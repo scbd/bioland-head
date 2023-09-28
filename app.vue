@@ -1,13 +1,16 @@
 <template>
   <section >
     <PageHeader/>
-    <!-- <PageEditorControls  :node-id="drupalNodeId" :path="routePath" /> -->
+    <!-- <PageEditorControls  /> -->
     <main>
       <PageHeroImage/>
-      <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-
       <NuxtPage/>
+      <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
     </main>
     <PageFooter/>
   </section>
 </template> 
+
+<script>
+export default { name      : 'BL2App', };
+</script>
