@@ -1,5 +1,5 @@
 <template>
-            <footer class="text-white-75" data-pgc="un3-bioland-footer">
+        <footer class="text-white-75" data-pgc="un3-bioland-footer">
             <div class="container-fluid bg-light footer-sitemap d-none d-sm-block">
                 <div class="container">
                     <div class="row pt-4">
@@ -69,6 +69,22 @@
             </div>
         </footer>
 </template>
+<script>
+    export default {
+        name: 'PageFooter',
+        setup
+    }
+
+    function setup() {
+        const menus = ref(undefined)
+
+        useFooterMenus().then((data) => menus.value = data);
+
+
+        return { menus }
+    }
+</script>
+
 <style scoped>
 .logo {
     min-width: 10rem;

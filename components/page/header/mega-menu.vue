@@ -538,3 +538,17 @@
         </li>
     </ul>
 </template>
+<script>
+    export default {
+        name: 'PageMegaMenu',
+        setup
+    }
+
+    function setup() {
+        const menus = ref(undefined)
+
+        useMainMenus().then((data) => menus.value = data);
+
+        return { menus }
+    }
+</script>
