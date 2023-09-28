@@ -14,10 +14,48 @@ async function getPageData(requestedPath: Ref){
 
     const { uuid, id, type, bundle } = await getPageIdentifiers(requestedPath);
 
-    const uri = `https://${encodeURIComponent(siteIdentifier.value)}${baseHost}/ar/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`
-    const { data, error } = await useFetch(uri, {mode: 'cors'})
+    const query = getSearchParams(type, bundle);
 
+    const uri = `https://${encodeURIComponent(siteIdentifier.value)}${baseHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
+
+    const { data, error } = await useFetch(uri, { query });
+
+    getPageAttachments(data.value.data)
+    consola.error(data.value.data);
     return data.value.data
+}
+
+async function getPageAttachments(data: Object){
+    const { field_attachments, id } = data;
+    const uriStart = getApiUriStart();
+
+    if(!field_attachments || !field_attachments.length) return;
+
+    for(const attachment of field_attachments){
+        const { type, thumbnail, field_media_document, field_media_image, field_media_video, field_media_audio } = attachment;
+        
+        useFetch(`${uriStart}file/file/${thumbnail.id}`, { query: {jsonapi_include: 1}, mode: 'cors' })
+            .then(({ data })=> attachment.thumbnail = { ...thumbnail, ...data.value.data })
+//TODO - media field main fields
+
+    }
+    const { data: attachments } = await useFetch(field_attachments.links.related.href);
+
+    return attachments;
+}
+
+function getSearchParams(type: string, bundle: string){
+    consola.warn(type);
+    const search = {jsonapi_include: 1};
+
+
+    if(type === 'node' && bundle === 'content')  setContentSearchParams(search);
+
+    return search;
+}
+
+function setContentSearchParams(search: Object){
+    search['include'] = 'field_attachments,field_type_placement';
 }
 
 async function getPageIdentifiers(requestedPath: Ref){
@@ -34,4 +72,11 @@ async function getPageIdentifiers(requestedPath: Ref){
 
 
     return { uuid, id, type, bundle, requestedPath };
+}
+
+function getApiUriStart(){
+    const siteIdentifier = useState('siteIdentifier');
+    const { baseHost }   = useRuntimeConfig().public;
+
+    return `https://${encodeURIComponent(siteIdentifier.value)}${baseHost}/jsonapi/`;
 }
