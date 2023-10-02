@@ -1,6 +1,7 @@
 {
   "name": "nuxt-app",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev --open",
@@ -18,7 +19,9 @@
   },
   "dependencies": {
     "bootstrap": "^5.3.1",
+    "click-outside-vue3": "^4.0.1",
     "consola": "^3.2.3",
-    "lodash.clonedeep": "^4.5.0"
+    "lodash.clonedeep": "^4.5.0",
+    "nuxt-viewport": "^2.0.6"
   }
 }
