@@ -2,25 +2,21 @@
     <div class="container-fluid brandbar-header fixed-top d-none d-sm-block">
         <div class="container p-0 pl-sm-3 pr-sm-3">
             <div class="row">
-                <div class="col-8 col-sm-4"><a class="navbar-brand" href="/en/">Welcome to the Convention on Biological Diversity CHM Network</a>
+                <div class="col-8 col-sm-4"><a class="navbar-brand" href="/">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</a>
                 </div>
                 <div class="col-4 col-sm-8 d-flex justify-content-end">
-                    <ul class="nav">
-                        <li class="nav-item dropdown d-block d-sm-none"><a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Languages&nbsp;</a>
-                            <div class="dropdown-menu" aria-labelledby="navbarDropdown"><a class="dropdown-item" href="ar/index.html">العربية</a><a class="dropdown-item" href="zh/index.html">中文</a><a class="dropdown-item" href="index.html">English</a><a class="dropdown-item" href="fr/index.html">Français</a><a class="dropdown-item" href="ru/index.html">Русский</a><a class="dropdown-item" href="es/index.html">Español</a>
+                    <ul class="nav" v-click-outside="close">
+                        <li v-for="(aMenu,index) in limitedMenus" :key="index"  class="nav-item d-none d-sm-block"><a class="nav-link" :href="`/${aMenu.code}${pagePath}`">{{aMenu.nativeName}}</a>
+                        </li>
+
+                        <li v-if="otherMenus.length" @click.stop.prevent="toggle" class="nav-item dropdown d-block ">
+                            <a  ref="dropDownLinkEl" class="nav-link dropdown-toggle" href="#">{{ t('Other') }}</a>
+
+                            <div ref="dropDownEl" class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                                <a v-for="(aMenu,index) in otherMenus" :key="index" class="dropdown-item" :href="`/${aMenu.code}${pagePath}`">{{aMenu.nativeName}}</a>
+
                             </div>
-                        </li>
-                        <li class="nav-item d-none d-sm-block"><a class="nav-link" href="ar/index.html">العربية</a>
-                        </li>
-                        <li class="nav-item d-none d-sm-block"><a class="nav-link" href="zh/index.html">中文</a>
-                        </li>
-                        <li class="nav-item d-none d-sm-block active"><a class="nav-link" href="#">English</a>
-                        </li>
-                        <li class="nav-item d-none d-sm-block"><a class="nav-link" href="fr/index.html">Français</a>
-                        </li>
-                        <li class="nav-item d-none d-sm-block"><a class="nav-link" href="ru/index.html">Русский</a>
-                        </li>
-                        <li class="nav-item d-none d-sm-block"><a class="nav-link" href="es/index.html">Español</a>
                         </li>
                     </ul>
                 </div>
@@ -28,3 +24,67 @@
         </div>
     </div>
 </template>
+<i18n src="@/i18n/dist/components/page/header/language-bar.json"></i18n>
+<script>
+    import { useI18n } from 'vue-i18n';
+
+    export default {
+        name: 'PageLanguageBar',
+        methods:{ toggle, close },
+        setup, mounted
+    }
+
+    function setup() {
+        const { t } = useI18n();
+        const dropDownEl = ref(undefined);
+        const dropDownLinkEl = ref(undefined);
+        const menus = ref([]);
+        const limitedMenus = ref([]);
+        const otherMenus = ref([]);
+        const limit = ref(3);
+        const viewport = useViewport();
+        
+
+        watch(viewport.breakpoint, (newBreakpoint, oldBreakpoint) => {
+            consola.info('Breakpoint updated:', oldBreakpoint, '->', newBreakpoint);
+        })
+
+        const pagePath       = useState('pagePath');
+        const path = computed(()=>{
+            const { pathname } = useRequestURL();
+
+            return pathname;
+        })
+
+
+        useLanguageMenus().then((data) => { 
+            menus.value = data;
+            limitedMenus.value = data.slice(0, limit.value);
+            otherMenus.value = data.slice(limit.value);
+        });
+
+        return { t, pagePath, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl }
+    }
+
+    function mounted(){
+        setTimeout(() => {
+            this.dropDownLinkEl.classList.add('dropdown-toggle');
+        }, 250);
+
+        consola.warn(this.otherMenus)
+    }
+
+    function toggle(e){
+        
+        if(!this.dropDownEl.style.display) this.dropDownEl.style.display = 'none';
+
+        if(this.dropDownEl.style.display.includes('none'))
+            this.dropDownEl.style.display = 'block';
+        else
+            this.dropDownEl.style.display = 'none';
+    }
+
+    function close(e){
+        this.dropDownEl.style.display = 'none';
+    }
+</script>
