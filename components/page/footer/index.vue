@@ -3,48 +3,12 @@
             <div class="container-fluid bg-light footer-sitemap d-none d-sm-block">
                 <div class="container">
                     <div class="row pt-4">
-                        <div class="col-6 col-md-3 mb-4">
-                            <h4>Quick Links</h4> 
+                        <div v-for="(aMenu,index) in menus" :key="index"   class="col-6 col-md-3 mb-4">
+                            <h4>{{aMenu.title}}</h4> 
                             <ul class="list-unstyled"> 
-                                <li><a href="#" alt="">Home</a></li>
-                                <li><a href="#" alt="">Network</a></li>
-                                <li><a href="#" alt="">Guidance</a></li>
-                                <li><a href="#" alt="">Bioland Introduction</a></li>
-                                <li><a href="#" alt="">About Us</a></li>
-                            </ul>
-                        </div>
-                        <div class="col-6 col-md-3 mb-4">
-                            <h4>CBD Links</h4> 
-                            <ul class="list-unstyled"> 
-                                <li><a href="#">CBD (Convention on Biological Diversity)</a></li>
-                                <li><a href="#">Strategic Plan for Biodiversity</a></li>
-                                <li><a href="#">Global Biodiversity Framework</a></li>
-                                <li><a href="#">CHM Network</a></li>
-                                <li><a href="#">CHM Information services</a></li>
-                                <li><a href="#">BCH</a></li>
-                                <li><a href="#">ABSCH</a></li>
-                            </ul>
-                        </div>
-                        <div class="col-6 col-md-3 mb-4">
-                            <h4>Sri Lanka Links</h4> 
-                            <ul class="list-unstyled"> 
-                                <li><a href="#">CBD country profile</a></li>
-                                <li><a href="#">GEF projects</a></li>
-                                <li><a href="#">InforMEA country profile</a></li>
-                                <li><a href="#">United Nations country profile</a></li>
-                                <li><a href="#">Biodiversity Indicators Summary</a></li>
-                                <li><a href="#">Protected Areas</a></li>
-                                <li><a href="#">Red List of Threatened Species</a></li>
-                            </ul>
-                        </div>
-                        <div class="col-6 col-md-3 mb-4">
-                            <h4>Social Media</h4> 
-                            <ul class="list-unstyled">
-                                <li><a href="#">Twitter</a></li>
-                                <li><a href="#">Facebook</a></li>
-                                <li><a href="#">Instagram</a></li>
-                                <li><a href="#">YouTube</a></li>
-                                <li><a href="#">LinkedIn</a></li>
+                                <li v-for="(aChildMenu,i) in aMenu.children" :key="i">
+                                    <a :href="aChildMenu.href || '#'" :alt="aChildMenu.title" :target="aChildMenu.target?.length? aChildMenu.target[0] : ''" :rel="aChildMenu.target?.length? 'noopener noreferrer' : ''" >{{ aChildMenu.title }}</a>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -54,13 +18,14 @@
                 <div class="container p-0 pl-md-3 pr-md-3">
                     <div class="row align-items-center w-100x">
                         <div class="align-items-center col-8 d-flex">
-                            <a class="logo navbar-btn pull-left flip" href="/en" title="United Nations"></a><a class="sublogo navbar-btn pull-left flip" href="/en" title="United Nations"></a><a class="navbar-brand pull-left flip" href="/en" title="UN Web TV - Live Video and On-Demand">Convention on<br/>Biological Diversity</a>
+                            <a class="logo navbar-btn pull-left flip" href="https://www.un.org/" :title="t('United Nations')"></a>
+                            <a class="sublogo navbar-btn pull-left flip" href="https://www.un.org/" :title="t('United Nations')"></a>
+                            <a class="navbar-brand pull-left flip" href="https://www.cbd.int/" :title="t('Convention on Biological Diversity')">{{t('Convention on')}}<br/>{{t('Biological Diversity')}}</a>
                         </div>
                         <div class="col-4 d-flex justify-content-end">
                             <ul class="nav">
-                                <li class="nav-item"><a class="nav-link" href="#">Credits</a>
-                                </li>
-                                <li class="nav-item"><a class="nav-link" href="#">Terms of Use</a>
+                                <li v-for="(aChildMenu,index) in creditsMenus" :key="index" class="nav-item">
+                                    <a class="nav-link" :href="aChildMenu.href || '#'" :alt="aChildMenu.title" :target="aChildMenu.target?.length? aChildMenu.target[0] : ''" :rel="aChildMenu.target?.length? 'noopener noreferrer' : ''" >{{ aChildMenu.title }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -69,6 +34,7 @@
             </div>
         </footer>
 </template>
+<i18n src="@/i18n/dist/components/page/footer/index.json"></i18n>
 <script>
     export default {
         name: 'PageFooter',
@@ -76,13 +42,18 @@
     }
 
     function setup() {
-        const menus = ref(undefined)
+        const menus = ref(undefined);
+        const creditsMenus = ref(undefined);
+
+        const { t }     = useI18n();
 
         useFooterMenus().then((data) => menus.value = data);
 
+        useFooterCreditsMenus().then((data) => creditsMenus.value = data);
 
-        return { menus }
+        return { t, menus, creditsMenus }
     }
+
 </script>
 
 <style scoped>
