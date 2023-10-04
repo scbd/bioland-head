@@ -24,55 +24,54 @@
         </div>
     </div>
 </template>
+
 <i18n src="@/i18n/dist/components/page/header/language-bar.json"></i18n>
+
 <script>
     import { useI18n } from 'vue-i18n';
 
     export default {
-        name: 'PageLanguageBar',
-        methods:{ toggle, close },
+        name   : 'PageLanguageBar',
+        methods: { toggle, close, reloadMenus},
         setup, mounted
     }
 
     function setup() {
-        const { t } = useI18n();
-        const dropDownEl = ref(undefined);
-        const dropDownLinkEl = ref(undefined);
-        const menus = ref([]);
-        const limitedMenus = ref([]);
-        const otherMenus = ref([]);
-        const limit = ref(3);
-        const viewport = useViewport();
+        const { t }           = useI18n();
+        const dropDownEl      = ref(undefined);
+        const dropDownLinkEl  = ref(undefined);
+        const menus           = ref([]);
+        const limitedMenus    = ref([]);
+        const otherMenus      = ref([]);
         
+        const viewport        = useViewport();
+        const limit           = 6;
 
-        watch(viewport.breakpoint, (newBreakpoint, oldBreakpoint) => {
-            consola.info('Breakpoint updated:', oldBreakpoint, '->', newBreakpoint);
-        })
 
-        const pagePath       = useState('pagePath');
-        const path = computed(()=>{
-            const { pathname } = useRequestURL();
 
-            return pathname;
-        })
-
+        const pagePath = useState('pagePath');
 
         useLanguageMenus().then((data) => { 
             menus.value = data;
             limitedMenus.value = data.slice(0, limit.value);
-            otherMenus.value = data.slice(limit.value);
+            
+            if(menus.value.length > limit.value)
+                otherMenus.value = data.slice(limit.value);
         });
 
-        return { t, pagePath, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl }
+        return { t, pagePath, menus, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl, viewport }
     }
 
     function mounted(){
-        setTimeout(() => {
-            this.dropDownLinkEl.classList.add('dropdown-toggle');
-        }, 250);
+        // setTimeout(() => {
+        //     this.dropDownLinkEl.classList.add('dropdown-toggle');
+        // }, 250);
 
-        consola.warn(this.otherMenus)
+
+        this.reloadMenus(this.viewport.breakpoint);
+        watch(this.viewport.breakpoint, this.reloadMenus)
     }
+
 
     function toggle(e){
         
@@ -85,6 +84,24 @@
     }
 
     function close(e){
+        if(['sm','xs'].includes(this.viewport.breakpoint)) return;
+
         this.dropDownEl.style.display = 'none';
+    }
+
+    function reloadMenus(newBreakpoint){
+        this.otherMenus = [];
+        const largeBreakpoints = ['lg','xl'];
+        const mediumBreakpoints = ['md','sm','xs'];
+
+        if(largeBreakpoints.includes(newBreakpoint))
+                this.limit = 6;
+        if(mediumBreakpoints.includes(newBreakpoint))
+                this.limit = 3;
+
+        this.limitedMenus = this.menus.slice(0, this.limit);
+
+        if(mediumBreakpoints.includes(newBreakpoint))
+            this.otherMenus = this.menus.slice(this.limit);
     }
 </script>
