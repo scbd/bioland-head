@@ -6,17 +6,17 @@
                     <NuxtLink class="navbar-brand" to="https://www.cbd.int">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</NuxtLink>
                 </div>
                 <div class="col-4 col-sm-8 d-flex justify-content-end">
-                    <ul class="nav" v-click-outside="close">
+                    <ul class="nav" >
                         <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
-                            <NuxtLink class="nav-link" :to="`/${aMenu.code}${pagePath}`">{{aMenu.nativeName}}</NuxtLink>
+                            <NuxtLink class="nav-link" :to="switchLocalePath(aMenu.code)">{{aMenu.nativeName}}</NuxtLink>
                         </li>
 
-                        <li v-if="otherMenus.length" @click.stop.prevent="toggle" class="nav-item dropdown d-block ">
+                        <li v-if="otherMenus.length" @click.stop.prevent="toggle" class="nav-item dropdown d-block " v-click-outside="close">
                             <NuxtLink  ref="dropDownLinkEl" class="nav-link dropdown-toggle" to="#">{{ t('Other') }}</NuxtLink>
 
                             <div ref="dropDownEl" class="dropdown-menu" aria-labelledby="navbarDropdown">
 
-                                <NuxtLink v-for="(aMenu,index) in otherMenus" :key="index" class="dropdown-item" :to="`/${aMenu.code}${pagePath}`">{{aMenu.nativeName}}</NuxtLink>
+                                <NuxtLink v-for="(aMenu,index) in otherMenus" :key="index" class="dropdown-item" :to="switchLocalePath(aMenu.code)">{{aMenu.nativeName}}</NuxtLink>
 
                             </div>
                         </li>
@@ -40,6 +40,7 @@
 
     function setup() {
         const { t }           = useI18n();
+        const switchLocalePath = useSwitchLocalePath()
         const dropDownEl      = ref(undefined);
         const dropDownLinkEl  = ref(undefined);
         const menus           = useState('languageMenus');//useLanguageMenus();//ref([]);
@@ -61,15 +62,10 @@
                 otherMenus.value = menus.value.slice(limit.value);
        // });
 
-        return { t, pagePath, menus, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl, viewport }
+        return { t, pagePath, menus, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl, viewport, switchLocalePath }
     }
 
     function mounted(){
-        // setTimeout(() => {
-        //     this.dropDownLinkEl.classList.add('dropdown-toggle');
-        // }, 250);
-
-
         this.reloadMenus(this.viewport.breakpoint);
         watch(this.viewport.breakpoint, this.reloadMenus)
     }

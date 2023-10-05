@@ -1,5 +1,4 @@
 import clone from 'lodash.clonedeep';
-import { useI18n } from 'vue-i18n';
 
 export const useFooterMenus = () => {
     return getMenuData('footer');
@@ -18,7 +17,7 @@ async function getMenuData(menuName: string){
     const defaultLocale = useState('siteDefaultLocale').value;//{locale: 'en'};//await useSiteDefaultLocale();
     const pathLocale     = locale.value === defaultLocale?.locale? '' : `/${locale.value}`;
 
-    const uri = `https://${siteIdentifier.value}${baseHost}${pathLocale}/system/menu/${encodeURIComponent(menuName)}/linkset`
+    const uri = `https://${siteIdentifier.value}${baseHost}${pathLocale}/system/menu/${encodeURIComponent(menuName)}/linkset`;
 
     const { data, error } = await useFetch(uri, { mode: 'cors' });
 
