@@ -2,19 +2,21 @@
     <div class="container-fluid brandbar-header fixed-top d-none d-sm-block">
         <div class="container p-0 pl-sm-3 pr-sm-3">
             <div class="row">
-                <div class="col-8 col-sm-4"><a class="navbar-brand" href="/">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</a>
+                <div class="col-8 col-sm-4">
+                    <NuxtLink class="navbar-brand" to="https://www.cbd.int">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</NuxtLink>
                 </div>
                 <div class="col-4 col-sm-8 d-flex justify-content-end">
                     <ul class="nav" v-click-outside="close">
-                        <li v-for="(aMenu,index) in limitedMenus" :key="index"  class="nav-item d-none d-sm-block"><a class="nav-link" :href="`/${aMenu.code}${pagePath}`">{{aMenu.nativeName}}</a>
+                        <li v-for="(aMenu,index) in limitedMenus" :key="index"  class="nav-item d-none d-sm-block">
+                            <NuxtLink class="nav-link" :to="`/${aMenu.code}${pagePath}`">{{aMenu.nativeName}}</NuxtLink>
                         </li>
 
                         <li v-if="otherMenus.length" @click.stop.prevent="toggle" class="nav-item dropdown d-block ">
-                            <a  ref="dropDownLinkEl" class="nav-link dropdown-toggle" href="#">{{ t('Other') }}</a>
+                            <NuxtLink  ref="dropDownLinkEl" class="nav-link dropdown-toggle" to="#">{{ t('Other') }}</NuxtLink>
 
                             <div ref="dropDownEl" class="dropdown-menu" aria-labelledby="navbarDropdown">
 
-                                <a v-for="(aMenu,index) in otherMenus" :key="index" class="dropdown-item" :href="`/${aMenu.code}${pagePath}`">{{aMenu.nativeName}}</a>
+                                <NuxtLink v-for="(aMenu,index) in otherMenus" :key="index" class="dropdown-item" :to="`/${aMenu.code}${pagePath}`">{{aMenu.nativeName}}</NuxtLink>
 
                             </div>
                         </li>
