@@ -7,7 +7,7 @@
                             <h4>{{aMenu.title}}</h4> 
                             <ul class="list-unstyled"> 
                                 <li v-for="(aChildMenu,i) in aMenu.children" :key="i">
-                                    <NuxtLink :to="aChildMenu.href || '#'" :alt="aChildMenu.title" :target="aChildMenu.target?.length? aChildMenu.target[0] : ''" :rel="aChildMenu.target?.length? 'noopener noreferrer' : ''" >{{ aChildMenu.title }}</NuxtLink>
+                                    <PageMenuLink v-bind="aChildMenu"/>
                                 </li>
                             </ul>
                         </div>
@@ -25,7 +25,7 @@
                         <div class="col-12 col-sm-4 d-flex justify-content-end">
                             <ul class="nav">
                                 <li v-for="(aChildMenu,index) in creditsMenus" :key="index" class="nav-item">
-                                    <NuxtLink class="nav-link" :to="aChildMenu.href || '#'" :alt="aChildMenu.title" :target="aChildMenu.target?.length? aChildMenu.target[0] : ''" :rel="aChildMenu.target?.length? 'noopener noreferrer' : ''" >{{ aChildMenu.title }}</NuxtLink>
+                                    <PageMenuLink v-bind="aChildMenu" />
                                 </li>
                             </ul>
                         </div>
