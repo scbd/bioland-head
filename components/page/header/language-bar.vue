@@ -7,7 +7,7 @@
                 </div>
                 <div class="col-4 col-sm-8 d-flex justify-content-end">
                     <ul class="nav" v-click-outside="close">
-                        <li v-for="(aMenu,index) in limitedMenus" :key="index"  class="nav-item d-none d-sm-block">
+                        <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
                             <NuxtLink class="nav-link" :to="`/${aMenu.code}${pagePath}`">{{aMenu.nativeName}}</NuxtLink>
                         </li>
 
@@ -42,7 +42,7 @@
         const { t }           = useI18n();
         const dropDownEl      = ref(undefined);
         const dropDownLinkEl  = ref(undefined);
-        const menus           = ref([]);
+        const menus           = useState('languageMenus');//useLanguageMenus();//ref([]);
         const limitedMenus    = ref([]);
         const otherMenus      = ref([]);
         
@@ -53,13 +53,13 @@
 
         const pagePath = useState('pagePath');
 
-        useLanguageMenus().then((data) => { 
-            menus.value = data;
-            limitedMenus.value = data.slice(0, limit.value);
+        // menus.value = useLanguageMenus().value;//.then((data) => { 
+            // menus.value = data;
+            limitedMenus.value = menus.value.slice(0, limit.value);
             
             if(menus.value.length > limit.value)
-                otherMenus.value = data.slice(limit.value);
-        });
+                otherMenus.value = menus.value.slice(limit.value);
+       // });
 
         return { t, pagePath, menus, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl, viewport }
     }

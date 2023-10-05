@@ -1,29 +1,28 @@
 import clone from 'lodash.clonedeep';
 import { useI18n } from 'vue-i18n';
 
-export const useFooterMenus = async () => {
+export const useFooterMenus = () => {
     return getMenuData('footer');
 }
-export const useFooterCreditsMenus = async () => {
+export const useFooterCreditsMenus = () => {
     return getMenuData('footer-credits');
 }
-export const useMainMenus = async () => {
+export const useMainMenus = () => {
     return getMenuData('main');
 }
 
 async function getMenuData(menuName: string){
-    const { locale }     = useI18n();
+    const locale     = useState('locale');
     const siteIdentifier = useState('siteIdentifier');
     const { baseHost }   = useRuntimeConfig().public;
-    const defaultLocale = await useSiteDefaultLocale();
-    const pathLocale     = locale.value === defaultLocale.locale? '' : `/${locale.value}`;
+    const defaultLocale = useState('siteDefaultLocale').value;//{locale: 'en'};//await useSiteDefaultLocale();
+    const pathLocale     = locale.value === defaultLocale?.locale? '' : `/${locale.value}`;
 
     const uri = `https://${siteIdentifier.value}${baseHost}${pathLocale}/system/menu/${encodeURIComponent(menuName)}/linkset`
 
-    const { data, error } = await useFetch(uri, {mode: 'cors'})
+    const { data, error } = await useFetch(uri, { mode: 'cors' });
 
-
-    return formatMenus(data.value.linkset[0].item);
+    return data.value?.linkset? formatMenus(data.value.linkset[0].item) : [];
 }
 
 

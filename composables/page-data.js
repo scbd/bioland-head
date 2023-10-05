@@ -8,7 +8,17 @@ export const usePageData = () => {
     return getPageData(pagePath);
 }
 
-async function getPageData(requestedPath: Ref){
+export const useHasHeroImage = () => {
+    const hasPageHeroImage = ref(false);
+
+    usePageData().then((d)=>{
+        consola.warn(d);
+    }) 
+
+    return hasPageHeroImage;
+}
+
+async function getPageData(requestedPath){
     const siteIdentifier = useState('siteIdentifier');
     const { baseHost }   = useRuntimeConfig().public;
 
@@ -20,12 +30,12 @@ async function getPageData(requestedPath: Ref){
 
     const { data, error } = await useFetch(uri, { query });
 
-    getPageAttachments(data.value.data)
+    //getPageAttachments(data.value.data)
     consola.error(data.value.data);
     return data.value.data
 }
 
-async function getPageAttachments(data: Object){
+async function getPageAttachments(data){
     const { field_attachments, id } = data;
     const uriStart = getApiUriStart();
 
@@ -44,7 +54,7 @@ async function getPageAttachments(data: Object){
     return attachments;
 }
 
-function getSearchParams(type: string, bundle: string){
+function getSearchParams(type, bundle){
     consola.warn(type);
     const search = {jsonapi_include: 1};
 
@@ -54,11 +64,11 @@ function getSearchParams(type: string, bundle: string){
     return search;
 }
 
-function setContentSearchParams(search: Object){
+function setContentSearchParams(search){
     search['include'] = 'field_attachments,field_type_placement';
 }
 
-async function getPageIdentifiers(requestedPath: Ref){
+async function getPageIdentifiers(requestedPath){
     
     const siteIdentifier = useState('siteIdentifier');
     const { baseHost }   = useRuntimeConfig().public;
