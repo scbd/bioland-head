@@ -42,13 +42,10 @@
     }
 
     function setup() {
-        const   menus          = ref    (undefined);
-        const   creditsMenus   = ref    (undefined);
+        const   menus          = useState('footerMenu');
+        const   creditsMenus   = useState('footerCreditsMenu');
         const { t            } = useI18n();
 
-        useFooterMenus().then((data) => menus.value = data);
-
-        useFooterCreditsMenus().then((data) => creditsMenus.value = data);
 
         return { t, menus, creditsMenus }
     }

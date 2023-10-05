@@ -1,21 +1,18 @@
 <template>
     <div>
-      <!-- Markup shared across all pages, ex: NavBar -->
-      ddd<br/>
-
+      <br/>
+      <h1>Debuging page place holder</h1>
+{{viewport.breakpoint}}<br/>
+<pre>{{viewport}}</pre><br/>
     </div>
 </template>
 <script>
 export default {
   name: 'IndexPage',
   setup() {
-    const temp = ref(undefined)
-    useFooterMenus();
-    usePageData().then((data) => {
-      temp.value = data
-    })
+    const viewport        = useViewport();
 
-    return { temp }
+    return {  viewport }
   }
 }
 </script>
