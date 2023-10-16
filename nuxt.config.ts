@@ -26,6 +26,7 @@ export default defineNuxtConfig({
   modules: [
     'nuxt-viewport',
     '@nuxtjs/i18n-edge',
+    '@pinia/nuxt'
   ],
   viewport: {
     breakpoints: {
@@ -68,6 +69,7 @@ export default defineNuxtConfig({
     // strategy: "prefix",
     // vueI18n:'./config/i18n.config.ts',
   },
+  pinia: { autoImports: [ 'defineStore','useStore', 'storeToRefs'], },
     vite: {
     
       resolve: {

@@ -1,4 +1,5 @@
 import clone from 'lodash.clonedeep';
+import {  useSiteStore } from "~/stores/site";
 
 export const useFooterMenus = () => {
     return getMenuData('footer');
@@ -11,16 +12,14 @@ export const useMainMenus = () => {
 }
 
 async function getMenuData(menuName: string){
-    const locale     = useState('locale');
-    const siteIdentifier = useState('siteIdentifier');
-    const { baseHost }   = useRuntimeConfig().public;
-    const defaultLocale = useState('siteDefaultLocale').value;//{locale: 'en'};//await useSiteDefaultLocale();
-    const pathLocale     = locale.value === defaultLocale?.locale? '' : `/${locale.value}`;
+    const { locale, identifier,   baseHost, defaultLocale } = useSiteStore();
 
-    const uri = `https://${siteIdentifier.value}${baseHost}${pathLocale}/system/menu/${encodeURIComponent(menuName)}/linkset`;
+    const pathLocale     = locale === defaultLocale? '' : `/${locale}`;
+
+    const uri = `https://${identifier}${baseHost}${pathLocale}/system/menu/${encodeURIComponent(menuName)}/linkset`;
 
     const { data, error } = await useFetch(uri, { mode: 'cors' });
-
+consola.info(data)
     return data.value?.linkset? formatMenus(data.value.linkset[0].item) : [];
 }
 

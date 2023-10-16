@@ -31,6 +31,7 @@
 
 <script>
     import { useI18n } from 'vue-i18n';
+    import {  useMenusStore } from "~/stores/menus";
 
     export default {
         name   : 'PageLanguageBar',
@@ -39,28 +40,26 @@
     }
 
     function setup() {
+        const menuStore      = useMenusStore();
         const { t }           = useI18n();
         const switchLocalePath = useSwitchLocalePath()
         const dropDownEl      = ref(undefined);
         const dropDownLinkEl  = ref(undefined);
-        const menus           = useState('languageMenus');//useLanguageMenus();//ref([]);
         const limitedMenus    = ref([]);
         const otherMenus      = ref([]);
-        
         const viewport        = useViewport();
         const limit           = 6;
 
 
+        const { languages: menus } = storeToRefs(menuStore);
 
         const pagePath = useState('pagePath');
 
-        // menus.value = useLanguageMenus().value;//.then((data) => { 
-            // menus.value = data;
-            limitedMenus.value = menus.value.slice(0, limit.value);
-            
-            if(menus.value.length > limit.value)
-                otherMenus.value = menus.value.slice(limit.value);
-       // });
+        limitedMenus.value = menus.value.slice(0, limit.value);
+        
+        if(menus.value.length > limit.value)
+            otherMenus.value = menus.value.slice(limit.value);
+
 
         return { t, pagePath, menus, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl, viewport, switchLocalePath }
     }

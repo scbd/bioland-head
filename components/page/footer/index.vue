@@ -36,15 +36,17 @@
 </template>
 <i18n src="@/i18n/dist/components/page/footer/index.json"></i18n>
 <script>
+    import { useMenusStore } from "~/stores/menus";
+
     export default {
         name: 'PageFooter',
         setup
     }
 
     function setup() {
-        const   menus          = useState('footerMenu');
-        const   creditsMenus   = useState('footerCreditsMenu');
-        const { t            } = useI18n();
+        const menuStore = useMenusStore();
+        const { footer: menus, footerCredits: creditsMenus } = storeToRefs(menuStore);
+        const { t  } = useI18n();
 
 
         return { t, menus, creditsMenus }

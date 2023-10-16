@@ -1,4 +1,5 @@
 <template>
+
     <section v-if="pageHasHeroImage">
         <section id="un3-avlibary-index-bg" class="un3-hero hero-image  w-100 h-50 position-absolute" >
         </section>
@@ -25,10 +26,13 @@ export default {
 }
 
 function setup() {
-    const pageHasHeroImage = useHasHeroImage();
+    const pageHasHeroImage = ref(false)
 
+    // useHasHeroImage().then((result) => {
+    //     pageHasHeroImage.value = result.value
+    //     consola.info('pageHasHeroImage', pageHasHeroImage.value);
 
-    consola.info('pageHasHeroImage', pageHasHeroImage.value);
+    // });
 
     return { pageHasHeroImage }
 }

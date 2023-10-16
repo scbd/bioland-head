@@ -1,10 +1,9 @@
-
+import {  useSiteStore } from "~/stores/site";
 
 export const useLanguageMenus = async () => {
-    const siteIdentifier = useState('siteIdentifier');
-    const { gaiaApi, drupalMultisiteIdentifier }   = useRuntimeConfig().public;
+    const { identifier, gaiaApi, drupalMultisiteIdentifier } = useSiteStore()
 
-    const uri = `${gaiaApi}v2023/drupal/multisite/${drupalMultisiteIdentifier}/${siteIdentifier.value}/locales`
+    const uri = `${gaiaApi}v2023/drupal/multisite/${drupalMultisiteIdentifier}/${identifier}/locales`
 
     const { data, error } = await useFetch(uri)
 
