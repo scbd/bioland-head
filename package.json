@@ -8,12 +8,12 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "clean-reinstall": "if test -f node_modules; then rm -rf node_modules; fi &&  yarn install --force",
+    "clean-reinstall": "if test -f node_modules; then rm -rf node_modules; fi &&  yarn install --force;"
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",
     "@nuxtjs/i18n-edge": "^8.0.0-rc.4-28240475.595f9ca",
-    "nuxt": "^3.7.1",
+    "nuxt": "^3.7.4",
     "sass": "~1.64.2",
     "sass-loader": "^13.3.2"
   },
