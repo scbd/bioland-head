@@ -8,7 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "clean-reinstall": "if test -f yarn.lock; then rm yarn.lock; fi && if test -f node_modules; then rm -rf node_modules; fi &&  yarn install --force"
+    "clean-reinstall": "if test -f node_modules; then rm -rf node_modules; fi &&  yarn install --force",
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",
