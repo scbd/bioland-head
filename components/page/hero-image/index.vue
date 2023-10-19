@@ -1,5 +1,7 @@
 <template>
-
+<div class="debug-blue w-100 h-25 position-absolute"> 
+    <div class="text-center text-muted">Hero Image <a href="https://scbd.atlassian.net/browse/BL-17" target="_blank">BL-17</a></div>
+</div>
     <section v-if="pageHasHeroImage">
         <section id="un3-avlibary-index-bg" class="un3-hero hero-image  w-100 h-50 position-absolute" >
         </section>

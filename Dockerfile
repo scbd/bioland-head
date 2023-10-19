@@ -1,18 +1,17 @@
 FROM node:18-alpine
 
 RUN apk update && apk upgrade && \
-    apk add --no-cache yarn && \
     apk add --no-cache curl
 
 WORKDIR /usr/src/app
 
 COPY package.json ./
 
-RUN yarn clean-reinstall
+RUN npm run clean-reinstall
 
 COPY . ./
 
-RUN yarn build
+RUN npm run build
 
 ENV PORT 8000
 

@@ -63,7 +63,9 @@ yarn preview
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
 
 
-/admin
-/sites
-/modules
-/core
+
+
+
+traefik pathPrefix regex (go lang)
+
+`/{local:(?i:([a-z]{2}/)?)}{dpath:(?i:(((node|media)/[1-9]+/(edit|delete|revisions|translations))|admin|jsonapi|sites|modules|core|system|user|entity_reference_autocomplete|batch|((node|media)/add)))}`

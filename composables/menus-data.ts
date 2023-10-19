@@ -14,12 +14,12 @@ export const useMainMenus = () => {
 async function getMenuData(menuName: string){
     const { locale, identifier,   baseHost, defaultLocale } = useSiteStore();
 
-    const pathLocale     = locale === defaultLocale? '' : `/${locale}`;
+    const pathLocale = locale === defaultLocale?.locale? '' : `/${locale}`;
 
     const uri = `https://${identifier}${baseHost}${pathLocale}/system/menu/${encodeURIComponent(menuName)}/linkset`;
 
     const { data, error } = await useFetch(uri, { mode: 'cors' });
-consola.info(data)
+
     return data.value?.linkset? formatMenus(data.value.linkset[0].item) : [];
 }
 

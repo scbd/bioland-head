@@ -55,9 +55,9 @@
 
         const pagePath = useState('pagePath');
 
-        limitedMenus.value = menus.value.slice(0, limit.value);
+        limitedMenus.value = menus.value? menus.value.slice(0, limit.value) : [];
         
-        if(menus.value.length > limit.value)
+        if(menus.value && menus.value.length > limit.value)
             otherMenus.value = menus.value.slice(limit.value);
 
 
