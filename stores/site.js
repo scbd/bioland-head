@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { getBiolandSiteIdentifier } from "~/util";
 
-const actions = { set, initialize, getSiteDefaultLocale, watchLocaleChange }
+const actions = { set, initialize, getSiteDefaultLocale, watchLocaleChange, getSiteConfig }
 
 export const useSiteStore = defineStore('site', { state, actions })
 
@@ -13,6 +13,9 @@ const initState = {
                     gaiaApi                  : undefined,
                     drupalMultisiteIdentifier: undefined,
                     baseHost                 : undefined,
+                    logo : undefined,
+                    hasFlag : undefined,
+                    config:     undefined
                 }
 
 function state(){ return initState }
@@ -38,6 +41,10 @@ async function initialize(nuxtApp){
     this.set('locale',nuxtApp.$i18n.locale);
     this.set('identifier',getBiolandSiteIdentifier(hostname) || 'seed');
     this.set('defaultLocale',await this.getSiteDefaultLocale());
+
+    const config = await this.getSiteConfig();
+    this.set('config',await this.getSiteConfig());
+    this.set('logo',config.logo);
 }
 
 function watchLocaleChange(nuxtApp, functions = []){
@@ -62,4 +69,14 @@ async function getSiteDefaultLocale(){
     const { data, error } = await useFetch(uri)
 
     return data.value
+}
+//https://api.cbddev.xyz/api/v2023/drupal/multisite/bl2/configs/seed
+
+async function getSiteConfig(){
+    const { identifier, gaiaApi, drupalMultisiteIdentifier } = this;
+
+
+    const uri = `${gaiaApi}v2023/drupal/multisite/${drupalMultisiteIdentifier}/configs/${identifier}`
+
+    return $fetch(uri)
 }

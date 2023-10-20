@@ -1,5 +1,6 @@
 <template>
   <section >
+    <Icons v-once/>
     <PageHeader/>
     <!-- <PageEditorControls  /> -->
     <main class="debug-main">
