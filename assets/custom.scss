@@ -622,22 +622,6 @@ smaller, .smaller {
   font-size: 0.75em;
 }
 
-.form {
-  background-color: rgba($gray-900, .5);
-  padding: 2rem;
-}
-
-.form-control {
-  background-color: $gray-900;
-  border-color: $gray-700;
-  color: $white;
-}
-
-.form-control:focus {
-  background-color: $gray-800;
-  border-color: $primary;
-  color: $white;
-}
 
 .time {
   position: relative;
@@ -671,64 +655,6 @@ smaller, .smaller {
   }
 }
 
-.navbar-header {
-  padding-top: 1.5rem;
-  padding-bottom: 1.5rem;
-  width: 100%;
-
-  .navbar-brand {
-      color: $white;
-      font-weight: 500;
-      font-size: 2.5rem;
-      line-height: 1.75rem;
-      text-decoration: none;
-      padding: 0 1rem 0 0;
-      border-right: 1px solid black;
-
-      // transition: color .5s;
-      small {
-          font-size: 1.25rem;
-      }
-  }
-
-  .navbar-subbrand {
-    color: $gray-300;
-    font-weight: 400;
-    font-size: 1.25rem;
-    line-height: 1.25rem;
-    text-decoration: none;
-    padding: 0;
-
-    // transition: color .5s;
-    small {
-        font-size: 0.75rem;
-    }
-  }
-
-  .navbar-btn {
-      display: inline-block;
-      margin: 0 1rem 0 0;
-      padding: 0;
-  }
-  
-  // .logo {
-  //   width: 8rem;
-  //   height: 4rem;
-  //   background-position: left top !important;
-  //   background-image: url('../../assets/flag-sri-lanka.png');
-  //   background-repeat: no-repeat;
-  //   background-size: contain;
-  // }
-  
-  .sublogo {
-    width: 2rem;
-    height: 2.5rem;
-    background-position: left top !important;
-    // background-image: url('../../assets/cbd-logo-white.svg');
-    background-repeat: no-repeat;
-    background-size: contain;
-  }
-}
 
 .has-hero-image .navbar-header {
   .navbar-brand, .navbar-subbrand {
@@ -886,39 +812,9 @@ smaller, .smaller {
   margin-right: 1rem;
 }
 
-.navbar .input-group {
-  border: 1px solid $gray-300;
-  background-color: rgba(255,255,255,.25);
-  border-radius: .5rem;
-}
 
-.navbar .input-group-text,
-.navbar .form-control {
-  background-color: transparent;
-  color: white;
-  border: none;
-}
 
-.navbar .input-group-prepend {
-  width: 0;
-  padding: 0;
-}
 
-.navbar .input-group > .form-control:not(:first-child),
-.input-group > .custom-select:not(:first-child) {
-  padding-left: 3rem;
-}
-
-.navbar .form-control::placeholder,
-.navbar .form-control::-ms-input-placeholder {
-  color: white !important;
-}
-
-.navbar .form-control:focus {
-  background-color: rgba($white, .75);
-  color: black;
-  border-radius: .5rem;
-}
 
 .has-video-top .navbar,
 .has-video-top .brandbar-header {
