@@ -1,8 +1,8 @@
 <template>
-    <div class="container-fluid brandbar-header fixed-top d-none d-sm-block">
+    <div class="container-fluid brandbar-header fixed-top d-none d-md-block">
         <div class="container p-0 pl-sm-3 pr-sm-3">
             <div class="row">
-                <div class="col-8 col-sm-4">
+                <div class="col-8 col-sm-4 d-flex align-items-center">
                     <NuxtLink class="navbar-brand" to="https://www.cbd.int">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</NuxtLink>
                 </div>
                 <div class="col-4 col-sm-8 d-flex justify-content-end">
@@ -102,3 +102,18 @@
             this.otherMenus = this.menus.slice(this.limit);
     }
 </script>
+<style scoped>
+.brandbar-header {
+  background: var(--bs-gray-200);
+  border-bottom: .25rem solid var(--bs-blue);
+  height: 2.5rem;
+}
+
+.brandbar-header a.navbar-brand {
+  font-size: .875rem;
+  font-weight: 500;
+  color: var(--bs-gray-700);
+  /* // padding-top: .5rem; */
+  text-decoration: none;
+}
+</style>
