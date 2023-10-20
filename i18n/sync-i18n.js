@@ -1,4 +1,5 @@
 import { copyFile, mkdir, readFile, readdir, stat, writeFile } from 'fs/promises';
+import localeObjects from './locales.js';
 import path from 'path';
 // import assert, { match } from 'assert';
 import * as url from 'url';
@@ -34,7 +35,7 @@ async function syncLocaleFiles(matchedFiles) {
 
 async function createLocaleFile(enFile){
 
-  const locales = ['ar', 'es', 'fr', 'ru', 'zh'];
+  const locales = localeObjects.map(({ code })=> code);//['ar', 'es', 'fr', 'ru', 'zh'];
   const localeFilePromises = []
 
   //TODO check wny i18n fallback is not working, temp copy en props to lang objects
