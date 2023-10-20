@@ -13,11 +13,11 @@ export const useMainMenus = () => {
 
 async function getMenuData(menuName: string){
     const { locale, identifier,   baseHost, defaultLocale } = useSiteStore();
-
-    const pathLocale = locale === defaultLocale?.locale? '' : `/${locale}`;
+    const pathPreFix = locale === defaultLocale?.locale? '' : `/${locale}`;
+    const pathLocale = pathPreFix === '/zh'? '/zh-hans' : pathPreFix;
 
     const uri = `https://${identifier}${baseHost}${pathLocale}/system/menu/${encodeURIComponent(menuName)}/linkset`;
-
+consola.info('menu uri', uri)
     const { data, error } = await useFetch(uri, { mode: 'cors' });
 
     return data.value?.linkset? formatMenus(data.value.linkset[0].item) : [];

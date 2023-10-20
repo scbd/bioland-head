@@ -1,5 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import { viteSyncI18nFiles } from './i18n/sync-i18n';
+import locales from './i18n/locales';
+
 const css  =   [ '@/assets/custom.scss' ]
 
 export default defineNuxtConfig({
@@ -46,18 +48,18 @@ export default defineNuxtConfig({
 
     fallbackBreakpoint: 'lg'
   },
-  i18n: {
-    locales: [
-        { code: 'ar', iso: 'ar-SA',  dir: 'rtl' },
-        { code: 'en', iso: 'en-US',             },
-        { code: 'fr', iso: 'fr-FR',             },
-        { code: 'es', iso: 'es-ES',             },
-        { code: 'ru', iso: 'ru-RU',             },
-        { code: 'zh', iso: 'zh-CN',             },
-    ],
+  i18n: { locales,
+    // locales: [
+    //     { code: 'ar', iso: 'ar-SA',  dir: 'rtl' },
+    //     { code: 'en', iso: 'en-US',             },
+    //     { code: 'fr', iso: 'fr-FR',             },
+    //     { code: 'es', iso: 'es-ES',             },
+    //     { code: 'ru', iso: 'ru-RU',             },
+    //     { code: 'zh', iso: 'zh-CN',             },
+    // ],
     defaultLocale: 'en',
     fallbackLocale: 'en',
-    locale: 'en',
+    // locale: 'en',
     detectBrowserLanguage : {
         alwaysRedirect: true,
     },
@@ -66,7 +68,7 @@ export default defineNuxtConfig({
     // },
     // strictMessage: false,
     // escapeHtml:true,
-    // strategy: "prefix",
+    strategy: "prefix_except_default",
     // vueI18n:'./config/i18n.config.ts',
   },
   pinia: { autoImports: [ 'defineStore','useStore', 'storeToRefs'], },
