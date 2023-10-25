@@ -1,5 +1,5 @@
 <template>
-    <ul class="nav bg-dark w-100x d-none d-sm-flex">
+    <ul class="nav bg-dark w-100 d-none d-sm-flex">
         <li class="active nav-item" data-pgc-field="un3-bioland-header-nav-mediahome"><a class="nav-link" href="index.html">Home</a>
         </li>
 

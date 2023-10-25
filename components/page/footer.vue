@@ -18,9 +18,13 @@
                 <div class="container p-0 pl-md-3 pr-md-3">
                     <div class="row align-items-center w-100x">
                         <div class="align-items-center col-12 col-sm-8 d-flex">
-                            <NuxtLink class="logo navbar-btn pull-left flip" to="https://www.un.org/" :title="t('United Nations')"></NuxtLink>
-                            <NuxtLink class="sublogo navbar-btn pull-left flip" to="https://www.un.org/" :title="t('United Nations')"></NuxtLink>
-                            <NuxtLink class="navbar-brand pull-left flip" to="https://www.cbd.int/" :title="t('Convention on Biological Diversity')">{{t('Convention on')}}<br/>{{t('Biological Diversity')}}</NuxtLink>
+                            <NuxtLink class="logo navbar-btn" to="https://www.un.org/" :title="t('United Nations')" target="_blank" external>
+                                <NuxtImg   src="/images/un-logo-white-en.svg" />
+                            </NuxtLink>
+                            <NuxtLink  to="https://www.un.org/" :title="t('United Nations')" target="_blank" external>
+                                <NuxtImg  class="sublogo  me-2" src="/images/cbd-logo-white.svg" />
+                            </NuxtLink>
+                            <NuxtLink  class="navbar-brand" to="https://www.cbd.int/" :title="t('Convention on Biological Diversity')" target="_blank" external>{{t('Convention on')}}<br/>{{t('Biological Diversity')}}</NuxtLink>
                         </div>
                         <div class="col-12 col-sm-4 d-flex justify-content-end">
                             <ul class="nav">
@@ -54,23 +58,83 @@
 
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@import "@/assets/scss/variables.scss";
+  .navbar-btn {
+    display: inline-block;
+    margin: 1.5rem 1.5rem 1.5rem 0;
+    padding-right: 1.5rem;
+  }
 .logo {
-    min-width: 10rem;
-    height: 3rem;
-    background-position: left center !important;
-    background-image: url(@/assets/un-logo-white-en.svg);
-    background-size: contain;
-    background-repeat: no-repeat;
+    max-height: 3rem;
     border-right: 1px solid white;
 }
 .sublogo {
-    min-width: 2.5rem;
     height: 3rem;
-    background-position: left center !important;
-    background-image: url(@/assets/cbd-logo-white.svg);
-    background-size: contain;
-    background-repeat: no-repeat;
   }
 
+
+.footer-sitemap li {
+  font-size: 0.875rem;
+  line-height: 1rem;
+  padding-bottom: 1rem;
+}
+
+.footer-sitemap li:last-child {
+  padding-bottom: 0;
+}
+
+.footer-sitemap li a,
+.footer-links a {
+  text-decoration: none;
+  color: $gray-700;
+}
+
+.footer-sitemap .col-6 {
+  border-left: 0.5px solid $gray-700;
+}
+
+.footer-sitemap .col-6:first-child {
+  border-left: 0;
+}
+
+@media (max-width: 991.98px) {
+
+  .footer-sitemap .col-6 {
+      border-left: 0;
+  }
+}
+  .footer-links {
+  border-top: .25rem solid $primary;
+  padding-bottom: .5rem;
+
+  .navbar-brand {
+    color: $gray-300;
+    font-weight: 500;
+    font-size: 1rem;
+    line-height: 1.1rem;
+    text-decoration: none;
+    padding: 0;
+  }
+
+
+
+
+
+  .nav-item > .nav-link {
+    color: $gray-400;
+    padding: .5rem .66rem;
+  }
+}
+
+.footer-sitemap li a:hover,
+.footer-links a:hover,
+.footer-links .nav-item > .nav-link:hover {
+  color: $black;
+  text-decoration: underline;
+}
+.footer-links .nav-item>.nav-link {
+    color: hsla(0,0%,100%,.67);
+    padding: 0.5rem 0.66rem;
+}
 </style>

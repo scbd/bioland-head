@@ -1,22 +1,26 @@
 import { defineStore } from 'pinia'
 import { getBiolandSiteIdentifier } from "~/util";
 
-const actions = { set, initialize, getSiteDefaultLocale, watchLocaleChange, getSiteConfig, getDefinedName  }
 
-export const useSiteStore = defineStore('site', { state, actions })
+const actions = { getHost, set, initialize, getSiteDefaultLocale, watchLocaleChange, getSiteConfig, getDefinedName }
+const getters = { drupalApiUriBase, host, localizedHost };
+
+
+
+export const useSiteStore = defineStore('site', { state, actions, getters })
 
 const initState = { 
-                    locale                   : undefined,
-                    identifier               : undefined,
-                    pagePath                 : undefined,
-                    defaultLocale            : undefined,
-                    gaiaApi                  : undefined,
-                    drupalMultisiteIdentifier: undefined,
-                    baseHost                 : undefined,
-                    logo : undefined,
-                    hasFlag : undefined,
-                    config:     undefined,
-                    name:       undefined,
+                    locale                    : undefined,
+                    identifier                : undefined,
+                    pageIdentifiers           : undefined,
+                    defaultLocale             : undefined,
+                    gaiaApi                   : undefined,
+                    drupalMultisiteIdentifier : undefined,
+                    baseHost                  : undefined,
+                    logo                      : undefined,
+                    hasFlag                   : undefined,
+                    config                    : undefined,
+                    name                      : undefined,
                 }
 
 function state(){ return initState }
@@ -44,6 +48,7 @@ async function initialize(nuxtApp){
     this.set('defaultLocale',await this.getSiteDefaultLocale());
 
     const config = await this.getSiteConfig();
+
     this.set('config',await this.getSiteConfig());
     this.set('logo',getLogoUri(config));
     this.set('name',await this.getDefinedName());
@@ -72,7 +77,7 @@ async function getSiteDefaultLocale(){
 
     return data.value
 }
-//https://api.cbddev.xyz/api/v2023/drupal/multisite/bl2/configs/seed
+
 
 async function getSiteConfig(){
     const { identifier, gaiaApi, drupalMultisiteIdentifier } = this;
@@ -108,3 +113,39 @@ async function getDefinedName () {
 
 // TODO
 // get country name from server translated
+
+function host(){
+    return this.getHost(true)
+}
+function localizedHost(){
+    return this.getHost()
+}
+
+function drupalApiUriBase(){
+    return this.getHost()
+}
+
+function getHost(ignoreLocale = false){
+    const { locale, identifier, baseHost, defaultLocale } = this;
+    
+    const pathLocale = ignoreLocale? '' : drupalizePathLocales(locale, defaultLocale);
+
+    return `https://${encodeURIComponent(identifier)}${encodeURIComponent(baseHost)}${pathLocale}`;
+}
+
+const drupalLocaleMap = new Map([['/zh','/zh-hans']]);
+
+function drupalizePathLocales(locale, defaultLocale){
+
+    const pathPreFix = locale === defaultLocale?.locale? '' : `/${locale}`;
+
+    if(!pathPreFix) return pathPreFix;
+
+    const keys = drupalLocaleMap.keys();
+
+    for (const aKey of keys)
+        if(pathPreFix.startsWith(aKey))
+            return pathPreFix.replace(aKey,drupalLocaleMap.get(aKey))
+
+    return pathPreFix;
+}

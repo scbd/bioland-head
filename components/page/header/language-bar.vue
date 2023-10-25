@@ -1,14 +1,14 @@
 <template>
-    <div class="container-fluid brandbar-header fixed-top d-none d-md-block">
-        <div class="container p-0 pl-sm-3 pr-sm-3">
+    <div class="brandbar-header fixed-top d-none d-md-block">
+        <div class="container py-0 pl-sm-3 pr-sm-3">
             <div class="row">
                 <div class="col-8 col-sm-4 d-flex align-items-center">
-                    <NuxtLink class="navbar-brand" to="https://www.cbd.int">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</NuxtLink>
+                    <NuxtLink class="navbar-brand" to="https://www.cbd.int" external target="_blank">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</NuxtLink>
                 </div>
                 <div class="col-4 col-sm-8 d-flex justify-content-end">
                     <ul class="nav" >
                         <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
-                            <NuxtLink class="nav-link" :to="switchLocalePath(aMenu.code)">{{aMenu.nativeName}}</NuxtLink>
+                            <NuxtLink class="nav-link" active-class="lang-active" :to="switchLocalePath(aMenu.code)">{{aMenu.nativeName}}</NuxtLink>
                         </li>
 
                         <li v-if="otherMenus.length" @click.stop.prevent="toggle" class="nav-item dropdown d-block " v-click-outside="close">
@@ -102,7 +102,12 @@
             this.otherMenus = this.menus.slice(this.limit);
     }
 </script>
+
 <style scoped>
+
+.lang-active {
+    font-weight: bolder !important;
+}
 .brandbar-header {
   background: var(--bs-gray-200);
   border-bottom: .25rem solid var(--bs-blue);
@@ -116,4 +121,54 @@
   /* // padding-top: .5rem; */
   text-decoration: none;
 }
+
+</style>
+<style lang="scss" scoped>
+@import "@/assets/scss/variables.scss";
+.brandbar-header .nav-item,
+.footer-links .nav-item {
+  font-size: .875rem;
+}
+
+.brandbar-header .nav-item > .nav-link {
+  font-weight: 500;
+  color: $gray-700;
+  padding: .5rem .66rem;
+}
+
+.brandbar-header .nav-item.active > .nav-link {
+  font-weight: 700;
+  color: $body-color;
+}
+
+.brandbar-header .nav,
+.footer-links .nav {
+  margin-left: -.66rem;
+  margin-right: -.66rem;
+}
+
+.footer-links .nav {
+  justify-content: flex-end;
+}
+
+.brandbar-header a:hover,
+.brandbar-header .nav-item > .nav-link:hover {
+  color: $black;
+  text-decoration: underline;
+}
+
+.nav {
+  a {
+      color: var(--bs-gray-300);
+
+      transition: color .5s;
+  }
+
+  a:hover {
+      color: white;
+  }
+}
+
+
+
 </style>

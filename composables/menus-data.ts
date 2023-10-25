@@ -17,10 +17,10 @@ async function getMenuData(menuName: string){
     const pathLocale = pathPreFix === '/zh'? '/zh-hans' : pathPreFix;
 
     const uri = `https://${identifier}${baseHost}${pathLocale}/system/menu/${encodeURIComponent(menuName)}/linkset`;
-consola.info('menu uri', uri)
-    const { data, error } = await useFetch(uri, { mode: 'cors' });
 
-    return data.value?.linkset? formatMenus(data.value.linkset[0].item) : [];
+    const data = await $fetch(uri, { mode: 'cors' });
+
+    return data?.linkset? formatMenus(data.linkset[0].item) : [];
 }
 
 

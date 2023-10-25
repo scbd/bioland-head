@@ -1,13 +1,5 @@
-
-
-export const usePageData = (path) => {
-    const pagePath       = path || useState('pagePath');
-
-
-    if(!pagePath.value) throw new Error('State pagePath is not set');
-
-    return getPageData(pagePath);
-}
+import {  useSiteStore } from "~/stores/site";
+import {  usePageStore } from "~/stores/page";
 
 export const useHasHeroImage = async (path) => {
     const { field_attachments:fieldAttachments } = useState('pageData').value || usePageData(path);
@@ -21,63 +13,72 @@ export const useHasHeroImage = async (path) => {
     return hasPageHeroImage;
 }
 
-export async function getPageData({ uuid, id, type, bundle } ){
-    const siteIdentifier = useState('siteIdentifier');
-    const { baseHost }   = useRuntimeConfig().public;
-
-    // const { uuid, id, type, bundle } = await usePageIdentifiers(requestedPath);
+export async function usePageData(){
+    const { localizedHost: host }  = useSiteStore();
+    const { uuid,  type, bundle } = await getPageIdentifiers();
 
     const query = getSearchParams(type, bundle);
+    const uri   = `${host}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
-    const uri = `https://${encodeURIComponent(siteIdentifier.value)}${baseHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
+    const { data } = await $fetch(uri, { query });
 
-    return uri
-    // const { data, error } = await useFetch(uri, { query });
+    await getPageAttachments(data)
 
-    // //getPageAttachments(data.value.data)
-    // consola.error(data.value.data);
-    // return data.value.data
+
+    return data
 }
 
-export async function usePageIdentifiers(requestedPath){
-    
-    const siteIdentifier = useState('siteIdentifier');
-    const { baseHost }   = useRuntimeConfig().public;
 
-    const uri = `https://${siteIdentifier.value}${baseHost}/router/translate-path?path=${encodeURIComponent(requestedPath.value)}`;
+async function getPageIdentifiers(){
+    const { host } = useSiteStore();
+    const { path } = usePageStore();
 
-    const { data, error } = await useFetch(uri, {mode: 'cors'})
-    const { uuid, id, type, bundle } = data?.value?.entity || {};
+    const uri = `${host}/router/translate-path?path=${encodeURIComponent(cleanToPath(path))}`;
 
-    if(error?.value) throw new Error(`Error occurred fetching page uuid for path ${requestedPath.value}`);
+    const data = await $fetch(uri, {mode: 'cors'})
+    const { uuid, id, type, bundle } = data?.entity || {};
 
-    return { uuid, id, type, bundle, requestedPath };
+    // if(error?.value) throw new Error(`Error occurred fetching page uuid for path ${pagePath}`);
+
+    return { uuid, id, type, bundle, pagePath:path, path };
 }
 
 
 async function getPageAttachments(data){
+    const allRequests =[];
     const { field_attachments, id } = data;
-    const uriStart = getApiUriStart();
+    const { localizedHost: uriStart }  = useSiteStore();
+
 
     if(!field_attachments || !field_attachments.length) return;
 
     for(const attachment of field_attachments){
-        const { type, thumbnail, field_media_document, field_media_image, field_media_video, field_media_audio } = attachment;
+        const { thumbnail, field_media_document, field_media_image, field_media_image_1 } = attachment;
         
-        useFetch(`${uriStart}file/file/${thumbnail.id}`, { query: {jsonapi_include: 1}, mode: 'cors' })
-            .then(({ data })=> attachment.thumbnail = { ...thumbnail, ...data.value.data })
-//TODO - media field main fields
+        if(thumbnail?.id)
+            allRequests.push($fetch(`${uriStart}/jsonapi/file/file/${thumbnail.id}`, { query: {jsonapi_include: 1}, mode: 'cors' })
+                .then(({ data })=> attachment.thumbnail = { ...thumbnail, ...data }))
 
+        if(field_media_document?.id)
+            allRequests.push($fetch(`${uriStart}/jsonapi/file/file/${field_media_document.id}`, { query: {jsonapi_include: 1}, mode: 'cors' })
+                .then(({ data })=> attachment.field_media_document = { ...field_media_document, ...data }))
+
+        if(field_media_image?.id)
+            allRequests.push($fetch(`${uriStart}/jsonapi/file/file/${field_media_image.id}`, { query: {jsonapi_include: 1}, mode: 'cors' })
+                .then(({ data })=> attachment.field_media_image = { ...field_media_image, ...data }))
+
+        if(field_media_image_1?.id)
+            allRequests.push($fetch(`${uriStart}/jsonapi/file/file/${field_media_image_1.id}`, { query: {jsonapi_include: 1}, mode: 'cors' })
+                .then(({ data })=> attachment.field_media_image_1 = { ...field_media_image_1, ...data }))
+        
     }
-    const { data: attachments } = await useFetch(field_attachments.links.related.href);
+    await Promise.all(allRequests);
 
-    return attachments;
+    return data;
 }
 
 function getSearchParams(type, bundle){
-    consola.warn(type);
     const search = {jsonapi_include: 1};
-
 
     if(type === 'node' && bundle === 'content')  setContentSearchParams(search);
 
@@ -89,9 +90,15 @@ function setContentSearchParams(search){
 }
 
 
-function getApiUriStart(){
-    const siteIdentifier = useState('siteIdentifier');
-    const { baseHost }   = useRuntimeConfig().public;
 
-    return `https://${encodeURIComponent(siteIdentifier.value)}${baseHost}/jsonapi/`;
+function cleanToPath(path){
+    const pathParts = path.split('/');
+
+    if(pathParts[1] === 'zh') pathParts[1] = 'zh-hans';
+
+    if(pathParts[1] === 'search') return '/search';
+    
+    if(pathParts[2] === 'search') return `/${pathParts[1]}/${pathParts[2]}`;
+
+    return pathParts.join('/');
 }
