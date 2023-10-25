@@ -14,15 +14,21 @@
     "@nuxt/devtools": "latest",
     "@nuxtjs/i18n-edge": "^8.0.0-rc.4-28240475.595f9ca",
     "nuxt": "^3.7.4",
+    "nuxt-delay-hydration": "^1.2.3",
+    "nuxt-purgecss": "^2.0.0",
     "sass": "~1.64.2",
     "sass-loader": "^13.3.2"
   },
   "dependencies": {
+    "@nuxt/image": "^1.0.0",
     "@pinia/nuxt": "^0.4.11",
+    "@vueuse/core": "^10.5.0",
     "bootstrap": "^5.3.1",
+    "camelcase-keys": "^9.1.2",
     "click-outside-vue3": "^4.0.1",
     "consola": "^3.2.3",
     "lodash.clonedeep": "^4.5.0",
+    "lodash.sample": "^4.2.1",
     "nuxt-viewport": "^2.0.6",
     "pinia": "^2.1.6"
   }
