@@ -9,11 +9,15 @@ export default {
     props:{
         href: String,
         title: String,
-        target: Array,
+        target: String,
         class: String,
         hierarchy: Array,
         'machine-name': Array,
-        children: Array
+        children: Array,
+        machineName: String,
+        path: String,
+        id: String,
+        drupalInternalId: Number
     },
     computed: { isExternal },
     setup
@@ -24,7 +28,7 @@ function setup(props) {
     const   localePath     = useLocalePath();
     const { title, href, target:targets } = toRefs(props);
 
-    const targetValue = targets?.value?.length? targets.value[0] : '';
+    const targetValue = targets;
 
     return { localePath, title, href, targetValue }
 }

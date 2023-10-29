@@ -475,4 +475,8 @@ export default [
         "name": "Chinese, Traditional",
         "nativeName": "繁體中文"
     }
-]
+].map((l)=> {
+    const rtlLangs = [ "am","ar","az", "he", "fa", "ur", 'mv', 'ku' ];
+
+    return { ...l, iso:l.code, dir: rtlLangs.includes(l.code)? 'rtl' : 'ltr'}
+})

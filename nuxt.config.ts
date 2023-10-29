@@ -6,10 +6,13 @@ const css  =   [ '@/assets/custom.scss' ]
 
 export default defineNuxtConfig({
   devtools: { enabled: true },
-  debug: true, 
+  debug: false, 
   css,
   runtimeConfig:{
+    apiUser: process.env.API_USER,
+    apiUserPass: process.env.API_USER_PASS,
     public: {
+      locales,
       baseURL: '',
       env: 'production',
       baseHost:'.chm-cbd.net',
@@ -51,7 +54,7 @@ export default defineNuxtConfig({
 
     fallbackBreakpoint: 'lg'
   },
-  i18n: { locales,
+  i18n: { missingWarn: false, locales,
     // locales: [
     //     { code: 'ar', iso: 'ar-SA',  dir: 'rtl' },
     //     { code: 'en', iso: 'en-US',             },

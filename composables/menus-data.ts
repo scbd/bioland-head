@@ -46,12 +46,17 @@ function embedChildren(menus: Array, menusClone: Array){
 
     for (const aMenu of menus) {
         const children = [];
+
+        if(Array.isArray(aMenu.class)) aMenu.class = aMenu.class[0].split(' ');
         for (const aMenuClone of menusClone) {
             if((aMenuClone.hierarchy.length - aMenu.hierarchy.length) != 1) continue;
 
+            const aMenuCloneHierarchy = aMenuClone.hierarchy.join('.');
+            const aMenuHierarchy = aMenu.hierarchy.join('.');
             const index = aMenu.hierarchy.length - 1;
 
-            if(aMenuClone.hierarchy[index] !== aMenu.hierarchy[index]) continue;
+           if(!aMenuCloneHierarchy.startsWith(aMenuHierarchy)) continue;
+           //if(Array.isArray(aMenuClone.class)) aMenuClone.class = aMenuClone.class[0].split(' ');
 
             children.push(aMenuClone);
         }

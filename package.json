@@ -8,6 +8,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
+    "clean": "nuxt cleanup",
+    "analyze":"nuxt analyze",
     "clean-reinstall": "if test -f node_modules; then rm -rf node_modules; fi &&  yarn install --force;"
   },
   "devDependencies": {
@@ -25,11 +27,13 @@
     "@vueuse/core": "^10.5.0",
     "bootstrap": "^5.3.1",
     "camelcase-keys": "^9.1.2",
+    "change-case": "^5.1.2",
     "click-outside-vue3": "^4.0.1",
     "consola": "^3.2.3",
     "lodash.clonedeep": "^4.5.0",
     "lodash.sample": "^4.2.1",
     "nuxt-viewport": "^2.0.6",
-    "pinia": "^2.1.6"
+    "pinia": "^2.1.6",
+    "superagent": "^8.1.2"
   }
 }

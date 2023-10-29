@@ -9,12 +9,13 @@
             
             <PageHeaderTitleSearch/> 
 
-            <div class="container-fluid">
-                <div class="db text-muted">Mega Menu <a href="https://scbd.atlassian.net/browse/BL-16" target="_blank">BL-16</a></div>
+            
+                <!-- <div class="db text-muted">Mega Menu <a href="https://scbd.atlassian.net/browse/BL-16" target="_blank">BL-16</a></div> -->
 
-                <!-- <PageHeaderMegaMenu/>   -->
-            </div>
+            
+                
         </div> 
+        <PageHeaderMegaMenu/> 
         <PageHeaderHeroImage :key="path"/>
     </header>
 </template>
@@ -23,7 +24,7 @@ const { path }= useRoute();
 </script>
 <style lang="scss" scoped>
 header {
-    overflow: clip;
+    // overflow: clip;
     position: relative;
 }
 // UN3 "Masthead": Brand Bar, Header, and Menu

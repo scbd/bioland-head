@@ -23,13 +23,17 @@ function set(name, value){
     return this;
 }
 
-function loadAllMenus(){
-    const allPromises = [];
+function loadAllMenus(menus){
+    this.set('footer', menus.footer);
+    this.set('main', menus.main);
+    this.set('footerCredits', menus.footerCredits);
+    this.set('languages', menus.languages);
+    // const allPromises = [];
 
-    allPromises[0] = useFooterMenus().then((menus) => this.set('footer', menus) );
-    allPromises[1] = useMainMenus().then((menus) => this.set('main', menus));
-    allPromises[2] = useFooterCreditsMenus().then((menus) => this.set('footerCredits', menus));
-    allPromises[3] = useLanguageMenus().then((menus) => this.set('languages', menus));
+    // allPromises[0] = useFooterMenus().then((menus) => this.set('footer', menus) );
+    // allPromises[1] = useMainMenus().then((menus) => this.set('main', menus));
+    // allPromises[2] = useFooterCreditsMenus().then((menus) => this.set('footerCredits', menus));
+    // allPromises[3] = useLanguageMenus().then((menus) => this.set('languages', menus));
 
-    return Promise.all(allPromises);
+    // return Promise.all(allPromises);
 }

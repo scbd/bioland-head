@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { getBiolandSiteIdentifier } from "~/util";
 
 
-const actions = { getHost, set, initialize, getSiteDefaultLocale, watchLocaleChange, getSiteConfig, getDefinedName }
+const actions = { getHost, set, initialize, getSiteDefaultLocale, watchLocaleChange, getSiteConfig, getDefinedName}
 const getters = { drupalApiUriBase, host, localizedHost };
 
 
@@ -21,6 +21,7 @@ const initState = {
                     hasFlag                   : undefined,
                     config                    : undefined,
                     name                      : undefined,
+                    hasNationalReportSix      : undefined,
                 }
 
 function state(){ return initState }
@@ -52,6 +53,7 @@ async function initialize(nuxtApp){
     this.set('config',await this.getSiteConfig());
     this.set('logo',getLogoUri(config));
     this.set('name',await this.getDefinedName());
+   // await this.getNationalReportSixUrl()
 }   
 
 function watchLocaleChange(nuxtApp, functions = []){
@@ -93,23 +95,22 @@ function getLogoUri(config){
 
     if(config.logo)  return config.logo;
 
-    if(hasCountry) return `https://seed.chm-cbd.net/sites/default/files/images/flags/flag-${hasCountry}.png`
+    if(hasCountry) return `https://www.cbd.int/images/flags/96/flag-${hasCountry}-96.png`
 
     return 'https://seed.chm-cbd.net/sites/default/files/images/country/flag/xx.png'
 }
 
 async function getDefinedName () {
-    const { locale, identifier,   baseHost, defaultLocale } = this;
-    const pathPreFix = locale === defaultLocale?.locale? '' : `/${locale}`;
-    const pathLocale = pathPreFix === '/zh'? '/zh-hans' : pathPreFix;
+    const host  = this.localizedHost;
     const query = {jsonapi_include: 1};
-    const uri = `https://${encodeURIComponent(identifier)}${baseHost}${pathLocale}/jsonapi/site/site?api-key=636afe3fa6d502d3d7b01996b50add18`
+    const uri   = `${host}/jsonapi/site/site?api-key=636afe3fa6d502d3d7b01996b50add18`
 
     const resp = await $fetch(uri,{query})
     const name = resp?.data?.name
 
     return name === '_'? '' : name;
 }
+
 
 // TODO
 // get country name from server translated

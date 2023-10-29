@@ -1,0 +1,233 @@
+import clone from 'lodash.clonedeep';
+
+export async function useMenus({ identifier, pathPreFix }){
+    const menuNames = ['main', 'footer', 'footer-credits'];
+    const menuPromises = [];
+    const menus = {};
+
+    for (const menuName of menuNames) {
+        const menuPromise = getMenuData(menuName,{ identifier, pathPreFix } )
+                            .then((menusData) => menus[menuName] = menusData);
+
+        menuPromises.push(menuPromise);
+
+        
+    }
+    await Promise.all(menuPromises);
+    const [ cleanMenus, languages] = await Promise.all( [addMissingData(menus, { identifier, pathPreFix } ), getInstalledLanguages({ identifier, pathPreFix })])
+
+    // for (const iterator of object) {
+        
+    // }
+    await getThumbNails(cleanMenus, { identifier, pathPreFix })
+    return { ...cleanMenus, languages };
+}
+
+async function getThumbNails(menus, { identifier, pathPreFix}){
+    const internalUrls = getInternalUrlsRecursive(menus.main);
+
+const pagesPromises = []
+    for (const aMenu of internalUrls) {
+        pagesPromises.push(getPageThumb({ identifier, pathPreFix, path: aMenu.href })
+        .then((thumb) => aMenu.thumb = thumb))
+        
+    }
+console.time('pages')
+    const pages = await Promise.all(pagesPromises)
+    console.timeEnd()
+    console.log(internalUrls.length)
+
+}
+
+function getInternalUrlsRecursive(menus,{internalUrlsArr}={}){
+    const internalUrls = internalUrlsArr? internalUrlsArr : [];
+
+    for (const aMenu of menus) {
+        if(aMenu.children) getInternalUrlsRecursive(aMenu.children, {internalUrlsArr:internalUrls})
+        if(aMenu?.path?.includes('entity')) internalUrls.push(aMenu)
+    }
+    return internalUrls
+}
+const findFromRawMenus = (aMenu )=>({ link, title, alias  })=>{
+
+    if(aMenu.href === link.uri && aMenu.title === title) return true
+    if(aMenu.href === link.alias && aMenu.title === title) return true
+
+    return false
+}
+
+async function addMissingData(menus, { identifier, pathPreFix }){
+    const rawMenus =  await getMenusFromApiPager ({ identifier, pathPreFix });
+    
+    for (const menuName in menus) {
+        const rawMenuSet = rawMenus.filter((l) => l.menu_name === menuName)
+
+        addMissingDataRecursive(menus[menuName], { identifier, pathPreFix, rawMenus:rawMenuSet, menuName  })
+    }
+
+    return menus
+}
+
+function addMissingDataRecursive(menus, { identifier, pathPreFix, rawMenus, menuName  }){
+
+        for (const aMenu of menus) {
+            if(aMenu.children) aMenu.children=addMissingDataRecursive(aMenu.children, { identifier, pathPreFix, rawMenus, menuName  })
+
+            const rawMenu = rawMenus.find(findFromRawMenus(aMenu))
+            if(rawMenu?.title==='Biodiversity Facts')
+
+            if(!rawMenu) continue;
+            if(rawMenu?.description) aMenu.description = rawMenu.description;
+            if(rawMenu?.link?.uri) aMenu.path = rawMenu.link.uri;
+            if(rawMenu?.id) aMenu.id = rawMenu.id;
+            if(rawMenu?.drupal_internal__id) aMenu.drupalInternalId = rawMenu.drupal_internal__id;
+        }
+
+    return menus
+}
+
+async function getPathAliasFromApiPager ({ identifier, pathPreFix }, next){
+    try {
+        const { baseHost }   = useRuntimeConfig().public;
+
+        const $http = await useDrupalLogin(identifier);
+
+        const uri = next || `${identifier}${baseHost}${pathPreFix}/jsonapi/path_alias/path_alias`
+
+        const { body }  = await $http.get(uri).withCredentials().accept('json');
+
+        const { links, data } = body
+
+        if(nextUri(links)) return [ ...data, ...await getPathAliasFromApiPager({ identifier, pathPreFix }, nextUri(links)) ]
+
+        return data
+    }
+    catch(e){
+        console.error('Menus.getPathAliasFromApiPager - recursive', e)
+    }
+}
+
+export async function getMenusFromApiPager ({ identifier, pathPreFix, pathAlias }, next){
+    try {
+        const paths = pathAlias? pathAlias : await getPathAliasFromApiPager({ identifier, pathPreFix })
+
+        const { baseHost }   = useRuntimeConfig().public;
+
+        const $http = await useDrupalLogin(identifier)
+
+        const uri = next || `${identifier}${baseHost}${pathPreFix}/jsonapi/menu_link_content/menu_link_content`
+
+        const { body }  = await $http.get(uri).withCredentials().accept('json')
+
+        const { links, data } = body
+
+        for (const aMenu of data) {
+            const path = paths.find(({ path:p }) => aMenu.link.uri.includes(p.substring(1)) )
+
+            if(path) aMenu.link.alias = path.alias
+        }
+
+        if(nextUri(links)) return [ ...data, ...await getMenusFromApiPager({ identifier, pathPreFix, pathAlias:paths }, nextUri(links)) ]
+
+
+        return data
+    }
+    catch(e){
+        console.error('Menus.getMenusFromApiPager - recursive', e)
+    }
+}
+
+async function getMenuData(menuName, { identifier, pathPreFix }){
+    const { baseHost } = useRuntimeConfig().public;
+    const   pathLocale = pathPreFix === '/zh'? '/zh-hans' : pathPreFix;
+
+    const uri = `https://${identifier}${baseHost}${pathLocale}/system/menu/${encodeURIComponent(menuName)}/linkset`;
+
+    const data = await $fetch(uri, { mode: 'cors' });
+
+    return data?.linkset? formatMenus(data.linkset[0].item) : [];
+}
+
+
+
+function formatMenus(menuData){
+    const menusClone = clone(splitClasses(menuData));
+    const menus = [];
+
+    for (const aMenu of menusClone) {
+        
+        if(aMenu.hierarchy.length>1) continue;
+
+        menus.push(aMenu)
+    }
+    
+    menus.sort(sortMenus);
+
+    embedChildren(menus, menusClone)
+
+    return menus;
+}
+async function addDescriptions(menus, { identifier, pathPreFix, menuName }){
+    const rawMenus = (await getMenusFromApiPager ({ identifier, pathPreFix })).filter((l) => l.menu_name === menuName)
+                        .map(({ description, title, link })=>({ description, title, link: link.uri.replace('internal:', '') }))
+
+    // for (const aMenu of menus) {
+
+    // }
+
+}
+
+function splitClasses(menus){
+
+    for (const aMenu of menus){
+        if(Array.isArray(aMenu.class)) aMenu.class = aMenu.class[0].split(' ');
+        if(Array.isArray(aMenu['machine-name']))    aMenu.machineName = aMenu['machine-name'][0];
+        if(Array.isArray(aMenu.target))          aMenu.target = aMenu.target[0];
+        delete(aMenu['machine-name']) ;
+        
+    }
+    return menus;
+}
+
+function embedChildren(menus, menusClone){
+
+    for (const aMenu of menus) {
+        const children = [];
+
+        //if(Array.isArray(aMenu.class)) aMenu.class = aMenu.class[0].split(' ');
+        for (const aMenuClone of menusClone) {
+            if((aMenuClone.hierarchy.length - aMenu.hierarchy.length) != 1) continue;
+
+            const aMenuCloneHierarchy = aMenuClone.hierarchy.join('.');
+            const aMenuHierarchy = aMenu.hierarchy.join('.');
+
+           if(!aMenuCloneHierarchy.startsWith(aMenuHierarchy)) continue;
+           //if(Array.isArray(aMenuClone.class)) aMenuClone.class = aMenuClone.class[0].split(' ');
+
+            children.push(aMenuClone);
+        }
+        if(!children.length) continue;
+
+        children.sort(sortMenus);
+
+        aMenu.children = children;
+        
+        embedChildren(aMenu.children, menusClone);
+    }
+}
+
+function sortMenus(x,y){
+    const index = x.hierarchy.length - 1;
+
+    if (x.hierarchy[index] > y.hierarchy[index])
+        return 1;
+    if (x.hierarchy[index] < y.hierarchy[index])
+        return -1;
+
+    return 0;
+}
+
+function nextUri ({ next } = {}){
+    if(!next) return
+    return next.href
+}
