@@ -1,5 +1,6 @@
 <template>
-    <IconsSymbols v-once/>
+    <IconSymbols v-once/>
+    <NuxtLoadingIndicator />
     <PageHeader/>
     <!-- <PageEditorControls  /> -->
     <main class="debug-main">
