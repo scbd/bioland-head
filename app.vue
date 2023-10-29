@@ -1,5 +1,5 @@
 <template>
-    <Icons v-once/>
+    <IconsSymbols v-once/>
     <PageHeader/>
     <!-- <PageEditorControls  /> -->
     <main class="debug-main">

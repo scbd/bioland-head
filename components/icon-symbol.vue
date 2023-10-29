@@ -42,7 +42,7 @@
   </svg>
 </template>
 
-<i18n src="@/i18n/dist/components/icons.json"></i18n>
+<i18n src="@/i18n/dist/components/icon-symbols.json"></i18n>
 <script>
 
 import { useI18n } from "vue-i18n"
