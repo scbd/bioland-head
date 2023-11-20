@@ -1,19 +1,19 @@
 <template>
-    <div class="container position-relative mega">
+    <div class="container position-relative mega d-none d-md-block">
         <div class="cont-x">
-            <nav v-on:click="test" class="navbar nav bg-dark w-100 pt-0">
+            <nav  class="navbar nav bg-dark w-100 pt-0">
                 <ul class="nav">
                     <li @click.stop="toggle(index)" v-for="(aMenu,index) in menus" :key="index" :class="{'bg-primary': aMenu.class?.includes('login')}" class="nav-item text-nowrap"  >
                         <NuxtLink  :class="aMenu.class" class="nav-link" to="#" :title="aMenu.title" >
                             {{aMenu.title}}
                         </NuxtLink>
-                        <span ref="spacers" :class="{'opacity-0':isLastSpacer(index)}" class="spacer"></span>
-                        <PageHeaderMegaMenuDropDown v-show="aMenu.children && toggles[index]" :menus="aMenu.children"  v-click-outside="unToggle"/>
+                        <span ref="spacers" :class="{ 'opacity-0': isLastSpacer(index) }" class="spacer"></span>
+                        <LazyPageHeaderMegaMenuDropDown v-if="aMenu.children && toggles[index]" :menus="aMenu.children"  v-click-outside="unToggle"/>
                     </li>
                 </ul>
             </nav>
         </div>
-    </div> 
+    </div>
 </template>
 <script>
 import { useElementBounding } from '@vueuse/core'
@@ -25,14 +25,12 @@ import { useMenusStore } from "~/stores/menus";
     }
 
     function setup() {
-        const spacers  = ref(undefined);
-        const spacersY = ref([]       );
-        // const menus    = ref(undefined);
-        const toggles  = ref([]);
-
+        const spacers   = ref(undefined);
+        const spacersY  = ref([]);
+        const toggles   = ref([]);
         const menuStore = useMenusStore();
+        
         const { main: menus } = storeToRefs(menuStore);
-        // useMainMenus().then((data) => menus.value = data);
 
         const stop = watch(spacers, async (newSpacers) => {
                                                             if(!newSpacers) return;
@@ -78,6 +76,7 @@ import { useMenusStore } from "~/stores/menus";
         return array.length === i+1;
     }
 </script>
+
 <style lang="scss" scoped>
 @import "@/assets/scss/variables.scss";
 

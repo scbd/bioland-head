@@ -4,12 +4,12 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev --open",
+    "dev": "nuxt cleanup && nuxt dev --open",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "clean": "nuxt cleanup",
-    "analyze":"nuxt analyze",
+    "analyze": "nuxt analyze",
     "clean-reinstall": "if test -f node_modules; then rm -rf node_modules; fi &&  yarn install --force;"
   },
   "devDependencies": {
@@ -31,8 +31,13 @@
     "click-outside-vue3": "^4.0.1",
     "consola": "^3.2.3",
     "lodash.clonedeep": "^4.5.0",
+    "lodash.isplainobject": "^4.0.6",
+    "lodash.isstring": "^4.0.1",
     "lodash.sample": "^4.2.1",
+    "luxon": "^3.4.4",
     "nuxt-viewport": "^2.0.6",
+    "param-case": "^4.0.0",
+    "pascal-case": "^4.0.0",
     "pinia": "^2.1.6",
     "superagent": "^8.1.2"
   }

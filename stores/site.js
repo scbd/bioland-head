@@ -3,7 +3,7 @@ import { getBiolandSiteIdentifier } from "~/util";
 
 
 const actions = { getHost, set, initialize, getSiteDefaultLocale, watchLocaleChange, getSiteConfig, getDefinedName}
-const getters = { drupalApiUriBase, host, localizedHost };
+const getters = { drupalApiUriBase, host, localizedHost, params, countries };
 
 
 
@@ -22,6 +22,7 @@ const initState = {
                     config                    : undefined,
                     name                      : undefined,
                     hasNationalReportSix      : undefined,
+                    redirect                  : undefined
                 }
 
 function state(){ return initState }
@@ -38,7 +39,7 @@ function set(name, value){
 }
 
 async function initialize(nuxtApp){
-    const { gaiaApi, drupalMultisiteIdentifier, baseHost }   = useRuntimeConfig().public;
+    const { gaiaApi, drupalMultisiteIdentifier, baseHost, env }   = useRuntimeConfig().public;
     const { hostname } = useRequestURL();
 
     this.set('baseHost',baseHost);
@@ -50,9 +51,11 @@ async function initialize(nuxtApp){
 
     const config = await this.getSiteConfig();
 
-    this.set('config',await this.getSiteConfig());
+    this.set('config',config);
     this.set('logo',getLogoUri(config));
     this.set('name',await this.getDefinedName());
+    this.set('redirect', env === 'production'? config.redirect : '');
+
    // await this.getNationalReportSixUrl()
 }   
 
@@ -127,13 +130,30 @@ function drupalApiUriBase(){
 }
 
 function getHost(ignoreLocale = false){
-    const { locale, identifier, baseHost, defaultLocale } = this;
     
-    const pathLocale = ignoreLocale? '' : drupalizePathLocales(locale, defaultLocale);
+    const { locale, identifier, baseHost, defaultLocale, redirect } = this;
 
-    return `https://${encodeURIComponent(identifier)}${encodeURIComponent(baseHost)}${pathLocale}`;
+    const pathLocale = ignoreLocale? '' : drupalizePathLocales(locale, defaultLocale);
+    const base       = redirect? `https://${redirect}` : `https://${encodeURIComponent(identifier)}${encodeURIComponent(baseHost)}`;
+
+    return `${base}${pathLocale}`;
 }
 
+function params(){
+    const { identifier, config, locale, defaultLocale, host, localizedHost, redirect } = this;
+    const { country, countries } = config;
+
+    return { identifier, country, locale, defaultLocale, countries, redirect, host, localizedHost };
+}
+
+function countries(){
+    const { config } = this;
+
+    const countries = config?.countries || [];
+    const country   = config?.country? [config?.country] : []
+
+    return [  ...country , ...countries ];
+}
 const drupalLocaleMap = new Map([['/zh','/zh-hans']]);
 
 function drupalizePathLocales(locale, defaultLocale){

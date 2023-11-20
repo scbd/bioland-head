@@ -9,7 +9,15 @@ const initState = {
     footer: [],
     main: [],
     footerCredits: [],
-    languages: []
+    languages: [],
+    nrSix:[],
+    nr:[],
+    nbsap:{},
+    bch:[],
+    absch:[],
+    nfps:[],
+    counts:[],
+    contentTypes:{},
 }
 
 function state(){ return initState }
@@ -23,17 +31,19 @@ function set(name, value){
     return this;
 }
 
-function loadAllMenus(menus){
-    this.set('footer', menus.footer);
-    this.set('main', menus.main);
-    this.set('footerCredits', menus.footerCredits);
-    this.set('languages', menus.languages);
-    // const allPromises = [];
+function loadAllMenus(menus = {}){
 
-    // allPromises[0] = useFooterMenus().then((menus) => this.set('footer', menus) );
-    // allPromises[1] = useMainMenus().then((menus) => this.set('main', menus));
-    // allPromises[2] = useFooterCreditsMenus().then((menus) => this.set('footerCredits', menus));
-    // allPromises[3] = useLanguageMenus().then((menus) => this.set('languages', menus));
+    this.set('footer', menus?.footer);
+    this.set('main', menus?.main);
+    this.set('footerCredits', menus['footer-credits']);
+    this.set('languages', menus?.languages);
+    this.set('absch', menus?.absch);
+    this.set('bch', menus?.bch);
+    this.set('nr', menus?.nr);
+    this.set('nrSix', menus?.nrSix);
+    this.set('nbsap', menus?.nbsap);
+    this.set('nfps', menus?.nfps);
+    this.set('counts', menus?.counts);
+    this.set('contentTypes', menus?.contentTypes);
 
-    // return Promise.all(allPromises);
 }

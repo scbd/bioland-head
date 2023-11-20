@@ -1,40 +1,49 @@
 
 
 export async function getPageData({ identifier, pathPreFix, path }){
-    const { baseHost }   = useRuntimeConfig().public;
+    const { baseHost }            = useRuntimeConfig().public;
     const { uuid,  type, bundle } = await getPageIdentifiers({ identifier, pathPreFix, path });
 
-    const query = getSearchParams(type, bundle);
-    const uri   = `https://${identifier}${baseHost}${pathPreFix}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
+    const   query  = getSearchParams(type, bundle);
+    const   uri    = `https://${identifier}${baseHost}${pathPreFix || ''}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
+    const { data } = await $fetch(uri, { query });
+
+    await getPageAttachments(data, { identifier, pathPreFix, path });
+
+    return data;
+}
+export async function getPageDates(ctx){
+    const { localizedHost }       = ctx;
+    const { uuid, type, bundle }  = await getPageIdentifiers(ctx);
+
+    const query    = getSearchParams(type, bundle);
+    const uri      = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
     const { data } = await $fetch(uri, { query });
 
-    await getPageAttachments(data,  {identifier, pathPreFix, path })
+    const { changed, created, field_start_date } = data;
 
-
-    return data
+    return { changed, created, startDate: field_start_date }
 }
 
-export async function getPageThumb({ identifier, pathPreFix, path }){
-    const { baseHost }   = useRuntimeConfig().public;
-    const { uuid,  type, bundle } = await getPageIdentifiers({ identifier, pathPreFix, path });
 
-    const query = getSearchParams(type, bundle, 'field_attachments');
-    const uri   = `https://${identifier}${baseHost}${pathPreFix}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}/field_attachments`;
+export async function getPageThumb(ctx){
+    const { localizedHost }       = ctx;
+    const { uuid, type, bundle }  = await getPageIdentifiers(ctx);
+
+    const query    = getSearchParams(type, bundle, 'field_attachments');
+    const uri      = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}/field_attachments`;
 
     const { data } = await $fetch(uri, { query });
 
-    //await getThumbFiles(data,  {identifier, pathPreFix, path })
-
-
-    return getThumbFiles(data,  {identifier, pathPreFix, path })
+    return getThumbFiles(data,  ctx)
 }
 
-async function getPageIdentifiers({ identifier, pathPreFix, path }){
-    const { baseHost }   = useRuntimeConfig().public;
+async function getPageIdentifiers({ localizedHost, path }){
 
 
-    const uri = `https://${identifier}${baseHost}${pathPreFix}/router/translate-path?path=${encodeURIComponent(cleanToPath(path))}`;
+
+    const uri = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanToPath(path))}`;
 
     const data = await $fetch(uri, { mode: 'cors' })
     const { uuid, id, type, bundle } = data?.entity || {};
@@ -44,25 +53,20 @@ async function getPageIdentifiers({ identifier, pathPreFix, path }){
     return { uuid, id, type, bundle, pagePath:path, path };
 }
 
-async function getThumbFiles(data,  {identifier, pathPreFix, path }){
+async function getThumbFiles(data,  {localizedHost, host }){
     const allRequests =[];
-
-    const { baseHost }   = useRuntimeConfig().public;
-
-    const uriStart = `https://${identifier}${baseHost}${pathPreFix}`;
-
-  
 
     const images = data.filter(({ type })=> 'media--image' === type);
     const heros = data.filter(({ type })=> 'media--hero' === type);
     const videos = data.filter(({ type })=> 'media--remote-video' === type);
+
     for(const attachment of [...images, ...heros, ...videos]){
         const { type, thumbnail } = attachment;
         
         if(thumbnail?.id){
-            const thumb = (await $fetch(`${uriStart}/jsonapi/file/file/${thumbnail.id}`, { query: {jsonapi_include: 1}, mode: 'cors' }) )?.data?.uri?.url
+            const thumb = (await $fetch(`${localizedHost}/jsonapi/file/file/${thumbnail.id}`, { query: {jsonapi_include: 1}, mode: 'cors' }) )?.data?.uri?.url
 
-            if(thumb) return thumb
+            if(thumb) return host+thumb
         }
 
 
@@ -70,7 +74,7 @@ async function getThumbFiles(data,  {identifier, pathPreFix, path }){
     }
 
 
-    return '/64x64-00000000.png';
+    return '/images/no-image.png';
 }
 
 async function getPageAttachments(data,  {identifier, pathPreFix, path }){
@@ -111,7 +115,8 @@ function getSearchParams(type, bundle, prop){
     const search = {jsonapi_include: 1};
 
     if(type === 'node' && bundle === 'content' && !prop)  setContentSearchParams(search);
-if(prop === 'field_attachments') search['include'] = 'thumbnail';
+    if(prop === 'field_attachments') search['include'] = 'thumbnail';
+
     return search;
 }
 

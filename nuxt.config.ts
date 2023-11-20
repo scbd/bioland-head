@@ -4,10 +4,20 @@ import locales from './i18n/locales';
 
 const css  =   [ '@/assets/custom.scss' ]
 
+const routeRules = {
+  // Cached for 1 hour
+  // '/api/facets/bch': { cache: { maxAge: 60 * 60 * 24 } },
+  // '/api/facets/absch': { cache: { maxAge: 60 * 60 * 24 } },
+  // '/api/nbsap/*': { cache: { maxAge: 60 * 60 * 24 * 30 } },
+  // '/api/nr/*': { cache: { maxAge: 60 * 60 * 24 * 30} },
+  // '/api/nr6/*': { cache: { maxAge: 60 * 60 * 24 * 30 } },
+}
+
 export default defineNuxtConfig({
   devtools: { enabled: true },
   debug: false, 
   css,
+  //routeRules,
   runtimeConfig:{
     apiUser: process.env.API_USER,
     apiUserPass: process.env.API_USER_PASS,

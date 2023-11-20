@@ -7,7 +7,7 @@
             </NuxtLink>
             <NuxtLink class="navbar-brand small-line mx-0 px-0 me-1"  :to="localePath(`/`)" :alt="t('Home')" > ccc&nbsp; </NuxtLink>
 
-            <NuxtLink class="sublogo " to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')" >
+            <NuxtLink class="sublogo" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')" >
                 <svg class="scbd-logo-small me-1" :class="{ hero: hasHeroImage }" width="19.34" height="24" viewBox="0 0 34 42"  fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g opacity="0.8">
                         <path d="M27.3342 6.08834C30.7265 6.08834 32.611 2.60188 32.988 1V9.90459C32.988 14.0035 30.1611 15.9823 27.3342 15.9823H23.094C19.1364 15.9823 17.4874 19.9399 16.8749 21.9187V14.0035C16.8749 8.68905 20.6911 6.08834 22.8584 6.08834H27.3342Z"  stroke-width="1.5" stroke-miterlimit="4.62023"/>
@@ -26,12 +26,12 @@
                     <span >{{t('Biodiversity CHM')}}</span>
                 </NuxtLink>
             </div>
-            <div class="flex-fill d-flex align-items-center justify-content-end pe-2" >
-                <Icon name="menu" class="menu "/>
+            <div class="flex-fill d-flex align-items-center justify-content-end" >
+                <PageHeaderMegaMenuBurger/>
             </div>
             
     </div>
-    <div v-if="!hasLargeName" ref="cont" class=" container d-none d-md-flex">
+    <div v-if="!hasLargeName" ref="cont" class="container d-none d-md-flex">
         <div class=" navbar-header row align-items-center pe-3" :style="{ width: rowElWidth?`${rowElWidth+64}px`: '100%' }">
             <div class="col-md-9 col-lg-9 d-flex  justify-content-start align-items-center">
                 <NuxtLink  class="me-2" :to="localePath(`/`)" :alt="t('Home')"  >
@@ -73,7 +73,7 @@
             </div>
         </div> 
     </div>
-    <div v-if="hasLargeName" ref="cont" class=" container d-none d-md-flex">
+    <div v-if="hasLargeName" ref="cont" class="container d-none d-md-flex">
         <div class=" navbar-header row align-items-center pe-3" :style="{ width: rowElWidth?`${rowElWidth+64}px`: '100%' }">
             <div class="col-md-9 col-lg-9 d-flex  justify-content-start align-items-center">
                 <NuxtLink  class="me-2" :to="localePath(`/`)" :alt="t('Home')"  >

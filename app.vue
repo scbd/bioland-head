@@ -5,7 +5,6 @@
     <!-- <PageEditorControls  /> -->
     <main class="debug-main">
       <div class="text-muted text-center">Main Page Content</div>
-      <PageHeaderMegaMenuNationalReportSix/>
       <NuxtPage/>
       <br/><br/><br/><br/><br/><br/><br/>
       <div class="text-muted text-center">Main Page Content</div>

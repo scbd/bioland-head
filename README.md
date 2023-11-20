@@ -69,3 +69,13 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 traefik pathPrefix regex (go lang)
 
 `/{local:(?i:([a-z]{2}/)?)}{dpath:(?i:(((node|media)/[1-9]+/(edit|delete|revisions|translations))|admin|jsonapi|sites|modules|core|system|user|entity_reference_autocomplete|batch|((node|media)/add)))}`
+
+
+
+Mega Menu Classes
+
+mm-main-nav-final-link
+mm-arrow
+mm-special
+mm-main-nav-sub-heading
+mm-show-thumbs

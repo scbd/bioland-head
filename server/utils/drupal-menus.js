@@ -1,49 +1,51 @@
 import clone from 'lodash.clonedeep';
 
-export async function useMenus({ identifier, pathPreFix }){
+export async function useMenus(query){
     const menuNames = ['main', 'footer', 'footer-credits'];
     const menuPromises = [];
     const menus = {};
 
     for (const menuName of menuNames) {
-        const menuPromise = getMenuData(menuName,{ identifier, pathPreFix } )
+        const menuPromise = getMenuData(menuName,query )
                             .then((menusData) => menus[menuName] = menusData);
 
         menuPromises.push(menuPromise);
 
         
     }
-    await Promise.all(menuPromises);
-    const [ cleanMenus, languages] = await Promise.all( [addMissingData(menus, { identifier, pathPreFix } ), getInstalledLanguages({ identifier, pathPreFix })])
+    menuPromises.push(getInstalledLanguages(query));
+    const [main, footer, footerCredits, languages ] = await Promise.all(menuPromises);
+    const [ cleanMenus ] = await Promise.all( [addMissingData(menus, query )])
 
     // for (const iterator of object) {
         
     // }
-    await getThumbNails(cleanMenus, { identifier, pathPreFix })
+    await getThumbNails(cleanMenus, query)
     return { ...cleanMenus, languages };
 }
 
-async function getThumbNails(menus, { identifier, pathPreFix}){
-    const internalUrls = getInternalUrlsRecursive(menus.main);
+async function getThumbNails(menus, ctx){
+    const internalUrls  = getInternalUrlsRecursive(menus.main);
+    const pagesPromises = [];
 
-const pagesPromises = []
-    for (const aMenu of internalUrls) {
-        pagesPromises.push(getPageThumb({ identifier, pathPreFix, path: aMenu.href })
-        .then((thumb) => aMenu.thumb = thumb))
-        
+    for (const aMenu of internalUrls){
+        pagesPromises.push(getPageThumb({ ...ctx, path: aMenu.href }).then((thumb) => aMenu.thumb = thumb));
+
+        pagesPromises.push(getPageDates({ ...ctx, path: aMenu.href }).then(({changed, created, startDate}) => { 
+            aMenu.changed = changed;
+            aMenu.created = created;
+            aMenu.startDate = startDate;
+        }));
     }
-console.time('pages')
-    const pages = await Promise.all(pagesPromises)
-    console.timeEnd()
-    console.log(internalUrls.length)
-
+    return Promise.all(pagesPromises)
 }
 
-function getInternalUrlsRecursive(menus,{internalUrlsArr}={}){
+function getInternalUrlsRecursive(menus,{internalUrlsArr, parent}={}){
     const internalUrls = internalUrlsArr? internalUrlsArr : [];
 
     for (const aMenu of menus) {
-        if(aMenu.children) getInternalUrlsRecursive(aMenu.children, {internalUrlsArr:internalUrls})
+        if(aMenu.children) getInternalUrlsRecursive(aMenu.children, { internalUrlsArr:internalUrls, parent:aMenu })
+        if(!parent?.class?.includes('bl2-show-thumbs')) continue;
         if(aMenu?.path?.includes('entity')) internalUrls.push(aMenu)
     }
     return internalUrls
@@ -56,22 +58,22 @@ const findFromRawMenus = (aMenu )=>({ link, title, alias  })=>{
     return false
 }
 
-async function addMissingData(menus, { identifier, pathPreFix }){
-    const rawMenus =  await getMenusFromApiPager ({ identifier, pathPreFix });
+async function addMissingData(menus, { identifier, pathPreFix, localizedHost }){
+    const rawMenus =  await getMenusFromApiPager ({ identifier, pathPreFix, localizedHost });
     
     for (const menuName in menus) {
         const rawMenuSet = rawMenus.filter((l) => l.menu_name === menuName)
 
-        addMissingDataRecursive(menus[menuName], { identifier, pathPreFix, rawMenus:rawMenuSet, menuName  })
+        addMissingDataRecursive(menus[menuName], { identifier, pathPreFix, localizedHost, rawMenus:rawMenuSet, menuName  })
     }
 
     return menus
 }
 
-function addMissingDataRecursive(menus, { identifier, pathPreFix, rawMenus, menuName  }){
+function addMissingDataRecursive(menus, { identifier, pathPreFix, rawMenus, menuName, localizedHost  }){
 
         for (const aMenu of menus) {
-            if(aMenu.children) aMenu.children=addMissingDataRecursive(aMenu.children, { identifier, pathPreFix, rawMenus, menuName  })
+            if(aMenu.children) aMenu.children=addMissingDataRecursive(aMenu.children, { identifier, pathPreFix, rawMenus, menuName, localizedHost  })
 
             const rawMenu = rawMenus.find(findFromRawMenus(aMenu))
             if(rawMenu?.title==='Biodiversity Facts')
@@ -86,19 +88,19 @@ function addMissingDataRecursive(menus, { identifier, pathPreFix, rawMenus, menu
     return menus
 }
 
-async function getPathAliasFromApiPager ({ identifier, pathPreFix }, next){
+async function getPathAliasFromApiPager ({ identifier, pathPreFix, localizedHost }, next){
     try {
-        const { baseHost }   = useRuntimeConfig().public;
+
 
         const $http = await useDrupalLogin(identifier);
 
-        const uri = next || `${identifier}${baseHost}${pathPreFix}/jsonapi/path_alias/path_alias`
+        const uri = next || `${localizedHost}/jsonapi/path_alias/path_alias`
 
         const { body }  = await $http.get(uri).withCredentials().accept('json');
 
         const { links, data } = body
 
-        if(nextUri(links)) return [ ...data, ...await getPathAliasFromApiPager({ identifier, pathPreFix }, nextUri(links)) ]
+        if(nextUri(links)) return [ ...data, ...await getPathAliasFromApiPager({ identifier, pathPreFix, localizedHost }, nextUri(links)) ]
 
         return data
     }
@@ -107,15 +109,13 @@ async function getPathAliasFromApiPager ({ identifier, pathPreFix }, next){
     }
 }
 
-export async function getMenusFromApiPager ({ identifier, pathPreFix, pathAlias }, next){
+export async function getMenusFromApiPager ({ identifier, pathPreFix, pathAlias, localizedHost }, next){
     try {
-        const paths = pathAlias? pathAlias : await getPathAliasFromApiPager({ identifier, pathPreFix })
-
-        const { baseHost }   = useRuntimeConfig().public;
+        const paths = pathAlias? pathAlias : await getPathAliasFromApiPager({ identifier, pathPreFix, localizedHost })
 
         const $http = await useDrupalLogin(identifier)
 
-        const uri = next || `${identifier}${baseHost}${pathPreFix}/jsonapi/menu_link_content/menu_link_content`
+        const uri = next || `${localizedHost}/jsonapi/menu_link_content/menu_link_content`
 
         const { body }  = await $http.get(uri).withCredentials().accept('json')
 
@@ -127,7 +127,7 @@ export async function getMenusFromApiPager ({ identifier, pathPreFix, pathAlias 
             if(path) aMenu.link.alias = path.alias
         }
 
-        if(nextUri(links)) return [ ...data, ...await getMenusFromApiPager({ identifier, pathPreFix, pathAlias:paths }, nextUri(links)) ]
+        if(nextUri(links)) return [ ...data, ...await getMenusFromApiPager({ identifier, pathPreFix, pathAlias:paths, localizedHost }, nextUri(links)) ]
 
 
         return data
@@ -137,11 +137,11 @@ export async function getMenusFromApiPager ({ identifier, pathPreFix, pathAlias 
     }
 }
 
-async function getMenuData(menuName, { identifier, pathPreFix }){
-    const { baseHost } = useRuntimeConfig().public;
-    const   pathLocale = pathPreFix === '/zh'? '/zh-hans' : pathPreFix;
+async function getMenuData(menuName, { host, pathPreFix, localizedHost }){
 
-    const uri = `https://${identifier}${baseHost}${pathLocale}/system/menu/${encodeURIComponent(menuName)}/linkset`;
+    // const   pathLocale = pathPreFix === '/zh'? '/zh-hans' : pathPreFix;
+
+    const uri = `${localizedHost}/system/menu/${encodeURIComponent(menuName)}/linkset`;
 
     const data = await $fetch(uri, { mode: 'cors' });
 
@@ -167,15 +167,15 @@ function formatMenus(menuData){
 
     return menus;
 }
-async function addDescriptions(menus, { identifier, pathPreFix, menuName }){
-    const rawMenus = (await getMenusFromApiPager ({ identifier, pathPreFix })).filter((l) => l.menu_name === menuName)
-                        .map(({ description, title, link })=>({ description, title, link: link.uri.replace('internal:', '') }))
+// async function addDescriptions(menus, { identifier, pathPreFix, menuName }){
+//     const rawMenus = (await getMenusFromApiPager ({ identifier, pathPreFix })).filter((l) => l.menu_name === menuName)
+//                         .map(({ description, title, link })=>({ description, title, link: link.uri.replace('internal:', '') }))
 
-    // for (const aMenu of menus) {
+//     // for (const aMenu of menus) {
 
-    // }
+//     // }
 
-}
+// }
 
 function splitClasses(menus){
 

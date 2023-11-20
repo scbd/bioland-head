@@ -1,6 +1,6 @@
 <template>
     <NuxtLink  class="main-nav-sub-heading"  :to="menu.href" :title="menu.title" :external="isExternal" :target="target">
-        <h4 class="text-wrap position-relative me-4">
+        <h4 class="text-wrap position-relative d-inline-block mb-2">
             {{menu.title}}
             <Icon v-if="hasArrow" name="arrow-right" class="arrow" />
         </h4>
@@ -17,7 +17,7 @@
 
     function setup(props) {
         const { menu }     = toRefs(props);
-        const   hasArrow   = computed(()=>menu?.value?.class?.includes('arrow'));
+        const   hasArrow   = computed(()=>menu?.value?.class?.includes('arrow')||menu?.value?.class?.includes('mm-arrow'));
         const   isExternal = computed(()=> menu?.value?.href?.includes('http'));
         const   target     = computed(()=> menu?.value?.target? menu?.value?.target[0] : '_self');
 
@@ -26,7 +26,7 @@
 </script>
 
 <style lang="scss" scoped>
-.arrow{
+.mm-arrow, .arrow{
     position: absolute;
     fill:var(--bs-blue);
     transition: 0.3s;
@@ -35,16 +35,14 @@
     width       : 1.5em;
     height      : 1.5em;
 }
+.mm-main-nav-sub-heading,
 .main-nav-sub-heading{
     color: var(--bs-heading-color) !important;
     text-decoration-color: var(--bs-heading-color)!important;
 }
-
+.mm-main-nav-sub-heading > h4,
 .main-nav-sub-heading > h4{
     margin-right: 2rem;
 }
-.main-nav-sub-heading{
-    color: var(--bs-heading-color) !important;
-    text-decoration-color: var(--bs-heading-color)!important;
-}
+
 </style>

@@ -13,16 +13,19 @@ export const useDrupalLogin = async (identifier) => {
     const cacheId = `${drupalMultisiteIdentifier}-${identifier}`;
 
     if($http[cacheId]) return $http[cacheId]
-    if(!$http[cacheId]) $http[cacheId] = SA.agent()
+
+    const saAgent = SA.agent()
+    
 
     const uri  = `https://${identifier}${baseHost}/user/login?_format=json`
 
-    $http[cacheId].query({ 'jsonapi_include': 1 });
+    saAgent.query({ 'jsonapi_include': 1 });
     
-    const resp = await $http[cacheId].post(uri)
+    await saAgent.post(uri)
             .set('Content-Type', 'application/json')
             .send(JSON.stringify({ name, pass }));
 
+    $http[cacheId] = saAgent
     return $http[cacheId]
   }
   catch(e){

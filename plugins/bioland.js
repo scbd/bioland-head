@@ -12,17 +12,25 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
     await siteStore.initialize(nuxtApp);
 
-    const locale = siteStore.locale === siteStore.defaultLocale.locale ? 'und' : siteStore.locale;
-  
-    const { data } = await useFetch(`/api/${siteStore.identifier}/${locale}/menus`);
 
-    consola.warn(data.value.main)
+    const { params } = siteStore;
+
+    const context = useCookie('context');
+
+    context.value = params
+
+    const { data } = await useFetch(`/api/menus`,{ params });
+
+// consola.error('data', data)
+
     await menuStore.loadAllMenus(data.value);
 
     nuxtApp.hook('i18n:localeSwitched', async ({oldLocale, newLocale}) => {
-        consola.warn('i18n:localeSwitched', oldLocale, newLocale)
+        // consola.warn('i18n:localeSwitched', oldLocale, newLocale)
         const localeChanged = newLocale === siteStore.defaultLocale.locale ? 'und' : newLocale;
-        menuStore.loadAllMenus((await useFetch(`/api/${siteStore.identifier}/${localeChanged}/menus`)).data.value);
+        params.locale = localeChanged;
+        context.value.locale = localeChanged;
+        menuStore.loadAllMenus((await useFetch(`/api/menus`,{ params })).data.value)
     })
     // siteStore.watchLocaleChange(nuxtApp, [menuStore.loadAllMenus]);
 
