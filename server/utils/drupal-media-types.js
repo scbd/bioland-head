@@ -19,19 +19,36 @@ async function getMediaMenus (ctx, drupalInternalId) {
     const headers           = { 'Content-Type': 'application/json' };
     const { data }          = await $fetch(uri, { method, headers });
 
-    return data.map(mapThumbNails(ctx))
+    return mapData(ctx)(data)
 };
-function mapThumbNails(ctx){
-    return (document)=>{
+function mapData(ctx){
+    const pathAlias = usePathAlias(ctx)
 
-        document.thumb  = '/images/no-image.png';
+    return async (data)=>{
+        const docs = []
+        const promises = [];
+        for (const document of data){
 
-        const { path, thumbnail, name, title, created, changed, drupal_internal__mid: drupalInternalMid  } = document;
-        const { url }       = thumbnail?.uri || {};
-        const   href        = path?.alias || `/media/${drupalInternalMid}`;
-        const   thumb       = `${ctx.host}${url || ''}`;
+            const { thumbnail, name, title, created, changed, drupal_internal__mid: drupalInternalMid  } = document;
+            const { url }       = thumbnail?.uri || {};
+            const   href        = `/media/${drupalInternalMid}`;
+            const   thumb       = url? `${ctx.host}${url || ''}` : '/images/no-image.png';
+            
+            const aDoc = { thumb, title:title || name, name, href, created, changed, drupalInternalMid }
+            docs.push(aDoc);
+
+            promises.push(pathAlias.getByMediaId(drupalInternalMid).then((p)=>{ 
+                aDoc.path=p;
+                if(p.alias) aDoc.href=p.alias;
+            }))
+            // .then((p) => consola.warn(p))
+            // .then((p)=>aDoc.path=p);
+
+        }
         
-        return { thumb, title:title || name, name, href, created, changed, drupalInternalMid };
+        await Promise.all(promises);
+
+        return docs;
     }
 }
 

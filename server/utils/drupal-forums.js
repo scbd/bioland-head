@@ -15,7 +15,7 @@ async function getContentMenus (ctx) {
     const { data } = await $fetch(uri, { method, headers });
 
 
-    return data.sort(sort).map(mapMenuData).slice(0,6)
+    return data.sort(sort).map(mapMenuData(ctx)).slice(0,6)
 };
 
 function sort(a,b){
@@ -25,14 +25,23 @@ function sort(a,b){
     return 0;
 }
 
-function mapMenuData(aForum){
-    const { taxonomy_forums, comment_forum, title,  } = aForum;
-    const { name, id } = taxonomy_forums;
-    const forum = { name, id, slug: paramCase(name) };
-    const { comment_count: count, last_comment_timestamp:timeStamp } = comment_forum;
-    const dateString = getTimeString(timeStamp);
+function mapMenuData(ctx){
+    const pathAlias = usePathAlias(ctx)
 
-    return { forum, title, count, dateString }
+  
+    return (aForum)=> {
+                    const { taxonomy_forums, comment_forum, title, drupal_internal__nid: nodeId  } = aForum;
+                    const { name, id } = taxonomy_forums;
+                    const forum = { name, id, slug: paramCase(name), href:`/forums/${paramCase(name)}` };
+                    const { comment_count: count, last_comment_timestamp:timeStamp } = comment_forum;
+                    const dateString = getTimeString(timeStamp);
+
+                    const forumMenu = { forum, title, count, dateString, nodeId };
+
+                    pathAlias.getByNodeId(nodeId).then((path) => path? forumMenu.path=path : '')
+
+                    return forumMenu
+            }
 }
 
 function getTimeString(timeStamp){

@@ -4,12 +4,12 @@
 
         <div v-for="(aChild,j) in menu.children" :key="j" class="row mb-2">
             <div class="col-6">
-                <NuxtLink  class="child-link"   :to="aChild.href" :title="aChild.title" >
+                <NuxtLink  class="child-link"   :to="aChild?.path?.alias || ''" :title="aChild.title" >
                     {{aChild.title}}
                 </NuxtLink>
             </div>
             <div class="col-3 ps-0 align-self-center">
-                <NuxtLink  class="child-link"   :to="'/'" :title="aChild.forum.name" >
+                <NuxtLink  class="child-link"   :to="aChild.forum.href" :title="aChild.forum.name" >
                     <span class="badge bg-primary">{{aChild.forum.name}}</span>
                 </NuxtLink>
             </div>
@@ -41,7 +41,7 @@
         passedMenu.value.children = [...passedMenu.value.children, ...menuStore.forums ];
         return passedMenu.value;
     });
-consola.warn('menus', menu.value)
+
 
     function generateMenus(){
         const theMenu = unref(menu);

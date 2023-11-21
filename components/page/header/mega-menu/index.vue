@@ -22,6 +22,7 @@ import { useMenusStore } from "~/stores/menus";
         name: 'PageMegaMenu',
         methods: { isLastIndex , isLastSpacer, toggle, unToggle},
         setup,
+
     }
 
     function setup() {
@@ -31,7 +32,12 @@ import { useMenusStore } from "~/stores/menus";
         const menuStore = useMenusStore();
         
         const { main: menus } = storeToRefs(menuStore);
+        const router = useRouter()
 
+        router.beforeEach(() => {
+          for (let index = 0; index < unref(toggles).length; index++)
+              toggles.value[index] = false;
+  })
         const stop = watch(spacers, async (newSpacers) => {
                                                             if(!newSpacers) return;
                                                             for (let i = 0; i < newSpacers.length; i++) {
@@ -43,7 +49,6 @@ import { useMenusStore } from "~/stores/menus";
 
         return { menus,  spacers, spacersY, toggles }
     }
-
 
     function toggle(index){
       this.unToggle();
