@@ -18,6 +18,8 @@ const initState = {
     nfps:[],
     counts:[],
     contentTypes:{},
+    mediaTypes: {},
+    forums: [],
 }
 
 function state(){ return initState }
@@ -45,5 +47,7 @@ function loadAllMenus(menus = {}){
     this.set('nfps', menus?.nfps);
     this.set('counts', menus?.counts);
     this.set('contentTypes', menus?.contentTypes);
+    this.set('mediaTypes', menus?.mediaTypes);
+    this.set('forums', menus?.forums);
 
 }

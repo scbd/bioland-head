@@ -15,7 +15,7 @@ export const parseQuery = (event) => {
 
     const defaultLocale  =  !isPlainObject(defaultLocaleRaw)? JSON.parse(defaultLocaleRaw).locale : defaultLocaleRaw.locale;
     const { baseHost, env }   = useRuntimeConfig().public;
-    const pathPreFix     = locale === 'und' || locale === defaultLocale  ? '' : '/'+locale;
+    const pathPreFix     = getPathPrefix(locale, defaultLocale)
     const hasRedirect    = env === 'production' && redirect;
     const host           = hasRedirect? `https://${redirect}` : `https://${identifier}${baseHost}`;
     const localizedHost  = `${host}${pathPreFix}`;
@@ -33,19 +33,29 @@ export const getContext = (event) => {
 }
 
 export function parseContext (context) {
-  
     const ctx = isString(context)? JSON.parse(context) : context;
 
     const { country, identifier, locale, defaultLocale: defaultLocaleRaw, countries: countriesArray, redirect } = ctx;
     
-    const countries      = countriesArray?.length? [country,...countriesArray] : [country];
-    const defaultLocale  =  !isPlainObject(defaultLocaleRaw) && defaultLocaleRaw? JSON.parse(defaultLocaleRaw).locale : defaultLocaleRaw?.locale;
-    const { baseHost, env }   = useRuntimeConfig().public;
-    const pathPreFix     = locale === 'und' || locale === defaultLocale  ? '' : '/'+locale;
-    const hasRedirect    = env === 'production' && redirect;
-    const host           = hasRedirect? `https://${redirect}` : `https://${identifier}${baseHost}`;
-    const localizedHost  = `${host}${pathPreFix}`;
-    const indexLocale     = getIndexLocale(locale);
+    const   countries       = countriesArray?.length? [country,...countriesArray] : [country];
+    const   defaultLocale   =  !isPlainObject(defaultLocaleRaw) && defaultLocaleRaw? JSON.parse(defaultLocaleRaw).locale : defaultLocaleRaw?.locale;
+    const { baseHost, env } = useRuntimeConfig().public;
+    const   pathPreFix      = getPathPrefix(locale, defaultLocale)
+    const   hasRedirect     = env === 'production' && redirect;
+    const   host            = hasRedirect? `https://${redirect}` : `https://${identifier}${baseHost}`;
+    const   localizedHost   = `${host}${pathPreFix}`;
+    const   indexLocale     = getIndexLocale(locale);
 
     return { host, localizedHost, country,countries,  identifier, locale, defaultLocale, indexLocal:indexLocale, indexLocale }
+}
+
+
+function getPathPrefix(locale, defaultLocale){
+    return locale === 'und' || locale === defaultLocale  ? '' : '/'+ drupalizeLocale(locale);
+}
+
+function drupalizeLocale(locale){
+    if(locale === 'zh-hans') return 'zh-hans';
+
+    return locale;
 }

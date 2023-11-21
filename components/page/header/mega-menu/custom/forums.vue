@@ -2,75 +2,62 @@
     <div class="col-12 text-wrap px-0">
         <PageHeaderMegaMenuHeader  :menu="menu" />
 
-        <PageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menus" >
-            <Transition :name="slotProps.fadeName">
-                <section v-if="slotProps.hide">
-                    <section v-for="(aChild,j) in menus[slotProps.country]" :key="j">
-                        <p >
-                            <NuxtLink  class="child-link" :class="aChild.class"   :to="aChild.href" :title="aChild.title"  external target="_blank">
-                                {{aChild.title}}<span class="text-nowrap">&#65279;&nbsp;<Icon name="external-link"  class="ex-link" /></span>
-                            </NuxtLink>
-                        </p>
-                    </section>
-                </section>
-            </Transition>
-        </PageHeaderMegaMenuCustomCountryTab>
+        <div v-for="(aChild,j) in menu.children" :key="j" class="row mb-2">
+            <div class="col-6">
+                <NuxtLink  class="child-link"   :to="aChild.href" :title="aChild.title" >
+                    {{aChild.title}}
+                </NuxtLink>
+            </div>
+            <div class="col-3 ps-0 align-self-center">
+                <NuxtLink  class="child-link"   :to="'/'" :title="aChild.forum.name" >
+                    <span class="badge bg-primary">{{aChild.forum.name}}</span>
+                </NuxtLink>
+            </div>
+            <div class="col-1 px-0 align-self-center">
+                {{aChild.count? aChild.dateString: '&nbsp;'}}
+            </div>
+            <div class="col-1 text-nowrap px-0 align-self-center">
+                {{aChild.count}} {{t('replies')}}
+            </div>
+        </div>
+
     </div>
 </template>
 <i18n src="@/i18n/dist/components/page/header/mega-menu/custom/forums.json"></i18n>
 <script setup>
-    import {  useSiteStore } from "~/stores/site";
-    const { t } = useI18n();
-    const menu  = ref({ 
-                        title: t('Fourms'), 
-                        href : '#', 
-                        class: ['main-nav-sub-heading'] 
-                    });
+    import {  useSiteStore } from '~/stores/site';
+    import { useMenusStore } from '~/stores/menus';
+
+    const { t     } = useI18n    (                );
+    const   props   = defineProps({ menu: Object });
+    const { menu: passedMenu  } = toRefs     (props           );
+
     const siteStore = useSiteStore();
- 
+    const menuStore = useMenusStore();
     
-    const menus      = computed(() => generateMenus());
+    const menu      = computed(() => {
+        passedMenu.value.children = passedMenu.value.children || [];
+
+        passedMenu.value.children = [...passedMenu.value.children, ...menuStore.forums ];
+        return passedMenu.value;
+    });
+consola.warn('menus', menu.value)
 
     function generateMenus(){
-        const countries = siteStore.countries;
-        const countryMap = {};
+        const theMenu = unref(menu);
 
-        for(const country of countries){
-            countryMap[country] = [];
+        if(!theMenu.children) return theMenu.children = [];
 
-            countryMap[country].push(
-                ...generateCountrySet(country)
-            )
+        for(const aMenu of subMenus){
+            theMenu.children
+
+
         }
 
         return countryMap
     }
 
-    function generateCountrySet(countryCode){
-        const title = ' '+t('Country Profile');
-        return [
-            {
-                title: t('CBD') + title,
-                href : `https://www.cbd.int/countries/?country=${countryCode}`
-            },
-            {
-                title: t('BCH') + title,
-                href : `https://bch.cbd.int/en/countries/${countryCode}`
-            },
-            {
-                title: t('ABSCH') + title,
-                href : `https://absch.cbd.int/en/countries/${countryCode}`
-            },
-            {
-                title: t('UN') + title,
-                href : `https://data.un.org/en/iso/${countryCode}.html`
-            },
-            {
-                title: t('InforMEA') + title,
-                href : `https://data.un.org/en/iso/${countryCode}.html`
-            }
-        ]
-    }
+
 </script>
 
 <style lang="scss" scoped>

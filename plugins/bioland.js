@@ -39,6 +39,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
     async function setAppStates(to){
         const pageStore = usePageStore(nuxtApp.$pinia);
+
         pageStore.set('path',to.path);
         pageStore.initialize(await usePageData())
     }

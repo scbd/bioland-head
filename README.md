@@ -79,3 +79,24 @@ mm-arrow
 mm-special
 mm-main-nav-sub-heading
 mm-show-thumbs
+
+
+
+<div class="container">
+    <div class="row pb-1">
+        <div class="col col-md-9 col-lg-8 mt-4">
+            <h2>
+                Welcome to the National<br>
+                Clearing House Mechanism Portal of<br>
+                Bioland Biodiversity.
+            </h2>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12 col-md-8 col-lg-8">
+            <p class="small">
+                Bioland Biodiversity has been a party of the Convention of Biological Diversity (CBD) since 1994, and a party of the Cartagena Protocol on Biosafety since 2004.
+            </p>
+        </div>
+    </div>
+</div>

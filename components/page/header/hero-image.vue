@@ -47,7 +47,7 @@ function setup() {
                                 format: ['webp', 'avif', 'jpeg', 'jpg', 'png','gif']
                             }
 
-        const imgSrc = img(siteStore.host+pageStore.heroImage.field_media_image_1.uri.url, imgOptions)
+        const imgSrc = img(siteStore.host+pageStore.heroImage.field_media_image.uri.url, imgOptions)
 
         return getBackgroundStyles(imgSrc)
     })

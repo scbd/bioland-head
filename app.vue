@@ -4,6 +4,7 @@
     <PageHeader/>
     <!-- <PageEditorControls  /> -->
     <main class="debug-main">
+      <test/>
       <div class="text-muted text-center">Main Page Content</div>
       <NuxtPage/>
       <br/><br/><br/><br/><br/><br/><br/>

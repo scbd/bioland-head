@@ -80,6 +80,7 @@ import { useMenusStore } from "~/stores/menus";
 <style lang="scss" scoped>
 @import "@/assets/scss/variables.scss";
 
+
 .opacity-0 {
     border: none;
 }   
@@ -98,11 +99,15 @@ import { useMenusStore } from "~/stores/menus";
 nav {
     // max-height: 3rem;
     padding: 0 1rem 0 1rem;
+    // flex-shrink: 1;
+    // flex-wrap: nowrap;
 }
 .navbar {
   .nav {
     // margin: 0 -2rem;
-
+    // flex-wrap: nowrap;
+    // flex-shrink: 0;
+    // 
     .has-hero-image, .has-video-top {
       background-color: rgba(0,0,0,.67) !important;
     }
