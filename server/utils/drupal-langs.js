@@ -18,7 +18,7 @@ export const getDefaultLocale= async (query) => {
 
     const [aLang] = await  getInstalledLanguages(query)
 
-    return { locale: aLang };
+    return { locale: aLang?.langcode };
 }
 
 export const normalizeDrupalJsonApiData = (data=[]) => {

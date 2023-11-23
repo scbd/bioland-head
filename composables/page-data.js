@@ -14,6 +14,7 @@ export const useHasHeroImage = async (path) => {
 }
 
 export async function usePageData(){
+    try{
     const { localizedHost: host }  = useSiteStore();
     const { uuid,  type, bundle } = await getPageIdentifiers();
 
@@ -26,6 +27,9 @@ export async function usePageData(){
 
 
     return data
+    }catch(e){
+        return {}
+    }
 }
 
 

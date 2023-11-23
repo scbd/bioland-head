@@ -1,5 +1,5 @@
 <template>
-  <PageHome/>
+    <PageList/>
 </template>
 <script setup>
 import { usePageStore } from "~/stores/page";

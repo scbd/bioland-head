@@ -76,7 +76,7 @@ async function getSiteDefaultLocale(){
     const { identifier, gaiaApi, drupalMultisiteIdentifier } = this;
 
 
-    const uri = `${gaiaApi}v2023/drupal/multisite/${drupalMultisiteIdentifier}/${identifier}/default-locale`
+    const uri = `/api/default-locale`
 
     const { data, error } = await useFetch(uri)
 

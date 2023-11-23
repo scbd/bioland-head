@@ -4,16 +4,14 @@
         <div v-if="hi?.field_description?.value" v-html="hi?.field_description?.value">
         </div>
 
-        <div v-if="hi?.field_credits" class=" position-absolute bottom-0 w-100">
-            <div class="container">
-                <div class="row">
+        <div v-if="hi?.field_credits" class=" position-absolute bottom-30 w-100">
+
                     <div class="col-12 d-flex justify-content-end align-items-center pe-3">
                         <p class="small mb-2" style="opacity:70%;">
                             Photo Credits - {{hi.field_credits}}
                         </p>
                     </div>
-                </div>
-            </div>
+
         </div>
     </div> 
 </template>

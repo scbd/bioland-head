@@ -82,8 +82,10 @@
             if(unref(isMobile)) return 'col-12';
 
             const numberOfCols  =  hasDoubleCol()? unref(sections).length +1 : unref(sections).length;
+
             const isDouble      = isDoubleCol(aMenu);
-            const colSize       =  isDouble? lengthColSizeMap[numberOfCols] * 2 : lengthColSizeMap[numberOfCols];
+            const multiplier    =  numberOfCols == 5? 3 : 2
+            const colSize       =  isDouble? lengthColSizeMap[numberOfCols] * multiplier : lengthColSizeMap[numberOfCols];
 
             if(hasTwoDoubleCol()) return isDouble?  'col-5' : 'col';
 
