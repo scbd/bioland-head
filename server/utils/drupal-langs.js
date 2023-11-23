@@ -29,7 +29,7 @@ export const normalizeLanguageData = (data=[]) => {
     return normalizeDrupalJsonApiData(data)
                         .filter((lang)=> getLanguage(lang.drupalInternalId))
                         .map((lang)=> ({...lang, ...getLanguage(lang.drupalInternalId)}))
-                        .sort((a,b)=> sort(a,b, 'weight'))
+                        .sort((a,b)=> sortArrayOfObjectsByProp(a,b, 'weight'))
 }
 
 export const getLanguage = (locale) => {
@@ -39,9 +39,5 @@ export const getLanguage = (locale) => {
         return language.code.startsWith(locale.substring(0, 2));
     });
 }
-function sort(a,b, prop){
-    if(a[prop] < b[prop]) return -1; 
-    if(a[prop] > b[prop]) return 1;
 
-    return 0;
-}
+

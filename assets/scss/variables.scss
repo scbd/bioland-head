@@ -218,16 +218,16 @@ $grid-breakpoints: (
   xs: 0,
   sm: 752px,
   md: 992px,
-  lg: 1248px,
-  xl: 1376px
+  lg: 1330px,
+  xl: 1600px
 ) !default;
 
 // Grid containers
 $container-max-widths: (
-  sm: 720px,
-  md: 960px,
-  lg: 1216px,
-  xl: 1344px
+  sm: 752px,
+  md: 992px,
+  lg: 1330px,
+  xl: 1600px
 ) !default;
 
 // Grid columns

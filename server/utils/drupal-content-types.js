@@ -1,11 +1,11 @@
 import { paramCase } from "param-case";
 
-export const useContentTypeCounts = async (ctx) => {
-    await useDrupalLogin(ctx.identifier)
-    const allCounts = await Promise.all([getAllContentCounts(ctx), getAllMediaCounts(ctx)])
+// export const useContentTypeCounts = async (ctx) => {
+//     await useDrupalLogin(ctx.identifier)
+//     const allCounts = await Promise.all([getAllContentCounts(ctx), getAllMediaCounts(ctx)])
 
-    return makeTypeMap(allCounts.flat())
-}
+//     return makeTypeMap(allCounts.flat())
+// }
 
 export const useContentTypeMenus = async (ctx) => {
     await useDrupalLogin(ctx.identifier)
@@ -14,14 +14,14 @@ export const useContentTypeMenus = async (ctx) => {
 
 async function getContentMenus (ctx, drupalInternalId) {
     const { localizedHost } = ctx;
-    const uri           = `${localizedHost}/jsonapi/node/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image&filter[taxonomy_term--tags][condition][path]=field_type_placement.drupal_internal__tid&filter[taxonomy_term--tags][condition][operator]=IN&filter[taxonomy_term--tags][condition][value][]=${drupalInternalId}&page[limit]=7&sort[sort-created][path]=created&sort[sticky][path]=sticky`;
+    const uri           = `${localizedHost}/jsonapi/node/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image&filter[taxonomy_term--tags][condition][path]=field_type_placement.drupal_internal__tid&filter[taxonomy_term--tags][condition][operator]=IN&filter[taxonomy_term--tags][condition][value][]=${drupalInternalId}&page[limit]=14&sort[sticky][path]=sticky&sort[sticky][direction]=DESC&sort[sort-created][path]=created&sort[sort-created][direction]=DESC`;
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
-    const { data } = await $fetch(uri, { method, headers });
+    const { data, meta } = await $fetch(uri, { method, headers });
 
 
-    return data.map(mapThumbNails(ctx))
+    return { data: data.map(mapThumbNails(ctx)), count: meta.count }
 };
 
 function makeTypeMap(data){
@@ -43,14 +43,16 @@ function mapThumbNails(ctx){
 
         const { thumb, title, path, created, changed, field_start_date } = document;
 
-        if(!hasAttachments) return { thumb, title, href: path.alias };
+        const startDate = field_start_date || '';
+
+        if(!hasAttachments) return { thumb, title, href: path.alias, created, changed, startDate  };
 
         const { uri } = attachments[0].field_media_image;
 
         document.thumb  = `${ctx.host}${uri.url}`
 
 
-        return { thumb:document.thumb, title, href: path.alias, created, changed, startDate:field_start_date };
+        return { thumb:document.thumb, title, href: path.alias, created, changed, startDate };
     }
 }
 
@@ -61,7 +63,7 @@ async function getAllContentTypeMenus(ctx){
     const requests = [];
 
     for(const term of terms){
-        const aRequest = getContentMenus(ctx, term.drupalInternalId).then(( data )=> ({ ...term, data }))
+        const aRequest = getContentMenus(ctx, term.drupalInternalId).then(( { data, count })=> ({ ...term, data, count }))
 
         requests.push(aRequest)
     }
@@ -81,18 +83,7 @@ async function getTerms ({ localizedHost }) {
                 .map(({ drupal_internal__tid:drupalInternalId, name })=> ({ drupalInternalId, name, slug: paramCase(name) }))
 };
 
-async function getMediaTypes ({ identifier, localizedHost }) {
-    const uri   = `${localizedHost}/jsonapi/media_type/media_type?jsonapi_include=1`;
 
-    const $http = await useDrupalLogin(identifier)
-
-
-    const { body }  = await $http.get(uri).withCredentials().accept('json')
-
-
-    return body.data
-                .map(({ drupal_internal__id:drupalInternalId, label:name })=> ({ drupalInternalId, name, slug: paramCase(name) }))
-};
 
 async function getAllContentCounts(ctx){
     const terms    = await getTerms(ctx);
@@ -121,32 +112,4 @@ async function getContentCounts ({ localizedHost }, drupalInternalId) {
 
 
 
-async function getAllMediaCounts (ctx) {
-    const mediaTypes    = await getMediaTypes(ctx);
 
-
-    const requests = [];
-    
-    for(const term of mediaTypes){
-     
-        if(!term?.drupalInternalId) throw new Error(`getAllMediaCounts -> ${term.name} does not have a drupalInternalId`);
-        const aRequest = getMediaCounts(ctx, term.drupalInternalId).then(( { count } )=> ({ ...term, count }))
-
-        requests.push(aRequest)
-    }
-
-    return Promise.all(requests);
-};
-
-
-async function getMediaCounts ({ localizedHost }, mediaType) {
-
-    const uri           = `${localizedHost}/jsonapi/media/${mediaType}?jsonapi_include=1&page[limit]=1`;
-    const method        = 'get';
-    const headers       = { 'Content-Type': 'application/json' };
-
-    const { meta } = await $fetch(uri, { method, headers });
-
-
-    return meta
-};

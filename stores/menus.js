@@ -16,7 +16,7 @@ const initState = {
     bch:[],
     absch:[],
     nfps:[],
-    counts:[],
+    // counts:[],
     contentTypes:{},
     mediaTypes: {},
     forums: [],
@@ -37,6 +37,7 @@ function loadAllMenus(menus = {}){
 
     this.set('footer', menus?.footer);
     this.set('main', menus?.main);
+    if(menus)
     this.set('footerCredits', menus['footer-credits']);
     this.set('languages', menus?.languages);
     this.set('absch', menus?.absch);
@@ -45,7 +46,7 @@ function loadAllMenus(menus = {}){
     this.set('nrSix', menus?.nrSix);
     this.set('nbsap', menus?.nbsap);
     this.set('nfps', menus?.nfps);
-    this.set('counts', menus?.counts);
+    // this.set('counts', menus?.counts);
     this.set('contentTypes', menus?.contentTypes);
     this.set('mediaTypes', menus?.mediaTypes);
     this.set('forums', menus?.forums);

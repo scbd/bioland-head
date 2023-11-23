@@ -81,22 +81,29 @@ mm-main-nav-sub-heading
 mm-show-thumbs
 
 
-
-<div class="container">
-    <div class="row pb-1">
-        <div class="col col-md-9 col-lg-8 mt-4">
-            <h2>
-                Welcome to the National<br>
-                Clearing House Mechanism Portal of<br>
-                Bioland Biodiversity.
-            </h2>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-12 col-md-8 col-lg-8">
-            <p class="small">
-                Bioland Biodiversity has been a party of the Convention of Biological Diversity (CBD) since 1994, and a party of the Cartagena Protocol on Biosafety since 2004.
-            </p>
-        </div>
-    </div>
-</div>
+*jsonapi/taxonomy_term/tags/*	staging.infra.cbd.int	HTTP and HTTPS	
+bioland-30-day
+-
+attachments
+1	*jsonapi/configurable_language/configurable_language/*	staging.infra.cbd.int	HTTP and HTTPS	
+bioland-30-day
+-
+attachments
+2	*jsonapi/media_type/media_type/*	staging.infra.cbd.int	HTTP and HTTPS	
+bioland-30-day
+-
+attachments
+3	*router/translate-path	staging.infra.cbd.int	HTTP and HTTPS	
+bioland-30-day
+-
+attachments
+4	*system/menu/*	staging.infra.cbd.int	HTTP and HTTPS	
+bioland-5-mins
+-
+attachments
+5	*jsonapi/*	staging.infra.cbd.int	HTTP and HTTPS	
+Bioland-1-mins
+-
+attachments
+6	/sites/*/files/202*/*	staging.infra.cbd.int	HTTP and HTTPS	
+bioland-30-day

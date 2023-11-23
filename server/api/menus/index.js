@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
             Cookie: `context=${encodeURIComponent(JSON.stringify(context || {}))};`,
         }
 
-        const [absch, bch, menus, nr, nrSix, nbsap, nfps, counts, contentTypes, mediaTypes, forums  ] = await Promise.all([
+        const [absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes, mediaTypes, forums  ] = await Promise.all([
             $fetch('/api/menus/absch', { query, method:'get', headers }),
             $fetch('/api/menus/bch', { query, method:'get', headers }),
             useMenus (query),
@@ -16,15 +16,15 @@ export default defineEventHandler(async (event) => {
             $fetch('/api/menus/nr6', { query, method:'get', headers }),
             $fetch('/api/menus/nbsap', { query, method:'get', headers }),
             $fetch('/api/menus/focal-points', { query, method:'get', headers }),
-            useContentTypeCounts(parseContext(context)),
+            // useContentTypeCounts(parseContext(context)),
             useContentTypeMenus(parseContext(context)),
             useMediaTypeMenus(parseContext(context)),
-            useDrupalForumMenus(parseContext(context)),
+            useDrupalForumMenus(parseContext(context))
         ]);
 
         // const menus = (await useMenus (query))
 
-        return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, counts, contentTypes, mediaTypes, forums }
+        return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, mediaTypes, forums }
     }
     catch(e){
         console.log('--------------------------',e)

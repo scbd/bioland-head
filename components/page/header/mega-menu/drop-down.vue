@@ -1,6 +1,6 @@
 <template>
-    <div class="debug overflow-scroll mm">
-        <div class="container px-0 ">
+    <div class="overflow-scroll mm">
+        <div class="container px-0 cont">
             <div class="row  m-0">
                 <div  class="menu-section text-wrap"  :class="[getGridValue(aMenu)]" v-for="(aMenu,index) in sections" :key="index">
                     <section v-if="!isComponent(aMenu)">
@@ -85,7 +85,7 @@
             const isDouble      = isDoubleCol(aMenu);
             const colSize       =  isDouble? lengthColSizeMap[numberOfCols] * 2 : lengthColSizeMap[numberOfCols];
 
-            if(hasTwoDoubleCol()) return isDouble?  'col-5' : 'col-2';
+            if(hasTwoDoubleCol()) return isDouble?  'col-5' : 'col';
 
             return `col-${colSize}`;
         }
@@ -281,6 +281,9 @@
 }
 
 @media (max-width: 991.98px) { 
+    .cont{
+        height: 175vh;
+    }
     .mm{
         top: 0; 
         padding-top: 2rem;

@@ -14,14 +14,16 @@ export const useMediaTypeMenus = async (ctx) => {
 
 async function getMediaMenus (ctx, drupalInternalId) {
     const { localizedHost } = ctx;
-    const uri               = `${localizedHost}/jsonapi/media/${drupalInternalId}?jsonapi_include=1&include=thumbnail&page[limit]=7&sort[sort-created][path]=created`;
+    const include          = drupalInternalId === 'document'? 'thumbnail,field_media_image' : 'thumbnail';
+    const uri               = `${localizedHost}/jsonapi/media/${drupalInternalId}?jsonapi_include=1&include=${include}&page[limit]=14&sort[sort-created][path]=created`;
     const method            = 'get';
     const headers           = { 'Content-Type': 'application/json' };
+
     const { data }          = await $fetch(uri, { method, headers });
 
-    return mapData(ctx)(data)
+    return mapData(ctx, drupalInternalId)(data)
 };
-function mapData(ctx){
+function mapData(ctx, drupalInternalId){
     const pathAlias = usePathAlias(ctx)
 
     return async (data)=>{
@@ -30,8 +32,9 @@ function mapData(ctx){
         for (const document of data){
 
             const { thumbnail, name, title, created, changed, drupal_internal__mid: drupalInternalMid  } = document;
-            const { url }       = thumbnail?.uri || {};
-            const   href        = `/media/${drupalInternalMid}`;
+            const thumbSource   = drupalInternalId === 'document'? document.field_media_image : thumbnail;
+            const { url }       = thumbSource?.uri || {};
+            const   href        = `/media/${drupalInternalId}/${drupalInternalMid}`;
             const   thumb       = url? `${ctx.host}${url || ''}` : '/images/no-image.png';
             
             const aDoc = { thumb, title:title || name, name, href, created, changed, drupalInternalMid }

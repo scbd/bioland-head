@@ -45,6 +45,8 @@ function getInternalUrlsRecursive(menus,{internalUrlsArr, parent}={}){
 
     for (const aMenu of menus) {
         if(aMenu.children) getInternalUrlsRecursive(aMenu.children, { internalUrlsArr:internalUrls, parent:aMenu })
+        if(aMenu.title==='Publications')
+
         if(!parent?.class?.includes('bl2-show-thumbs')) continue;
         if(aMenu?.path?.includes('entity')) internalUrls.push(aMenu)
     }
@@ -105,7 +107,7 @@ async function getPathAliasFromApiPager ({ identifier, pathPreFix, localizedHost
         return data
     }
     catch(e){
-        console.error('Menus.getPathAliasFromApiPager - recursive', e)
+       // console.error('Menus.getPathAliasFromApiPager - recursive', e)
     }
 }
 
@@ -133,7 +135,7 @@ export async function getMenusFromApiPager ({ identifier, pathPreFix, pathAlias,
         return data
     }
     catch(e){
-        console.error('Menus.getMenusFromApiPager - recursive', e)
+       // console.error('Menus.getMenusFromApiPager - recursive', e)
     }
 }
 

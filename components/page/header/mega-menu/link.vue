@@ -89,4 +89,11 @@
     fill:var(--bs-blue);
     transition: 0.3s;
 }
+@media (max-width: 991.98px) { 
+    .mm-main-nav-final-link,
+.main-nav-final-link{
+    position: relative;
+    bottom: unset;
+}
+}
 </style>

@@ -49,6 +49,12 @@ export function parseContext (context) {
     return { host, localizedHost, country,countries,  identifier, locale, defaultLocale, indexLocal:indexLocale, indexLocale }
 }
 
+export function sortArrayOfObjectsByProp(a,b, prop){
+    if(a[prop] < b[prop]) return -1; 
+    if(a[prop] > b[prop]) return 1;
+
+    return 0;
+}
 
 function getPathPrefix(locale, defaultLocale){
     return locale === 'und' || locale === defaultLocale  ? '' : '/'+ drupalizeLocale(locale);

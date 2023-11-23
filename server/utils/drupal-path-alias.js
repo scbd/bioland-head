@@ -22,7 +22,7 @@ function getById ({ identifier, localizedHost, locale }){
                                 return data.length? data[0] : undefined
                             }
                             catch(e){
-                                consola.error('usePathAlias.getById', e)
+                              //  consola.error('usePathAlias.getById', e)
                             }
                     }
 }

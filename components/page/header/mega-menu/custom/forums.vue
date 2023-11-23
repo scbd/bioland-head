@@ -2,7 +2,7 @@
     <div class="col-12 text-wrap px-0">
         <PageHeaderMegaMenuHeader  :menu="menu" />
 
-        <div v-for="(aChild,j) in menu.children" :key="j" class="row mb-2">
+        <div v-for="(aChild,j) in children" :key="j" class="row mb-2">
             <div class="col-6">
                 <NuxtLink  class="child-link"   :to="aChild?.path?.alias || ''" :title="aChild.title" >
                     {{aChild.title}}
@@ -30,16 +30,13 @@
 
     const { t     } = useI18n    (                );
     const   props   = defineProps({ menu: Object });
-    const { menu: passedMenu  } = toRefs     (props           );
+    const { menu } = toRefs     (props           );
 
     const siteStore = useSiteStore();
     const menuStore = useMenusStore();
     
-    const menu      = computed(() => {
-        passedMenu.value.children = passedMenu.value.children || [];
-
-        passedMenu.value.children = [...passedMenu.value.children, ...menuStore.forums ];
-        return passedMenu.value;
+    const children      = computed(() => {
+        return menuStore.forums;
     });
 
 

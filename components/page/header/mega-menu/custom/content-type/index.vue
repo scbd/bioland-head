@@ -25,7 +25,7 @@
     
     function getDefaultFinalLink(){
         const   contentType         = getContentType();
-        const { count, name, slug } = menuStore.counts[contentType];
+        const { count, name, slug } = menuStore.contentTypes[contentType] || {};
 
         return {
             title: `View more`,

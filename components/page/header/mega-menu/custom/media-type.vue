@@ -80,8 +80,8 @@ consola.warn('getMediaTypeData',getMediaTypeData())
     }
 
     function getMediaTypeData(){
-        const mediaTypes = getMediaType();
-
+        const mediaTypes = Array.isArray(getMediaType())? getMediaType(): [getMediaType()];
+        consola.error('contentType', mediaTypes)
         let data = []
         for (const type of mediaTypes) {
             data = [...data, ...menuStore?.mediaTypes[type]?.data || []]

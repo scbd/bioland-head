@@ -4,7 +4,7 @@
             <nav  class="navbar nav bg-dark w-100 pt-0">
                 <ul class="nav">
                     <li @click.stop="toggle(index)" v-for="(aMenu,index) in menus" :key="index" :class="{'bg-primary': aMenu.class?.includes('login')}" class="nav-item text-nowrap"  >
-                        <NuxtLink  :class="aMenu.class" class="nav-link" to="#" :title="aMenu.title" >
+                        <NuxtLink  :class="aMenu.class" class="nav-link" :to="aMenu.href" :title="aMenu.title" >
                             {{aMenu.title}}
                         </NuxtLink>
                         <span ref="spacers" :class="{ 'opacity-0': isLastSpacer(index) }" class="spacer"></span>
@@ -135,6 +135,7 @@ nav {
   color:rgba(255, 255, 255);
   opacity: .75;
   transition: opacity .3s;
+  cursor: pointer;
 //   @media (max-width: 1247.98px) {
 //       margin-right: 1rem;
 //   }
