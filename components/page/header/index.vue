@@ -1,41 +1,34 @@
 <template>
     <header >
         
-        <div class="page-loader"></div>
-
         <PageHeaderLanguageBar/>
+        <PageHeaderHeroImage :key="path">
 
-        <div class="navbar navbar-dark">
-            
             <PageHeaderTitleSearch/> 
+            <PageHeaderMegaMenu/> 
 
-            
-                <!-- <div class="db text-muted">Mega Menu <a href="https://scbd.atlassian.net/browse/BL-16" target="_blank">BL-16</a></div> -->
+        </PageHeaderHeroImage>
 
-            
-                
-        </div> 
-        <PageHeaderMegaMenu/> 
-        <PageHeaderHeroImage :key="path"/>
     </header>
 </template>
 <script setup>
 const { path }= useRoute();
 </script>
+
 <style lang="scss" scoped>
 header {
     // overflow: clip;
     position: relative;
 }
 // UN3 "Masthead": Brand Bar, Header, and Menu
-.navbar {
-  padding: 0;
-  padding-top: 2.5rem;
-}
+// .navbar {
+//   padding: 0;
+//   padding-top: 2.5rem;
+// }
 
-@media (max-width: 721.98px) {
-  .navbar {
-      padding-top: 0;
-  }
-}
+// @media (max-width: 721.98px) {
+//   .navbar {
+//       padding-top: 0;
+//   }
+// }
 </style>

@@ -5,21 +5,21 @@ import c from 'consola';
 export const consola = c;
 export const unLocales = ['en', 'ar', 'es', 'fr', 'ru', 'zh'];
 
-export const absMegaMenuSchemas = ['measure', 'absProcedure', 'absNationalModelContractualClause', 'absPermit', 'database', 'absCheckpoint']
+export const absMegaMenuSchemas = [ 'measure', 'absProcedure', 'absNationalModelContractualClause', 'absPermit', 'database', 'absCheckpoint']
 export const bchMegaMenuSchemas = [ 'biosafetyLaw', 'biosafetyDecision', 'nationalRiskAssessment', 'database', 'nationalReport', 'biosafetyExpert']
 
 export const parseQuery = (event) => {
-    const { country, identifier, locale, defaultLocale: defaultLocaleRaw, countries: countriesArray } = getQuery(event);
+    const { country, identifier, locale, defaultLocale, countries: countriesArray } = getQuery(event);
     
     const countries      = countriesArray?.length? countriesArray : undefined;
 
-    const defaultLocale  =  !isPlainObject(defaultLocaleRaw)? JSON.parse(defaultLocaleRaw).locale : defaultLocaleRaw.locale;
-    const { baseHost, env }   = useRuntimeConfig().public;
-    const pathPreFix     = getPathPrefix(locale, defaultLocale)
-    const hasRedirect    = env === 'production' && redirect;
-    const host           = hasRedirect? `https://${redirect}` : `https://${identifier}${baseHost}`;
-    const localizedHost  = `${host}${pathPreFix}`;
-    const indexLocal     = getIndexLocale(locale);
+    // const defaultLocale      =  !isPlainObject(defaultLocaleRaw)? JSON.parse(defaultLocaleRaw || {}).locale : defaultLocaleRaw.locale;
+    const { baseHost, env }  = useRuntimeConfig().public;
+    const pathPreFix         = getPathPrefix(locale, defaultLocale)
+    const hasRedirect        = env === 'production' && redirect;
+    const host               = hasRedirect? `https://${redirect}` : `https://${identifier}${baseHost}`;
+    const localizedHost      = `${host}${pathPreFix}`;
+    const indexLocal         = getIndexLocale(locale);
 
     return { host, localizedHost, baseHost, country, countries, identifier, locale, defaultLocale, pathPreFix, indexLocal  }
 }
@@ -33,12 +33,13 @@ export const getContext = (event) => {
 }
 
 export function parseContext (context) {
+
     const ctx = isString(context)? JSON.parse(context) : context;
 
-    const { country, identifier, locale, defaultLocale: defaultLocaleRaw, countries: countriesArray, redirect } = ctx;
+    const { country, identifier, locale, defaultLocale, countries: countriesArray, redirect } = ctx;
     
     const   countries       = countriesArray?.length? [country,...countriesArray] : [country];
-    const   defaultLocale   =  !isPlainObject(defaultLocaleRaw) && defaultLocaleRaw? JSON.parse(defaultLocaleRaw).locale : defaultLocaleRaw?.locale;
+    // const   defaultLocale   =  defaultLocale
     const { baseHost, env } = useRuntimeConfig().public;
     const   pathPreFix      = getPathPrefix(locale, defaultLocale)
     const   hasRedirect     = env === 'production' && redirect;
@@ -57,6 +58,8 @@ export function sortArrayOfObjectsByProp(a,b, prop){
 }
 
 function getPathPrefix(locale, defaultLocale){
+    if(!locale || !defaultLocale?.locale) return '';
+
     return locale === 'und' || locale === defaultLocale  ? '' : '/'+ drupalizeLocale(locale);
 }
 
@@ -64,4 +67,56 @@ function drupalizeLocale(locale){
     if(locale === 'zh-hans') return 'zh-hans';
 
     return locale;
+}
+
+
+export async function getSiteDefinedName (ctx) {
+    const { apiKey }     = useRuntimeConfig()
+    const localizedHost  = getHost(ctx)
+    const query          = { jsonapi_include: 1 };
+    const uri            = `${localizedHost}/jsonapi/site/site?api-key=${apiKey}`
+
+
+    const resp = await $fetch(uri,{query})
+    const name = resp?.data?.name
+
+    return name === '_'? '' : name;
+}
+
+export async function getSiteConfig({identifier, gaiaApi, drupalMultisiteIdentifier }){
+
+
+
+    const uri = `${gaiaApi}v2023/drupal/multisite/${drupalMultisiteIdentifier}/configs/${identifier}`
+
+    return $fetch(uri)
+}
+
+
+function getHost(ctx, ignoreLocale = false){
+    const { baseHost, env }  = useRuntimeConfig().public;
+    const { locale, identifier, defaultLocale, config } = ctx;
+    const   hasRedirect     = env === 'production' && config.redirect;
+    const pathLocale = ignoreLocale? '' : drupalizePathLocales(locale, defaultLocale);
+    const base       = hasRedirect? `https://${config.redirect}` : `https://${encodeURIComponent(identifier)}${encodeURIComponent(baseHost)}`;
+
+    return `${base}${pathLocale}`;
+}
+
+const drupalLocaleMap = new Map([['/zh','/zh-hans']]);
+
+function drupalizePathLocales(locale, defaultLocale){
+    if(!defaultLocale?.locale || !locale) return '';
+
+    const pathPreFix = locale === defaultLocale?.locale? '' : `/${locale}`;
+
+    if(!pathPreFix) return pathPreFix;
+
+    const keys = drupalLocaleMap.keys();
+
+    for (const aKey of keys)
+        if(pathPreFix.startsWith(aKey))
+            return pathPreFix.replace(aKey,drupalLocaleMap.get(aKey))
+
+    return pathPreFix;
 }

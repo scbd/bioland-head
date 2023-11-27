@@ -1,22 +1,22 @@
 <template>
-    <div v-show="hasHeroImage"  :style="backgroundStyles" class="un3-hero hero-image  w-100 position-absolute" > </div>
-    <div v-show="hasHeroImage"  class="message text-white">
-        <div v-if="hi?.field_description?.value" v-html="hi?.field_description?.value">
-        </div>
+    <div   :style="backgroundStyles" :class="{'un3-hero':hasHeroImage, 'hero-image':hasHeroImage, 'no-hero':!hasHeroImage }"  >
+        <slot></slot>
+        <div v-if="hasHeroImage"  class="container text-white">
+            <div class="row pb-1">
+                <div v-if="hi?.field_description?.value" v-html="hi?.field_description?.value">
+                </div>
 
-        <div v-if="hi?.field_credits" class=" position-absolute bottom-30 w-100">
-
-                    <div class="col-12 d-flex justify-content-end align-items-center pe-3">
-                        <p class="small mb-2" style="opacity:70%;">
-                            Photo Credits - {{hi.field_credits}}
-                        </p>
+                <div v-if="hi?.field_credits"  class="col-12 d-flex justify-content-end align-items-center">
+                    <div class="small" style="opacity:70%;">
+                        {{hi.field_credits}}
                     </div>
-
+                </div>
+            </div>
         </div>
-    </div> 
+
+    </div>
 </template>
 <script>
-import { useElementSize } from '@vueuse/core';
 import { useSiteStore } from "~/stores/site";
 import { usePageStore } from "~/stores/page";
 
@@ -37,7 +37,7 @@ function setup() {
 
     const backgroundStyles = computed(() => {
 
-        if(!hasHeroImage.value) return getBackgroundStyles('/images/hero-image.jpg')
+        if(!hasHeroImage.value) return {}//getBackgroundStyles('/images/hero-image.jpg')
         const imgOptions = { 
                                 ...getWidthHeightImg(viewport),
                                 fit: 'outside',
@@ -89,18 +89,21 @@ section {
     overflow-x: hidden;
 }
 
-
+.no-hero{
+    margin-top: 2rem;;
+}
 .hero-image {
-    top: 0;
-    z-index: -2;
-    min-height: 472px;
-    max-height: 472px;
+    // top: 0;
+    // z-index: -2;
+    // min-height: 472px;
+    // max-height: 472px;
+    width: 100vw;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
     background-size: cover !important;
     background-repeat: no-repeat;
     background-position: center center;
     background-position: center, center, center center, center;
-    background-repeat-x: initial, initial, initial, initial, no-repeat;
-    background-repeat-y: initial, initial, initial, initial, no-repeat;
     background-color:lightgray;
     background-blend-mode: normal, normal, color, normal;
 
@@ -108,17 +111,23 @@ section {
         animation: scrollBackground ease-in-out 120s infinite;
     }
 
-    @media (max-aspect-ratio: 4/3) {
-        height: 100vh;
-    }
+    // @media (max-aspect-ratio: 4/3) {
+    //     height: 100vh;
+    // }
 
-    @media (min-width: 1600px) {
-        filter: blur(1px);
-    }
+    // @media (min-width: 1600px) {
+    //     filter: blur(1px);
+    // }
 }
 
-.hero-image {
-    width: 100vw;
-    height: 472px;
+// .hero-image {
+//    width: 100vw;
+//    max-height: 472px;
+// }
+
+@media (max-width: 991.98px) {
+    .hero-image {
+        margin-top: 4rem;
+    }
 }
 </style>

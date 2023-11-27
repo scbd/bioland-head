@@ -16,11 +16,16 @@ const routeRules = {
 export default defineNuxtConfig({
   devtools: { enabled: true },
   debug: false, 
+  sourcemap: {
+    server: true,
+    client: true
+  },
   css,
   //routeRules,
   runtimeConfig:{
     apiUser: process.env.API_USER,
     apiUserPass: process.env.API_USER_PASS,
+    apiKey : process.env.API_KEY,
     public: {
       locales,
       baseURL: '',
@@ -119,5 +124,21 @@ export default defineNuxtConfig({
       xxl: 1400,
       '2xl': 1400
     },
+  },
+  nitro: {
+    // Production
+    storage: {
+      db: {
+        driver: 'fs',
+        base: './data/db'
+      }
+    },
+    // Development
+    devStorage: {
+      db: {
+        driver: 'fs',
+        base: './data/db'
+      }
+    }
   }
 })

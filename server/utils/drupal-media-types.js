@@ -42,7 +42,7 @@ function mapData(ctx, drupalInternalId){
 
             promises.push(pathAlias.getByMediaId(drupalInternalMid).then((p)=>{ 
                 aDoc.path=p;
-                if(p.alias) aDoc.href=p?.alias;
+                if(p?.alias) aDoc.href=p?.alias;
             }))
             // .then((p) => consola.warn(p))
             // .then((p)=>aDoc.path=p);

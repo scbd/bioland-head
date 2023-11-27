@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
-import { getBiolandSiteIdentifier } from "~/util";
 
 
-const actions = { getHost, set, initialize, getSiteDefaultLocale, watchLocaleChange, getSiteConfig, getDefinedName}
+
+const actions = { getHost, set, initialize, getInitialContext }
 const getters = { drupalApiUriBase, host, localizedHost, params, countries };
 
 
@@ -38,55 +38,51 @@ function set(name, value){
     return this;
 }
 
-async function initialize(nuxtApp){
+async function initialize(nuxtApp, { identifier, defaultLocale, config, siteName }){
     const { gaiaApi, drupalMultisiteIdentifier, baseHost, env }   = useRuntimeConfig().public;
-    const { hostname } = useRequestURL();
 
-    this.set('baseHost',baseHost);
-    this.set('gaiaApi',gaiaApi);
-    this.set('drupalMultisiteIdentifier',drupalMultisiteIdentifier);
-    this.set('locale',nuxtApp.$i18n.locale);
-    this.set('identifier',getBiolandSiteIdentifier(hostname) || 'seed');
-    this.set('defaultLocale',await this.getSiteDefaultLocale());
+    // consola.error(await getInitialContext({  baseHost, gaiaApi, drupalMultisiteIdentifier, locale: nuxtApp.$i18n.locale })    );
 
-    const config = await this.getSiteConfig();
+    
 
-    this.set('config',config);
-    this.set('logo',getLogoUri(config));
-    this.set('name',await this.getDefinedName());
+    this.set('baseHost', baseHost);
+    this.set('gaiaApi', gaiaApi);
+    this.set('drupalMultisiteIdentifier', drupalMultisiteIdentifier);
+    this.set('locale', nuxtApp.$i18n.locale);
+    this.set('identifier', identifier);
+    this.set('defaultLocale', defaultLocale);
+
+    // const config = await this.getSiteConfig();
+
+    this.set('config', config);
+    this.set('logo', getLogoUri(config));
+    this.set('name', siteName);
     this.set('redirect', env === 'production'? config.redirect : '');
 
-   // await this.getNationalReportSixUrl()
+
 }   
 
-function watchLocaleChange(nuxtApp, functions = []){
-    const locale  =  nuxtApp.$i18n.locale
-
-    watch(locale, async (newLocale) => {
-        this.set('locale',newLocale);
-        await this.initialize(nuxtApp);
-
-        for (const aFunction of functions)
-            await aFunction();
-        
-    }, { immediate: true });
-}
-
-async function getSiteDefaultLocale(){
-    const { identifier, gaiaApi, drupalMultisiteIdentifier } = this;
 
 
-    const uri = `/api/default-locale`
+async function getInitialContext(locale){
+    try{
+        const { gaiaApi, drupalMultisiteIdentifier, baseHost, env }   = useRuntimeConfig().public;
+        const identifier = getBiolandSiteIdentifier(useRequestURL().hostname) || 'seed';
+        const params     = { identifier,  locale, gaiaApi, drupalMultisiteIdentifier, baseHost };
+        const uri        = `/api/context`
+    
+        const { data, error } = await useFetch(uri, { params })
+    
+        return data?.value
+    }catch(e){
+        consola.error('getInitialContext',e)
+    }
 
-    const { data, error } = await useFetch(uri)
-
-    return data.value
 }
 
 
 async function getSiteConfig(){
     const { identifier, gaiaApi, drupalMultisiteIdentifier } = this;
-
 
     const uri = `${gaiaApi}v2023/drupal/multisite/${drupalMultisiteIdentifier}/configs/${identifier}`
 
@@ -157,6 +153,7 @@ function countries(){
 const drupalLocaleMap = new Map([['/zh','/zh-hans']]);
 
 function drupalizePathLocales(locale, defaultLocale){
+    if(!defaultLocale?.locale || !locale) return '';
 
     const pathPreFix = locale === defaultLocale?.locale? '' : `/${locale}`;
 
@@ -169,4 +166,11 @@ function drupalizePathLocales(locale, defaultLocale){
             return pathPreFix.replace(aKey,drupalLocaleMap.get(aKey))
 
     return pathPreFix;
+}
+
+function getBiolandSiteIdentifier (hostName) {
+    if(hostName.split('.').length <= 1)
+        return undefined;
+
+    return hostName.split('.')[0];
 }

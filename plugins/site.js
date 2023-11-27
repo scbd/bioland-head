@@ -10,10 +10,14 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     const siteStore = useSiteStore(nuxtApp.$pinia);
     const menuStore = useMenusStore(nuxtApp.$pinia);
 
-    await siteStore.initialize(nuxtApp);
+
+    const { identifier, defaultLocale, config, siteName } = await siteStore.getInitialContext(nuxtApp.$i18n.locale);
 
 
+    await siteStore.initialize(nuxtApp,{ identifier, defaultLocale, config, siteName });
     const { params } = siteStore;
+
+    // consola.error('params', params)
 
     const context = useCookie('context');
 
@@ -21,18 +25,16 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
     const { data } = await useFetch(`/api/menus`,{ params });
 
-// consola.error('data', data)
-
     await menuStore.loadAllMenus(data.value);
 
     nuxtApp.hook('i18n:localeSwitched', async ({oldLocale, newLocale}) => {
-        // consola.warn('i18n:localeSwitched', oldLocale, newLocale)
-        const localeChanged = newLocale === siteStore.defaultLocale.locale ? 'und' : newLocale;
+        const localeChanged = newLocale === siteStore.defaultLocale ? 'und' : newLocale;
+
         params.locale = localeChanged;
         context.value.locale = localeChanged;
         menuStore.loadAllMenus((await useFetch(`/api/menus`,{ params })).data.value)
     })
-    // siteStore.watchLocaleChange(nuxtApp, [menuStore.loadAllMenus]);
+
 
     //middleware before every route change
     addRouteMiddleware('bioland-route-change',  async (to) => setAppStates(to), { global: true });

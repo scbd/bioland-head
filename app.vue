@@ -1,6 +1,7 @@
 <template>
     <IconSymbols v-once/>
     <NuxtLoadingIndicator />
+    <!-- <div class="page-loader"></div> -->
     <PageHeader/>
     <!-- <PageEditorControls  /> -->
     <main class="">

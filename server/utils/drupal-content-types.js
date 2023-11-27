@@ -71,8 +71,8 @@ async function getAllContentTypeMenus(ctx){
     return Promise.all(requests);
 }
 
-async function getTerms ({ localizedHost }) {
-    const uri           = `${localizedHost}/jsonapi/taxonomy_term/tags?jsonapi_include=1`;
+async function getTerms ({ localizedHost, host }) {
+    const uri           = `${host}/jsonapi/taxonomy_term/tags?jsonapi_include=1`;
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 

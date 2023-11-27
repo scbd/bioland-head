@@ -55,11 +55,11 @@
 
         const pagePath = useState('pagePath');
 
-        limitedMenus.value = menus.value? menus.value.slice(0, limit.value) : [];
+        limitedMenus.value = menus.value && Array.isArray(menus.value)? menus.value.slice(0, limit.value) : [];
         
-        if(menus.value && menus.value.length > limit.value)
+        if(menus?.value && menus.value?.length > limit.value)
             otherMenus.value = menus.value.slice(limit.value);
-
+        
 
         return { t, pagePath, menus, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl, viewport, switchLocalePath }
     }
@@ -88,14 +88,16 @@
 
     function reloadMenus(newBreakpoint){
         this.otherMenus = [];
-        const largeBreakpoints = ['lg','xl'];
+        const largeBreakpoints = ['lg','xl', 'xxl'];
         const mediumBreakpoints = ['md','sm','xs'];
 
         if(largeBreakpoints.includes(newBreakpoint))
-                this.limit = 6;
+            return  this.limit = 6;
         if(mediumBreakpoints.includes(newBreakpoint))
                 this.limit = 3;
 
+        if(!this.menus || !this.menus?.length) return;
+        
         this.limitedMenus = this.menus.slice(0, this.limit);
 
         if(mediumBreakpoints.includes(newBreakpoint))

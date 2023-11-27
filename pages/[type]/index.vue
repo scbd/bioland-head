@@ -5,5 +5,5 @@
 import { usePageStore } from "~/stores/page";
 
 const pageStore = usePageStore();
-
+const viewport = useViewport();
 </script>

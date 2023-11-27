@@ -4,7 +4,6 @@
             <div @click="clickLeft" class="arrow-cont"><Icon name="arrow-left" class="arrow"/></div>
 
             <div class="flag-box">
-                &nbsp;---{{selectedCountry}}
                 <Transition :name="fadeName">
                     <NuxtImg  v-if="!hide" :src="logo" class="flag"/>
                 </Transition>
