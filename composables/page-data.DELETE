@@ -23,8 +23,7 @@ export async function usePageData(){
 
     const { data } = await $fetch(uri, { query });
 
-    await getPageAttachments(data)
-
+    await getPageAttachments(data);
 
     return data
     }catch(e){

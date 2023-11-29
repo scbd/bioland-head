@@ -1,9 +1,10 @@
 import { defineStore   } from 'pinia';
 import   random          from 'lodash.sample' ;
 import   camelCaseKeys   from 'camelcase-keys';
+import { useSiteStore } from "~/stores/site";
 
 const actions = { set, initialize }
-const getters = { heroImage };
+const getters = { heroImage, typeName, images, documents, videos, image };
 
 function heroImage(){
     
@@ -52,7 +53,8 @@ const initState = {
         fieldTypePlacement         : undefined,
         path                       : undefined,
         pageIdentifiers            : undefined,
-        hasHeroImage               : undefined
+        hasHeroImage               : undefined,
+
 }
 
 function state(){ return initState }
@@ -79,4 +81,42 @@ async function initialize(pageDataRaw){
     const   hasHeroImage       = Array.isArray(fieldAttachments)? !!fieldAttachments?.find(({ type })=> type === 'media--hero') : false ;
 
     this.$patch({ hasHeroImage } );
-}   
+}  
+
+function typeName(){
+    if(!this.fieldTypePlacement || !this.fieldTypePlacement?.length) return undefined;
+
+    return this.fieldTypePlacement[0].name;
+}
+
+function image(){
+    if(!this.images || !this.images?.length) return undefined;
+
+    return this.images[0];
+}
+
+function images(){
+    if(!this.fieldAttachments || !this.fieldAttachments?.length) return [];
+
+    return this.fieldAttachments.filter(({ type })=> type === 'media--image').map( mapImage);
+}
+function documents(){
+    if(!this.fieldAttachments || !this.fieldAttachments?.length) return [];
+
+    return this.fieldAttachments.filter(({ type })=> type === 'media--document');
+}
+function videos(){
+    if(!this.fieldAttachments || !this.fieldAttachments?.length) return [];
+
+    return this.fieldAttachments.filter(({ type })=> type === 'media--remote-video');
+}
+
+function mapImage({ name,fieldMediaImage, drupalInternalMid, path }){
+    if(!name || !fieldMediaImage) throw new Error('usePageStore.mapImage -> name or fieldMediaImage is undefined');
+    const siteStore = useSiteStore();
+
+    const alt = fieldMediaImage?.meta?.alt|| name;
+    const src = `${siteStore.host}${fieldMediaImage.uri.url}`;
+
+    return { name, url:path.alias, alt, drupalInternalMid, src}
+}

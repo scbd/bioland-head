@@ -1,16 +1,16 @@
 import { defineEventHandler } from 'h3';
-export default defineEventHandler(async (event) => {
+export default cachedEventHandler(async (event) => {
     try{
         const { context } = parseCookies(event)
 
-        console.log('--------------------------/api/menus context', context)
+        // console.log('--------------------------/api/menus context', context)
         const query       = getQuery(event)
-        console.log('--------------------------/api/menus query', query)
+        // console.log('--------------------------/api/menus query', query)
 
         const headers = {
             Cookie: `context=${encodeURIComponent(JSON.stringify(context || query || {}))};`,
         }
-        console.log('--------------------------/api/menus  headers',  headers)
+        // console.log('--------------------------/api/menus  headers',  headers)
         const [absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes, mediaTypes, forums  ] = await Promise.all([
             $fetch('/api/menus/absch', { query, method:'get', headers }),
             $fetch('/api/menus/bch', { query, method:'get', headers }),
@@ -37,4 +37,7 @@ export default defineEventHandler(async (event) => {
         }) 
     }
     
+},{
+    maxAge: 60,
+    varies:['Cookie']
 })

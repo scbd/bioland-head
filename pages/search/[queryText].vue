@@ -1,5 +1,5 @@
 <template>
-  <PageBody/>
+  <!-- <PageBody/> -->
 
   <h1 class="text-center text-muted">Search term: {{ params.queryText }}</h1>
 

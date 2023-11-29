@@ -1,5 +1,5 @@
 
-export default defineEventHandler(async (event) => {
+export default cachedEventHandler(async (event) => {
     try{
         const context = getContext(event);
 
@@ -13,4 +13,7 @@ export default defineEventHandler(async (event) => {
         }); 
     }
     
+},{
+    maxAge: 60 * 60 * 24,
+    varies:['Cookie']
 })

@@ -2,7 +2,7 @@ import SA      from 'superagent'               ;
 
 const $http   = {}//SA.agent()
 
-export default defineEventHandler(async (event) => {
+export default cachedEventHandler(async (event) => {
     try{
     
         const receivedQuery = parseQuery(event);
@@ -19,7 +19,11 @@ export default defineEventHandler(async (event) => {
         }) 
     }
     
+},{
+    maxAge: 60 * 60 * 24,
+    varies:['Cookie']
 })
+
 function getQueryString({ countries, country, locale }={}){
     
     const fields = getIndexNrFields(locale);

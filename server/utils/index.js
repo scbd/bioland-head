@@ -36,7 +36,7 @@ export function parseContext (context) {
 
     const ctx = isString(context)? JSON.parse(context) : context;
 
-    const { country, identifier, locale, defaultLocale, countries: countriesArray, redirect } = ctx;
+    const { country, identifier, locale, defaultLocale, countries: countriesArray, redirect , path} = ctx;
     
     const   countries       = countriesArray?.length? [country,...countriesArray] : [country];
     // const   defaultLocale   =  defaultLocale
@@ -47,7 +47,7 @@ export function parseContext (context) {
     const   localizedHost   = `${host}${pathPreFix}`;
     const   indexLocale     = getIndexLocale(locale);
 
-    return { host, localizedHost, country,countries,  identifier, locale, defaultLocale, indexLocal:indexLocale, indexLocale }
+    return { host, localizedHost, country,countries,  identifier, locale, defaultLocale, indexLocal:indexLocale, indexLocale, path }
 }
 
 export function sortArrayOfObjectsByProp(a,b, prop){
@@ -83,9 +83,9 @@ export async function getSiteDefinedName (ctx) {
     return name === '_'? '' : name;
 }
 
-export async function getSiteConfig({identifier, gaiaApi, drupalMultisiteIdentifier }){
+export async function getSiteConfig({ identifier }){
 
-
+    const { gaiaApi, drupalMultisiteIdentifier }  = useRuntimeConfig().public;
 
     const uri = `${gaiaApi}v2023/drupal/multisite/${drupalMultisiteIdentifier}/configs/${identifier}`
 
@@ -96,7 +96,7 @@ export async function getSiteConfig({identifier, gaiaApi, drupalMultisiteIdentif
 function getHost(ctx, ignoreLocale = false){
     const { baseHost, env }  = useRuntimeConfig().public;
     const { locale, identifier, defaultLocale, config } = ctx;
-    const   hasRedirect     = env === 'production' && config.redirect;
+    const   hasRedirect     = env === 'production' && config?.redirect;
     const pathLocale = ignoreLocale? '' : drupalizePathLocales(locale, defaultLocale);
     const base       = hasRedirect? `https://${config.redirect}` : `https://${encodeURIComponent(identifier)}${encodeURIComponent(baseHost)}`;
 

@@ -1,16 +1,19 @@
+import   camelCaseKeys   from 'camelcase-keys';
 
-
-export async function getPageData({ identifier, pathPreFix, path }){
+export async function getPageData(ctx){
     const { baseHost }            = useRuntimeConfig().public;
-    const { uuid,  type, bundle } = await getPageIdentifiers({ identifier, pathPreFix, path });
+    const { uuid,  type, bundle } = await getPageIdentifiers(ctx);
 
+        const { identifier, pathPreFix } = ctx;
     const   query  = getSearchParams(type, bundle);
     const   uri    = `https://${identifier}${baseHost}${pathPreFix || ''}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
     const { data } = await $fetch(uri, { query });
 
-    await getPageAttachments(data, { identifier, pathPreFix, path });
+    //await getPageAttachments(data, ctx);
+//field_media_image
 
-    return data;
+
+    return  await mapData(ctx)(data)
 }
 export async function getPageDates(ctx){
     const { localizedHost }       = ctx;
@@ -77,38 +80,31 @@ async function getThumbFiles(data,  {localizedHost, host }){
     return '/images/no-image.png';
 }
 
-async function getPageAttachments(data,  {identifier, pathPreFix, path }){
-    const allRequests =[];
-    const { field_attachments, id } = data;
-    const { baseHost }   = useRuntimeConfig().public;
+function mapData(ctx){
+    const pathAlias = usePathAlias(ctx)
 
-    const uriStart = `https://${identifier}${baseHost}${pathPreFix}`;
+    return async (document)=>{
+        const docs = []
+        const promises = [];
+        for (const media of document['field_attachments']){
 
-    if(!field_attachments || !field_attachments.length) return;
+            promises.push(pathAlias.getByMediaId(media.drupal_internal__mid).then((p)=>{ 
+                media.path=p;
+       
+            }))
+            // .then((p) => consola.warn(p))
+            // .then((p)=>aDoc.path=p);
 
-    for(const attachment of field_attachments){
-        const { thumbnail, field_media_document, field_media_image, field_media_image_1 } = attachment;
+        }
         
-        if(thumbnail?.id)
-            allRequests.push($fetch(`${uriStart}/jsonapi/file/file/${thumbnail.id}`, { query: {jsonapi_include: 1}, mode: 'cors' })
-                .then(({ data })=> attachment.thumbnail = { ...thumbnail, ...data }))
+        await Promise.all(promises);
 
-        if(field_media_document?.id)
-            allRequests.push($fetch(`${uriStart}/jsonapi/file/file/${field_media_document.id}`, { query: {jsonapi_include: 1}, mode: 'cors' })
-                .then(({ data })=> attachment.field_media_document = { ...field_media_document, ...data }))
-
-        if(field_media_image?.id)
-            allRequests.push($fetch(`${uriStart}/jsonapi/file/file/${field_media_image.id}`, { query: {jsonapi_include: 1}, mode: 'cors' })
-                .then(({ data })=> attachment.field_media_image = { ...field_media_image, ...data }))
-
-        if(field_media_image_1?.id)
-            allRequests.push($fetch(`${uriStart}/jsonapi/file/file/${field_media_image_1.id}`, { query: {jsonapi_include: 1}, mode: 'cors' })
-                .then(({ data })=> attachment.field_media_image_1 = { ...field_media_image_1, ...data }))
-        
-    }
-    await Promise.all(allRequests);
-
-    return data;
+        for (const key in document) {
+            if(Array.isArray(document[key]))
+                document[key] = document[key].map((item)=> camelCaseKeys(item))
+        }
+        return camelCaseKeys(document)
+}
 }
 
 function getSearchParams(type, bundle, prop){
@@ -121,7 +117,7 @@ function getSearchParams(type, bundle, prop){
 }
 
 function setContentSearchParams(search){
-    search['include'] = 'field_attachments,field_type_placement';
+    search['include'] = 'field_attachments,field_type_placement,field_attachments.field_media_image, field_attachments.thumbnail';
 }
 
 

@@ -1,13 +1,10 @@
 import { defineStore } from 'pinia'
 
 
-
-const actions = { getHost, set, initialize, getInitialContext }
+const actions = { getHost, set, initialize, getInitialContext };
 const getters = { drupalApiUriBase, host, localizedHost, params, countries };
 
-
-
-export const useSiteStore = defineStore('site', { state, actions, getters })
+export const useSiteStore = defineStore('site', { state, actions, getters });
 
 const initState = { 
                     locale                    : undefined,
@@ -41,10 +38,6 @@ function set(name, value){
 async function initialize(nuxtApp, { identifier, defaultLocale, config, siteName }){
     const { gaiaApi, drupalMultisiteIdentifier, baseHost, env }   = useRuntimeConfig().public;
 
-    // consola.error(await getInitialContext({  baseHost, gaiaApi, drupalMultisiteIdentifier, locale: nuxtApp.$i18n.locale })    );
-
-    
-
     this.set('baseHost', baseHost);
     this.set('gaiaApi', gaiaApi);
     this.set('drupalMultisiteIdentifier', drupalMultisiteIdentifier);
@@ -52,42 +45,30 @@ async function initialize(nuxtApp, { identifier, defaultLocale, config, siteName
     this.set('identifier', identifier);
     this.set('defaultLocale', defaultLocale);
 
-    // const config = await this.getSiteConfig();
-
     this.set('config', config);
     this.set('logo', getLogoUri(config));
     this.set('name', siteName);
     this.set('redirect', env === 'production'? config.redirect : '');
-
-
 }   
 
 
 
 async function getInitialContext(locale){
     try{
-        const { gaiaApi, drupalMultisiteIdentifier, baseHost, env }   = useRuntimeConfig().public;
+
         const identifier = getBiolandSiteIdentifier(useRequestURL().hostname) || 'seed';
-        const params     = { identifier,  locale, gaiaApi, drupalMultisiteIdentifier, baseHost };
-        const uri        = `/api/context`
+
+        const uri        = `/api/context/${identifier}/${unref(locale)}`
     
-        const { data, error } = await useFetch(uri, { params })
+        const { data, error } = await useFetch(uri)
     
         return data?.value
     }catch(e){
         consola.error('getInitialContext',e)
     }
-
 }
 
 
-async function getSiteConfig(){
-    const { identifier, gaiaApi, drupalMultisiteIdentifier } = this;
-
-    const uri = `${gaiaApi}v2023/drupal/multisite/${drupalMultisiteIdentifier}/configs/${identifier}`
-
-    return $fetch(uri)
-}
 
 function getLogoUri(config){
     const hasCountry = config.country || (config?.countries? config?.countries[0] : undefined)
@@ -99,24 +80,13 @@ function getLogoUri(config){
     return 'https://seed.chm-cbd.net/sites/default/files/images/country/flag/xx.png'
 }
 
-async function getDefinedName () {
-    const host  = this.localizedHost;
-    const query = {jsonapi_include: 1};
-    const uri   = `${host}/jsonapi/site/site?api-key=636afe3fa6d502d3d7b01996b50add18`
-
-    const resp = await $fetch(uri,{query})
-    const name = resp?.data?.name
-
-    return name === '_'? '' : name;
-}
-
-
 // TODO
 // get country name from server translated
 
 function host(){
     return this.getHost(true)
 }
+
 function localizedHost(){
     return this.getHost()
 }

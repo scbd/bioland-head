@@ -1,6 +1,6 @@
 
 
-export default defineEventHandler(async (event) => {
+export default cachedEventHandler(async (event) => {
     try{
         const context  = getContext(event);
         const query    = getQueryString(context);
@@ -16,6 +16,9 @@ export default defineEventHandler(async (event) => {
         }) 
     }
     
+},{
+    maxAge: 60 * 60 * 24,
+    varies:['Cookie']
 })
 
 function getQueryString({ countries, country, locale }={}){

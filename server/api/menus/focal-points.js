@@ -1,6 +1,6 @@
 const focalPointTypes = [ 'CBD-FP1', 'CBD-FP2', 'CPB-FP1', 'ABS-FP', 'CHM-FP', 'BCH-FP', 'CPB-A17-FP', 'RM-FP', 'PA-FP', 'TKBD-FP', 'SBSTTA-FP', 'GTI-FP', 'GSPC-FP' ];
 
-export default defineEventHandler(async (event) => {
+export default cachedEventHandler(async (event) => {
     try{
         const context = getContext(event);
         const query   = getQueryString(context);
@@ -18,6 +18,9 @@ export default defineEventHandler(async (event) => {
         }); 
     }
     
+},{
+    maxAge: 60 * 60 * 24,
+    varies:['Cookie']
 })
 
 function mapByCountry({ docs }, ctx){

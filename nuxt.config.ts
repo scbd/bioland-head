@@ -11,6 +11,7 @@ const routeRules = {
   // '/api/nbsap/*': { cache: { maxAge: 60 * 60 * 24 * 30 } },
   // '/api/nr/*': { cache: { maxAge: 60 * 60 * 24 * 30} },
   // '/api/nr6/*': { cache: { maxAge: 60 * 60 * 24 * 30 } },
+  '/api/context/**': { cache: { maxAge:  60 * 60 } },
 }
 
 export default defineNuxtConfig({
@@ -21,7 +22,7 @@ export default defineNuxtConfig({
     client: true
   },
   css,
-  //routeRules,
+
   runtimeConfig:{
     apiUser: process.env.API_USER,
     apiUserPass: process.env.API_USER_PASS,
@@ -126,19 +127,20 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    routeRules
     // Production
-    storage: {
-      db: {
-        driver: 'fs',
-        base: './data/db'
-      }
-    },
+    // storage: {
+    //   db: {
+    //     driver: 'fs',
+    //     base: './data/db'
+    //   }
+    // },
     // Development
-    devStorage: {
-      db: {
-        driver: 'fs',
-        base: './data/db'
-      }
-    }
+    // devStorage: {
+    //   db: {
+    //     driver: 'fs',
+    //     base: './data/db'
+    //   }
+    // }
   }
 })

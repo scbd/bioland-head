@@ -3,12 +3,12 @@
         <slot></slot>
         <div v-if="hasHeroImage"  class="container text-white">
             <div class="row pb-1">
-                <div v-if="hi?.field_description?.value" v-html="hi?.field_description?.value">
+                <div v-if="hi?.fieldDescription?.value" v-html="hi?.fieldDescription?.value">
                 </div>
 
-                <div v-if="hi?.field_credits"  class="col-12 d-flex justify-content-end align-items-center">
+                <div v-if="hi?.fieldCredits"  class="col-12 d-flex justify-content-end align-items-center">
                     <div class="small" style="opacity:70%;">
-                        {{hi.field_credits}}
+                        {{hi.fieldCredits}}
                     </div>
                 </div>
             </div>
@@ -45,7 +45,7 @@ function setup() {
                                 format: ['webp', 'avif', 'jpeg', 'jpg', 'png','gif']
                             }
 
-        const imgSrc = img(siteStore.host+pageStore.heroImage.field_media_image.uri.url, imgOptions)
+        const imgSrc = img(siteStore.host+pageStore.heroImage.fieldMediaImage.uri.url, imgOptions)
 
         return getBackgroundStyles(imgSrc)
     })

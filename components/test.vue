@@ -7,6 +7,10 @@
 </template>
 <script setup>
 import { useSiteStore } from "~/stores/site";
+
+const { drupalMultisiteIdentifier } = useRuntimeConfig().public;
+const { path } = useRoute()
+
         // const { t , locale } = useI18n();
         const siteStore    = useSiteStore();
 
@@ -14,6 +18,7 @@ import { useSiteStore } from "~/stores/site";
     const { country, countries } = config;
 
     const params = { identifier, country, locale, defaultLocale, countries };
+    const key = `${drupalMultisiteIdentifier}-${identifier}-${locale}`;
 //`/api/nr/en/lk`
-        const { data } = country? await useFetch(`/api/default-locale`, { params, method: 'GET' }) : {}
+        const { data } = country? await useFetch(`/api/page/${key}/${encodeURIComponent(path)}`, {  method: 'GET' }) : {}
 </script>
