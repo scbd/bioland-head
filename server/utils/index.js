@@ -27,7 +27,7 @@ export const parseQuery = (event) => {
 export const getContext = (event) => {
     const { context } = parseCookies(event)
 
-    if(!context) throw new Error('No context cookie found');
+    if(!context) return parseQuery(event)
 
     return context? parseContext(JSON.parse(decodeURIComponent(context))) : undefined
 }
