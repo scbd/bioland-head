@@ -34,8 +34,7 @@
 
         <div v-if="media?.length"  class="row mt-3">
             <div class="col-12 col-md-3">
-                <h2 class="side-heading text-nowrap">{{t('Related Media')}} <span class="text-muted fs-4">({{media.length}})</span></h2>
-
+                <h2 class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{media.length}})</span></h2>
 
             </div>
             <div class="col-12 col-md-9">

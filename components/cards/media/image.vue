@@ -1,6 +1,6 @@
 <template>
     <div class="card p-2" >
-        <NuxtImg :alt="imageAlt" :src="imageSrc" class="card-img-top"/>
+        <NuxtImg :alt="imageAlt" :src="imageSrc" class="card-img-top image-top"/>
         <div class="card-body">
             <h6 class="card-subtitle text-muted mb-2">{{t('Image')}}</h6>
             <h5 class="card-title  mb-1">{{imageAlt}}</h5>

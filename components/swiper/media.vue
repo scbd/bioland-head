@@ -2,9 +2,9 @@
     <div class="position-relative" >
 
         <swiper
-
+        style="min-height:700px;"
             :loop="true"
-
+  
             :slidesPerView="slidePerView"
             :spaceBetween="50"
             
