@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 
 const actions = { set, loadAllMenus }
 
-export const useMenusStore = defineStore('menus', { state, actions })
+export const useMenusStore = defineStore('menus', { state, actions,  persist: true, })
 
 const initState = { 
     footer: [],

@@ -5,7 +5,12 @@ import {  useMenusStore } from "~/stores/menus";
 import vClickOutside from "click-outside-vue3";
 
 export default defineNuxtPlugin(async (nuxtApp) => {
+    const route    = useRoute();
 
+    const pageStore = usePageStore(nuxtApp.$pinia);
+
+
+    // consola.warn('defineNuxtPlugin', process.client)
     nuxtApp.vueApp.use(vClickOutside);
 
     const siteStore = useSiteStore(nuxtApp.$pinia);
@@ -21,13 +26,14 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
     const context = useCookie('context');
 
-    context.value = siteStore.params
+    context.value = {...siteStore.params, path:route.path};
 
-    const { data } = await useFetch(`/api/menus`, { params: siteStore.params });
+    const { data } = await useFetch(`/api/menus`, { params: {...siteStore.params, path:route.path}});
 
     await menuStore.loadAllMenus(data.value);
 
     nuxtApp.hook('i18n:localeSwitched', async ({oldLocale, newLocale}) => {
+        
         const context       = useCookie('context');
         const localeChanged = newLocale === siteStore.defaultLocale ? 'und' : newLocale;
 
@@ -43,13 +49,11 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     addRouteMiddleware('bioland-route-change',  async (to) => setAppStates(to), { global: true });
 
     async function setAppStates(to){
-        const pageStore = usePageStore(nuxtApp.$pinia);
+        const pStore = usePageStore(nuxtApp.$pinia);
 
         context.value.path = to.path;
-        pageStore.set('path',to.path);
 
-        console.warn('to.path', to.path)
-        pageStore.initialize((await getPage(to.path)).value)
+        pStore.initialize((await getPage(to.path)).value)
     }
 
     function getPage(path){
@@ -58,7 +62,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
         const key = `${drupalMultisiteIdentifier}-${identifier}-${locale}`;
 
-        return useFetch(`/api/page/${key}/${encodeURIComponent(path)}`, {  method: 'GET' }).then(({ data }) => data);
+        return useFetch(`/api/page/${key}/${encodeURIComponent(path)}`, {  method: 'GET', params: { ...siteStore.params, path } }).then(({ data }) => data);
     }
 
 

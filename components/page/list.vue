@@ -23,9 +23,13 @@ import { useMenusStore } from '~/stores/menus';
 const route = useRoute();
 const { type } = route.params;
 const pageStore  = usePageStore();
-const { contentTypes }  = useMenusStore();
+const { contentTypes, mediaTypes }  = useMenusStore();
+consola.warn('route', route)
+const isContentType = computed(()=>!!contentTypes[type]);
 
-//if (contentTypes[type]) 404
-const list = computed(()=>contentTypes[type]);
+const isAllMedia = computed(()=> !type && route.path === '/media');
+
+
+const list = computed(()=>isContentType.value? contentTypes[type] : mediaTypes[type]);
 
 </script>

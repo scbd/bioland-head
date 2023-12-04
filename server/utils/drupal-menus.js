@@ -45,7 +45,7 @@ function getInternalUrlsRecursive(menus,{internalUrlsArr, parent}={}){
 
     for (const aMenu of menus) {
         if(aMenu.children) getInternalUrlsRecursive(aMenu.children, { internalUrlsArr:internalUrls, parent:aMenu })
-        if(aMenu.title==='Publications')
+        // if(aMenu.title==='Publications')
 
         if(!parent?.class?.includes('bl2-show-thumbs')) continue;
         if(aMenu?.path?.includes('entity')) internalUrls.push(aMenu)
@@ -78,7 +78,7 @@ function addMissingDataRecursive(menus, { identifier, pathPreFix, rawMenus, menu
             if(aMenu.children) aMenu.children=addMissingDataRecursive(aMenu.children, { identifier, pathPreFix, rawMenus, menuName, localizedHost  })
 
             const rawMenu = rawMenus.find(findFromRawMenus(aMenu))
-            if(rawMenu?.title==='Biodiversity Facts')
+            // if(rawMenu?.title==='Biodiversity Facts')
 
             if(!rawMenu) continue;
             if(rawMenu?.description) aMenu.description = rawMenu.description;

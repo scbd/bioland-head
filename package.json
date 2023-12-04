@@ -25,6 +25,7 @@
     "@nuxt/image": "^1.0.0",
     "@pinia/nuxt": "^0.4.11",
     "@vueuse/core": "^10.5.0",
+    "add": "^2.0.6",
     "bootstrap": "^5.3.1",
     "camelcase-keys": "^9.1.2",
     "change-case": "^5.1.2",
@@ -35,10 +36,13 @@
     "lodash.isstring": "^4.0.1",
     "lodash.sample": "^4.2.1",
     "luxon": "^3.4.4",
+    "nuxt-swiper": "^1.2.2",
     "nuxt-viewport": "^2.0.6",
     "param-case": "^4.0.0",
     "pascal-case": "^4.0.0",
     "pinia": "^2.1.6",
-    "superagent": "^8.1.2"
+    "superagent": "^8.1.2",
+    "vue3-popper": "^1.5.0",
+    "yarn": "^1.22.21"
   }
 }

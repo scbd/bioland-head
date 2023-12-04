@@ -8,7 +8,7 @@
                     <section v-for="(aChild,j) in menus[slotProps.country]" :key="j">
                         <p v-if="j <= 6">
                             <NuxtLink  class="child-link" :class="aChild.class"   :to="aChild.href" :title="t(aChild.title)"  >
-                                {{t(aChild.title)}}
+                                {{t(aChild.title || 'title')}}
                             </NuxtLink>
                         </p>
                     </section>

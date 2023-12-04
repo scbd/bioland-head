@@ -1,23 +1,102 @@
 <template >
-    <div style="float: right;width: 100px; height: 100px; background-color: #ff0000;">
-    
+    <div class="cont" style="float: right; width: 200px; ">
+        <div v-if="fieldStartDate" class="mb-2">
+            <h5 class="mb-0">{{t('Start Date')}}</h5>
+            {{dateFormat(fieldStartDate)}}
+            <h5 class="mb-0"  v-if="fieldEndDate">{{t('End Date')}}</h5>
+            <span v-if="fieldEndDate">{{dateFormat(fieldEndDate)}}</span>
+        </div>
+        <div v-if="!fieldStartDate" class="mb-2">
+            <h5 class="mb-0">{{t('Published on')}}</h5>
+            {{dateFormat(fieldPublished || created)}}
+        </div>
+        <div v-if="tags?.gbfTargets?.length" class="mb-2">
+            <h5 >{{t('GBF Targets')}}</h5>
+            <NuxtLink  v-for="(aTarget,i) in tags.gbfTargets" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
+                <Popper class="dark" :hover="true" :arrow="true" placement="bottom">
+                    <GbfIcon :identifier="aTarget.identifier" size="xs"/>
+                    <template #content>
+                    <div >
+                        <h5>{{aTarget.title.en}}</h5>
+                        <p >{{aTarget.description}}</p>
+                    </div>
+                    </template>
+                </Popper>
+            </NuxtLink>
+        </div>
+        <div v-if="tags?.sdgs?.length" class="mb-2">
+            <h5 >{{t("SDG's")}}</h5>
+            <NuxtLink  v-for="(aSdg,i) in tags.sdgs" :key="i"  :to="aSdg.url" target="_blank" external>
+                <Popper class="dark" :hover="true" :arrow="true" placement="bottom">
+                    <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
+                    <template #content>
+                    <div >
+                        <h5>{{aSdg.name}}</h5>
+                        <p >{{aSdg.alternateName}}</p>
+                    </div>
+                    </template>
+                </Popper>
+            </NuxtLink>
+        </div>
+        <div v-if="tags?.countries?.length" class="mb-2">
+            <h5 >{{t("Countries")}}</h5>
+            <NuxtLink  v-for="(aCountry,i) in tags.countries" :key="i"  :to="`https://www.cbd.int/countries/?country=${aCountry.identifier}`" target="_blank" external>
+                <NuxtImg :alt="aCountry.name" :src="`https://www.cbd.int/images/flags/96/flag-${aCountry.identifier}-96.png`"  class="flag me-1"/>
+            </NuxtLink>
+        </div>
+        <div v-if="tags?.subjects?.length" class="mb-2">
+            <h5 >{{t("Thematic Areas")}}</h5>
+            
+            <span  v-for="(subject,i) in tags.subjects" :key="i" class="badge bg-primary me-1">{{subject.name}}</span>
+        </div>
     </div>
-  </template>
-  
-  <script setup>
-        const   props       = defineProps({ 
-                                            date: { type: String },
-                                            tags: { type: Array }
-                                        });
-        const { number    } = toRefs(props);
-  
-        const isGreaterThanNine = computed(() => number.value > 9);
-  
-        const x = computed(() => isGreaterThanNine.value ? 8: 33);
-  
-  
-  </script>
-  
-  <style lang="scss" scoped>
+</template>
+<i18n src="@/i18n/dist/components/page/body-tags-date.json"></i18n>
+<script setup>
+    import   Popper         from 'vue3-popper'  ;
+    import { DateTime     } from 'luxon'        ;
+    import { usePageStore } from '~/stores/page';
 
-  </style>
+    const { t, locale } = useI18n();
+
+    const pageStore = usePageStore()
+    const { created, fieldStartDate, fieldPublished, fieldEndDate, tags } = storeToRefs( usePageStore());
+
+    function getGbfUrl(identifier){
+        const number = Number(identifier.replace('GBF-TARGET-', ''));
+
+        return `https://www.cbd.int/gbf/targets/${number}`
+    }
+
+    function dateFormat(date){
+        return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
+    }
+</script>
+
+<style lang="scss" scoped>
+.flag{
+    max-width: 75px;
+}
+.cont{
+    border-top: var(--bs-primary) .5rem solid;
+    padding-top: .5rem;
+    margin-left: 1rem;
+    overflow: hidden;
+}
+h5{
+    color: #456F3B;
+    margin-bottom: .4rem;
+}
+.dark {
+    --popper-theme-background-color: #333333;
+    --popper-theme-background-color-hover: #333333;
+    --popper-theme-text-color: white;
+    --popper-theme-border-width: 0px;
+    --popper-theme-border-radius: 6px;
+    --popper-theme-padding: 32px;
+    --popper-theme-box-shadow: 0 6px 30px -6px rgba(0, 0, 0, 0.25);
+}
+.popper{
+    max-width: 50% !important;
+}
+</style>

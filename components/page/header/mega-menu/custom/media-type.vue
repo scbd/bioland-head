@@ -54,7 +54,7 @@
         const children = aMenu?.children?.filter(aMenu => !isFinalLink(aMenu)) || [];
 
         aMenu.children = [ ...children, ...getMediaTypeData() ];
-consola.warn('getMediaTypeData',getMediaTypeData())
+
         const showDefault = aMenu.children.length > 5;
         const last        = unref(hasFinalLink)? [unref(hasFinalLink)] : showDefault? [getDefaultFinalLink()] : [];
 
@@ -81,14 +81,14 @@ consola.warn('getMediaTypeData',getMediaTypeData())
 
     function getMediaTypeData(){
         const mediaTypes = Array.isArray(getMediaType())? getMediaType(): [getMediaType()];
-        consola.error('contentType', mediaTypes)
+  
         let data = []
         for (const type of mediaTypes) {
             data = [...data, ...menuStore?.mediaTypes[type]?.data || []]
         }
         // const data        = menuStore?.mediaTypes[contentType]?.data || [];
         const menuPaths   = unref(passedMenu)?.children?.map(aMenu => aMenu.href) || [];
-consola.error('contentType', mediaTypes)
+
         return data.filter(aMenu => !menuPaths.includes(aMenu.href)).sort((a,b)=>sort(a,b, 'created'));
     }
 

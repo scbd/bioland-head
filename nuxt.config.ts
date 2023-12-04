@@ -50,7 +50,8 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@nuxt/image',
     'nuxt-delay-hydration',
-    'nuxt-purgecss'
+    'nuxt-purgecss',
+    'nuxt-swiper'
   ],
   viewport: {
     breakpoints: {
@@ -70,7 +71,11 @@ export default defineNuxtConfig({
 
     fallbackBreakpoint: 'lg'
   },
-  i18n: { missingWarn: false, locales,
+  i18n: { 
+    missingWarn: false, 
+    fallbackWarn: false,
+    silentTranslationWarn: true,
+    locales,
     // locales: [
     //     { code: 'ar', iso: 'ar-SA',  dir: 'rtl' },
     //     { code: 'en', iso: 'en-US',             },

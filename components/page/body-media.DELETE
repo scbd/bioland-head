@@ -5,67 +5,67 @@
             <div class="col-3 ">
                 &nbsp;
             </div>
-            <div class="col-9 ps-0">
+            <div class="col-9">
                 <PageBreadCrumbs/>
             </div>
 
             <div class="col-3 d-none d-md-block">
                 <h2 class="page-type">{{typeName}}</h2>
-                <NuxtLink v-if="image.url"  :to="localePath(image.url)">
+                <NuxtLink v-if="image?.url"  :to="localePath(image.url)">
                     <NuxtImg :alt="image.alt" :src="image.src" class="img-fluid mt-5 w-100"/>
                 </NuxtLink>
             </div>
-            <div v-if="image.url" class="col-12 d-md-none">
+            <div v-if="image?.url" class="col-12 d-md-none">
                 <NuxtLink :to="localePath(image.url)">
                     <NuxtImg :alt="image.alt" :src="image.src" class="img-fluid mt-5 w-100"/>
                 </NuxtLink>
             </div>
-            <div class="col-12 col-md-9 ps-0" >
+            <div class="col-12 col-md-9" >
                 
                 <h2  class="data-body" :class="{'has-hero': heroImage}" >{{title}}</h2>
 
-                <div style="float: right;width: 100px; height: 100px; background-color: #ff0000;">xxx</div>
+                <PageBodyTagsDate />
 
                 <div v-if="body?.value" v-html="body?.value"></div>
-                
+
             </div> 
         </div>
     </div>
-
-    <div class="container mt-3">
+    <div v-if="media?.length" class="container mt-3">
         <div class="row">
-            <div class="col-3">
-                <h2 class="side-heading">GBF Targets</h2>
+            <div class="col-12 col-md-3">
+                <h2 class="side-heading">{{t('Related Media')}}</h2>
             </div>
-            <div class="col-9">
-                <GbfIcon :number="2"/>
-                <GbfIcon :number="5"/>
-                <GbfIcon :number="12"/>
-                <GbfIcon :number="21"/>
-                <GbfIcon :number="20"/>
+            <div class="col-12 col-md-9">
+                <SwiperContainer :slides="media" type="media"/>
+            </div>
+        </div>
+    </div>
+    <div v-if="tags?.gbfTargets?.length" class="container mt-3">
+        <div class="row">
+            <div class="col-12 col-md-3">
+                <h2 class="side-heading">{{t('GBF Targets')}}</h2>
+            </div>
+            <div class="col-12 col-md-9">
+                <SwiperContainer :slides="tags.gbfTargets" type="gbf"/>
             </div>
         </div>
     </div>
 
-    <!-- <div class="container mt-3">
-        <div class="row">
-            <div class="col-12">
-                <pre>{{pageStore}}</pre>
-            </div>
-        </div>
-    </div> -->
 </template>
 <script setup>
+
 import { usePageStore } from "~/stores/page";
 
-
+const { t, locale } = useI18n();
 const route = useRoute();
 const localePath = useLocalePath();
 const viewport = useViewport();
 
 const pageStore = usePageStore()
-const { title, body, heroImage, typeName, image } = storeToRefs( usePageStore());
+const { title, body, heroImage, typeName, image, tags, fieldAttachments } = storeToRefs( usePageStore());
 
+const media = computed(()=> fieldAttachments.value?.filter(({ type })=> !type.endsWith('hero')) || []);
 </script>
 <style lang="scss" scoped>
 .data-body{

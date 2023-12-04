@@ -4,7 +4,7 @@ import { defineStore } from 'pinia'
 const actions = { getHost, set, initialize, getInitialContext };
 const getters = { drupalApiUriBase, host, localizedHost, params, countries };
 
-export const useSiteStore = defineStore('site', { state, actions, getters });
+export const useSiteStore = defineStore('site', { state, actions, getters,  persist: true, });
 
 const initState = { 
                     locale                    : undefined,

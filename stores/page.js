@@ -4,7 +4,7 @@ import   camelCaseKeys   from 'camelcase-keys';
 import { useSiteStore } from "~/stores/site";
 
 const actions = { set, initialize }
-const getters = { heroImage, typeName, images, documents, videos, image };
+const getters = { heroImage, typeName, images, documents, videos, image, mediaImage };
 
 function heroImage(){
     
@@ -17,7 +17,7 @@ function heroImage(){
     return random(heroImages);
 }
 
-export const usePageStore = defineStore('page', { state, actions, getters })
+export const usePageStore = defineStore('page', { state, actions, getters,  persist: true })
 
 const initState = { 
 
@@ -54,7 +54,21 @@ const initState = {
         path                       : undefined,
         pageIdentifiers            : undefined,
         hasHeroImage               : undefined,
-
+        tags: undefined,
+        drupalInternalMid: undefined,
+        revisionCreated: undefined,
+        revisionLogMessage: undefined,
+        name: undefined,
+        fieldCaption: undefined,
+        fieldDescription: undefined,
+        fieldHeight: undefined,
+        fieldMime: undefined,
+        fieldSize: undefined,
+        fieldWidth: undefined,
+        bundle: undefined,
+        revisionUser: undefined,
+        thumbnail: undefined,
+        fieldMediaImage: undefined,
 }
 
 function state(){ return initState }
@@ -72,6 +86,9 @@ function set(name, value){
 
 
 async function initialize(pageDataRaw){
+    this.$reset()
+
+    if(!pageDataRaw) throw new Error('usePageStore.initialize -> pageDataRaw is undefined');
     const pageData = camelCaseKeys(pageDataRaw);
 
     for (const key in pageData){
@@ -84,6 +101,12 @@ async function initialize(pageDataRaw){
 }  
 
 function typeName(){
+    if(this.type?.startsWith('media--')){
+        if(this.type.endsWith('image')) return 'Image';
+        if(this.type.endsWith('document')) return 'Document';
+        if(this.type.endsWith('remote-video')) return 'Remote Video';
+    }
+
     if(!this.fieldTypePlacement || !this.fieldTypePlacement?.length) return undefined;
 
     return this.fieldTypePlacement[0].name;
@@ -119,4 +142,16 @@ function mapImage({ name,fieldMediaImage, drupalInternalMid, path }){
     const src = `${siteStore.host}${fieldMediaImage.uri.url}`;
 
     return { name, url:path.alias, alt, drupalInternalMid, src}
+}
+
+function mediaImage(){
+    const isImage = this.type.endsWith('image')
+
+    if(!isImage) return undefined;
+    const siteStore = useSiteStore();
+
+    const alt = this.fieldMediaImage?.meta?.alt;
+    const src = `${siteStore.host}${this.fieldMediaImage.uri.url}`;
+
+    return {  alt, src}
 }
