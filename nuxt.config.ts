@@ -132,7 +132,7 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
-    routeRules
+    // routeRules
     // Production
     // storage: {
     //   db: {
