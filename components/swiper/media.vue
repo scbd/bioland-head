@@ -28,7 +28,7 @@
 </template>
 <script setup>
 import { Pagination  } from 'swiper/modules';
-
+import 'swiper/css';
 const props = defineProps({ 
                             slides: { type: Array},
                             type: { type: String },
