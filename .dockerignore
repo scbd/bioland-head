@@ -13,3 +13,4 @@ LICENSE
 dist
 *.log
 *.sh
+.circleci

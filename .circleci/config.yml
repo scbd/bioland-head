@@ -16,15 +16,12 @@ _run:
     command: |      
       docker info
       docker login -u $DOCKER_USER -p $DOCKER_PASS
-      docker buildx create --use --platform=linux/arm/v7 --name multi-platform-builder
-      docker buildx build --platform linux/arm/v7 -t output --build-arg VERSION=$CIRCLE_SHA1 --build-arg BRANCH=${CIRCLE_BRANCH:-master} --build-arg TAG=$CIRCLE_TAG -o type=docker .
-      docker images output
+      docker build -t output --build-arg VERSION=$CIRCLE_SHA1 --build-arg BRANCH=${CIRCLE_BRANCH:-master} --build-arg TAG=$CIRCLE_TAG .
   testImage: &testImage
     name: Test docker image 
     command:  |
-      docker build -t testoutput --build-arg VERSION=$CIRCLE_SHA1 --build-arg BRANCH=${CIRCLE_BRANCH:-master} --build-arg TAG=$CIRCLE_TAG .
-      docker run --name bl2-head  -d -p 8000:8000 testoutput;sleep 10;
-      docker exec bl2-head curl --retry 10 --retry-delay 5 -v http://localhost:8000
+      docker run --name bl2  -d -p 8000:8000 output;sleep 10;
+      docker exec bl2 curl --retry 10 --retry-delay 5 -v http://localhost:8000
 
 jobs:
   build:
