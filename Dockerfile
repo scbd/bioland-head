@@ -7,7 +7,7 @@ WORKDIR /usr/src/app
 
 COPY package.json ./
 
-RUN clean-reinstall
+RUN yarn clean-reinstall
 
 COPY . ./
 
