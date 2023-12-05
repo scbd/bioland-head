@@ -7,7 +7,7 @@ WORKDIR /usr/src/app
 
 COPY package.json ./
 
-RUN yarn clean-reinstall
+RUN yarn
 RUN npm install --platform=linux --arch=64x --arm-version=7 --libc=glibc sharp
 
 COPY . ./
