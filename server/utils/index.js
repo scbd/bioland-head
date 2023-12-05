@@ -87,7 +87,7 @@ export async function getSiteConfig({ identifier }){
 
     const { gaiaApi, drupalMultisiteIdentifier }  = useRuntimeConfig().public;
 
-    const uri = `${gaiaApi}v2023/drupal/multisite/${drupalMultisiteIdentifier}/configs/${identifier}`
+    const uri = `${gaiaApi}/v2023/drupal/multisite/${drupalMultisiteIdentifier}/configs/${identifier}`
 
     return $fetch(uri)
 }
