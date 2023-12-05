@@ -115,8 +115,8 @@ export default defineNuxtConfig({
     debug: process.env.NODE_ENV === 'development'
   },
   purgecss: {
-    enabled: process.env.NODE_ENV !== 'development', // Always enable purgecss
-    safelist: ['my-class'], // Add my-class token to the safelist (e.g. .my-class)
+    enabled: false,//process.env.NODE_ENV !== 'development', // Always enable purgecss
+    safelist: ['swiper'], // Add my-class token to the safelist (e.g. .my-class)
   },
   image: {
     domains: ['https://seed.chm-cbd.net', 'https://www.cbd.int', 'https://seed.bl2.staging.cbd.int'],
