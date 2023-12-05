@@ -16,8 +16,7 @@ _run:
     command: |      
       docker info
       docker login -u $DOCKER_USER -p $DOCKER_PASS
-      docker buildx create --use --platform=linux/arm/v7 --name multi-platform-builder
-      docker buildx build --platform linux/arm/v7 -t output --build-arg VERSION=$CIRCLE_SHA1 --build-arg BRANCH=${CIRCLE_BRANCH:-master} --build-arg TAG=$CIRCLE_TAG -o type=docker .
+      docker buildx build --platform linux/amd64 -t output --build-arg VERSION=$CIRCLE_SHA1 --build-arg BRANCH=${CIRCLE_BRANCH:-master} --build-arg TAG=$CIRCLE_TAG -o type=docker .
       docker images output
   testImage: &testImage
     name: Test docker image 

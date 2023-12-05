@@ -2,6 +2,7 @@
 node_modules
 app/libs
 .DS_Store
+.circleci
 .dockerignore
 .editorconfig
 .env
