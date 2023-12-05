@@ -16,7 +16,7 @@ const routeRules = {
 
 export default defineNuxtConfig({
   devtools: { enabled: true },
-  debug: false, 
+  debug: true, 
   sourcemap: {
     server: true,
     client: true
