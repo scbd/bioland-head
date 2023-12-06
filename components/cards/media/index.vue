@@ -1,8 +1,9 @@
 <template>
-    <LazyCardsMediaImage :record="record" v-if="isImage"/>
-    <LazyCardsMediaVideo :record="record" v-if="isVideo"/>
-    <LazyCardsMediaDocument :record="record" v-if="isDocument"/>
-    <!-- <pre>{{record}}</pre> -->
+    <section>
+        <LazyCardsMediaImage :record="record" v-if="isImage"/>
+        <LazyCardsMediaVideo :record="record" v-if="isVideo"/>
+        <LazyCardsMediaDocument :record="record" v-if="isDocument"/>
+    </section>
 </template>
 <script setup>
 

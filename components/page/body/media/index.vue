@@ -53,7 +53,7 @@
 <script setup>
 import { usePageStore } from "~/stores/page";
 
-const { t} = useI18n();
+const { t } = useI18n();
 
 const { fieldMediaOembedVideo, mediaImage, name,   typeName,  tags, fieldDescription, } = storeToRefs( usePageStore());
 

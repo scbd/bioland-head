@@ -1,4 +1,5 @@
 <template>
     <!-- <PageBody/> -->
-    focal points
+    
+    <div>focal points</div>
 </template>

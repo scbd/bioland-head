@@ -1,5 +1,4 @@
 <template>
   <!-- <PageBody/> -->
-
-  test
+  <div>test</div>
 </template>

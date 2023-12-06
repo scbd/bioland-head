@@ -1,7 +1,8 @@
 <template>
 
-    <div v-if="!(!sw.activeIndex && direction==='left')"  @click="direction === 'right'? sw.slidePrev() : sw.slideNext()"  :class="{ left: direction === 'left', right: direction !== 'left' }" class="arrow-container d-flex align-items-center">
-        <Icon  :name="`arrow-${direction}`" class="arrow" />
+    <div  @click="direction === 'right'? sw.slidePrev() : sw.slideNext()"  :class="{ left: direction === 'left', right: direction !== 'left' }" class="arrow-container d-flex align-items-center">
+        <Icon v-if="!(!sw.activeIndex && direction==='left')"  :name="`arrow-${direction}`" class="arrow" />
+        &nbsp;
     </div>
 
 </template>

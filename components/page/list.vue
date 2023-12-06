@@ -22,12 +22,10 @@ import { usePageStore } from '~/stores/page';
 import { useMenusStore } from '~/stores/menus';
 const route = useRoute();
 const { type } = route.params;
-const pageStore  = usePageStore();
-const { contentTypes, mediaTypes }  = useMenusStore();
-consola.warn('route', route)
-const isContentType = computed(()=>!!contentTypes[type]);
 
-const isAllMedia = computed(()=> !type && route.path === '/media');
+const { contentTypes, mediaTypes }  = useMenusStore();
+
+const isContentType = computed(()=>!!contentTypes[type]);
 
 
 const list = computed(()=>isContentType.value? contentTypes[type] : mediaTypes[type]);

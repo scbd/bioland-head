@@ -57,12 +57,12 @@
 
 import { usePageStore } from "~/stores/page";
 
-const { t, locale } = useI18n();
-const route = useRoute();
-const localePath = useLocalePath();
-const viewport = useViewport();
+const { t } = useI18n();
 
-const pageStore = usePageStore()
+const localePath = useLocalePath();
+
+
+
 const { title, body, heroImage, typeName, image, tags, fieldAttachments } = storeToRefs( usePageStore());
 
 const media = computed(()=> Array.isArray(fieldAttachments.value)? fieldAttachments.value.filter(({ type })=> !type.endsWith('hero')) : []);

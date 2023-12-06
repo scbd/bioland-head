@@ -1,7 +1,9 @@
 <template>
-    <div v-if="match" class="col-12 my-2">
-        <iframe class="youtube-video" :src="`https://www.youtube.com/embed/${match}`" :title="title" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-    </div>
+    <section>
+        <div v-if="match" class="col-12 my-2">
+            <iframe class="youtube-video" :src="`https://www.youtube.com/embed/${match}`" :title="title" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+    </section>
 </template>
 <script setup>
     const   props  = defineProps({ url: { type: String }, title: { type: String } });
