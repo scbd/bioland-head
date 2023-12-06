@@ -23,8 +23,8 @@
             <div class="col-12 col-md-9" >
                 
                 <h2  class="data-body" :class="{'has-hero': heroImage}" >{{title}}</h2>
-<!-- 
-                <PageBodyTagsDate /> -->
+
+                <PageBodyTagsDate />
 
                 <div v-if="body?.value" v-html="body?.value"></div>
 
