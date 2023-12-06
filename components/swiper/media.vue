@@ -1,29 +1,30 @@
 <template>
+    
     <div class="position-relative" >
+        <ClientOnly>
+            <swiper
+            style="min-height:700px;"
+                :loop="true"
+    
+                :slidesPerView="slidePerView"
+                :spaceBetween="50"
+                
+                :pagination="{ clickable: true }"
 
-        <swiper
-        style="min-height:700px;"
-            :loop="true"
-  
-            :slidesPerView="slidePerView"
-            :spaceBetween="50"
-            
-            :pagination="{ clickable: true }"
 
+                :modules="modules"
+            >
 
-            :modules="modules"
-        >
+                <SwiperButton v-if="arrows && leftArrow && hideArrows" direction="left"/> 
 
-            <SwiperButton v-if="arrows && leftArrow && hideArrows" direction="left"/> 
+                <SwiperSlide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
+                    <LazyCardsGbf :record="slide" v-if="type==='gbf'"/>
+                    <LazyCardsMedia :record="slide" v-if="type==='media'"/>
+                </SwiperSlide>
 
-            <SwiperSlide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
-                <LazyCardsGbf :record="slide" v-if="type==='gbf'"/>
-                <LazyCardsMedia :record="slide" v-if="type==='media'"/>
-            </SwiperSlide>
-
-            <SwiperButton v-if="arrows && hideArrows" direction="right"/> 
-        </swiper>
-
+                <SwiperButton v-if="arrows && hideArrows" direction="right"/> 
+            </swiper>
+        </ClientOnly>
     </div>
 </template>
 <script setup>

@@ -24,7 +24,7 @@
                 
                 <h2  class="data-body" :class="{'has-hero': heroImage}" >{{title}}</h2>
 
-                <PageBodyTagsDate />
+                <!-- <PageBodyTagsDate /> -->
 
                 <div v-if="body?.value" v-html="body?.value"></div>
 
@@ -32,7 +32,7 @@
         </div>
     
 
-        <!-- <div v-if="media?.length"  class="row mt-3">
+        <div v-if="media?.length"  class="row mt-3">
             <div class="col-12 col-md-3">
                 <h2 class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{media.length}})</span></h2>
 
@@ -40,7 +40,7 @@
             <div class="col-12 col-md-9">
                 <LazySwiperMedia :slides="media" type="media"/>
             </div>
-        </div> -->
+        </div>
 <!-- 
         <div v-if="tags?.gbfTargets?.length" class="row mt-3">
             <div class="col-12 col-md-3">
