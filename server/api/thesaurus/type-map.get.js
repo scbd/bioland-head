@@ -1,4 +1,4 @@
-import {getRequestURL} from 'h3';
+
 
 export default cachedEventHandler(async (event) => {
     try{

@@ -1,4 +1,4 @@
-import isPlainObject from 'lodash.isplainobject';
+
 import isString from 'lodash.isstring'
 import c from 'consola';
 
