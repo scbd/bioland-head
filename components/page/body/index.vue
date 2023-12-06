@@ -41,7 +41,7 @@
                 <LazySwiperMedia :slides="media" type="media"/>
             </div>
         </div>
-<!-- 
+
         <div v-if="tags?.gbfTargets?.length" class="row mt-3">
             <div class="col-12 col-md-3">
                 <h2 class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{tags.gbfTargets.length}})</span></h2>
@@ -49,7 +49,7 @@
             <div class="col-12 col-md-9">
                 <LazySwiperGbf :slides="tags.gbfTargets" type="gbf"/>
             </div>
-        </div> -->
+        </div>
     </div>
 </template>
 <i18n src="@/i18n/dist/components/page/body/index.json"></i18n>

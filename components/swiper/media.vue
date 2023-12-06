@@ -3,15 +3,11 @@
     <div class="position-relative" >
         <ClientOnly>
             <swiper
-            style="min-height:700px;"
+                style="min-height:700px;"
                 :loop="true"
-    
                 :slidesPerView="slidePerView"
                 :spaceBetween="50"
-                
                 :pagination="{ clickable: true }"
-
-
                 :modules="modules"
             >
 
