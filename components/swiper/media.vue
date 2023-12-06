@@ -1,7 +1,6 @@
 <template>
     
     <div class="position-relative" >
-        <ClientOnly>
             <swiper
                 style="min-height:700px;"
                 :loop="true"
@@ -20,7 +19,6 @@
 
                 <SwiperButton v-if="arrows && hideArrows" direction="right"/> 
             </swiper>
-        </ClientOnly>
     </div>
 </template>
 <script setup>

@@ -10,7 +10,7 @@
             <h5 class="mb-0">{{t('Published on')}}</h5>
             {{dateFormat(fieldPublished || created)}}
         </div>
-        <div v-if="tags?.gbfTargets?.length" class="mb-2">
+        <!-- <div v-if="tags?.gbfTargets?.length" class="mb-2">
             <h5 >{{t('GBF Targets')}}</h5>
             <NuxtLink  v-for="(aTarget,i) in tags.gbfTargets" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
                 <Popper class="dark" :hover="true" :arrow="true" placement="bottom">
@@ -23,19 +23,24 @@
                     </template>
                 </Popper>
             </NuxtLink>
-        </div>
+        </div> -->
         <div v-if="tags?.sdgs?.length" class="mb-2">
             <h5 >{{t("SDG's")}}</h5>
             <NuxtLink  v-for="(aSdg,i) in tags.sdgs" :key="i"  :to="aSdg.url" target="_blank" external>
-                <Popper class="dark" :hover="true" :arrow="true" placement="bottom">
-                    <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
-                    <template #content>
-                    <div >
-                        <h5>{{aSdg.name}}</h5>
-                        <p >{{aSdg.alternateName}}</p>
-                    </div>
+                <ClientOnly>
+                    <Popper class="dark" :hover="true" :arrow="true" placement="bottom">
+                        <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
+                        <template #content>
+                        <div >
+                            <h5>{{aSdg.name}}</h5>
+                            <p >{{aSdg.alternateName}}</p>
+                        </div>
+                        </template>
+                    </Popper>
+                    <template #fallback>
+                        <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
                     </template>
-                </Popper>
+                </ClientOnly>
             </NuxtLink>
         </div>
         <div v-if="tags?.countries?.length" class="mb-2">

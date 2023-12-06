@@ -24,7 +24,7 @@
                 
                 <h2  class="data-body" :class="{'has-hero': heroImage}" >{{title}}</h2>
 
-                <!-- <PageBodyTagsDate /> -->
+                <PageBodyTagsDate />
 
                 <div v-if="body?.value" v-html="body?.value"></div>
 
