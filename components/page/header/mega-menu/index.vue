@@ -85,7 +85,10 @@ import { useMenusStore } from "~/stores/menus";
 <style lang="scss" scoped>
 @import "@/assets/scss/variables.scss";
 
+.dropdown-toggle::after {
+    display: none;
 
+}
 .opacity-0 {
     border: none;
 }   
