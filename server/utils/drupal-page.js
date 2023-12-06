@@ -127,7 +127,7 @@ function getSearchParams(type, bundle, prop){
     const search = {jsonapi_include: 1};
 
     if(type === 'node' && bundle === 'content' && !prop)  setContentSearchParams(search);
-    if(type === 'media' && bundle === 'image')  setMediaImageSearchParams(search);
+    if(type === 'media' &&  ['image', 'document'].includes(bundle))  setMediaImageSearchParams(search);
     if(prop === 'field_attachments') search['include'] = 'thumbnail';
 
     return search;

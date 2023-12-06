@@ -132,6 +132,7 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    logLevel: 4
     // routeRules
     // Production
     // storage: {

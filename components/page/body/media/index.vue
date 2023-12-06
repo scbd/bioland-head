@@ -2,10 +2,11 @@
 
     <div class="container">
         <div class="row">
-            <div class="col-md-2 d-lg-block">
+            <div class="col-md-3 d-lg-block">
                 &nbsp;
+                
             </div>
-            <div class="col-12 col-md-10">
+            <div class="col-12 col-md-9">
                 <PageBreadCrumbs/>
             </div>
             <div v-if="mediaImage?.src" class="col-12 d-md-none px-0">
@@ -13,11 +14,12 @@
                 <NuxtImg :alt="mediaImage.alt" :src="mediaImage.src" class="img-fluid mt-0 mb-1 w-100"/>
 
             </div>
-            <div class="col-2 d-none d-md-block">
+            <div class="col-3 d-none d-md-block">
                 <h2 class="page-type">{{t(typeName || 'Content Type')}}</h2>
+                <PageMediaFileDetails :vertical="true" class=""/>
             </div>
-            <div class="col-12 col-md-10" >
-                <h2  class="data-body"  >{{name }}</h2>
+            <div class="col-12 col-md-9" >
+                <h2  class="data-body"  >{{mediaImage?.alt ||name }}</h2>
                 <div v-if="mediaImage?.src" class="d-none d-md-block">
 
                     <NuxtImg :alt="mediaImage.alt" :src="mediaImage.src" class="img-fluid mt-0 mb-2 w-100"/>
@@ -30,7 +32,10 @@
 
                 <div v-if="fieldDescription?.value" v-html="fieldDescription?.value"></div>
 
-            </div>  
+            </div> 
+            <div class="col-12 col-md-9 offset-md-3 d-md-none">
+                <PageMediaFileDetails />
+            </div> 
         </div>
 
         <div v-if="tags?.gbfTargets?.length" class="row mt-3">
@@ -57,7 +62,7 @@ const viewport = useViewport();
 const pageStore = usePageStore()
 const { mediaImage, name,   typeName,  tags, fieldDescription, } = storeToRefs( usePageStore());
 
-consola.warn(usePageStore())
+consola.warn('page',usePageStore())
 </script>
 <style lang="scss" scoped>
 .data-body{

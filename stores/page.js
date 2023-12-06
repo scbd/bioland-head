@@ -69,6 +69,9 @@ const initState = {
         revisionUser: undefined,
         thumbnail: undefined,
         fieldMediaImage: undefined,
+        fieldMediaDocument: undefined,
+        fieldMediaOembedVideo: undefined,
+        fieldTitle: undefined,
 }
 
 function state(){ return initState }
@@ -86,6 +89,7 @@ function set(name, value){
 
 
 async function initialize(pageDataRaw){
+    consola.error('pageDataRaw', pageDataRaw)
     this.$reset()
 
     if(!pageDataRaw) throw new Error('usePageStore.initialize -> pageDataRaw is undefined');
@@ -104,7 +108,7 @@ function typeName(){
     if(this.type?.startsWith('media--')){
         if(this.type.endsWith('image')) return 'Image';
         if(this.type.endsWith('document')) return 'Document';
-        if(this.type.endsWith('remote-video')) return 'Remote Video';
+        if(this.type.endsWith('remote_video')) return 'Remote Video';
     }
 
     if(!this.fieldTypePlacement || !this.fieldTypePlacement?.length) return undefined;
@@ -145,9 +149,9 @@ function mapImage({ name,fieldMediaImage, drupalInternalMid, path }){
 }
 
 function mediaImage(){
-    const isImage = this.type.endsWith('image')
+    const hasImage = this.fieldMediaImage?.uri?.url;
 
-    if(!isImage) return undefined;
+    if(!hasImage) return undefined;
     const siteStore = useSiteStore();
 
     const alt = this.fieldMediaImage?.meta?.alt;
