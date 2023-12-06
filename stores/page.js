@@ -89,15 +89,14 @@ function set(name, value){
 
 
 async function initialize(pageDataRaw){
-    consola.error('pageDataRaw', pageDataRaw)
     this.$reset()
 
     if(!pageDataRaw) throw new Error('usePageStore.initialize -> pageDataRaw is undefined');
     const pageData = camelCaseKeys(pageDataRaw);
 
-    for (const key in pageData){
+    for (const key in pageData)
         this.set(key,pageData[key]);
-    }
+    
     const { fieldAttachments } = pageData;
     const   hasHeroImage       = Array.isArray(fieldAttachments)? !!fieldAttachments?.find(({ type })=> type === 'media--hero') : false ;
 
@@ -157,5 +156,5 @@ function mediaImage(){
     const alt = this.fieldMediaImage?.meta?.alt;
     const src = `${siteStore.host}${this.fieldMediaImage.uri.url}`;
 
-    return {  alt, src}
+    return { alt, src }
 }

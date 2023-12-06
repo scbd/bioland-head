@@ -1,6 +1,6 @@
 <template>
     <div v-if="match" class="col-12 my-2">
-        <iframe class="youtube-video" :src="`https://www.youtube.com/embed/${match}`" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <iframe class="youtube-video" :src="`https://www.youtube.com/embed/${match}`" :title="title" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
     </div>
 </template>
 <script setup>
