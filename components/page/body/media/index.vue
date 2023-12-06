@@ -23,16 +23,16 @@
                 <div v-if="mediaImage?.src" class="d-none d-md-block">
 
                     <NuxtImg :alt="mediaImage.alt" :src="mediaImage.src" class="img-fluid mt-0 mb-2 w-100"/>
-
                 </div>
-                
-                <!-- <NuxtImg :alt="image.alt" :src="image.src" class="img-fluid mt-5 w-100"/> -->
                 
                 <PageBodyTagsDate />
 
                 <div v-if="fieldDescription?.value" v-html="fieldDescription?.value"></div>
-
+                
             </div> 
+
+            <PageBodyMediaYouTube v-if="fieldMediaOembedVideo" :url="fieldMediaOembedVideo" :title="mediaImage?.alt ||name"/>
+
             <div class="col-12 col-md-9 offset-md-3 d-md-none">
                 <PageMediaFileDetails />
             </div> 
@@ -51,20 +51,15 @@
 
 </template>
 <script setup>
-
 import { usePageStore } from "~/stores/page";
 
-const { t, locale } = useI18n();
-const route = useRoute();
-const localePath = useLocalePath();
-const viewport = useViewport();
+const { t} = useI18n();
 
-const pageStore = usePageStore()
-const { mediaImage, name,   typeName,  tags, fieldDescription, } = storeToRefs( usePageStore());
+const { fieldMediaOembedVideo, mediaImage, name,   typeName,  tags, fieldDescription, } = storeToRefs( usePageStore());
 
-consola.warn('page',usePageStore())
 </script>
 <style lang="scss" scoped>
+
 .data-body{
 
     padding-left: 0;
