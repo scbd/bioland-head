@@ -2,18 +2,20 @@ import   camelCaseKeys   from 'camelcase-keys';
 
 export async function getPageData(ctx){
     const { baseHost }            = useRuntimeConfig().public;
-    const { uuid,  type, bundle } = await getPageIdentifiers(ctx);
 
+    try{
+        const { uuid,  type, bundle }    = await getPageIdentifiers(ctx);
         const { identifier, pathPreFix } = ctx;
-    const   query  = getSearchParams(type, bundle);
-    const   uri    = `https://${identifier}${baseHost}${pathPreFix || ''}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
-    const { data } = await $fetch(uri, { query });
-
-    //await getPageAttachments(data, ctx);
-//field_media_image
+        const   query  = getSearchParams(type, bundle);
+        const   uri    = `https://${identifier}${baseHost}${pathPreFix || ''}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
+        const { data } = await $fetch(uri, { query });
 
 
-    return  await mapData(ctx)(data)
+        return  await mapData(ctx)(data)
+    }catch(e){
+        return {}
+    }
+
 }
 export async function getPageDates(ctx){
     const { localizedHost }       = ctx;
