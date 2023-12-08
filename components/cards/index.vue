@@ -74,7 +74,7 @@ const type = computed(()=> record?.value?.fieldTypePlacement?.length? record?.va
 }
 .card {
     width: 350px;
-    height: 550px !important;
+    height: 600px !important;
     // border: .5px solid var(--bs-blue);
 }
 .arrow{
