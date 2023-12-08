@@ -11,11 +11,11 @@ export default cachedEventHandler(async (event) => {
         consola.error(e);
         throw createError({
             statusCode: 500,
-            statusMessage: `Failed to get list/content/${getRouterParam(event, 'type')}`,
+            statusMessage: `Failed to get list/content`,
         }); 
     }
     
 },{
-    maxAge: 1,
+    maxAge: 60,
     varies:['Cookie']
 })

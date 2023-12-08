@@ -2,31 +2,34 @@
 
     <div class="container">
         <div class="row">
+            <div class="col-12 pe-0 me-0" >
+                <SwiperNewsUpdates  :slides="slides" type="media" :arrows="true" :pagination="false" :leftArrow="false"/>
+            </div>
             <div class="col-12">
-                home page
+<!-- <pre>{{slides}}</pre> -->
             </div>
-            <!-- <div class="col-10">
-                {{route.path}}
-            </div>
-            <div class="col-2">
-                &nbsp;
-                <h4>Menu for Testing</h4>
-                <NuxtLink :to="localePath('/')">Home</NuxtLink><br/>
-                <NuxtLink :to="localePath('/test')">Test</NuxtLink><br/>
-                <NuxtLink :to="localePath('/search/abs')">Search Text abs</NuxtLink><br/>
-            </div>
-            <div class="col-10">
-                <div v-if="pageStore?.body?.value" v-html="pageStore.body.value"></div>
-            </div> -->
         </div>
     </div>
 
 </template>
 <script setup>
+import { useMenusStore } from "~/stores/menus";
 import { usePageStore } from "~/stores/page";
+import { useSiteStore } from '~/stores/site';
 
 const route = useRoute();
 const localePath = useLocalePath();
 const pageStore  = usePageStore();
+const menuStore = useMenusStore();
+const   siteStore                   = useSiteStore();
 
+
+const drupalInternalIds = [2,3]
+
+// const query = {drupalInternalIds, freeText}
+const query  = { drupalInternalIds, ...siteStore.params };
+
+const { data } = await useFetch(`/api/list/content`, {  method: 'GET', query });
+
+const slides = computed(()=>data.value.data)
 </script>

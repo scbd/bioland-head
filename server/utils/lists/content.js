@@ -21,13 +21,13 @@ function mapData(ctx){
         await Promise.all(promises);
 
         for (const key in results.data) {
-            const { title, tags, path, field_type_placement,field_attachments, field_start_date, changed, sticky, promote, id, body } = results.data[key];
+            const { type, title, tags, path, field_type_placement,field_attachments, field_start_date, changed, sticky, promote, id, body } = results.data[key];
 
-            if(body?.value) body.summary = stripHtml(body?.value).result.substring(0, 200);
+            if(body?.value) body.summary = stripHtml(body?.value).result.substring(0, 400);
 
             const mediaImage = getMediaImage(ctx, field_attachments);
 
-            results.data[key] = camelCaseKeys({ mediaImage, title, tags, path, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary } )
+            results.data[key] = camelCaseKeys({ type, mediaImage, title, tags, path, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary } )
         }
 
         return results
