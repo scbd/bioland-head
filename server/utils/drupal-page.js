@@ -86,7 +86,6 @@ function mapData(ctx){
     const pathAlias = usePathAlias(ctx)
 
     return async (document)=>{
-        const docs = []
         const promises = [];
         if(document?.field_attachments?.length)
         for (const media of document['field_attachments']){

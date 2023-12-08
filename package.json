@@ -41,6 +41,7 @@
     "pascal-case": "4.0.0",
     "pinia": "2.1.7",
     "pretty-bytes": "6.1.1",
+    "string-strip-html": "^13.4.3",
     "superagent": "8.1.2",
     "vue3-popper": "1.5.0"
   }
