@@ -52,7 +52,7 @@ function getInternalUrlsRecursive(menus,{internalUrlsArr, parent}={}){
     }
     return internalUrls
 }
-const findFromRawMenus = (aMenu )=>({ link, title, alias  })=>{
+const findFromRawMenus = (aMenu )=>({ link, title, alias  } = {})=>{
 
     if(aMenu.href === link.uri && aMenu.title === title) return true
     if(aMenu.href === link.alias && aMenu.title === title) return true
@@ -192,22 +192,36 @@ function splitClasses(menus){
 }
 
 function embedChildren(menus, menusClone){
-
+    let index = -1;
     for (const aMenu of menus) {
+        index++
         const children = [];
-
-        //if(Array.isArray(aMenu.class)) aMenu.class = aMenu.class[0].split(' ');
+        if(Array.isArray(aMenu.crumbs))
+            aMenu.crumbs.push({ title: aMenu.title, href: aMenu.href, index })
+        else aMenu.crumbs = [{ title: aMenu.title, href: aMenu.href, index }]
+        
         for (const aMenuClone of menusClone) {
+
             if((aMenuClone.hierarchy.length - aMenu.hierarchy.length) != 1) continue;
 
             const aMenuCloneHierarchy = aMenuClone.hierarchy.join('.');
-            const aMenuHierarchy = aMenu.hierarchy.join('.');
+            const aMenuHierarchy      = aMenu.hierarchy.join('.');
 
-           if(!aMenuCloneHierarchy.startsWith(aMenuHierarchy)) continue;
-           //if(Array.isArray(aMenuClone.class)) aMenuClone.class = aMenuClone.class[0].split(' ');
+            if(!aMenuCloneHierarchy.startsWith(aMenuHierarchy)) continue;
 
+            if(!Array.isArray(aMenuClone.crumbs))
+                aMenuClone.crumbs = clone(aMenu?.crumbs);
+
+                // if(!aMenuClone.crumbs.find(({ title, href }) => title === aMenuClone.title && href===aMenu.href))
+                    
+            
+            // Array.from(new Set([...( aMenu?.crumbs || []),{ title: aMenu.title, href: aMenu.href, index }]))
+            //aMenuClone.crumbs.push({ title: aMenuClone.title, href: aMenuClone.href })
+            
             children.push(aMenuClone);
+
         }
+
         if(!children.length) continue;
 
         children.sort(sortMenus);

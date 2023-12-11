@@ -9,7 +9,7 @@
 import { useSiteStore } from "~/stores/site";
 
 const { drupalMultisiteIdentifier } = useRuntimeConfig().public;
-const { path } = useRoute()
+const route = useRoute()
 
         // const { t , locale } = useI18n();
         const siteStore    = useSiteStore();
@@ -19,6 +19,8 @@ const { path } = useRoute()
 
     const params = { identifier, country, locale, defaultLocale, countries };
     const key = `${drupalMultisiteIdentifier}-${identifier}-${locale}`;
-//`/api/nr/en/lk`
-        const { data } = country? await useFetch(`/api/page/${key}/${encodeURIComponent(path)}`, {  method: 'GET' }) : {}
+    const query  = { ...route.query, ...siteStore.params };
+// const typeId = drupalTypes[type]?.drupalInternalId? '/'+drupalTypes[type]?.drupalInternalId : '';
+
+   const { data } =  await useFetch(`/api/list/media/document`, {  method: 'GET', query });
 </script>

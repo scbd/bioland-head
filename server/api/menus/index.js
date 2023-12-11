@@ -38,6 +38,6 @@ export default cachedEventHandler(async (event) => {
     }
     
 },{
-    maxAge: 60*60,
+    maxAge: 1,// 60*60,
     varies:['Cookie']
 })

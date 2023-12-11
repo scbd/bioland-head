@@ -35,6 +35,7 @@
     "lodash.isstring": "4.0.1",
     "lodash.sample": "4.2.1",
     "luxon": "^3.4.4",
+    "mitt": "^3.0.1",
     "nuxt-swiper": "1.2.2",
     "nuxt-viewport": "2.0.6",
     "param-case": "4.0.0",

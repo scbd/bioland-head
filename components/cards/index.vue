@@ -65,7 +65,7 @@ const type = computed(()=> record?.value?.fieldTypePlacement?.length? record?.va
         return {'background':`url('${imgSrc}') no-repeat center fixed`,  'object-fit': 'contain' , 'background-size': '100% auto', 'background-size': '150%'}
         })
 
-        consola.info(record.value)
+
 </script>
 <i18n src="@/i18n/dist/components/cards/index.json"></i18n>
 <style lang="scss" scoped>

@@ -4,6 +4,7 @@
     <!-- <div class="page-loader"></div> -->
     <PageHeader/>
     <!-- <PageEditorControls  /> -->
+
     <main class="">
       <!-- <test/> -->
       <!-- <div class="text-muted text-center">Main Page Content</div> -->
@@ -13,12 +14,13 @@
 
       <!-- <div class="text-muted text-center">Main Page Content</div> -->
     </main>
+    <div v-if="!isProd" class="text-center"><HydrationStatus /> </div>
     <PageFooter/>
 </template> 
 <script setup >
 
-
-
+const { env } =useRuntimeConfig().public;
+const isProd = env === 'production';
 const { locale } = useI18n();
 const localHead  = useLocaleHead({
   addDirAttribute: true,

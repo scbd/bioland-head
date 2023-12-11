@@ -67,10 +67,11 @@
     import { DateTime     } from 'luxon'        ;
     import { usePageStore } from '~/stores/page';
 
+    const route      = useRoute();
     const { t, locale } = useI18n();
 
     const pageStore = usePageStore()
-    const { created, fieldStartDate, fieldPublished, fieldEndDate, tags } = storeToRefs( usePageStore());
+    const { path, created, fieldStartDate, fieldPublished, fieldEndDate, tags } = storeToRefs( usePageStore());
 
     function getGbfUrl(identifier){
         const number = Number(identifier.replace('GBF-TARGET-', ''));

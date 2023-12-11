@@ -5,22 +5,25 @@
             <div class="col-md-3">
                 &nbsp;
             </div>
-            <div class="col-12 col-md-9 ps-0">
-                <PageBreadCrumbs/>
+            <div class="col-12 col-md-9 px-0">
+                <PageBreadCrumbs :count="data.count"/>
             </div>
             <div class="col-12 col-md-3 ps-0" >
-                <h2 class="page-type">{{t(type || 'Content Type')}}</h2>
+        
+                <h2 v-if="type " class="page-type text-capitalize">{{t(type,2)}}</h2>
                 <PageListTextSearch/>
             </div>
 
             <div class="col-12 col-md-9 data-body" >
-                <div class="card p-1 mb-3" v-for="(aLine,index) in data.data" :key="index">
+                <div @click="goTo(aLine?.path?.alias)" class="card p-1 mb-3" v-for="(aLine,index) in data.data" :key="index">
                     <div class="row g-0">
+                        <Icon v-if="aLine.sticky" name="pushpin" class="position-absolute start-50 icon"/>
                         <div :class="{'col-9': aLine.mediaImage, 'col-12': !aLine.mediaImage }">
                             <div class="card-body pe-1">
-                                <h5 class="card-title">{{aLine.title}}</h5>
+                                <h5 class="card-title">{{aLine.title || aLine.name}}</h5>
                                 <p v-if="aLine.summary" class="card-text">{{aLine.summary}}...</p>
                                 <!-- <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p> -->
+
                             </div>
                         </div>
                         <div v-if="aLine.mediaImage" class="col-md-3">
@@ -29,7 +32,8 @@
                         <div class="col-12 ">
                             <div class="card-footer pb-0 text-center">
                                 <ul class="float-start">
-                                    <li v-if="!isSingleType"><span class="text-primary text-uppercase">{{type}}</span></li>
+                                    <!-- <li v-if="!isSingleType && type"><span class="text-primary text-uppercase">{{type}}</span></li> -->
+                                    <li v-if="!isSingleType"><span class="text-primary text-uppercase">{{getDocumentTypeName(aLine)}}</span></li>
                                     <li v-if="aLine?.tags?.countries?.length" v-for="(aCountry,i) in aLine.tags?.countries" :key="i"   class="text-uppercase" >
                                         <NuxtLink :to="`https://www.cbd.int/countries/?country=${aCountry.identifier}`" target="_blank" external>
                                             {{aCountry.name}}
@@ -50,11 +54,14 @@
                         </div>
                     </div>
                 </div>
+
+<!-- <pre>{{data.data}}</pre> -->
             </div>
         </div>
     </div>
 
 </template>
+<i18n src="@/i18n/dist/components/page/list/index.json"></i18n>
 <script setup>
 import { DateTime     } from 'luxon'  
 import { useSiteStore } from '~/stores/site';
@@ -64,25 +71,28 @@ const { t, locale } = useI18n();
 
 const   route                       = useRoute();
 const   siteStore                   = useSiteStore();
-const { type }                      = route.params;
+const type                          = route?.params?.type;
+const drupalInternalIds                         = route?.query?.types;
 const { contentTypes, mediaTypes }  = useMenusStore();
 
 
 const isContentType = computed(()=>!!contentTypes[type]);
-const isMediaType   = computed(()=>!!mediaTypes[type]);
+const isMediaType   = computed(()=> drupalInternalIds?.length || !!mediaTypes[type]);
 const isDrupalType  = computed(()=> isContentType.value || isMediaType.value);
-const isSingleType  = computed(()=> isDrupalType.value && !route?.query?.drupalInternalIds?.length);
+const isSingleType  = computed(()=> (isDrupalType.value && !route?.query?.drupalInternalIds?.length && !drupalInternalIds?.length));
 const drupalTypes   = { ...contentTypes, ...mediaTypes };
 
 // const list = computed(()=>isDrupalType.value? drupalTypes[type] : {});
 
-const drupalInternalIds = [8,9,10]
-const freeText = 'for'
+
 // const query = {drupalInternalIds, freeText}
-const query  = { ...route.query, ...siteStore.params };
+const query  = { ...route.query, ...siteStore.params, drupalInternalIds };
+
+consola.warn(drupalInternalIds)
 const typeId = drupalTypes[type]?.drupalInternalId? '/'+drupalTypes[type]?.drupalInternalId : '';
 
-const { data } = await useFetch(`/api/list/content${typeId}`, {  method: 'GET', query });
+
+const { data } = await useFetch(`/api/list/${isMediaType.value? 'media': 'content'}${typeId}`, {  method: 'GET', query });
 
 
 
@@ -94,13 +104,29 @@ function getQuery(){
     return { drupalInternalIds, freeText, page, rowsPerPage }
 }
 
-consola.warn(getQuery())
+// consola.warn(getQuery())
 // if(!isDrupalType.value){
 //error
 // }
 
     function dateFormat(date){
         return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
+    }
+
+    function getDocumentTypeName(aLine){
+        if(aLine?.fieldTypePlacement?.length)
+            return aLine.fieldTypePlacement[0].name;
+
+        if(aLine.type.includes('media--'))
+            return t(aLine.type.replace('media--',''),1);
+    }
+
+    async function goTo(path){
+        if(!path) return 
+
+        const localePath = useLocalePath();
+
+        await navigateTo({ path: localePath(path) })
     }
 </script>
 
@@ -153,8 +179,13 @@ li a{
 .data-body{
 
 padding-left: 0;
+padding-right: 0;
 border-top: black .5rem solid;
 padding-top: 1rem;
 
+}
+
+.icon{
+    fill:var(--bs-primary);
 }
 </style>

@@ -112,7 +112,7 @@ export default defineNuxtConfig({
   delayHydration: {
     mode: 'init',
     // enables nuxt-delay-hydration in dev mode for testing
-    debug: process.env.NODE_ENV === 'development'
+    debug: true//process.env.NODE_ENV === 'development'
   },
   purgecss: {
     enabled: false,//process.env.NODE_ENV !== 'development', // Always enable purgecss

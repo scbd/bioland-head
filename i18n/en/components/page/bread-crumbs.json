@@ -1,1 +1,12 @@
-{}
+{
+    "National CHM": "National CHM",
+    "ecosystem": "ecosystem | ecosystems",
+    "project": "project | projects",
+    "biodiversity-data": "biodiversity data | biodiversity data sets",
+    "event": "event | events",
+    "protected-area":"protected area | protected areas",
+    "web-page":"web page | web pages",
+    "learning-resource":"learning resource | learning resources",
+    "news":"news",
+    "government-ministry-or-institute":"government ministry or institute | government ministries and institutes"
+}

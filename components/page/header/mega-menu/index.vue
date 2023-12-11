@@ -34,10 +34,12 @@ import { useMenusStore } from "~/stores/menus";
         const { main: menus } = storeToRefs(menuStore);
         const router = useRouter()
 
+        const eventBus   = useEventBus();
+
         router.beforeEach(() => {
           for (let index = 0; index < unref(toggles).length; index++)
               toggles.value[index] = false;
-  })
+        })
         const stop = watch(spacers, async (newSpacers) => {
                                                             if(!newSpacers) return;
                                                             for (let i = 0; i < newSpacers.length; i++) {
@@ -46,6 +48,8 @@ import { useMenusStore } from "~/stores/menus";
                                                             }
                                                             stop();
                                                             }, { immediate: true });
+        //open menu from crumbs
+        onMounted(() => eventBus.on('openMenu', (index) => toggles.value[index] = true) );
 
         return { menus,  spacers, spacersY, toggles }
     }

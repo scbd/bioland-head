@@ -27,7 +27,7 @@ function mapData(ctx){
 
             const mediaImage = getMediaImage(ctx, field_attachments);
 
-            results.data[key] = camelCaseKeys({ type, mediaImage, title, tags, path, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary } )
+            results.data[key] = camelCaseKeys({ type, mediaImage, title, tags, path, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary }, {deep: true}  )
         }
 
         return results
@@ -49,20 +49,7 @@ function getMediaImage(ctx, fieldAttachments){
     return { filename, width, height, alt, title, src: ctx.host+src } 
 }
 
-function mapTagsByType(tags){
-    if(!tags) return  undefined;
-    const map = { };
 
-    for (const tag of tags) {
-        const type = thesaurusSourceMap[tag.identifier];
-
-        if(!map[type]) map[type] = [];
-
-        map[type].push(tag);
-    }
-
-    return map
-}
 async function getList(ctx ) {
     const { localizedHost } = ctx;
     const uri           = `${localizedHost}/jsonapi/node/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image`;
@@ -96,4 +83,37 @@ function getTypeFilterParams({ drupalInternalId, drupalInternalIds }){
 
 
     return  filterQueryString;
+}
+
+function getSortParams({ sortBy, sortDirection }){
+
+    const direction = !sortDirection? 'DESC' : 'ASC';
+
+    let sortQueryString = '';
+    sortQueryString += `&sort[sticky][path]=sticky`
+    sortQueryString += `&sort[sticky][direction]=${direction}`
+    sortQueryString += `&sort[sort-start][path]=field_start_date`
+    sortQueryString += `&sort[sort-start][direction]=${direction}`
+    sortQueryString += `&sort[sort-created][path]=${sortBy || 'changed'}`
+    sortQueryString += `&sort[sort-created][direction]=${direction}`
+
+    return sortQueryString;
+}
+
+function getFreeTextFilterParams({ freeText }){
+    if(!freeText) return '';
+
+    let sortQueryString = '&filter[or-group][group][conjunction]=OR';
+
+    sortQueryString += `&filter[free-text-title][condition][path]=title`;
+    sortQueryString += `&filter[free-text-title][condition][operator]=CONTAINS`;
+    sortQueryString += `&filter[free-text-title][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-title][condition][memberOf]=or-group`;
+
+    sortQueryString += `&filter[free-text-body][condition][path]=body.value`;
+    sortQueryString += `&filter[free-text-body][condition][operator]=CONTAINS`;
+    sortQueryString += `&filter[free-text-body][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-body][condition][memberOf]=or-group`;
+
+    return sortQueryString;
 }

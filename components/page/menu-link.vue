@@ -17,7 +17,9 @@ export default {
         machineName: String,
         path: String,
         id: String,
-        drupalInternalId: Number
+        drupalInternalId: Number,
+        crumbs:String,
+        crumbs: Array
     },
     computed: { isExternal },
     setup
