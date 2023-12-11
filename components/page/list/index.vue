@@ -57,6 +57,9 @@
 
 <!-- <pre>{{data.data}}</pre> -->
             </div>
+            <div class="col-12">
+                <PageListPager/>
+            </div>
         </div>
     </div>
 
@@ -88,7 +91,7 @@ const drupalTypes   = { ...contentTypes, ...mediaTypes };
 // const query = {drupalInternalIds, freeText}
 const query  = { ...route.query, ...siteStore.params, drupalInternalIds };
 
-consola.warn(drupalInternalIds)
+
 const typeId = drupalTypes[type]?.drupalInternalId? '/'+drupalTypes[type]?.drupalInternalId : '';
 
 
