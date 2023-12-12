@@ -2,7 +2,7 @@ import   camelCaseKeys   from 'camelcase-keys';
 import { stripHtml } from "string-strip-html"; 
 
 export const useContentTypeList = async (ctx) => {
-   // await useDrupalLogin(ctx.identifier)
+
     return  getList(ctx)//makeTypeMap(await getAllContentTypeMenus(ctx))
 }
 

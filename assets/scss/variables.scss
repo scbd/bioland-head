@@ -119,12 +119,12 @@ $navbar-dark-hover-color: $white !default;
 // Pagination
 // $pagination-color: $white !default;
 // $pagination-bg: $gray-700 !default;
-// $pagination-border-color: transparent !default;
-// $pagination-hover-color: $white !default;
-// $pagination-hover-bg: $primary !default;
-// $pagination-hover-border-color: $pagination-border-color !default;
+$pagination-border-color: #dee2e6 !default;
+$pagination-hover-color: $white !default;
+$pagination-hover-bg: $primary !default;
+$pagination-hover-border-color: $pagination-border-color !default;
 // $pagination-disabled-bg: $pagination-bg !default;
-// $pagination-disabled-border-color: $pagination-border-color !default;
+$pagination-disabled-border-color: $pagination-border-color !default;
 
 // Jumbotron
 $jumbotron-color: $white !default;

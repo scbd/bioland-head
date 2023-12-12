@@ -6,7 +6,7 @@
                 &nbsp;
             </div>
             <div class="col-12 col-md-9 px-0">
-                <PageBreadCrumbs :count="data.count"/>
+                <PageBreadCrumbs :count="results.count"/>
             </div>
             <div class="col-12 col-md-3 ps-0" >
         
@@ -14,8 +14,9 @@
                 <PageListTextSearch/>
             </div>
 
-            <div class="col-12 col-md-9 data-body" >
-                <div @click="goTo(aLine?.path?.alias)" class="card p-1 mb-3" v-for="(aLine,index) in data.data" :key="index">
+            <!-- <div class="col-12 col-md-9 data-body" > -->
+            <transition-group name="list" tag="div" class="col-12 col-md-9 data-body">
+                <div @click="goTo(aLine?.path?.alias)" class="card p-1 mb-3" v-for="(aLine,index) in results.data" :key="index">
                     <div class="row g-0">
                         <Icon v-if="aLine.sticky" name="pushpin" class="position-absolute start-50 icon"/>
                         <div :class="{'col-9': aLine.mediaImage, 'col-12': !aLine.mediaImage }">
@@ -54,11 +55,9 @@
                         </div>
                     </div>
                 </div>
-
-<!-- <pre>{{data.data}}</pre> -->
-            </div>
+        </transition-group>
             <div class="col-12">
-                <PageListPager/>
+                <PageListPager :count="results.count"/>
             </div>
         </div>
     </div>
@@ -70,10 +69,12 @@ import { DateTime     } from 'luxon'
 import { useSiteStore } from '~/stores/site';
 import { useMenusStore } from '~/stores/menus';
 
+
 const { t, locale } = useI18n();
 
 const   route                       = useRoute();
 const   siteStore                   = useSiteStore();
+const   eventBus    = useEventBus();
 const type                          = route?.params?.type;
 const drupalInternalIds                         = route?.query?.types;
 const { contentTypes, mediaTypes }  = useMenusStore();
@@ -84,18 +85,14 @@ const isMediaType   = computed(()=> drupalInternalIds?.length || !!mediaTypes[ty
 const isDrupalType  = computed(()=> isContentType.value || isMediaType.value);
 const isSingleType  = computed(()=> (isDrupalType.value && !route?.query?.drupalInternalIds?.length && !drupalInternalIds?.length));
 const drupalTypes   = { ...contentTypes, ...mediaTypes };
-
+// let results = ref({})
 // const list = computed(()=>isDrupalType.value? drupalTypes[type] : {});
 
 
 // const query = {drupalInternalIds, freeText}
-const query  = { ...route.query, ...siteStore.params, drupalInternalIds };
 
 
-const typeId = drupalTypes[type]?.drupalInternalId? '/'+drupalTypes[type]?.drupalInternalId : '';
-
-
-const { data } = await useFetch(`/api/list/${isMediaType.value? 'media': 'content'}${typeId}`, {  method: 'GET', query });
+//const { data } = await useFetch(`/api/list/${isMediaType.value? 'media': 'content'}${typeId}`, {  method: 'GET', query });
 
 
 
@@ -107,10 +104,7 @@ function getQuery(){
     return { drupalInternalIds, freeText, page, rowsPerPage }
 }
 
-// consola.warn(getQuery())
-// if(!isDrupalType.value){
-//error
-// }
+
 
     function dateFormat(date){
         return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
@@ -131,6 +125,23 @@ function getQuery(){
 
         await navigateTo({ path: localePath(path) })
     }
+
+
+        // await nextTick();
+        const   r                       = useRoute();
+        const freeText = computed(()=>r?.query?.freeText? r?.query?.freeText : '');
+        const page = computed(()=>r?.query?.page? r?.query?.page : 1);
+
+        const query  = { ...r.query,freeText, page, ...siteStore.params, drupalInternalIds }
+
+
+        const typeId = drupalTypes[type]?.drupalInternalId? '/'+drupalTypes[type]?.drupalInternalId : '';
+
+        consola.error('callApi', r.query)
+        const { data: results, status, refresh } = await useFetch(`/api/list/${isMediaType.value? 'media': 'content'}${typeId}`, {  method: 'GET', query });
+
+
+    onMounted(() => eventBus.on('changePage', refresh) );
 </script>
 
 <style scoped>
@@ -191,4 +202,17 @@ padding-top: 1rem;
 .icon{
     fill:var(--bs-primary);
 }
+.list-move,
+    .list-enter-active,
+    .list-leave-active {
+            transition: all 1s cubic-bezier(0.075, 0.82, 0.165, 1);
+    }
+    .list-enter-from,
+    .list-leave-to {
+            opacity: 0;
+            transform: translateX(-2rem);
+    }
+    .list-leave-active {
+            position: absolute;
+    }
 </style>

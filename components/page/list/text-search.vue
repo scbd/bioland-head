@@ -2,28 +2,33 @@
     <div  class="input-group">
         <input type="text" v-model="queryText" class="form-control"  :placeholder="t('Free text search')" aria-label="search" >
 
-        <a class="input-group-text"    :alt="t('Search this site')"  >
+        <a class="input-group-text"    :alt="t('Free text search')"  >
             <Icon v-if="!queryText" name="search" class="white-icon" />
             <Icon @click="clear()" v-if="queryText" name="cancel" class="white-icon" />&nbsp;
         </a>
     </div>
 </template>
-
+<i18n src="@/i18n/dist/components/page/list/text-search.json"></i18n>
 <script setup>
 
 const { t  }    = useI18n();
 const router = useRouter()
 const   route   = useRoute();
+const   eventBus  = useEventBus();
 const queryText = ref(route.query.freeText || '');
 
-watch(queryText, (value) => {
-    const query = { ...route.query, freeText: value } ;
-    
-    if(!value)
-        delete(query.freeText);
-    
-    router.push({ query })
-})
+
+watch(queryText, debounce(async (value) => {
+                    const query = { ...route.query, freeText: value } ;
+                    
+                    if(!value)
+                        delete(query.freeText);
+                    
+                    await router.push({ query });
+
+                    eventBus.emit('changePage');
+
+                }, 500))
 
 
     function clear(){

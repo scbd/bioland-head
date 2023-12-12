@@ -10,6 +10,8 @@
             </NuxtLink>
             <span v-if="!isSelf(aCrumb.href)">&nbsp; <Icon name="triangle-right"/> &nbsp;</span>
         </span>
+
+        <span v-if="count" class="text-muted float-end"> &nbsp; {{t('record', count)}}</span>
         <span v-if="count" class="badge rounded-pill bg-primary float-end" >{{count}}</span>
     </div>
 </template>
