@@ -26,12 +26,11 @@ const { count } = toRefs(props);
 
 const route      = useRoute();
 const localePath = useLocalePath();
-const pageStore  = usePageStore();
+// const pageStore  = usePageStore();
 const menusStore = useMenusStore();
 const inMenu     = ref(menusStore.isInMainMenu(route.path) || menusStore.isInMainMenu(parentPath()));
 const eventBus   = useEventBus();
 const crumbs     = computed(()=> inMenu?.value? inMenu.value?.crumbs : []);
-
 
 
 function isSelf(href){ return href === route.path; }

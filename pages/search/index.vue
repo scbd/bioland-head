@@ -1,5 +1,5 @@
 <template>
-  <PageList/>
+  <PageList :showTopPager="true" title="search"/>
 </template>
 <script setup>
 

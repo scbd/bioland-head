@@ -13,5 +13,6 @@
     "image":"image | images",
     "video":"video | videos",
     "remote_video":"video | videos",
-    "photos-and-videos":"photo or video | photos & videos"
+    "photos-and-videos":"photo or video | photos & videos",
+    "search":"search"
 }

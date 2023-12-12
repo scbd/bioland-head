@@ -4,7 +4,7 @@
             <li @click.prevent="prevPage()" :class="{'disabled': prevDisabled}" class="page-item">
                 <a class="page-link" href="#" >{{t('Previous')}}</a>
             </li>
-            <li @click.prevent="changePage(aPage)" class="page-item" v-for="(aPage,index) in pages" :key="index">
+            <li @click.prevent="changePage(aPage)" class="page-item" v-for="(aPage,index) in range" :key="index">
                 <a :class="{'disabled current':page === aPage}" class="page-link" href="#">
                     {{aPage}}
                 </a>
@@ -29,8 +29,7 @@ const page        = computed(()=>route?.query?.page?  Number(route?.query?.page)
 const rowsPerPage = computed(()=>route?.query?.rowsPerPage? Number(route?.query?.rowsPerPage):  10);
 
 const totalPages   = computed(()=> Math.ceil((count.value || rowsPerPage.value) / rowsPerPage.value));
-const pages        = computed(()=> Array.from(Array(totalPages.value).keys()).map(i => i + 1));    
-const showPaging   = true;//computed(()=> count.value > rowsPerPage.value);
+const showPaging   = true;
 const prevDisabled = computed(()=> page.value === 1);
 const nextDisabled = computed(()=> page.value === totalPages.value);
 
@@ -53,6 +52,19 @@ async function changePage(page){
 
     eventBus.emit('changePage');
 }
+
+const range = computed(()=> {
+    if(totalPages.value <= 5 ) return Array.from(Array(totalPages.value).keys()).map(i => i + 1)
+    if(page.value <=3) return Array.from(Array(5).keys()).map(i => i + 1)
+
+    if(page.value >3 && page.value <= totalPages.value -2 ) return [page.value-2,page.value-1,page.value,page.value+1,page.value+2]
+
+    if(page.value == totalPages.value -1 ) return [page.value-3,page.value-2,page.value-1,page.value,page.value+1]
+
+    return [page.value-4,page.value-3,page.value-2,page.value-1,page.value]
+
+});
+
 </script>
 <style lang="scss" scoped>
 .current {

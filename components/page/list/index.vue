@@ -10,12 +10,15 @@
             </div>
             <div class="col-12 col-md-3 ps-0" >
         
-                <h2 v-if="type " class="page-type text-capitalize">{{t(type,2)}}</h2>
+                <h2 v-if="type" class="page-type text-capitalize">{{t(type,2)}}</h2>
+                <h2 v-if="!type && title" class="page-type text-capitalize">{{t(title)}}</h2>
                 <PageListTextSearch/>
             </div>
 
             <!-- <div class="col-12 col-md-9 data-body" > -->
             <transition-group name="list" tag="div" class="col-12 col-md-9 data-body">
+                <PageListPager v-if="showTopPager" :count="results.count"/>
+
                 <div @click="goTo(aLine?.path?.alias)" class="card p-1 mb-3" v-for="(aLine,index) in results.data" :key="index">
                     <div class="row g-0">
                         <Icon v-if="aLine.sticky" name="pushpin" class="position-absolute start-50 icon"/>
@@ -56,7 +59,7 @@
                     </div>
                 </div>
         </transition-group>
-            <div class="col-12">
+            <div class="col-12 col-md-9 offset-md-3 ">
                 <PageListPager :count="results.count"/>
             </div>
         </div>
@@ -78,7 +81,11 @@ const   eventBus    = useEventBus();
 const type                          = route?.params?.type;
 const drupalInternalIds                         = route?.query?.types;
 const { contentTypes, mediaTypes }  = useMenusStore();
-
+const   props     = defineProps({ 
+                                    showTopPager: { type: Boolean, default: false },
+                                    title: { type: String, default: '' },
+                                });
+const { showTopPager }   = toRefs(props);
 
 const isContentType = computed(()=>!!contentTypes[type]);
 const isMediaType   = computed(()=> drupalInternalIds?.length || !!mediaTypes[type]);
@@ -96,7 +103,7 @@ const drupalTypes   = { ...contentTypes, ...mediaTypes };
 
 
 
-watch(() => route.query, () => consola.warn('query changed', route.query))
+// watch(() => route.query, () => consola.warn('query changed', route.query))
 
 function getQuery(){
     const { drupalInternalIds, freeText, page, rowsPerPage } = route.query;
@@ -137,7 +144,7 @@ function getQuery(){
 
         const typeId = drupalTypes[type]?.drupalInternalId? '/'+drupalTypes[type]?.drupalInternalId : '';
 
-        consola.error('callApi', r.query)
+
         const { data: results, status, refresh } = await useFetch(`/api/list/${isMediaType.value? 'media': 'content'}${typeId}`, {  method: 'GET', query });
 
 

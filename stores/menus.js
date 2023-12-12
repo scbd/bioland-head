@@ -72,7 +72,7 @@ function isInFooterCreditsMenu(href){
 
 function isInMenu(menu, href){
 
-    if(menu.href === href) return menu;
+    if(menu.href === href && menu.href && href) return menu;
 
     if(menu?.children?.length)
         for(let i = 0; i < menu.children.length; i++)
