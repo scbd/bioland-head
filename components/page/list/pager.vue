@@ -29,7 +29,7 @@ const page        = computed(()=>route?.query?.page?  Number(route?.query?.page)
 const rowsPerPage = computed(()=>route?.query?.rowsPerPage? Number(route?.query?.rowsPerPage):  10);
 
 const totalPages   = computed(()=> Math.ceil((count.value || rowsPerPage.value) / rowsPerPage.value));
-const showPaging   = true;
+const showPaging   = computed(()=> totalPages.value > 1);
 const prevDisabled = computed(()=> page.value === 1);
 const nextDisabled = computed(()=> page.value === totalPages.value);
 

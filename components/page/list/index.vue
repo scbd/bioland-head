@@ -10,12 +10,11 @@
             </div>
             <div class="col-12 col-md-3 ps-0" >
         
-                <h2 v-if="type" class="page-type text-capitalize">{{t(type,2)}}</h2>
+                <h2 v-if="type && !title" class="page-type text-capitalize">{{t(type,2)}}</h2>
                 <h2 v-if="!type && title" class="page-type text-capitalize">{{t(title)}}</h2>
                 <PageListTextSearch/>
             </div>
 
-            <!-- <div class="col-12 col-md-9 data-body" > -->
             <transition-group name="list" tag="div" class="col-12 col-md-9 data-body">
                 <PageListPager v-if="showTopPager" :count="results.count"/>
 
@@ -26,8 +25,6 @@
                             <div class="card-body pe-1">
                                 <h5 class="card-title">{{aLine.title || aLine.name}}</h5>
                                 <p v-if="aLine.summary" class="card-text">{{aLine.summary}}...</p>
-                                <!-- <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p> -->
-
                             </div>
                         </div>
                         <div v-if="aLine.mediaImage" class="col-md-3">
@@ -36,7 +33,6 @@
                         <div class="col-12 ">
                             <div class="card-footer pb-0 text-center">
                                 <ul class="float-start">
-                                    <!-- <li v-if="!isSingleType && type"><span class="text-primary text-uppercase">{{type}}</span></li> -->
                                     <li v-if="!isSingleType"><span class="text-primary text-uppercase">{{getDocumentTypeName(aLine)}}</span></li>
                                     <li v-if="aLine?.tags?.countries?.length" v-for="(aCountry,i) in aLine.tags?.countries" :key="i"   class="text-uppercase" >
                                         <NuxtLink :to="`https://www.cbd.int/countries/?country=${aCountry.identifier}`" target="_blank" external>
@@ -58,7 +54,8 @@
                         </div>
                     </div>
                 </div>
-        </transition-group>
+            </transition-group>
+
             <div class="col-12 col-md-9 offset-md-3 ">
                 <PageListPager :count="results.count"/>
             </div>
@@ -79,7 +76,7 @@ const   route                       = useRoute();
 const   siteStore                   = useSiteStore();
 const   eventBus    = useEventBus();
 const type                          = route?.params?.type;
-const drupalInternalIds                         = route?.query?.types;
+const drupalInternalIds             = route?.path?.includes('/media/photos-and-videos')? ['image', 'remote_video'] : undefined
 const { contentTypes, mediaTypes }  = useMenusStore();
 const   props     = defineProps({ 
                                     showTopPager: { type: Boolean, default: false },
@@ -87,30 +84,13 @@ const   props     = defineProps({
                                 });
 const { showTopPager }   = toRefs(props);
 
+consola.info('drupalInternalIds',route?.query);
+
 const isContentType = computed(()=>!!contentTypes[type]);
 const isMediaType   = computed(()=> drupalInternalIds?.length || !!mediaTypes[type]);
 const isDrupalType  = computed(()=> isContentType.value || isMediaType.value);
 const isSingleType  = computed(()=> (isDrupalType.value && !route?.query?.drupalInternalIds?.length && !drupalInternalIds?.length));
 const drupalTypes   = { ...contentTypes, ...mediaTypes };
-// let results = ref({})
-// const list = computed(()=>isDrupalType.value? drupalTypes[type] : {});
-
-
-// const query = {drupalInternalIds, freeText}
-
-
-//const { data } = await useFetch(`/api/list/${isMediaType.value? 'media': 'content'}${typeId}`, {  method: 'GET', query });
-
-
-
-// watch(() => route.query, () => consola.warn('query changed', route.query))
-
-function getQuery(){
-    const { drupalInternalIds, freeText, page, rowsPerPage } = route.query;
-
-    return { drupalInternalIds, freeText, page, rowsPerPage }
-}
-
 
 
     function dateFormat(date){
@@ -134,18 +114,18 @@ function getQuery(){
     }
 
 
-        // await nextTick();
-        const   r                       = useRoute();
-        const freeText = computed(()=>r?.query?.freeText? r?.query?.freeText : '');
-        const page = computed(()=>r?.query?.page? r?.query?.page : 1);
+    // await nextTick();
+    const   r                       = useRoute();
+    const freeText = computed(()=>r?.query?.freeText? r?.query?.freeText : '');
+    const page = computed(()=>r?.query?.page? r?.query?.page : 1);
 
-        const query  = { ...r.query,freeText, page, ...siteStore.params, drupalInternalIds }
-
-
-        const typeId = drupalTypes[type]?.drupalInternalId? '/'+drupalTypes[type]?.drupalInternalId : '';
+    const query  = { ...r.query,freeText, page, ...siteStore.params, drupalInternalIds }
 
 
-        const { data: results, status, refresh } = await useFetch(`/api/list/${isMediaType.value? 'media': 'content'}${typeId}`, {  method: 'GET', query });
+    const typeId = drupalTypes[type]?.drupalInternalId? '/'+drupalTypes[type]?.drupalInternalId : '';
+
+
+    const { data: results, status, refresh } = await useFetch(`/api/list/${isMediaType.value? 'media': 'content'}${typeId}`, {  method: 'GET', query });
 
 
     onMounted(() => eventBus.on('changePage', refresh) );
