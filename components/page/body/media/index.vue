@@ -11,7 +11,7 @@
             </div>
             <div v-if="mediaImage?.src" class="col-12 d-md-none px-0">
 
-                <NuxtImg :alt="mediaImage.alt" :src="mediaImage.src" class="img-fluid mt-0 mb-1 w-100"/>
+                <NuxtImg format="webp" :alt="mediaImage.alt" :src="mediaImage.src" class="img-fluid mt-0 mb-1 w-100"/>
 
             </div>
             <div class="col-3 d-none d-md-block">

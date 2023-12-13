@@ -121,6 +121,7 @@ export default defineNuxtConfig({
   image: {
     domains: ['https://seed.chm-cbd.net', 'https://www.cbd.int', 'https://seed.bl2.staging.cbd.int'],
     format: ['webp', 'avif', 'jpeg', 'jpg', 'png','gif'],
+    quality: 70,
     screens: {
       'xs': 320,
       sm: 576,

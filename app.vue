@@ -1,6 +1,6 @@
 <template>
     <IconSymbols v-once/>
-    <NuxtLoadingIndicator />
+    
     <!-- <div class="page-loader"></div> -->
     <PageHeader/>
     <!-- <PageEditorControls  /> -->
@@ -8,6 +8,8 @@
     <main class="">
       <!-- <test/> -->
       <!-- <div class="text-muted text-center">Main Page Content</div> -->
+      <NuxtLoadingIndicator :height="6"/>
+
       <NuxtPage/>
       <br/><br/><br/><br/><br/><br/><br/>
       <br/><br/><br/><br/><br/><br/><br/>

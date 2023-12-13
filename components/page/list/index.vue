@@ -28,7 +28,7 @@
                             </div>
                         </div>
                         <div v-if="aLine.mediaImage" class="col-md-3">
-                            <NuxtImg class="img-fluid rounded-start" :alt="aLine.mediaImage.alt" :src="aLine.mediaImage.src" :width="aLine.mediaImage.width" :height="aLine.mediaImage.height" />
+                            <NuxtImg  format="webp" loading="lazy" quality="50" class="img-fluid" :alt="aLine.mediaImage.alt" :src="aLine.mediaImage.src" :width="aLine.mediaImage.width" :height="aLine.mediaImage.height" />
                         </div>
                         <div class="col-12 ">
                             <div class="card-footer pb-0 text-center">
@@ -39,7 +39,6 @@
                                             {{aCountry.name}}
                                         </NuxtLink>
                                     </li>
-
                                 </ul>
 
                                 <span v-if="aLine?.tags?.gbfTargets?.length" v-for="(aTarget,i) in aLine?.tags?.gbfTargets" :key="i"  >
@@ -48,7 +47,7 @@
                                 <span v-if="aLine?.tags?.sdgs?.length" v-for="(aSdg,i) in aLine?.tags?.sdgs" :key="i"  >
                                     <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
                                 </span>
-                                <p class="float-end card-text pe-1"><small class="text-muted">{{dateFormat(aLine.fieldStartDate || aLine.fieldPublishedDate || aLine.changed)}}</small></p>
+                                <p class="float-end card-text pe-1"><small class="text-muted">{{aLine.index}} - {{dateFormat(aLine.fieldStartDate || aLine.fieldPublishedDate || aLine.changed)}}</small></p>
                             </div>
                             
                         </div>
@@ -115,11 +114,11 @@ const drupalTypes   = { ...contentTypes, ...mediaTypes };
 
 
     // await nextTick();
-    const   r                       = useRoute();
-    const freeText = computed(()=>r?.query?.freeText? r?.query?.freeText : '');
-    const page = computed(()=>r?.query?.page? r?.query?.page : 1);
+    const   r      = useRoute();
+    const freeText = computed(() => r?.query?.freeText? r?.query?.freeText : '');
+    const page     = computed(() => r?.query?.page? r?.query?.page : 1);
 
-    const query  = { ...r.query,freeText, page, ...siteStore.params, drupalInternalIds }
+    const query    = { ...r.query,freeText, page, ...siteStore.params, drupalInternalIds }
 
 
     const typeId = drupalTypes[type]?.drupalInternalId? '/'+drupalTypes[type]?.drupalInternalId : '';

@@ -15,9 +15,10 @@ export function getTagFilterParams(filters){
     return  filterQueryString;
 }
 
-export function getPaginationParams({ page, rowsPerPage }){
-    const offSet = page? Number(page)-1: 0;
-    const limit  = rowsPerPage? Number(rowsPerPage) : 10;
+export function getPaginationParams({ page=1, rowsPerPage=10 }){
+    
+    const limit  = Number(rowsPerPage)? Number(rowsPerPage) : 10;
+    const offSet = Number(page)>1? (Number(page)-1)*limit : 0 ;
 
     return `&page[limit]=${limit}&page[offset]=${offSet}`;
 }

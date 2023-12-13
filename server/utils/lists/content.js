@@ -2,7 +2,7 @@ import   camelCaseKeys   from 'camelcase-keys';
 import { stripHtml } from "string-strip-html"; 
 
 export const useContentTypeList = async (ctx) => {
-
+console.log(ctx)
     return  getList(ctx)//makeTypeMap(await getAllContentTypeMenus(ctx))
 }
 
@@ -26,8 +26,12 @@ function mapData(ctx){
             if(body?.value) body.summary = stripHtml(body?.value).result.substring(0, 400);
 
             const mediaImage = getMediaImage(ctx, field_attachments);
+            const page = ctx.page? Number(ctx.page) : 1;
+            const perPage = ctx.rowsPerPage? Number(ctx.rowsPerPage) : 10;
+            const index = page > 1? (page-1)*perPage + Number(key) : Number(key);
 
-            results.data[key] = camelCaseKeys({ type, mediaImage, title, tags, path, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary }, {deep: true}  )
+            // consola.info(`${page} ${perPage} ${key}n ${index}`)
+            results.data[key] = camelCaseKeys({ type, mediaImage, title, tags, path, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary, index }, {deep: true}  )
         }
 
         return results
