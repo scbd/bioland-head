@@ -73,7 +73,7 @@
             </div>
         </div> 
     </div>
-    <div v-if="hasLargeName" ref="cont" class="container d-none d-md-flex">
+    <div v-if="hasLargeName" ref="contL" class="container d-none d-md-flex">
         <div class=" navbar-header row align-items-center pe-3" :style="{ width: rowElWidth?`${rowElWidth+64}px`: '100%' }">
             <div class="col-md-9 col-lg-9 d-flex  justify-content-start align-items-center">
                 <NuxtLink  class="me-2" :to="localePath(`/`)" :alt="t('Home')"  >
@@ -134,13 +134,16 @@ export default {
 function setup() {
     const queryText    = ref('');
     const cont         = ref(null);
+    const contL         = ref(null);
     const localePath   = useLocalePath();
     const { t  }       = useI18n();
     const siteStore    = useSiteStore();
     const pageStore    = usePageStore();
     const viewport     = useViewport();
 
-    const { width: rowElWidth    } = useElementSize(cont);
+    const { width    } = useElementSize(cont);
+    const { width: rowElWidthL    } = useElementSize(contL);
+    const rowElWidth = computed(()=> rowElWidthL.value? rowElWidthL.value : width.value);    
     const { name: siteName, logo } = storeToRefs(siteStore);
 
 
