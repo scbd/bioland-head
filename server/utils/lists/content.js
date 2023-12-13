@@ -2,7 +2,7 @@ import   camelCaseKeys   from 'camelcase-keys';
 import { stripHtml } from "string-strip-html"; 
 
 export const useContentTypeList = async (ctx) => {
-console.log(ctx)
+
     return  getList(ctx)//makeTypeMap(await getAllContentTypeMenus(ctx))
 }
 
