@@ -8,24 +8,25 @@
                 <PageBreadCrumbs :count="results.count"/>
             </div>
             <div class="col-12 col-md-3 ps-0" >
-        
                 <h2 v-if="type && !title" class="page-type text-capitalize">{{t(type,2)}}</h2>
-                <h2 v-if="!type && title" class="page-type text-capitalize">{{t(title)}}</h2>
+                <h2 v-if="title" class="page-type text-capitalize">{{t(title,2)}}</h2>
                 <PageListTextSearch/>
             </div>
 
-            <div class="col-12 col-md-9 data-body">
-                <PageListPager v-if="showTopPager" :count="results.count" :key="results.count+100"/>
-            </div>
-
             <ClientOnly>
-                <transition-group name="list" tag="div" class="col-12 col-md-9 offset-md-3">
-                    <PageListRow :a-line="aLine" v-for="(aLine,index) in results.data" :key="index" />
-                </transition-group>
-
+                <div name="list" tag="div" class="col-12 col-md-9 data-body">
+                    <PageListTabs v-model="type" :types="types" :key="JSON.stringify(types)"/>
+                    <PageListPager v-if="showTopPager" :count="results.count" :key="`showTopPage${showTopPager}${results.count}`"/>
+                    <transition-group name="list">
+                        <PageListRow  :a-line="aLine" v-for="(aLine,index) in results.data" :key="index" />
+                        <span :key="`showTopPage${showTopPager}${results.count}-span`">&nbsp;</span>
+                    </transition-group>
+                </div>
                 <template #fallback>
-                    <div name="list" tag="div" class="col-12 col-md-9 offset-md-3">
-                        <PageListRow :a-line="aLine" v-for="(aLine,index) in results.data" :key="index" />
+                    <div name="list" tag="div" class="col-12 col-md-9 data-body">
+                        <PageListTabs v-model="type" :types="types" :key="JSON.stringify(types)"/>
+                        <PageListPager v-if="showTopPager" :count="results.count" />
+                        <PageListRow  :a-line="aLine" v-for="(aLine,index) in results.data" :key="index" />
                     </div>
                 </template>
             </ClientOnly>
@@ -41,33 +42,53 @@
 <script setup>
     import { useSiteStore  } from '~/stores/site';
     import { useMenusStore } from '~/stores/menus';
-
+  
     const { t  }                        = useI18n();
     const   r                           = useRoute();
     const   siteStore                   = useSiteStore();
     const   eventBus                    = useEventBus();
-    const   type                        = r?.params?.type;
-    const   drupalInternalIds           = r?.path?.includes('/media/photos-and-videos')? ['image', 'remote_video'] : undefined
-    const { contentTypes, mediaTypes }  = useMenusStore();
     const   props                       = defineProps({ 
                                                         showTopPager: { type: Boolean, default: false },
                                                         title       : { type: String,  default: '' },
+                                                        types: { type: Array, default: () => [] },
                                                     });
 
-    const { showTopPager, title }       = toRefs(props);
+    const { showTopPager, title, types }       = toRefs(props);
 
-    const isMediaType   = computed(()=> drupalInternalIds?.length || !!mediaTypes[type]);
+
+    const   type = ref(types.value?.length? types.value[0] : r?.params?.type );
+    
+
+    const { contentTypes, mediaTypes }  = useMenusStore();
+
+    const isMediaType   = computed(()=> !!mediaTypes[type.value]);
+    const isContentType = computed(()=> !!contentTypes[type.value]);
+    const isChm         = computed(()=> type.value === 'secretariate');
     const drupalTypes   = { ...contentTypes, ...mediaTypes };
     const freeText      = computed(() => r?.query?.freeText? r?.query?.freeText : '');
     const page          = computed(() => r?.query?.page? r?.query?.page : 1);
     const rowsPerPage   = computed(() => r?.query?.rowsPerPage? r?.query?.rowsPerPage : 10);
-    const query         = { ...r.query,freeText, page, ...siteStore.params, drupalInternalIds, rowsPerPage };
-    const typeId        = drupalTypes[type]?.drupalInternalId? '/'+drupalTypes[type]?.drupalInternalId : '';
-
-    const { data: results, status, refresh } = await useFetch(`/api/list/${isMediaType.value? 'media': 'content'}${typeId}`, {  method: 'GET', query });
+    const query         = { ...r.query, ...siteStore.params, freeText, page, rowsPerPage };
+    const typeId        = computed(()=>drupalTypes[type.value]?.drupalInternalId? '/'+drupalTypes[type.value]?.drupalInternalId : '');
 
 
-    onMounted(() => eventBus.on('changePage', refresh) );
+    const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query });
+
+
+    onMounted(() => {
+        eventBus.on('changePage', refresh);
+        eventBus.on('changeTab', changeTab);
+        });
+
+    function getApiUri(){
+        if(isMediaType.value || type.value === 'content')
+            return `/api/list/${isMediaType.value? 'media': 'content'}${typeId.value}`;
+
+        if(type.value == 'secretariate')
+            return `/api/list/chm`;
+    }
+
+    function changeTab(){ refresh(); }
 </script>
 
 <style scoped>

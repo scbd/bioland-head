@@ -64,7 +64,7 @@
 
             <div class=" col-md-3 col-lg-3 d-flex justify-content-end align-items-center" >
                 <div  class="input-group" :class="{ hero: hasHeroImage }" style="margin-left:2rem;margin-right:-2rem;">
-                    <input type="text" v-model="queryText" class="form-control" :class="{ hero: hasHeroImage }" placeholder="Search this site" aria-label="search" >
+                    <input @keyup.enter="()=>{onClick(queryText);}" type="text" v-model="queryText" class="form-control" :class="{ hero: hasHeroImage }" :placeholder="t('Search this site')" aria-label="search" >
 
                     <span v-on:click="onClick(queryText)" class="input-group-text"  :class="{ hero: hasHeroImage }"  :alt="t('Search this site')"  >
                         <Icon name="search" class="white-icon" :class="{ hero: hasHeroImage }"/>&nbsp;
@@ -140,7 +140,7 @@ function setup() {
     const siteStore    = useSiteStore();
     const pageStore    = usePageStore();
     const viewport     = useViewport();
-
+    const route        = useRoute();
     const { width    } = useElementSize(cont);
     const { width: rowElWidthL    } = useElementSize(contL);
     const rowElWidth = computed(()=> rowElWidthL.value? rowElWidthL.value : width.value);    
@@ -161,13 +161,23 @@ function setup() {
     return { localePath, t, logo , hasHeroImage , name, rowElWidth, cont, hasLargeName, navigateTo, queryText }
 }
 
-function onClick(value){
-    consola.warn('onClick', value)
+async function onClick(value){
+    
     if(!value) return
+    
+    const   route   = useRoute();
 
     const   localePath     = useLocalePath();
     
-    this.navigateTo(localePath(`/search?freeText=${value}`))
+    if(route.path !== '/search'){
+        this.navigateTo(localePath(`/search?freeText=${value}`))
+
+    }else{
+        const router = useRouter();
+        
+        await router.push({ path:localePath(`/search`), query: { freeText: value } });
+    }
+    //this.navigateTo(localePath(`/search?freeText=${value}`))
     this.queryText='';
 }
 </script>

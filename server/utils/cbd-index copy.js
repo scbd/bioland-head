@@ -1,5 +1,3 @@
-import { DateTime     } from 'luxon' ; 
-
 export const indexUri = 'https://api.cbd.int/api/v2013/index/select?';
 
 export const $indexFetch = async (queryString) => {
@@ -138,8 +136,7 @@ function getAllQuery(ctx){
     
 
     const { country, countries, locale, indexLocal, page, rowsPerPage, freeText, schemas } = ctx;
-
-    const countryString = Array.isArray(countries)? countries.join(' ') : country;
+//((updatedDate_dt:[ 2023\-11\-19T00\:00\:00.000Z TO 2023\-12\-18T23\:59\:59.999Z ]))
 const hasCbdSchemas = schemas?.length? schemas.some((s)=>cbdSchemas.includes(s)): false;
 const cbdSchemaQueryText =  hasCbdSchemas? `(schema_s:(${cbdSchemas.filter(filterSchemas(schemas)).join(' ')}))` : '';
 const  hasOtherSchemas = schemas?.length? schemas.some((s)=>!allSchemas.includes(s)): false;
@@ -152,15 +149,14 @@ const otherSchemaQueryText = hasOtherSchemas? `((schema_s:(${allSchemas.filter(f
     const rows  = rowsPerPage? rowsPerPage: 10;
     const start = page<=1? 0:(page*rows)+1;
 
-    
-    const q = getQ(ctx);
+    const countryString = Array.isArray(countries)? countries.join(' ') : country;
+    const q = freeText? `(((uniqueIdentifier_t:(${freeText})^6) OR (government_EN_t:(${freeText})^5.5) OR (countryRegions_EN_txt:(${freeText})^5) OR (title_EN_t:(${freeText})^4) OR (summary_EN_t:(${freeText})^3) OR (schema_EN_t:(${freeText})^2) OR (text_EN_txt:(${freeText})^1)))` : "''";
 
     const query = {
         
             df: `text_${indexLocal}_txt`,
             fq: [
                 "{!tag=version}(*:* NOT version_s:*)",
-                schemaQuery,
                 "{!tag=excludeSchemas}(*:* NOT schema_s : (submission))",
                 "realm_ss:abs OR realm_ss:chm OR realm_ss:bch"
             ],
@@ -183,19 +179,4 @@ const otherSchemaQueryText = hasOtherSchemas? `((schema_s:(${allSchemas.filter(f
             
             }
     return JSON.stringify(query);
-}
-
-function getQ({ freeText, from, to }){
-    let q = freeText? `(((uniqueIdentifier_t:(${freeText})^6) OR (government_EN_t:(${freeText})^5.5) OR (countryRegions_EN_txt:(${freeText})^5) OR (title_EN_t:(${freeText})^4) OR (summary_EN_t:(${freeText})^3) OR (schema_EN_t:(${freeText})^2) OR (text_EN_txt:(${freeText})^1)))` : '';
-
-    
-    const toTime = !to? DateTime.now().toFormat('yyyy\-MM\-dd'): cleanTime(to);
-
-    q+= from? ` AND (updatedDate_dt:[${cleanTime(from)}T00:00:00.000Z TO ${toTime}T23:59:59.999Z])`: '';
-
-    return q? q: "''";
-}
-
-function cleanTime(time){
-    return time.replace(/-/g, '\\-').replace(/:/g, '\\:');
 }

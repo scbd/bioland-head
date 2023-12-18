@@ -11,25 +11,30 @@
 <i18n src="@/i18n/dist/components/page/list/text-search.json"></i18n>
 <script setup>
 
-const { t  }    = useI18n();
-const router = useRouter()
-const   route   = useRoute();
-const   eventBus  = useEventBus();
-const queryText = ref(route.query.freeText || '');
+const { t        } = useI18n    ();
+const   router     = useRouter  ();
+const   route      = useRoute   ();
+const   eventBus   = useEventBus();
+
+const queryText = ref(route.query.freeText || '')
 
 
-watch(queryText, debounce(async (value) => {
-                    const query = { ...route.query, freeText: value } ;
-                    
-                    if(!value)
-                        delete(query.freeText);
-                    
-                    await router.push({ query });
+    watch(queryText, debounce(async (value) => {
+        const query = { ...route.query, freeText: value } ;
+        
+        if(!value)
+            delete(query.freeText);
+        
+            delete(query.page);
+        await router.push({ query });
 
-                    eventBus.emit('changePage');
+        eventBus.emit('changePage');
 
-                }, 500))
+    }, 500))
 
+    watch(() => route.query, (value) => {
+        if(value.freeText) queryText.value = value.freeText
+    })
 
     function clear(){
         queryText.value = '';

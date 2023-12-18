@@ -3,14 +3,13 @@ export default cachedEventHandler(async (event) => {
     try{
         const { context } = parseCookies(event)
 
-        // console.log('--------------------------/api/menus context', context)
         const query       = getQuery(event)
-        // console.log('--------------------------/api/menus query', query)
+
 
         const headers = {
             Cookie: `context=${encodeURIComponent(JSON.stringify(context || query || {}))};`,
         }
-        // console.log('--------------------------/api/menus  headers',  headers)
+
         const [absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes, mediaTypes, forums  ] = await Promise.all([
             $fetch('/api/menus/absch', { query, method:'get', headers }),
             $fetch('/api/menus/bch', { query, method:'get', headers }),
@@ -38,6 +37,6 @@ export default cachedEventHandler(async (event) => {
     }
     
 },{
-    maxAge: 1,// 60*60,
+    maxAge: 60*60,
     varies:['Cookie']
 })

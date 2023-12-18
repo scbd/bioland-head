@@ -4,11 +4,18 @@ import { stripHtml } from "string-strip-html";
 
 const defaultTypes = ['image', 'document', 'remote_video'];
 
+export const useAllMedia = async (ctx) => {
+
+
+
+    return  getAllMedia(ctx)
+}
+
+
 export const useMediaTypeList = async (ctx) => {
 
     const { localizedHost, drupalInternalId, drupalInternalIds } = ctx;
 
-    console.log('---------------------', drupalInternalIds)
     const isAllTypes    = !drupalInternalIds?.length && !drupalInternalId;
     const types         = isAllTypes ? defaultTypes : [...(drupalInternalIds || []), drupalInternalId].filter((x)=>x);
 
@@ -16,15 +23,46 @@ export const useMediaTypeList = async (ctx) => {
     return  getLists(ctx, types)
 }
 
-async function getLists(ctx, types = defaultTypes){
-    return mapData(ctx)(await Promise.all(types.map((type)=>getList(ctx, type))))
+async function getAllMedia(ctx){
+
+    const [images, documents, remoteVids ] = await Promise.all([
+        getAllMediaPager(ctx, 'image'),
+        getAllMediaPager(ctx, 'document'),
+        getAllMediaPager(ctx, 'remote_video')
+    ])
+    const meta = { image: images.meta.count, document: documents.meta.count, remote_video: remoteVids.meta.count, count: images.meta.count + documents.meta.count + remoteVids.meta.count}
+    const { data  } = (await mapData(ctx)([{ data: [...images.data, ...documents.data, ...remoteVids.data]}]))
+
+    return { data: data.sort((a,b)=>sort(a,b,'changed')), meta }
 }
 
-async function getList(ctx, type ) {
+async function getAllMediaPager (ctx, type, next){
+    try {
+        const { localizedHost } = ctx;
+        const   method          = 'get';
+        const   headers         = { 'Content-Type': 'application/json' };
+        const   include         = `&include=field_media_image,thumbnail${type==='document'? ',field_media_document': ''}`;
+        const   uri             = next || `${localizedHost}/jsonapi/media/${type}?jsonapi_include=1${include}`;
+        const { links, data, meta }         = await $fetch(uri, { method, headers })
+
+        if(nextUri(links)) return { data: [ ...data, ...await getAllMediaPager(ctx, type, nextUri(links)) ], meta: { ...meta, type } };
+
+        return { data, meta: { ...meta, type }}
+    }
+    catch(e){
+        console.error('- recursive', e)
+    }
+}
+async function getLists(ctx, types = defaultTypes){
+    const isMultiple = types.length > 1;
+
+    return mapData(ctx)(await Promise.all(types.map((type)=>getList(ctx, type, isMultiple))))
+}
+
+async function getList(ctx, type, isMultiple = false ) {
     const { localizedHost } = ctx;
 
     const uri            = `${localizedHost}/jsonapi/media/${type}?jsonapi_include=1&include=field_media_image,thumbnail${type==='document'? ',field_media_document': ''}`;
-
     const method         = 'get';
     const headers        = { 'Content-Type': 'application/json' };
 
@@ -121,4 +159,12 @@ function getFreeTextFilterParams({ freeText }){
     sortQueryString += `&filter[free-text-body][condition][memberOf]=or-group`;
 
     return sortQueryString;
+}
+
+
+function sort(a,b, prop){
+    if(a[prop] < b[prop]) return 1; 
+    if(a[prop] > b[prop]) return -1;
+
+    return 0;
 }

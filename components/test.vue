@@ -6,15 +6,15 @@
 
 </template>
 <script setup>
-import { useSiteStore } from "~/stores/site";
+    import { useSiteStore } from "~/stores/site";
 
-const { drupalMultisiteIdentifier } = useRuntimeConfig().public;
-const route = useRoute()
+    const { drupalMultisiteIdentifier } = useRuntimeConfig().public;
+    const route = useRoute()
 
         // const { t , locale } = useI18n();
-        const siteStore    = useSiteStore();
+    const siteStore    = useSiteStore();
 
-        const { identifier, config, locale, defaultLocale } = siteStore;
+    const { identifier, config, locale, defaultLocale } = siteStore;
     const { country, countries } = config;
 
     const params = { identifier, country, locale, defaultLocale, countries };
@@ -22,5 +22,5 @@ const route = useRoute()
     const query  = { ...route.query, ...siteStore.params };
 // const typeId = drupalTypes[type]?.drupalInternalId? '/'+drupalTypes[type]?.drupalInternalId : '';
 
-   const { data } =  await useFetch(`/api/list/media/document`, {  method: 'GET', query });
+    const { data } =  await useFetch(`/api/list/latest`, {  method: 'GET', query });
 </script>

@@ -1,6 +1,11 @@
 import   camelCaseKeys   from 'camelcase-keys';
 import { stripHtml } from "string-strip-html"; 
 
+export const useAllContent = async (ctx) => {
+
+    return  getAllContent(ctx)//makeTypeMap(await getAllContentTypeMenus(ctx))
+}
+
 export const useContentTypeList = async (ctx) => {
 
     return  getList(ctx)//makeTypeMap(await getAllContentTypeMenus(ctx))
@@ -26,9 +31,9 @@ function mapData(ctx){
             if(body?.value) body.summary = stripHtml(body?.value).result.substring(0, 400);
 
             const mediaImage = getMediaImage(ctx, field_attachments);
-            const page = ctx.page? Number(ctx.page) : 1;
-            const perPage = ctx.rowsPerPage? Number(ctx.rowsPerPage) : 10;
-            const index = page > 1? (page-1)*perPage + Number(key) : Number(key);
+            const page       = ctx.page? Number(ctx.page) : 1;
+            const perPage    = ctx.rowsPerPage? Number(ctx.rowsPerPage) : 10;
+            const index      = page > 1? (page-1)*perPage + Number(key) : Number(key);
 
             // consola.info(`${page} ${perPage} ${key}n ${index}`)
             results.data[key] = camelCaseKeys({ type, mediaImage, title, tags, path, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary, index }, {deep: true}  )
@@ -53,6 +58,27 @@ function getMediaImage(ctx, fieldAttachments){
     return { filename, width, height, alt, title, src: ctx.host+src } 
 }
 
+
+// function getAllContent(ctx ) {
+
+// }
+
+async function getAllContentPager(ctx ) {
+    try {
+        const { localizedHost } = ctx;
+        const   method          = 'get';
+        const   headers         = { 'Content-Type': 'application/json' };
+        const uri               = `${localizedHost}/jsonapi/node/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image`;
+        const { links, data, meta }         = await $fetch(uri, { method, headers })
+
+        if(nextUri(links)) return { data: [ ...data, ...await getAllContentPager(ctx, nextUri(links)) ], meta: { ...meta } };
+
+        return { data, meta: { ...meta }}
+    }
+    catch(e){
+        console.error('- recursive', e)
+    }
+};
 
 async function getList(ctx ) {
     const { localizedHost } = ctx;

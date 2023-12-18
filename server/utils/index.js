@@ -120,3 +120,8 @@ function drupalizePathLocales(locale, defaultLocale){
 
     return pathPreFix;
 }
+
+export function nextUri ({ next } = {}){
+    if(!next) return
+    return next.href
+}

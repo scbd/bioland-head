@@ -1,5 +1,5 @@
 <template>
-  <PageList :showTopPager="true" title="search"/>
+  <PageList :show-top-pager="true" title="search" :types="['content','secretariate','image', 'document', 'remote-video']"/>
 </template>
 <script setup>
 
