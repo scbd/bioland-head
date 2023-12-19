@@ -72,6 +72,7 @@ const initState = {
         fieldMediaDocument: undefined,
         fieldMediaOembedVideo: undefined,
         fieldTitle: undefined,
+        fieldUrl: undefined,
 }
 
 function state(){ return initState }
