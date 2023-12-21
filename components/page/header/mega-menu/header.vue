@@ -5,7 +5,7 @@
             <Icon v-if="hasArrow" name="arrow-right" class="arrow" />
         </h4>
     </NuxtLink>
-    <p v-if="menu.description" class="small">{{menu.description}}</p>
+    <p v-if="menu.description" :class="{'mm-special-description': hasSpecialDescription}" class="small">{{menu.description}}</p>
 </template>
 
 <script>
@@ -20,8 +20,8 @@
         const   hasArrow   = computed(()=>menu?.value?.class?.includes('arrow')||menu?.value?.class?.includes('mm-arrow'));
         const   isExternal = computed(()=> menu?.value?.href?.includes('http'));
         const   target     = computed(()=> menu?.value?.target? menu?.value?.target[0] : '_self');
-
-        return { hasArrow,  menu, isExternal, target }
+        const   hasSpecialDescription   = computed(()=>menu?.value?.class?.includes('mm-special-description'));
+        return { hasSpecialDescription, hasArrow,  menu, isExternal, target }
     }
 </script>
 
@@ -44,5 +44,10 @@
 .main-nav-sub-heading > h4{
     margin-right: 2rem;
 }
+.mm-special-description{
+    color: #009edb !important;
 
+
+
+}
 </style>

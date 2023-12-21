@@ -1,3 +1,5 @@
+import   clone           from 'lodash.clonedeep';
+
 const focalPointTypes = [ 'CBD-FP1',  'CPB-FP1', 'ABS-FP', 'CHM-FP', 'BCH-FP' ];
 const focalPointAll = [ 'CBD-FP1',  'CBD-FP2', 'CPB-FP1', 'ABS-FP', 'CHM-FP', 'BCH-FP', 'CPB-A17-FP', 'RM-FP', 'PA-FP', 'TKBD-FP', 'SBSTTA-FP', 'GTI-FP', 'GSPC-FP' ];
 
@@ -24,7 +26,7 @@ export default cachedEventHandler(async (event) => {
     }
     
 },{
-    maxAge: 60 * 60 * 24,
+    maxAge: 60*60*24,
     varies:['Cookie']
 })
 
@@ -82,10 +84,10 @@ async function getProtocolContacts(ctx, map){
     const promises = [];
     for (const country of countries) {
         const promiseAbs = getAbsContacts(ctx, country)
-                            .then((resp)=>getAbsLinks(resp, map[country]));
+                            .then((resp)=>getAbsLinks(resp, map[country], country));
 
         const promiseBch = getBchContacts(ctx, country)
-                            .then((resp)=>getBchLinks(resp, map[country]));
+                            .then((resp)=>{console.log(resp);getBchLinks(resp, map[country], country)});
 
         promises.push(promiseAbs);
         promises.push(promiseBch);
@@ -95,20 +97,26 @@ async function getProtocolContacts(ctx, map){
 }
 
 async function getBchContacts(ctx, country){
-    const query   = { rowsPerPage: 1, realms: ['BCH'], filter:[country], schemas: [ 'authority', 'supplementaryAuthority', 'contact' ]};
-    const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(ctx || {}))};` };
+    const query   = { rowsPerPage: 1, realms: ['BCH'], schemas: [ 'authority', 'supplementaryAuthority', 'contact' ]};
+    const context = clone(ctx);
+    context.country = country;
+    context.countries = [country]
+    const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(context || {}))};` };
 
     return await $fetch('/api/list/chm', { query, method:'get', headers });
 }
 
 async function getAbsContacts(ctx, country){
     const query   = { rowsPerPage: 1, realms: ['ABS'], filter:[country], schemas: [ 'authority', 'supplementaryAuthority', 'contact' ]};
-    const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(ctx || {}))};` };
+    const context = clone(ctx);
+    context.country = country;
+    context.countries = [country]
+    const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(context || {}))};` };
 
     return $fetch('/api/list/chm', { query, method:'get', headers });
 }
 
-function getAbsLinks({ facetCounts }, countryList){
+function getAbsLinks({ facetCounts }, countryList, country){
     const schemaCountArray = facetCounts?.facet_pivot['schema_s, all_Terms_ss'] || [];
 
     for (const { field, value, count } of schemaCountArray) {
@@ -116,11 +124,11 @@ function getAbsLinks({ facetCounts }, countryList){
 
         if(value !== 'authority') continue;
 
-        countryList.push({ href: `https://absch.cbd.int/en/search?currentPage=1&schema=${value}`, title: 'absch-'+value, target: '_blank', count });
+        countryList.push({ href: `https://absch.cbd.int/en/search?currentPage=1&schema=${value}&country=${country}`, title: 'absch-'+value, target: '_blank', count });
     }
 }
 
-function getBchLinks({ facetCounts }, countryList){
+function getBchLinks({ facetCounts }, countryList, country){
     const schemaCountArray = facetCounts?.facet_pivot['schema_s, all_Terms_ss'] || [];
 
     for (const { field, value, count } of schemaCountArray) {
@@ -128,7 +136,7 @@ function getBchLinks({ facetCounts }, countryList){
 
         if(value !== 'authority' && value !== 'supplementaryAuthority') continue;
 
-        countryList.push({ href: `https://bch.cbd.int/en/search?currentPage=1&schema=${value}`, title: 'bch-'+value, target: '_blank', count });
+        countryList.push({ href: `https://bch.cbd.int/en/search?currentPage=1&schema=${value}&country=${country}`, title: 'bch-'+value, target: '_blank', count });
     }
 }
 

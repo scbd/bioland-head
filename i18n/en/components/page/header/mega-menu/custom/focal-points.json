@@ -28,5 +28,6 @@
     "National Contact Points":"National Contact Points",
     "view": "View",
     "bch-authority":"BCH Competent National Authority | BCH Competent National Authorities",
-    "absch-authority":"ABSCH Competent National Authority | ABSCH Competent National Authorities"
+    "absch-authority":"ABSCH Competent National Authority | ABSCH Competent National Authorities",
+    "bch-supplementaryAuthority":"BCH Supplementary Competent National Authority | BCH Supplementary Competent National Authorities"
 }
