@@ -87,7 +87,7 @@ async function getProtocolContacts(ctx, map){
                             .then((resp)=>getAbsLinks(resp, map[country], country));
 
         const promiseBch = getBchContacts(ctx, country)
-                            .then((resp)=>{console.log(resp);getBchLinks(resp, map[country], country)});
+                            .then((resp)=>getBchLinks(resp, map[country], country));
 
         promises.push(promiseAbs);
         promises.push(promiseBch);
