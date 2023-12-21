@@ -1,5 +1,5 @@
 <template>
-    <div @click="goTo(href)" class="card p-1 mb-3" >
+    <div  @click="goTo(href)" class="card p-1 mb-3" >
 
         <div  class="row g-0">
             <Icon v-if="aLine.sticky" name="pushpin" class="position-absolute start-50 icon"/>
@@ -79,8 +79,8 @@
     }
 
     function getDocumentTypeName(aLine){
-        if(aLine?.fieldTypePlacement?.length)
-            return aLine.fieldTypePlacement[0].name;
+        if(aLine?.fieldTypePlacement)
+            return aLine.fieldTypePlacement.name;
 
         if(aLine?.type?.includes('media--'))
             return t(aLine.type.replace('media--',''),1);
@@ -102,6 +102,10 @@
         if(hasChm && hasBch) return t('Biosafety Clearing-House');
 
         if(hasChm && realms.length == 1) return t('Secretariat');
+
+        if( hasAbs && realms.length == 1) return t('Access and Benefit-sharing Clearing-House');
+
+        if(hasBch && realms.length == 1) return t('Biosafety Clearing-House');
     }
 
     function getRealmHost(){

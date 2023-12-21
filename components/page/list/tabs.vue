@@ -11,23 +11,21 @@
 </template>
 <i18n src="@/i18n/dist/components/page/list/index.json"></i18n>
 <script setup>
-const { t  }                        = useI18n();
-const router = useRouter();
-    const   eventBus                    = useEventBus();
-    const   props                       = defineProps({     modelValue: {
-        type: String,
-        default: null,
-    },
-                                                        types: { type: Array, default: () => [] },
-                                                    });
+    const { t  }      = useI18n();
+    const   router    = useRouter();
+    const   eventBus  = useEventBus();
+    const   props     = defineProps({   modelValue: { type: String, default: null, },
+                                        types     : { type: Array, default: () => [] }
+                                    });
 
-    const emit = defineEmits(['update:modelValue'])
-    const { types, modelValue }       = toRefs(props);
+    const   emit                = defineEmits(['update:modelValue']);
+    const { types, modelValue } = toRefs(props);
 
     async function changeType(type){
         if(type===modelValue.value) return;
 
         await router.push({ query:{ } });
+
         emit('update:modelValue', type);
         eventBus.emit('changeTab');
     }

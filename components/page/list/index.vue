@@ -42,7 +42,7 @@
 <script setup>
     import { useSiteStore  } from '~/stores/site';
     import { useMenusStore } from '~/stores/menus';
-  
+
     const { t  }                        = useI18n();
     const   r                           = useRoute();
     const   siteStore                   = useSiteStore();
@@ -56,7 +56,7 @@
     const { showTopPager, title, types }       = toRefs(props);
 
 
-    const   type = ref(types.value?.length? types.value[0] : r?.params?.type );
+    const   type = ref(r?.params?.type? r?.params?.type : types.value?.length? types.value[0] : r?.params?.type );
     
 
     const { contentTypes, mediaTypes }  = useMenusStore();
@@ -65,10 +65,11 @@
     const isContentType = computed(()=> !!contentTypes[type.value]);
     const isChm         = computed(()=> type.value === 'secretariate');
     const drupalTypes   = { ...contentTypes, ...mediaTypes };
+    const schemas       = computed(() => r?.query?.schemas? r?.query?.schemas : undefined);
     const freeText      = computed(() => r?.query?.freeText? r?.query?.freeText : '');
     const page          = computed(() => r?.query?.page? r?.query?.page : 1);
     const rowsPerPage   = computed(() => r?.query?.rowsPerPage? r?.query?.rowsPerPage : 10);
-    const query         = { ...r.query, ...siteStore.params, freeText, page, rowsPerPage };
+    const query         = { ...r.query, ...siteStore.params, freeText, page, rowsPerPage, schemas };
     const typeId        = computed(()=>drupalTypes[type.value]?.drupalInternalId? '/'+drupalTypes[type.value]?.drupalInternalId : '');
 
 
@@ -81,7 +82,7 @@
         });
 
     function getApiUri(){
-        if(isMediaType.value || type.value === 'content')
+        if(typeId.value || type.value === 'content')
             return `/api/list/${isMediaType.value? 'media': 'content'}${typeId.value}`;
 
         if(type.value == 'secretariate')

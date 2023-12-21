@@ -6,10 +6,11 @@
             <Transition :name="slotProps.fadeName">
                 <section v-if="slotProps.hide">
                     <section v-for="(aChild,j) in menus[slotProps.country]" :key="j">
-                        <p v-if="j <= 6">
-                            <NuxtLink  class="child-link" :class="aChild.class"   :to="aChild.href" :title="t(aChild.title)"  >
+                        <p >
+                            <PageHeaderMegaMenuLink :title="t(aChild.title, aChild.count)"  :menu="aChild" />
+                            <!-- <NuxtLink  class="child-link" :class="aChild.class"   :to="aChild.href" :title="t(aChild.title)"  :external="aChild.target" target>
                                 {{t(aChild.title || 'title')}}
-                            </NuxtLink>
+                            </NuxtLink> -->
                         </p>
                     </section>
                 </section>
@@ -27,7 +28,7 @@
     const hasCountries = computed(()=>Object.keys(menus.value).length > 1);
     const country      = hasCountries.value?    '/'+Object.keys(menus.value)[0] : '';
     const menu  = ref({ 
-                        title: t('National Focal Points'), 
+                        title: t('National Contact Points'), 
                         href : `/focal-points${country}`, 
                         class: ['mm-main-nav-sub-heading', 'mm-arrow'] 
                     });

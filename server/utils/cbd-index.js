@@ -116,13 +116,15 @@ export const normalizeIndexKeys = (obj) => {
 }
 
 export const useScbdIndex = async (ctx) => {
-    const uri       = 'https://api.cbd.int/api/v2013/index/select';
+    const uri = 'https://api.cbd.int/api/v2013/index/select';
 
     const { response, facet_counts: facetCounts } = await $fetch(uri,  { method:'post', body: getAllQuery(ctx), headers: {'Content-Type': 'application/json'}});
 
-    response.data = response.docs.map(normalizeIndexKeys);
+    response.data  = response.docs.map(normalizeIndexKeys)//.filter(({ title, summary })=> (title && summary));
     response.count = response.numFound;
-delete response.docs;
+
+    delete response.docs;
+
     return { ...response, facetCounts };
 }
 
@@ -137,38 +139,48 @@ function getAllQuery(ctx){
 
     
 
-    const { country, countries, locale, indexLocal, page, rowsPerPage, freeText, schemas } = ctx;
+    const { country, countries, locale, indexLocal, page: passedPage, rowsPerPage, freeText, schemas: passedSchemas, filters:passedFilters, realms: passedRealms } = ctx;
 
-    const countryString = Array.isArray(countries)? countries.join(' ') : country;
-const hasCbdSchemas = schemas?.length? schemas.some((s)=>cbdSchemas.includes(s)): false;
-const cbdSchemaQueryText =  hasCbdSchemas? `(schema_s:(${cbdSchemas.filter(filterSchemas(schemas)).join(' ')}))` : '';
-const  hasOtherSchemas = schemas?.length? schemas.some((s)=>!allSchemas.includes(s)): false;
+const realms                  = Array.isArray(passedRealms)? passedRealms : passedRealms? [ passedRealms ] : '';
+const schemas                 = Array.isArray(passedSchemas)? passedSchemas : passedSchemas? [ passedSchemas ] : '';
+const filters                 = Array.isArray(passedFilters)? passedFilters : passedFilters? [ passedFilters ] : '';
+const countryString           = Array.isArray(countries)? countries.join(' ')+` ${country}` : country;
+const hasCbdSchemas           = schemas?.length? schemas.some((s)=>cbdSchemas.includes(s)): false;
+const cbdSchemaQueryText      = hasCbdSchemas? `(schema_s:(${cbdSchemas.filter(filterSchemas(schemas)).join(' ')}))` : '';
+const hasOtherSchemas         = schemas?.length? schemas.some((s)=>allSchemas.includes(s)): false;
 const hasBothSchemaQueryTypes = hasCbdSchemas && hasOtherSchemas;
-const otherSchemaQueryText = hasOtherSchemas? `((schema_s:(${allSchemas.filter(filterSchemas(schemas)).join(' ')})) AND (countryRegions_ss:(${countryString}) OR countryRegions_REL_ss:(${countryString})))` : '';
+const otherSchemaQueryText    = hasOtherSchemas? `((schema_s:(${allSchemas.filter(filterSchemas(schemas)).join(' ')})) AND (countryRegions_ss:(${countryString}) OR countryRegions_REL_ss:(${countryString})))` : '';
 
-    const schemaQuery = schemas?.length?  `{!tag=government}${cbdSchemaQueryText}${hasBothSchemaQueryTypes? ' OR ': ''} ${otherSchemaQueryText}` : `{!tag=government}(schema_s:(${cbdSchemas.join(' ')})) OR ((schema_s:(${allSchemas.join(' ')})) AND (countryRegions_ss:(${countryString}) OR countryRegions_REL_ss:(${countryString})))`;
 
-    
-    const rows  = rowsPerPage? rowsPerPage: 10;
-    const start = page<=1? 0:(page*rows)+1;
+const schemaQuery  = schemas?.length?  `{!tag=government}${cbdSchemaQueryText}${hasBothSchemaQueryTypes? ' OR ': ''} ${otherSchemaQueryText}` : `{!tag=government}(schema_s:(${cbdSchemas.join(' ')})) OR ((schema_s:(${allSchemas.join(' ')})) AND (countryRegions_ss:(${countryString}) OR countryRegions_REL_ss:(${countryString})))`;
+const filtersQuery = filters?.length? `{!tag=keywords}all_terms_ss:(${filters.join(' ')})` : '';
+const realmText    = realms?.length? `realm_ss:(${realms.join(' ')})` : 'realm_ss:abs OR realm_ss:chm OR realm_ss:bch';
+const rows         = rowsPerPage? rowsPerPage : 10;
+const page         = passedPage? passedPage : 1;
+const start        = page <=1? 0 : ((page -1) * rows);
 
-    
-    const q = getQ(ctx);
+const q            = getQ(ctx);
 
+// console.log('----------------', schemas)
+// console.log('----------------', schemaQuery)
+// console.log('----------------', realmText)
+// console.log('----------------', `start: ${start} rows: ${rows} page: ${page}`)
     const query = {
         
             df: `text_${indexLocal}_txt`,
             fq: [
                 "{!tag=version}(*:* NOT version_s:*)",
                 schemaQuery,
+                filtersQuery,
                 "{!tag=excludeSchemas}(*:* NOT schema_s : (submission))",
-                "realm_ss:abs OR realm_ss:chm OR realm_ss:bch"
+                realmText
+                //"realm_ss:abs OR realm_ss:chm OR realm_ss:bch"
             ],
             q,
             "sort": "updatedDate_dt desc",
             "fl": "id, realm_ss, updatedDate_dt, createdDate_dt, identifier_s, uniqueIdentifier_s, url_ss, government_s, schema_s, government_EN_s, schemaSort_i, sort1_i, sort2_i, sort3_i, sort4_i, _revision_i,government_EN_s, title_EN_s, summary_s, type_EN_s, meta1_EN_txt, meta2_EN_txt, meta3_EN_txt,meta4_EN_txt,meta5_EN_txt,symbol_s,startDate_dt,endDate_dt,eventCountry_CEN_s,eventCity_s",
             "wt": "json",
-            start, page,
+            start, rows,
             "facet": true,
             "facet.field": [
                 "{!ex=schemaType}schemaType_s",

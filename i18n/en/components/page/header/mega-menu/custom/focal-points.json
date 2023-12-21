@@ -1,8 +1,9 @@
 {
-    "CBD-FP1": "Convention on Biological Diversity",
+    "CBD-FP1": "SCBD Focal Point",
     "CBD-FP2": "Secondary Convention on Biological Diversity",
-    "ABS-FP": "Nagoya Protocol on Access and Benefit-sharing",
-    "CPB-FP1": "Cartagena Protocol on Biosafety",
+    "ABS-FP": "ABS Focal Point",
+    "ABSCH-FP": "ABSCH Focal Point",
+    "CPB-FP1": "CPB Focal Point",
     "CPB-A17-FP": "Emergency Measures (Article 17) Contact Point",
     "RM-FP": "Resource Mobilization Focal Point",
     "PA-FP": "Programme of Work on Protected Areas",
@@ -10,8 +11,8 @@
     "SBSTTA-FP": "Subsidiary Body on Scientific, Technical and Technological Advice (SBSTTA)",
     "GTI-FP": "Global Taxonomy Initiative",
     "GSPC-FP": "Global Strategy for Plant Conservation",
-    "CHM-FP": "Clearing House Mechanism",
-    "BCH-FP": "Biosafety Clearing House Mechanism",
+    "CHM-FP": "CHM Focal Point",
+    "BCH-FP": "BCH Focal Point",
     "CBD": "Convention on Biological Diversity",
     "ABS": "Nagoya Protocol on Access and Benefit-sharing",
     "CPB": "Cartagena Protocol on Biosafety",
@@ -24,5 +25,8 @@
     "CHM": "CHM NFP",
     "BCH": "BCH NFP",
     "National Focal Points":"National Focal Points",
-    "view": "View"
+    "National Contact Points":"National Contact Points",
+    "view": "View",
+    "bch-authority":"BCH Competent National Authority | BCH Competent National Authorities",
+    "absch-authority":"ABSCH Competent National Authority | ABSCH Competent National Authorities"
 }
