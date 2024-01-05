@@ -37,7 +37,7 @@ export default cachedEventHandler(async (event) => {
     }
     
 },{
-    maxAge: 5,
+    maxAge: 60 * 5,
     varies:['Cookie'],
     getKey: (event) => {
         const { context } = parseCookies(event)
