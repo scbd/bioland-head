@@ -2,11 +2,15 @@
     <div class="card p-2" >
         <div class="card-header">
             <GbfIcon :identifier="record.identifier" size="lg"/>
+            
         </div>
         <div class="card-body">
             <h5 class="card-title text-primary mb-3">{{name}}</h5>
 
-            <p class="card-text">{{record.description}}</p>
+            <p class="card-text">{{trunc(record.description)}}
+                
+                <!-- <Icon v-if="isTruncated" name="read-more"  class="fs-4"/> -->
+            </p>
         </div>
         <div class="card-footer">
             <h6 class="card-subtitle my-2 text-primary">
@@ -24,8 +28,10 @@
     const { record    } = toRefs(props);
 
     const { t, locale } = useI18n();
-
+    const { trunc, isTruncated: isTrunc } = useText()
     const name = computed(()=> record.value.name.substring(8));
+
+    const isTruncated = computed(()=> isTrunc(record.value.description));
 
     function getGbfUrl(){
         const number = Number(record.value.identifier.replace('GBF-TARGET-', ''));

@@ -1,11 +1,11 @@
 <template>
     <div class="card p-2" >
-        <NuxtImg :alt="record.name" :src="imageSrc" class="card-img-top"/>
+        <NuxtImg :alt="record.name" :src="imageSrc" class="card-img-top i-top"/>
         <div class="card-body">
             <h6 class="card-subtitle text-muted mb-2">{{t('Document')}}</h6>
             <h5 class="card-title  mb-1">{{record.name}}</h5>
 
-            <p class="card-text">{{record.description}}</p>
+            <p class="card-text">{{trunc(record.description)}}</p>
 
         </div>
         <div class="card-footer">
@@ -42,6 +42,7 @@
     import { useSiteStore } from '~/stores/site' ;
     import { DateTime     } from 'luxon'         ;
 
+    const { trunc, isTruncated: isTrunc } = useText();
     const siteStore = useSiteStore();
     const   props       = defineProps({ record: { type: Object } });
     const { record    } = toRefs(props);
@@ -60,6 +61,10 @@
     }
 </script>
 <style lang="scss" scoped>
+.i-top{
+    max-height: 250px;
+    object-fit: cover;
+}
 .card {
     width: 350px;
     height: 650px !important;

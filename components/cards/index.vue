@@ -1,7 +1,7 @@
 <template>
     <div class="card " >
         <div :style="backgroundStyles" class="cit bg-light">
-            <NuxtLink :to="linkTo" style="color:black;"><div style="width:100%;height:100%;"></div></NuxtLink> 
+            <NuxtLink :to="linkTo" style="color:black;"><div style="width:100%;height:200px;"></div></NuxtLink> 
         </div>
 
         <div class="card-body">
@@ -10,7 +10,7 @@
                 <NuxtLink :to="linkTo" style="color:black;">{{record.title}}</NuxtLink> 
             </h5>
 
-            <p class="card-text">{{record.summary}}</p>
+            <p class="card-text">{{trunc(record.summary)}}</p>
 
         </div>
         <div class="card-footer">
@@ -32,6 +32,7 @@
     import { useSiteStore } from '~/stores/site' ;
     import { DateTime     } from 'luxon'         ;
 
+    const { trunc  } = useText();
     const siteStore = useSiteStore();
     const   props       = defineProps({ record: { type: Object } });
     const { record    } = toRefs(props);
@@ -69,6 +70,10 @@ const type = computed(()=> record?.value?.fieldTypePlacement?.length? record?.va
 </script>
 <i18n src="@/i18n/dist/components/cards/index.json"></i18n>
 <style lang="scss" scoped>
+.i-top{
+    max-height: 250px;
+    object-fit: cover;
+}
 .cit{
     height: 232px !important;
 }
