@@ -35,23 +35,24 @@ useHead({
     lang: locale,
     dir: () => localHead.value.htmlAttrs.dir
   },
-  link: [
-    {
-      rel: 'preconnect',
-      href: 'https://fonts.googleapis.com'
-    },
-    {
-      rel: 'stylesheet',
-      href: 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap',
-      crossorigin: ''
-    }
-  ]
+  // link: [
+  //   {
+  //     rel: 'preconnect',
+  //     href: 'https://fonts.googleapis.com'
+  //   },
+  //   {
+  //     rel: 'stylesheet',
+  //     href: 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap',
+  //     crossorigin: ''
+  //   }
+  // ]
 })
 </script>
 <script>
 export default { name      : 'BL2App', };
 </script>
 <style lang="css">
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 .debug{
   border: 1px dashed red;
 }
