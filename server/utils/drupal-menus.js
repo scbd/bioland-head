@@ -17,9 +17,7 @@ export async function useMenus(query){
     const [main, footer, footerCredits, languages ] = await Promise.all(menuPromises);
     const [ cleanMenus ] = await Promise.all( [addMissingData(menus, query )])
 
-    // for (const iterator of object) {
-        
-    // }
+
     await getThumbNails(cleanMenus, query)
     return { ...cleanMenus, languages };
 }

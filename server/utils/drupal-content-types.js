@@ -9,7 +9,7 @@ import { paramCase } from "param-case";
 
 export const useContentTypeMenus = async (ctx) => {
     await useDrupalLogin(ctx.identifier)
-    return  makeTypeMap(await getAllContentTypeMenus(ctx))
+    return  makeTypeMap(await getAllContentTypeMenus(ctx), ctx)
 }
 
 async function getContentMenus (ctx, drupalInternalId) {
@@ -24,13 +24,48 @@ async function getContentMenus (ctx, drupalInternalId) {
     return { data: data?.map(mapThumbNails(ctx)), count: meta?.count }
 };
 
-function makeTypeMap(data){
+function makeTypeMap(data, ctx){
+    const countries = Array.from(new Set(!ctx?.country? [ ...(ctx?.countries || [])] : [ ctx.country, ...(ctx?.countries || []) ]));
+
     const map = {};
 
-    for(const item of data)
+    for(const item of data){
+        //item.dataAll = item.data;
+        item.dataMap = {};
+        for(const country of countries){
+            if(!item.dataMap[country]) item.dataMap[country]=[]
+            
+            for(const doc of item.data) {
+                if(!isInCountry(countries, country, doc)) continue;
+
+                item.dataMap[country].push(doc)
+            }
+        }
         map[item.slug] = item
+    }
     
+    // for(const country of countries){
+
+    // }
     return map;
+}
+
+function isInAllCountries(countries, doc){
+    let inAll = true;
+    let count = 0;
+    for(const country of countries){
+        if(doc.tags.includes(country)){
+            inAll = false;
+            count++;
+        }
+    }
+    return inAll || count === countries.length;
+}
+
+function isInCountry(countries, country, doc){
+    if(isInAllCountries(countries, doc)) return true;
+
+    return doc.tags.includes(country);
 }
 function mapThumbNails(ctx){
     return (document)=>{
@@ -41,18 +76,20 @@ function mapThumbNails(ctx){
 
         document.thumb  = '/images/no-image.png';
 
-        const { thumb, title, path, created, changed, field_start_date } = document;
+        const { thumb, title, path, created, changed, field_start_date, field_published, field_tags } = document;
 
         const startDate = field_start_date || '';
+        const published = field_published || '';
+        const tags      = field_tags? field_tags.split(',') : [];
 
-        if(!hasAttachments) return { thumb, title, href: path.alias, created, changed, startDate  };
+        if(!hasAttachments) return { thumb, title, href: path.alias, created, changed, startDate, published, tags  };
 
         const { uri } = attachments[0].field_media_image;
 
         document.thumb  = `${ctx.host}${uri.url}`
 
 
-        return { thumb:document.thumb, title, href: path.alias, created, changed, startDate };
+        return { thumb:document.thumb, title, href: path.alias, created, changed, startDate, published, tags };
     }
 }
 
@@ -85,30 +122,30 @@ async function getTerms ({ localizedHost, host }) {
 
 
 
-async function getAllContentCounts(ctx){
-    const terms    = await getTerms(ctx);
-    const requests = [];
+// async function getAllContentCounts(ctx){
+//     const terms    = await getTerms(ctx);
+//     const requests = [];
 
-    for(const term of terms){
-        const aRequest = getContentCounts(ctx, term.drupalInternalId).then(( { count } )=> ({ ...term, count }))
+//     for(const term of terms){
+//         const aRequest = getContentCounts(ctx, term.drupalInternalId).then(( { count } )=> ({ ...term, count }))
 
-        requests.push(aRequest)
-    }
+//         requests.push(aRequest)
+//     }
 
-    return Promise.all(requests);
-}
+//     return Promise.all(requests);
+// }
 
-async function getContentCounts ({ localizedHost }, drupalInternalId) {
+// async function getContentCounts ({ localizedHost }, drupalInternalId) {
 
-    const uri           = `${localizedHost}/jsonapi/node/content?jsonapi_include=1&include=field_type_placement&filter[taxonomy_term--tags][condition][path]=field_type_placement.drupal_internal__tid&filter[taxonomy_term--tags][condition][operator]=IN&filter[taxonomy_term--tags][condition][value][]=${drupalInternalId}&page[limit]=1`;
-    const method        = 'get';
-    const headers       = { 'Content-Type': 'application/json' };
+//     const uri           = `${localizedHost}/jsonapi/node/content?jsonapi_include=1&include=field_type_placement&filter[taxonomy_term--tags][condition][path]=field_type_placement.drupal_internal__tid&filter[taxonomy_term--tags][condition][operator]=IN&filter[taxonomy_term--tags][condition][value][]=${drupalInternalId}&page[limit]=1`;
+//     const method        = 'get';
+//     const headers       = { 'Content-Type': 'application/json' };
 
-    const { meta } = await $fetch(uri, { method, headers });
+//     const { meta } = await $fetch(uri, { method, headers });
 
 
-    return meta
-};
+//     return meta
+// };
 
 
 

@@ -4,7 +4,7 @@ import   camelCaseKeys   from 'camelcase-keys';
 import { useSiteStore } from "~/stores/site";
 
 const actions = { set, initialize }
-const getters = { heroImage, typeName, images, documents, videos, image, mediaImage };
+const getters = { heroImage, typeName, images, documents, videos, image, mediaImage, typeId, video, document, documentUri, isImageOrVideo, isImage, isVideo, isDocument  };
 
 function heroImage(){
     
@@ -106,23 +106,33 @@ async function initialize(pageDataRaw){
 }  
 
 function typeName(){
-    if(this.type?.startsWith('media--')){
-        if(this.type.endsWith('image')) return 'Image';
-        if(this.type.endsWith('document')) return 'Document';
-        if(this.type.endsWith('remote_video')) return 'Remote Video';
-    }
+    if(!this.fieldTypePlacement ) return undefined;
 
-    if(!this.fieldTypePlacement || !this.fieldTypePlacement?.length) return undefined;
-
-    return this.fieldTypePlacement[0].name;
+    return this.fieldTypePlacement.name;
 }
 
-function image(){
+function typeId(){
+    if(!this.fieldTypePlacement ) return undefined;
+
+    return this.fieldTypePlacement.drupal_internal__tid;
+}
+
+function image(){//&& this.document?.fieldMediaImage
+    if(this.isDocument ) return mapDocumentImage(this.document.fieldMediaImage)
     if(!this.images || !this.images?.length) return undefined;
 
-    return this.images[0];
+    return {...this.images[0] };
 }
+function document(){
+    if(!this.documents || !this.documents?.length) return undefined;
 
+    return { ...this.documents[0], downloadUrl: this.documentUri };
+}
+function video(){
+    if(!this.videos || !this.videos?.length) return undefined;
+
+    return this.videos[0];
+}
 function images(){
     if(!this.fieldAttachments || !this.fieldAttachments?.length) return [];
 
@@ -136,18 +146,19 @@ function documents(){
 function videos(){
     if(!this.fieldAttachments || !this.fieldAttachments?.length) return [];
 
-    return this.fieldAttachments.filter(({ type })=> type === 'media--remote-video');
+    return this.fieldAttachments.filter(({ type })=> type === 'media--remote_video');
 }
 
-function mapImage({ name,fieldMediaImage, drupalInternalMid, path }){
-    if(!name || !fieldMediaImage) throw new Error('usePageStore.mapImage -> name or fieldMediaImage is undefined');
+function mapImage({  name,fieldMediaImage, drupalInternalMid, path, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage }){
+    if(!name || !fieldMediaImage ) throw new Error('usePageStore.mapImage -> name or fieldMediaImage is undefined');
     const siteStore = useSiteStore();
 
-    const alt = fieldMediaImage?.meta?.alt|| name;
+    const alt = fieldMediaImage?.meta?.alt|| name || filename;
     const src = `${siteStore.host}${fieldMediaImage.uri.url}`;
 
-    return { name, url:path.alias, alt, drupalInternalMid, src}
+    return { name, url:path.alias, alt, drupalInternalMid, src, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage}
 }
+//name, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage 
 
 function mediaImage(){
     const hasImage = this.fieldMediaImage?.uri?.url;
@@ -159,4 +170,38 @@ function mediaImage(){
     const src = `${siteStore.host}${this.fieldMediaImage.uri.url}`;
 
     return { alt, src }
+}
+
+function documentUri(){
+    if(!this.document?.fieldMediaDocument?.uri?.url) return undefined;
+    const siteStore = useSiteStore();
+
+    return `${siteStore.host}${this.document.fieldMediaDocument.uri.url}`;
+}
+
+function isImageOrVideo(){
+    return this.typeId === 16;
+}
+
+function isImage(){
+    return this.isImageOrVideo && !this.videos.length;
+}
+
+function isVideo(){
+    return this.isImageOrVideo && !!this.videos.length;
+}
+
+function isDocument(){
+    return this.typeId === 12;
+}
+
+
+function mapDocumentImage({ uri, meta, created, changed, filename:name }){
+    if(!uri || !name ) throw new Error('usePageStore.mapImage -> name or fieldMediaImage is undefined');
+    const siteStore = useSiteStore();
+
+    const alt = meta?.alt|| name ;
+    const src = `${siteStore.host}${uri.url}`;
+
+    return { name,  alt,  src, created, changed }
 }

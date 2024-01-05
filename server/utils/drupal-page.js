@@ -6,7 +6,7 @@ export async function getPageData(ctx){
     try{
         const { uuid,  type, bundle }    = await getPageIdentifiers(ctx);
         const { identifier, pathPreFix } = ctx;
-        const   query  = getSearchParams(type, bundle);
+        const   query  = getSearchParams(ctx, type, bundle);
         const   uri    = `https://${identifier}${baseHost}${pathPreFix || ''}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
         const { data } = await $fetch(uri, { query });
 
@@ -21,7 +21,7 @@ export async function getPageDates(ctx){
     const { localizedHost }       = ctx;
     const { uuid, type, bundle }  = await getPageIdentifiers(ctx);
 
-    const query    = getSearchParams(type, bundle);
+    const query    = getSearchParams(ctx, type, bundle, );
     const uri      = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
     const { data } = await $fetch(uri, { query });
@@ -36,7 +36,7 @@ export async function getPageThumb(ctx){
     const { localizedHost }       = ctx;
     const { uuid, type, bundle }  = await getPageIdentifiers(ctx);
 
-    const query    = getSearchParams(type, bundle, 'field_attachments');
+    const query    = getSearchParams(ctx, type, bundle, 'field_attachments');
     const uri      = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}/field_attachments`;
 
     const { data } = await $fetch(uri, { query });
@@ -124,18 +124,19 @@ function mapTagsByType(tags){
     return map
 }
 
-function getSearchParams(type, bundle, prop){
+function getSearchParams(ctx, type, bundle, prop){
     const search = {jsonapi_include: 1};
-
+//field_attachments.fieldMediaDocument
     if(type === 'node' && bundle === 'content' && !prop)  setContentSearchParams(search);
     if(type === 'media' &&  ['image', 'document'].includes(bundle))  setMediaImageSearchParams(search);
     if(prop === 'field_attachments') search['include'] = 'thumbnail';
-
+   // if(ctx.path.startsWith('/document/')) search['include'] =search['include']+',field_attachments.field_media_document'
+console.log(ctx.path)
     return search;
 }
 
 function setContentSearchParams(search){
-    search['include'] = 'field_attachments,field_type_placement,field_attachments.field_media_image,field_attachments.thumbnail';
+    search['include'] = 'field_attachments,field_type_placement,field_attachments.field_media_image,field_attachments.thumbnail,field_attachments.field_media_document';
 }
 function setMediaImageSearchParams(search){
     search['include'] = 'field_media_image';

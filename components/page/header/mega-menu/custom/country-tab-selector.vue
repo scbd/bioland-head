@@ -14,7 +14,6 @@
                 <div @click="clickRight" class="arrow-cont align-self-stretch d-flex justify-content-end align-items-center" style="width:30%; "><Icon name="arrow-right" class="arrow"/></div>
             </div>
 
-            <slot :country="selectedCountry" :hide="!hide" :fade-name="fadeName"></slot>
 
         </div>
     </section>

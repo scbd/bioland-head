@@ -1,5 +1,5 @@
 <template>
-    <div class="mb-3">
+    <div class="my-2">
         <NuxtLink class="fw-bold" :to="localePath('/')">
             {{t('National CHM')}}
         </NuxtLink>

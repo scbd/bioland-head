@@ -1,35 +1,27 @@
 <template>
-        <PageHeaderMegaMenuHeader  :menu="menu" />
+    <PageHeaderMegaMenuHeader :menu="menu" />
+    <div :class="{ 'd-flex justify-content-between':isCardView}">
+        <section v-for="(aChild,j) in menu.children" :key="j">
 
-        <PageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menu.dataMap" >
-            <Transition :name="slotProps.fadeName">
-                <section v-if="slotProps.hide">
-                    <div :class="{ 'd-flex justify-content-between':isCardView}">
-                        <section v-for="(aChild,j) in menu.dataMap[slotProps.country]" :key="j">
-
-                            <PageHeaderMegaMenuLink v-if="!isHeader(aChild)"  :show-thumbs="menu.class?.includes('bl2-show-thumbs')" :show-cards="isCardView"  :menu="aChild" />
-                            <PageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
-
-                            <PageHeaderMegaMenuLink v-if="hasFinalLink && isCardView"  :menu="hasFinalLink" />
-                        </section>
-                    </div>
-                </section>
-            </Transition>
-        </PageHeaderMegaMenuCustomCountryTab>
+                <PageHeaderMegaMenuLink v-if="!isHeader(aChild)"  :show-thumbs="menu.class?.includes('bl2-show-thumbs')" :show-cards="isCardView"  :menu="aChild" />
+                <PageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
+            
+        </section>
+    </div>
+    <PageHeaderMegaMenuLink v-if="hasFinalLink && isCardView"  :menu="hasFinalLink" />
 </template>
 
 <script setup>
     import   clone           from 'lodash.clonedeep';
     import { useMenusStore } from '~/stores/menus';
-    import {  useSiteStore } from "~/stores/site";
-    
+
     const   props              = defineProps({ type: String, menu: Object });
     const { menu: passedMenu } = toRefs(props);
     const   menuStore          = useMenusStore();
     const   isFinalLink        = (aMenu)=> unref(aMenu)?.class?.includes('main-nav-final-link') || unref(aMenu)?.class?.includes('mm-main-nav-final-link');
     const   hasFinalLink       = computed(()=> unref(passedMenu)?.children?.find(aMenu => isFinalLink(aMenu)));
     const   viewport           = useViewport();
-    const   siteStore          = useSiteStore();
+    
     
     function getDefaultFinalLink(){
         const   contentType         = getContentType();
@@ -56,17 +48,16 @@
     });
 
     const menu = computed(()=> {
-
-        const countries = siteStore.countries;
-        const aMenu     = clone(unref(passedMenu));
-
+        const aMenu    = clone(unref(passedMenu));
         const children = aMenu?.children?.filter(aMenu => !isFinalLink(aMenu)) || [];
 
-        aMenu.children = [ ...children ];
+        aMenu.children = [ ...children, ...getContentTypeData() ];
 
-        aMenu.dataMap = {}
-        for (const country of countries)
-            aMenu.dataMap[country] = getContentTypeData(country)
+        const showDefault = aMenu.children.length > 5;
+        const last        = unref(hasFinalLink)? [unref(hasFinalLink)] : showDefault? [getDefaultFinalLink()] : [];
+
+        aMenu.children = aMenu.children.slice(0,6);
+        aMenu.children = [ ...aMenu.children, ...last ];
 
         return aMenu;
     })
@@ -86,16 +77,11 @@
         return classes.length >1? classes : classes[0];
     }
 
-    function getContentTypeData(country){
+    function getContentTypeData(){
         const contentType = getContentType();
-        const children    = unref(passedMenu)?.children || [];
-        const data        = menuStore?.contentTypes[contentType]?.dataMap[country] || [];
+        const data        = menuStore?.contentTypes[contentType]?.data || [];
         const menuPaths   = unref(passedMenu)?.children?.map(aMenu => aMenu.href) || [];
 
-        const returnData = [...children, ...data.filter(aMenu => !menuPaths.includes(aMenu.href))]
-        const showDefault = returnData.length > 5;
-        const last        = unref(hasFinalLink)? [unref(hasFinalLink)] : showDefault? [getDefaultFinalLink()] : [];
-
-        return [...returnData, ...last].slice(0,6);
+        return data.filter(aMenu => !menuPaths.includes(aMenu.href));
     }
 </script>

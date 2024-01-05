@@ -61,10 +61,8 @@
 
     const { contentTypes, mediaTypes }  = useMenusStore();
 
-    const isMediaType   = computed(()=> !!mediaTypes[type.value]);
-    const isContentType = computed(()=> !!contentTypes[type.value]);
-    const isChm         = computed(()=> type.value === 'secretariate');
-    const drupalTypes   = { ...contentTypes, ...mediaTypes };
+
+    const drupalTypes   = { ...contentTypes };
     const schemas       = computed(() => r?.query?.schemas? r?.query?.schemas : undefined);
     const freeText      = computed(() => r?.query?.freeText? r?.query?.freeText : '');
     const page          = computed(() => r?.query?.page? r?.query?.page : 1);
@@ -82,8 +80,9 @@
         });
 
     function getApiUri(){
+
         if(typeId.value || type.value === 'content')
-            return `/api/list/${isMediaType.value? 'media': 'content'}${typeId.value}`;
+            return `/api/list/content${typeId.value}`;
 
         if(type.value == 'secretariate')
             return `/api/list/chm`;
