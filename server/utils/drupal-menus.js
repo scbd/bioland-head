@@ -137,9 +137,8 @@ export async function getMenusFromApiPager ({ identifier, pathPreFix, pathAlias,
     }
 }
 
-async function getMenuData(menuName, { host, pathPreFix, localizedHost }){
-
-    // const   pathLocale = pathPreFix === '/zh'? '/zh-hans' : pathPreFix;
+async function getMenuData(menuName, ctx){
+    const { host, pathPreFix, localizedHost } = ctx;
 
     const uri = `${localizedHost}/system/menu/${encodeURIComponent(menuName)}/linkset`;
 

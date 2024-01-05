@@ -7,7 +7,7 @@ export default cachedEventHandler(async (event) => {
         const pathAlias = usePathAlias(ctx)
 const test = await pathAlias.getByMediaId(drupalIntarnalMid)
 
-console.log(test)
+// console.log(test)
         return test
     }
     catch(e){

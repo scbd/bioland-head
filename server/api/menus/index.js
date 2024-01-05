@@ -29,7 +29,7 @@ export default cachedEventHandler(async (event) => {
         return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, mediaTypes, forums }
     }
     catch(e){
-        console.error('/api/menus--------------------------',e)
+        // console.error('/api/menus--------------------------',e)
         throw createError({
             statusCode: 500,
             statusMessage: 'Failed to  query the drupal menus',
@@ -37,6 +37,14 @@ export default cachedEventHandler(async (event) => {
     }
     
 },{
-    maxAge: 60*60,
-    varies:['Cookie']
+    maxAge: 5,
+    varies:['Cookie'],
+    getKey: (event) => {
+        const { context } = parseCookies(event)
+        const query       = getQuery(event)
+
+        const locale = query.locale || context.locale || 'und'
+
+        return locale
+    }
 })

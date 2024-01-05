@@ -123,9 +123,9 @@ function countries(){
 const drupalLocaleMap = new Map([['/zh','/zh-hans']]);
 
 function drupalizePathLocales(locale, defaultLocale){
-    if(!defaultLocale?.locale || !locale) return '';
+    if(!defaultLocale || !locale) return '';
 
-    const pathPreFix = locale === defaultLocale?.locale? '' : `/${locale}`;
+    const pathPreFix = locale === defaultLocale? '' : `/${locale}`;
 
     if(!pathPreFix) return pathPreFix;
 

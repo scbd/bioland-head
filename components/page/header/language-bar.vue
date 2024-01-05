@@ -12,7 +12,7 @@
                         </li>
 
                         <li v-if="otherMenus.length" @click.stop.prevent="toggle" class="nav-item dropdown d-block " v-click-outside="close">
-                            <NuxtLink  ref="dropDownLinkEl" class="nav-link dropdown-toggle" to="#">{{ t('Other') }}</NuxtLink>
+                            <a  ref="dropDownLinkEl" class="nav-link dropdown-toggle" to="#">{{ t('Other') }}</a>
 
                             <div ref="dropDownEl" class="dropdown-menu" aria-labelledby="navbarDropdown">
 
@@ -87,20 +87,22 @@
     }
 
     function reloadMenus(newBreakpoint){
+
         this.otherMenus = [];
         const largeBreakpoints = ['lg','xl', 'xxl'];
         const mediumBreakpoints = ['md','sm','xs'];
 
-        if(largeBreakpoints.includes(newBreakpoint))
-            return  this.limit = 6;
-        if(mediumBreakpoints.includes(newBreakpoint))
-                this.limit = 3;
+        this.limit=4
+        // if(largeBreakpoints.includes(newBreakpoint))
+        //     return  this.limit = 4;
+        // if(mediumBreakpoints.includes(newBreakpoint))
+        //         this.limit = 3;
 
         if(!this.menus || !this.menus?.length) return;
         
         this.limitedMenus = this.menus.slice(0, this.limit);
 
-        if(mediumBreakpoints.includes(newBreakpoint))
+        // if(mediumBreakpoints.includes(newBreakpoint))
             this.otherMenus = this.menus.slice(this.limit);
     }
 </script>

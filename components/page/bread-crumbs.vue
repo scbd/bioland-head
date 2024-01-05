@@ -1,5 +1,5 @@
 <template>
-    <div class="my-2">
+    <div class="my-2" :class="{ 'mt-4 mb-3': isMobile }">
         <NuxtLink class="fw-bold" :to="localePath('/')">
             {{t('National CHM')}}
         </NuxtLink>
@@ -13,6 +13,7 @@
 
         <span v-if="count" class="text-muted float-end"> &nbsp; {{t('record', count)}}</span>
         <span v-if="count" class="badge rounded-pill bg-primary float-end" >{{count}}</span>
+
     </div>
 </template>
 <i18n src="@/i18n/dist/components/page/bread-crumbs.json"></i18n>
@@ -24,6 +25,7 @@ const { t  }    = useI18n();
 const   props   = defineProps({ count: { type: Number } });
 const { count } = toRefs(props);
 
+const viewport   = useViewport();
 const route      = useRoute();
 const localePath = useLocalePath();
 // const pageStore  = usePageStore();
@@ -31,7 +33,7 @@ const menusStore = useMenusStore();
 const inMenu     = ref(menusStore.isInMainMenu(route.path) || menusStore.isInMainMenu(parentPath()));
 const eventBus   = useEventBus();
 const crumbs     = computed(()=> inMenu?.value? inMenu.value?.crumbs : []);
-
+const isMobile   = computed(()=> ['md','sm','xs'].includes(viewport.breakpoint.value));
 
 function isSelf(href){ return href === route.path; }
 

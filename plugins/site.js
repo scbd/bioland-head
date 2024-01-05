@@ -33,9 +33,9 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     await menuStore.loadAllMenus(data.value);
 
     nuxtApp.hook('i18n:localeSwitched', async ({oldLocale, newLocale}) => {
-        
+
         const context       = useCookie('context');
-        const localeChanged = newLocale === siteStore.defaultLocale ? 'und' : newLocale;
+        const localeChanged = newLocale === siteStore.defaultLocale ? 'en' : newLocale;
 
         siteStore.set('locale', localeChanged);
 

@@ -131,7 +131,7 @@ function getSearchParams(ctx, type, bundle, prop){
     if(type === 'media' &&  ['image', 'document'].includes(bundle))  setMediaImageSearchParams(search);
     if(prop === 'field_attachments') search['include'] = 'thumbnail';
    // if(ctx.path.startsWith('/document/')) search['include'] =search['include']+',field_attachments.field_media_document'
-console.log(ctx.path)
+// console.log(ctx.path)
     return search;
 }
 
