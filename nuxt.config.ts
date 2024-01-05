@@ -56,11 +56,10 @@ export default defineNuxtConfig({
   viewport: {
     breakpoints: {
       xs: 1,
-      sm: 576,
-      md: 768,
-      lg: 992,
-      xl: 1250,
-      xxl: 1400
+      sm: 752,
+      md: 992,
+      lg: 1330,
+      xl: 1600
     },
 
     defaultBreakpoints: {
@@ -124,12 +123,10 @@ export default defineNuxtConfig({
     quality: 70,
     screens: {
       'xs': 320,
-      sm: 576,
-      md: 768,
-      lg: 992,
-      xl: 1200,
-      xxl: 1400,
-      '2xl': 1400
+      sm: 552,
+      md: 992,
+      lg: 1330,
+      xl: 1600
     },
   },
   nitro: {
