@@ -36,7 +36,7 @@ export function parseContext (context) {
 
     const ctx = isString(context)? JSON.parse(context) : context;
 
-    const { country, identifier, locale, defaultLocale, countries: countriesArray, redirect , path} = ctx;
+    const { country, localizedHost:lh, identifier, locale, defaultLocale, countries: countriesArray, redirect , path} = ctx;
     
     const   countries       = countriesArray?.length? [country,...countriesArray] : [country];
     // const   defaultLocale   =  defaultLocale
@@ -44,7 +44,7 @@ export function parseContext (context) {
     const   pathPreFix      = getPathPrefix(locale, defaultLocale)
     const   hasRedirect     = env === 'production' && redirect;
     const   host            = hasRedirect? `https://${redirect}` : `https://${identifier}${baseHost}`;
-    const   localizedHost   = `${host}${pathPreFix}`;
+    const   localizedHost   = lh? lh : `${host}${pathPreFix}`;
     const   indexLocale     = getIndexLocale(locale);
 
     return { host, localizedHost, country,countries,  identifier, locale, defaultLocale, indexLocal:indexLocale, indexLocale, path }

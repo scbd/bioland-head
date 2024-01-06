@@ -4,12 +4,9 @@ export default cachedEventHandler(async (event) => {
     try{
 
         const path = decodeURIComponent(getRouterParam(event, 'path'))
-        const ctx =  getContext(event)
+        const ctx  =  getContext(event)
 
 
-
-
-        
         return  getPageData({...ctx, path})
     }
     catch(e){
@@ -21,6 +18,11 @@ export default cachedEventHandler(async (event) => {
     }
     
 },{
-    maxAge: 5,
-    varies:['Cookie']
+    maxAge: 1,
+    varies:['Cookie'],
+    getKey: (event) => {
+        const key = getRouterParam(event, 'key');
+        const path = getRouterParam(event, 'path');
+        return `${key}-${path}`;
+    }
 })

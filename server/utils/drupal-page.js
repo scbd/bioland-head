@@ -5,14 +5,17 @@ export async function getPageData(ctx){
 
     try{
         const { uuid,  type, bundle }    = await getPageIdentifiers(ctx);
-        const { identifier, pathPreFix } = ctx;
+        const { identifier, pathPreFix, localizedHost } = ctx;
         const   query  = getSearchParams(ctx, type, bundle);
-        const   uri    = `https://${identifier}${baseHost}${pathPreFix || ''}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
+        const   uri    = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
+       
+  
         const { data } = await $fetch(uri, { query });
 
 
         return  await mapData(ctx)(data)
     }catch(e){
+        console.error(e);
         return {}
     }
 
@@ -44,11 +47,11 @@ export async function getPageThumb(ctx){
     return getThumbFiles(data,  ctx)
 }
 
-async function getPageIdentifiers({ localizedHost, path }){
+async function getPageIdentifiers({ host, path }){
 
 
 
-    const uri = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanToPath(path))}`;
+    const uri = `${host}/router/translate-path?path=${encodeURIComponent(cleanToPath(path))}`;
 
     const data = await $fetch(uri, { mode: 'cors' })
     const { uuid, id, type, bundle } = data?.entity || {};
