@@ -1,6 +1,6 @@
 <template>
     <NuxtLink v-if="isExternal" class="nav-link" :to="href || '#'" :alt="title" :target="targetValue" external >{{ title }}</NuxtLink>
-    <NuxtLink active-class="footer-active" v-if="!isExternal" class="nav-link" :to="localePath(href || '/#')" :alt="title" :target="targetValue" >{{ title }}</NuxtLink>
+    <NuxtLink active-class="footer-active" v-if="!isExternal" class="nav-link" :to="href || '/#'" :alt="title" :target="targetValue" >{{ title }}</NuxtLink>
 </template>
 
 <script>

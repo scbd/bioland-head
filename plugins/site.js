@@ -33,7 +33,6 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     await menuStore.loadAllMenus(data.value);
 
     nuxtApp.hook('i18n:localeSwitched', async ({oldLocale, newLocale}) => {
-
         const context       = useCookie('context');
         const localeChanged = newLocale === siteStore.defaultLocale ? 'en' : newLocale;
 
@@ -46,15 +45,29 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
 
     //middleware before every route change
-    addRouteMiddleware('bioland-route-change',  async (to) => setAppStates(to), { global: true });
 
-    async function setAppStates(to){
-        const pStore = usePageStore(nuxtApp.$pinia);
+    const  setAppStates = async (to, from)=>{
 
-        context.value.path = to.path;
+        const pStore      = usePageStore(nuxtApp.$pinia);
 
-        pStore.initialize((await getPage(to.path)).value)
+        if(to.path.startsWith('/zh-hans')) 
+            return navigateTo(to.path.replace('/zh-hans', '/zh'));
+        
+        const isNewLocale = isLocaleChange(to, from) && !!pStore.drupalInternalNid;
+
+        
+        const localePath  = siteStore.locale === siteStore.defaultLocale? '' : `/${siteStore.locale}`;
+        const path        = isNewLocale? `${localePath}/node/${pStore.drupalInternalNid}` : to.path;
+
+        context.value.path = path;
+
+        const pData = (await getPage(path)).value;
+
+        pStore.initialize(pData)
     }
+
+    addRouteMiddleware('bioland-route-change',  async (to, from) => setAppStates(to, from), { global: true });
+
 
     function getPage(path){
         const { drupalMultisiteIdentifier } = useRuntimeConfig().public;
@@ -66,5 +79,18 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     }
 
 
+
 });
 
+function isLocaleChange({ name: to }, { name: from }){
+   
+    const toLocale   = getLocaleFromRouteName(to);
+    const fromLocale = getLocaleFromRouteName(from);
+
+    return toLocale !== fromLocale;
+}
+
+function getLocaleFromRouteName(name){
+    const indexToSlice = name.lastIndexOf('_');
+    return name.slice(indexToSlice + 1);
+}

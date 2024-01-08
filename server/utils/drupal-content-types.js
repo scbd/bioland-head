@@ -13,10 +13,13 @@ export const useContentTypeMenus = async (ctx) => {
 }
 
 async function getContentMenus (ctx, drupalInternalId) {
+
     const { localizedHost } = ctx;
+
     const uri           = `${localizedHost}/jsonapi/node/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image&filter[taxonomy_term--tags][condition][path]=field_type_placement.drupal_internal__tid&filter[taxonomy_term--tags][condition][operator]=IN&filter[taxonomy_term--tags][condition][value][]=${drupalInternalId}&page[limit]=14&sort[sticky][path]=sticky&sort[sticky][direction]=DESC&sort[sort-created][path]=created&sort[sort-created][direction]=DESC`;
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
+
 
     const { data, meta } = await $fetch(uri, { method, headers });
 
@@ -76,20 +79,25 @@ function mapThumbNails(ctx){
 
         document.thumb  = '/images/no-image.png';
 
-        const { thumb, title, path, created, changed, field_start_date, field_published, field_tags } = document;
+
+        const {  drupal_internal__nid, langcode, thumb, title, path, created, changed, field_start_date, field_published, field_tags } = document;
 
         const startDate = field_start_date || '';
         const published = field_published || '';
         const tags      = field_tags? field_tags.split(',') : [];
+        const hasAlias  = path?.alias && path.langcode === ctx.locale;
+        const localePath = ctx.locale === ctx.defaultLocale? '' : `/${ctx.locale}`;
 
-        if(!hasAttachments) return { thumb, title, href: path.alias, created, changed, startDate, published, tags  };
+        const href      = hasAlias? `${localePath}${path.alias}` : `${localePath}/node/${drupal_internal__nid}`;
+
+        if(!hasAttachments) return { langcode, thumb, title, href, created, changed, startDate, published, tags  };
 
         const { uri } = attachments[0].field_media_image;
 
         document.thumb  = `${ctx.host}${uri.url}`
 
 
-        return { thumb:document.thumb, title, href: path.alias, created, changed, startDate, published, tags };
+        return { thumb:document.thumb, title, href, created, changed, startDate, published, tags };
     }
 }
 

@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 
 const actions = { getHost, set, initialize, getInitialContext };
-const getters = { drupalApiUriBase, host, localizedHost, params, countries };
+const getters = { drupalApiUriBase, host, localizedHost, params, countries, isDefaultLocale };
 
 export const useSiteStore = defineStore('site', { state, actions, getters,  persist: true, });
 
@@ -68,7 +68,9 @@ async function getInitialContext(locale){
     }
 }
 
-
+function isDefaultLocale(){
+    return this.locale === this.defaultLocale
+}
 
 function getLogoUri(config){
     const hasCountry = config.country || (config?.countries? config?.countries[0] : undefined)

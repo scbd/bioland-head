@@ -18,7 +18,7 @@ const initState = {
     nfps:[],
     // counts:[],
     contentTypes:{},
-    mediaTypes: {},
+    // mediaTypes: {},
     forums: [],
 }
 
@@ -48,7 +48,7 @@ function loadAllMenus(menus = {}){
     this.set('nfps', menus?.nfps);
     // this.set('counts', menus?.counts);
     this.set('contentTypes', menus?.contentTypes);
-    this.set('mediaTypes', menus?.mediaTypes);
+    // this.set('mediaTypes', menus?.mediaTypes);
     this.set('forums', menus?.forums);
 
 }
@@ -77,7 +77,6 @@ function isInMenu(menu, href){
     if(menu?.children?.length)
         for(let i = 0; i < menu.children.length; i++)
             if(isInMenu(menu.children[i], href)) return isInMenu(menu.children[i], href);
-
 
     return false;
 }

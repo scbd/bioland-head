@@ -10,7 +10,7 @@ export default cachedEventHandler(async (event) => {
             Cookie: `context=${encodeURIComponent(JSON.stringify(context || query || {}))};`,
         }
 
-        const [absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes, mediaTypes, forums  ] = await Promise.all([
+        const [absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes,  forums  ] = await Promise.all([
             $fetch('/api/menus/absch', { query, method:'get', headers }),
             $fetch('/api/menus/bch', { query, method:'get', headers }),
             useMenus (query),
@@ -20,13 +20,13 @@ export default cachedEventHandler(async (event) => {
             $fetch('/api/menus/focal-points', { query, method:'get', headers }),
             // useContentTypeCounts(parseContext(context)),
             useContentTypeMenus(parseContext(context || query )),
-            useMediaTypeMenus(parseContext(context || query  )),
+            // useMediaTypeMenus(parseContext(context || query  )),
             useDrupalForumMenus(parseContext(context || query ))
         ]);
 
         // const menus = (await useMenus (query))
 
-        return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, mediaTypes, forums }
+        return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, forums }
     }
     catch(e){
         // console.error('/api/menus--------------------------',e)
@@ -37,14 +37,13 @@ export default cachedEventHandler(async (event) => {
     }
     
 },{
-    maxAge: 60 * 5,
-    varies:['Cookie'],
+    maxAge: 60*5,
     getKey: (event) => {
         const { context } = parseCookies(event)
         const query       = getQuery(event)
 
         const locale = query.locale || context.locale || 'und'
-
-        return locale
+        const host   = query.host || context.host 
+        return `${host}-${locale}`
     }
 })

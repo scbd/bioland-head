@@ -15,7 +15,7 @@ export async function getPageData(ctx){
 
         return  await mapData(ctx)(data)
     }catch(e){
-        console.error(e);
+        console.error('server/utils/dupal-page -> getPageData', e);
         return {}
     }
 
@@ -47,12 +47,14 @@ export async function getPageThumb(ctx){
     return getThumbFiles(data,  ctx)
 }
 
-async function getPageIdentifiers({ host, path }){
+async function getPageIdentifiers(ctx){
+
+    const { localizedHost, path } = ctx;
 
 
+    const uri = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanToPath(path))}`;
 
-    const uri = `${host}/router/translate-path?path=${encodeURIComponent(cleanToPath(path))}`;
-
+    // consola.log(uri)
     const data = await $fetch(uri, { mode: 'cors' })
     const { uuid, id, type, bundle } = data?.entity || {};
 
