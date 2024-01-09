@@ -64,7 +64,8 @@
 
         aMenu.children = [ ...children ];
 
-        aMenu.dataMap = {}
+        aMenu.dataMap = {};
+
         for (const country of countries)
             aMenu.dataMap[country] = getContentTypeData(country)
 
@@ -92,7 +93,7 @@
         const data        = menuStore?.contentTypes[contentType]?.dataMap[country] || [];
         const menuPaths   = unref(passedMenu)?.children?.map(aMenu => aMenu.href) || [];
 
-        const returnData = [...children, ...data.filter(aMenu => !menuPaths.includes(aMenu.href))]
+        const returnData  = [...children, ...data.filter(aMenu => !menuPaths.includes(aMenu.href))]
         const showDefault = returnData.length > 5;
         const last        = unref(hasFinalLink)? [unref(hasFinalLink)] : showDefault? [getDefaultFinalLink()] : [];
 

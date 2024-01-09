@@ -68,7 +68,7 @@
         const isVideo        = computed(()=> typeId.value === 16 && videos.value.length > 0);
         const isDocument     = computed(()=> typeId.value === 12);
 const media = computed(()=> {
- consola.warn(document.value)
+
         if(isImage.value) return {...image.value, fieldPublished:fieldPublished.value};
         if(isVideo.value) return { ...video.value, fieldPublished:fieldPublished.value};
         if(isDocument.value) {

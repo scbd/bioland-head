@@ -19,21 +19,23 @@
                 <SwiperButton v-if="arrows && hideArrows" direction="right"/> 
             </swiper>
     </div>
+    <!-- <pre>{{data}}</pre> -->
 </template>
 <script setup>
+import { useSiteStore } from '~/stores/site';
 import { Pagination  } from 'swiper/modules';
 import { useWindowSize } from '@vueuse/core';
 import 'swiper/css';
+
 const props = defineProps({ 
                             slides: { type: Array},
-                            type: { type: String },
                             pagination: { type: Boolean, default: true },
                             arrows:     { type: Boolean, default: true },
                             leftArrow:  { type: Boolean, default: false },
                         });
-const { type, pagination, arrows, slides , leftArrow  } = toRefs(props);
-const cont = ref(null);
-const { width: rowElWidth    } = useWindowSize();
+const { pagination, arrows, slides , leftArrow  } = toRefs(props);
+
+const { width: rowElWidth } = useWindowSize();
 
 
 const modules      = computed(()=> pagination.value? [ Pagination ] : []); 
@@ -58,5 +60,10 @@ const spaceBetween = computed(()=> {
 
     return 5
 });
+
+const siteStore = useSiteStore();
+const query     = { ...siteStore.params };
+
+const { data } = await useFetch(`/api/list/latest`, {  method: 'GET', query });
 </script>
 

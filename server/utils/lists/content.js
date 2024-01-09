@@ -26,7 +26,7 @@ function mapData(ctx){
         await Promise.all(promises);
 
         for (const key in results.data) {
-            const { type, title, tags, path, field_type_placement,field_attachments, field_start_date, changed, sticky, promote, id, body } = results.data[key];
+            const { drupal_internal__nid:dnid, type, title, tags, path, field_type_placement,field_attachments, field_start_date, changed, sticky, promote, id, body } = results.data[key];
 
             if(body?.value) body.summary = stripHtml(body?.value).result.substring(0, 400);
 
@@ -34,9 +34,11 @@ function mapData(ctx){
             const page       = ctx.page? Number(ctx.page) : 1;
             const perPage    = ctx.rowsPerPage? Number(ctx.rowsPerPage) : 10;
             const index      = page > 1? (page-1)*perPage + Number(key) : Number(key);
-
+            const localePath = ctx.locale === ctx.defaultLocale? '' : `/${ctx.locale}`;
+            const hasAlias   = path?.alias && path.langcode === ctx.locale;
+            const href       = hasAlias? path?.alias : `/node/${dnid}`;
             // consola.info(`${page} ${perPage} ${key}n ${index}`)
-            results.data[key] = camelCaseKeys({ type, mediaImage, title, tags, path, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary, index }, {deep: true}  )
+            results.data[key] = camelCaseKeys({dnid, href, type, mediaImage, title, tags, path, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary, index }, {deep: true}  )
         }
 
         return results
