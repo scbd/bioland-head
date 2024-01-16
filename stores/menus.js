@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 
 
-const actions = { set, loadAllMenus, isInMainMenu, isInFooterMenu, isInFooterCreditsMenu }
+const actions = { isInMainMenuByContentTypeId,getContentType,getContentTypeById,set, loadAllMenus, isInMainMenu, isInFooterMenu, isInFooterCreditsMenu }
 
 export const useMenusStore = defineStore('menus', { state, actions,  persist: true, })
 
@@ -77,6 +77,43 @@ function isInMenu(menu, href){
     if(menu?.children?.length)
         for(let i = 0; i < menu.children.length; i++)
             if(isInMenu(menu.children[i], href)) return isInMenu(menu.children[i], href);
+
+    return false;
+}
+
+const typeMapIds = { news:2, event:3, 'learning-resource':4, project:5, 'basic-page':6, 'government-ministry-or-institute':8, ecosystem:9, 'protected-area':10, 'biodiversity-data':11, document:12, 'related-website':13, other:15, 'image-or-video':16 };
+
+
+function getContentType(name,country){
+
+
+    const hasKey      = this.contentTypes[name];
+    const id          = typeMapIds[name]
+
+    const contentType = hasKey? hasKey : this.getContentTypeById(id);
+
+    return country? contentType?.dataMap[country] : contentType;
+}
+
+function getContentTypeById(id){
+    return Object.values(this.contentTypes).find((ct)=> ct.drupalInternalId === id);
+}
+
+function isInMainMenuByContentTypeId(id){
+    if(!id) return false;
+    for(let i = 0; i < this.main.length; i++)
+        if(isInMenuByContentTypeId(this.main[i], id)) return isInMenuByContentTypeId(this.main[i], id)
+
+    return false;
+}
+
+function isInMenuByContentTypeId(menu, id){
+
+    if(menu.contentTypeId === id && menu.contentTypeId && id) return menu;
+
+    if(menu?.children?.length)
+        for(let i = 0; i < menu.children.length; i++)
+            if(isInMenuByContentTypeId(menu.children[i], id)) return isInMenuByContentTypeId(menu.children[i], id);
 
     return false;
 }

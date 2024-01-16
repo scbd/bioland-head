@@ -1,12 +1,13 @@
 
-export const usePathAlias = (ctx) => ({ getByNodeId:getByNodeId(ctx), getByMediaId:getByMediaId(ctx) })
+export const usePathAlias = (ctx) => ({ getByNodeId:getByNodeId(ctx), getByMediaId:getByMediaId(ctx), getByTermId:getByTermId (ctx) })
 
 
-function getByNodeId (ctx){ return (nodeId) => getById (ctx)('node',nodeId) }
-function getByMediaId (ctx){ return (nodeId) => getById (ctx)('media',nodeId) }
+function getByNodeId (ctx){ return (nodeId, all=false) => getById (ctx)('node',nodeId, all) }
+function getByMediaId (ctx){ return (nodeId, all=false) => getById (ctx)('media',nodeId, all) }
+function getByTermId (ctx){ return (nodeId, all=false) => getById (ctx)('taxonomy/term',nodeId, all) }
 
-function getById ({ identifier, localizedHost, locale }){
-    return async (type,nodeId) => {
+function getById ({ identifier, localizedHost, locale } ){
+    return async (type,nodeId, all=false) => {
                             try {
 
                                 const params  = getSearchParams(type, nodeId, locale)
@@ -19,7 +20,7 @@ function getById ({ identifier, localizedHost, locale }){
                                 
                                 const { data } = body
 
-                                return data.length? data[0] : undefined
+                                return data.length? all? data : data[0] : undefined
                             }
                             catch(e){
                               //  consola.error('usePathAlias.getById', e)
@@ -39,4 +40,25 @@ function getSearchParams(type, nodeId, locale = 'en'){
     search['filter[node-id][condition][value]']    = `/${type}/${nodeId}`;
     
     return search 
+}
+
+export async function mapAliasByLocale(ctx, type, id){
+ 
+    const languages = await getById(ctx)(type, id, true)
+    const locales = (await getInstalledLanguages(ctx)).map(mapDrupalLocaleToLocale);
+
+    const map = {};
+    const englishLang = languages?.find(({langcode})=> langcode === 'en') || { path: `/${type}/${id}`};
+    
+    for (const locale of locales) {
+        const aLang           = languages?.find(({langcode}) => langcode.startsWith(locale));
+        const { alias, path } = aLang || englishLang;
+
+        if(ctx.defaultLocale === locale) 
+            map[locale] = aLang? `${alias}` : `${path}`;
+        else
+            map[locale] = aLang? `/${locale}${alias}` : `/${locale}${path}`;
+    }
+
+    return map;
 }

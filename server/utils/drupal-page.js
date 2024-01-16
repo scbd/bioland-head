@@ -1,24 +1,34 @@
 import   camelCaseKeys   from 'camelcase-keys';
 
 export async function getPageData(ctx){
-    const { baseHost }            = useRuntimeConfig().public;
-
     try{
         const { uuid,  type, bundle }    = await getPageIdentifiers(ctx);
         const { identifier, pathPreFix, localizedHost } = ctx;
         const   query  = getSearchParams(ctx, type, bundle);
         const   uri    = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
-       
-  
+
+
         const { data } = await $fetch(uri, { query });
 
-
+        await addPageAliases(ctx,data).then((aliases)=> data.aliases=aliases)
+        
+        
         return  await mapData(ctx)(data)
     }catch(e){
         console.error('server/utils/dupal-page -> getPageData', e);
         return {}
     }
 
+}
+
+async function addPageAliases(ctx,data){
+    const isMedia = !!data.drupal_internal__mid 
+    const isTax   = !!data.drupal_internal__tid
+    const isNode  = !!data.drupal_internal__nid
+    const type = isNode? 'node' : isTax? 'taxonomy/term' : 'media';
+    const id  = isNode? data.drupal_internal__nid : isTax? data.drupal_internal__tid : data.drupal_internal__mid;
+
+    return mapAliasByLocale(ctx, type, id)
 }
 export async function getPageDates(ctx){
     const { localizedHost }       = ctx;
@@ -50,7 +60,7 @@ export async function getPageThumb(ctx){
 async function getPageIdentifiers(ctx){
 
     const { localizedHost, path } = ctx;
-
+//TODO-remove locale prefix on path
 
     const uri = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanToPath(path))}`;
 
@@ -92,6 +102,7 @@ function mapData(ctx){
 
     return async (document)=>{
         const promises = [];
+
         if(document?.field_attachments?.length)
         for (const media of document['field_attachments']){
 

@@ -18,13 +18,13 @@ export default cachedEventHandler(async (event) => {
             $fetch('/api/menus/nr6', { query, method:'get', headers }),
             $fetch('/api/menus/nbsap', { query, method:'get', headers }),
             $fetch('/api/menus/focal-points', { query, method:'get', headers }),
-            // useContentTypeCounts(parseContext(context)),
+
             useContentTypeMenus(parseContext(context || query )),
-            // useMediaTypeMenus(parseContext(context || query  )),
+
             useDrupalForumMenus(parseContext(context || query ))
         ]);
 
-        // const menus = (await useMenus (query))
+
 
         return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, forums }
     }

@@ -19,7 +19,9 @@ const initState = {
                     config                    : undefined,
                     name                      : undefined,
                     hasNationalReportSix      : undefined,
-                    redirect                  : undefined
+                    redirect                  : undefined,
+                    drupalInternalRevisionId : undefined,
+                   
                 }
 
 function state(){ return initState }

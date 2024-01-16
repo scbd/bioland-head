@@ -7,15 +7,16 @@
         <div class="card-body">
             <h6 class="card-subtitle text-muted mb-2">{{type}}</h6>
             <h5 class="card-title  mb-3">
-                <NuxtLink :to="linkTo" style="color:black;">{{record.title}}</NuxtLink> 
+                <NuxtLink :to="linkTo" style="color:black;">{{record.title}}</NuxtLink>
             </h5>
-
+            <p>&nbsp;</p>
             <p class="card-text">{{trunc(record.summary)}}</p>
 
         </div>
         <div class="card-footer">
-            <h6 class="card-subtitle text-muted text-small mb-2">{{dateFormat(record.fieldPublished || record.fieldStartDate ||record.changed)}}</h6>
+            <h6 class="card-subtitle text-muted text-small mb-2">{{dateFormat(record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate)}}</h6>
 
+            <span> {{record.eventCity}}</span>
             <NuxtLink  v-for="(aTarget,i) in record?.tags?.gbfTargets || []" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
                 <GbfIcon :identifier="aTarget.identifier" size="xs"/>
             </NuxtLink>

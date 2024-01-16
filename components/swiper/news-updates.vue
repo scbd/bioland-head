@@ -33,7 +33,11 @@ const props = defineProps({
                             arrows:     { type: Boolean, default: true },
                             leftArrow:  { type: Boolean, default: false },
                         });
-const { pagination, arrows, slides , leftArrow  } = toRefs(props);
+// const { pagination, arrows, slides , leftArrow  } = toRefs(props);
+
+const pagination = false;
+const arrows     = true;
+const leftArrow  = false;
 
 const { width: rowElWidth } = useWindowSize();
 
@@ -64,6 +68,8 @@ const spaceBetween = computed(()=> {
 const siteStore = useSiteStore();
 const query     = { ...siteStore.params };
 
-const { data } = await useFetch(`/api/list/latest`, {  method: 'GET', query });
+const { data:slides } = await useFetch(`/api/list/latest`, {  method: 'GET', query });
+
+consola.error(slides.value)
 </script>
 

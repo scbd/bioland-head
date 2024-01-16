@@ -28,9 +28,10 @@ const { count } = toRefs(props);
 const viewport   = useViewport();
 const route      = useRoute();
 const localePath = useLocalePath();
-// const pageStore  = usePageStore();
+const pageStore  = usePageStore();
+const contentTypeId = computed(()=> pageStore?.fieldTypePlacement?.drupal_internal__tid);
 const menusStore = useMenusStore();
-const inMenu     = ref(menusStore.isInMainMenu(route.path) || menusStore.isInMainMenu(parentPath()));
+const inMenu     = ref(menusStore.isInMainMenu(route.path) || menusStore.isInMainMenu(parentPath()) || menusStore.isInMainMenuByContentTypeId(contentTypeId.value));
 const eventBus   = useEventBus();
 const crumbs     = computed(()=> inMenu?.value? inMenu.value?.crumbs : []);
 const isMobile   = computed(()=> ['md','sm','xs'].includes(viewport.breakpoint.value));
@@ -42,6 +43,7 @@ function openMenu({ href, index }){
 
     eventBus.emit('openMenu', index);
 }
+
 
 function parentPath(){
     return route.path.split('/').slice(0, -1).join('/');

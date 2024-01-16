@@ -43,4 +43,8 @@ export const getLanguage = (locale) => {
     });
 }
 
+export function mapDrupalLocaleToLocale({ drupalInternalId }){
+    if(drupalInternalId === 'zh-hans') return 'zh'
 
+    return drupalInternalId
+}

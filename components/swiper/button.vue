@@ -1,6 +1,6 @@
 <template>
 
-    <div  @click="direction === 'right'? sw.slidePrev() : sw.slideNext()"  :class="{ left: direction === 'left', right: direction !== 'left' }" class="arrow-container d-flex align-items-center">
+    <div  @click="direction != 'right'? sw.slidePrev() : sw.slideNext()"  :class="{ left: direction === 'left', right: direction !== 'left' }" class="arrow-container d-flex align-items-center">
         <Icon v-if="!(!sw.activeIndex && direction==='left')"  :name="`arrow-${direction}`" class="arrow" />
         &nbsp;
     </div>

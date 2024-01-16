@@ -4,11 +4,12 @@
             <div class="row">
                 <div class="col-8 col-sm-4 d-flex align-items-center">
                     <NuxtLink class="navbar-brand" to="https://www.cbd.int" external target="_blank">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</NuxtLink>
+                    
                 </div>
                 <div class="col-4 col-sm-8 d-flex justify-content-end">
                     <ul class="nav" >
                         <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
-                            <NuxtLink class="nav-link" active-class="lang-active" :to="switchLocalePath(aMenu.code)">{{aMenu.nativeName}}</NuxtLink>
+                            <NuxtLink class="nav-link" active-class="lang-active" :to="pageStore.aliases[aMenu.code]">{{aMenu.nativeName}}</NuxtLink>
                         </li>
 
                         <li v-if="otherMenus.length" @click.stop.prevent="toggle" class="nav-item dropdown d-block " v-click-outside="close">
@@ -16,8 +17,8 @@
 
                             <div ref="dropDownEl" class="dropdown-menu" aria-labelledby="navbarDropdown">
 
-                                <NuxtLink v-for="(aMenu,index) in otherMenus" :key="index" class="dropdown-item" :to="switchLocalePath(aMenu.code)">{{aMenu.nativeName}}</NuxtLink>
-
+                                <NuxtLink v-for="(aMenu,index) in otherMenus" :key="index" class="dropdown-item" :to="pageStore.aliases[aMenu.code]">{{aMenu.nativeName}}</NuxtLink>
+                                
                             </div>
                         </li>
                     </ul>
@@ -32,7 +33,7 @@
 <script>
     import { useI18n } from 'vue-i18n';
     import {  useMenusStore } from "~/stores/menus";
-
+    import {  usePageStore } from "~/stores/page";
     export default {
         name   : 'PageLanguageBar',
         methods: { toggle, close, reloadMenus},
@@ -41,8 +42,9 @@
 
     function setup() {
         const menuStore      = useMenusStore();
+        const pageStore       = usePageStore();
         const { t }           = useI18n();
-        const switchLocalePath = useSwitchLocalePath()
+
         const dropDownEl      = ref(undefined);
         const dropDownLinkEl  = ref(undefined);
         const limitedMenus    = ref([]);
@@ -53,7 +55,7 @@
 
         const { languages: menus } = storeToRefs(menuStore);
 
-        const pagePath = useState('pagePath');
+
 
         limitedMenus.value = menus.value && Array.isArray(menus.value)? menus.value.slice(0, limit.value) : [];
         
@@ -61,7 +63,7 @@
             otherMenus.value = menus.value.slice(limit.value);
         
 
-        return { t, pagePath, menus, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl, viewport, switchLocalePath }
+        return { t, pageStore , menus, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl, viewport }
     }
 
     function mounted(){

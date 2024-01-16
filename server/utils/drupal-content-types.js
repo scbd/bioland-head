@@ -44,7 +44,7 @@ function makeTypeMap(data, ctx){
                 item.dataMap[country].push(doc)
             }
         }
-        map[item.slug] = item
+        map[item.slug.slice(1)] = item
     }
     
     // for(const country of countries){
@@ -117,7 +117,7 @@ async function getAllContentTypeMenus(ctx){
 }
 
 async function getTerms ({ localizedHost, host }) {
-    const uri           = `${host}/jsonapi/taxonomy_term/tags?jsonapi_include=1`;
+    const uri           = `${localizedHost}/jsonapi/taxonomy_term/tags?jsonapi_include=1`;
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
@@ -125,7 +125,7 @@ async function getTerms ({ localizedHost, host }) {
 
 
     return data.filter(({ status })=> status)
-                .map(({ drupal_internal__tid:drupalInternalId, name })=> ({ drupalInternalId, name, slug: paramCase(name) }))
+                .map(({ drupal_internal__tid:drupalInternalId, name, uuid, path })=> ({ drupalInternalId, name, slug: path?.alias, uuid }))
 };
 
 

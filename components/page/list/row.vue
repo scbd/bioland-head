@@ -1,6 +1,5 @@
 <template>
     <div  @click="goTo(href)" class="card p-1 mb-3" >
-
         <div  class="row g-0">
             <Icon v-if="aLine.sticky" name="pushpin" class="position-absolute start-50 icon"/>
             <div :class="{'col-9': aLine.mediaImage, 'col-12': !aLine.mediaImage }">
@@ -46,6 +45,7 @@
     const   type                        = route?.params?.type;
     const   drupalInternalIds           = route?.path?.includes('/media/photos-and-videos')? ['image', 'remote_video'] : undefined
     const { contentTypes, mediaTypes }  = useMenusStore();
+ 
     const { t, locale  } = useI18n();
     const   props     = defineProps({ 
                                         aLine: { type: Object  },
@@ -61,7 +61,8 @@
 
 
     const  href  = computed(()=> {
-        const uri = aLine.value?.path?.alias || aLine.value?.url;
+        // consola.info('aLine', aLine.value)
+        const uri = aLine.value?.href//aLine.value?.path?.alias || aLine.value?.url;
 
         if(uri.startsWith('https')) return uri;
 

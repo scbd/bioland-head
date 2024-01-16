@@ -118,6 +118,7 @@ export const normalizeIndexKeys = (obj) => {
 export const useScbdIndex = async (ctx) => {
     const uri = 'https://api.cbd.int/api/v2013/index/select';
 
+    //return  JSON.parse(getAllQuery(ctx))
     const { response, facet_counts: facetCounts } = await $fetch(uri,  { method:'post', body: getAllQuery(ctx), headers: {'Content-Type': 'application/json'}});
 
     response.data  = response.docs.map(normalizeIndexKeys)//.filter(({ title, summary })=> (title && summary));
@@ -161,10 +162,7 @@ const start        = page <=1? 0 : ((page -1) * rows);
 
 const q            = getQ(ctx);
 
-// console.log('----------------', schemas)
-// console.log('----------------', schemaQuery)
-// console.log('----------------', realmText)
-// console.log('----------------', `start: ${start} rows: ${rows} page: ${page}`)
+
     const query = {
         
             df: `text_${indexLocal}_txt`,
@@ -177,7 +175,7 @@ const q            = getQ(ctx);
                 //"realm_ss:abs OR realm_ss:chm OR realm_ss:bch"
             ],
             q,
-            "sort": "updatedDate_dt desc",
+            "sort": "startDate_dt desc, updatedDate_dt desc",
             "fl": "id, realm_ss, updatedDate_dt, createdDate_dt, identifier_s, uniqueIdentifier_s, url_ss, government_s, schema_s, government_EN_s, schemaSort_i, sort1_i, sort2_i, sort3_i, sort4_i, _revision_i,government_EN_s, title_EN_s, summary_s, type_EN_s, meta1_EN_txt, meta2_EN_txt, meta3_EN_txt,meta4_EN_txt,meta5_EN_txt,symbol_s,startDate_dt,endDate_dt,eventCountry_CEN_s,eventCity_s",
             "wt": "json",
             start, rows,
@@ -204,6 +202,9 @@ function getQ({ freeText, from, to }){
     const toTime = !to? DateTime.now().toFormat('yyyy\-MM\-dd'): cleanTime(to);
 
     q+= from? ` AND (updatedDate_dt:[${cleanTime(from)}T00:00:00.000Z TO ${toTime}T23:59:59.999Z])`: '';
+
+    if(q.startsWith(' AND '))
+        q = q.substring(5);
 
     return q? q: "''";
 }

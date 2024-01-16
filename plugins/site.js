@@ -52,7 +52,9 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
         if(to.path.startsWith('/zh-hans')) 
             return navigateTo(to.path.replace('/zh-hans', '/zh'));
-        
+        if(to.path.endsWith('node/18'))
+            return navigateTo(to.path.replace('/node/18', '/'));
+
         const isNewLocale = isLocaleChange(to, from) && !!pStore.drupalInternalNid;
 
         
@@ -60,6 +62,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         const path        = isNewLocale? `${localePath}/node/${pStore.drupalInternalNid}` : to.path;
 
         context.value.path = path;
+
 
         const pData = (await getPage(path)).value;
 

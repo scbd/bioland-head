@@ -88,9 +88,10 @@
     }
 
     function getContentTypeData(country){
-        const contentType = getContentType();
+        const contentTypeName = getContentType();
+
         const children    = unref(passedMenu)?.children || [];
-        const data        = menuStore?.contentTypes[contentType]?.dataMap[country] || [];
+        const data        = menuStore.getContentType(contentTypeName,country) || [];
         const menuPaths   = unref(passedMenu)?.children?.map(aMenu => aMenu.href) || [];
 
         const returnData  = [...children, ...data.filter(aMenu => !menuPaths.includes(aMenu.href))]
@@ -99,4 +100,7 @@
 
         return [...returnData, ...last].slice(0,6);
     }
+
+
+
 </script>

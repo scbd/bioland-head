@@ -23,4 +23,6 @@
 // const typeId = drupalTypes[type]?.drupalInternalId? '/'+drupalTypes[type]?.drupalInternalId : '';
 
     const { data } =  await useFetch(`/api/list/latest`, {  method: 'GET', query });
+
+    //const data = computed(()=>d.value[d.value.length-1])
 </script>

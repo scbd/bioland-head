@@ -25,7 +25,9 @@ const initState = {
         id                         : undefined,
         links                      : undefined,
         drupalInternalNid          : undefined,
+        drupalInternalTid         : undefined,
         drupalInternalVid          : undefined,
+        drupalInternalRevisionId: undefined,
         langcode                   : undefined,
         revisionTimestamp          : undefined,
         revisionLog                : undefined,
@@ -74,6 +76,13 @@ const initState = {
         fieldTitle: undefined,
         fieldUrl: undefined,
         fieldPublished: undefined,
+        description: undefined,
+        weight: undefined,
+        contentTranslationCreated: undefined,
+        vid: undefined,
+        parent: undefined,
+        contentTranslationUid: undefined,
+        aliases: undefined,
 }
 
 function state(){ return initState }

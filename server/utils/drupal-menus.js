@@ -183,9 +183,22 @@ function splitClasses(menus){
         if(Array.isArray(aMenu['machine-name']))    aMenu.machineName = aMenu['machine-name'][0];
         if(Array.isArray(aMenu.target))          aMenu.target = aMenu.target[0];
         delete(aMenu['machine-name']) ;
-        
+        addContentTypeId(aMenu);
     }
     return menus;
+}
+
+const typeMapIds = { news:2, event:3, 'learning-resource':4, project:5, 'basic-page':6, 'government-ministry-or-institute':8, ecosystem:9, 'protected-area':10, 'biodiversity-data':11, document:12, 'related-website':13, other:15, 'image-or-video':16 };
+
+function addContentTypeId(aMenu){
+    const contentType = aMenu?.class?.find((c)=> c.startsWith('bl2-content-type-'))
+    if(!contentType) return aMenu;
+
+    const contentTypeName = contentType.replace('bl2-content-type-', '');
+
+    aMenu.contentTypeId = typeMapIds[contentTypeName];
+
+    return aMenu;
 }
 
 function embedChildren(menus, menusClone){

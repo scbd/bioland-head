@@ -5,7 +5,7 @@
                 &nbsp;
             </div>
             <div class="col-12 col-md-9 px-0">
-                <PageBreadCrumbs :count="results.count"/>
+                <PageBreadCrumbs :count="results?.count"/>
             </div>
             <div class="col-12 col-md-3 ps-0" >
                 <h2 v-if="type && !title" class="page-type text-capitalize">{{t(type,2)}}</h2>
@@ -16,23 +16,23 @@
             <ClientOnly>
                 <div name="list" tag="div" class="col-12 col-md-9 data-body">
                     <PageListTabs v-model="type" :types="types" :key="JSON.stringify(types)"/>
-                    <PageListPager v-if="showTopPager" :count="results.count" :key="`showTopPage${showTopPager}${results.count}`"/>
+                    <PageListPager v-if="showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results.count}`"/>
                     <transition-group name="list">
-                        <PageListRow  :a-line="aLine" v-for="(aLine,index) in results.data" :key="index" />
-                        <span :key="`showTopPage${showTopPager}${results.count}-span`">&nbsp;</span>
+                        <PageListRow  :a-line="aLine" v-for="(aLine,index) in results?.data" :key="index" />
+                        <span :key="`showTopPage${showTopPager}${results?.count}-span`">&nbsp;</span>
                     </transition-group>
                 </div>
                 <template #fallback>
                     <div name="list" tag="div" class="col-12 col-md-9 data-body">
                         <PageListTabs v-model="type" :types="types" :key="JSON.stringify(types)"/>
-                        <PageListPager v-if="showTopPager" :count="results.count" />
-                        <PageListRow  :a-line="aLine" v-for="(aLine,index) in results.data" :key="index" />
+                        <PageListPager v-if="showTopPager" :count="results?.count" />
+                        <PageListRow  :a-line="aLine" v-for="(aLine,index) in results?.data" :key="index" />
                     </div>
                 </template>
             </ClientOnly>
 
             <div class="col-12 col-md-9 offset-md-3 ">
-                <PageListPager :count="results.count"/>
+                <PageListPager :count="results?.count"/>
             </div>
         </div>
     </div>
@@ -80,7 +80,8 @@
         });
 
     function getApiUri(){
-
+// consola.error('type.value',type.value)
+// consola.error('typeId.value',typeId.value)
         if(typeId.value || type.value === 'content')
             return `/api/list/content${typeId.value}`;
 

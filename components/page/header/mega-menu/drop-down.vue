@@ -151,7 +151,7 @@
             let contentTypesHasDocuments = false;
 
             for (const aType of getContentTypes(menu)) {
-                const hasRecords = menuStore?.contentTypes[aType]?.data?.length;
+                const hasRecords = menuStore?.getContentType(aType)?.data?.length;
 
                 if(hasRecords) contentTypesHasDocuments = true;
             }
