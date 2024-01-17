@@ -1,4 +1,8 @@
 <template>
+    <div class="col-12 mt-3">
+        <h3 >{{t('Latest News and Updates')}}</h3>
+        <NuxtLink to="/news" class="text-decoration-underline text-primary float-end text-bold fs-5">{{t('View more news and updates')}} <Icon  name="arrow-right" class="arrow" /></NuxtLink>
+    </div>
     <div  class="position-relative mt-3" >
 
             <swiper
@@ -21,12 +25,14 @@
     </div>
     <!-- <pre>{{data}}</pre> -->
 </template>
+<i18n src="@/i18n/dist/components/swiper/news-updates.json"></i18n>
 <script setup>
-import { useSiteStore } from '~/stores/site';
-import { Pagination  } from 'swiper/modules';
+import { useSiteStore }  from '~/stores/site';
+import { Pagination  }   from 'swiper/modules';
 import { useWindowSize } from '@vueuse/core';
 import 'swiper/css';
 
+const { t } = useI18n();
 const props = defineProps({ 
                             slides: { type: Array},
                             pagination: { type: Boolean, default: true },
@@ -72,4 +78,12 @@ const { data:slides } = await useFetch(`/api/list/latest`, {  method: 'GET', que
 
 
 </script>
+<style lang="scss" scoped>
+.arrow{
+    fill:var(--bs-blue);
+    transition: 0.3s;
+    width       : 1em;
+    height      : 1em;
+}
+</style>
 

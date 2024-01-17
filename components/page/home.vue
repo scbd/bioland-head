@@ -5,6 +5,9 @@
             <div class="col-12 pe-0 me-0" >
                 <SwiperNewsUpdates  :slides="slides" :arrows="true" :pagination="false" :leftArrow="false"/>
             </div>
+            <div class="col-3">
+                <WidgetImplementations/>
+            </div>
             <div class="col-12">
 <!-- <pre>{{slides}}</pre> -->
             </div>
