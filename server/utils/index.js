@@ -1,12 +1,25 @@
 
 import isString from 'lodash.isstring'
 import c from 'consola';
+import crypto from 'crypto';
 
 export const consola = c;
 export const unLocales = ['en', 'ar', 'es', 'fr', 'ru', 'zh'];
 
 export const absMegaMenuSchemas = [ 'measure', 'absProcedure', 'absNationalModelContractualClause', 'absPermit', 'database', 'absCheckpoint']
 export const bchMegaMenuSchemas = [ 'biosafetyLaw', 'biosafetyDecision', 'nationalRiskAssessment', 'database', 'nationalReport', 'biosafetyExpert']
+
+export const getKey =  (event) => {
+    const { context } = parseCookies(event)
+    const query       = getQuery(event)
+    const { pathname } = new URL(getRequestURL(event))
+    const locale = query.locale || context.locale || 'und'
+    const host   = query.host || context.host 
+    const makeHash = (x) => crypto.createHash('sha1').update(x).digest('hex')
+    const hashData = `${host}-${locale}-${pathname}` + JSON.stringify({...context, ...query});
+
+    return `${host}-${locale}-${pathname}-${makeHash(hashData)}`
+}
 
 export const parseQuery = (event) => {
     const { country, identifier, locale, defaultLocale, countries: countriesArray } = getQuery(event);

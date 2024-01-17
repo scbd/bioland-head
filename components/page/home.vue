@@ -28,7 +28,7 @@ const drupalInternalIds = [2,3]
 
 // const query = {drupalInternalIds, freeText}
 const query  = { drupalInternalIds, ...siteStore.params };
-consola.warn(query)
+
 const { data } = await useFetch(`/api/list/content`, {  method: 'GET', query });
 
 const slides = computed(()=>data.value.data)

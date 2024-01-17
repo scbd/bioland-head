@@ -1,22 +1,22 @@
 <template>
     <div class="card " >
         <div :style="backgroundStyles" class="cit bg-light">
-            <NuxtLink :to="linkTo" style="color:black;"><div style="width:100%;height:200px;"></div></NuxtLink> 
+            <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
         </div>
 
         <div class="card-body">
             <h6 class="card-subtitle text-muted mb-2">{{type}}</h6>
             <h5 class="card-title  mb-3">
-                <NuxtLink :to="linkTo" style="color:black;">{{record.title}}</NuxtLink>
+                <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''">{{record.title}}</NuxtLink>
             </h5>
-            <p>&nbsp;</p>
             <p class="card-text">{{trunc(record.summary)}}</p>
 
         </div>
         <div class="card-footer">
             <h6 class="card-subtitle text-muted text-small mb-2">{{dateFormat(record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate)}}</h6>
 
-            <span> {{record.eventCity}}</span>
+            <span v-if="record?.eventCity" class="badge bg-primary me-1"> {{record.eventCity}}</span>
+            <span v-if="record?.eventCountry" class="badge bg-secondary"> {{record.eventCountry}}</span>
             <NuxtLink  v-for="(aTarget,i) in record?.tags?.gbfTargets || []" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
                 <GbfIcon :identifier="aTarget.identifier" size="xs"/>
             </NuxtLink>
@@ -27,7 +27,7 @@
         </div>
     </div>
 </template>
-<i18n src="@/i18n/dist/components/cards/media/index.json"></i18n>
+<i18n src="@/i18n/dist/components/cards/index.json"></i18n>
 <script setup>
     import { getGbfUrl    } from '~/util'        ;
     import { useSiteStore } from '~/stores/site' ;
@@ -42,10 +42,24 @@
 
     const tags = computed(()=> record?.value?.tags);
 
-const type = computed(()=> record?.value?.fieldTypePlacement?.length? record?.value?.fieldTypePlacement[0]?.name : null);
+    const external = computed(()=> !!record?.value?.realms);
+    const type = computed(()=> { 
+        if(record?.value?.fieldTypePlacement?.name) 
+            return  record?.value?.fieldTypePlacement?.name;
+
+        if(record?.value?.realms?.length)
+            return t('from the secretariat');
+    });
+
     const imageSrc = computed(()=> siteStore.host + record.value.fieldMediaImage?.uri?.url) //siteStore.host + fieldMediaImage?.value?.uri?.url
     const imageAlt = computed(()=> record?.value?.fieldMediaImage?.meta?.alt)
-    const linkTo  = computed(()=> record?.value?.path?.alias)
+    const goTo = computed(()=> {
+        if(external.value) return record.value.href;
+
+        const localePath = useLocalePath();
+
+        return localePath(record.value.href)
+    })
 
     function dateFormat(date){
         return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
