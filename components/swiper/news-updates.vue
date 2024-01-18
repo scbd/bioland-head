@@ -77,7 +77,7 @@ const query     = { ...siteStore.params };
 
 const { data:slides } = await useFetch(`/api/list/latest`, {  method: 'GET', query });
 
-consola.error(slides.value)
+
 </script>
 <style lang="scss" scoped>
 .arrow{

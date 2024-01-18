@@ -1,18 +1,19 @@
 <template>
+   
     <div class="text-capitalize mt-4">
         <h3>{{t(name)}}</h3>
-        <NuxtLink  :to="'/search'">
-            search
-        </NuxtLink>
+
 
     </div>
+    <!-- <LazyCards :record="record" /> -->
     <div class="card " >
-        <div :style="backgroundStyles" class="cit bg-light">
+        <h6 class="card-subtitle text-muted mb-2">{{type}}</h6>
+        <div :style="backgroundStyles" class=" bg-light">
             <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
         </div>
 
         <div class="card-body">
-            <h6 class="card-subtitle text-muted mb-2">{{type}}</h6>
+            
             <h5 class="card-title  mb-3">
                 <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''">{{record.title}}</NuxtLink>
             </h5>
@@ -32,6 +33,11 @@
                 <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
             </NuxtLink>
         </div>
+    </div>
+    <div v-for="(link,i) in links || []" :key="i" class="text-start my-3">
+        <NuxtLink :to="link.to" class="text-decoration-underline text-primary  text-bold fs-5">
+                {{t(link.name)}} <Icon  name="arrow-right" class="arrow" />
+        </NuxtLink>
     </div>
 </template>
 <i18n src="@/i18n/dist/components/cards/index.json"></i18n>
@@ -85,13 +91,13 @@
         const imgUri = record?.value?.mediaImage?.src || '/images/no-image.png'                   
         const imgSrc = img(imgUri, imgOptions)
 
-        return {'background':`url('${imgSrc}') no-repeat center fixed`,  'object-fit': 'contain' , 'background-size': '100% auto', 'background-size': '150%'}
+        return {'background':`url('${imgSrc}') no-repeat center`,  'background-size': 'cover'}
         })
 
 
 </script>
 <i18n src="@/i18n/dist/components/widgets/index.json"></i18n>
-<style lang="scss" scoped>
+<!-- <style lang="scss" scoped>
 .i-top{
     max-height: 250px;
     object-fit: cover;
@@ -116,4 +122,4 @@
         width: 90%;
     }
 }
-</style>
+</style> -->

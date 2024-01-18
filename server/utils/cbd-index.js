@@ -119,6 +119,8 @@ export const useScbdIndex = async (ctx) => {
     const uri = 'https://api.cbd.int/api/v2013/index/select';
 
     //return  JSON.parse(getAllQuery(ctx))
+    // console.log(getAllQuery(ctx))
+    // return JSON.parse(getAllQuery(ctx))
     const { response, facet_counts: facetCounts } = await $fetch(uri,  { method:'post', body: getAllQuery(ctx), headers: {'Content-Type': 'application/json'}});
 
     response.data  = response.docs.map(normalizeIndexKeys)//.filter(({ title, summary })=> (title && summary));
@@ -150,7 +152,7 @@ const hasCbdSchemas           = schemas?.length? schemas.some((s)=>cbdSchemas.in
 const cbdSchemaQueryText      = hasCbdSchemas? `(schema_s:(${cbdSchemas.filter(filterSchemas(schemas)).join(' ')}))` : '';
 const hasOtherSchemas         = schemas?.length? schemas.some((s)=>allSchemas.includes(s)): false;
 const hasBothSchemaQueryTypes = hasCbdSchemas && hasOtherSchemas;
-const otherSchemaQueryText    = hasOtherSchemas? `((schema_s:(${allSchemas.filter(filterSchemas(schemas)).join(' ')})) AND (countryRegions_ss:(${countryString}) OR countryRegions_REL_ss:(${countryString})))` : '';
+const otherSchemaQueryText    = hasOtherSchemas? `((schema_s:(${allSchemas.filter(filterSchemas(schemas)).join(' ')})) AND ((hostGovernments_ss:(${countryString})) OR (countryRegions_ss:(${countryString}) OR countryRegions_REL_ss:(${countryString}))))` : '';
 
 
 const schemaQuery  = schemas?.length?  `{!tag=government}${cbdSchemaQueryText}${hasBothSchemaQueryTypes? ' OR ': ''} ${otherSchemaQueryText}` : `{!tag=government}(schema_s:(${cbdSchemas.join(' ')})) OR ((schema_s:(${allSchemas.join(' ')})) AND (countryRegions_ss:(${countryString}) OR countryRegions_REL_ss:(${countryString})))`;

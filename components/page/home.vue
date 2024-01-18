@@ -2,14 +2,20 @@
 
     <div class="container">
         <div class="row">
-            <div class="col-12 pe-0 me-0" >
+            <div class="col-12 pe-0 me-0 mb-3" >
                 <SwiperNewsUpdates  :slides="slides" :arrows="true" :pagination="false" :leftArrow="false"/>
             </div>
-            <div class="col-3">
-                <WidgetImplementations/>
+            <div class="col-md-4 col-12 border-col">
+                <WidgetPanorama/>
+                <WidgetGbif/>
+                <WidgetELearning/>
             </div>
-            <div class="col-12">
-<!-- <pre>{{slides}}</pre> -->
+            <div class="col-md-4 col-12 border-col">
+                <WidgetImplementations/>
+                <WidgetTsc/>
+            </div>
+            <div class="col-md-4 col-12">
+                <WidgetForums/>
             </div>
         </div>
     </div>
@@ -36,3 +42,13 @@ const { data } = await useFetch(`/api/list/content`, {  method: 'GET', query });
 
 const slides = computed(()=>data.value.data)
 </script>
+<style>
+.border-col{
+    border-right: 1px solid rgba(0,0,0,0.3) !important;
+}
+@media (max-width: 991.98px) {
+    .border-col{
+        border-right: none !important;
+    }
+}
+</style>
