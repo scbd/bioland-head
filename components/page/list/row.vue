@@ -54,8 +54,8 @@
 
     const isChm         = computed(()=> aLine.value?.realms?.length);
     const isContentType = computed(()=>!!contentTypes[type]);
-    const isMediaType   = computed(()=> drupalInternalIds?.length || !!mediaTypes[type]);
-    const isDrupalType  = computed(()=> isContentType.value || isMediaType.value);
+    // const isMediaType   = computed(()=> drupalInternalIds?.length || !!mediaTypes[type]);
+    const isDrupalType  = computed(()=> isContentType.value );
     const isSingleType  = computed(()=> (isDrupalType.value && !route?.query?.drupalInternalIds?.length && !drupalInternalIds?.length));
     const drupalTypes   = { ...contentTypes, ...mediaTypes };
 
