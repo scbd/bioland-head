@@ -111,9 +111,10 @@ function getHost(ignoreLocale = false){
 
 function params(){
     const { identifier, config, locale, defaultLocale, host, localizedHost, redirect } = this;
-    const { country, countries } = config;
+    const { country:c, countries:cs } = config;
+    const countries = cs?.length? Array.from(new Set([c, ...cs])): undefined;
 
-    return { identifier, country, locale, defaultLocale, countries, redirect, host, localizedHost };
+    return { identifier, country:c, locale, defaultLocale, countries, redirect, host, localizedHost };
 }
 
 function countries(){
