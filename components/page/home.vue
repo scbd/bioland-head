@@ -2,7 +2,7 @@
 
     <div class="container">
         <div class="row">
-            <div class="col-12 pe-0 me-0 mb-3" >
+            <div class="col-12 pe-0 me-0 mb-4" >
                 <SwiperNewsUpdates  :slides="slides" :arrows="true" :pagination="false" :leftArrow="false"/>
             </div>
             <div class="col-md-4 col-12 border-col">
@@ -44,7 +44,7 @@ const slides = computed(()=>data.value.data)
 </script>
 <style>
 .border-col{
-    border-right: 1px solid rgba(0,0,0,0.3) !important;
+    border-right: 1px solid rgba(0,0,0,0.2) !important;
 }
 @media (max-width: 991.98px) {
     .border-col{
