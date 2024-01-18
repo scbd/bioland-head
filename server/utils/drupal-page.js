@@ -2,6 +2,8 @@ import   camelCaseKeys   from 'camelcase-keys';
 
 export async function getPageData(ctx){
     try{
+ 
+
         const { uuid,  type, bundle }    = await getPageIdentifiers(ctx);
         const { identifier, pathPreFix, localizedHost } = ctx;
         const   query  = getSearchParams(ctx, type, bundle);
@@ -64,7 +66,7 @@ async function getPageIdentifiers(ctx){
 
     const uri = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanToPath(path))}`;
 
-    // consola.log(uri)
+
     const data = await $fetch(uri, { mode: 'cors' })
     const { uuid, id, type, bundle } = data?.entity || {};
 
@@ -164,9 +166,9 @@ function cleanToPath(path){
 
     if(pathParts[1] === 'zh') pathParts[1] = 'zh-hans';
 
-    if(pathParts[1] === 'search') return '/search';
+    // if(pathParts[1] === 'search') return '/search';
     
-    if(pathParts[2] === 'search') return `/${pathParts[1]}/${pathParts[2]}`;
+    // if(pathParts[2] === 'search') return `/${pathParts[1]}/${pathParts[2]}`;
 
     return pathParts.join('/');
 }

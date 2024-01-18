@@ -1,7 +1,7 @@
 <template>
     <div class="col-12 mt-3">
         <h3 >{{t('Latest News and Updates')}}</h3>
-        <NuxtLink to="/news" class="text-decoration-underline text-primary float-end text-bold fs-5">{{t('View more news and updates')}} <Icon  name="arrow-right" class="arrow" /></NuxtLink>
+        <NuxtLink :to="localePath({path:'/news-and-updates', query:{ schemas:[2,3]}})" class="text-decoration-underline text-primary float-end text-bold fs-5">{{t('View more news and updates')}} <Icon  name="arrow-right" class="arrow" /></NuxtLink>
     </div>
     <div  class="position-relative mt-3" >
 
@@ -32,6 +32,7 @@ import { Pagination  }   from 'swiper/modules';
 import { useWindowSize } from '@vueuse/core';
 import 'swiper/css';
 
+const localePath = useLocalePath();
 const { t } = useI18n();
 const props = defineProps({ 
                             slides: { type: Array},
@@ -76,7 +77,7 @@ const query     = { ...siteStore.params };
 
 const { data:slides } = await useFetch(`/api/list/latest`, {  method: 'GET', query });
 
-
+consola.error(slides.value)
 </script>
 <style lang="scss" scoped>
 .arrow{

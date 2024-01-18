@@ -19,10 +19,5 @@ export default cachedEventHandler(async (event) => {
     
 },{
     maxAge: 1,
-    varies:['Cookie'],
-    getKey: (event) => {
-        const key = getRouterParam(event, 'key');
-        const path = getRouterParam(event, 'path');
-        return `${key}-${path}`;
-    }
+    getKey
 })

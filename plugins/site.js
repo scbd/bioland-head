@@ -50,10 +50,17 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
         const pStore      = usePageStore(nuxtApp.$pinia);
 
+
         if(to.path.startsWith('/zh-hans')) 
-            return navigateTo(to.path.replace('/zh-hans', '/zh'));
+            return navigateTo({ path: to.path.replace('/zh-hans', '/zh'), query: to.query });
         if(to.path.endsWith('node/18'))
-            return navigateTo(to.path.replace('/node/18', '/'));
+            return navigateTo({ path: to.path.replace('/node/18', '/'), query: to.query });
+        if(to.path.endsWith('node/25'))
+            return navigateTo({ path: to.path.replace('/node/25', '/search'), query: to.query });
+        if(to.path.endsWith('node/87'))
+            return navigateTo({ path: to.path.replace('/node/87', '/search/secretariat'), query: to.query });
+        if(to.path.endsWith('node/88'))
+            return navigateTo({ path: to.path.replace('/node/88', '/news-and-updates'), query: to.query });
 
         const isNewLocale = isLocaleChange(to, from) && !!pStore.drupalInternalNid;
 

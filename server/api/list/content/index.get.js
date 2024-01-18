@@ -2,8 +2,11 @@
 
 export default cachedEventHandler(async (event) => {
     try{
-        const query            = getQuery      (event);
-        const ctx              = getContext    (event);
+        const query             = getQuery      (event);
+        const ctx               = getContext    (event);
+
+        if(query?.schemas?.length && !query?.drupalInternalIds?.length)
+            query.drupalInternalIds = query.schemas
 
         return useContentTypeList({ ...ctx, ...query });
     }
@@ -16,6 +19,6 @@ export default cachedEventHandler(async (event) => {
     }
     
 },{
-    maxAge: 1,
+    maxAge: 60,
     getKey
 })

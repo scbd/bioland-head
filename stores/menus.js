@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 
 
-const actions = { isInMainMenuByContentTypeId,getContentType,getContentTypeById,set, loadAllMenus, isInMainMenu, isInFooterMenu, isInFooterCreditsMenu }
+const actions = { isContentTypeId, isInMainMenuByContentTypeId,getContentType,getContentTypeById,set, loadAllMenus, isInMainMenu, isInFooterMenu, isInFooterCreditsMenu }
 
 export const useMenusStore = defineStore('menus', { state, actions,  persist: true, })
 
@@ -97,6 +97,10 @@ function getContentType(name,country){
 
 function getContentTypeById(id){
     return Object.values(this.contentTypes).find((ct)=> ct.drupalInternalId === id);
+}
+
+function isContentTypeId(id){
+    return (Object.values(this.contentTypes).map((ct)=> ct.drupalInternalId)).includes(Number(id));
 }
 
 function isInMainMenuByContentTypeId(id){

@@ -4,12 +4,11 @@
             <div class="row">
                 <div class="col-8 col-sm-4 d-flex align-items-center">
                     <NuxtLink class="navbar-brand" to="https://www.cbd.int" external target="_blank">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</NuxtLink>
-                    
                 </div>
                 <div class="col-4 col-sm-8 d-flex justify-content-end">
                     <ul class="nav" >
                         <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
-                            <NuxtLink class="nav-link" active-class="lang-active" :to="pageStore.aliases[aMenu.code]">{{aMenu.nativeName}}</NuxtLink>
+                            <NuxtLink class="nav-link" active-class="lang-active" :to="{path: pageStore.aliases[aMenu.code], query}">{{aMenu.nativeName}}</NuxtLink>
                         </li>
 
                         <li v-if="otherMenus.length" @click.stop.prevent="toggle" class="nav-item dropdown d-block " v-click-outside="close">
@@ -41,6 +40,7 @@
     }
 
     function setup() {
+        const route           = useRoute();
         const menuStore      = useMenusStore();
         const pageStore       = usePageStore();
         const { t }           = useI18n();
@@ -51,7 +51,7 @@
         const otherMenus      = ref([]);
         const viewport        = useViewport();
         const limit           = 6;
-
+        const query = computed(()=> route.query);
 
         const { languages: menus } = storeToRefs(menuStore);
 
@@ -63,7 +63,7 @@
             otherMenus.value = menus.value.slice(limit.value);
         
 
-        return { t, pageStore , menus, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl, viewport }
+        return { t,query, pageStore , menus, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl, viewport }
     }
 
     function mounted(){
