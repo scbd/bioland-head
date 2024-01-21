@@ -1,3 +1,15 @@
 {
-    "implementations":"implementations"
+    "implementation":"implementation",
+    "Browse TSC Opportunities": "Browse TSC Opportunities",
+    "Browse TSC Assistance and Providers":"Browse TSC Assistance and Providers",
+    "Request TSC Assistance":"Request TSC Assistance",
+    "Provide TSC Assistance":"Provide TSC Assistance",
+    "Provide TSC Opportunity":"Provide TSC Opportunity",
+    "View National Reports":"View National Reports",
+    "View Laws & Regulations":"View Laws & Regulations",
+    "View NBSAP(s)":"View NBSAP(s)",
+    "View Projects":"View Projects",
+    "View Documents":"View Documents",
+    "Browse Courses":"Browse Courses"
+
 }

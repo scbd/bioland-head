@@ -26,7 +26,7 @@
     const links = [
         { name: 'View National Reports',    to: { path:localePath('/search/secretariat'), query:{ schemas:['cpbNationalReport2','cpbNationalReport3','cpbNationalReport4','absNationalReport','nationalReport','nationalReport6']}} },
         { name: 'View Laws & Regulations',  to: { path:localePath('/search/secretariat'), query:{ schemas:['measure','absProcedure','biosafetyLaw', 'biosafetyDecision']}} },
-        { name: 'View NBSAP',  to: { path:localePath('/search/secretariat'),query:{ schemas:['nationalReport'], freeText:'nbsap'}}},
+        { name: 'View NBSAP(s)',  to: { path:localePath('/search/secretariat'),query:{ schemas:['nationalReport'], freeText:'nbsap'}}},
         { name: 'View Projects',  to: { path:localePath('/search'),query:{ schemas:[5,5]}}},
         { name: 'View Documents',  to: { path:localePath('/search'),query:{ schemas:[12,12]}}},
     ];

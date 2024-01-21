@@ -73,14 +73,17 @@
     const rowsPerPage   = computed(() => r?.query?.rowsPerPage? r?.query?.rowsPerPage : 10);
     const query         = { ...r.query, ...siteStore.params, freeText, page, rowsPerPage, schemas };
     const typeId        = computed(getContentTypeId);
-const contentTypeName = computed(getContentTypeName)
+    const contentTypeName = computed(getContentTypeName)
 
 
     const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query });
 
+    // function onResponse({ request, response, options}){
+    //     consola.error('onResponse response._data',response._data)
+    // }
 
     onMounted(() => { eventBus.on('changePage', refresh); });
-
+ 
     function getContentTypeId(){
         const contentType = r?.params?.contentType;
 

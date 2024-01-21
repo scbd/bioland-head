@@ -11,7 +11,7 @@
                 <WidgetELearning/>
             </div>
             <div class="col-md-4 col-12 border-col">
-                <WidgetImplementations/>
+                <WidgetImplementation/>
                 <WidgetTsc/>
             </div>
             <div class="col-md-4 col-12">

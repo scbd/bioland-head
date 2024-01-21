@@ -8,7 +8,7 @@ export const useAllContent = async (ctx) => {
 
 export const useContentTypeList = async (ctx) => {
 
-    return  getList(ctx)//makeTypeMap(await getAllContentTypeMenus(ctx))
+    return  getList(ctx);
 }
 
 function mapData(ctx){
@@ -18,10 +18,8 @@ function mapData(ctx){
 
         const promises = [];
 
-        for (const aDoc of results.data){
+        for (const aDoc of results.data)
             promises.push(getThesaurusByKey(aDoc.field_tags || aDoc.fieldTags).then((p)=>{aDoc.tags =mapTagsByType(p) ;}));
-
-        }
 
         await Promise.all(promises);
 
@@ -36,9 +34,14 @@ function mapData(ctx){
             const index      = page > 1? (page-1)*perPage + Number(key) : Number(key);
             const localePath = ctx.locale === ctx.defaultLocale? '' : `/${ctx.locale}`;
             const hasAlias   = path?.alias && path.langcode === ctx.locale;
-            const href       = hasAlias? path?.alias : `/node/${dnid}`;
-            // consola.info(`${page} ${perPage} ${key}n ${index}`)
-            results.data[key] = camelCaseKeys({dnid, href, type, mediaImage, title, tags, path, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary, index }, {deep: true}  )
+            const href       = hasAlias? path?.alias : `${localePath}/node/${dnid}`;
+
+            results.data[key] = camelCaseKeys({dnid, href, type, mediaImage, title, tags, path, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary, index }, {deep: true}  );
+
+            if(tags?.subjects)
+                for (const subject of tags.subjects) 
+                    if(subject?.title[ctx.locale])
+                        subject.name=subject?.title[ctx.locale];
         }
 
         return results
