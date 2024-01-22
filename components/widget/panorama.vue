@@ -1,5 +1,5 @@
 <template>
-    <Widget v-if="record" name="Panorama Solutions" :record="record" :links="links"/>
+    <Widget v-if="record" :t="'solution'" name="Panorama Solutions" :record="record" :links="links"/>
 </template>
 <script setup>
 
