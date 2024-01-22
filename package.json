@@ -38,6 +38,7 @@
     "mitt": "^3.0.1",
     "nuxt-swiper": "1.2.2",
     "nuxt-viewport": "2.0.6",
+    "nuxt3-leaflet": "^1.0.12",
     "param-case": "4.0.0",
     "pascal-case": "4.0.0",
     "pinia": "2.1.7",

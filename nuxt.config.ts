@@ -52,7 +52,8 @@ export default defineNuxtConfig({
     '@nuxt/image',
     'nuxt-delay-hydration',
     'nuxt-purgecss',
-    'nuxt-swiper'
+    'nuxt-swiper',
+    'nuxt3-leaflet'
   ],
   viewport: {
     breakpoints: {
