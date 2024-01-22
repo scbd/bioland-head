@@ -24,7 +24,7 @@ export const getKey =  (event) => {
 export const parseQuery = (event) => {
     const { country, identifier, locale, defaultLocale, countries: countriesArray } = getQuery(event);
     
-    const countries      = countriesArray?.length? countriesArray : undefined;
+    const countries      = Array.isArray(countriesArray) && countriesArray?.length? countriesArray : [country];
 
     // const defaultLocale      =  !isPlainObject(defaultLocaleRaw)? JSON.parse(defaultLocaleRaw || {}).locale : defaultLocaleRaw.locale;
     const { baseHost, env }  = useRuntimeConfig().public;
@@ -51,7 +51,7 @@ export function parseContext (context) {
 
     const { country, localizedHost:lh, identifier, locale, defaultLocale, countries: countriesArray, redirect , path} = ctx;
     
-    const   countries       = countriesArray?.length? [country,...countriesArray] : [country];
+    const   countries       = Array.isArray(countriesArray) && countriesArray?.length? [country,...countriesArray] : [country];
     // const   defaultLocale   =  defaultLocale
     const { baseHost, env } = useRuntimeConfig().public;
     const   pathPreFix      = getPathPrefix(locale, defaultLocale)

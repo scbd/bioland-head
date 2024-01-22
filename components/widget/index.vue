@@ -33,9 +33,9 @@
                 <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
             </NuxtLink>
 
-            <span class="card-subtitle text-nowrap text-muted text-small mb-2">{{dateFormat(record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate)}}</span>
+            <span v-if="record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate" class="card-subtitle text-nowrap text-muted text-small mb-2">{{dateFormat(record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate)}}</span>
 
-            <span  v-if="tags?.subjects?.length" v-for="(subject,i) in tags.subjects" :key="i" class="badge bg-secondary me-1">{{subject.name}}</span>
+            <span  v-if="tags?.subjects?.length" v-for="(subject,i) in tags.subjects" :key="i" class="badge bg-primary me-1">{{subject.name}}</span>
 
         </div>
     </div>

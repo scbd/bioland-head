@@ -14,7 +14,7 @@ const uri = `https://api.cbd.int/api/v2013/index/select?${queryFields}&q=NOT+ver
    // const { data: record  }= 
     const { data: record  } = await useFetch('/api/list/tsc', {  method: 'GET', onResponse });
 
-consola.error(record)
+
     function onResponse({ request, response, options}){
        
         const data    = response._data;

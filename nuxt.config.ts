@@ -27,6 +27,7 @@ export default defineNuxtConfig({
     apiUser: process.env.API_USER,
     apiUserPass: process.env.API_USER_PASS,
     apiKey : process.env.API_KEY,
+    panoramaKey: process.env.PANORAMA_KEY,
     public: {
       locales,
       baseURL: '',
@@ -118,7 +119,7 @@ export default defineNuxtConfig({
     safelist: ['swiper'], // Add my-class token to the safelist (e.g. .my-class)
   },
   image: {
-    domains: ['https://seed.chm-cbd.net', 'https://www.cbd.int', 'https://seed.bl2.staging.cbd.int'],
+    domains: ['https://seed.chm-cbd.net', 'https://www.cbd.int', 'https://seed.bl2.staging.cbd.int','https://panorama.solutions/'],
     format: ['webp', 'avif', 'jpeg', 'jpg', 'png','gif'],
     quality: 70,
     screens: {
