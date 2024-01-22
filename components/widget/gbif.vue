@@ -1,53 +1,60 @@
 <template>
-    <div style="height:300px; width:100%;">
-      <LMap
-        ref="map"
-        :zoom="zoom"
-        :center="[47.21322, -1.559482]"
-      >
-        <LTileLayer
-          url="https://tile.gbif.org/3857/omt/{z}/{x}/{y}@2x.png?style=gbif-classic"
-
-          layer-type="base"
-          name="OpenStreetMap"
-        />
-        <LTileLayer
-          url="https://api.gbif.org/v2/map/occurrence/adhoc/{z}/{x}/{y}@2x.png?style=purpleYellow-noborder.poly&squareSize=16&country=LK&hasCoordinate=true&hasGeospatialIssue=false&advanced=false&srs=EPSG%3A3857"
-
-          layer-type="base"
-          name="OpenStreetMap"
-        />
-        <!-- <l-wms-tile-layer
-            :key="wmsLayer.name"
-          
-            :url="wmsLayer.url"
-            :layers="wmsLayer.layers"
-            :visible="wmsLayer.visible"
-            :name="wmsLayer.name"
-            :attribution="wmsLayer.attribution"
-            :transparent="true"
-            format="image/png32"
-            layer-type="base"
-            > 
-</l-wms-tile-layer>-->
-      </LMap>
+    <div class="text-capitalize mt-2">
+        <h4 class="bm-3">{{t('GBIF')}} </h4>
     </div>
+
+    <div style="height:300px; width:100%;">
+        <LMap
+            ref="map"
+            :zoom="zoom"
+            :center="config?.coordinates.reverse()"
+        >
+        <LTileLayer
+            url="https://tile.gbif.org/3857/omt/{z}/{x}/{y}@2x.png?style=gbif-classic"
+            layer-type="base"
+        />
+        <LTileLayer
+            :url="url"
+            layer-type="base"
+        />
+
+        </LMap>
+    </div>
+    <div class="d-flex justify-content-between text-primary mt-2 mb-3">
+        <div>
+            <h5 class="fs-3 mb-0 ">1,382,381</h5>
+            <NuxtLink class="text-decoration-underline" to="/">{{t('Occurrence')}}</NuxtLink>
+        </div>
+        <div>
+            <h5 class="fs-3 mb-0 ">1,382</h5>
+            <NuxtLink class="text-decoration-underline" to="/">{{t('Datasets')}}</NuxtLink>
+        </div>
+        <div>
+            <h5 class="fs-3 mb-0 ">334</h5>
+            <NuxtLink class="text-decoration-underline" to="/">{{t('Publishers')}}</NuxtLink>
+        </div>
+    </div>
+
   </template>
   
   <script setup>
   import cCenter from '~/util/country-center.js'
-   const wmsLayer = ref({
-    key: 'UN-Clear-Map',
-    name: 'UN Clear Map',
-    url: 'https://geoservices.un.org/arcgis/services/ClearMap_Dark/MapServer/WMSServer?request=GetCapabilities&service=WMS',
-    layers: '0',
-    visible: true,
-    attribution: 'UN Clear Map'
-   })
-//   const url = 'https://geoservices.un.org/arcgis/rest/services/ClearMap_Plain/MapServer?request=GetCapabilities&service=WMS'
-  const zoom = ref(1)
+  import { useSiteStore } from '~/stores/site' ;
+  const { t, locale } = useI18n();
 
-  consola.warn(cCenter)
+  const siteStore = useSiteStore();
+
+  const config = computed(getCountry)
+  const zoom = ref(config.value.zoomLevel)
+
+  const url = computed(()=> `https://api.gbif.org/v2/map/occurrence/adhoc/{z}/{x}/{y}@2x.png?style=classic-noborder.poly&bin=hex&country=${config.value.identifier}&hasCoordinate=true&hasGeospatialIssue=false&advanced=false&srs=EPSG%3A3857`)
+
+  function getCountry(){
+    const { countries } = siteStore.params;
+    const country = countries[[Math.floor(Math.random() * countries.length)]]
+
+    return cCenter.find(({ identifier })=> identifier === country.toUpperCase())
+  }
   </script>
   
   <style>
