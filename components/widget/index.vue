@@ -56,8 +56,8 @@
 
     const { trunc  } = useText();
     const siteStore = useSiteStore();
-    const   props       = defineProps({ name: { type: String } , record: { type: Object }, links: { type: Array } });
-    const { name, record, links, type:passedType    } = toRefs(props);
+    const   props       = defineProps({t: { type: String } , name: { type: String } , record: { type: Object }, links: { type: Array } });
+    const { name, record, links, t:passedType    } = toRefs(props);
 
     const { t, locale } = useI18n();
 
@@ -77,7 +77,7 @@
 
         if(record?.value?.schema)
             typeText += t(record?.value?.schema);
-        if(passedType) 
+        if(passedType.value) 
             typeText+= t(passedType.value)
         if(record?.value?.realms?.length)
             typeText += t(' from the secretariat');

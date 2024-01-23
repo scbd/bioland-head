@@ -23,15 +23,15 @@
     </div>
     <div class="d-flex justify-content-between text-primary mt-2 mb-3">
         <div>
-            <h5 class="fs-4 mb-1 ">1,382,381</h5>
+            <h5 class="fs-4 mb-1 ">{{data.occurrences}}</h5>
             <NuxtLink class="text-decoration-underline" :to="occurrencesLink" external target="_blank">{{t('Occurrence')}}</NuxtLink>
         </div>
         <div>
-            <h5 class="fs-4 mb-1 ">1,382</h5>
+            <h5 class="fs-4 mb-1 ">{{data.datasets}}</h5>
             <NuxtLink class="text-decoration-underline" :to="datasetsLink" external target="_blank">{{t('Datasets')}}</NuxtLink>
         </div>
         <div>
-            <h5 class="fs-4 mb-1 ">334</h5>
+            <h5 class="fs-4 mb-1 ">{{data.publishers}}</h5>
             <NuxtLink class="text-decoration-underline" :to="publishersLink" external target="_blank">{{t('Publishers')}}</NuxtLink>
         </div>
     </div>
@@ -91,6 +91,11 @@
 //   { name: 'Browse GBIF Publishers',  to: publishersLink.value },
   { name: 'View all GBIF Data',  to:'https://www.gbif.org/search' },
 ]
+
+const query  = {...siteStore.params };
+    const { data } =  await useFetch(`/api/list/gbif`, {  method: 'GET', query });
+
+    consola.error(data)
 //https://www.gbif.org/dataset/search?publishing_country=LK
 //https://www.gbif.org/publisher/search?country=LK
 //https://www.gbif.org/occurrence/search?country=LK
