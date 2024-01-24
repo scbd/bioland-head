@@ -1,3 +1,3 @@
 <template>
-    <div>Forums</div>
+    <h1>Comments under topics</h1>
 </template>

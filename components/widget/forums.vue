@@ -11,7 +11,6 @@
             <span v-for="(user,j) in forum?.users || []" :key="j" >
                 <Avatar :user="user" />
             </span>
-            
         </div>
         <div class="mt-1">
             <span class="badge bg-primary me-2">{{forum.forum.name}}</span>
@@ -19,25 +18,19 @@
             <span>{{forum.count}} {{t('Replies')}}</span>
         </div>
     </div>
-
-  </template>
+</template>
 <i18n src="@/i18n/dist/components/widget/index.json"></i18n>
-  <script setup>
+<script setup>
+    import { useSiteStore } from '~/stores/site' ;
+    const { t, locale } = useI18n();
 
-  import { useSiteStore } from '~/stores/site' ;
-  const { t, locale } = useI18n();
-
-  const siteStore = useSiteStore();
-
-
-
+    const siteStore = useSiteStore();
 
     const   query  = {...siteStore.params, rowsPerPage:5 };
     const { data } =  await useFetch(`/api/list/forums`, {  method: 'GET', query });
+</script>
 
-  </script>
-  
-  <style>
+<style>
 
 
-  </style>
+</style>
