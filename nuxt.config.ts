@@ -53,7 +53,8 @@ export default defineNuxtConfig({
     'nuxt-delay-hydration',
     'nuxt-purgecss',
     'nuxt-swiper',
-    'nuxt3-leaflet'
+    'nuxt3-leaflet',
+    'nuxt-gravatar'
   ],
   viewport: {
     breakpoints: {

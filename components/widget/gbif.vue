@@ -92,13 +92,9 @@
   { name: 'View all GBIF Data',  to:'https://www.gbif.org/search' },
 ]
 
-const query  = {...siteStore.params };
+    const   query  = {...siteStore.params };
     const { data } =  await useFetch(`/api/list/gbif`, {  method: 'GET', query });
 
-    consola.error(data)
-//https://www.gbif.org/dataset/search?publishing_country=LK
-//https://www.gbif.org/publisher/search?country=LK
-//https://www.gbif.org/occurrence/search?country=LK
   </script>
   
   <style>

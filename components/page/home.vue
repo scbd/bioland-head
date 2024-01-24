@@ -15,7 +15,7 @@
                 <WidgetTsc/>
             </div>
             <div class="col-md-4 col-12">
-                <!-- <WidgetForums/> -->
+                <WidgetForums/>
             </div>
         </div>
     </div>

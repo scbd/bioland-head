@@ -33,22 +33,24 @@
                 <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
             </NuxtLink>
 
-            <span v-if="record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate" class="card-subtitle text-nowrap text-muted text-small mb-2">{{dateFormat(record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate)}}</span>
-
             <span  v-if="tags?.subjects?.length" v-for="(subject,i) in tags.subjects" :key="i" class="badge bg-primary me-1">{{subject.name}}</span>
+
+            <span v-if="record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate" class="float-end card-subtitle text-nowrap text-muted text-small mt-1 mb-2">{{dateFormat(record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate)}}</span>
 
         </div>
     </div>
-    <div v-for="(link,i) in links || []" :key="i" class="text-start my-3 mb-5">
-        <NuxtLink :to="link.to" class="text-decoration-underline  text-primary  fw-bold fs-5" :external="external">
-                {{t(link.name)}}
-        </NuxtLink>
-        &nbsp;
-        <Icon  v-if="!external" name="arrow-right" class="arrow" />
-        <Icon  v-if="external" name="external-link" class="arrow" />
+    <div class="mb-5">
+        <div v-for="(link,i) in links || []" :key="i" class="text-start my-3 mb-3">
+            <NuxtLink :to="link.to" class="text-decoration-underline  text-primary  fw-bold fs-5" :external="external">
+                    {{t(link.name)}}
+            </NuxtLink>
+            &nbsp;
+            <Icon  v-if="!external" name="arrow-right" class="arrow" />
+            <Icon  v-if="external" name="external-link" class="arrow" />
+        </div>
     </div>
 </template>
-<i18n src="@/i18n/dist/components/cards/index.json"></i18n>
+<i18n src="@/i18n/dist/components/widget/index.json"></i18n>
 <script setup>
     import { getGbfUrl    } from '~/util'        ;
     import { useSiteStore } from '~/stores/site' ;
