@@ -10,11 +10,11 @@ export default cachedEventHandler(async (event) => {
         return  getPageData({...ctx, path})
     }
     catch(e){
-        console.error(e);
-        throw createError({
-            statusCode: 500,
-            statusMessage: 'Failed to get page data',
-        }); 
+
+        // throw createError({
+        //     statusCode: 500,
+        //     statusMessage: 'Failed to get page data',
+        // }); 
     }
     
 },{

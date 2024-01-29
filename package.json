@@ -31,6 +31,7 @@
     "click-outside-vue3": "4.0.1",
     "consola": "3.2.3",
     "lodash.clonedeep": "4.5.0",
+    "lodash.isinteger": "^4.0.4",
     "lodash.isplainobject": "4.0.6",
     "lodash.isstring": "4.0.1",
     "lodash.sample": "4.2.1",
@@ -46,6 +47,7 @@
     "pretty-bytes": "6.1.1",
     "string-strip-html": "^13.4.3",
     "superagent": "8.1.2",
+    "uuid": "^9.0.1",
     "vue3-popper": "1.5.0"
   }
 }

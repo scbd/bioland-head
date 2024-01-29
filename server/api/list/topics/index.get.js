@@ -6,13 +6,13 @@ export default cachedEventHandler(async (event) => {
         const ctx               = getContext    (event);
 
 
-        return useDrupalForumMenus({...ctx,...query});
+        return useDrupalTopicMenus({...ctx,...query});
     }
     catch(e){
         consola.error(e);
         throw createError({
             statusCode: 500,
-            statusMessage: `Failed to get list/content`,
+            statusMessage: `/api/list/topics: Failed to list forums`,
         }); 
     }
     

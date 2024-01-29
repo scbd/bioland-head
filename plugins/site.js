@@ -9,8 +9,6 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
     const pageStore = usePageStore(nuxtApp.$pinia);
 
-
-    // consola.warn('defineNuxtPlugin', process.client)
     nuxtApp.vueApp.use(vClickOutside);
 
     const siteStore = useSiteStore(nuxtApp.$pinia);
@@ -19,10 +17,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
     const { identifier, defaultLocale, config, siteName } = await siteStore.getInitialContext(nuxtApp.$i18n.locale);
 
-
     await siteStore.initialize(nuxtApp,{ identifier, defaultLocale, config, siteName });
-
-
 
     const context = useCookie('context');
 
@@ -61,16 +56,17 @@ export default defineNuxtPlugin(async (nuxtApp) => {
             return navigateTo({ path: to.path.replace('/node/87', '/search/secretariat'), query: to.query });
         if(to.path.endsWith('node/88'))
             return navigateTo({ path: to.path.replace('/node/88', '/news-and-updates'), query: to.query });
+        if(to.path.endsWith('node/90'))
+            return navigateTo({ path: to.path.replace('/node/90', '/forums'), query: to.query });
 
         const isNewLocale = isLocaleChange(to, from) && !!pStore.drupalInternalNid;
 
-        
         const localePath  = siteStore.locale === siteStore.defaultLocale? '' : `/${siteStore.locale}`;
         const path        = isNewLocale? `${localePath}/node/${pStore.drupalInternalNid}` : to.path;
 
         context.value.path = path;
 
-
+consola.warn('path', path)
         const pData = (await getPage(path)).value;
 
         pStore.initialize(pData)
@@ -79,7 +75,8 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     addRouteMiddleware('bioland-route-change',  async (to, from) => setAppStates(to, from), { global: true });
 
 
-    function getPage(path){
+    function getPage(passedPath){
+        const path = passedPath.endsWith('/topics')? passedPath.replace('/topics', '') : passedPath;
         const { drupalMultisiteIdentifier } = useRuntimeConfig().public;
         const { identifier,  locale } = siteStore;
 
@@ -93,7 +90,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 });
 
 function isLocaleChange({ name: to }, { name: from }){
-   
+
     const toLocale   = getLocaleFromRouteName(to);
     const fromLocale = getLocaleFromRouteName(from);
 

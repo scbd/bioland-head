@@ -1,13 +1,15 @@
 import   camelCaseKeys   from 'camelcase-keys';
 
+const localizationExceptionPaths = ['/forums/', '/topics/'];
+
 export async function getPageData(ctx){
     try{
  
-
-        const { uuid,  type, bundle }    = await getPageIdentifiers(ctx);
-        const { identifier, pathPreFix, localizedHost } = ctx;
-        const   query  = getSearchParams(ctx, type, bundle);
-        const   uri    = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
+        ctx.isLocalizationException   = hasLocalizationException(ctx);
+        const { uuid,  type, bundle } = await getPageIdentifiers(ctx);
+        const { localizedHost }       = ctx;
+        const   query                 = getSearchParams(ctx, type, bundle);
+        const   uri                   = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
 
         const { data } = await $fetch(uri, { query });
@@ -17,12 +19,18 @@ export async function getPageData(ctx){
         
         return  await mapData(ctx)(data)
     }catch(e){
-        console.error('server/utils/dupal-page -> getPageData', e);
+        console.warn('server/utils/dupal-page -> getPageData', e);
         return {}
     }
 
 }
 
+function hasLocalizationException({ path }){
+    for (const exceptionPath of localizationExceptionPaths)
+        if(path.includes(exceptionPath)) return true;
+
+    return false
+}
 async function addPageAliases(ctx,data){
     const isMedia = !!data.drupal_internal__mid 
     const isTax   = !!data.drupal_internal__tid

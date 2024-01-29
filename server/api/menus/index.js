@@ -21,7 +21,7 @@ export default cachedEventHandler(async (event) => {
 
             useContentTypeMenus(parseContext(context || query )),
 
-            useDrupalForumMenus(parseContext(context || query ))
+            useDrupalTopicMenus(parseContext(context || query ))
         ]);
 
 
@@ -29,21 +29,14 @@ export default cachedEventHandler(async (event) => {
         return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, forums }
     }
     catch(e){
-        // console.error('/api/menus--------------------------',e)
+        console.error('/api/menus--------------------------',e)
         throw createError({
             statusCode: 500,
-            statusMessage: 'Failed to  query the drupal menus',
+            statusMessage: '/api/menus/index: Failed to  query the drupal menus',
         }) 
     }
     
 },{
-    maxAge: 60*5,
-    getKey: (event) => {
-        const { context } = parseCookies(event)
-        const query       = getQuery(event)
-
-        const locale = query.locale || context.locale || 'und'
-        const host   = query.host || context.host 
-        return `${host}-${locale}`
-    }
+    maxAge: 1,
+    getKey
 })

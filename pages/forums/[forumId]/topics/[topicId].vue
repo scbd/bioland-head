@@ -1,3 +1,5 @@
 <template>
-    <h1>Comments under topics</h1>
+    <!-- <PageListTopics  /> -->
+
+    comments
 </template>

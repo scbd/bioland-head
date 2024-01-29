@@ -9,6 +9,10 @@ export const unLocales = ['en', 'ar', 'es', 'fr', 'ru', 'zh'];
 export const absMegaMenuSchemas = [ 'measure', 'absProcedure', 'absNationalModelContractualClause', 'absPermit', 'database', 'absCheckpoint']
 export const bchMegaMenuSchemas = [ 'biosafetyLaw', 'biosafetyDecision', 'nationalRiskAssessment', 'database', 'nationalReport', 'biosafetyExpert']
 
+export function uniqueObjects(passedArray){
+    return Array.from(new Set(passedArray.map(e => JSON.stringify(e)))).map(e => JSON.parse(e));
+}
+
 export const getKey =  (event) => {
     const { context } = parseCookies(event)
     const query       = getQuery(event)

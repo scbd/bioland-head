@@ -1,3 +1,3 @@
 <template>
-    <h1>Forums List</h1>
+    <PageListForums  />
 </template>

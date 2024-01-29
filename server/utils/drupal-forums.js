@@ -1,123 +1,144 @@
-import { DateTime } from 'luxon';
-import { paramCase } from 'param-case';
+// import { DateTime } from 'luxon';
+// import { paramCase } from 'param-case';
+import   camelCaseKeys   from 'camelcase-keys';
+import { stripHtml } from "string-strip-html"; 
 
-export const useDrupalForumMenus = async (ctx) => {
+import {validate as validateUuid} from 'uuid';
 
-    return getContentMenus(ctx)
+
+export const useDrupalForums = async (ctx) => {
+
+    return getForums(ctx)
 }
 
-async function getContentMenus (ctx) {
+export async function addForumIdentifierToContext(ctx){
 
-    const { host, rowsPerPage=7 } = ctx;
-    const uri           = `${host}/jsonapi/node/forum?jsonapi_include=1&include=taxonomy_forums&page[limit]=${rowsPerPage}&sort=-sticky`;
+    if(validateUuid(ctx.forumAlias)){
+        ctx.uuid = ctx.forumAlias;
+        return ctx
+    } else ctx.uuid = '';
+    
+
+    const pathAlias = usePathAlias(ctx);
+
+    const { path } = (await pathAlias.getByAlias(`/forums/${ctx.forumAlias}`)) || {};
+    
+  
+    if(!path){
+        ctx.tid = '';
+
+        return ctx
+    }
+
+    ctx.tid = parseInt(path.replace('/taxonomy/term/',''));
+
+    return ctx;
+}
+
+export async function getForumTidFromAlias(ctx){
+    const pathAlias = usePathAlias(ctx);
+
+    const { path } = await pathAlias.getByAlias(`/forums/${ctx.forumAlias}`);
+    
+    if(!path) return undefined;
+
+    return parseInt(path.replace('/taxonomy/term/',''))
+}
+
+async function getForums(ctx) {
+
+    const { host, uuid  } = ctx;
+    const id            = uuid? `/${uuid}` : '';
+
+    const params        = getQuestString(ctx);
+    const uri           = `${host}/jsonapi/taxonomy_term/forums${id}?jsonapi_include=1${params}`;//&include=taxonomy_forums&page[limit]=${rowsPerPage}&sort=-sticky
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
-    const { data } = await $fetch(uri, { method, headers });
+    const { data:d }      = await $fetch(uri, { method, headers });
+
+    const data = d.map(cleanForumData)
+
+    const isOneForum    = data.length === 1;
 
 
-    const forums = data.sort(sort).map(mapMenuData(ctx));
+    if(!isOneForum) return await mapForumMeta(ctx, data);
 
-    const userPromises = []
-    for (const forum of forums) {
-        userPromises.push(getLatestCommentsUsersFromForum(ctx, forum.id).then((users)=> forum.users = uniqueObjects(users)))
-        
-    }
+    data[0].topics = await useDrupalTopics({ ...ctx, tfid: data[0].id });
+    data[0].meta   = await getDrupalTopicMetaByForumIdentifier(ctx, data[0].topics);
 
-    await Promise.all(userPromises);
-
-    return forums
+    return data;
 };
 
-function sort(a,b){
-    if(a.comment_forum.cid < b.comment_forum.cid) return 1; 
-    if(a.comment_forum.cid > b.comment_forum.cid) return -1;
+async function mapForumMeta(ctx, forums){
+    const promises = []
 
-    return 0;
-}
+    for (const forum of forums){
+        const request = getDrupalTopicMetaByForumIdentifier({ ...ctx, tfid:forum.id }).then((meta)=> forum.meta = meta)
 
-function mapMenuData(ctx){
+        promises.push(request)
 
-    return (aForum)=> {
-                    const { id, tags, path, taxonomy_forums, comment_forum, title, drupal_internal__nid: nodeId  } = aForum;
-                    const { name, id:tid, path: taxForumsPath } = taxonomy_forums;
-                    const { alias } = taxForumsPath;
-                    const forum = { name, id:tid, slug: paramCase(name), href:alias };
-                    const { comment_count: count, last_comment_timestamp:timeStamp } = comment_forum;
-                    const dateString = getTimeString(timeStamp);
-
-                    const href = path.alias
-                    const forumMenu = { id,tags, href, forum, title, count, dateString, nodeId, path };
-
-
-
-                    return forumMenu
-            }
-}
-
-function getTimeString(timeStamp){
-
-    if(!timeStamp) return '';
-    const now             = DateTime.now();
-    const lastCommentTime = DateTime.fromSeconds(timeStamp);
-    
-    const years   = now.diff(lastCommentTime, 'years').toObject().years;
-    const months  = now.diff(lastCommentTime, 'months').toObject().months;
-    const days    = now.diff(lastCommentTime, 'days').toObject().days;
-    const hours   = now.diff(lastCommentTime, 'hours').toObject().hours;
-    const minutes = now.diff(lastCommentTime, 'minutes').toObject().minutes;
-
-    const formatMap = { years:'y', months:'m',days:'d', hours:'h', minutes:'mins' };
-    const timeMap   = { years, months, days, hours, minutes };
-
-    for (const key in timeMap)
-        if( Math.floor(timeMap[key])) 
-            return `${Math.floor(timeMap[key])}${formatMap[key]}`
-
-}
-
-async function getLatestCommentsUsersFromForum(ctx, forumId){
-    const $http = await useDrupalLogin(ctx.identifier);
-
-    const queryString = getForumFilterQueryString(forumId);
-    
-    const { host, rowsPerPage=20, } = ctx;
-    const uri                      = `${host}/jsonapi/comment/comment_forum?jsonapi_include=1&include=uid.user_picture&page[limit]=${rowsPerPage}${queryString}`;
-
-
-    const { body }  = await $http.get(uri).withCredentials().accept('json');
-
-    const { data } = body
-
-
-    return data.map(mapCommentUserData(ctx));
-}
-
-function mapCommentUserData(ctx){
-    return (all)=>{
-        const { host } = ctx;
-        const { display_name:displayName, name, mail, user_picture } = all.uid;
-        const { uri } = user_picture || {};
-        const img = { alt:displayName, src: host+uri?.url };
-
-        if(uri?.url)return { displayName,  mail, img  }
-
-        return { displayName, mail  }
     }
+
+    await Promise.all(promises);
+
+    return forums
 }
 
-function getForumFilterQueryString(fid){
-    let filterQueryString = `&filter[forum-entity_id][condition][path]=entity_id.id`;
+function cleanForumData(forum){
+    const { id, drupalInternalTid, status, description, name, weight, path, fieldColor }   = camelCaseKeys (forum, { deep: true });
 
-    filterQueryString += `&filter[forum-entity_id][condition][operator]=%3D`;
-    filterQueryString += `&filter[forum-entity_id][condition][value]=${fid}`;
+    const summary = description?.value? stripHtml(description.value).result.substring(0, 400): '';
 
-    filterQueryString += `&sort[sort-created][path]=created`;
-    filterQueryString += `&sort[sort-created][direction]=DESC`;
 
-    return filterQueryString;
+    return { description, id, drupalInternalTid, status, summary, name, weight, path, fieldColor } 
+}
+function getQuestString(ctx){
+    return getTypeFilterParams(ctx)+getFreeTextFilterParams(ctx)+getPaginationParams(ctx)+getSortParams(ctx);s
 }
 
-function uniqueObjects(passedArray){
-    return Array.from(new Set(passedArray.map(e => JSON.stringify(e)))).map(e => JSON.parse(e));
+function getTypeFilterParams({ tid, uuid }){
+    if(!tid || uuid) return '';
+
+
+    let filterQueryString = '';
+
+
+    filterQueryString += `&filter[taxonomy_term--pa][condition][path]=drupal_internal__tid`
+    filterQueryString += `&filter[taxonomy_term--pa][condition][operator]=ENDS_WITH`
+    filterQueryString += `&filter[taxonomy_term--pa][condition][value]=${tid}`
+
+
+
+    return  filterQueryString;
+}
+
+function getSortParams({ sortBy, sortDirection, tid, uuid }){
+    if(tid || uuid) return '';
+
+    const direction = !sortDirection? 'DESC' : 'ASC';
+
+    let sortQueryString = '';
+    sortQueryString += `&sort[sort-created][path]=${sortBy || 'changed'}`
+    sortQueryString += `&sort[sort-created][direction]=${direction}`
+
+    return sortQueryString;
+}
+
+function getFreeTextFilterParams({ freeText, tid, uuid }){
+    if(!freeText || tid || uuid) return '';
+
+    let sortQueryString = '&filter[or-group][group][conjunction]=OR';
+
+    sortQueryString += `&filter[free-text-title][condition][path]=name`;
+    sortQueryString += `&filter[free-text-title][condition][operator]=CONTAINS`;
+    sortQueryString += `&filter[free-text-title][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-title][condition][memberOf]=or-group`;
+
+    sortQueryString += `&filter[free-text-body][condition][path]=description.value`;
+    sortQueryString += `&filter[free-text-body][condition][operator]=CONTAINS`;
+    sortQueryString += `&filter[free-text-body][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-body][condition][memberOf]=or-group`;
+
+    return sortQueryString;
 }

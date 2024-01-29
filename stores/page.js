@@ -83,6 +83,10 @@ const initState = {
         parent: undefined,
         contentTranslationUid: undefined,
         aliases: undefined,
+        commentForum: undefined,
+        taxonomyForums: undefined,
+        fieldColor: undefined,
+        forumContainer: undefined,
 }
 
 function state(){ return initState }
@@ -91,7 +95,7 @@ function state(){ return initState }
 
 function set(name, value){
 
-    if(!Object.keys(initState).includes(name)) throw new Error(`useSiteStore.set -> State ${name} is not defined`);
+    if(!Object.keys(initState).includes(name)) throw new Error(`usePageeStore.set -> State ${name} is not defined`);
 
     this.$patch({ [name]: unref(value) } );
 

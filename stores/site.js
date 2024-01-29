@@ -21,7 +21,9 @@ const initState = {
                     hasNationalReportSix      : undefined,
                     redirect                  : undefined,
                     drupalInternalRevisionId : undefined,
-                   
+                    commentForum: undefined,
+                    taxonomyForums: undefined,
+               
                 }
 
 function state(){ return initState }

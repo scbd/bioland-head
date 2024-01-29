@@ -15,9 +15,7 @@
                             <a  ref="dropDownLinkEl" class="nav-link dropdown-toggle" to="#">{{ t('Other') }}</a>
 
                             <div ref="dropDownEl" class="dropdown-menu" aria-labelledby="navbarDropdown">
-
                                 <NuxtLink v-for="(aMenu,index) in otherMenus" :key="index" class="dropdown-item" :to="pageStore.aliases[aMenu.code]">{{aMenu.nativeName}}</NuxtLink>
-                                
                             </div>
                         </li>
                     </ul>
@@ -94,18 +92,13 @@
         const largeBreakpoints = ['lg','xl', 'xxl'];
         const mediumBreakpoints = ['md','sm','xs'];
 
-        this.limit=4
-        // if(largeBreakpoints.includes(newBreakpoint))
-        //     return  this.limit = 4;
-        // if(mediumBreakpoints.includes(newBreakpoint))
-        //         this.limit = 3;
+        this.limit=4;
 
         if(!this.menus || !this.menus?.length) return;
         
         this.limitedMenus = this.menus.slice(0, this.limit);
 
-        // if(mediumBreakpoints.includes(newBreakpoint))
-            this.otherMenus = this.menus.slice(this.limit);
+        this.otherMenus = this.menus.slice(this.limit);
     }
 </script>
 
