@@ -1,4 +1,3 @@
-import isInt from 'lodash.isinteger';
 
 export default cachedEventHandler(async (event) => {
     try{

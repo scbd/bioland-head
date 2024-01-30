@@ -51,7 +51,7 @@
 
     const imageSrc = computed(()=> siteStore.host + record.value.thumbnail?.uri?.url) //siteStore.host + fieldMediaImage?.value?.uri?.url
 
-    const linkTo  = computed(()=> record?.value?.path.alias)
+    const linkTo  = computed(()=> record?.value?.path?.alias)
 
     function dateFormat(date){
         return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');

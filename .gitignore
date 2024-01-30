@@ -23,3 +23,4 @@ logs
 .env.*
 !.env.example
 sw.*
+i18n/.to-delete*

@@ -1,9 +1,12 @@
 import { copyFile, mkdir, readFile, readdir, stat, writeFile } from 'fs/promises';
+import { readFileSync } from 'fs'
 import localeObjects from './locales.js';
 import path from 'path';
 // import assert, { match } from 'assert';
 import * as url from 'url';
-import {readJson} from 'fs-extra';
+import {readJson, pathExistsSync, moveSync, ensureFileSync } from 'fs-extra';
+import consola from 'consola';
+import cheerio from 'cheerio';
 
 const __dirname = url.fileURLToPath(new url.URL('.', import.meta.url));
 const __rootDirname =  url.fileURLToPath(new url.URL('../', import.meta.url));
@@ -41,6 +44,16 @@ async function createLocaleFile(enFile){
   //TODO check wny i18n fallback is not working, temp copy en props to lang objects
   let enData = await readJsonFile(enFile);
 
+  if(!enData || !Object.keys(enData).length) {
+    consola.warn('enFile',enFile)
+    const toPath = `${__rootDirname}i18n/.to-delete${enFile.replace('i18n/en','')}`;  
+
+    ensureFileSync(toPath)
+    moveSync(__rootDirname+enFile, toPath, {overwrite:true})
+    consola.warn(`Moving ${__rootDirname+enFile} to ${toPath} as it is empty`)
+    return ;
+  }
+  
   for (let i = 0; i < locales.length; i++) {
     const locale = locales[i];
 
@@ -91,15 +104,42 @@ async function createLocaleEnFile(enVueFile){
     }
 }
 
-async function readJsonFile(filePath){
+async function cleanFiles(enVueFile){
+  const jsonFileName = `${enVueFile.replace(/\.vue$/, '.json')}`
+  const jsonEnFileName = `${enFolder}/${jsonFileName}`;
+
   try{
-    const fileStat = await stat(filePath);
-    if(fileStat && fileStat.size > 0){
-        const parsedData = await readJson(`${__rootDirname}${filePath}`, {encoding:"utf8"})
-        return parsedData;
-    }
+    const data = await readJsonFile(jsonEnFileName);
+
+    if(!data) return;
+
+    const isEmpty = Object.keys(data).length === 0;
+
+    if(!isEmpty) return;
+
+    const toPath = `${__rootDirname}i18n/.to-delete/${jsonFileName}`;  
+
+    ensureFileSync(toPath)
+    moveSync(__rootDirname+jsonEnFileName, toPath, {overwrite:true})
+
+    consola.info(`i18n Empty json file deleted: ${jsonEnFileName}`)
   }
   catch(e){
+    consola.error(e)
+  }
+}
+
+async function readJsonFile(filePath){
+  try{
+    if(!pathExistsSync(filePath) || filePath.includes('.DS_Store')) return undefined
+    
+    const parsedData = await readJson(`${__rootDirname}${filePath}`, {encoding:"utf8"});
+
+    return parsedData;
+
+  }
+  catch(e){
+    consola.error(e)
     // if(e?.message?.indexOf('ENOENT')>=0)
     //     console.warn('error reading json file', e)
     //locale file does not exists, ignore 
@@ -140,23 +180,32 @@ export function viteSyncI18nFiles(options) {
   return {
     name: 'vite-plugin-sync-i18n-files',
     async buildStart(a,b){
-      console.debug('Syncing i18n files')
+      consola.debug('Syncing i18n files')
 
       isBuildRunning = true;
       await syncLocaleFiles();
       isBuildRunning = false;
       
-      console.debug('Syncing i18n files finished')
+      consola.debug('Syncing i18n files finished')
     },    
     handleHotUpdate: async function handleHotUpdate(_ref) {
 
       // if(isBuildRunning)
       //   return;
-      var file = _ref.file.replace(__rootDirname, ''),
-      server = _ref.server;
-      if(file.split(".").pop() === "vue"){
+      const  file = _ref.file.replace(__rootDirname, '');
+      
+      if(file.includes('i18n')) return;
+
+      const server = _ref.server;
+
+      if(hasI18nTag(file)){
+
+
         await createLocaleEnFile(file);
-      };
+      } else if(isVueFile(file)){
+        consola.info('IS VUE BUT NOT i18N tag')
+        await cleanFiles(file)
+      }
 
       if (!file.includes(enFolder) || file.split(".").pop() !== "json") return;
 
@@ -168,4 +217,34 @@ export function viteSyncI18nFiles(options) {
       });
     }
   }
+}
+
+function hasI18nTag(file){
+  if(!isVueFile(file)) return false;
+
+  return !!getI18nTagSource(file)
+}
+
+function getI18nTagSource(file){
+
+  const filePath = path.resolve(__rootDirname, file);
+  const fileData = readFileSync(filePath, 'utf8');
+
+  const $ = cheerio.load(fileData);
+
+  return $('i18n').attr('src')
+}
+
+function isVueFile(file){
+  return file.endsWith('.vue');
+}
+
+function isEmptyJson(file){
+
+  const filePath = path.resolve(__rootDirname, file);
+  const fileData = readFileSync(filePath, 'utf8');
+
+  const $ = cheerio.load(fileData);
+
+  return $('i18n').attr('src')
 }

@@ -66,7 +66,6 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
         context.value.path = path;
 
-consola.warn('path', path)
         const pData = (await getPage(path)).value;
 
         pStore.initialize(pData)
