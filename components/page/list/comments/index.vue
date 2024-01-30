@@ -1,18 +1,20 @@
 <template>
-    <div class="container mt-1">
-        <div class="row">
-            <div class="col-md-3">
+    <div class="container mt-0">
+        <div class="row align-items-end">
+            <div class="col-md-3 ps-0 ">
                 <PageListTextSearch class="mb-1"/>
             </div>
             <div class="col-12 col-md-9 px-0">
-                <PageBreadCrumbs :count="results?.topics?.count"/>
+                <PageBreadCrumbs :count="results?.comments?.count"/>
             </div>
+        </div>
+        <div class="row ">
             <div class="col-12 col-md-3 ps-0" >
                 <!-- <h2 class="page-type text-capitalize">{{t('Topic',2)}}</h2> -->
-                <h2 class="page-type mb-1">{{results?.name}}</h2>
-                <div v-html="results?.description?.processed"></div>
+                <h2 class="page-type mb-1">{{results?.title}}</h2>
+                <div v-html="results?.body?.value || ''"></div>
   
-         
+                
             </div>
 
             <ClientOnly >
@@ -20,22 +22,22 @@
 
                     <!-- <PageListPager v-if="showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results.count}`"/> -->
                     <transition-group name="list">
-                        <PageListTopicsRow  :a-line="aLine" v-for="(aLine,index) in results?.topics" :key="index" />
-                        <span :key="`showTopPage${showTopPager}${results?.topics?.count}-span`">&nbsp;</span>
+                        <PageListCommentsRow  :a-line="aLine" v-for="(aLine,index) in results?.comments" :key="index" />
+                        <span :key="`showTopPage${showTopPager}${results?.comments?.count}-span`">&nbsp;</span>
                     </transition-group>
                 </div>
                 <template #fallback>
                     <div name="list" tag="div" class="col-12 col-md-9 data-body">
 
                         <!-- <PageListPager v-if="showTopPager" :count="results?.count" /> -->
-                        <PageListTopicsRow  :a-line="aLine" v-for="(aLine,index) in results?.topics" :key="index" />
+                        <PageListCommentsRow  :a-line="aLine" v-for="(aLine,index) in results?.comments" :key="index" />
                     </div>
                 </template>
             </ClientOnly>
-<!-- <pre>{{results}}</pre> -->
+
 
             <div class="col-12 col-md-9 offset-md-3 ">
-                <PageListPager :count="results?.count"/>
+                <PageListPager :count="results?.comments?.count"/>
             </div>
         </div>
     </div>
@@ -73,7 +75,7 @@
 
     function onResponse({ request, response, options}){
 
-        response._data =response._data[0] || {}
+        // response._data =response._data[0] || {}
     }
 
     onMounted(() => { eventBus.on('changePage', refresh); });
@@ -83,7 +85,9 @@
 
 
     function getApiUri(){
-        return `/api/forums/${r.params.forumId}`;    
+        const topicId = pageStore.id;
+
+        return `/api/forums/${r.params.forumId}/${topicId}`;    
     }
 
     // function changeTab(){ refresh(); }

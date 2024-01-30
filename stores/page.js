@@ -169,7 +169,7 @@ function mapImage({  name,fieldMediaImage, drupalInternalMid, path, fieldCaption
     const alt = fieldMediaImage?.meta?.alt|| name || filename;
     const src = `${siteStore.host}${fieldMediaImage.uri.url}`;
 
-    return { name, url:path.alias, alt, drupalInternalMid, src, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage}
+    return { name, url:path?.alias, alt, drupalInternalMid, src, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage}
 }
 //name, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage 
 

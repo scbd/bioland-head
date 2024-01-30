@@ -20,7 +20,7 @@
     </div>
     <div class="mb-5">
         <div class="text-start my-3 mb-3">
-            <NuxtLink :to="localePath('/forums')" class="text-decoration-underline  text-primary  fw-bold fs-5" :external="external">
+            <NuxtLink :to="localePath('/forums')" class="text-decoration-underline  text-primary  fw-bold fs-5" >
                     {{t('Browse Discussions')}}
             </NuxtLink>
             &nbsp;

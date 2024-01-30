@@ -53,17 +53,17 @@ function mapTopicMeta(topics){
 
 async function getTopics (ctx) {
 
-    const { host, rowsPerPage } = ctx;
+    const { host, rowsPerPage, topicId } = ctx;
     const params = getTopicFilterQueryString(ctx)+getFreeTextFilterParams(ctx);
-    // console.log(ctx)
-    // console.log(getTopicFilterQueryString(ctx))
-    const uri           = `${host}/jsonapi/node/forum?jsonapi_include=1&include=taxonomy_forums&page[limit]=${rowsPerPage}${params}`;
+
+    const id =  topicId? `/${topicId}` : '';
+    const uri           = `${host}/jsonapi/node/forum${id}?jsonapi_include=1&include=taxonomy_forums&page[limit]=${rowsPerPage}${params}`;
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
     const { data } = await $fetch(uri, { method, headers });
 
-
+    if(topicId) return mapTopics(ctx)(data)
     const forums = data.sort(sort).map(mapTopics(ctx));
 
     const userPromises = []
@@ -92,12 +92,12 @@ function mapTopics(ctx){
                     const { alias } = taxForumsPath;
                     const forum = { name, id:tid, slug: paramCase(name), href:alias };
                     const { comment_count: count, last_comment_timestamp:timeStamp, last_comment_uid: lastCommentUid    } = comment_forum;
-                    const dateString = getTimeString(timeStamp);
+                    const dateString = getTimeStringFromSeconds(timeStamp);
 
                     const summary = body?.value? stripHtml(body.value).result.substring(0, 400) : '';
 
                     const href = path.alias
-                    const forumMenu = { summary, id,tags, href, forum, title, count, dateString, nodeId, path, lastCommentUid, lastCommentTimeStamp:timeStamp, timeStamp  };
+                    const forumMenu = { body, summary, id,tags, href, forum, title, count, dateString, nodeId, path, lastCommentUid, lastCommentTimeStamp:timeStamp, timeStamp  };
 
 
 
@@ -105,26 +105,7 @@ function mapTopics(ctx){
             }
 }
 
-function getTimeString(timeStamp){
 
-    if(!timeStamp) return '';
-    const now             = DateTime.now();
-    const lastCommentTime = DateTime.fromSeconds(timeStamp);
-    
-    const years   = now.diff(lastCommentTime, 'years').toObject().years;
-    const months  = now.diff(lastCommentTime, 'months').toObject().months;
-    const days    = now.diff(lastCommentTime, 'days').toObject().days;
-    const hours   = now.diff(lastCommentTime, 'hours').toObject().hours;
-    const minutes = now.diff(lastCommentTime, 'minutes').toObject().minutes;
-
-    const formatMap = { years:'y', months:'m',days:'d', hours:'h', minutes:'mins' };
-    const timeMap   = { years, months, days, hours, minutes };
-
-    for (const key in timeMap)
-        if( Math.floor(timeMap[key])) 
-            return `${Math.floor(timeMap[key])}${formatMap[key]}`
-
-}
 
 async function getLatestCommentsUsersFromForum(ctx, topicId){
     const $http = await useDrupalLogin(ctx.identifier);
@@ -168,7 +149,8 @@ function getCommentByTopicFilterQueryString(fid){
     return filterQueryString;
 }
 
-function getTopicFilterQueryString({tfid}){
+function getTopicFilterQueryString({tfid, topicId}){
+    if(topicId) return '';
     // if(!ftid) return '';
 
     let filterQueryString = `&filter[taxonomy_forums_id][condition][path]=taxonomy_forums.id`;

@@ -2,6 +2,7 @@
 import isString from 'lodash.isstring'
 import c from 'consola';
 import crypto from 'crypto';
+import { DateTime } from 'luxon';
 
 export const consola = c;
 export const unLocales = ['en', 'ar', 'es', 'fr', 'ru', 'zh'];
@@ -73,7 +74,38 @@ export function sortArrayOfObjectsByProp(a,b, prop){
 
     return 0;
 }
+export function getTimeStringFromIso(dateTimeIso){
+    if(!dateTimeIso) return '';
 
+    return getTimeString(DateTime.fromISO(dateTimeIso))
+}
+
+export function getTimeStringFromSeconds(seconds){
+    if(!seconds) return '';
+
+    return getTimeString(DateTime.fromSeconds(seconds))
+}
+
+export function getTimeString(lastCommentTime){
+
+    const now             = DateTime.now();
+    // const lastCommentTime = DateTime.fromSeconds(timeStamp);
+    
+    const years   = now.diff(lastCommentTime, 'years').toObject().years;
+    const months  = now.diff(lastCommentTime, 'months').toObject().months;
+    // const weeks   = now.diff(lastCommentTime, 'months').toObject().weeks;
+    const days    = now.diff(lastCommentTime, 'days').toObject().days;
+    const hours   = now.diff(lastCommentTime, 'hours').toObject().hours;
+    const minutes = now.diff(lastCommentTime, 'minutes').toObject().minutes;
+
+    const formatMap = { years:'y', months:'m', days:'d', hours:'h', minutes:'mins' };
+    const timeMap   = { years, months, days,  hours, minutes  };
+
+    for (const key in timeMap)
+        if( Math.floor(timeMap[key])) 
+            return `${Math.floor(timeMap[key])}${formatMap[key]}`
+
+}
 function getPathPrefix(locale, defaultLocale){
     if(!locale || !defaultLocale?.locale) return '';
 

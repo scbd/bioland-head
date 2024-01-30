@@ -1,5 +1,6 @@
 <template>
-    <div  @click="goTo(href)" class="card p-1 mb-3" >
+    <NuxtLink :to="goTo(href)" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" :target="target" :external="external">
+    <div   class="card p-1 mb-3" >
         <div  class="row g-0">
             <Icon v-if="aLine.sticky" name="pushpin" class="position-absolute start-50 icon"/>
             <div :class="{'col-9': aLine.mediaImage, 'col-12': !aLine.mediaImage }">
@@ -35,6 +36,7 @@
             </div>
         </div>
     </div>
+    </NuxtLink>
 </template>
 <i18n src="@/i18n/dist/components/page/list/index.json"></i18n>
 <script setup>
@@ -69,14 +71,16 @@
         return getRealmHost()+uri;
     });
 
-    async function goTo(path){
+    const target = computed(()=> isChm.value? '_blank' : '_self');
+    const external = computed(()=> isChm.value? true : false);
+    function goTo(path){
         if(!path) return 
 
-        if(isChm.value) return await navigateTo(path, { open: { target: '_blank' } })
+        if(isChm.value) return path//await navigateTo(path, { open: { target: '_blank' } })
 
         const localePath = useLocalePath();
 
-        await navigateTo({ path: localePath(path) })
+        return localePath(path)//navigateTo({ path: localePath(path) })
     }
 
     function getDocumentTypeName(aLine){

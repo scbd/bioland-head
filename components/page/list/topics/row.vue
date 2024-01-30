@@ -1,36 +1,38 @@
 <template>
-    <div  @click="goTo(href)" class="card p-1 mb-3"  >
-        <div  class="row g-0">
-            <div class="col-8 fw-bold"> {{t('Topic')}} </div>
-            <div class="col-1 fw-bold"> {{t('Replies')}} </div>
-            <div class="col-3 fw-bold"> {{t('Last Reply')}}</div>
+    <NuxtLink :to="goTo(href)" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" >
+        <div   class="card p-1 mb-3"  >
+            <div  class="row g-0">
+                <div class="col-8 fw-bold"> {{t('Topic')}} </div>
+                <div class="col-1 fw-bold"> {{t('Replies')}} </div>
+                <div class="col-3 fw-bold"> {{t('Last Reply')}}</div>
 
-            <div class="col-12">
-                <div class="card-header">
-                    <hr class="my-0 mx-0 line" >
+                <div class="col-12">
+                    <div class="card-header">
+                        <hr class="my-0 mx-0 line" >
+                    </div>
                 </div>
-            </div>
 
-            <div class="col-8">
-                <div class="card-body pe-1">
-                    <h5 class="card-title">{{aLine.title || aLine.name}}</h5>
-                    <p v-if="aLine.summary" class="card-text">{{aLine.summary}}...</p>
+                <div class="col-8">
+                    <div class="card-body pe-1">
+                        <h5 class="card-title">{{aLine.title || aLine.name}}</h5>
+                        <p v-if="aLine.summary" class="card-text">{{aLine.summary}}...</p>
 
+                    </div>
                 </div>
-            </div>
-            <div class="col-1">
-                <div class="card-body">
-                    {{aLine?.count}}
+                <div class="col-1">
+                    <div class="card-body">
+                        {{aLine?.count}}
+                    </div>
                 </div>
-            </div>
-            <div class="col-3">
-                <div class="card-body">
-                    <p>{{t('By')}} {{user?.displayName}}</p>
-                    <p>{{aLine?.dateString}}</p>
+                <div class="col-3">
+                    <div class="card-body">
+                        <p>{{t('By')}} {{user?.displayName}}</p>
+                        <p>{{aLine?.dateString}}</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </NuxtLink>
 </template>
 <i18n src="@/i18n/dist/components/page/list/index.json"></i18n>
 <script setup>
@@ -63,12 +65,12 @@
 
     });
 
-    async function goTo(path){
+    function goTo(path){
         if(!path) return 
 
         const localePath = useLocalePath();
 
-        await navigateTo({ path: localePath(path) })
+        return localePath(path)
     }
 
 

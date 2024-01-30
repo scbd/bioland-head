@@ -1,5 +1,3 @@
 <template>
-    <!-- <PageListTopics  /> -->
-
-    comments
+    <PageListComments  /> 
 </template>
