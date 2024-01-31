@@ -32,14 +32,14 @@ export const parseQuery = (event) => {
     const countries      = Array.isArray(countriesArray) && countriesArray?.length? countriesArray : [country];
 
     // const defaultLocale      =  !isPlainObject(defaultLocaleRaw)? JSON.parse(defaultLocaleRaw || {}).locale : defaultLocaleRaw.locale;
-    const { baseHost, env }  = useRuntimeConfig().public;
+    const { baseHost, env, isLocalHost }  = useRuntimeConfig().public;
     const pathPreFix         = getPathPrefix(locale, defaultLocale)
     const hasRedirect        = env === 'production' && redirect;
-    const host               = hasRedirect? `https://${redirect}` : `https://${identifier}${baseHost}`;
+    const host               = isLocalHost? hasRedirect? `https://${redirect}` : `https://${identifier}${baseHost}` : '';
     const localizedHost      = `${host}${pathPreFix}`;
     const indexLocal         = getIndexLocale(locale);
 
-    return { host, localizedHost, baseHost, country, countries, identifier, locale, defaultLocale, pathPreFix, indexLocal  }
+    return { isLocalHost,host, localizedHost, baseHost, country, countries, identifier, locale, defaultLocale, pathPreFix, indexLocal  }
 }
 
 export const getContext = (event) => {
@@ -58,14 +58,14 @@ export function parseContext (context) {
     
     const   countries       = Array.isArray(countriesArray) && countriesArray?.length? [country,...countriesArray] : [country];
     // const   defaultLocale   =  defaultLocale
-    const { baseHost, env } = useRuntimeConfig().public;
+    const { baseHost, env, isLocalHost } = useRuntimeConfig().public;
     const   pathPreFix      = getPathPrefix(locale, defaultLocale)
     const   hasRedirect     = env === 'production' && redirect;
-    const   host            = hasRedirect? `https://${redirect}` : `https://${identifier}${baseHost}`;
+    const   host            = isLocalHost? hasRedirect? `https://${redirect}` : `https://${identifier}${baseHost}` : '';
     const   localizedHost   = lh? lh : `${host}${pathPreFix}`;
     const   indexLocale     = getIndexLocale(locale);
 
-    return { host, localizedHost, country,countries,  identifier, locale, defaultLocale, indexLocal:indexLocale, indexLocale, path }
+    return { isLocalHost, host, localizedHost, country,countries,  identifier, locale, defaultLocale, indexLocal:indexLocale, indexLocale, path }
 }
 
 export function sortArrayOfObjectsByProp(a,b, prop){
@@ -107,13 +107,13 @@ export function getTimeString(lastCommentTime){
 
 }
 function getPathPrefix(locale, defaultLocale){
-    if(!locale || !defaultLocale?.locale) return '';
+    if(!locale || !defaultLocale) return '';
 
     return locale === 'und' || locale === defaultLocale  ? '' : '/'+ drupalizeLocale(locale);
 }
 
 function drupalizeLocale(locale){
-    if(locale === 'zh-hans') return 'zh-hans';
+    if(locale === 'zh') return 'zh-hans';
 
     return locale;
 }
@@ -143,11 +143,11 @@ export async function getSiteConfig({ identifier }){
 
 
 function getHost(ctx, ignoreLocale = false){
-    const { baseHost, env }  = useRuntimeConfig().public;
+    const { baseHost, env, isLocalHost }  = useRuntimeConfig().public;
     const { locale, identifier, defaultLocale, config } = ctx;
     const   hasRedirect     = env === 'production' && config?.redirect;
     const pathLocale = ignoreLocale? '' : drupalizePathLocales(locale, defaultLocale);
-    const base       = hasRedirect? `https://${config.redirect}` : `https://${encodeURIComponent(identifier)}${encodeURIComponent(baseHost)}`;
+    const base       = isLocalHost? hasRedirect? `https://${config.redirect}` : `https://${encodeURIComponent(identifier)}${encodeURIComponent(baseHost)}` : '';
 
     return `${base}${pathLocale}`;
 }

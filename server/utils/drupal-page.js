@@ -72,7 +72,7 @@ async function getPageIdentifiers(ctx){
     const { localizedHost, path } = ctx;
 //TODO-remove locale prefix on path
 
-    const uri = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanToPath(path))}`;
+    const uri = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanToPath(ctx,path))}`;
 
 
     const data = await $fetch(uri, { mode: 'cors' })
@@ -169,14 +169,16 @@ function setMediaImageSearchParams(search){
 }
 
 
-function cleanToPath(path){
+function cleanToPath(ctx, path){
+
     const pathParts = path.split('/');
 
-    if(pathParts[1] === 'zh') pathParts[1] = 'zh-hans';
+    const isLocalizedPath = pathParts[1] === ctx.locale;
+    // if(pathParts[1] === 'zh') pathParts[1] = 'zh-hans';
 
     // if(pathParts[1] === 'search') return '/search';
     
     // if(pathParts[2] === 'search') return `/${pathParts[1]}/${pathParts[2]}`;
 
-    return pathParts.join('/');
+    return isLocalizedPath?   [ '', pathParts.slice(2) ].join('/')    :  pathParts.join('/');
 }
