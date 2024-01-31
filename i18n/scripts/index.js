@@ -36,12 +36,12 @@ async function translate(locales){
 
             const { body: translatedData } = await $http.post(`http://localhost:3000/api/i18n/${code}`).send(data).set('accept', 'json')
 
-            consola.error(code, langFile.fileName)
+consola.info(code, langFile.fileName)
             const newFileName = resolve(rootContext, langFile.fileName.replace('/en/', `/${code}/`));
 
             fs.ensureFileSync(newFileName)
             fs.writeFileSync(newFileName, JSON.stringify(translatedData,null, 2))
-            await sleep(500);
+            await sleep(100);
         }
 
     }
