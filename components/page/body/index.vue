@@ -77,7 +77,7 @@
 </template>
 <i18n src="@/i18n/dist/components/page/body/index.json"></i18n>
 <script setup>
-
+ 
 import { usePageStore } from "~/stores/page";
 
 const { t } = useI18n();

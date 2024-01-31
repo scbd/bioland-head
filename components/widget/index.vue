@@ -1,7 +1,7 @@
 <template>
    
     <div class="text-capitalize mb">
-        <h4 class="bm-3">{{t(name)}} </h4>
+        <h4 class="bm-3">{{name}} </h4>
     </div>
     <!-- <LazyCards :record="record" /> -->
     <div class="card " >
@@ -42,7 +42,7 @@
     <div class="mb-5">
         <div v-for="(link,i) in links || []" :key="i" class="text-start my-3 mb-3">
             <NuxtLink :to="link.to" class="text-decoration-underline  text-primary  fw-bold fs-5" :external="external">
-                    {{t(link.name)}}
+                    {{link.name}}
             </NuxtLink>
             &nbsp;
             <Icon  v-if="!external" name="arrow-right" class="arrow" />

@@ -1,5 +1,4 @@
 <template>
-
     <div class="container">
         <div class="row">
             <div class="col-md-3 d-lg-block">
@@ -50,6 +49,7 @@
 
 
 </template>
+<i18n src="@/i18n/dist/components/page/body/media/index.json"></i18n>
 <script setup>
 import { usePageStore } from "~/stores/page";
 

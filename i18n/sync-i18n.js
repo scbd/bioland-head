@@ -7,19 +7,21 @@ import * as url from 'url';
 import {readJson, pathExistsSync, moveSync, ensureFileSync } from 'fs-extra';
 import consola from 'consola';
 import cheerio from 'cheerio';
-
+import {getI18nData} from './scripts/index.js'
 const __dirname = url.fileURLToPath(new url.URL('.', import.meta.url));
 const __rootDirname =  url.fileURLToPath(new url.URL('../', import.meta.url));
 
 const i18nFolder = 'i18n'
-const enFolder = `${i18nFolder}/en`
+const enFolder = `${i18nFolder}/locales/en`
 // const otherLocales = ['ar', 'es', 'fr', 'ru', 'zh'];
+
 
 async function syncLocaleFiles(matchedFiles) {
   
   let enFiles = matchedFiles || [];
   if (!enFiles?.length) {
     enFiles = await getAllDirectoryFiles(enFolder)
+
   }
 
   const filePromises = []
@@ -45,8 +47,8 @@ async function createLocaleFile(enFile){
   let enData = await readJsonFile(enFile);
 
   if(!enData || !Object.keys(enData).length) {
-    consola.warn('enFile',enFile)
-    const toPath = `${__rootDirname}i18n/.to-delete${enFile.replace('i18n/en','')}`;  
+   
+    const toPath = `${__rootDirname}i18n/.to-delete${enFile.replace(enFolder,'')}`;  
 
     ensureFileSync(toPath)
     moveSync(__rootDirname+enFile, toPath, {overwrite:true})
@@ -71,7 +73,7 @@ async function createLocaleFile(enFile){
   const localeData = await Promise.all(localeFilePromises);
   localeData.unshift({en:enData});
 
-  const distFilePath = enFile.replace(/\/en\//, `/dist/`); //path is i18n/dist/
+  const distFilePath = enFile.replace(/\/locales\/en\//, `/dist/`); //path is i18n/dist/
   const flatData = localeData.reduce((a,b)=>{return { ...(a), ...(b||{})}});
 
   try{
@@ -105,6 +107,7 @@ async function createLocaleEnFile(enVueFile){
 }
 
 async function cleanFiles(enVueFile){
+
   const jsonFileName = `${enVueFile.replace(/\.vue$/, '.json')}`
   const jsonEnFileName = `${enFolder}/${jsonFileName}`;
 
@@ -125,21 +128,27 @@ async function cleanFiles(enVueFile){
     consola.info(`i18n Empty json file deleted: ${jsonEnFileName}`)
   }
   catch(e){
+    consola.error('cleanFiles',enVueFile)
     consola.error(e)
   }
 }
 
 async function readJsonFile(filePath){
   try{
-    if(!pathExistsSync(filePath) || filePath.includes('.DS_Store')) return undefined
+
+    if(!pathExistsSync(`${__rootDirname}${filePath}`) || filePath.includes('.DS_Store')) return undefined
     
+   
     const parsedData = await readJson(`${__rootDirname}${filePath}`, {encoding:"utf8"});
+
 
     return parsedData;
 
   }
   catch(e){
+    consola.error('readJsonFile',filePath)
     consola.error(e)
+
     // if(e?.message?.indexOf('ENOENT')>=0)
     //     console.warn('error reading json file', e)
     //locale file does not exists, ignore 
@@ -168,7 +177,8 @@ async function getAllDirectoryFiles(dir, options) {
         fileList.push(filePath)
       }
     } catch (e) {
-      useLogger().error(e, file)
+      // useLogger().error(e, file)
+      consola.error(e,file)
     }
   }))
   return fileList;
@@ -180,21 +190,22 @@ export function viteSyncI18nFiles(options) {
   return {
     name: 'vite-plugin-sync-i18n-files',
     async buildStart(a,b){
-      consola.debug('Syncing i18n files')
+      consola.info('Syncing i18n files')
 
       isBuildRunning = true;
       await syncLocaleFiles();
       isBuildRunning = false;
       
-      consola.debug('Syncing i18n files finished')
+      consola.info('Syncing i18n files finished')
     },    
     handleHotUpdate: async function handleHotUpdate(_ref) {
 
       // if(isBuildRunning)
       //   return;
       const  file = _ref.file.replace(__rootDirname, '');
-      
-      if(file.includes('i18n')) return;
+      // getI18nData()
+
+      // if(file.includes('i18n')) return;
 
       const server = _ref.server;
 

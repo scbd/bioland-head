@@ -1,12 +1,13 @@
 <template>
-    <Widget v-if="record" :t="'solution'" name="Panorama Solutions" :record="record" :links="links"/>
+    <Widget v-if="record" :t="'solution'" :name="t('Panorama Solutions')" :record="record" :links="links"/>
 </template>
+<i18n src="@/i18n/dist/components/widget/index.json"></i18n>
 <script setup>
 
     import { useSiteStore } from '~/stores/site' ;
 
     const siteStore  = useSiteStore();
-    const { locale } = useI18n();
+    const { t  } = useI18n();
 const query = { ...siteStore.params };
    // const { data: record  }= 
     const { data: record  } = await useFetch('/api/list/panorama', {  method: 'GET', onResponse, query });
@@ -21,7 +22,7 @@ const query = { ...siteStore.params };
     }
     
     const links = [
-        { name: 'Browse Solutions',  to:'https://panorama.solutions/en/explorer' }
+        { name: t('Browse Solutions'),  to:'https://panorama.solutions/en/explorer' }
     ];
 </script>
 

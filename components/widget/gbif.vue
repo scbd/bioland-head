@@ -44,6 +44,7 @@
         <Icon   name="external-link" class="arrow" />
     </div>
   </template>
+<i18n src="@/i18n/dist/components/widget/index.json"></i18n>
   
   <script setup>
   import cCenter from '~/util/country-center.js'

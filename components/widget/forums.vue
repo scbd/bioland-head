@@ -26,7 +26,7 @@
             &nbsp;
             <Icon name="arrow-right" class="arrow" />
         </div>
-    </div>
+    </div> 
 </template>
 <i18n src="@/i18n/dist/components/widget/index.json"></i18n>
 <script setup>

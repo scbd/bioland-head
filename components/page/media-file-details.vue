@@ -1,32 +1,32 @@
 <template >
 
-<div class="media-details-container " :class="{ 'p-1': !vertical }">
-        <div v-if="media.name" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
-                <h5 >{{t('File Name')}}</h5>
-                <span v-if="!isImage">{{media.name}}</span>
-                <span v-if="isImage">
-                        <NuxtLink :to="image.src" target="_blank" download>
-                                {{media.name}}  <Icon name="download" class="fs-4 ms-1"/>
-                        </NuxtLink>
-                </span> 
-        </div>
-        <div v-if="media.fieldCaption" :class="{ 'flex-column mb-1': vertical }" class="d-flex">
-                <h5 >{{t('Caption')}}</h5>
-                <span>{{media.fieldCaption}}</span>
-        </div>
+        <div class="media-details-container " :class="{ 'p-1': !vertical }">
+                <div v-if="media.name" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
+                        <h5 >{{t('File Name')}}</h5>
+                        <span v-if="!isImage">{{media.name}}</span>
+                        <span v-if="isImage">
+                                <NuxtLink :to="image.src" target="_blank" download>
+                                        {{media.name}}  <Icon name="download" class="fs-4 ms-1"/>
+                                </NuxtLink>
+                        </span> 
+                </div>
+                <div v-if="media.fieldCaption" :class="{ 'flex-column mb-1': vertical }" class="d-flex">
+                        <h5 >{{t('Caption')}}</h5>
+                        <span>{{media.fieldCaption}}</span>
+                </div>
 
-        <div v-if="media.fieldHeight" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
-                <h5 >{{t('Height')}}</h5>
-                <span>{{media.fieldHeight}} {{t('px')}}</span>
-        </div>
-        <div v-if="media.fieldWidth" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
-                <h5 >{{t('Width')}}</h5>
-                <span>{{media.fieldWidth}} {{t('px')}}</span>
-        </div> 
-        <div v-if="media.fieldMime" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
-                <h5 >{{t('Mime Type')}}</h5>
-                <span>{{media.fieldMime}}</span>
-        </div> 
+                <div v-if="media.fieldHeight" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
+                        <h5 >{{t('Height')}}</h5>
+                        <span>{{media.fieldHeight}} {{t('px')}}</span>
+                </div>
+                <div v-if="media.fieldWidth" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
+                        <h5 >{{t('Width')}}</h5>
+                        <span>{{media.fieldWidth}} {{t('px')}}</span>
+                </div> 
+                <div v-if="media.fieldMime" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
+                        <h5 >{{t('Mime Type')}}</h5>
+                        <span>{{media.fieldMime}}</span>
+                </div> 
         <div v-if="media.fieldSize" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
                 <h5 >{{t('File Size')}}</h5>
                 <span>{{fileSize(media.fieldSize)}}</span>

@@ -1,10 +1,12 @@
 <template>
-    <Widget v-if="record" name="e-Learning" :record="record" :links="links"/>
+    <Widget v-if="record" :name="t('e-Learning')" :record="record" :links="links"/>
 </template>
+<i18n src="@/i18n/dist/components/widget/index.json"></i18n>
 <script setup>
 
     import { useSiteStore } from '~/stores/site' ;
 
+    const { t  } = useI18n();
     const siteStore  = useSiteStore();
     const query      = { ...siteStore.params };
     const localePath = useLocalePath();
@@ -22,7 +24,7 @@
     }
     
     const links = [
-        { name: 'Browse Courses',  to: { path:localePath('/search'),query:{ schemas:[4,4]}}},
+        { name: t('Browse Courses'),  to: { path:localePath('/search'),query:{ schemas:[4,4]}}},
     ];
 </script>
 
