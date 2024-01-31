@@ -1,19 +1,19 @@
-import { copyFile, mkdir, readFile, readdir, stat, writeFile } from 'fs/promises';
+import {  mkdir,  readdir, stat, writeFile } from 'fs/promises';
 import { readFileSync } from 'fs'
 import localeObjects from './locales.js';
 import path from 'path';
-// import assert, { match } from 'assert';
+
 import * as url from 'url';
 import {readJson, pathExistsSync, moveSync, ensureFileSync } from 'fs-extra';
 import consola from 'consola';
 import cheerio from 'cheerio';
-import {getI18nData} from './scripts/index.js'
-const __dirname = url.fileURLToPath(new url.URL('.', import.meta.url));
+
+
 const __rootDirname =  url.fileURLToPath(new url.URL('../', import.meta.url));
 
 const i18nFolder = 'i18n'
 const enFolder = `${i18nFolder}/locales/en`
-// const otherLocales = ['ar', 'es', 'fr', 'ru', 'zh'];
+
 
 
 async function syncLocaleFiles(matchedFiles) {
@@ -25,7 +25,6 @@ async function syncLocaleFiles(matchedFiles) {
   }
 
   const filePromises = []
-  // const enFileData = {};     
           
   for (let j = 0; j < enFiles.length; j++) {
     const enFile = enFiles[j];
@@ -77,9 +76,6 @@ async function createLocaleFile(enFile){
   const flatData = localeData.reduce((a,b)=>{return { ...(a), ...(b||{})}});
 
   try{
-      // const existingData = await readJsonFile(distFilePath);
-      // //assert.deepEqual throws error when object are not equal
-      // assert.deepEqual(flatData, existingData)
       await  mkdir(path.dirname(`${__rootDirname}${distFilePath}`), { recursive: true });
       await writeFile(`${__rootDirname}${distFilePath}`, JSON.stringify(flatData, null, 4), {encoding:"utf8"})
   }
@@ -149,9 +145,6 @@ async function readJsonFile(filePath){
     consola.error('readJsonFile',filePath)
     consola.error(e)
 
-    // if(e?.message?.indexOf('ENOENT')>=0)
-    //     console.warn('error reading json file', e)
-    //locale file does not exists, ignore 
   }
 
 }
@@ -177,7 +170,7 @@ async function getAllDirectoryFiles(dir, options) {
         fileList.push(filePath)
       }
     } catch (e) {
-      // useLogger().error(e, file)
+  
       consola.error(e,file)
     }
   }))
