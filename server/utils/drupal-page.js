@@ -70,9 +70,11 @@ export async function getPageThumb(ctx){
 async function getPageIdentifiers(ctx){
 
     const { localizedHost, path } = ctx;
-//TODO-remove locale prefix on path
 
-    const uri = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanToPath(ctx,path))}`;
+    const cleanPath = cleanToPath(ctx, path);
+    //encodeURIComponent(cleanToPath(ctx,path))
+
+    const uri = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanPath)}`;
 
 
     const data = await $fetch(uri, { mode: 'cors' })
@@ -180,5 +182,5 @@ function cleanToPath(ctx, path){
     
     // if(pathParts[2] === 'search') return `/${pathParts[1]}/${pathParts[2]}`;
 
-    return isLocalizedPath?   [ '', pathParts.slice(2) ].join('/')    :  pathParts.join('/');
+    return isLocalizedPath?   [ '', ...pathParts.slice(2) ].join('/')    :  pathParts.join('/');
 }

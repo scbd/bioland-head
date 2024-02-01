@@ -33,8 +33,9 @@ export default cachedEventHandler(async (event) => {
 })
 
 function mapPanoData({ id, url:href, title, summary, preview_image: mediaImage, classifications }){
-    const { theme } = classifications
-    const subjects  = (theme.length? theme.map((name)=> ({ name })) : []).sort(() => Math.random() - 0.5).slice(0,3)
+    const { theme } = classifications || {};
+
+    const subjects  = (theme?.length? theme.map((name)=> ({ name })) : []).sort(() => Math.random() - 0.5).slice(0,3)
     const tags      = { subjects }
 
     return { id, title, summary:stripHtml(summary).result, mediaImage, tags, href }
