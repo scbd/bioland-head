@@ -122,25 +122,9 @@
 
 
 </script>
-<i18n src="@/i18n/dist/components/widgets/index.json"></i18n>
+<i18n src="@/i18n/dist/components/widget/index.json"></i18n>
 <style lang="scss" scoped>
-// .i-top{
-//     max-height: 250px;
-//     object-fit: cover;
-// }
-// .cit{
-//     height: 232px !important;
-// }
-// .card {
-//     width: 350px;
-//     height: 600px !important;
-//     // border: .5px solid var(--bs-blue);
-// }
-// @media (max-width: 991px) {
-//     .card {
-//         width: 90%;
-//     }
-// }
+
 .arrow{
     fill:var(--bs-blue);
     width       : 1.3em;

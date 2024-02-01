@@ -29,6 +29,7 @@ export default defineNuxtConfig({
     apiKey : process.env.API_KEY,
     panoramaKey: process.env.PANORAMA_KEY,
     public: {
+      isLocalHost:!!process.env.NUXT_LOCAL_HOST,
       locales,
       baseURL: '',
       env: 'production',
