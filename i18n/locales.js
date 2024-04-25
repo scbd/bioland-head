@@ -1,4 +1,5 @@
-export default [
+
+export default[
     {
         "code": "af",
         "name": "Afrikaans",
@@ -89,11 +90,6 @@ export default [
         "code": "en",
         "name": "English",
         "nativeName": "English"
-    },
-    {
-        "code": "en-x-simple",
-        "name": "Simple English",
-        "nativeName": "Simple English"
     },
     {
         "code": "eo",
@@ -461,18 +457,15 @@ export default [
         "nativeName": "Tiếng Việt"
     },
     {
-        "code": "xx-lolspeak",
-        "name": "Lolspeak",
-        "nativeName": "Lolspeak"
-    },
-    {
         "code": "zh",
         "name": "Chinese, Simplified",
         "nativeName": "简体中文"
-    },
-    {
-        "code": "zh-hant",
-        "name": "Chinese, Traditional",
-        "nativeName": "繁體中文"
     }
-]
+].map((l)=> {
+    const rtlLangs = [ "am","ar","az", "he", "fa", "ur", 'mv', 'ku' ];
+
+    return { ...l, iso:l.code, dir: rtlLangs.includes(l.code)? 'rtl' : 'ltr'}
+})
+
+// export default localeObjects;
+// export const localeCodes = localeObjects.map(({ code })=> code);

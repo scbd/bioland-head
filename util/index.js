@@ -1,7 +1,9 @@
+export const unLocales = ['en', 'ar', 'es', 'fr', 'ru', 'zh'];
 
-export const getBiolandSiteIdentifier = (hostName) => {
-    if(hostName.split('.').length <= 1)
-        return undefined;
 
-    return hostName.split('.')[0];
+
+export     function getGbfUrl(identifier){
+    const number = Number(identifier.replace('GBF-TARGET-', ''));
+
+    return `https://www.cbd.int/gbf/targets/${number}`
 }

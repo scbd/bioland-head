@@ -1,23 +1,58 @@
 <template>
-  <section >
-    <Icons v-once/>
+    <IconSymbols v-once/>
+    
+    <!-- <div class="page-loader"></div> -->
     <PageHeader/>
     <!-- <PageEditorControls  /> -->
-    <main class="debug-main">
-      <div class="text-muted text-center">Main Page Content</div>
-      <PageHeroImage/>
-      <NuxtPage/>
-      <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-      <div class="text-muted text-center">Main Page Content</div>
-    </main>
-    <PageFooter/>
-  </section>
-</template> 
 
+    <main class="">
+      <!-- <test/> -->
+      <!-- <div class="text-muted text-center">Main Page Content</div> -->
+      <NuxtLoadingIndicator :height="6"/>
+
+      <NuxtPage/>
+      <br/><br/><br/><br/><br/><br/><br/>
+      <br/><br/><br/><br/><br/><br/><br/>
+
+      <!-- <div class="text-muted text-center">Main Page Content</div> -->
+    </main>
+    <div v-if="!isProd" class="text-center"><HydrationStatus /> </div>
+    <PageFooter/>
+</template> 
+<script setup >
+
+const { env } =useRuntimeConfig().public;
+const isProd = env === 'production';
+const { locale } = useI18n();
+const localHead  = useLocaleHead({
+  addDirAttribute: true,
+  addSeoAttributes: true
+})
+
+
+useHead({
+  htmlAttrs: {
+    lang: locale,
+    dir: () => localHead.value.htmlAttrs.dir
+  },
+  // link: [
+  //   {
+  //     rel: 'preconnect',
+  //     href: 'https://fonts.googleapis.com'
+  //   },
+  //   {
+  //     rel: 'stylesheet',
+  //     href: 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap',
+  //     crossorigin: ''
+  //   }
+  // ]
+})
+</script>
 <script>
 export default { name      : 'BL2App', };
 </script>
 <style lang="css">
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 .debug{
   border: 1px dashed red;
 }
@@ -40,4 +75,122 @@ export default { name      : 'BL2App', };
         width:100%;
         text-align: center;
     }
+</style>
+<style lang="scss">
+@import "@/assets/scss/variables.scss";
+// Typography
+@media (max-width: 1375.98px) {
+  html {
+      font-size: 15px;
+  }
+}
+
+@media (max-width: 1247.98px) {
+  html {
+      font-size: 14px;
+  }
+
+  .display-1 {
+      font-size: 5rem;
+  }
+
+  .display-2 {
+      font-size: 4.5rem;
+  }
+}
+
+@media (max-width: 991.98px) {
+  html {
+      font-size: 13px;
+  }
+
+  h1 {
+      font-size: 4rem;
+  }
+
+  h2 {
+      font-size: 3rem;
+  }
+
+  .display-1 {
+      font-size: 4.5rem;
+  }
+
+  .display-2 {
+      font-size: 4rem;
+  }
+}
+
+@media (max-width: 721.98px) {
+  html {
+      font-size: 14px;
+  }
+
+  h1 {
+      font-size: 3.5rem;
+  }
+
+  h2 {
+      font-size: 2.75rem;
+  }
+
+  .display-1 {
+      font-size: 4rem;
+  }
+
+  .display-2 {
+      font-size: 3.5rem;
+  }
+}
+
+h1 {
+  font-weight: 700;
+}
+
+h3 {
+  display: inline-block;
+  border-bottom: .25rem solid $primary;
+  margin-bottom: 3rem;
+}
+
+h4 {
+  display: inline-block;
+  border-bottom: .25rem solid $primary;
+  margin-bottom: 1.5rem;
+}
+
+h5.lead {
+  display: inline-block;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.25rem;
+  border-bottom: .25rem solid $primary;
+  margin-bottom: 1.5rem;
+}
+
+h6 {
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+}
+
+h1,
+.h1,
+h2,
+.h2 {
+  animation: .5s fadeUp ease;
+  line-height: 110%;
+}
+
+@keyframes fadeUp {
+  0% {
+      transform: translate(0, .2em);
+      opacity: 0;
+  }
+
+  100% {
+      transform: translate(0, 0);
+      opacity: 1;
+  }
+}
+
 </style>

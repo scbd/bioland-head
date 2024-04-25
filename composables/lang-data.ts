@@ -5,7 +5,7 @@ export const useLanguageMenus = async () => {
 
     const uri = `${gaiaApi}v2023/drupal/multisite/${drupalMultisiteIdentifier}/configs/${identifier}/locales`
 
-    const { data, error } = await useFetch(uri)
+    const data = await $fetch(uri)
 
-    return data.value || []
+    return data || []
 }

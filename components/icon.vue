@@ -1,6 +1,6 @@
 <template >
-  <svg :class="{ [`chm-icon-${name}`]:true, 'chm-icon-flip': flip}" class="chm-icon" >
-    <use  v-bind="{ 'xlink:href': `#chm-icon-${name}` }"></use>
+  <svg :class="{ [`bl2-icon-${name}`]:true, 'bl2-icon-flip': flip}" class="bl2-icon" >
+    <use  v-bind="{ 'xlink:href': `#bl2-icon-${name}` }"></use>
   </svg>
 </template>
 <script>
@@ -13,7 +13,7 @@ export default {
 }
 </script>
 <style>
-.chm-icon {
+.bl2-icon {
   display     : inline-block;
   width       : 1em;
   height      : 1em;
@@ -22,7 +22,7 @@ export default {
 
   /* fill        : currentColor; */
 }
-.chm-icon-flip{
+.bl2-icon-flip{
   transform: scaleX(-1);
 }
 </style>

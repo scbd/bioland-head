@@ -17,10 +17,10 @@ async function getMenuData(menuName: string){
     const pathLocale = pathPreFix === '/zh'? '/zh-hans' : pathPreFix;
 
     const uri = `https://${identifier}${baseHost}${pathLocale}/system/menu/${encodeURIComponent(menuName)}/linkset`;
-consola.info('menu uri', uri)
-    const { data, error } = await useFetch(uri, { mode: 'cors' });
 
-    return data.value?.linkset? formatMenus(data.value.linkset[0].item) : [];
+    const data = await $fetch(uri, { mode: 'cors' });
+
+    return data?.linkset? formatMenus(data.linkset[0].item) : [];
 }
 
 
@@ -46,12 +46,17 @@ function embedChildren(menus: Array, menusClone: Array){
 
     for (const aMenu of menus) {
         const children = [];
+
+        if(Array.isArray(aMenu.class)) aMenu.class = aMenu.class[0].split(' ');
         for (const aMenuClone of menusClone) {
             if((aMenuClone.hierarchy.length - aMenu.hierarchy.length) != 1) continue;
 
+            const aMenuCloneHierarchy = aMenuClone.hierarchy.join('.');
+            const aMenuHierarchy = aMenu.hierarchy.join('.');
             const index = aMenu.hierarchy.length - 1;
 
-            if(aMenuClone.hierarchy[index] !== aMenu.hierarchy[index]) continue;
+           if(!aMenuCloneHierarchy.startsWith(aMenuHierarchy)) continue;
+           //if(Array.isArray(aMenuClone.class)) aMenuClone.class = aMenuClone.class[0].split(' ');
 
             children.push(aMenuClone);
         }

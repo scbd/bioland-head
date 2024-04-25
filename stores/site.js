@@ -1,110 +1,97 @@
-import { defineStore } from 'pinia'
-import { getBiolandSiteIdentifier } from "~/util";
+export const useSiteStore = defineStore('site', {
+    state: () => ({  locale  : undefined, identifier                : undefined, siteCode                  : undefined, pageIdentifiers           : undefined, defaultLocale             : undefined, gaiaApi                   : undefined, drupalMultisiteIdentifier : undefined, multiSiteCode             : undefined, baseHost                  : undefined, logo                      : undefined, config                    : undefined, name                      : undefined, redirect                  : undefined, drupalInternalRevisionId : undefined, }),
+    actions:{
+        set(name, value){
 
-const actions = { set, initialize, getSiteDefaultLocale, watchLocaleChange, getSiteConfig, getDefinedName  }
-
-export const useSiteStore = defineStore('site', { state, actions })
-
-const initState = { 
-                    locale                   : undefined,
-                    identifier               : undefined,
-                    pagePath                 : undefined,
-                    defaultLocale            : undefined,
-                    gaiaApi                  : undefined,
-                    drupalMultisiteIdentifier: undefined,
-                    baseHost                 : undefined,
-                    logo : undefined,
-                    hasFlag : undefined,
-                    config:     undefined,
-                    name:       undefined,
-                }
-
-function state(){ return initState }
-
-
-
-function set(name, value){
-
-    if(!Object.keys(initState).includes(name)) throw new Error(`useSiteStore.set -> State ${name} is not defined`);
-
-    this.$patch({ [name]: unref(value) } );
-
-    return this;
-}
-
-async function initialize(nuxtApp){
-    const { gaiaApi, drupalMultisiteIdentifier, baseHost }   = useRuntimeConfig().public;
-    const { hostname } = useRequestURL();
-
-    this.set('baseHost',baseHost);
-    this.set('gaiaApi',gaiaApi);
-    this.set('drupalMultisiteIdentifier',drupalMultisiteIdentifier);
-    this.set('locale',nuxtApp.$i18n.locale);
-    this.set('identifier',getBiolandSiteIdentifier(hostname) || 'seed');
-    this.set('defaultLocale',await this.getSiteDefaultLocale());
-
-    const config = await this.getSiteConfig();
-    this.set('config',await this.getSiteConfig());
-    this.set('logo',getLogoUri(config));
-    this.set('name',await this.getDefinedName());
-}   
-
-function watchLocaleChange(nuxtApp, functions = []){
-    const locale  =  nuxtApp.$i18n.locale
-
-    watch(locale, async (newLocale) => {
-        this.set('locale',newLocale);
-        await this.initialize(nuxtApp);
-
-        for (const aFunction of functions)
-            await aFunction();
+            //if(!Object.keys(initState).includes(name)) throw new Error(`useSiteStore.set -> State ${name} is not defined`);
         
-    }, { immediate: true });
-}
-
-async function getSiteDefaultLocale(){
-    const { identifier, gaiaApi, drupalMultisiteIdentifier } = this;
-
-
-    const uri = `${gaiaApi}v2023/drupal/multisite/${drupalMultisiteIdentifier}/${identifier}/default-locale`
-
-    const { data, error } = await useFetch(uri)
-
-    return data.value
-}
-//https://api.cbddev.xyz/api/v2023/drupal/multisite/bl2/configs/seed
-
-async function getSiteConfig(){
-    const { identifier, gaiaApi, drupalMultisiteIdentifier } = this;
-
-
-    const uri = `${gaiaApi}v2023/drupal/multisite/${drupalMultisiteIdentifier}/configs/${identifier}`
-
-    return $fetch(uri)
-}
-
-function getLogoUri(config){
-    const hasCountry = config.country || (config?.countries? config?.countries[0] : undefined)
-
-    if(config.logo)  return config.logo;
-
-    if(hasCountry) return `https://seed.chm-cbd.net/sites/default/files/images/flags/flag-${hasCountry}.png`
-
-    return 'https://seed.chm-cbd.net/sites/default/files/images/country/flag/xx.png'
-}
-
-async function getDefinedName () {
-    const { locale, identifier,   baseHost, defaultLocale } = this;
-    const pathPreFix = locale === defaultLocale?.locale? '' : `/${locale}`;
-    const pathLocale = pathPreFix === '/zh'? '/zh-hans' : pathPreFix;
-    const query = {jsonapi_include: 1};
-    const uri = `https://${encodeURIComponent(identifier)}${baseHost}${pathLocale}/jsonapi/site/site?api-key=636afe3fa6d502d3d7b01996b50add18`
-
-    const resp = await $fetch(uri,{query})
-    const name = resp?.data?.name
-
-    return name === '_'? '' : name;
-}
-
-// TODO
-// get country name from server translated
+            this.$patch({ [name]: unref(value) } );
+        
+            return this;
+        },
+        initialize( { locale, identifier,siteCode, defaultLocale, config, siteName, gaiaApi, multiSiteCode, baseHost, env }){
+            this.set('baseHost',                  baseHost);
+            this.set('gaiaApi',                   gaiaApi);
+            this.set('drupalMultisiteIdentifier', multiSiteCode);
+            this.set('multiSiteCode',             multiSiteCode);
+            this.set('locale',                    locale);
+            this.set('identifier',                identifier || siteCode);
+            this.set('siteCode',                  identifier || siteCode);
+            this.set('defaultLocale',             defaultLocale);
+        
+            this.set('config', config);
+            this.set('logo',   this.getLogoUri);
+            this.set('name',   siteName);
+            this.set('redirect', env === 'production'? config.redirect : '');
+        },
+        getHost(ignoreLocale = false){
+    
+            const { locale, siteCode, baseHost, defaultLocale, redirect } = this;
+        
+            const pathLocale = ignoreLocale? '' : this.drupalizePathLocales(locale, defaultLocale);
+            const base       = redirect    ? `https://${redirect}` : `https://${encodeURIComponent(siteCode)}.${encodeURIComponent(baseHost)}`;
+        
+            return `${base}${pathLocale}`;
+        },
+        drupalizePathLocales(locale, defaultLocale){
+            const drupalLocaleMap = new Map([['/zh','/zh-hans']]);
+            
+            if(!defaultLocale || !locale) return '';
+        
+            const pathPreFix = locale === defaultLocale? '' : `/${locale}`;
+        
+            if(!pathPreFix) return pathPreFix;
+        
+            const keys = drupalLocaleMap.keys();
+        
+            for (const aKey of keys)
+                if(pathPreFix.startsWith(aKey))
+                    return pathPreFix.replace(aKey,drupalLocaleMap.get(aKey))
+        
+            return pathPreFix;
+        }
+    },
+    getters:{
+        isDefaultLocale(){
+            return this.locale === this.defaultLocale
+        },
+        getLogoUri(){
+            const config = this.config
+            const hasCountry = config?.country || (config?.countries? config?.countries[0] : undefined)
+        
+            if(config?.logo)  return config.logo;
+        
+            if(hasCountry) return `https://www.cbd.int/images/flags/96/flag-${hasCountry}-96.png`
+        
+            return 'https://seed.chm-cbd.net/sites/default/files/images/country/flag/xx.png'
+        },
+        host(){
+            return this.getHost(true)
+        },
+        localizedHost(){
+            return this.getHost()
+        },
+        drupalApiUriBase(){
+            return this.getHost()
+        },
+        params(){
+            const { identifier, baseHost, siteCode, config, locale, defaultLocale, host, localizedHost, redirect } = this;
+            const { country:c, countries:cs } = config || {};
+            const countries = this?.countries?.length?  this?.countries :(cs?.length? Array.from(new Set([c, ...cs])) : c? [c] : []).filter(x=>x && x !== 'undefined');
+        
+        
+            return { baseHost, siteCode,identifier, country:c, locale, defaultLocale, countries, redirect, host, localizedHost };
+        },
+        countries(){
+            const { config } = this;
+        
+            const countries = config?.countries || config?.runtime?.countries || [];
+            const country   = config?.country? [config?.country] : []
+        
+            return Array.from(new Set([  ...country , ...countries ])).filter(x=>x && x !== 'undefined');
+        },
+       
+        
+        
+    }
+});

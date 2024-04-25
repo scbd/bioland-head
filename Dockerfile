@@ -1,8 +1,7 @@
-FROM node:18-alpine
+FROM node:20
 
-RUN apk update && apk upgrade && \
-    apk add --no-cache yarn && \
-    apk add --no-cache curl
+RUN apt update && \
+    apt install yarn curl -y
 
 WORKDIR /usr/src/app
 
@@ -21,4 +20,6 @@ EXPOSE 8000
 ENV NUXT_HOST=0.0.0.0
 ENV NUXT_PORT=8000
 
-CMD ["node", ".output/server/index.mjs"]
+
+
+CMD ["node", "--max-http-header-size=32768",".output/server/index.mjs"]
