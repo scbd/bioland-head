@@ -67,11 +67,11 @@
         }
 
         function isDoubleCol(aMenu){
-            const isXl = ['xl', 'xxl'].includes(viewport.breakpoint.value);
+            const isXl = ['xl', 'xxl'].includes(viewport?.breakpoint?.value);
 
-            if(aMenu.class.includes('bl2-2x')) return true;
+            if(aMenu?.class?.includes('bl2-2x')) return true;
 
-            if(aMenu.class.includes('bl2-2x-xl') && isXl) return true;
+            if(aMenu?.class?.includes('bl2-2x-xl') && isXl) return true;
 
             return false
         }
