@@ -32,6 +32,8 @@
         // const { menus    } = toRefs      (props);
         const   toggle      = ref         (false);
         const   siteStore   = useSiteStore(     );
+
+        const maxColumns = computed(()=> siteStore.config?.runTime?.theme?.megaMenu?.maxColumns || 4)
         const viewport = useViewport();
         const isMobile = computed(() => !['lg','xl', 'xxl'].includes(viewport.breakpoint.value));
         const sections = computed(() => {
@@ -39,17 +41,30 @@
                                     if(!props?.menus?.length) return []
 
                                     const menusFiltered = [];
-
+                                    let   totalColumns = 0;
                                     for (let index = 0; index < props?.menus?.length; index++) {
-
+                                        if(hasMaxColumns(totalColumns, props?.menus[index+1]))
                                         if(isEmptySection(props?.menus[index])) continue;
 
                                         menusFiltered.push(props?.menus[index]);
+
+                                        isDoubleCol(props?.menus[index])? totalColumns += 2 : totalColumns += 1;
                                     }
+
+                                    if(totalColumns > maxColumns.value) return menusFiltered.slice(0, maxColumns.value);
 
                                     return menusFiltered;
         });
 
+        function hasMaxColumns(totalColumns, nextMenu = {}){
+            if(totalColumns >= maxColumns.value) return true;
+
+            const nextTotalColumns = totalColumns + (isDoubleCol(nextMenu)? 2 : 1);
+
+            if(nextTotalColumns >= maxColumns.value) return true;
+
+            return false
+        }
 
         function hasDoubleCol(){
             for (const aMenu of unref(sections)) 
