@@ -1,8 +1,3 @@
-import { DateTime } from 'luxon';
-import { paramCase } from 'param-case';
-import {validate as validateUuid} from 'uuid';
-
-
 export const useDrupalForums = async (ctx) => {
 
     return getForums(ctx)
@@ -10,15 +5,14 @@ export const useDrupalForums = async (ctx) => {
 
 async function getForums(ctx) {
 
-    const { host  } = ctx;
-        const params        = getQuestString(ctx);
+    const { host  }     = ctx;
+    const params        = getQueryString(ctx);
     const uri           = `${host}/jsonapi/taxonomy_term/forums?jsonapi_include=1${params}`;//&include=taxonomy_forums&page[limit]=${rowsPerPage}&sort=-sticky
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
     const { data }      = await $fetch(uri, { method, headers });
 
-console.log('params', params)
     return data
 };
 

@@ -152,11 +152,11 @@ export async function getSiteDefinedName (ctx) {
     return name === '_'? '' : name;
 }
 
-export async function getSiteConfig({ identifier, siteCode }){
+export async function getSiteConfig({  siteCode }){
 
-    const { multiSiteCode, env } = useRuntimeConfig().public;
+    const { multiSiteCode, env, dmsm } = useRuntimeConfig().public;
 
-    const uri = `https://dmsm.cbddev.xyz/api/config/${env}/${multiSiteCode}/${siteCode}`//`${gaiaApi}/v2023/drupal/multisite/${multiSiteCode}/configs/${identifier}`
+    const uri = `${dmsm}/config/${env}/${multiSiteCode}/${siteCode}`//`${gaiaApi}/v2023/drupal/multisite/${multiSiteCode}/configs/${identifier}`
 
     return $fetch(uri);
 }
