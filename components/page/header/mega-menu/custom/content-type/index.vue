@@ -66,8 +66,13 @@
 
         aMenu.dataMap = {};
 
+        const horizontalCardMax = siteStore?.config?.runTime?.theme?.megaMenu?.horizontalCardMax
+
         for (const country of countries)
-            aMenu.dataMap[country] = getContentTypeData(country)
+            if(!isCardView.value)
+                aMenu.dataMap[country] = getContentTypeData(country).slice(0,getMaxRowsPerColumn() || 6);
+            else
+                aMenu.dataMap[country] = getContentTypeData(country).slice(0,horizontalCardMax);
 
         return aMenu;
     })
@@ -86,7 +91,13 @@
 
         return classes.length >1? classes : classes[0];
     }
+    function getMaxRowsPerColumn(){
+        const [max] = (unref(passedMenu)?.class?.filter(aClass => aClass.startsWith('bl2-ct-max-row-per-column-')) || []).map((aClass)=> aClass.replace('bl2-ct-max-row-per-column-',''));
 
+        if(max) return max;
+
+        return siteStore?.config?.runTime?.theme?.megaMenu?.maxRowsPerColumn 
+    }
     function getContentTypeData(country){
         const contentTypeName = getContentType();
 

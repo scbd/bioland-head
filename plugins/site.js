@@ -86,10 +86,10 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
     function getPage(passedPath){
         const path = passedPath.endsWith('/topics')? passedPath.replace('/topics', '') : passedPath;
-        const { drupalMultisiteIdentifier } = useRuntimeConfig().public;
+        const { multiSiteCode } = useRuntimeConfig().public;
         const { identifier,  locale } = siteStore;
 
-        const key = `${drupalMultisiteIdentifier}-${identifier}-${locale}`;
+        const key = `${multiSiteCode}-${identifier}-${locale}`;
 
         return useFetch(`/api/page/${key}/${encodeURIComponent(path)}`, {  method: 'GET', params: clone({ ...siteStore.params, path }) }).then(({ data }) => data);
     }
@@ -100,7 +100,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
         if(!hostName || hostName.split('.').length <= 1)
             return  'demo';
-    console.log('===========plugins/site.getBiolandSiteIdentifier',hostName.split('.'))
+
         return hostName.split('.')[0];
     }
 

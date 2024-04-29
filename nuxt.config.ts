@@ -36,6 +36,7 @@ export default defineNuxtConfig({
       baseHost:'.chm-cbd.net',
       multiSiteCode: 'bl2',
       gaiaApi: 'https://api.cbd.int/api',
+      dmsm: 'https://dmsm.cbddev.xyz/api'
     }
   },
   imports: {
@@ -123,7 +124,7 @@ export default defineNuxtConfig({
     safelist: ['swiper'], // Add my-class token to the safelist (e.g. .my-class)
   },
   image: {
-    domains: ['https://seed.chm-cbd.net', 'https://www.cbd.int', 'https://seed.bl2.staging.cbd.int','https://panorama.solutions/'],
+    domains: ['chm-cbd.net', 'cbd.int', 'https://panorama.solutions/'],
     format: ['webp', 'avif', 'jpeg', 'jpg', 'png','gif'],
     quality: 70,
     screens: {
