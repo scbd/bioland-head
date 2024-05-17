@@ -25,14 +25,11 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
 
     siteStore.initialize({ ...rtPublic, ...data.value, locale}) ;
-    //context.value = { ...rtPublic, ...data.value, locale }; //path:route.path
-    context.value = { ...siteStore.params, locale }; 
-  
-//     consola.log('context.value',context.value )
-// consola.log('siteStore.params',siteStore.params )
 
-  ensureContext(siteStore.params)// const { data:menuData } = await useFetch(`/api/menus`, { params: clone({...siteStore.params, path:route.path})});
-//  if()
+    context.value = { ...siteStore.params, locale }; 
+
+    ensureContext(siteStore.params);
+
     const { data:menuData } = await useFetch(`/api/menus`, { params: clone({...siteStore.params, path:route.path})});
 
     await menuStore.loadAllMenus(menuData.value);
@@ -56,18 +53,18 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         const pStore      = usePageStore(nuxtApp.$pinia);
 
 
-        if(to.path.startsWith('/zh-hans')) 
-            return navigateTo({ path: to.path.replace('/zh-hans', '/zh'), query: to.query });
-        if(to.path.endsWith('node/18'))
-            return navigateTo({ path: to.path.replace('/node/18', '/'), query: to.query });
-        if(to.path.endsWith('node/25'))
-            return navigateTo({ path: to.path.replace('/node/25', '/search'), query: to.query });
-        if(to.path.endsWith('node/87'))
-            return navigateTo({ path: to.path.replace('/node/87', '/search/secretariat'), query: to.query });
-        if(to.path.endsWith('node/88'))
-            return navigateTo({ path: to.path.replace('/node/88', '/news-and-updates'), query: to.query });
-        if(to.path.endsWith('node/90'))
-            return navigateTo({ path: to.path.replace('/node/90', '/forums'), query: to.query });
+        // if(to.path.startsWith('/zh-hans')) 
+        //     return navigateTo({ path: to.path.replace('/zh-hans', '/zh'), query: to.query });
+        // if(to.path.endsWith('node/18'))
+        //     return navigateTo({ path: to.path.replace('/node/18', '/'), query: to.query });
+        // if(to.path.endsWith('node/25'))
+        //     return navigateTo({ path: to.path.replace('/node/25', '/search'), query: to.query });
+        // if(to.path.endsWith('node/87'))
+        //     return navigateTo({ path: to.path.replace('/node/87', '/search/secretariat'), query: to.query });
+        // if(to.path.endsWith('node/88'))
+        //     return navigateTo({ path: to.path.replace('/node/88', '/news-and-updates'), query: to.query });
+        // if(to.path.endsWith('node/90'))
+        //     return navigateTo({ path: to.path.replace('/node/90', '/forums'), query: to.query });
 
         const isNewLocale = isLocaleChange(to, from) && !!pStore.drupalInternalNid;
 
@@ -78,6 +75,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
         const pData = (await getPage(path)).value;
 
+   
         pStore.initialize(pData)
     }
 
@@ -115,12 +113,13 @@ function isLocaleChange({ name: to }, { name: from }){
 }
 
 function getLocaleFromRouteName(name){
+    if(!name)return '';
     const indexToSlice = name.lastIndexOf('_');
     return name.slice(indexToSlice + 1);
 }
 
 function ensureContext(ctx = {}){
-    const hasContext = ctx.siteCode && ctx.locale && ctx.host && (ctx.country || ctx.countries?.length)
+    const hasContext = ctx.siteCode && ctx.locale && ctx.host //&& (ctx.country || ctx.countries?.length)
 
     if(!hasContext)
             throw new Error('plugins/site: Context not derived');

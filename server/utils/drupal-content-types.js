@@ -23,7 +23,6 @@ async function getContentMenus (ctx, drupalInternalId) {
 
     const { data, meta } = await $fetch(uri, { method, headers });
 
-
     return { data: data?.map(mapThumbNails(ctx)), count: meta?.count }
 };
 

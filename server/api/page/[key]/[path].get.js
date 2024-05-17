@@ -10,11 +10,12 @@ export default cachedEventHandler(async (event) => {
         return  getPageData({...ctx, path})
     }
     catch(e){
+        const path = decodeURIComponent(getRouterParam(event, 'path'));
 
-        // throw createError({
-        //     statusCode: 500,
-        //     statusMessage: 'Failed to get page data',
-        // }); 
+        throw createError({
+            statusCode: 404,
+            statusMessage: `Failed to get page from path: ${path}`,
+        }); 
     }
     
 },{

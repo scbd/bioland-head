@@ -12,18 +12,34 @@ export async function getPageData(ctx){
         const   query                 = getSearchParams(ctx, type, bundle);
         const   uri                   = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
-
         const { data } = await $fetch(uri, { query });
 
         await addPageAliases(ctx,data).then((aliases)=> data.aliases=aliases)
         
-        
+        if(data.type === 'taxonomy_term--system_pages' && !data?.parent[0].id !== 'virtual' ) await getChildren(ctx, data);
+
         return  await mapData(ctx)(data)
     }catch(e){
         console.warn('server/utils/dupal-page -> getPageData', e);
         return {}
     }
 
+}
+
+async function getChildren(ctx, data){
+    const { localizedHost }       = ctx;
+    const   query                 =`?jsonapi_include=1&include=parent&filter[a-label][condition][path]=parent.id&filter[a-label][condition][operator]=%3D&filter[a-label][condition][value]=${data.id}`
+
+    const   uri                   = `${localizedHost}/jsonapi/taxonomy_term/system_pages${query}`;
+
+
+    const { data:children } = await $fetch(uri);
+
+
+
+    data.children=children
+
+    return data
 }
 
 function hasLocalizationException({ path }){
@@ -152,10 +168,11 @@ function mapTagsByType(tags){
 function getSearchParams(ctx, type, bundle, prop){
     const search = {jsonapi_include: 1};
 
+    if(type === 'taxonomy_term' && bundle === 'system_pages') search['include'] = 'field_attachments,field_attachments.field_media_image,field_search,parent,field_type_placement';
     if(type === 'node' && bundle === 'content' && !prop)  setContentSearchParams(search);
     if(type === 'media' &&  ['image', 'document'].includes(bundle))  setMediaImageSearchParams(search);
     if(prop === 'field_attachments') search['include'] = 'thumbnail';
-
+    
     return search;
 }
 

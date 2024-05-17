@@ -92,6 +92,7 @@ async function getList(ctx ) {
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
+   
     const { data, meta } = await $fetch(uri+getQuestString(ctx), { method, headers });
 
 

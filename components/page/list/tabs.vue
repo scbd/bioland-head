@@ -3,12 +3,12 @@
         <ul  class="nav nav-tabs mb-1" >
 
             <li   class="nav-item ">
-                <NuxtLink :class="{a:siteContentActive}" :to="siteContentTo" class="nav-link  text-capitalize">
+                <NuxtLink :class="{a:isActive(siteContentTo)}" :to="siteContentTo" class="nav-link  text-capitalize">
                     {{t('Site Content')}}
                 </NuxtLink>
             </li>
             <li   class="nav-item ">
-                <NuxtLink :class="{a:secretariatContentActive}" :to="secretariatContentTo" class="nav-link  text-capitalize">
+                <NuxtLink :class="{a:isActive(secretariatContentTo)}" :to="secretariatContentTo" class="nav-link  text-capitalize">
                     {{t('Secretariat')}}
                 </NuxtLink>
             </li>
@@ -22,70 +22,39 @@
     const { t  }   = useI18n();
     const   r      = useRoute();
 
+  
     const localePath = useLocalePath();
 
-    const showNodes = [25,87,88]
+
     const pageStore = usePageStore();
-    const showTabs = computed(()=> showNodes.includes(pageStore?.page?.drupalInternalNid));
+    const showTabs = computed(()=>  (pageStore?.page?.children?.length || (pageStore?.page?.parent?.length && pageStore?.page?.parent[0].id !== 'virtual')));
 
     const siteContentTo = computed(()=> {
-        const pageNid = pageStore?.page?.drupalInternalNid;
 
-        if([25,87].includes(pageNid)) return localePath(`/search`)
-        if(pageNid === 87) return localePath(`/search/secretariat`) 
-        if(pageNid === 88) return localePath({path:`/news-and-updates`, query:{ schemas: [2,3] }})
-
-        return localePath(`/search`)
+        return getParentAlias() || localePath(pageStore?.path?.alias)
     });
 
     const secretariatContentTo = computed(()=> {
-        const pageNid = pageStore?.page?.drupalInternalNid;
 
-        if([25,87].includes(pageNid)) return localePath(`/search/secretariat`)
-
-        if(pageNid === 88) return localePath({path:`/news-and-updates`, query:{ schemas: [ 'news', 'notification', 'statement', 'meeting', 'pressRelease' ] }})
-
-        return localePath(`/search/secretariat`)
+        return getChildAlias() || localePath(pageStore?.path?.alias)
     });
 
-    const secretariatContentActive = computed(()=> {
-        const pageNid = pageStore?.page?.drupalInternalNid;
+    const isActive = (to)=>{
+        return localePath(pageStore?.path?.alias) === to
+    }
 
-        if([87].includes(pageNid)) return true
+    function getParentAlias(){
+        if(!pageStore?.page?.parent?.length || pageStore?.page?.parent[0].id === 'virtual') return ''
 
-        if(pageNid === 88 && r?.query?.schemas?.length > 2) return true;
+        return localePath(pageStore?.page?.parent[0].path?.alias)
+    }
 
-        return false
-    });
+    function getChildAlias(){
+        if(!pageStore?.page?.children?.length) return ''
 
-    const siteContentActive = computed(()=> {
-        const pageNid = pageStore?.page?.drupalInternalNid;
-
-        if([25].includes(pageNid)) return true
-
-        if(pageNid === 88 && r?.query?.schemas?.length === 2) return true;
-
-        return false
-    });
-    // const   router    = useRouter();
-    // const   eventBus  = useEventBus();
+        return localePath(pageStore?.page?.children[0].path?.alias)
+    }
     
-    // const   props     = defineProps({   modelValue: { type: String, default: null, },
-    //                                     types     : { type: Array, default: () => [] }
-    //                                 });
-// consola.warn(r )
-    
-    // const   emit                = defineEmits(['update:modelValue']);
-    // const { types, modelValue } = toRefs(props);
-
-    // async function changeType(type){
-    //     if(type===modelValue.value) return;
-
-    //     await router.push({ query:{ } });
-
-    //     emit('update:modelValue', type);
-    //     eventBus.emit('changeTab');
-    // }
 </script>
 <style lang="scss"  scoped>
     .nav-link{

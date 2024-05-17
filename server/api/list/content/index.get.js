@@ -6,7 +6,7 @@ export default cachedEventHandler(async (event) => {
         const ctx               = getContext    (event);
 
         if(query?.schemas?.length && !query?.drupalInternalIds?.length)
-            query.drupalInternalIds = query.schemas
+            query.drupalInternalIds = Array.isArray(query.schemas)? query.schemas : [query.schemas];
 
         return useContentTypeList({ ...ctx, ...query });
     }

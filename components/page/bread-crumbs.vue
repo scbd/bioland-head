@@ -28,7 +28,7 @@ const viewport   = useViewport();
 const route      = useRoute();
 const localePath = useLocalePath();
 const pageStore  = usePageStore();
-const contentTypeId = computed(()=> pageStore?.page?.fieldTypePlacement?.drupal_internal__tid);
+const contentTypeId = computed(()=> pageStore?.typeid);
 const menusStore = useMenusStore();
 const inMenu     = ref(menusStore.isInMainMenu(route.path) || menusStore.isInMainMenu(parentPath()) || menusStore.isInMainMenuByContentTypeId(contentTypeId.value));
 const eventBus   = useEventBus();

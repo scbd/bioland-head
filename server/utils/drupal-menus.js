@@ -145,7 +145,7 @@ async function getMenuData(menuName, ctx){
 
     const data = await $fetch(uri, { mode: 'cors' });
 
-    return data?.linkset? formatMenus(data.linkset[0].item) : [];
+    return data?.linkset && data?.linkset?.length ? formatMenus(data.linkset[0].item) : [];
 }
 
 

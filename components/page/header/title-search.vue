@@ -162,12 +162,13 @@ function setup() {
 }
 
 async function onClick(value){
-    
-    if(!value) return
-    
     const   route   = useRoute();
 
-    const   localePath     = useLocalePath();
+const   localePath     = useLocalePath();
+    consola.error(!!value)
+    if(!value) return this.navigateTo(localePath(`/search`))
+    
+
     
     if(route.path !== '/search'){
         this.navigateTo(localePath(`/search?freeText=${value}`))

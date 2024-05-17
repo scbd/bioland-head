@@ -1,5 +1,5 @@
 <template>
-    <div class="container mt-3">
+    <div class="container ">
         <div class="row">
             <div class="col-md-3">
                 &nbsp;
@@ -11,12 +11,13 @@
                 <h2 v-if="contentTypeName && !title" class="page-type text-capitalize">{{t(contentTypeName,2)}}</h2>
                 <h2 v-if="title" class="page-type text-capitalize">{{t(title,2)}}</h2>
                 <PageListTextSearch/>
+                <PageListFilter v-if="!typeId"/>
             </div>
 
             
                 <div name="list" tag="div" class="col-12 col-md-9 data-body">
                     <PageListTabs  :types="types" :key="JSON.stringify(types)"/>
-                    <PageListPager v-if="showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results.count}`"/>
+                    <PageListPager v-if="showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results?.count}`"/>
                     <ClientOnly>
                         <transition-group name="list">
                             <PageListRow  :a-line="aLine" v-for="(aLine,index) in results?.data" :key="index" />
@@ -26,12 +27,6 @@
                     <PageListPager :count="results?.count"/>
                 </div>
 
-          
-
-            <!-- <span :key="`showTopPage${showTopPager}${results?.count}-span`">&nbsp;</span>
-            <div class="col-12 col-md-9 offset-md-3 ">
-                <PageListPager :count="results?.count"/>
-            </div> -->
         </div>
     </div>
 
@@ -49,14 +44,16 @@
     const   pageStore                   = usePageStore ();
     const   eventBus                    = useEventBus();
     const   props                       = defineProps({ 
-                                                        showTopPager: { type: Boolean, default: false },
+                                                        // showTopPager: { type: Boolean, default: false },
                                                         title       : { type: String,  default: '' },
                                                         types: { type: Array, default: () => [] },
                                                     });
 
-    const { showTopPager, title  }       = toRefs(props);
+    const showTopPager = computed(()=>pageStore.isSearchAll);
 
-    const isSecretariat  = computed(()=> pageStore?.page?.drupalInternalNid === 87 || pageStore?.page?.drupalInternalNid === 88 && r.query?.schemas?.length > 2);   
+    const { title  }       = toRefs(props);
+
+    const isSecretariat  =computed(()=> ((pageStore?.page?.parent?.length && pageStore?.page?.parent[0].id !== 'virtual'))); 
     const isContent      = computed(()=> pageStore?.page?.drupalInternalNid === 25 || pageStore?.page?.drupalInternalNid === 88 && r.query?.schemas?.length === 2);  
 
     const   type = computed(()=> isSecretariat.value? 'secretariat' : isContent.value? 'content' : undefined);
@@ -77,14 +74,14 @@
 
     const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query });
 
-    // function onResponse({ request, response, options}){
-    //     consola.error('onResponse response._data',response._data)
-    // }
+
 
     onMounted(() => { eventBus.on('changePage', refresh); });
  
     function getContentTypeId(){
-        const contentType = r?.params?.contentType;
+        if(pageStore?.page?.type === 'taxonomy_term--system_pages') return ''
+
+        const contentType = r?.params[0];
 
         if(!contentType) return '';
 
@@ -97,7 +94,8 @@
     }
 
     function getContentTypeName(){
-        const contentType = r?.params?.contentType;
+        if(pageStore?.page?.type === 'taxonomy_term--system_pages') return ''
+        const contentType = r?.params[0];
 
         if(!contentType) return '';
 
@@ -110,8 +108,6 @@
     }
 
     function getApiUri(){
-// consola.error('type.value',type.value)
-// consola.error('typeId.value',typeId.value)
 
         if(type.value == 'secretariat')
             return `/api/list/chm`;

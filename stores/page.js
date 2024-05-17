@@ -1,7 +1,7 @@
 import   random          from 'lodash.sample' ;
 import   camelCaseKeys   from 'camelcase-keys';
 import { useSiteStore } from "~/stores/site";
-
+ 
 
 
 export const usePageStore = defineStore('page', {
@@ -49,10 +49,13 @@ export const usePageStore = defineStore('page', {
         
             return random(heroImages);
         },
-        typeName(){ return this.page?.fieldTypePlacement?.name || undefined; },
+        typeName(){ return  this.page?.fieldTypePlacement?.name || ''; },
+        typeNamePlural(){ return  this.page?.fieldTypePlacement?.field_plural || ''; },
+
         typeId(){ return this.page?.fieldTypePlacement?.drupal_internal__tid || this.page?.fieldTypePlacement?.drupalInternalTid  || undefined; },
         image(){
-            if(this.isDocument ) return this.mapDocumentImage(this.document?.fieldMediaImage)
+     
+            //if(this.isDocument ) return this.mapDocumentImage(this.document?.fieldMediaImage)
             if(!this.images || !this.images?.length) return undefined;
         
             return {...this.images[0] };
@@ -60,9 +63,12 @@ export const usePageStore = defineStore('page', {
         document(){
             if( !this?.documents?.length) return undefined;
         
-            return { ...this.documents[0], downloadUrl: this.documentUri };
+            const siteStore = useSiteStore();
+        
+            const downloadUrl =  `${siteStore.host}${this.documents[0]?.fieldMediaDocument?.uri?.url}`;
+            return { ...this.documents[0], downloadUrl };
         },
-        video(){ return this?.videos?.lengt? this.videos[0] : undefined; },
+        video(){ return this?.videos?.length? this.videos[0] : undefined; },
         images(){
             if(!this.page?.fieldAttachments?.length ) return [];
         
@@ -89,16 +95,81 @@ export const usePageStore = defineStore('page', {
         
             return { alt, src }
         },
-        documentUri(){
-            if(!this.document?.fieldMediaDocument?.uri?.url) return undefined;
-            const siteStore = useSiteStore();
+        // documentUri(){
+        //     if(!this.document?.fieldMediaDocument?.uri?.url) return undefined;
+        //     const siteStore = useSiteStore();
         
-            return `${siteStore.host}${this.document.fieldMediaDocument.uri.url}`;
-        },
-        isImageOrVideo(){ return this.page?.typeId === 16; },
+        //     return `${siteStore.host}${this.document.fieldMediaDocument.uri.url}`;
+        // },
+        isImageOrVideo(){ return this.typeId === 16; },
         isImage(){ return this.isImageOrVideo && !this.videos.length; },
         isVideo(){ return this.isImageOrVideo && !!this.videos.length; },
         isDocument(){ return this.typeId === 12; },
+        isSearch(){
+            if(this?.page?.type === 'taxonomy_term--tags') return this?.page?.drupalInternalTid;
 
+            if(this?.page?.type?.startsWith('node--') || this?.page?.type?.startsWith('media--')) return false;
+
+            if(this?.page?.type === 'taxonomy_term--system_pages') return getTids(this?.page?.fieldSearch);
+
+        },
+        isPage(){
+            if(this.isSearch) return false;
+
+            const pageTypes = ['node--content', 'taxonomy_term--system_pages', 'media--hero', 'media--image', 'media--document', 'media--remote_video'];
+            
+            if(pageTypes.includes(this?.page?.type)) return true;
+
+            return false;
+        },
+        isMediaPage(){
+            return ['media--hero', 'media--image', 'media--document', 'media--remote_video'].includes(this?.page?.type);
+
+        },
+        isContentType(){
+            return this?.page?.type === 'taxonomy_term--tags';
+        },
+        isSearchAll(){
+            return this.isSearch && !this.isContentType && ( getTids(this?.page?.fieldSearch) || []).includes(27);
+        },
+        title(){
+            return this.page?.title || this.page?.name;
+        
+        },
+        body(){
+            return this.page?.body?.processed || this.page?.body?.value || this.page?.description?.processed || this.page?.description?.value;
+        },
+        startDate(){
+            return this.page?.fieldStartDate
+        },
+        endDate(){
+            return this.page?.fieldEndDate
+        },
+        publishedOn(){
+            return this.page?.fieldPublished || this.page?.created || this.page?.revisionCreated
+        },
+        editedOn(){
+            if(this.page?.created === this.page?.changed) return ''
+
+            return this.page?.changed
+        },
+        url(){
+            if(!this.page?.fieldUrl?.uri) return ''
+
+            return this.page.fieldUrl.uri;
+        },
+        tags(){
+            return this?.page?.tags || {}
+        },
+        media(){
+            return this?.page?.fieldAttachments
+        }
     }
 })
+
+
+function getTids(searchField){
+    if(!searchField || !searchField?.length) return false;
+
+    return searchField.map(({ drupalInternalTid })=> drupalInternalTid);
+}

@@ -1,14 +1,14 @@
 <template >
     <div class="cont" style="float: right; width: 200px; ">
-        <div v-if="fieldStartDate" class="mb-2">
+        <div v-if="pageStore?.startDate" class="mb-2">
             <h5 class="mb-0">{{t('Start Date')}}</h5>
-            {{dateFormat(fieldStartDate)}}
-            <h5 class="mb-0"  v-if="fieldEndDate">{{t('End Date')}}</h5>
-            <span v-if="fieldEndDate">{{dateFormat(fieldEndDate)}}</span>
+            {{ formatDate(pageStore?.startDate)}}
+            <h5 class="mb-0"  v-if="pageStore?.fieldEndDate">{{t('End Date')}}</h5>
+            <span v-if="fieldEndDate">{{formatDate(pageStore?.endDate)}}</span>
         </div>
-        <div v-if="!fieldStartDate" class="mb-2">
+        <div v-if="!fieldStartDate && pageStore?.publishedOn" class="mb-2">
             <h5 class="mb-0">{{t('Published on')}}</h5>
-            {{dateFormat(fieldPublished || created)}}
+            {{formatDate(pageStore?.publishedOn)}}
         </div>
         <div v-if="tags?.gbfTargets?.length" class="mb-2">
             <h5 >{{t('GBF Targets')}}</h5>
@@ -83,7 +83,10 @@
         return `https://www.cbd.int/gbf/targets/${number}`
     }
 
-    function dateFormat(date){
+    function formatDate(date){
+   
+        if(!date)   return '';
+
         return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
     }
 </script>

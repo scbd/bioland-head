@@ -1,11 +1,13 @@
 <template >
 
-        <div class="media-details-container " :class="{ 'p-1': !vertical }">
+<div></div>
+
+        <div class="media-details-container p-2" :class="{ 'p-1': !vertical }">
                 <div v-if="media.name" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
                         <h5 >{{t('File Name')}}</h5>
-                        <span v-if="!isImage">{{media.name}}</span>
-                        <span v-if="isImage">
-                                <NuxtLink :to="image.src" target="_blank" download>
+                        <span v-if="!pageStore?.isImage">{{media.name}}</span>
+                        <span v-if="pageStore?.isImage">
+                                <NuxtLink :to="pageStore?.image.src" target="_blank" download>
                                         {{media.name}}  <Icon name="download" class="fs-4 ms-1"/>
                                 </NuxtLink>
                         </span> 
@@ -39,7 +41,7 @@
                 <h5 >{{t('Updated Date')}}</h5>
                 <span>{{dateFormat(media.changed)}}</span>
         </div>
-        <div v-if="isDocument && media?.downloadUrl" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
+        <div v-if="pageStore?.isDocument && media?.downloadUrl" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
                 <h5 >{{t('Download')}}</h5>
                 <span>
                         <NuxtLink :to="media.downloadUrl" target="_blank" download>
@@ -61,21 +63,17 @@
         const { t, locale } = useI18n();
         const siteStore = useSiteStore();
 
-        const { typeId, videos,video,document, image, name, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImag, documentUri  } = storeToRefs( usePageStore());
+        const pageStore = usePageStore();
 
-        const isImageOrVideo = computed(()=> typeId.value === 16);
-        const isImage        = computed(()=> typeId.value === 16 && videos.value.length === 0);
-        const isVideo        = computed(()=> typeId.value === 16 && videos.value.length > 0);
-        const isDocument     = computed(()=> typeId.value === 12);
+        // const { typeId, videos,video,document, image, name, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImag, documentUri  } = storeToRefs( usePageStore());
+
 const media = computed(()=> {
 
-        if(isImage.value) return {...image.value, fieldPublished:fieldPublished.value};
-        if(isVideo.value) return { ...video.value, fieldPublished:fieldPublished.value};
-        if(isDocument.value) {
-                if(!document?.value?.downloadUrl && document?.value?.fieldMediaDocument?.uri?.url) 
-                        document.value.downloadUrl = siteStore.host+ document?.value?.fieldMediaDocument?.uri?.url;
-
-                return {...document.value,fieldPublished:fieldPublished.value};
+        if(pageStore.isImage) return {...pageStore.image, fieldPublished:pageStore.publishedOn};
+        if(pageStore.isVideo) return { ...pageStore.video, fieldPublished:pageStore.publishedOn};
+        if(pageStore.isDocument) {
+   
+                return {...pageStore.document,fieldPublished:pageStore.publishedOn};
         }
 return {}
 });

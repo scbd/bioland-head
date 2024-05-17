@@ -81,12 +81,16 @@ function getSearchParamsByAlias(alias){
 }
 export async function mapAliasByLocale(ctx, type, id){
  
+    const homePath = await getSiteDefinedHome(ctx);
+    const isHomePath = homePath === `/${type}/${id}`; 
+  
     const languages = await getById(ctx)(type, id, true)
     const locales = (await getInstalledLanguages(ctx)).map(mapDrupalLocaleToLocale);
 
 
     const map = {};
-    const englishLang = languages?.find(({langcode})=> langcode === 'en') || { path: `/${type}/${id}`};
+    const thePath = isHomePath? '' : `/${type}/${id}`;
+    const englishLang = languages?.find(({langcode})=> langcode === 'en') || { path: thePath};
     
     for (const locale of locales) {
         const aLang           = languages?.find(({langcode}) => langcode.startsWith(locale));

@@ -56,6 +56,7 @@ export const parseQuery = (event) => {
 export const getContext = (event) => {
     const { context } = parseCookies(event)
 
+
     if(!context) return parseQuery(event)
 
     return context? parseContext(JSON.parse(decodeURIComponent(context))) : undefined
@@ -150,6 +151,20 @@ export async function getSiteDefinedName (ctx) {
     const name = resp?.data?.name
 
     return name === '_'? '' : name;
+}
+
+export async function getSiteDefinedHome (ctx) {
+    const { apiKey }     = useRuntimeConfig()
+    const localizedHost  = getHost(ctx)
+    const query          = { jsonapi_include: 1 };
+    const uri            = `${localizedHost}/jsonapi/site/site?api-key=${apiKey}`
+
+
+    const resp = await $fetch(uri,{query})
+
+
+
+    return resp?.data?.page_front
 }
 
 export async function getSiteConfig({  siteCode }){
