@@ -10,8 +10,7 @@
     "postinstall": "nuxt prepare",
     "clean": "nuxt cleanup",
     "analyze": "nuxt analyze",
-    "clean-reinstall": "if test -f node_modules; then rm -rf node_modules; fi &&  yarn install --force;",
-    "vue-i18n-extract": "vue-i18n-extract report --vueFiles './components/**/*.?(vue)' --languageFiles './i18n/en/**/*.?(json)' --output 'i18n-report.json'"
+    "clean-reinstall": "if test -f node_modules; then rm -rf node_modules; fi &&  yarn install --force;"
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",

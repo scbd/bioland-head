@@ -28,7 +28,7 @@ function mapData(ctx){
             const { drupal_internal__nid:dnid, type, title, tags, path, field_type_placement,field_attachments, field_start_date, changed, sticky, promote, id, body } = results.data[key];
 
             if(body?.value) body.summary = stripHtml(body?.value).result.substring(0, 400);
-
+// console.log('dnid', dnid)
             const mediaImage = getMediaImage(ctx, field_attachments);
             const page       = ctx.page? Number(ctx.page) : 1;
             const perPage    = ctx.rowsPerPage? Number(ctx.rowsPerPage) : 10;
@@ -56,6 +56,8 @@ function getMediaImage(ctx, fieldAttachments){
 
     if(!image) return undefined;
 
+    if(!image.uri) return undefined
+ 
     const { meta, uri, filename } = image;
     const { width, height, alt, title } = meta
     const { url:src } = uri;

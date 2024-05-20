@@ -184,7 +184,7 @@ const q            = getQ(ctx);
                 "{!tag=excludeSchemas}(*:* NOT schema_s : (submission))",
                 realmText
                 //"realm_ss:abs OR realm_ss:chm OR realm_ss:bch"
-            ],
+            ].filter(x=>x),
             q,
             "sort": "startDate_dt desc, updatedDate_dt desc",
             "fl": "id, realm_ss, updatedDate_dt, createdDate_dt, identifier_s, uniqueIdentifier_s, url_ss, government_s, schema_s, government_EN_s, schemaSort_i, sort1_i, sort2_i, sort3_i, sort4_i, _revision_i,government_EN_s, title_EN_s, summary_s, type_EN_s, meta1_EN_txt, meta2_EN_txt, meta3_EN_txt,meta4_EN_txt,meta5_EN_txt,symbol_s,startDate_dt,endDate_dt,eventCountry_CEN_s,eventCity_s",

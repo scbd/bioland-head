@@ -58,7 +58,7 @@ function sortObj([x,a],[y,b]){
 
         eventBus.emit('changePage');
 
-    }, 500))
+    }, 250))
 
 
 </script>

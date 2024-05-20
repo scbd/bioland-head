@@ -13,13 +13,12 @@
                 <PageListTextSearch/>
                 <PageListFilter v-if="!typeId"/>
             </div>
-
-            
                 <div name="list" tag="div" class="col-12 col-md-9 data-body">
                     <PageListTabs  :types="types" :key="JSON.stringify(types)"/>
                     <PageListPager v-if="showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results?.count}`"/>
+
                     <ClientOnly>
-                        <transition-group name="list">
+                        <transition-group  name="list">
                             <PageListRow  :a-line="aLine" v-for="(aLine,index) in results?.data" :key="index" />
                         </transition-group>
                     </ClientOnly>
@@ -76,7 +75,10 @@
 
 
 
-    onMounted(() => { eventBus.on('changePage', refresh); });
+    onMounted(() => { eventBus.on('changePage', ()=>{
+        results.value = []
+        setTimeout(refresh, 250)
+    }); });
  
     function getContentTypeId(){
         if(pageStore?.page?.type === 'taxonomy_term--system_pages') return ''

@@ -90,9 +90,11 @@ function mapThumbNails(ctx){
         const href      = hasAlias? `${localePath}${path.alias}` : `${localePath}/node/${drupal_internal__nid}`;
 
         if(!hasAttachments) return { langcode, thumb, title, href, created, changed, startDate, published, tags  };
+// console.log(attachments[0].field_media_image)
+        const { uri } = attachments[0]?.field_media_image || {};
 
-        const { uri } = attachments[0].field_media_image;
-
+        if(!uri) return { langcode, thumb, title, href, created, changed, startDate, published, tags  };
+       // if(!uri) return { langcode, thumb, title, href, created, changed, startDate, published, tags  };
         document.thumb  = `${ctx.host}${uri.url}`
 
 
