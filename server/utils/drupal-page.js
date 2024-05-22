@@ -91,7 +91,7 @@ async function getPageIdentifiers(ctx){
     const cleanPath = removeLocalizationFromPath(ctx, path);
     
     const uriHost = isLocalizationException? host : localizedHost;
-
+console.log('=======================', cleanPath)
     const uri = `${uriHost}/router/translate-path?path=${encodeURIComponent(cleanPath||'/')}`;
 
 
