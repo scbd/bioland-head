@@ -6,7 +6,7 @@ export const getThesaurusByKey = async (keysRaw) => {
     const promises = [];
 
     for (const key of keys) {
-        const uri = `https://api.cbd.int/api/v2013/thesaurus/terms/${key}`;
+        const uri = `https://api.cbd.int/api/v2013/thesaurus/terms/${encodeURIComponent(key)}`;
 
         if(key.includes('SDG-GOAL-'))  promises.push(getSdg(key ) )
         else promises.push($fetch(uri, { mode: 'cors' }));
