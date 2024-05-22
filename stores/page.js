@@ -24,9 +24,10 @@ export const usePageStore = defineStore('page', {
         mapImage({  name,fieldMediaImage, drupalInternalMid, path, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage }){
             if(!name || !fieldMediaImage ) throw new Error('usePageStore.mapImage -> name or fieldMediaImage is undefined');
             const siteStore = useSiteStore();
-        
+
+
             const alt = fieldMediaImage?.meta?.alt|| name || filename;
-            const src = `${siteStore.host}${fieldMediaImage.uri.url}`;
+            const src = `${siteStore.host}${fieldMediaImage?.uri?.url}`;
         
             return { name, url:path?.alias, alt, drupalInternalMid, src, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage}
         },
