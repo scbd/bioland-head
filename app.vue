@@ -11,12 +11,9 @@
       <NuxtLoadingIndicator :height="6"/>
 
       <NuxtPage/>
-      <br/><br/><br/><br/><br/><br/><br/>
-      <br/><br/><br/><br/><br/><br/><br/>
 
-      <!-- <div class="text-muted text-center">Main Page Content</div> -->
     </main>
-    <div v-if="!isProd" class="text-center"><HydrationStatus /> </div>
+    <!-- <div v-if="!isProd" class="text-center"><HydrationStatus /> </div> -->
     <PageFooter/>
 </template> 
 <script setup >
