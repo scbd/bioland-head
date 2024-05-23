@@ -5,10 +5,10 @@
                 <div  class="menu-section text-wrap"  :class="[getGridValue(aMenu)]" v-for="(aMenu,index) in sections" :key="index">
                     <section v-if="!isComponent(aMenu)">
                         <PageHeaderMegaMenuHeader :menu="aMenu" />
-
                         <section v-for="(aChild,j) in aMenu.children" :key="j">
                             <PageHeaderMegaMenuLink v-if="!isHeader(aChild)"  :show-thumbs="showThumbs(aMenu)" :menu="aChild" />
                             <PageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
+                         
                         </section>
                     </section>
 

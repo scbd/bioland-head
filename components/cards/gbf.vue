@@ -1,11 +1,11 @@
 <template>
-    <div class="card p-2" >
+    <div :style="bgStyle"  class="card p-2" >
         <div class="card-header">
             <GbfIcon :identifier="record.identifier" size="lg"/>
             
         </div>
         <div class="card-body">
-            <h5 class="card-title text-primary mb-3">{{name}}</h5>
+            <h5 class="card-title  mb-3">{{name}}</h5>
 
             <p class="card-text">{{trunc(record.description)}}
                 
@@ -13,9 +13,9 @@
             </p>
         </div>
         <div class="card-footer">
-            <h6 class="card-subtitle my-2 text-primary">
-                <NuxtLink   :to="getGbfUrl()" :title="name" external target="_blank">
-                    {{t('View more')}} <Icon  name="arrow-right" class="arrow" />
+            <h6 class="card-subtitle my-2 ">
+                <NuxtLink  :style="c2Style" :to="getGbfUrl()" :title="name" external target="_blank">
+                    {{t('View more')}} <Icon   name="arrow-right" class="arrow" />
                 </NuxtLink>
             </h6>
         </div>
@@ -38,6 +38,10 @@
 
         return `https://www.cbd.int/gbf/targets/${number}`
     }
+
+    const siteStore = useSiteStore();
+    const bgStyle = reactive({ 'background-color': siteStore.secondaryColor });
+    const c2Style = reactive({ 'color': siteStore?.theme?.color?.secondaryTextOver });
 </script>
 <style lang="scss" scoped>
 
@@ -45,10 +49,10 @@
 .card {
     width: 350px ;
     height: 450px !important;
-    background-color: rgba(0,158, 219, .15) !important;
+    // background-color: rgba(0,158, 219, .15) !important;
 }
 .arrow{
-    fill:var(--bs-blue);
+    fill:var(--bs-primar);
     width       : 1em;
     height      : 1em;
     cursor: pointer;

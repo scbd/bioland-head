@@ -3,7 +3,7 @@
         <div class="cont-x">
             <nav  class="navbar nav bg-dark w-100 pt-0">
                 <ul class="nav">
-                    <li @click.stop="toggle(index)" v-for="(aMenu,index) in menus" :key="index" :class="{'bg-primary': aMenu.class?.includes('login')}" class="nav-item text-nowrap"  >
+                    <li @click.stop="toggle(index)" v-for="(aMenu,index) in menus" :key="index" :style="loginStyle(aMenu)" class="nav-item text-nowrap"  >
                         <NuxtLink  v-if="!aMenu.class?.includes('login')" :class="aMenu.class" class="nav-link" :to="aMenu.href" :title="aMenu.title"  >
                             {{aMenu.title}}
                         </NuxtLink>
@@ -23,7 +23,7 @@ import { useElementBounding } from '@vueuse/core'
 // import { useMenusStore } from "~/stores/menus";
     export default {
         name: 'PageMegaMenu',
-        methods: { isLastIndex , isLastSpacer, toggle, unToggle},
+        methods: { loginStyle,isLogin, isLastIndex , isLastSpacer, toggle, unToggle},
         setup,
 
     }
@@ -35,6 +35,7 @@ import { useElementBounding } from '@vueuse/core'
         const menuStore = useMenusStore();
         const siteStore = useSiteStore();
 
+        
         const { main: menus } = storeToRefs(menuStore);
         const router = useRouter()
 
@@ -59,6 +60,18 @@ import { useElementBounding } from '@vueuse/core'
         return { loginUrl, menus,  spacers, spacersY, toggles }
     }
 
+    function isLogin(aMenu){
+        return aMenu.class?.includes('login');
+    }
+    function loginStyle(aMenu){
+      if(!this.isLogin(aMenu)) return {};
+
+      const siteStore = useSiteStore();
+
+      return reactive({
+        'background-color': siteStore.primaryColor
+      });
+    }
     function toggle(index){
       this.unToggle();
       this.toggles[index] = !this.toggles[index];

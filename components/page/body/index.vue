@@ -11,12 +11,12 @@
 
             <div  class="col-12 d-md-none">
 
-                <h2 class="page-type">{{pageStore?.typeName}}</h2>
+                <h2 :style="pageTypeStyle" class="page-type">{{pageStore?.typeName}}</h2>
             </div>
 
             <div  class="col-3 d-none d-md-block">
 
-                <h2 class="page-type">{{pageStore?.typeName}}</h2>
+                <h2 :style="pageTypeStyle" class="page-type">{{pageStore?.typeName}}</h2>
 
                 <NuxtLink v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  :to="localePath(pageStore?.image?.url)">
                     <NuxtImg :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-5 w-100"/>
@@ -27,7 +27,7 @@
 
             <div  class="col-12 col-md-9" >
                 <h2  class="data-body mb-0" :class="{'has-hero': pageStore?.heroImage}" >{{ pageStore?.title}}</h2>
-                <NuxtLink v-if="pageStore?.url" :to="pageStore?.url" target="_blank" class="fs-5" external>{{pageStore?.url}}</NuxtLink>
+                <NuxtLink :style="pageTypeStyle" v-if="pageStore?.url" :to="pageStore?.url" target="_blank" class="fs-5" external>{{pageStore?.url}}</NuxtLink>
 
                 <hr class="mt-1">
                 <div v-if="isImage && pageStore?.image?.src" >
@@ -49,7 +49,7 @@
                     <PageBodyTagsDate />
                 </div>
 
-                <div v-if="pageStore?.body" v-html="pageStore?.body"></div>
+                <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="pageStore?.body"></div>
 
             </div>
             <!-- <pre>{{pageStore?.isImageOrVideo}}</pre> -->
@@ -59,7 +59,7 @@
         <!-- && !isImageOrVideo  && !isDocument -->
         <div v-if="pageStore?.media?.length "  class="row mt-3">
             <div class="col-12 col-md-3">
-                <h2 class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{pageStore?.media.length}})</span></h2>
+                <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{pageStore?.media.length}})</span></h2>
 
             </div>
             <div class="col-12 col-md-9">
@@ -69,7 +69,7 @@
 
         <div v-if="pageStore?.tags?.gbfTargets?.length" class="row mt-3">
             <div class="col-12 col-md-3">
-                <h2 class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.gbfTargets.length}})</span></h2>
+                <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.gbfTargets.length}})</span></h2>
             </div>
             <div class="col-12 col-md-9">
                 <LazySwiperGbf :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
@@ -100,6 +100,13 @@ const isVideo        = computed(()=> pageStore?.isVideo);
 const isDocument     = computed(()=> pageStore?.isDocument );
 
 const media = computed(()=> Array.isArray(pageStore?.page?.fieldAttachments?.value)? pageStore?.page?.fieldAttachments?.value.filter(({ type })=> !type.endsWith('hero')) : []);
+
+
+
+const siteStore = useSiteStore();
+const pageTypeStyle = reactive({
+        '--bs-primary': siteStore.primaryColor
+      })
 </script>
 <style lang="scss" scoped>
 .data-body{

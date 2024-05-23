@@ -1,5 +1,5 @@
 <template>
-    <div class="brandbar-header fixed-top d-none d-md-block">
+    <div class="brandbar-header fixed-top d-none d-md-block" :style="brandBarStyle">
         <div class="container py-0 pl-sm-3 pr-sm-3">
             <div class="row">
                 <div class="col-8 col-sm-4 d-flex align-items-center">
@@ -38,6 +38,7 @@
     import { useI18n } from 'vue-i18n';
     import {  useMenusStore } from "~/stores/menus";
     import {  usePageStore } from "~/stores/page";
+    import {  useSiteStore } from "~/stores/site";
     export default {
         name   : 'PageLanguageBar',
         methods: { toggle, close, reloadMenus},
@@ -45,6 +46,7 @@
     }
 
     function setup() {
+        const siteStore      = useSiteStore();
         const route           = useRoute();
         const menuStore      = useMenusStore();
         const pageStore       = usePageStore();
@@ -60,7 +62,10 @@
 
         const { languages: menus } = storeToRefs(menuStore);
 
-
+        const brandBarStyle = reactive({
+            background: siteStore.theme.backGround.secondary,
+            'border-bottom': `.25rem solid ${siteStore.primaryColor}`
+        });
 
         limitedMenus.value = menus.value && Array.isArray(menus.value)? menus.value.slice(0, limit.value) : [];
         
@@ -68,7 +73,7 @@
             otherMenus.value = menus.value.slice(limit.value);
         
 
-        return { t,query, pageStore , menus, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl, viewport }
+        return { brandBarStyle,t,query, pageStore , menus, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl, viewport }
     }
 
     function mounted(){
@@ -115,8 +120,7 @@
     font-weight: bolder !important;
 }
 .brandbar-header {
-  background: var(--bs-gray-200);
-  border-bottom: .25rem solid var(--bs-blue);
+
   height: 2.5rem;
 }
 

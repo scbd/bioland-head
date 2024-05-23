@@ -1,4 +1,4 @@
-
+import { noCase } from 'change-case';
 
 export const useMenusStore = defineStore('menus', { 
     state: () => ({ footer: [], main: [], footerCredits: [], languages: [], nrSix:[], nr:[], nbsap:{}, bch:[], absch:[], nfps:[], contentTypes:{}, forums: [], }),
@@ -52,6 +52,12 @@ export const useMenusStore = defineStore('menus', {
         },
         getContentTypeById(id){
             return Object.values(this.contentTypes).find((ct)=> ct.drupalInternalId === id);
+        },
+        getContentTypeByName(name){
+            
+            return Object.values(this.contentTypes).find((ct)=> { 
+
+                return ct.name.toLowerCase() === noCase(name) || ct.plural.toLowerCase() === noCase(name)});
         },
         isContentTypeId(id){
             return (Object.values(this.contentTypes).map((ct)=> ct.drupalInternalId)).includes(Number(id));

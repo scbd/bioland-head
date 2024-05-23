@@ -91,7 +91,15 @@ export const useSiteStore = defineStore('site', {
             return Array.from(new Set([  ...country , ...countries ])).filter(x=>x && x !== 'undefined');
         },
 
-        
+        primaryColor(){
+            return this.config?.theme?.color?.primary || this.config?.runTime?.color?.primary || '#009edb';
+        },
+        secondaryColor(){
+            return this.config?.theme?.color?.secondary || this.config?.runTime?.color?.secondary ;
+        },
+        theme(){
+            return this.config?.theme || this.config?.runTime?.theme || {};
+        }
         
     }
 });

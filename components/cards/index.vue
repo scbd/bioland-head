@@ -16,8 +16,8 @@
         <div class="card-footer">
             <h6 class="card-subtitle text-muted text-small mb-2">{{dateFormat(record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate)}}</h6>
 
-            <span v-if="record?.eventCity" class="badge bg-primary me-1"> {{record.eventCity}}</span>
-            <span v-if="record?.eventCountry" class="badge bg-secondary"> {{record.eventCountry}}</span>
+            <span v-if="record?.eventCity" class="badge me-1" :style="badgePrimaryStyle"> {{record.eventCity}}</span>
+            <span v-if="record?.eventCountry" class="badge" :style="badgeSecondaryStyle"> {{record.eventCountry}}</span>
             <NuxtLink  v-for="(aTarget,i) in record?.tags?.gbfTargets || []" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
                 <GbfIcon :identifier="aTarget.identifier" size="xs"/>
             </NuxtLink>
@@ -86,6 +86,13 @@
     })
 
 
+      const badgePrimaryStyle = reactive({
+        'background-color': siteStore.primaryColor
+      })
+
+      const badgeSecondaryStyle = reactive({
+        'background-color': siteStore.secondaryColor
+      })
 </script>
 <i18n src="@/i18n/dist/components/cards/index.json"></i18n>
 <style lang="scss" scoped>

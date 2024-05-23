@@ -66,6 +66,16 @@
 
         aMenu.dataMap = {};
 
+
+        if(!aMenu.href || aMenu.href === '#'){
+            const contentType = menuStore.getContentTypeByName(getContentType());
+
+            if(!contentType) throw new Error(`No content type found in menu item: ${getContentType()}`);
+
+            aMenu.href = `${contentType.slug}`;
+        }
+
+
         const horizontalCardMax = siteStore?.config?.runTime?.theme?.megaMenu?.horizontalCardMax
 
         for (const country of countries)
@@ -89,7 +99,12 @@
 
         if(!Array.isArray(classes)) return '';
 
-        return classes.length >1? classes : classes[0];
+        const name = classes.length >1? classes : classes[0];
+
+        if(!name) throw new Error('No content type found in menu  item');
+
+
+        return name //classes.length >1? classes : classes[0];
     }
     function getMaxRowsPerColumn(){
         const [max] = (unref(passedMenu)?.class?.filter(aClass => aClass.startsWith('bl2-ct-max-row-per-column-')) || []).map((aClass)=> aClass.replace('bl2-ct-max-row-per-column-',''));
@@ -109,7 +124,7 @@
         const showDefault = returnData.length > 5;
         const last        = unref(hasFinalLink)? [unref(hasFinalLink)] : showDefault? [getDefaultFinalLink()] : [];
 
-        return [...returnData, ...last].slice(0,6);
+        return [...returnData, ...last]//.slice(0,6);
     }
 
 

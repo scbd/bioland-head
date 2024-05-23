@@ -1,16 +1,18 @@
 <template >
-  <svg :class="{ [`bl2-icon-${name}`]:true, 'bl2-icon-flip': flip}" class="bl2-icon" >
+  <svg :class="{ [`bl2-icon-${name}`]:true, 'bl2-icon-flip': flip}" class="bl2-icon" :style="iconStyle">
     <use  v-bind="{ 'xlink:href': `#bl2-icon-${name}` }"></use>
   </svg>
 </template>
-<script>
-export default {
-  name : 'Icon',
-  props : { 
-    name : { type: String, required: true },
-    flip : { type: Boolean, default: false },
-  }
-}
+<script setup>
+const   siteStore    = useSiteStore();
+const   props        = defineProps({  name : { type: String, required: true },
+                                      flip : { type: Boolean, default: false } ,
+                                      color: { type: String }
+                                    });
+
+const { name, flip, color } = toRefs(props);
+
+const iconStyle = reactive({ 'fill': color.value || siteStore.primaryColor });
 </script>
 <style>
 .bl2-icon {

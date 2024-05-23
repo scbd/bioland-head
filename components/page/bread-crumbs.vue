@@ -1,18 +1,18 @@
 <template>
-    <div class="my-2" :class="{ 'mt-4 mb-3': isMobile }">
-        <NuxtLink class="fw-bold" :to="localePath('/')">
+    <div :style="style" class="my-2" :class="{ 'mt-4 mb-3': isMobile }">
+        <NuxtLink :style="style" class="fw-bold" :to="localePath('/')">
             {{t('National CHM')}}
         </NuxtLink>
         <span>&nbsp; <Icon name="triangle-right"/> &nbsp;</span>
         <span v-for="(aCrumb,index) in crumbs" :key="index">
-            <NuxtLink @click="openMenu(aCrumb)" v-if="!isSelf(aCrumb.href)" :to="localePath(aCrumb.href)"  >
+            <NuxtLink :style="style" @click="openMenu(aCrumb)" v-if="!isSelf(aCrumb.href)" :to="localePath(aCrumb.href)"  >
                 {{aCrumb.title}}
             </NuxtLink>
             <span v-if="!isSelf(aCrumb.href)">&nbsp; <Icon name="triangle-right"/> &nbsp;</span>
         </span>
 
-        <span v-if="count" class="text-muted float-end"> &nbsp; {{t('record', count)}}</span>
-        <span v-if="count" class="badge rounded-pill bg-primary float-end" >{{count}}</span>
+        <span v-if="count"  class="text-muted float-end"> &nbsp; {{t('record', count)}}</span>
+        <span v-if="count" :style="badgePrimaryStyle" class="badge rounded-pill  float-end" >{{count}}</span>
 
     </div>
 </template>
@@ -51,7 +51,9 @@ function parentPath(){
 function makeCrumb(){
 
 }
-
+const siteStore = useSiteStore();
+const style = reactive({ color: siteStore.primaryColor, })
+const badgePrimaryStyle = reactive({ 'background-color': siteStore.primaryColor })
 </script>
 <style lang="scss" scoped>
 

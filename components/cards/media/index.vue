@@ -24,7 +24,7 @@
 
 }
 .arrow{
-    fill:var(--bs-blue);
+    fill:var(--bs-primary);
     width       : 1em;
     height      : 1em;
     cursor: pointer;

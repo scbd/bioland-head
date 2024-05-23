@@ -1,8 +1,8 @@
 <template>
-    <NuxtLink :to="goTo(href)" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" :target="target" :external="external">
-    <div   class="card p-1 mb-3" >
+    <NuxtLink style="text-decoration: none;;" :to="goTo(href)" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" :target="target" :external="external">
+    <div :style="cardStyle" class="card p-1 mb-3" >
         <div  class="row g-0">
-            <Icon v-if="aLine.sticky" name="pushpin" class="position-absolute start-50 icon"/>
+            <Icon v-if="aLine.sticky" name="pushpin" class="position-absolute start-50 "/>
             <div :class="{'col-9': aLine.mediaImage, 'col-12': !aLine.mediaImage }">
                 <div class="card-body pe-1">
                     <h5 class="card-title">{{aLine.title || aLine.name}}</h5>
@@ -16,7 +16,7 @@
             <div class="col-12 ">
                 <div class="card-footer pb-0 text-center">
                     <ul class="float-start">
-                        <li v-if="!isSingleType"><span class="text-primary text-uppercase">{{getDocumentTypeName(aLine)}}</span></li>
+                        <li v-if="!isSingleType"><span :style="typeStyle" class="fw-bold text-uppercase">{{getDocumentTypeName(aLine)}}</span></li>
                         <li v-if="aLine?.tags?.countries?.length" v-for="(aCountry,i) in aLine.tags?.countries" :key="i"   class="text-uppercase" >
                             <NuxtLink :to="`https://www.cbd.int/countries/?country=${aCountry.identifier}`" target="_blank" external>
                                 {{aCountry.name}}
@@ -142,12 +142,23 @@
         else
         return dateFormat(line.fieldStartDate || line.fieldPublishedDate || line.changed)
     }
+
+    const siteStore = useSiteStore();
+      const cardStyle = reactive({
+        'background-color': siteStore?.theme?.backGround?.secondary,
+    'border-left': `7px solid ${siteStore?.primaryColor}`
+      })
+
+      const typeStyle= reactive({
+        'color': siteStore?.primaryColor
+
+      })
 </script>
 <style scoped>
-.card{
+/* .card{
     background-color: #eee;
     border-left: 7px solid var(--bs-blue);
-}
+} */
 .card:hover{
     cursor: pointer !important;
     box-shadow:  0 10px 20px rgb(0 0 0 / 19%), 0 6px 6px rgb(0 0 0 / 23%) ;
@@ -179,8 +190,5 @@ li a{
 
 
 
-.icon{
-    fill:var(--bs-primary);
-}
 
 </style>

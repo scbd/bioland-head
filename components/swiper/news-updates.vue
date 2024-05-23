@@ -1,9 +1,9 @@
 <template>
-    <div class="col-12 mt-3">
-        <h3 >{{t('Latest News and Updates')}}</h3>
-        <NuxtLink :to="localePath({path:'/news-and-updates', query:{ schemas:[2,3]}})" class="text-decoration-underline text-primary float-end text-bold fs-5">{{t('View more news and updates')}} <Icon  name="arrow-right" class="arrow" /></NuxtLink>
+    <div class="col-12 mt-3 mb-0">
+        <h3 :style="headerStyle">{{t('Latest News and Updates')}}</h3>
+        <NuxtLink :to="localePath({path:'/news-and-updates', query:{ schemas:[2,3]}})" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more news and updates')}} <Icon  name="arrow-right" class="arrow" /></NuxtLink>
     </div>
-    <div  class="position-relative mt-3" >
+    <div  class="position-relative mt-1" >
 
             <swiper
                 :loop="true"
@@ -77,7 +77,18 @@ const query     = clone({ ...siteStore.params });
 
 const { data:slides } = await useFetch(`/api/list/latest`, {  method: 'GET', query });
 
+const headerStyle = reactive({
+    display: 'inline-block',
+  'border-bottom': `.25rem solid ${siteStore.primaryColor}`,
+  'margin-bottom': '2rem',
+  'border-bottom-width': '4px'
+});
 
+const linkStyle = reactive({
+    color: siteStore.primaryColor,
+    'text-decoration': 'underline',
+    'text-decoration-color': siteStore.primaryColor,
+});
 </script>
 <style lang="scss" scoped>
 .arrow{

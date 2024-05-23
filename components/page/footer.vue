@@ -4,7 +4,7 @@
                 <div class="container">
                     <div class="row pt-4 row-cols-2 row-cols-sm-4 row-cols-md-4 row-cols-lg-4 row-cols-xl-4 row-cols-xxl-4">
                         <div v-for="(aMenu,index) in menus" :key="index"   class="col mb-4">
-                            <h4>{{aMenu.title}}</h4> 
+                            <h4 :style="headerLinkStyle">{{aMenu.title}}</h4> 
                             <ul class="list-unstyled"> 
                                 <li v-for="(aChildMenu,i) in aMenu.children" :key="i">
                                     <PageMenuLink v-bind="aChildMenu"/>
@@ -14,7 +14,7 @@
                     </div>
                 </div>
             </div>
-            <div class="container-fluid bg-secondary footer-links">
+            <div :style="style" class="container-fluid bg-secondary footer-links">
                 <div class="container p-0 pl-md-3 pr-md-3">
                     <div class="row align-items-center w-100x">
                         <div class="align-items-center col-12 col-sm-8 d-flex">
@@ -51,9 +51,10 @@
         const menuStore = useMenusStore();
         const { footer: menus, footerCredits: creditsMenus } = storeToRefs(menuStore);
         const { t  } = useI18n();
-
-
-        return { t, menus, creditsMenus }
+        const siteStore = useSiteStore();
+        const style = reactive({ '--bs-primary': siteStore.primaryColor });
+        const headerLinkStyle = reactive({ '--bs-primary': siteStore.primaryColor });
+        return { headerLinkStyle, style, t, menus, creditsMenus }
     }
 
 </script>
@@ -105,7 +106,7 @@
   }
 }
   .footer-links {
-  border-top: .25rem solid $primary;
+  border-top: .25rem solid var(--bs-primary);
   padding-bottom: .5rem;
 
   .navbar-brand {

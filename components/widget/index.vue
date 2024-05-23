@@ -1,20 +1,20 @@
 <template>
    
     <div class="text-capitalize mb">
-        <h4 class="bm-3">{{name}} </h4>
+        <h4 :style="style" class="bm-3">{{name}} </h4>
     </div>
     <!-- <LazyCards :record="record" /> -->
     <div class="card " >
         <h6 class="card-subtitle text-muted mb-1">{{type}}</h6>
         <ClientOnly>
             <div  v-if="hasImg" :style="backgroundStyles" class=" bg-light">
-                <NuxtLink :to="goTo"   :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
+                <NuxtLink :style="style" :to="goTo"   :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
             </div>
         </ClientOnly>
         <div class="card-body">
             
             <h5 class="card-title  mb-3">
-                <NuxtLink class="text-primary fw-bold" :to="goTo"   :external="external" :target="external? '_blank': ''">{{record.title}}</NuxtLink>
+                <NuxtLink :style="style" class="text-primary fw-bold" :to="goTo"   :external="external" :target="external? '_blank': ''"><span :style="style">{{record.title}}</span></NuxtLink>
             </h5>
             <p class="card-text">{{trunc(record.summary)}}</p>
 
@@ -33,7 +33,7 @@
                 <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
             </NuxtLink>
 
-            <span  v-if="tags?.subjects?.length" v-for="(subject,i) in tags.subjects" :key="i" class="badge bg-primary me-1">{{subject.name}}</span>
+            <span  :style="bgStyle" v-if="tags?.subjects?.length" v-for="(subject,i) in tags.subjects" :key="i" class="badge  me-1">{{subject.name}}</span>
 
             <span v-if="record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate" class="float-end card-subtitle text-nowrap text-muted text-small mt-1 mb-2">{{dateFormat(record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate)}}</span>
 
@@ -42,7 +42,7 @@
     <div class="mb-5">
         <div v-for="(link,i) in links || []" :key="i" class="text-start my-3 mb-3">
             <NuxtLink :to="link.to" class="text-decoration-underline  text-primary  fw-bold fs-5" :external="external">
-                    {{link.name}}
+                <span :style="style">{{link.name}}</span>
             </NuxtLink>
             &nbsp;
             <Icon  v-if="!external" name="arrow-right" class="arrow" />
@@ -121,6 +121,14 @@
         })
 
 
+    const style = reactive({
+        '--bs-primary': siteStore.primaryColor,
+        color: siteStore.primaryColor
+      })
+
+      const bgStyle = reactive({
+        'background-color': siteStore.primaryColor
+      })
 </script>
 <i18n src="@/i18n/dist/components/widget/index.json"></i18n>
 <style lang="scss" scoped>

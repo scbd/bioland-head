@@ -1,5 +1,5 @@
 <template>
-    <div class="card p-2" >
+    <div :style="style" class="card p-2" >
         <NuxtImg :alt="imageAlt" :src="imageSrc" class="card-img-top image-top i-top"/>
         <div class="card-body">
             <h6 class="card-subtitle text-muted mb-2">{{t('Image')}}</h6>
@@ -58,6 +58,8 @@
     function dateFormat(date){
         return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
     }
+
+    const style = reactive({ '--bs-primary': siteStore.primaryColor });
 </script>
 <i18n src="@/i18n/dist/components/cards/media/index.json"></i18n>
 <style lang="scss" scoped>
@@ -68,7 +70,7 @@
 .card {
     width: 350px;
     height: 650px !important;
-    border: .5px solid var(--bs-blue);
+    border: .5px solid var(--bs-primary);
 }
 .arrow{
     fill:var(--bs-blue);

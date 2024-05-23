@@ -1,34 +1,32 @@
 <template>
     <NuxtLink  class="main-nav-sub-heading"  :to="menu.href" :title="menu.title" :external="isExternal" :target="target">
-        <h4 class="text-wrap position-relative d-inline-block mb-2">
+        <h4 class="text-wrap position-relative d-inline-block mb-2" :style="lineStyle">
             {{menu.title}}
-            <Icon v-if="hasArrow" name="arrow-right" class="arrow" />
+            <Icon v-if="hasArrow" name="arrow-right" class="arrow" :style="arrowStyle"/>
         </h4>
     </NuxtLink>
-    <p v-if="menu.description" :class="{'mm-special-description': hasSpecialDescription}" class="small">{{menu.description}}</p>
+    <p v-if="menu.description" :class="{'mm-special-description': hasSpecialDescription}" class="small" :style="descriptionStyle">{{menu.description}}</p>
 </template>
 
-<script>
-    export default {
-        name: 'PageHeaderMegaMenuHeader',
-        props:{ menu: Object },
-        setup
-    }
-
-    function setup(props) {
+<script setup>
+        const   props      = defineProps({ menu: Object });
         const { menu }     = toRefs(props);
         const   hasArrow   = computed(()=>menu?.value?.class?.includes('arrow')||menu?.value?.class?.includes('mm-arrow'));
         const   isExternal = computed(()=> menu?.value?.href?.includes('http'));
         const   target     = computed(()=> menu?.value?.target? menu?.value?.target[0] : '_self');
         const   hasSpecialDescription   = computed(()=>menu?.value?.class?.includes('mm-special-description'));
-        return { hasSpecialDescription, hasArrow,  menu, isExternal, target }
-    }
+        const   siteStore          = useSiteStore();
+        const  primaryColor        = computed(()=> siteStore.primaryColor);
+
+        const lineStyle = reactive({ 'border-bottom': `.25rem solid ${primaryColor.value}` })
+        const arrowStyle = reactive({ 'fill': primaryColor.value })
+        const descriptionStyle = reactive({ 'color': primaryColor.value })
 </script>
 
 <style lang="scss" scoped>
 .mm-arrow, .arrow{
     position: absolute;
-    fill:var(--bs-blue);
+    // fill:var(--bs-blue);
     transition: 0.3s;
     right: -2em;
     bottom: 0.1rem;
@@ -45,7 +43,7 @@
     margin-right: 2rem;
 }
 .mm-special-description{
-    color: #009edb !important;
+    // color: #009edb !important;
 
 
 

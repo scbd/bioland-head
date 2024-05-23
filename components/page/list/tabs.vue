@@ -3,7 +3,7 @@
         <ul  class="nav nav-tabs mb-1" >
 
             <li   class="nav-item ">
-                <NuxtLink :class="{a:isActive(siteContentTo)}" :to="siteContentTo" class="nav-link  text-capitalize">
+                <NuxtLink :style="getStyle(siteContentTo)"  :to="siteContentTo" class="nav-link  text-capitalize">
                     {{t('Site Content')}}
                 </NuxtLink>
             </li>
@@ -54,7 +54,19 @@
 
         return localePath(pageStore?.page?.children[0].path?.alias)
     }
-    
+    const siteStore = useSiteStore();
+    function getStyle(link){
+        if(!isActive(link)) return {}
+
+        return reactive({
+            'z-index': 2,
+        color: 'white',
+        'text-decoration': 'none',
+        'background-color': siteStore.primaryColor,
+        'border-color': 'white',
+        'border-bottom': `${siteStore.primaryColor} solid 1px`,
+        })
+    }
 </script>
 <style lang="scss"  scoped>
     .nav-link{

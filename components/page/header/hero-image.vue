@@ -61,11 +61,18 @@ function getWidthHeightImg(vp){
 
     return { width, height }
 }
+const hexToRgb = hex =>
+  hex.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i
+             ,(m, r, g, b) => '#' + r + r + g + g + b + b)
+    .substring(1).match(/.{2}/g)
+    .map(x => parseInt(x, 16)).join(', ');
 
 function getBackgroundStyles(url) {
-    return {    
-        'background-image': `linear-gradient(rgba(0, 0, 0, 0.33) 0%, rgba(0, 0, 0, 0) 100%), linear-gradient(90deg, rgb(0, 158, 219) 0%, rgba(0, 158, 219, 0) 100%), linear-gradient(0deg, rgb(22, 197, 110) 0%, rgb(22, 197, 110) 100%), url(${url})`
-    }
+    const siteStore    = useSiteStore();
+
+    return reactive({    
+        'background-image': `linear-gradient(rgba(0, 0, 0, 0.33) 0%, rgba(0, 0, 0, 0) 100%), linear-gradient(90deg, rgb(${hexToRgb(siteStore.theme.hero.primary[0])}) 0%, rgba(${hexToRgb(siteStore.theme.hero.primary[0])}, 0) 100%), linear-gradient(0deg, rgb(${hexToRgb(siteStore.theme.hero.primary[1])}) 0%, rgb(${hexToRgb(siteStore.theme.hero.primary[0])}) 100%), url(${url})`
+    })
 }
 </script>
 

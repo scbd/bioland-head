@@ -1,16 +1,16 @@
 <template>
-    <nav v-if="showPaging" aria-label="Page navigation example">
+    <nav v-if="showPaging" >
         <ul class="pagination justify-content-center">
-            <li @click.prevent="prevPage()" :class="{'disabled': prevDisabled}" class="page-item">
-                <a class="page-link" href="#" >{{t('Previous')}}</a>
+            <li  @click.prevent="prevPage()" :class="{'disabled': prevDisabled}" class="page-item">
+                <a :style="linkStyle" class="page-link" href="#" >{{t('Previous')}}</a>
             </li>
-            <li @click.prevent="changePage(aPage)" class="page-item" v-for="(aPage,index) in range" :key="index">
-                <a :class="{'disabled current':page === aPage}" class="page-link" href="#">
+            <li  @click.prevent="changePage(aPage)" class="page-item" v-for="(aPage,index) in range" :key="index">
+                <a :style="linkStyle" :class="{'disabled current':page === aPage}" class="page-link" href="#">
                     {{aPage}}
                 </a>
             </li>
-            <li @click.prevent="nextPage()" :class="{ 'disabled': nextDisabled }" class="page-item">
-                <a class="page-link" href="#"> {{t('Next')}}</a>
+            <li  @click.prevent="nextPage()" :class="{ 'disabled': nextDisabled }" class="page-item">
+                <a :style="linkStyle" class="page-link" href="#"> {{t('Next')}}</a>
             </li>
         </ul>
     </nav>
@@ -64,7 +64,30 @@ const range = computed(()=> {
     return [page.value-4,page.value-3,page.value-2,page.value-1,page.value]
 
 });
+const siteStore = useSiteStore();
 
+const linkStyle = reactive({
+        // 'color': `${siteStore?.primaryColor} !important`,
+        // 'border-color': `${siteStore?.primaryColor} !important`,
+    //     position: 'relative',
+    // display: 'block',
+    // padding: 'var(--bs-pagination-padding-y) var(--bs-pagination-padding-x)',
+    // 'font-size': 'var(--bs-pagination-font-size)',
+    // color: siteStore?.primaryColor,
+    // 'background-color': 'var(--bs-pagination-bg)',
+    // border: 'var(--bs-pagination-border-width) solid var(--bs-pagination-border-color)',
+'--bs-pagination-bg': siteStore?.theme?.backGround?.secondary,
+'--bs-pagination-border-color':siteStore?.primaryColor,
+'--bs-pagination-disabled-border-color': siteStore?.primaryColor,
+'    --bs-pagination-active-border-color': siteStore?.primaryColor,
+    '--bs-pagination-hover-color': '#fff',
+    '--bs-pagination-color': siteStore?.primaryColor,
+    '--bs-pagination-hover-bg': siteStore?.primaryColor,
+    '--bs-pagination-active-border-color': siteStore?.primaryColor,
+    '--bs-pagination-color': siteStore?.primaryColor,
+    '--bs-pagination-hover-border-color': siteStore?.primaryColor
+
+});
 </script>
 <style lang="scss" scoped>
 .current {
@@ -73,5 +96,8 @@ const range = computed(()=> {
     text-decoration: none;
     background-color: var(--bs-pagination-hover-bg);
     border-color: var(--bs-pagination-hover-border-color);
+}
+.disabled {
+    cursor:not-allowed;
 }
 </style>

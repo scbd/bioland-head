@@ -146,13 +146,13 @@ h1 {
 
 h3 {
   display: inline-block;
-  border-bottom: .25rem solid $primary;
+  border-bottom: .25rem solid var(--bs-primary);
   margin-bottom: 3rem;
 }
 
 h4 {
   display: inline-block;
-  border-bottom: .25rem solid $primary;
+  border-bottom: .25rem solid var(--bs-primary);
   margin-bottom: 1.5rem;
 }
 
@@ -161,7 +161,7 @@ h5.lead {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.25rem;
-  border-bottom: .25rem solid $primary;
+  border-bottom: .25rem solid var(--bs-primary);
   margin-bottom: 1.5rem;
 }
 

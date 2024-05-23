@@ -1,5 +1,5 @@
 <template >
-    <div class="cont" style="float: right; width: 200px; ">
+    <div :style="style" class="cont" style="float: right; width: 200px; ">
         <div v-if="pageStore?.startDate" class="mb-2">
             <h5 class="mb-0">{{t('Start Date')}}</h5>
             {{ formatDate(pageStore?.startDate)}}
@@ -53,7 +53,7 @@
             <section v-for="(aCountry,i) in tags.countries" :key="i" class="mb-1">
                 <NuxtLink   :to="`https://www.cbd.int/countries/?country=${aCountry.identifier}`" target="_blank" external>
                     
-                    <span   class="badge text-wrap bg-primary me-1 w-100">
+                    <span   :style="bgStyle" class="badge text-wrap  me-1 w-100">
                         <NuxtImg :alt="aCountry.name" :src="`https://www.cbd.int/images/flags/96/flag-${aCountry.identifier}-96.png`"  class="flag mb-1"/>
                         <br>{{aCountry.name}}</span>
                 </NuxtLink>
@@ -62,7 +62,7 @@
         <div v-if="tags?.subjects?.length" class="mb-2">
             <h5 >{{t("Thematic Areas")}}</h5>
             
-            <span  v-for="(subject,i) in tags.subjects" :key="i" class="badge text-wrap bg-primary  w-100 mb-1">{{subject.name}}</span>
+            <span  v-for="(subject,i) in tags.subjects" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{subject.name}}</span>
         </div>
     </div>
 </template>
@@ -89,6 +89,10 @@
 
         return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
     }
+
+    const siteStore = useSiteStore();
+const style = reactive({ '--bs-primary': siteStore.primaryColor });
+const bgStyle = reactive({ 'background-color': siteStore.primaryColor });
 </script>
 
 <style lang="scss" scoped>

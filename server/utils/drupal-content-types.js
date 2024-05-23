@@ -1,4 +1,4 @@
-
+import limax from 'limax';
 
 // export const useContentTypeCounts = async (ctx) => {
 //     await useDrupalLogin(ctx.identifier)
@@ -126,7 +126,7 @@ async function getTerms ({ localizedHost, host }) {
 
 
     return data.filter(({ status })=> status)
-                .map(({ drupal_internal__tid:drupalInternalId, name, uuid, path })=> ({ drupalInternalId, name, slug: path?.alias, uuid }))
+                .map(({ drupal_internal__tid:drupalInternalId, name, uuid, path, field_plural })=> ({ drupalInternalId, name, slug:limax(field_plural)? `/${limax(field_plural)}`: path?.alias, plural: field_plural, uuid, hrefs:[path?.alias, `/${limax(field_plural)}`]  }))
 };
 
 
