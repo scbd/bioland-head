@@ -14,10 +14,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   context.value.path = path;
 
-  const [ pData, fetch ]= await Promise.all([getPage(path), useFetch(`/api/menus`, { params: clone({...siteStore.params, path:route.path})})])
+  const [ pData, fetch ]= await Promise.all([getPage(path), getMenus()])
 
-  const { data:menuData } = fetch;
-
+  const { data:menuData } = fetch || { data: undefined};
   
   if(!pData?.value) return
 
@@ -25,9 +24,10 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   // const { data:menuData } = await useFetch(`/api/menus`, { params: clone({...siteStore.params, path:route.path})});
 
-  menuStore.loadAllMenus(menuData.value);
+  if(menuData?.value)
+    menuStore.loadAllMenus(menuData.value);
 
- async function getPage(passedPath){ 
+  async function getPage(passedPath){ 
     const path = passedPath.endsWith('/topics')? passedPath.replace('/topics', '') : passedPath;
     const { multiSiteCode } = useRuntimeConfig().public;
     const { identifier,  locale } = siteStore;
@@ -40,6 +40,13 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
     return data
   }
+
+  async function getMenus(){
+    if(menuStore.isLoaded) return undefined;
+
+    return useFetch(`/api/menus`, { params: clone({...siteStore.params, path:route.path})})
+  }
+
 })
 
 function isLocaleChange({ name: to }, { name: from }){

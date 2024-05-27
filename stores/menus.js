@@ -90,5 +90,8 @@ const hrefMatch = menu?.href === href && menu?.href && href
         
             return false;
         }
+    },
+    getters:{
+        isLoaded: state => !!state?.footer?.length
     }
 });
