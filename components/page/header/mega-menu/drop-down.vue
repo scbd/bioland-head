@@ -24,18 +24,15 @@
 </template>
 <script setup>
     import { pascalCase   } from 'pascal-case';
-    import { useSiteStore } from '~/stores/site';
-    import { useMenusStore } from '~/stores/menus';
 
-
-        const   props              = defineProps({ menus: Array });
-        // const { menus    } = toRefs      (props);
-        const   toggle      = ref         (false);
+        const   props       = defineProps({ menus: Array });
         const   siteStore   = useSiteStore(     );
+        const   menuStore   = useMenusStore();
+        const isDevSite  = computed(()=> !siteStore?.config?.published);
+        const maxColumns = computed(()=> siteStore.config?.runTime?.theme?.megaMenu?.maxColumns || 5);
+        const viewport   = useViewport();
+        const isMobile   = computed(() => !['lg','xl', 'xxl'].includes(viewport.breakpoint.value));
 
-        const maxColumns = computed(()=> siteStore.config?.runTime?.theme?.megaMenu?.maxColumns || 4)
-        const viewport = useViewport();
-        const isMobile = computed(() => !['lg','xl', 'xxl'].includes(viewport.breakpoint.value));
         const sections = computed(() => {
 
                                     if(!props?.menus?.length) return []
@@ -43,7 +40,7 @@
                                     const menusFiltered = [];
                                     let   totalColumns = 0;
                                     for (let index = 0; index < props?.menus?.length; index++) {
-                                        if(hasMaxColumns(totalColumns, props?.menus[index+1]))
+                                        if(hasMaxColumns(totalColumns, props?.menus[index+1])) continue;
                                         if(isEmptySection(props?.menus[index])) continue;
 
                                         menusFiltered.push(props?.menus[index]);
@@ -57,11 +54,12 @@
         });
 
         function hasMaxColumns(totalColumns, nextMenu = {}){
-            if(totalColumns >= maxColumns.value) return true;
+
+            if(totalColumns > maxColumns.value) return true;
 
             const nextTotalColumns = totalColumns + (isDoubleCol(nextMenu)? 2 : 1);
 
-            if(nextTotalColumns >= maxColumns.value) return true;
+            if(nextTotalColumns > maxColumns.value) return true;
 
             return false
         }
@@ -149,14 +147,14 @@
         return menu?.class?.includes('bl2-show-thumbs') || menu?.class?.includes('mm-show-thumbs');
     }
 
-    const emptyMap = { FocalPoints, NationalReport, Absch, Bch };
+    const emptyMap = { Forums, FocalPoints, NationalReport, Absch, Bch };
 
     function isEmptySection(menu){
 
-        if(!isComponent(menu)) return false;
+        if(!isComponent(menu) || isDevSite.value) return false;
 
         const cName = componentName(menu, true);
-
+consola.error(cName)
         if(cName === 'ContentType') {
 
             if(menu?.children?.length) return false;
@@ -243,7 +241,9 @@
 
         return true;
     }
-
+    function Forums(){
+        return !menuStore?.forums?.length
+    }
     function hasCountry(){
         const   siteStore   = useSiteStore();
 

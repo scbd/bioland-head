@@ -20,8 +20,9 @@ export async function getPageData(ctx){
 
         return  await mapData(ctx)(data)
     }catch(e){
-        console.warn('server/utils/dupal-page -> getPageData', e);
-        return {}
+        
+        if(e.status === 404) throw createError({ statusCode: 404, statusMessage: `Failed to get page from path: ${ctx.path}`})
+       
     }
 
 }

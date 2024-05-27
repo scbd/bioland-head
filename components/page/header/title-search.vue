@@ -165,7 +165,7 @@ async function onClick(value){
     const   route   = useRoute();
 
 const   localePath     = useLocalePath();
-    consola.error(!!value)
+
     if(!value) return this.navigateTo(localePath(`/search`))
     
 

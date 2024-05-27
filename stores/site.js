@@ -92,14 +92,16 @@ export const useSiteStore = defineStore('site', {
         },
 
         primaryColor(){
-            return this.config?.theme?.color?.primary || this.config?.runTime?.color?.primary || '#009edb';
+            return this.config?.theme?.color?.primary || this.config?.runTime?.theme?.color?.primary || '#009edb';
         },
         secondaryColor(){
-            return this.config?.theme?.color?.secondary || this.config?.runTime?.color?.secondary ;
+            return this.config?.theme?.color?.secondary || this.config?.runTime?.theme?.color?.secondary ;
         },
         theme(){
             return this.config?.theme || this.config?.runTime?.theme || {};
+        },
+        maxLangBeforeWrap(){
+            return this.config?.theme?.i18n?.maxLangBeforeWrap || this.config?.runTime?.theme?.i18n?.maxLangBeforeWrap  ;
         }
-        
     }
 });

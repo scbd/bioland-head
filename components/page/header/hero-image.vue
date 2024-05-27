@@ -1,5 +1,5 @@
 <template>
-    <div   :style="backgroundStyles" :class="{'un3-hero':hasHeroImage, 'hero-image':hasHeroImage, 'no-hero':!hasHeroImage }"  >
+    <div   :style="backgroundStyles" :class="{'un3-hero':hasHeroImage, 'hero-image':hasHeroImage, 'no-hero':!hasHeroImage, 'dev-site': isDevSite }"  >
         <slot></slot>
         <div v-if="hasHeroImage"  class="container text-white">
             <div class="row pb-1">
@@ -17,8 +17,6 @@
     </div>
 </template>
 <script>
-import { useSiteStore } from "~/stores/site";
-import { usePageStore } from "~/stores/page";
 
 export default {
     name: 'PageHeroImage',
@@ -32,6 +30,8 @@ function setup() {
     const hasHeroImage = computed(() => pageStore?.page?.hasHeroImage);
     const viewport     = useViewport();
     const img          = useImage();
+
+    const isDevSite = computed(()=> !siteStore?.config?.published);
 
     const hi = computed(() => pageStore.heroImage);
 
@@ -51,7 +51,7 @@ function setup() {
     })
 
 
-    return { hasHeroImage , backgroundStyles, hi }
+    return { isDevSite, hasHeroImage , backgroundStyles, hi }
 }
 
 function getWidthHeightImg(vp){
@@ -77,6 +77,9 @@ function getBackgroundStyles(url) {
 </script>
 
 <style lang="scss" scoped>
+.dev-site{
+    margin-top: 3.5rem !important;
+}
 .message{
     min-height: 300px;
     height: 50%;

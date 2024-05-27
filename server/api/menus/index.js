@@ -7,7 +7,7 @@ export default cachedEventHandler(async (event) => {
 
         const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(context || query || {}))};` };
 
-        const [absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes,  forums , languages ] = await Promise.all([
+        const [absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes,  forums , languages ] = (await Promise.allSettled([
             $fetch('/api/menus/absch',         { query, method:'get', headers }),
             $fetch('/api/menus/bch',           { query, method:'get', headers }),
             $fetch('/api/menus/drupal',        { query, method:'get', headers }),
@@ -18,7 +18,8 @@ export default cachedEventHandler(async (event) => {
             $fetch('/api/menus/content-types', { query, method:'get', headers }),
             $fetch('/api/menus/topics',        { query, method:'get', headers }),
             $fetch('/api/menus/languages',     { query, method:'get', headers })
-        ]);
+        ])).map(({ value }) => value || []);
+        
         return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, forums, languages, menus  }
     }
     catch(e){
@@ -30,7 +31,7 @@ export default cachedEventHandler(async (event) => {
     }
     
 },{
-    maxAge: 1,
+    maxAge: 60 * 60 * 24,
     getKey,
     base:'db'
 })

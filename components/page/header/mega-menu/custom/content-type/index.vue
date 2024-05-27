@@ -20,8 +20,6 @@
 
 <script setup>
     import   clone           from 'lodash.clonedeep';
-    import { useMenusStore } from '~/stores/menus';
-    import {  useSiteStore } from "~/stores/site";
     
     const   props              = defineProps({ type: String, menu: Object });
     const { menu: passedMenu } = toRefs(props);
@@ -30,7 +28,8 @@
     const   hasFinalLink       = computed(()=> unref(passedMenu)?.children?.find(aMenu => isFinalLink(aMenu)));
     const   viewport           = useViewport();
     const   siteStore          = useSiteStore();
-    
+
+
     function getDefaultFinalLink(){
         const   contentType         = getContentType();
         const { count, name, slug } = menuStore.contentTypes[contentType] || {};

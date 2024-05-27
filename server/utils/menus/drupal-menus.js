@@ -61,10 +61,10 @@ const findFromRawMenus = (aMenu )=>({ link, title, alias  } = {})=>{
 }
 
 async function addMissingData(menus, { siteCode, identifier, pathPreFix, localizedHost }){
-    const rawMenus =  await getMenusFromApiPager ({ siteCode,identifier, pathPreFix, localizedHost });
+    const rawMenus =  (await getMenusFromApiPager ({ siteCode,identifier, pathPreFix, localizedHost }) || []);
     
     for (const menuName in menus) {
-        const rawMenuSet = rawMenus.filter((l) => l.menu_name === menuName)
+        const rawMenuSet = rawMenus.filter((l) => l.menu_name === menuName);
 
         addMissingDataRecursive(menus[menuName], { siteCode,identifier, pathPreFix, localizedHost, rawMenus:rawMenuSet, menuName  })
     }
@@ -208,8 +208,8 @@ function embedChildren(menus, menusClone){
         index++
         const children = [];
         if(Array.isArray(aMenu.crumbs))
-            aMenu.crumbs.push({ title: aMenu.title, href: aMenu.href, index })
-        else aMenu.crumbs = [{ title: aMenu.title, href: aMenu.href, index }]
+            aMenu.crumbs.push({ title: aMenu.title, href: aMenu.href, index, contentTypeId: aMenu.contentTypeId})
+        else aMenu.crumbs = [{ title: aMenu.title, href: aMenu.href, index, contentTypeId: aMenu.contentTypeId}]
         
         for (const aMenuClone of menusClone) {
 

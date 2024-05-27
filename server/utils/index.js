@@ -1,9 +1,9 @@
 
-import isString from 'lodash.isstring'
+
 import c from 'consola';
-import crypto from 'crypto';
+
 import { DateTime } from 'luxon';
-import clone from 'lodash.clonedeep';
+
 import isNill from 'lodash.isnil';
 
 export const consola = c;
@@ -25,61 +25,9 @@ export function removeNullProps(obj){
 }
 
 
-export const getKey =  (event) => {
-    const { context } = parseCookies(event)
-    const query       = getQuery(event)
-    const { pathname } = new URL(getRequestURL(event))
-    const locale = query?.locale || context?.locale || 'und'
-    const host   = query?.host || context?.host 
-    const makeHash = (x) => crypto.createHash('sha1').update(x).digest('hex')
-    const hashData = `${host}-${locale}-${pathname}` + JSON.stringify({...context, ...query});
-
-    return `${host}-${locale}-${pathname}-${makeHash(hashData)}`
-}
-
-export const parseQuery = (event) => {
-    const { country, siteCode, identifier, locale, defaultLocale, countries: countriesArray } = getQuery(event);
-    
-    const countries      = (Array.isArray(countriesArray) && countriesArray?.length? countriesArray : country? [country]: []).filter(x=>x && x !== 'undefined');
-
-    // const defaultLocale      =  !isPlainObject(defaultLocaleRaw)? JSON.parse(defaultLocaleRaw || {}).locale : defaultLocaleRaw.locale;
-    const { baseHost, env }  = useRuntimeConfig().public;
-    const pathPreFix         = getPathPrefix(locale, defaultLocale)
-    const hasRedirect        = env === 'production' && redirect;
-    const host               = hasRedirect? `https://${redirect}` : `https://${siteCode}.${baseHost}`;
-    const localizedHost      = `${host}${pathPreFix}`;
-    const indexLocal         = getIndexLocale(locale);
-
-    return removeNullProps({ host, localizedHost, baseHost, country, countries,siteCode, identifier, locale, defaultLocale, pathPreFix, indexLocal  })
-}
-
-export const getContext = (event) => {
-    const { context } = parseCookies(event)
 
 
-    if(!context) return parseQuery(event)
 
-    return context? parseContext(JSON.parse(decodeURIComponent(context))) : undefined
-}
-
-export function parseContext (context) {
-
-    const ctx = isString(context)? JSON.parse(context) : context;
-
-    const { country, localizedHost:lh,siteCode, identifier, locale, defaultLocale, countries: countriesArray, redirect , path} = ctx;
-    
-    const   countries       = (Array.isArray(countriesArray) && countriesArray?.length? [country,...countriesArray] : country? [country] : []).filter(x=>x && x !== 'undefined');
-
-    // const   defaultLocale   =  defaultLocale
-    const { baseHost, env}  = useRuntimeConfig().public;
-    const   pathPreFix      = getPathPrefix(locale, defaultLocale)
-    const   hasRedirect     = env === 'production' && redirect;
-    const   host            = hasRedirect? `https://${redirect}` : `https://${siteCode}.${baseHost}`;
-    const   localizedHost   = lh? lh : `${host}${pathPreFix}`;
-    const   indexLocale     = getIndexLocale(locale);
-
-    return removeNullProps({ host, localizedHost, country,countries, siteCode, identifier, locale, defaultLocale, indexLocal:indexLocale, indexLocale, path })
-}
 
 export function sortArrayOfObjectsByProp(a,b, prop){
     if(a[prop] < b[prop]) return -1; 
@@ -119,11 +67,7 @@ export function getTimeString(lastCommentTime){
             return `${Math.floor(timeMap[key])}${formatMap[key]}`
 
 }
-function getPathPrefix(locale, defaultLocale){
-    if(!locale || !defaultLocale) return '';
 
-    return locale === 'und' || locale === defaultLocale  ? '' : '/'+ drupalizeLocale(locale);
-}
 
 export function removeLocalizationFromPath(ctx, path){
 
@@ -167,14 +111,7 @@ export async function getSiteDefinedHome (ctx) {
     return resp?.data?.page_front
 }
 
-export async function getSiteConfig({  siteCode }){
 
-    const { multiSiteCode, env, dmsm } = useRuntimeConfig().public;
-
-    const uri = `${dmsm}/config/${env}/${multiSiteCode}/${siteCode}`//`${gaiaApi}/v2023/drupal/multisite/${multiSiteCode}/configs/${identifier}`
-
-    return $fetch(uri);
-}
 
 
 function getHost(ctx, ignoreLocale = false){
@@ -185,6 +122,13 @@ function getHost(ctx, ignoreLocale = false){
     const base       = hasRedirect? `https://${config.redirect}` : `https://${encodeURIComponent(siteCode)}.${encodeURIComponent(baseHost)}`;
 
     return `${base}${pathLocale}`;
+}
+
+
+
+export function nextUri ({ next } = {}){
+    if(!next) return
+    return next.href
 }
 
 const drupalLocaleMap = new Map([['/zh','/zh-hans']]);
@@ -203,9 +147,4 @@ function drupalizePathLocales(locale, defaultLocale){
             return pathPreFix.replace(aKey,drupalLocaleMap.get(aKey))
 
     return pathPreFix;
-}
-
-export function nextUri ({ next } = {}){
-    if(!next) return
-    return next.href
 }

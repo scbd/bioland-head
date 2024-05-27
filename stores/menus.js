@@ -29,8 +29,9 @@ export const useMenusStore = defineStore('menus', {
         
         },
         isInMenu(menu, href){
-
-            if(menu.href === href && menu.href && href) return menu;
+const hrefMatch = menu?.href === href && menu?.href && href
+// const isContentType = this.isContentTypeId(href)
+            if(hrefMatch) return menu;
         
             if(menu?.children?.length)
                 for(let i = 0; i < menu.children.length; i++)
@@ -56,7 +57,6 @@ export const useMenusStore = defineStore('menus', {
         getContentTypeByName(name){
             
             return Object.values(this.contentTypes).find((ct)=> { 
-
                 return ct.name.toLowerCase() === noCase(name) || ct.plural.toLowerCase() === noCase(name)});
         },
         isContentTypeId(id){

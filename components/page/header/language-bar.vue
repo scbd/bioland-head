@@ -1,18 +1,18 @@
 <template>
-    <div class="brandbar-header fixed-top d-none d-md-block" :style="brandBarStyle">
+    <div class="brandbar-header fixed-top d-none d-md-block" :class="{'dev-site': isDevSite}" :style="brandBarStyle">
         <div class="container py-0 pl-sm-3 pr-sm-3">
             <div class="row">
                 <div class="col-8 col-sm-4 d-flex align-items-center">
                     <NuxtLink class="navbar-brand" to="https://www.cbd.int" external target="_blank">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</NuxtLink>
                 </div>
-                <div v-if="!(limitedMenus.length > 1)" class="col-4 col-sm-8 d-flex justify-content-end">
+                <div v-if="!(limitedMenus.length > 1) && pageLoaded" class="col-4 col-sm-8 d-flex justify-content-end">
                     <ul class="nav" >
                         <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
                             <NuxtLink class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}">&nbsp;</NuxtLink>
                         </li>
                     </ul>
                 </div>
-                <div v-if="limitedMenus.length > 1" class="col-4 col-sm-8 d-flex justify-content-end">
+                <div v-if="limitedMenus.length > 1 && pageLoaded " class="col-4 col-sm-8 d-flex justify-content-end">
                     <ul class="nav" >
                         <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
                             <NuxtLink class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}">{{aMenu.nativeName}}</NuxtLink>
@@ -35,20 +35,18 @@
 <i18n src="@/i18n/dist/components/page/header/language-bar.json"></i18n>
 
 <script>
-    import { useI18n } from 'vue-i18n';
-    import {  useMenusStore } from "~/stores/menus";
-    import {  usePageStore } from "~/stores/page";
-    import {  useSiteStore } from "~/stores/site";
+    import cloneDeep from 'lodash.clonedeep';
+
     export default {
         name   : 'PageLanguageBar',
-        methods: { toggle, close, reloadMenus},
-        setup, mounted
+        methods: { toggle, close},
+        setup
     }
 
     function setup() {
-        const siteStore      = useSiteStore();
+        const siteStore       = useSiteStore();
         const route           = useRoute();
-        const menuStore      = useMenusStore();
+        const menuStore       = useMenusStore();
         const pageStore       = usePageStore();
         const { t }           = useI18n();
 
@@ -57,8 +55,11 @@
         const limitedMenus    = ref([]);
         const otherMenus      = ref([]);
         const viewport        = useViewport();
-        const limit           = 6;
-        const query = computed(()=> route.query);
+        const limit           = ref(siteStore.maxLangBeforeWrap);
+        const query           = computed(()=> route.query);
+
+
+        const isDevSite = computed(()=> !siteStore?.config?.published);
 
         const { languages: menus } = storeToRefs(menuStore);
 
@@ -67,19 +68,18 @@
             'border-bottom': `.25rem solid ${siteStore.primaryColor}`
         });
 
-        limitedMenus.value = menus.value && Array.isArray(menus.value)? menus.value.slice(0, limit.value) : [];
+
+        limitedMenus.value = menus?.value?.length? cloneDeep(menus.value).splice(0, limit.value) : [];
         
+
         if(menus?.value && menus.value?.length > limit.value)
-            otherMenus.value = menus.value.slice(limit.value);
+            otherMenus.value = cloneDeep(menus.value).splice(limit.value, menus.value.length-limit.value);
         
+        const pageLoaded = computed(()=> pageStore?.page?.aliases && Object.keys(pageStore.page.aliases).length );
 
-        return { brandBarStyle,t,query, pageStore , menus, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl, viewport }
+        return { isDevSite, pageLoaded ,brandBarStyle,t,query, pageStore , menus, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl, viewport }
     }
 
-    function mounted(){
-        this.reloadMenus(this.viewport.breakpoint);
-        watch(this.viewport.breakpoint, this.reloadMenus)
-    }
 
 
     function toggle(e){
@@ -98,24 +98,12 @@
         this.dropDownEl.style.display = 'none';
     }
 
-    function reloadMenus(newBreakpoint){
-
-        this.otherMenus = [];
-        const largeBreakpoints = ['lg','xl', 'xxl'];
-        const mediumBreakpoints = ['md','sm','xs'];
-
-        this.limit=4;
-
-        if(!this.menus || !this.menus?.length) return;
-        
-        this.limitedMenus = this.menus.slice(0, this.limit);
-
-        this.otherMenus = this.menus.slice(this.limit);
-    }
 </script>
 
 <style scoped>
-
+.dev-site{
+    top: 21px;
+}
 .lang-active {
     font-weight: bolder !important;
 }

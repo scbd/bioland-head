@@ -1,10 +1,10 @@
 <template>
     <header >
-        
+        <PageHeaderDevSite/>
         <PageHeaderLanguageBar/>
         <PageHeaderHeroImage :key="path">
 
-            <PageHeaderTitleSearch/> 
+            <PageHeaderTitleSearch /> 
             <PageHeaderMegaMenu/> 
 
         </PageHeaderHeroImage>

@@ -28,11 +28,11 @@ const viewport   = useViewport();
 const route      = useRoute();
 const localePath = useLocalePath();
 const pageStore  = usePageStore();
-const contentTypeId = computed(()=> pageStore?.typeid);
+const contentTypeId = computed(()=> pageStore?.typeId);
 const menusStore = useMenusStore();
 const inMenu     = ref(menusStore.isInMainMenu(route.path) || menusStore.isInMainMenu(parentPath()) || menusStore.isInMainMenuByContentTypeId(contentTypeId.value));
 const eventBus   = useEventBus();
-const crumbs     = computed(()=> inMenu?.value? inMenu.value?.crumbs : []);
+const crumbs     = computed(makeCrumb)//computed(()=> inMenu?.value? inMenu.value?.crumbs : []);
 const isMobile   = computed(()=> ['md','sm','xs'].includes(viewport.breakpoint.value));
 
 function isSelf(href){ return href === route.path; }
@@ -49,8 +49,14 @@ function parentPath(){
 }
 
 function makeCrumb(){
+    if(!inMenu.value) return [];
 
+    for (const aCrumb of inMenu.value?.crumbs ) 
+        if(aCrumb?.contentTypeId && aCrumb?.href === '') aCrumb.href = menusStore.getContentTypeById(aCrumb.contentTypeId).slug
+    
+    return inMenu.value?.crumbs 
 }
+
 const siteStore = useSiteStore();
 const style = reactive({ color: siteStore.primaryColor, })
 const badgePrimaryStyle = reactive({ 'background-color': siteStore.primaryColor })

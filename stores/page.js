@@ -53,7 +53,7 @@ export const usePageStore = defineStore('page', {
         typeName(){ return  this.page?.fieldTypePlacement?.name || ''; },
         typeNamePlural(){ return  this.page?.fieldTypePlacement?.field_plural || ''; },
 
-        typeId(){ return this.page?.fieldTypePlacement?.drupal_internal__tid || this.page?.fieldTypePlacement?.drupalInternalTid  || undefined; },
+        typeId(){ return this.page?.fieldTypePlacement?.drupal_internal__tid || this.page?.fieldTypePlacement?.drupalInternalTid  || this.page?.drupalInternalTid || undefined; },
         image(){
      
             //if(this.isDocument ) return this.mapDocumentImage(this.document?.fieldMediaImage)
