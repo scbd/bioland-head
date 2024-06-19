@@ -21,15 +21,22 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
     ensureContext(siteStore.params);
 
-    nuxtApp.hook('i18n:localeSwitched', async ({oldLocale, newLocale}) => {
+    nuxtApp.hook('i18n:localeSwitched', ({oldLocale, newLocale}) => {
         const context       = useCookie('context');
-        const localeChanged = newLocale === siteStore.defaultLocale ? 'en' : newLocale;
+        const menuStore   = useMenusStore(nuxtApp.$pinia)
+        // const localeChanged = newLocale === siteStore.defaultLocale ? 'en' : newLocale;
 
-        siteStore.set('locale', localeChanged);
+        siteStore.set('locale', newLocale);
+        // context.value.locale = newLocale;
+        // context.value.localizedHost = siteStore.getHost();
+       // context.value.loc = siteStore.params;
+       
 
-        context.value = siteStore.params;
-
-        menuStore.loadAllMenus((await useFetch(`/api/menus`,{ params: clone(siteStore.params) })).data.value)
+       context.value = { ...context.value,...siteStore.params}
+       consola.info('context.value',context.value);
+    //    const menues = (await useFetch(`/api/menus`,{ params: clone(siteStore.params) })).data.value
+        useFetch(`/api/menus`,{ params: clone(siteStore.params) }).then(({data})=>menuStore.loadAllMenus(data.value))
+    //     await menuStore.loadAllMenus(menues)
     })
 
 

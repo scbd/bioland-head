@@ -16,6 +16,7 @@ export async function getPageData(ctx){
 
         await addPageAliases(ctx,data).then((aliases)=> data.aliases=aliases)
         
+        consola.warn('====================', data.aliases)
         if(data.type === 'taxonomy_term--system_pages' && !data?.parent[0].id !== 'virtual' ) await getChildren(ctx, data);
 
         return  await mapData(ctx)(data)
@@ -84,18 +85,34 @@ export async function getPageThumb(ctx){
 
     return getThumbFiles(data,  ctx)
 }
+function getLocalizationFromPath(ctx, path){
+
+    const pathParts = path.split('/');
+
+    const isLocalizedPath = ctx?.locales?.includes(pathParts[1]);
+
+    return isLocalizedPath?  pathParts[1] : 'en'
+}
 
 async function getPageIdentifiers(ctx){
 
-    const { host,localizedHost, path, isLocalizationException  } = ctx;
+    const { locale, host,localizedHost, path, isLocalizationException  } = ctx;
 
-    const cleanPath = removeLocalizationFromPath(ctx, path);
     
-    const uriHost = isLocalizationException? host : localizedHost;
+    const pathLocal = getLocalizationFromPath(ctx, path)
+    const isOnLocaleChange = pathLocal && (locale !== pathLocal);
+    const cleanPath = removeLocalizationFromPath(ctx, path);
+    const isDefaultLocale  = !!((locale === ctx.defaultLocale) || (isOnLocaleChange && (pathLocal ===ctx.defaultLocale)));
+    console.log('=======================pathLocal', !pathLocal)
+    console.log('=======================isDefaultLocale', isDefaultLocale)
+    console.log('=======================isOnLocaleChange', isOnLocaleChange)
+    console.log('=======================locale', locale)
+    const uriHost = isLocalizationException || isDefaultLocale ? host : isOnLocaleChange? `${host}/${pathLocal}` :localizedHost;
 console.log('=======================', cleanPath)
+console.log('=======================', uriHost)
     const uri = `${uriHost}/router/translate-path?path=${encodeURIComponent(cleanPath||'/')}`;
 
-
+console.log('=======================', uri)
     const data = await $fetch(uri, { mode: 'cors' })
     const { uuid, id, type, bundle } = data?.entity || {};
 

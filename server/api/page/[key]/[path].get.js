@@ -19,7 +19,7 @@ export default cachedEventHandler(async (event) => {
     }
     
 },{
-    maxAge: 1,
+    maxAge: 0,
     getKey,
     base:'db'
 })

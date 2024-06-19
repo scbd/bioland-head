@@ -73,11 +73,11 @@ export function removeLocalizationFromPath(ctx, path){
 
     const pathParts = path.split('/');
 
-    const isLocalizedPath = pathParts[1] === ctx.locale;
+    const isLocalizedPath = ctx?.locales?.includes(pathParts[1]);
 
     return isLocalizedPath?   [ '', ...pathParts.slice(2) ].join('/')    :  pathParts.join('/');
 }
-function drupalizeLocale(locale){
+export function drupalizeLocale(locale){
     if(locale === 'zh') return 'zh-hans';
 
     return locale;

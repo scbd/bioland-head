@@ -1,7 +1,7 @@
 import isString from 'lodash.isstring'
 
 export const parseQuery = (event) => {
-    const { country, siteCode, identifier, locale, defaultLocale, countries: countriesArray } = getQuery(event);
+    const { locales, country, siteCode, identifier, locale, defaultLocale, countries: countriesArray } = getQuery(event);
     
     const countries      = (Array.isArray(countriesArray) && countriesArray?.length? countriesArray : country? [country]: []).filter(x=>x && x !== 'undefined');
 
@@ -13,7 +13,7 @@ export const parseQuery = (event) => {
     const localizedHost      = `${host}${pathPreFix}`;
     const indexLocal         = getIndexLocale(locale);
 
-    return removeNullProps({ host, localizedHost, baseHost, country, countries,siteCode, identifier, locale, defaultLocale, pathPreFix, indexLocal  })
+    return removeNullProps({ locales, host, localizedHost, baseHost, country, countries,siteCode, identifier, locale, defaultLocale, pathPreFix, indexLocal  })
 }
 
 export const getContext = (event) => {
@@ -29,7 +29,7 @@ export function parseContext (context) {
 
     const ctx = isString(context)? JSON.parse(context) : context;
 
-    const { country, localizedHost:lh,siteCode, identifier, locale, defaultLocale, countries: countriesArray, redirect , path} = ctx;
+    const { locales, country, localizedHost:lh,siteCode, identifier, locale, defaultLocale, countries: countriesArray, redirect , path} = ctx;
     
     const   countries       = (Array.isArray(countriesArray) && countriesArray?.length? [country,...countriesArray] : country? [country] : []).filter(x=>x && x !== 'undefined');
 
@@ -41,7 +41,7 @@ export function parseContext (context) {
     const   localizedHost   = lh? lh : `${host}${pathPreFix}`;
     const   indexLocale     = getIndexLocale(locale);
 
-    return removeNullProps({ host, localizedHost, country,countries, siteCode, identifier, locale, defaultLocale, indexLocal:indexLocale, indexLocale, path })
+    return removeNullProps({locales,  host, localizedHost, country,countries, siteCode, identifier, locale, defaultLocale, indexLocal:indexLocale, indexLocale, path })
 }
 
 export async function getSiteConfig({  siteCode }){

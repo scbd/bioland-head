@@ -5,12 +5,13 @@ export const getKey =  (event) => {
     const   query      = getQuery(event)
     const { pathname } = new URL(getRequestURL(event))
 
+    const key      = query?.key || context?.key
     const locale   = query?.locale || context?.locale || 'und'
     const host     = query?.host || context?.host 
     const makeHash = (x) => crypto.createHash('sha1').update(x).digest('hex')
     const hashData = `${host}-${locale}-${pathname}` + JSON.stringify({...context, ...query});
 
-    return `${host}-${locale}-${pathname}-${makeHash(hashData)}`
+    return key? `${host}-${locale}-${pathname}-${makeHash(hashData)}-${key}` : `${host}-${locale}-${pathname}-${makeHash(hashData)}`
 }
 
 export const shouldInvalidateCache = (event) => {

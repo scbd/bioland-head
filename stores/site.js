@@ -9,6 +9,11 @@ export const useSiteStore = defineStore('site', {
         
             return this;
         },
+        setLocale(locale){
+            this.set('locale', locale);
+            
+            return this;
+        },
         initialize( { locale, identifier,siteCode, defaultLocale, config, siteName, gaiaApi, multiSiteCode, baseHost, env }){
             this.set('baseHost',                  baseHost);
             this.set('gaiaApi',                   gaiaApi);
@@ -52,6 +57,9 @@ export const useSiteStore = defineStore('site', {
         }
     },
     getters:{
+        allLocales(){
+            return [this.defaultLocale, ...this?.config?.locales || []]
+        },
         isDefaultLocale(){
             return this.locale === this.defaultLocale
         },
@@ -78,9 +86,9 @@ export const useSiteStore = defineStore('site', {
             const { identifier, baseHost, siteCode, config, locale, defaultLocale, host, localizedHost, redirect } = this;
             const { country:c, countries:cs } = config || {};
             const countries = this?.countries?.length?  this?.countries :(cs?.length? Array.from(new Set([c, ...cs])) : c? [c] : []).filter(x=>x && x !== 'undefined');
+            const locales = this.allLocales;
         
-        
-            return { baseHost, siteCode,identifier, country:c, locale, defaultLocale, countries, redirect, host, localizedHost };
+            return { locales, baseHost, siteCode,identifier, country:c, locale, defaultLocale, countries, redirect, host, localizedHost };
         },
         countries(){
             const { config } = this;
