@@ -17,7 +17,7 @@ function getByAlias (ctx){
 
                                 const uri =  `${ctx.localizedHost}/jsonapi/path_alias/path_alias`
 
-                                const resp = await $http.get(uri).query(params).withCredentials().accept('json');
+                                const resp = await $http.get(uri).query(params).withCredentials().accept('json');//.query({ 'jsonapi_include': 1 })
 
 
                                 const { data } = resp.body

@@ -97,7 +97,7 @@ async function getPathAliasFromApiPager ({ siteCode, identifier, pathPreFix, loc
 
         const uri = next || `${localizedHost}/jsonapi/path_alias/path_alias`
 
-        const { body }  = await $http.get(uri).withCredentials().accept('json');
+        const { body }  = await $http.get(uri).withCredentials().accept('json'); //.query({ 'jsonapi_include': 1 })
 
         const { links, data } = body
 

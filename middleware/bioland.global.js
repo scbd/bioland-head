@@ -12,7 +12,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   const localePath  = siteStore.locale === siteStore.defaultLocale? '' : `/${siteStore.locale}`;
   const path        = isNewLocale? `${localePath}/node/${pStore.drupalInternalNid}` : to.path;
 
-  context.value.path = path;
+  if(!context.value) context.value = {};
+    context.value.path = path;
 
   const [ pData, fetch ]= await Promise.all([getPage(path), getMenus()])
 

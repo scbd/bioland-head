@@ -1,6 +1,3 @@
-import SA      from 'superagent'               ;
-
-const $http   = {}//SA.agent()
 
 export default cachedEventHandler(async (event) => {
     try{

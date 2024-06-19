@@ -9,7 +9,7 @@ export const getInstalledLanguages = async ({ host, siteCode }) => {
 
     const uri  = `${host}/jsonapi/configurable_language/configurable_language`;
 
-    const { body: { data } } = await $http.get(uri);
+    const { body: { data } } = await $http.get(uri).query({ 'jsonapi_include': 1 });
 
     return normalizeLanguageData(data);
 }
