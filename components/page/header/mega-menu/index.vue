@@ -7,10 +7,14 @@
                         <NuxtLink  v-if="!aMenu.class?.includes('login')" :class="aMenu.class" class="nav-link" :to="aMenu.href" :title="aMenu.title"  >
                             {{aMenu.title}}
                         </NuxtLink>
-                        <NuxtLink v-if="aMenu.class?.includes('login')" :class="aMenu.class" class="nav-link" :to="loginUrl" :title="aMenu.title" external target="_blank">
-                            {{aMenu.title}}
-                        </NuxtLink>
-                        <span ref="spacers" :class="{ 'opacity-0': isLastSpacer(index) }" class="spacer"></span>
+                        <!-- <NuxtLink v-if="aMenu.class?.includes('login')" :class="aMenu.class" class="nav-link" :to="loginUrl" :title="aMenu.title" external target="_blank">
+                            <span v-if="!meStore.canEdit">xxxx <Icon name="drupal" :size="2"></Icon></span>
+                            {{aMenu.title}} {{meStore.name}} ssss {{meStore.canEdit}} dd
+                        </NuxtLink> -->
+                        <span v-if="!aMenu.class?.includes('login')" ref="spacers" :class="{ 'opacity-0': isLastSpacer(index) }" class="spacer"></span>
+                        
+                        <PageHeaderMegaMenuLogin v-show="aMenu.class?.includes('login')" :aMenu="aMenu"/>
+
                         <LazyPageHeaderMegaMenuDropDown v-if="aMenu.children && toggles[index]" :menus="aMenu.children"  v-click-outside="unToggle"/>
                     </li>
                 </ul>
@@ -20,7 +24,7 @@
 </template>
 <script>
 import { useElementBounding } from '@vueuse/core'
-// import { useMenusStore } from "~/stores/menus";
+
     export default {
         name: 'PageMegaMenu',
         methods: { loginStyle,isLogin, isLastIndex , isLastSpacer, toggle, unToggle},
@@ -29,6 +33,7 @@ import { useElementBounding } from '@vueuse/core'
     }
 
     function setup() {
+        const meStore = useMenusStore();
         const spacers   = ref(undefined);
         const spacersY  = ref([]);
         const toggles   = ref([]);
@@ -41,7 +46,10 @@ import { useElementBounding } from '@vueuse/core'
 
         const eventBus   = useEventBus();
 
-        const loginUrl = computed(() => `${siteStore.host}/user/login`);
+        const loginUrl = computed(() => {
+          if(meStore.canEdit) return `${siteStore.host}/user/${meStore.diuid}`
+          return `${siteStore.host}/user/login`
+        });
         router.beforeEach(() => {
           for (let index = 0; index < unref(toggles).length; index++)
               toggles.value[index] = false;
@@ -54,10 +62,14 @@ import { useElementBounding } from '@vueuse/core'
                                                             }
                                                             stop();
                                                             }, { immediate: true });
-        //open menu from crumbs
-        onMounted(() => eventBus.on('openMenu', (index) => toggles.value[index] = true) );
 
-        return { loginUrl, menus,  spacers, spacersY, toggles }
+        //open menu from crumbs
+        onMounted(() => { 
+            eventBus.on('openMenu', (index) => toggles.value[index] = true );
+            
+        });
+
+        return { loginUrl, menus,  spacers, spacersY, toggles, meStore }
     }
 
     function isLogin(aMenu){

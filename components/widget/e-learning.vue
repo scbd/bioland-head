@@ -1,5 +1,5 @@
 <template>
-    <Widget v-if="record" :name="t('e-Learning')" :record="record" :links="links"/>
+    <Widget v-if="!error && record" :loading="loading" :name="t('e-Learning')" :record="record" :links="links"/>
 </template>
 <i18n src="@/i18n/dist/components/widget/index.json"></i18n>
 <script setup>
@@ -12,14 +12,13 @@
     const localePath = useLocalePath();
 
 
-    const { data: record  }= await useFetch(`/api/list/content/4`, {  method: 'GET', query, onResponse });
+    const { data: record, status, error  }= await useFetch(`/api/list/content/4`, {  method: 'GET', query, onResponse });
 
+    const loading = computed(()=> status.value === 'pending'); 
 
     function onResponse({ request, response, options}){
         const { data }   = response._data;
         const { length } = data || []
-
-
         response._data = data[Math.floor(Math.random() * length)];
     }
     

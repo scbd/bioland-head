@@ -1,23 +1,19 @@
 <template>
     <IconSymbols v-once/>
     
-    <!-- <div class="page-loader"></div> -->
     <PageHeader/>
-    <!-- <PageEditorControls  /> -->
 
     <main class="">
-      <!-- <test/> -->
-      <!-- <div class="text-muted text-center">Main Page Content</div> -->
       <NuxtLoadingIndicator :height="6"/>
-
-      <NuxtPage/>
-
+      <!-- <Spinner v-if="pageStore.loading" /> -->
+      <NuxtPage />
     </main>
-    <!-- <div v-if="!isProd" class="text-center"><HydrationStatus /> </div> -->
+    {{viewport.breakpoint}}
     <PageFooter/>
 </template> 
 <script setup >
-
+const viewport        = useViewport();
+const pageStore = usePageStore();
 const { env } =useRuntimeConfig().public;
 const isProd = env === 'production';
 const { locale } = useI18n();
@@ -31,18 +27,7 @@ useHead({
   htmlAttrs: {
     lang: locale,
     dir: () => localHead.value.htmlAttrs.dir
-  },
-  // link: [
-  //   {
-  //     rel: 'preconnect',
-  //     href: 'https://fonts.googleapis.com'
-  //   },
-  //   {
-  //     rel: 'stylesheet',
-  //     href: 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap',
-  //     crossorigin: ''
-  //   }
-  // ]
+  }
 })
 </script>
 <script>

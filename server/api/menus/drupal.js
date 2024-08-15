@@ -15,7 +15,7 @@ export default cachedEventHandler(async (event) => {
     }
     
 },{
-    maxAge: 60 * 60 * 24,
+    maxAge: 1,
     getKey,
     base:'db'
 })

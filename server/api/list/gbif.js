@@ -12,12 +12,13 @@ export default cachedEventHandler(async (event) => {
         const uri  = `https://api.gbif.org/v1/occurrence/search?${countryQueryString}&limit=0&facet=publishingOrg&facetLimit=1000`;
         const uri2 = `https://api.gbif.org/v1/dataset?${countryQueryString}`;
 
+
         const data = await Promise.all([$fetch(uri, { mode: 'cors' }).then(mapOccurrence),$fetch(uri2, { mode: 'cors' }).then(mapDataSets)])
 
         return { ...data[0], ...data[1] }
     }
     catch(e){
-        //consola.error(e);
+        consola.error(e);
         return { occurrences: 0, publishers: 0, datasets: 0 }
     }
     

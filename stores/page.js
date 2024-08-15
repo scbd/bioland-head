@@ -5,8 +5,17 @@ import { useSiteStore } from "~/stores/site";
 
 
 export const usePageStore = defineStore('page', {
-    state: ()=>({ page: {} }), 
+    state: ()=>({ page: {}, loading: true, cancelLoading: true }), 
     actions:{
+        isLoading(){
+
+            return this.loading && !this.cancelLoading;
+        },
+        stopLoading(){
+            setTimeout(() => {
+                this.loading = false;
+            }, 500);
+        },
         initialize(pageDataRaw){
             this.$reset()
         
@@ -43,20 +52,31 @@ export const usePageStore = defineStore('page', {
 
     },
     getters:{
+        isSystemPage(){ return this.page?.type === 'taxonomy_term--system_pages'; },
+        isTaxonomyTerm(){ return this.page?.type === 'taxonomy_term--tags'; },
         heroImage(){
             const heroImages = Array.isArray(this.page?.fieldAttachments)? this.page.fieldAttachments.filter(({ type })=> type === 'media--hero') : [];
         
-            if(!heroImages.length) return undefined
+            if(!heroImages.length) return undefined;
         
             return random(heroImages);
         },
-        typeName(){ return  this.page?.fieldTypePlacement?.name || ''; },
-        typeNamePlural(){ return  this.page?.fieldTypePlacement?.field_plural || ''; },
+        typeName(){ 
+            if(this.isTaxonomyTerm || this.isSystemPage) return this.page?.name || '';
 
-        typeId(){ return this.page?.fieldTypePlacement?.drupal_internal__tid || this.page?.fieldTypePlacement?.drupalInternalTid  || this.page?.drupalInternalTid || undefined; },
+            return  this.page?.fieldTypePlacement?.name || ''; 
+        },
+        typeNamePlural(){ 
+            if(this.isSystemPage) return this.page?.name || '';
+            if(this.isTaxonomyTerm) return this.page?.fieldPlural || '';
+
+            return  this.page?.fieldTypePlacement?.field_plural || ''; 
+        },
+        typeId(){ 
+            
+            return this.page?.fieldTypePlacement?.drupal_internal__tid || this.page?.fieldTypePlacement?.drupalInternalTid  || this.page?.drupalInternalTid || undefined; 
+        },
         image(){
-     
-            //if(this.isDocument ) return this.mapDocumentImage(this.document?.fieldMediaImage)
             if(!this.images || !this.images?.length) return undefined;
         
             return {...this.images[0] };

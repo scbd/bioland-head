@@ -15,6 +15,7 @@
 
             <div class="overflow-scroll" style="height:100%; width:100%;">
                     <h5 v-for="(aMenu,index) in menus" :key="index" class="m-row" @click.stop="toggle(index)" :class="{'bg-primary': aMenu.class?.includes('login')}"   >
+                        {{aMenu.class}}
                         <NuxtLink  :class="aMenu.class" class="nav-link" to="#" :title="aMenu.title" >
                             {{aMenu.title}}
                         </NuxtLink>
@@ -29,12 +30,19 @@
 </template>
 <script setup>
     import { useMenusStore } from '~/stores/menus';
-
+    const eventBus   = useEventBus();
     const   menuStore     = useMenusStore();
     const   toggles       = ref([]);
     const   burgerToggle  = ref(false);
     const { main: menus } = storeToRefs(menuStore);
-
+    const router = useRouter()
+    onMounted(() => { 
+            eventBus.on('openMenu', (index) => { 
+                toggleBurger();
+                toggle(index);
+             });
+            
+        });
 
     const toggleBurger = () => {
         const hasSubOpen = unToggle();
@@ -57,6 +65,14 @@
 
         return hasOpen;
     }
+
+    router.beforeEach(() => {
+       
+          for (let index = 0; index < unref(toggles).length; index++)
+              toggles.value[index] = false;
+
+              burgerToggle.value = false;
+        })
 </script>
 <style scoped>  
 .slide-fade-enter-active,

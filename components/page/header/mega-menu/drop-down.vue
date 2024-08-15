@@ -2,7 +2,13 @@
     <div class="overflow-scroll mm">
         <div class="container px-0 cont">
             <div class="row  m-0">
+                <div v-if="meStore.showEditMenu" class="position-absolute top-0 end-0 text-end p-1">
+                    <button @click="editMenu" type="button" class="btn btn-outline-secondary btn-sm ">
+                        <Icon name="edit" :size="2"/>
+                    </button>
+                </div>
                 <div  class="menu-section text-wrap"  :class="[getGridValue(aMenu)]" v-for="(aMenu,index) in sections" :key="index">
+                    
                     <section v-if="!isComponent(aMenu)">
                         <PageHeaderMegaMenuHeader :menu="aMenu" />
                         <section v-for="(aChild,j) in aMenu.children" :key="j">
@@ -28,6 +34,7 @@
         const   props       = defineProps({ menus: Array });
         const   siteStore   = useSiteStore(     );
         const   menuStore   = useMenusStore();
+        const meStore    = useMeStore();
         const isDevSite  = computed(()=> !siteStore?.config?.published);
         const maxColumns = computed(()=> siteStore.config?.runTime?.theme?.megaMenu?.maxColumns || 5);
         const viewport   = useViewport();
@@ -53,6 +60,15 @@
                                     return menusFiltered;
         });
 
+        const editMenu = () => {
+            const menuName = sections.value[0].machineName || '';
+
+            if(!menuName) return;
+
+            navigateTo(`${siteStore.host}/admin/structure/menu/manage/${menuName}`,{ external: true, open:{ target: '_blank'} });
+
+            console.log('edit menu');
+        }
         function hasMaxColumns(totalColumns, nextMenu = {}){
 
             if(totalColumns > maxColumns.value) return true;
@@ -154,7 +170,7 @@
         if(!isComponent(menu) || isDevSite.value) return false;
 
         const cName = componentName(menu, true);
-consola.error(cName)
+
         if(cName === 'ContentType') {
 
             if(menu?.children?.length) return false;

@@ -1,9 +1,9 @@
 <template>
-    <NuxtLink style="text-decoration: none;;" :to="goTo(href)" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" :target="target" :external="external">
+    <NuxtLink style="text-decoration: none;" :to="goTo(href)" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" :target="target" :external="external">
     <div :style="cardStyle" class="card p-1 mb-3" >
         <div  class="row g-0">
-            <Icon v-if="aLine.sticky" name="pushpin" class="position-absolute start-50 "/>
-            <div :class="{'col-9': aLine.mediaImage, 'col-12': !aLine.mediaImage }">
+            <Icon v-if="aLine.sticky" name="pushpin" class="position-absolute start-50"/>
+            <div :class="{ 'col-9': aLine.mediaImage, 'col-12': !aLine.mediaImage }">
                 <div class="card-body pe-1">
                     <h5 class="card-title">{{aLine.title || aLine.name}}</h5>
                     <p v-if="aLine.summary" class="card-text">{{aLine.summary}}...</p>
@@ -63,8 +63,8 @@
 
 
     const  href  = computed(()=> {
-        // consola.info('aLine', aLine.value)
-        const uri = aLine.value?.href//aLine.value?.path?.alias || aLine.value?.url;
+   
+        const uri = aLine.value?.href || aLine.value?.urls[0] //aLine.value?.path?.alias || aLine.value?.url;
 
         if(!uri) return'';
         if(uri.startsWith('https')) return uri;
@@ -173,9 +173,10 @@ ul{
     margin-inline-start: 0px;
     margin-inline-end: 0px;
     padding-inline-start: 0px;
+
 }
 li{
-    display: inline;
+    display: inline-block;
     margin: .2rem;
     padding: 0;
     border-right: solid 1px #999;

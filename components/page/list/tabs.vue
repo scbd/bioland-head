@@ -8,26 +8,24 @@
                 </NuxtLink>
             </li>
             <li   class="nav-item ">
-                <NuxtLink :class="{a:isActive(secretariatContentTo)}" :to="secretariatContentTo" class="nav-link  text-capitalize">
+                <NuxtLink :style="getStyle(secretariatContentTo)" :to="secretariatContentTo" class="nav-link  text-capitalize">
                     {{t('Secretariat')}}
                 </NuxtLink>
             </li>
         </ul>
     </div>
 </template>
-<i18n src="@/i18n/dist/components/page/list/index.json"></i18n>
+
 <script setup>
     import { usePageStore  } from '~/stores/page';
 
     const { t  }   = useI18n();
-    const   r      = useRoute();
-
-  
+    const   r        = useRoute();
     const localePath = useLocalePath();
 
 
     const pageStore = usePageStore();
-    const showTabs = computed(()=>  (pageStore?.page?.children?.length || (pageStore?.page?.parent?.length && pageStore?.page?.parent[0].id !== 'virtual')));
+    const showTabs  = computed(()=>  (pageStore?.page?.children?.length || (pageStore?.page?.parent?.length && pageStore?.page?.parent[0].id !== 'virtual')));
 
     const siteContentTo = computed(()=> {
 
@@ -54,17 +52,18 @@
 
         return localePath(pageStore?.page?.children[0].path?.alias)
     }
+
     const siteStore = useSiteStore();
     function getStyle(link){
         if(!isActive(link)) return {}
 
         return reactive({
             'z-index': 2,
-        color: 'white',
-        'text-decoration': 'none',
-        'background-color': siteStore.primaryColor,
-        'border-color': 'white',
-        'border-bottom': `${siteStore.primaryColor} solid 1px`,
+            color: 'white',
+            'text-decoration': 'none',
+            'background-color': siteStore.primaryColor,
+            'border-color': 'white',
+            'border-bottom': `${siteStore.primaryColor} solid 1px`
         })
     }
 </script>

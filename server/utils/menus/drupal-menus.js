@@ -1,26 +1,91 @@
 import clone from 'lodash.clonedeep';
+import intersect from 'lodash.intersection';
 
-export async function useMenus(query){
-    const menuNames = ['main', 'footer', 'footer-credits'];
+const mainChildren = [ 'convention-protocols','biodiversity-facts','cooperation', 'implementation','news-updates', 'resources'  ];
+const menuNames    = ['main', 'footer', 'footer-credits'];
+
+export async function useMenus(ctx){
+
+    const newStructure = await hasNewMenuStructure(ctx);
+    const allMenuNames = newStructure? [ ...menuNames, ...mainChildren ] : menuNames;
     const menuPromises = [];
     const menus = {};
 
-    for (const menuName of menuNames) {
-        const menuPromise = getMenuData(menuName,query )
+    for (const menuName of allMenuNames) {
+        const menuPromise = getMenuData(menuName,ctx )
                             .then((menusData) => menus[menuName] = menusData);
 
         menuPromises.push(menuPromise);
     }
 
-    menuPromises.push(getInstalledLanguages(query));
-
-    const [main, footer, footerCredits, languages ] = await Promise.all(menuPromises);
-    const [ cleanMenus ] = await Promise.all( [addMissingData(menus, query )])
+    await Promise.all(menuPromises);
 
 
-    await getThumbNails(cleanMenus, query);
+    const cleanMenus  = await addMissingData(menus, ctx )
 
-    return { ...cleanMenus, languages };
+    if(newStructure)
+        buildMainChildren(cleanMenus);
+
+    await getThumbNails(cleanMenus, ctx);
+
+    return { ...cleanMenus};
+}
+
+async function hasNewMenuStructure(ctx){
+    try{
+        const { host } = ctx;
+
+        const uri = `${host}/system/menu/${encodeURIComponent('cooperation')}/linkset`;
+    
+
+        const data = await $fetch(uri, { mode: 'cors', ignoreResponseError: true }).catch((e)=>  false);
+
+        return data?.linkset && data?.linkset?.length ? true : false;
+    }
+    catch(e){
+        return false;
+    };
+    
+}
+
+function mergeMain(allMenus){
+    const newMain = clone(allMenus.main);
+    for (const aMainMenu of allMenus.main) {
+        const mainMenuChildName = mainMenuHasChild(aMainMenu);
+
+        if(!mainMenuChildName) continue;
+
+        const mainMenuIndex = aMainMenu.hierarchy[0]
+        for (const aMainChild of allMenus[mainMenuChildName]) {
+            aMainChild.hierarchy.unshift(mainMenuIndex)
+            // aMainChild.machineName = aMainMenu.machineName;
+        }
+        //newMain.push(...allMenus[mainMenuChildName])
+        // delete allMenus[mainMenuChildName]
+    }
+    allMenus.main = newMain.sort(sortMenus);
+
+    // consola.info( newMain)
+}
+function buildMainChildren(allMenus){
+    for (const aMenu of allMenus.main) {
+        if(!mainMenuHasChild(aMenu)) continue;
+
+        aMenu.children = allMenus[mainMenuHasChild(aMenu)]
+        for (const aChild of aMenu.children) {
+            aChild.hierarchy?.unshift(aMenu.hierarchy[0])
+            aChild.crumbs?.unshift(aMenu.crumbs[0])
+        }
+        delete allMenus[mainMenuHasChild(aMenu)]
+    }
+
+    return allMenus;
+}
+
+function mainMenuHasChild(aMainMenu){
+    const hasChild = intersect(aMainMenu.class||[], mainChildren);
+
+    return  hasChild.length? hasChild[0] : false;
 }
 
 async function getThumbNails(menus, ctx){
@@ -43,26 +108,28 @@ function getInternalUrlsRecursive(menus,{internalUrlsArr, parent}={}){
     const internalUrls = internalUrlsArr? internalUrlsArr : [];
 
     for (const aMenu of menus) {
-        if(aMenu.children) getInternalUrlsRecursive(aMenu.children, { internalUrlsArr:internalUrls, parent:aMenu })
-        // if(aMenu.title==='Publications')
+        if(!parent?.class?.includes('bl2-show-thumbs') || !parent?.class?.includes('mm-show-thumbs') ) continue;
 
-        if(!parent?.class?.includes('bl2-show-thumbs')) continue;
-        if(aMenu?.path?.includes('entity')) internalUrls.push(aMenu)
+        if(aMenu.children) getInternalUrlsRecursive(aMenu.children, { internalUrlsArr:internalUrls, parent:aMenu })
+
+        internalUrls.push(aMenu)
     }
     return internalUrls
 }
-const findFromRawMenus = (aMenu )=>({ link, title, alias  } = {})=>{
-    const { length } = aMenu?.hierarchy || [];
-    if(aMenu.href === link.uri && aMenu.title === title && length>1) return true
-    if(aMenu.href === link.alias && aMenu.title === title && length>1) return true
-    if(aMenu.title === title && length>1) return true
+
+const findFromRawMenus = (aMenu )=>({ link, title, alias, menu_name } = {})=>{
+
+    const hrefEqual = aMenu.href? aMenu.href === link.uri : link.uri === 'route:<nolink>';
+
+    if( hrefEqual && aMenu.title === title && menu_name === aMenu.machineName) return true
+    if(aMenu.title === title  && menu_name  === aMenu.machineName) return true
 
     return false
 }
 
 async function addMissingData(menus, { siteCode, identifier, pathPreFix, localizedHost }){
     const rawMenus =  (await getMenusFromApiPager ({ siteCode,identifier, pathPreFix, localizedHost }) || []);
-    
+
     for (const menuName in menus) {
         const rawMenuSet = rawMenus.filter((l) => l.menu_name === menuName);
 
@@ -75,9 +142,11 @@ async function addMissingData(menus, { siteCode, identifier, pathPreFix, localiz
 function addMissingDataRecursive(menus, { siteCode,identifier, pathPreFix, rawMenus, menuName, localizedHost  }){
 
         for (const index in menus) {
+            if(!menus[index]) continue;
             if(menus[index].children) menus[index].children=addMissingDataRecursive(menus[index].children, { siteCode,identifier, pathPreFix, rawMenus, menuName, localizedHost  })
 
             const rawMenu = rawMenus.find(findFromRawMenus(menus[index]))
+            if(rawMenu)
 
             if(!rawMenu) continue;
             if(rawMenu?.description) menus[index].description = rawMenu.description;
@@ -89,44 +158,21 @@ function addMissingDataRecursive(menus, { siteCode,identifier, pathPreFix, rawMe
     return menus
 }
 
-async function getPathAliasFromApiPager ({ siteCode, identifier, pathPreFix, localizedHost }, next){
-    try {
-
-
-        const $http = await useDrupalLogin(siteCode);
-
-        const uri = next || `${localizedHost}/jsonapi/path_alias/path_alias`
-
-        const { body }  = await $http.get(uri).withCredentials().accept('json'); //.query({ 'jsonapi_include': 1 })
-
-        const { links, data } = body
-
-        if(nextUri(links)) return [ ...data, ...await getPathAliasFromApiPager({ siteCode,  identifier, pathPreFix, localizedHost }, nextUri(links)) ]
-
-        return data
-    }
-    catch(e){
-       // console.error('Menus.getPathAliasFromApiPager - recursive', e)
-    }
-}
 
 export async function getMenusFromApiPager ({ siteCode,identifier, pathPreFix, pathAlias, localizedHost }, next){
     try {
-        const paths = pathAlias? pathAlias : await getPathAliasFromApiPager({ siteCode,identifier, pathPreFix, localizedHost })
+        let filterQueryString = '?jsonapi_include=1';
+        filterQueryString += `&filter[tag-filter-desc][condition][path]=description`
+        filterQueryString += `&filter[tag-filter-desc][condition][operator]=IS NOT NULL`
 
         const $http = await useDrupalLogin(siteCode)
 
-        const uri = next || `${localizedHost}/jsonapi/menu_link_content/menu_link_content`
+        const uri = next || `${localizedHost}/jsonapi/menu_link_content/menu_link_content${filterQueryString}`
 
         const { body }  = await $http.get(uri).withCredentials().accept('json')
 
         const { links, data } = body
 
-        for (const aMenu of data) {
-            const path = paths.find(({ path:p }) => aMenu.link.uri.includes(p.substring(1)) )
-
-            if(path) aMenu.link.alias = path.alias
-        }
 
         if(nextUri(links)) return [ ...data, ...await getMenusFromApiPager({ siteCode,identifier, pathPreFix, pathAlias:paths, localizedHost }, nextUri(links)) ]
 
@@ -148,8 +194,6 @@ async function getMenuData(menuName, ctx){
     return data?.linkset && data?.linkset?.length ? formatMenus(data.linkset[0].item) : [];
 }
 
-
-
 function formatMenus(menuData){
     const menusClone = clone(splitClasses(menuData));
     const menus = [];
@@ -165,17 +209,10 @@ function formatMenus(menuData){
 
     embedChildren(menus, menusClone)
 
+
     return menus;
 }
-// async function addDescriptions(menus, { identifier, pathPreFix, menuName }){
-//     const rawMenus = (await getMenusFromApiPager ({ identifier, pathPreFix })).filter((l) => l.menu_name === menuName)
-//                         .map(({ description, title, link })=>({ description, title, link: link.uri.replace('internal:', '') }))
 
-//     // for (const aMenu of menus) {
-
-//     // }
-
-// }
 
 function splitClasses(menus){
 
@@ -192,10 +229,10 @@ function splitClasses(menus){
 const typeMapIds = { news:2, event:3, 'learning-resource':4, project:5, 'basic-page':6, 'government-ministry-or-institute':8, ecosystem:9, 'protected-area':10, 'biodiversity-data':11, document:12, 'related-website':13, other:15, 'image-or-video':16 };
 
 function addContentTypeId(aMenu){
-    const contentType = aMenu?.class?.find((c)=> c.startsWith('bl2-content-type-'))
+    const contentType = aMenu?.class?.find((c)=> c.startsWith('bl2-content-type-') || c.startsWith('mm-content-type-'))
     if(!contentType) return aMenu;
 
-    const contentTypeName = contentType.replace('bl2-content-type-', '');
+    const contentTypeName = contentType.replace('bl2-content-type-', '').replace('mm-content-type-', '');
 
     aMenu.contentTypeId = typeMapIds[contentTypeName];
 
@@ -207,6 +244,7 @@ function embedChildren(menus, menusClone){
     for (const aMenu of menus) {
         index++
         const children = [];
+
         if(Array.isArray(aMenu.crumbs))
             aMenu.crumbs.push({ title: aMenu.title, href: aMenu.href, index, contentTypeId: aMenu.contentTypeId})
         else aMenu.crumbs = [{ title: aMenu.title, href: aMenu.href, index, contentTypeId: aMenu.contentTypeId}]
@@ -223,14 +261,7 @@ function embedChildren(menus, menusClone){
             if(!Array.isArray(aMenuClone.crumbs))
                 aMenuClone.crumbs = clone(aMenu?.crumbs);
 
-                // if(!aMenuClone.crumbs.find(({ title, href }) => title === aMenuClone.title && href===aMenu.href))
-                    
-            
-            // Array.from(new Set([...( aMenu?.crumbs || []),{ title: aMenu.title, href: aMenu.href, index }]))
-            //aMenuClone.crumbs.push({ title: aMenuClone.title, href: aMenuClone.href })
-            
             children.push(aMenuClone);
-
         }
 
         if(!children.length) continue;

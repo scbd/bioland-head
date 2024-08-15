@@ -24,3 +24,6 @@ logs
 !.env.example
 sw.*
 i18n/.to-delete*
+server/efs*
+pages-*
+cypress*

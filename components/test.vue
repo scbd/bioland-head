@@ -23,7 +23,7 @@
     const query  = clone({ ...route.query, ...siteStore.params });
 // const typeId = drupalTypes[type]?.drupalInternalId? '/'+drupalTypes[type]?.drupalInternalId : '';
 
-    const { data } =  await useFetch(`/api/list/latest`, {  method: 'GET', query });
-
+    const { data } =  await useFetch(`/api/menus`,{ params: clone(siteStore.params) }).then(({data})=> ({data:Object.keys(data.value)}))
+    
     //const data = computed(()=>d.value[d.value.length-1])
 </script>

@@ -64,7 +64,7 @@
 
 
     const  href  = computed(()=> {
-        // consola.info('aLine', aLine.value)
+      
         const uri = aLine.value?.path.alias//aLine.value?.path?.alias || aLine.value?.url;
 
         return uri;

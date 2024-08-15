@@ -15,6 +15,12 @@ const routeRules = {
 }
 
 export default defineNuxtConfig({
+  // app: {
+  //   pageTransition: {
+  //     name: 'fade',
+  //     mode: 'out-in' 
+  //   }
+  // },
   devtools: { enabled: true },
   debug: false, 
   sourcemap: {
@@ -136,7 +142,13 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
-    logLevel: 4
+    logLevel: 4,
+    devStorage: {
+      db: {
+        driver: 'fs',
+        base: './.nuxt/data/db'
+      }
+    }
     // routeRules
     // Production
     // storage: {

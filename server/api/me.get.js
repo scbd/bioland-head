@@ -23,7 +23,7 @@ async function getUser(event) {
 
     const uri           = `${host}/jsonapi`;
     const method        = 'get';
-    const headers       = { 'Content-Type': 'application/json', Cookie: 'SSESScdf9bf2e11fb28fdb7542fa5e770c587=1X7vIKKIWOjg94wlHNUYJqj-DwYlEL9LnSYoLZ9ItlOF8yNl;'};//getHeader(event, 'Cookie')
+    const headers       = { 'Content-Type': 'application/json', Cookie: getHeader(event, 'Cookie')};//getHeader(event, 'Cookie')
 
 
     const {  meta:m } = await $fetch(uri, { method, headers });
@@ -31,7 +31,7 @@ async function getUser(event) {
 
     if(!m?.links?.me) return anonUser
 
-    if(!m?.links?.me?.href) throw new Error('/api/me/getUer: no href property on ');
+    if(!m?.links?.me?.href) throw new Error('/api/me/getUser: no href property on ');
 
     const userUri = `${m.links.me.href}?include=roles`;
     const t= await $fetch(userUri, { method, headers });
@@ -54,7 +54,7 @@ function mapUserFromDrupal({ data, included }){
         duuid          : id,
         diuid          : attributes?.drupal_internal__uid,
         preferredLang  : attributes?.preferred_langcode,
-        display_name   : attributes?.display_name,
+        displayName   : attributes?.display_name,
         name           : attributes?.name,
         email          : attributes?.mail,
         isAuthenticated: true,

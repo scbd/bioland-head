@@ -1,8 +1,14 @@
 <template>
     <div   :style="backgroundStyles" :class="{'un3-hero':hasHeroImage, 'hero-image':hasHeroImage, 'no-hero':!hasHeroImage, 'dev-site': isDevSite }"  >
         <slot></slot>
+        
         <div v-if="hasHeroImage"  class="container text-white">
-            <div class="row pb-1">
+            <div class="row pb-1 position-relative ">
+                <div v-if="meStore.showEdit" class="position-absolute text-end" style="min-width:3rem;">
+                    <button @click="editHero" type="button" class="btn btn-outline-secondary btn-sm mt-1">
+                        <Icon name="edit" :size="2"/>
+                    </button>
+                </div>
                 <div v-if="hi?.fieldDescription?.value" v-html="hi?.fieldDescription?.value">
                 </div>
 
@@ -24,7 +30,8 @@ export default {
 }
 
 function setup() {
-
+//v-if="meStore.canEditMenu" @click="editMenu('footer-credits')" 
+const meStore = useMeStore();
     const siteStore    = useSiteStore();
     const pageStore    = usePageStore();
     const hasHeroImage = computed(() => pageStore?.page?.hasHeroImage);
@@ -50,8 +57,14 @@ function setup() {
         return getBackgroundStyles(imgSrc)
     })
 
+    function editHero () {
+            const menuName =  hi.value?.drupalInternalMid
 
-    return { isDevSite, hasHeroImage , backgroundStyles, hi }
+
+            navigateTo(`${siteStore.host}/media/${menuName}/edit`,{ external: true, open:{ target: '_blank'} });
+
+        }
+    return { isDevSite, hasHeroImage , backgroundStyles, hi, meStore, editHero }
 }
 
 function getWidthHeightImg(vp){

@@ -4,7 +4,12 @@
                 <div class="container">
                     <div class="row pt-4 row-cols-2 row-cols-sm-4 row-cols-md-4 row-cols-lg-4 row-cols-xl-4 row-cols-xxl-4">
                         <div v-for="(aMenu,index) in menus" :key="index"   class="col mb-4">
-                            <h4 :style="headerLinkStyle">{{aMenu.title}}</h4> 
+                          <div v-if="meStore.showEditMenu" class="position-relative">
+                            <button @click="editMenu" type="button" class="btn btn-outline-secondary btn-sm m-1 position-absolute top-0 end-0">
+                                <Icon name="edit" :size="2"/>
+                            </button>
+                          </div>
+                            <h4 :style="headerLinkStyle">{{aMenu.title}} </h4> 
                             <ul class="list-unstyled"> 
                                 <li v-for="(aChildMenu,i) in aMenu.children" :key="i">
                                     <PageMenuLink v-bind="aChildMenu"/>
@@ -27,11 +32,18 @@
                             <NuxtLink  class="navbar-brand" to="https://www.cbd.int/" :title="t('Convention on Biological Diversity')" target="_blank" external>{{t('Convention on')}}<br/>{{t('Biological Diversity')}}</NuxtLink>
                         </div>
                         <div class="col-12 col-sm-4 d-flex justify-content-end">
+
                             <ul class="nav">
                                 <li v-for="(aChildMenu,index) in creditsMenus" :key="index" class="nav-item">
                                     <PageMenuLink v-bind="aChildMenu" />
                                 </li>
                             </ul>
+                            <div v-if="meStore.showEditMenu" class="position-relative  bg-white" style="min-width:3rem;">
+                                <button  @click="editMenu('footer-credits')" type="button" class="btn btn-outline-secondary btn-sm position-absolute start-30">
+                                    <Icon name="edit" :size="2"/>
+                                </button>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -48,14 +60,25 @@
     }
 
     function setup() {
+        const meStore = useMeStore();
         const menuStore = useMenusStore();
         const { footer: menus, footerCredits: creditsMenus } = storeToRefs(menuStore);
         const { t  } = useI18n();
         const siteStore = useSiteStore();
         const style = reactive({ '--bs-primary': siteStore.primaryColor });
         const headerLinkStyle = reactive({ '--bs-primary': siteStore.primaryColor });
-        return { headerLinkStyle, style, t, menus, creditsMenus }
+
+        function editMenu (name) {
+            const menuName = name || 'footer'
+
+            navigateTo(`${siteStore.host}/admin/structure/menu/manage/${menuName}`,{ external: true, open:{ target: '_blank'} });
+
+            console.log('edit menu');
+        }
+
+        return { meStore, headerLinkStyle, style, t, menus, creditsMenus, editMenu }
     }
+
 
 </script>
 
@@ -67,8 +90,12 @@
     padding-right: 1.5rem;
   }
 .logo {
-    max-height: 3rem;
+
+    max-height: 4rem;
     border-right: 1px solid white;
+}
+.logo img {
+    max-height: 4rem;
 }
 .sublogo {
     height: 3rem;

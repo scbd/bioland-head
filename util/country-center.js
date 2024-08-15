@@ -12,7 +12,7 @@ export const zoomLevels = new Set([
     { id: 'AM', zoomLevel: 5 },
     { id: 'BA', zoomLevel: 5 },
     { id: 'BD', zoomLevel: 3 },
-    { id: 'BE', zoomLevel: 12 },
+    { id: 'BE', zoomLevel: 7 },
     { id: 'BG', zoomLevel: 5 },
     { id: 'BH', zoomLevel: 4 },
     { id: 'AZ', zoomLevel: 5 },

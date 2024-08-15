@@ -5,25 +5,24 @@ const localizationExceptionPaths = ['/forums/', '/forums', '/topics/'];
 
 export async function getPageData(ctx){
     try{
- 
+    
         ctx.isLocalizationException   = hasLocalizationException(ctx);
         const { uuid,  type, bundle } = await getPageIdentifiers(ctx);
         const { localizedHost }       = ctx;
         const   query                 = getSearchParams(ctx, type, bundle);
         const   uri                   = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
+
         const { data } = await $fetch(uri, { query });
 
         await addPageAliases(ctx,data).then((aliases)=> data.aliases=aliases)
         
-        consola.warn('====================', data.aliases)
         if(data.type === 'taxonomy_term--system_pages' && !data?.parent[0].id !== 'virtual' ) await getChildren(ctx, data);
 
         return  await mapData(ctx)(data)
     }catch(e){
-        
+        consola.error(e)
         if(e.status === 404) throw createError({ statusCode: 404, statusMessage: `Failed to get page from path: ${ctx.path}`})
-       
     }
 
 }
@@ -103,16 +102,11 @@ async function getPageIdentifiers(ctx){
     const isOnLocaleChange = pathLocal && (locale !== pathLocal);
     const cleanPath = removeLocalizationFromPath(ctx, path);
     const isDefaultLocale  = !!((locale === ctx.defaultLocale) || (isOnLocaleChange && (pathLocal ===ctx.defaultLocale)));
-    console.log('=======================pathLocal', !pathLocal)
-    console.log('=======================isDefaultLocale', isDefaultLocale)
-    console.log('=======================isOnLocaleChange', isOnLocaleChange)
-    console.log('=======================locale', locale)
+
     const uriHost = isLocalizationException || isDefaultLocale ? host : isOnLocaleChange? `${host}/${pathLocal}` :localizedHost;
-console.log('=======================', cleanPath)
-console.log('=======================', uriHost)
+
     const uri = `${uriHost}/router/translate-path?path=${encodeURIComponent(cleanPath||'/')}`;
 
-console.log('=======================', uri)
     const data = await $fetch(uri, { mode: 'cors' })
     const { uuid, id, type, bundle } = data?.entity || {};
 
@@ -150,7 +144,8 @@ function mapData(ctx){
         for (const media of document['field_attachments']){
 
             promises.push(pathAlias.getByMediaId(media.drupal_internal__mid).then((p)=>{ 
-                media.path = p;
+                if(media)
+                    media.path = p;
             }))
             promises.push(getThesaurusByKey(media.field_tags || media.fieldTags).then((p)=>{ media.tags =mapTagsByType(p) ;}));
         }

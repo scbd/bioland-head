@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "rm -rf .data && nuxt cleanup && nuxt dev --open",
+    "dev": "rm -rf .data && nuxt cleanup && nuxt dev --open --host be.localhost",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
@@ -37,6 +37,7 @@
     "consola": "3.2.3",
     "limax": "4.1.0",
     "lodash.clonedeep": "4.5.0",
+    "lodash.intersection": "^4.4.0",
     "lodash.isinteger": "4.0.4",
     "lodash.isnil": "4.0.0",
     "lodash.isplainobject": "4.0.6",

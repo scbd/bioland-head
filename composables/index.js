@@ -12,3 +12,11 @@ export function debounce(fn, wait){
         }, wait);
     }
 }
+
+export function isMobileFn(){
+
+    const viewport   = useViewport();
+
+    return computed(()=> ['sm','xs'].includes(viewport.breakpoint.value));
+}
+

@@ -44,7 +44,6 @@ function mapData(ctx, drupalInternalId){
                 aDoc.path=p;
                 if(p?.alias) aDoc.href=p?.alias;
             }))
-            // .then((p) => consola.warn(p))
             // .then((p)=>aDoc.path=p);
 
         }

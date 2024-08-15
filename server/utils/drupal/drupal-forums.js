@@ -1,14 +1,8 @@
-
-
-
-import { stripHtml } from "string-strip-html"; 
-import * as changeKeys from 'change-case/keys';
-
-import {validate as validateUuid} from 'uuid';
-
+import {    stripHtml  }                from 'string-strip-html';
+import * as changeKeys                  from 'change-case/keys' ;
+import {    validate   as validateUuid} from 'uuid'             ;
 
 export const useDrupalForums = async (ctx) => {
-
     return getForums(ctx)
 }
 
@@ -18,13 +12,10 @@ export async function addForumIdentifierToContext(ctx){
         ctx.uuid = ctx.forumAlias;
         return ctx
     } else ctx.uuid = '';
-    
 
     const pathAlias = usePathAlias(ctx);
+    const { path }  = (await pathAlias.getByAlias(`/forums/${ctx.forumAlias}`)) || {};
 
-    const { path } = (await pathAlias.getByAlias(`/forums/${ctx.forumAlias}`)) || {};
-    
-  
     if(!path){
         ctx.tid = '';
 
@@ -38,8 +29,7 @@ export async function addForumIdentifierToContext(ctx){
 
 export async function getForumTidFromAlias(ctx){
     const pathAlias = usePathAlias(ctx);
-
-    const { path } = await pathAlias.getByAlias(`/forums/${ctx.forumAlias}`);
+    const { path }  = await pathAlias.getByAlias(`/forums/${ctx.forumAlias}`);
     
     if(!path) return undefined;
 
@@ -56,7 +46,7 @@ async function getForums(ctx) {
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
-    const { data:d }      = await $fetch(uri, { method, headers });
+    const { data:d }    = await $fetch(uri, { method, headers });
 
     const data = d.map(cleanForumData)
 
@@ -78,7 +68,6 @@ async function mapForumMeta(ctx, forums){
         const request = getDrupalTopicMetaByForumIdentifier({ ...ctx, tfid:forum.id }).then((meta)=> forum.meta = meta)
 
         promises.push(request)
-
     }
 
     await Promise.all(promises);
@@ -87,29 +76,26 @@ async function mapForumMeta(ctx, forums){
 }
 
 function cleanForumData(forum){
-    const { id, drupalInternalTid, status, description, name, weight, path, fieldColor }   = changeKeys.camelCase (forum, { deep: true });
+    const { id, drupalInternalTid, status, description, name, weight, path, fieldColor } = changeKeys.camelCase (forum, { deep: true });
 
     const summary = description?.value? stripHtml(description.value).result.substring(0, 400): '';
 
 
     return { description, id, drupalInternalTid, status, summary, name, weight, path, fieldColor } 
 }
+
 function getQuestString(ctx){
-    return getTypeFilterParams(ctx)+getFreeTextFilterParams(ctx)+getPaginationParams(ctx)+getSortParams(ctx);s
+    return getTypeFilterParams(ctx)+getFreeTextFilterParams(ctx)+getPaginationParams(ctx)+getSortParams(ctx);
 }
 
 function getTypeFilterParams({ tid, uuid }){
     if(!tid || uuid) return '';
 
-
     let filterQueryString = '';
-
 
     filterQueryString += `&filter[taxonomy_term--pa][condition][path]=drupal_internal__tid`
     filterQueryString += `&filter[taxonomy_term--pa][condition][operator]=ENDS_WITH`
     filterQueryString += `&filter[taxonomy_term--pa][condition][value]=${tid}`
-
-
 
     return  filterQueryString;
 }

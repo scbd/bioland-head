@@ -5,6 +5,7 @@ app/libs
 .dockerignore
 .editorconfig
 .env
+.env*
 .git
 .gitignore
 .nuxt
@@ -14,3 +15,6 @@ dist
 *.log
 *.sh
 .circleci
+server/efs*
+pages-*
+cypress*

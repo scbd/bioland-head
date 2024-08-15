@@ -7,12 +7,17 @@
 const   siteStore    = useSiteStore();
 const   props        = defineProps({  name : { type: String, required: true },
                                       flip : { type: Boolean, default: false } ,
-                                      color: { type: String }
+                                      color: { type: String },
+                                      size : { type: Number, default: 1 }
                                     });
 
-const { name, flip, color } = toRefs(props);
-
-const iconStyle = reactive({ 'fill': color.value || siteStore.primaryColor });
+const { name, flip, color, size } = toRefs(props);
+// :style="`width:${size}em;height:${size}em;`"
+const iconStyle = reactive({ 
+  'fill': color.value || siteStore.primaryColor,
+  'width': `${size.value}em`,
+  'height': `${size.value}em`
+  });
 </script>
 <style>
 .bl2-icon {
@@ -27,4 +32,5 @@ const iconStyle = reactive({ 'fill': color.value || siteStore.primaryColor });
 .bl2-icon-flip{
   transform: scaleX(-1);
 }
+
 </style>

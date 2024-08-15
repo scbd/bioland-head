@@ -1,16 +1,16 @@
 <template>
 
-    <div class="container">
+    <div class="container page-body">
         <div  class="row">
             <div   class="col-md-3 d-lg-block">
                 &nbsp;
             </div>
             <div  class="col-12 col-md-9">
                 <PageBreadCrumbs/>
+                
             </div>
 
             <div  class="col-12 d-md-none">
-
                 <h2 :style="pageTypeStyle" class="page-type">{{pageStore?.typeName}}</h2>
             </div>
 
@@ -26,6 +26,7 @@
             </div>
 
             <div  class="col-12 col-md-9" >
+                <PageBodyTabs/>
                 <h2  class="data-body mb-0" :class="{'has-hero': pageStore?.heroImage}" >{{ pageStore?.title}}</h2>
                 <NuxtLink :style="pageTypeStyle" v-if="pageStore?.url" :to="pageStore?.url" target="_blank" class="fs-5" external>{{pageStore?.url}}</NuxtLink>
 
@@ -90,10 +91,7 @@ const localePath = useLocalePath();
 const pageStore = usePageStore();
 
 const page = computed(()=> pageStore.page);
-// const {isDocument, isImage, isImageOrVideo,isVideo } = storeToRefs( usePageStore());
-// const { page } = storeToRefs( usePageStore());
-// const { title, body, heroImage, typeName, image, tags, fieldAttachments, video } = storeToRefs( usePageStore().page);
-// consola.error('downloadUrl', documentUri.value)
+
 const isImageOrVideo = computed(()=> pageStore?.isImageOrVideo);
 const isImage        = computed(()=> pageStore?.isImage );
 const isVideo        = computed(()=> pageStore?.isVideo);
@@ -109,6 +107,9 @@ const pageTypeStyle = reactive({
       })
 </script>
 <style lang="scss" scoped>
+.page-body{
+    min-height: 60vh;
+}
 .data-body{
 
     padding-left: 0;

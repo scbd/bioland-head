@@ -65,9 +65,7 @@
 
     const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query });
 
-    // function onResponse({ request, response, options}){
-    //     consola.error('onResponse response._data',response._data)
-    // }
+
 
     onMounted(() => { eventBus.on('changePage', refresh); });
  
