@@ -38,11 +38,11 @@ export async function getForumTidFromAlias(ctx){
 
 async function getForums(ctx) {
 
-    const { host, uuid  } = ctx;
+    const { host, uuid, localizedHost  } = ctx;
     const id            = uuid? `/${uuid}` : '';
 
     const params        = getQuestString(ctx);
-    const uri           = `${host}/jsonapi/taxonomy_term/forums${id}?jsonapi_include=1${params}`;//&include=taxonomy_forums&page[limit]=${rowsPerPage}&sort=-sticky
+    const uri           = `${localizedHost}/jsonapi/taxonomy_term/forums${id}?jsonapi_include=1${params}`;//&include=taxonomy_forums&page[limit]=${rowsPerPage}&sort=-sticky
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 

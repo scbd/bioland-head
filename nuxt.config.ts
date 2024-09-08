@@ -1,41 +1,27 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import { viteSyncI18nFiles } from './i18n/sync-i18n';
+
 import locales from './i18n/locales';
+import en from './i18n/locales/en.json';
+import consola from 'consola'
+const css  =   [ '@/assets/custom.scss', 'vue-final-modal/style.css' ]
 
-const css  =   [ '@/assets/custom.scss' ]
-
-const routeRules = {
-  // Cached for 1 hour
-  // '/api/facets/bch': { cache: { maxAge: 60 * 60 * 24 } },
-  // '/api/facets/absch': { cache: { maxAge: 60 * 60 * 24 } },
-  // '/api/nbsap/*': { cache: { maxAge: 60 * 60 * 24 * 30 } },
-  // '/api/nr/*': { cache: { maxAge: 60 * 60 * 24 * 30} },
-  // '/api/nr6/*': { cache: { maxAge: 60 * 60 * 24 * 30 } },
-  '/api/context/**': { cache: { maxAge:  60 * 60 } },
+const  routeRules = {
+  '/sites/**': { proxy: 'https://mseed.bl2.cbddev.xyz', changeOrigin: true, prependPath: true}
 }
-
 export default defineNuxtConfig({
-  // app: {
-  //   pageTransition: {
-  //     name: 'fade',
-  //     mode: 'out-in' 
-  //   }
-  // },
-  devtools: { enabled: true },
-  debug: false, 
-  sourcemap: {
-    server: true,
-    client: true
-  },
+  // routeRules,
+  devtools: { enabled: !['prod','production'].includes(process.env.ENV) },
+  debug: false,
+  sourcemap: { server: true, client: true }, 
   css,
-
   runtimeConfig:{
-    apiUser: process.env.API_USER,
-    apiUserPass: process.env.API_USER_PASS,
-    apiKey : process.env.API_KEY,
-    panoramaKey: process.env.PANORAMA_KEY,
+    apiUser     : process.env.API_USER,
+    apiUserPass : process.env.API_USER_PASS,
+    apiKey      : process.env.API_KEY,
+    panoramaKey : process.env.PANORAMA_KEY,
     public: {
-      isLocalHost:!!process.env.NUXT_LOCAL_HOST,
+      isLocalHost:!!process.env.NUXT_IS_LOCAL_HOST,
+      showBl1Link:!!process.env.NUXT_SHOW_BL1_LINK,
       locales,
       baseURL: '',
       env: 'production',
@@ -45,34 +31,36 @@ export default defineNuxtConfig({
       dmsm: 'https://dmsm.cbddev.xyz/api'
     }
   },
+
   imports: {
     dirs: ['stores'],
-    presets: [
-      {
-        from: 'consola',
-        imports: ['consola']
-      }
+    presets: [ 
+      { from: 'consola', imports: ['consola'] },
+      { from: 'vue-final-modal', imports: ['useModal'] }
     ]
   },
   modules: [
     'nuxt-viewport',
-    '@nuxtjs/i18n-edge',
+    '@nuxtjs/i18n',
     '@pinia/nuxt',
+    // '@pinia-plugin-persistedstate/nuxt',
     '@nuxt/image',
     'nuxt-delay-hydration',
-    'nuxt-purgecss',
     'nuxt-swiper',
     'nuxt3-leaflet',
-    'nuxt-gravatar'
+    'nuxt-gravatar',
+    'nuxt-emoji-picker',
+    '@vue-final-modal/nuxt',
+    
   ],
+  // piniaPersistedstate: {
+  //   cookieOptions: {
+  //     sameSite: 'strict',
+  //   },
+  //   storage: 'cookies'
+  // },
   viewport: {
-    breakpoints: {
-      xs: 1,
-      sm: 752,
-      md: 992,
-      lg: 1330,
-      xl: 1600
-    },
+    breakpoints: { xs: 1, sm: 752, md: 992, lg: 1330, xl: 1600 },
 
     defaultBreakpoints: {
       desktop: 'lg',
@@ -82,87 +70,67 @@ export default defineNuxtConfig({
 
     fallbackBreakpoint: 'lg'
   },
+
   i18n: { 
-    missingWarn: false, 
-    fallbackWarn: false,
-    silentTranslationWarn: true,
-    locales,
-    // locales: [
-    //     { code: 'ar', iso: 'ar-SA',  dir: 'rtl' },
-    //     { code: 'en', iso: 'en-US',             },
-    //     { code: 'fr', iso: 'fr-FR',             },
-    //     { code: 'es', iso: 'es-ES',             },
-    //     { code: 'ru', iso: 'ru-RU',             },
-    //     { code: 'zh', iso: 'zh-CN',             },
-    // ],
-    defaultLocale: 'en',
-    fallbackLocale: 'en',
-    // locale: 'en',
-    detectBrowserLanguage : {
-        alwaysRedirect: true,
-    },
-    // precompile: {
-    //     strictMessage: false,
-    // },
-    // strictMessage: false,
-    // escapeHtml:true,
-    strategy: "prefix_except_default",
-    // vueI18n:'./config/i18n.config.ts',
+    locales              ,
+    debug                : false,
+    messages             :{ en },
+    defaultLocale        : 'en',
+    fallbackLocale       : 'en',
+    locale               : 'en',
+    detectBrowserLanguage : { alwaysRedirect: true, },
+    precompile           : { strictMessage: false, },
+    lazy                 : true,
+    langDir              : './i18n/locales',
+    strategy             : "prefix",
   },
-  pinia: { autoImports: [ 'defineStore','useStore', 'storeToRefs'], },
   vite: {
-      // resolve: {
-      //     alias: {
-      //         'vue-i18n': 'vue-i18n/dist/vue-i18n.runtime.esm-bundler.js'
-      //     }
-      // },
-      plugins: [
-          viteSyncI18nFiles()
-      ]
+    server: {
+      hmr: { protocol: 'ws', host: 'localhost', clientPort: 3000 },
+    //   proxy: {
+    //     '/sites/**': {
+    //         target: 'https://mseed.bl2.cbddev.xyz',
+    //         changeOrigin: true,
+    //         prependPath: true
+    //     },
+    //  },
+    }
   },
   delayHydration: {
     mode: 'init',
-    // enables nuxt-delay-hydration in dev mode for testing
-    debug: true//process.env.NODE_ENV === 'development'
-  },
-  purgecss: {
-    enabled: false,//process.env.NODE_ENV !== 'development', // Always enable purgecss
-    safelist: ['swiper'], // Add my-class token to the safelist (e.g. .my-class)
+    debug: !['prod','production'].includes(process.env.ENV)
   },
   image: {
     domains: ['chm-cbd.net', 'cbd.int', 'https://panorama.solutions/'],
     format: ['webp', 'avif', 'jpeg', 'jpg', 'png','gif'],
     quality: 70,
     screens: {
-      'xs': 320,
+      xs: 320,
       sm: 552,
       md: 992,
       lg: 1330,
       xl: 1600
     },
   },
+
   nitro: {
     logLevel: 4,
-    devStorage: {
-      db: {
-        driver: 'fs',
-        base: './.nuxt/data/db'
-      }
-    }
-    // routeRules
-    // Production
-    // storage: {
-    //   db: {
-    //     driver: 'fs',
-    //     base: './data/db'
-    //   }
+
+    // devProxy: {
+    //   '/sites/**': {
+    //       target: 'https://mseed.bl2.cbddev.xyz',
+    //       changeOrigin: true,
+    //       prependPath: true
+    //   },
     // },
-    // Development
-    // devStorage: {
-    //   db: {
-    //     driver: 'fs',
-    //     base: './data/db'
-    //   }
-    // }
+    devStorage: { db: { driver: 'fs', base: './.nuxt/data/db' } },
+    storage: { db: { driver: 'fs', base: './cache/db' } }
+  },
+  experimental: {
+    restoreState       : true,
+    clientFallback     : true,
+    sharedPrerenderData: true,
+    scanPageMeta       : true,
+    cookieStore        : true
   }
 })

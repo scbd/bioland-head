@@ -94,23 +94,21 @@ function getLocalizationFromPath(ctx, path){
 }
 
 async function getPageIdentifiers(ctx){
-
     const { locale, host,localizedHost, path, isLocalizationException  } = ctx;
 
     
-    const pathLocal = getLocalizationFromPath(ctx, path)
+    const pathLocal        = getLocalizationFromPath(ctx, path)
     const isOnLocaleChange = pathLocal && (locale !== pathLocal);
-    const cleanPath = removeLocalizationFromPath(ctx, path);
+    const cleanPath        = removeLocalizationFromPath(ctx, path);
     const isDefaultLocale  = !!((locale === ctx.defaultLocale) || (isOnLocaleChange && (pathLocal ===ctx.defaultLocale)));
 
     const uriHost = isLocalizationException || isDefaultLocale ? host : isOnLocaleChange? `${host}/${pathLocal}` :localizedHost;
 
-    const uri = `${uriHost}/router/translate-path?path=${encodeURIComponent(cleanPath||'/')}`;
+    const uri = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanPath||'/')}`;
 
-    const data = await $fetch(uri, { mode: 'cors' })
+    const data = await $fetch(uri, { mode: 'cors'})
+
     const { uuid, id, type, bundle } = data?.entity || {};
-
-    // if(error?.value) throw new Error(`Error occurred fetching page uuid for path ${pagePath}`);
 
     return { uuid, id, type, bundle, pagePath:path, path };
 }
@@ -181,7 +179,7 @@ function mapTagsByType(tags){
 function getSearchParams(ctx, type, bundle, prop){
     const search = {jsonapi_include: 1};
 
-    if(type === 'taxonomy_term' && bundle === 'system_pages') search['include'] = 'field_attachments,field_attachments.field_media_image,field_search,parent,field_type_placement';
+    if(type === 'taxonomy_term' && bundle === 'system_pages') search['include'] = 'field_attachments,field_attachments.field_media_image,field_search,parent';
     if(type === 'node' && bundle === 'content' && !prop)  setContentSearchParams(search);
     if(type === 'media' &&  ['image', 'document'].includes(bundle))  setMediaImageSearchParams(search);
     if(prop === 'field_attachments') search['include'] = 'thumbnail';

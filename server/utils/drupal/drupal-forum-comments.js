@@ -12,12 +12,12 @@ export const useDrupalForumComments = async (ctx) => {
 
 async function getComments(ctx) {
 
-    const { host, siteCode  } = ctx;
+    const { localizedHost, siteCode  } = ctx;
 
     const $http = await useDrupalLogin(siteCode);
 
     const params        = getParams(ctx);
-    const uri           = `${host}/jsonapi/comment/comment_forum?jsonapi_include=1&include=uid,uid.user_picture${params}`;
+    const uri           = `${localizedHost}/jsonapi/comment/comment_forum?jsonapi_include=1&include=uid,uid.user_picture${params}`;
 
     const { body }  = await $http.get(uri).withCredentials().accept('json');
 

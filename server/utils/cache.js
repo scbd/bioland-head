@@ -1,17 +1,17 @@
 import crypto from 'crypto';
 
 export const getKey =  (event) => {
-    const { context }  = parseCookies(event)
-    const   query      = getQuery(event)
     const { pathname } = new URL(getRequestURL(event))
+    const   ctx        = getContext(event);
 
-    const key      = query?.key || context?.key
-    const locale   = query?.locale || context?.locale || 'und'
-    const host     = query?.host || context?.host 
+    const { key:k, locale, siteCode , multiSiteCode, env } = ctx;
+
+    const key = k? k.replaceAll('context-', '')+`-${pathname}` : `${env}-${multiSiteCode}-${siteCode}-${locale}-${pathname}`;
+
     const makeHash = (x) => crypto.createHash('sha1').update(x).digest('hex')
-    const hashData = `${host}-${locale}-${pathname}` + JSON.stringify({...context, ...query});
+    const hashData = key + JSON.stringify(ctx);
 
-    return key? `${host}-${locale}-${pathname}-${makeHash(hashData)}-${key}` : `${host}-${locale}-${pathname}-${makeHash(hashData)}`
+    return `${key}-${makeHash(hashData)}`
 }
 
 export const shouldInvalidateCache = (event) => {

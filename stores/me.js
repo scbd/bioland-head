@@ -1,10 +1,11 @@
 import intersect from 'lodash.intersection';
+import { DateTime } from "luxon";
 export const useMeStore = defineStore('me', { 
-    state: () => ({ userID: '', duuid: '', diuid: '', preferredLang: '', displayName: '', name: '', email: '', isAuthenticated: false, roles: [], editMode: false }),
+    state: () => ({ userID: '', duuid: '', diuid: '', preferredLang: '', displayName: '', name: '', email: '', isAuthenticated: false, roles: [], editMode: false, token: '', expire: new Date() }),
 
     actions:{
         initialize( user){
-
+            user.expire = DateTime.now().plus({ minutes: 30 });
             this.$patch(unref(user));
         },
         toggleEditMode(){
@@ -35,7 +36,15 @@ export const useMeStore = defineStore('me', {
             const menuRoles = ["administrator","site_manager","content_manager","contributor"]
 
             return this.isAuthenticated && intersect(this.roles, menuRoles).length;
+        },
+        isExpired(){
+            const isExpired = DateTime.now() > this.expire;
+            if(!isExpired) false;
+
+            this.$reset();
+            return true;
         }
-    }
+    },
+    // persist: true,
 });
 

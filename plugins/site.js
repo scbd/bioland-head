@@ -1,54 +1,89 @@
 import vClickOutside from "click-outside-vue3";
+// import { createVfm } from 'vue-final-modal'
+
 import clone from 'lodash.clonedeep';
 
-export default defineNuxtPlugin(async (nuxtApp) => {
+export default defineNuxtPlugin({
+    name: 'site',
+    async setup (nuxtApp){
+        // const vfm = createVfm();
 
-    nuxtApp.vueApp.use(vClickOutside);
+        nuxtApp.vueApp.use(vClickOutside);
+        // nuxtApp.vueApp.use(vfm);
 
-    const siteStore = useSiteStore(nuxtApp.$pinia);
-    const context   = useCookie('context');
+        const siteStore = useSiteStore(nuxtApp.$pinia);
+        const menuStore = useMenusStore(nuxtApp.$pinia);
+        const meStore   = useMeStore(nuxtApp.$pinia);
+        const context   = useCookie('context');
+        const locale    = unref(nuxtApp.$i18n.locale);
+        const rtPublic  = useRuntimeConfig().public;
 
-    const id         = getBiolandSiteIdentifier ();
-    const locale     = unref(nuxtApp.$i18n.locale);
-    const uri        = `/api/context/${id}/${locale}`;
-    const rtPublic   = useRuntimeConfig().public;
+        await getSiteContext();
 
-    const { data } = await useFetch(uri)
+        // addRouteMiddleware((to, from) => {
 
-    siteStore.initialize({ ...rtPublic, ...data.value, locale}) ;
+        // })
 
-    context.value = { ...siteStore.params, locale }; 
+        nuxtApp.hook('i18n:localeSwitched', ({oldLocale, newLocale}) => {
+            siteStore.set('locale', newLocale);
 
-    ensureContext(siteStore.params);
+            context.value = { ...context.value,...siteStore.params }
 
-    nuxtApp.hook('i18n:localeSwitched', ({oldLocale, newLocale}) => {
-        const context       = useCookie('context');
-        const menuStore   = useMenusStore(nuxtApp.$pinia)
-        // const localeChanged = newLocale === siteStore.defaultLocale ? 'en' : newLocale;
+            useFetch(`/api/menus`,{ params: clone(siteStore.params) }).then(({data})=>menuStore.loadAllMenus(data.value))
+        })
 
-        siteStore.set('locale', newLocale);
-        // context.value.locale = newLocale;
-        // context.value.localizedHost = siteStore.getHost();
-       // context.value.loc = siteStore.params;
-       
+        async function getSiteContext(){
+            const id         = getBiolandSiteIdentifier ();
+            const uri        = `/api/context/${id}/${locale}`;
+            const { data }   = await useFetch(uri)
 
-       context.value = { ...context.value,...siteStore.params}
-       consola.info('context.value',context.value);
-    //    const menues = (await useFetch(`/api/menus`,{ params: clone(siteStore.params) })).data.value
-        useFetch(`/api/menus`,{ params: clone(siteStore.params) }).then(({data})=>menuStore.loadAllMenus(data.value))
-    //     await menuStore.loadAllMenus(menues)
-    })
+            siteStore.initialize({ ...rtPublic, ...data.value, locale}) ;
+        
+            context.value = { ...siteStore.params, locale }; 
+            ensureContext(siteStore.params);
 
 
-    function getBiolandSiteIdentifier () {
-        const hostName = useRequestURL().hostname;
+        }
 
-        if(!hostName || hostName.split('.').length <= 1)
-            return  'demo';
+        function getBiolandSiteIdentifier () {
+            const hostName = useRequestURL().hostname;
 
-        return hostName.split('.')[0];
+            if(!hostName || hostName.split('.').length <= 1)
+                return  'demo';
+
+            return hostName.split('.')[0];
+        }
+
+        async function pageMiddleware(to, from){
+            await getMe();
+
+            const path = to.path; 
+
+            if(!context.value) context.value = {};
+                context.value.path = path;
+            
+            const { identifier,  locale, multiSiteCode } = siteStore;
+        
+            const key = `${multiSiteCode}-${identifier}-${locale}-${encodeURIComponent(path)}`;
+        
+            return getPage(key, path);
+        }
+
+        async function getMe(){
+            if(meStore.isAuthenticated  && !meStore.isExpired ) return;
+        
+            const { data, error } = await useFetch(`/api/me`, {  method: 'GET', query: clone({...siteStore.params, path:to.path})})//.then(({ data }) => data);
+        
+            if(!error.value) meStore.initialize(data)
+        }
+
+        async function getMenus(){
+            if(menuStore.isLoaded) return undefined;
+        
+            return useFetch(`/api/menus`, { query: clone({...siteStore.params, path:to.path})})
+        }
+
     }
-
 });
 
 
@@ -60,3 +95,5 @@ function ensureContext(ctx = {}){
             throw new Error('plugins/site: Context not derived');
     
 }
+
+

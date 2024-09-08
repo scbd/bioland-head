@@ -8,14 +8,28 @@ export default defineEventHandler(async (event) => {
 
 
         const defaultLocale = (await getDefaultLocale({ ...ctx, config }) || {}).locale;
-        const siteName      = await getSiteDefinedName({ ...ctx, config, defaultLocale })
+        const siteName      = await getSiteDefinedName({ ...ctx, config, defaultLocale });
 
+        await cleanStorage();
+        
+        return  { ...ctx, config, defaultLocale, siteName };
 
-        return  { ...ctx, config, defaultLocale, siteName }
+        async function cleanStorage(){
+            const keys = await useStorage('db').getKeys();
+
+            for(let key of keys){
+                if(key.includes('nitro:handlers:_:undefined')){
+                    await useStorage('db').removeItem(key)
+
+                    consola.warn('storage contains undefined key:', key)
+                }
+            }
+        }
     }
     catch(e){
         const siteCode = getRouterParam(event, 'siteCode')
-        const locale     = getRouterParam(event, 'locale')
+        const locale   = getRouterParam(event, 'locale')
+
         console.error(e);
         throw createError({
             statusCode: 500,
@@ -24,3 +38,4 @@ export default defineEventHandler(async (event) => {
     }
     
 })
+

@@ -35,6 +35,7 @@ const getUrl = (schemaName, passedLocale='en', passedCountry, countries) => {
 export async function getAbschMenus({ country:aCountry, countries, locale }){
     const uri       = 'https://api.cbd.int/api/v2013/index/select'
     const country   = countries?.length? countries : aCountry;
+    if(!country) return
     const response  = await $fetch(uri,  { method:'post', body: JSON.stringify(getIndexQuery(country)), headers: {'Content-Type': 'application/json'}});
 
 

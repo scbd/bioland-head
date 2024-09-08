@@ -21,7 +21,6 @@
         </div>
     </div>
 </template>
-<i18n src="@/i18n/dist/components/cards/gbf.json"></i18n>
 <script setup>
 
     const   props       = defineProps({ record: { type: Object } });

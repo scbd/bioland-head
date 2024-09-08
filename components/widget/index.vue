@@ -1,12 +1,11 @@
 <template>
 <div class="position-relative">
     <Spinner v-if="loading" :is-modal="true"/>
-    <div v-if="record">
-        <div class="text-capitalize mb">
-            <h4 :style="style" class="bm-3">{{name}} </h4>
+    <div >
+        <div class="text-capitalize">
+            <h4 :style="style"  >{{name}} </h4>
         </div>
-        <!-- <LazyCards :record="record" /> -->
-        <div class="card " >
+        <div v-if="recordExists" class="card " >
             <h6 class="card-subtitle text-muted mb-1">{{type}}</h6>
             <ClientOnly>
                 <div  v-if="hasImg" :style="backgroundStyles" class=" bg-light">
@@ -42,7 +41,7 @@
             </div>
         </div>
         <div class="mb-5">
-            <div v-for="(link,i) in links || []" :key="i" class="text-start my-3 mb-3">
+            <div v-for="(link,i) in links || []" :key="i" class="text-start  mb-3">
                 <NuxtLink :to="link.to" class="text-decoration-underline  text-primary  fw-bold fs-5" :external="external">
                     <span :style="linkStyle">{{link.name}}</span>
                 </NuxtLink>
@@ -54,7 +53,6 @@
     </div>
 </div>
 </template>
-<i18n src="@/i18n/dist/components/widget/index.json"></i18n>
 <script setup>
     import { getGbfUrl    } from '~/util'        ;
     import { useSiteStore } from '~/stores/site' ;
@@ -65,12 +63,15 @@
     const   props       = defineProps({t: { type: String } , name: { type: String } , record: { type: Object }, links: { type: Array }, loading: { type: Boolean, default: false } });
     const { name, record, links, t:passedType, loading    } = toRefs(props);
 
+    const recordExists = computed(()=> record?.value?.title)
+
+
     const { t, locale } = useI18n();
 
     const tags = computed(()=> record?.value?.tags);
 
     const external = computed(()=> {
-        if(record?.value.href.startsWith('https://')) return true;
+        if(record?.value?.href?.startsWith('https://')) return true;
         if(record?.value?.realms?.length) return true;
 
         return false
@@ -86,7 +87,7 @@
         if(passedType.value) 
             typeText+= t(passedType.value)
         if(record?.value?.realms?.length)
-            typeText += t(' from the secretariat');
+            typeText += t('from the secretariat');
     
         return typeText
     });
@@ -105,8 +106,9 @@
         return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
     }
 
+   
     const img = useImage();
-    const imgUri = record?.value?.mediaImage?.src || imageGenStore.getImage(record?.value).src//'/images/no-image.png';
+    const imgUri = record.value? (record?.value?.mediaImage?.src || imageGenStore.getImage(record?.value)?.src) : undefined;//'/images/no-image.png';
     const hasImg = imgUri && imgUri !== '/images/no-image.png';  
 
     const backgroundStyles = computed(() => {
@@ -141,7 +143,6 @@
         'background-color': siteStore.primaryColor
       })
 </script>
-<i18n src="@/i18n/dist/components/widget/index.json"></i18n>
 <style lang="scss" scoped>
 
 .arrow{

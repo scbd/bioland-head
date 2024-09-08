@@ -12,7 +12,6 @@
 
 
 </template>
-<i18n src="@/i18n/dist/components/page/header/mega-menu/custom/national-report/six.json"></i18n>
 <script setup>
         import { useSiteStore } from '~/stores/site';
         import { useMenusStore } from '~/stores/menus';

@@ -18,7 +18,6 @@
         </PageHeaderMegaMenuCustomCountryTab>
     </div>
 </template>
-<i18n src="@/i18n/dist/components/page/header/mega-menu/custom/focal-points.json"></i18n>
 <script setup>
     import {  useMenusStore } from "~/stores/menus";
     const { t } = useI18n();
@@ -29,7 +28,7 @@
     const country      = hasCountries.value?    '/'+Object.keys(menus.value)[0] : '';
     const menu  = ref({ 
                         title: t('National Contact Points'), 
-                        href : `/focal-points${country}`, 
+                        href : '/focal-points', 
                         class: ['mm-main-nav-sub-heading', 'mm-arrow'] 
                     });
 

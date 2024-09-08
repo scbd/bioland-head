@@ -15,7 +15,6 @@
         </ul>
     </nav>
 </template>
-<i18n src="@/i18n/dist/components/page/list/pager.json"></i18n>
 <script setup>
 
 const { t  }      = useI18n();

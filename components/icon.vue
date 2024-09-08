@@ -26,7 +26,7 @@ const iconStyle = reactive({
   height      : 1em;
   stroke-width: 0;
   stroke      : currentColor;
-
+  margin-bottom: .2em;
   /* fill        : currentColor; */
 }
 .bl2-icon-flip{

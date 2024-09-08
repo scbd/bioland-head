@@ -38,7 +38,6 @@
     </div>
     </NuxtLink>
 </template>
-<i18n src="@/i18n/dist/components/page/list/index.json"></i18n>
 <script setup>
     import { DateTime     } from 'luxon';
     import { useMenusStore } from '~/stores/menus';

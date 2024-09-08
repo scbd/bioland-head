@@ -11,6 +11,7 @@ export async function useMenus(ctx){
     const menuPromises = [];
     const menus = {};
 
+
     for (const menuName of allMenuNames) {
         const menuPromise = getMenuData(menuName,ctx )
                             .then((menusData) => menus[menuName] = menusData);
@@ -189,7 +190,10 @@ async function getMenuData(menuName, ctx){
 
     const uri = `${localizedHost}/system/menu/${encodeURIComponent(menuName)}/linkset`;
 
+
     const data = await $fetch(uri, { mode: 'cors' });
+
+    // consola.info(data?.linkset)
 
     return data?.linkset && data?.linkset?.length ? formatMenus(data.linkset[0].item) : [];
 }

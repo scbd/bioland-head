@@ -35,7 +35,7 @@ export const getIndexQuery = (s, { countries, country }={}) => {
     const countryQueryString = getIndexCountryQuery({ countries, country });
 
 
-    return`q=(${schema})+AND+government_s:(${countryQueryString})`; //NOT+version_s:*+AND+realm_ss:chm+AND+schema_s:*++AND+
+    return countryQueryString? `q=(${schema})+AND+government_s:(${countryQueryString})`:`q=(${schema})`; //NOT+version_s:*+AND+realm_ss:chm+AND+schema_s:*++AND+
 }
 
 //https://api.cbd.int/api/v2013/index/select?q=realm_ss:chm AND (schema_s:focalPoint) AND government_s :(bn id kh la mm my ph sg th tl vn)&fl=type_EN_txt,hostGovernments_ss,type_ss&rows=500&sort=createdDate_dt+desc&start=0&wt=json

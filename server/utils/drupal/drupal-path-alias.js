@@ -97,10 +97,10 @@ export async function mapAliasByLocale(ctx, type, id){
         const { alias, path } = aLang || englishLang;
 
 
-        if(ctx.defaultLocale === locale){
-            map[locale] = aLang? `${alias}` : `${path}`;
-            continue;
-        }
+        // if(ctx.defaultLocale === locale){
+        //     map[locale] = aLang? `${alias}` : `${path}`;
+        //     continue;
+        // }
 
         if(ctx.isLocalizationException){
             map[locale] = `/${locale}${removeLocalizationFromPath(ctx,ctx.path)}`

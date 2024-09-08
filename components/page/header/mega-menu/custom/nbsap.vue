@@ -3,8 +3,6 @@
     <PageHeaderMegaMenuLink v-if="data.href"  :menu="menu" />
 
 </template>
-<i18n src="@/i18n/dist/components/page/header/mega-menu/custom/nbsap.json"></i18n>
-
 <script>
 import { useSiteStore } from "~/stores/site";
     export default {

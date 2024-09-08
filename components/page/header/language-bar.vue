@@ -31,19 +31,9 @@
         </div>
     </div>
 </template>
-
-<i18n src="@/i18n/dist/components/page/header/language-bar.json"></i18n>
-
-<script>
+<script setup>
     import cloneDeep from 'lodash.clonedeep';
 
-    export default {
-        name   : 'PageLanguageBar',
-        methods: { toggle, close},
-        setup
-    }
-
-    function setup() {
         const siteStore       = useSiteStore();
         const route           = useRoute();
         const menuStore       = useMenusStore();
@@ -64,7 +54,7 @@
         const { languages: menus } = storeToRefs(menuStore);
 
         const brandBarStyle = reactive({
-            background: siteStore.theme.backGround.secondary,
+            background     : siteStore.theme.backGround.secondary,
             'border-bottom': `.25rem solid ${siteStore.primaryColor}`
         });
 
@@ -77,26 +67,21 @@
         
         const pageLoaded = computed(()=> pageStore?.page?.aliases && Object.keys(pageStore.page.aliases).length );
 
-        return { isDevSite, pageLoaded ,brandBarStyle,t,query, pageStore , menus, limitedMenus, otherMenus, dropDownEl , dropDownLinkEl, viewport }
-    }
+        function toggle(e){
+            
+            if(!unref(dropDownEl).style.display) unref(dropDownEl).style.display = 'none';
 
+            if(unref(dropDownEl).style.display.includes('none'))
+                unref(dropDownEl).style.display = 'block';
+            else
+                tunref(dropDownEl).style.display = 'none';
+        }
 
+        function close(e){
+            if(['sm','xs'].includes(viewport.breakpoint.value)) return;
 
-    function toggle(e){
-        
-        if(!this.dropDownEl.style.display) this.dropDownEl.style.display = 'none';
-
-        if(this.dropDownEl.style.display.includes('none'))
-            this.dropDownEl.style.display = 'block';
-        else
-            this.dropDownEl.style.display = 'none';
-    }
-
-    function close(e){
-        if(['sm','xs'].includes(this.viewport.breakpoint)) return;
-
-        this.dropDownEl.style.display = 'none';
-    }
+            unref(dropDownEl).style.display = 'none';
+        }
 
 </script>
 
@@ -106,6 +91,7 @@
 }
 .lang-active {
     font-weight: bolder !important;
+    text-decoration: underline;
 }
 .brandbar-header {
 

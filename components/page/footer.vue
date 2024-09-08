@@ -1,11 +1,11 @@
 <template>
-        <footer class="text-white-75" >
+        <footer class=" text-white-75 " style="z-index:2000;">
             <div class="container-fluid bg-light footer-sitemap ">
                 <div class="container">
                     <div class="row pt-4 row-cols-2 row-cols-sm-4 row-cols-md-4 row-cols-lg-4 row-cols-xl-4 row-cols-xxl-4">
                         <div v-for="(aMenu,index) in menus" :key="index"   class="col mb-4">
                           <div v-if="meStore.showEditMenu" class="position-relative">
-                            <button @click="editMenu" type="button" class="btn btn-outline-secondary btn-sm m-1 position-absolute top-0 end-0">
+                            <button @click="editMenu('footer')" type="button" class="btn btn-outline-secondary btn-sm m-1 position-absolute top-0 end-0">
                                 <Icon name="edit" :size="2"/>
                             </button>
                           </div>
@@ -50,16 +50,10 @@
             </div>
         </footer>
 </template>
-<i18n src="@/i18n/dist/components/page/footer/index.json"></i18n>
-<script>
+<script setup>
     import { useMenusStore } from "~/stores/menus";
 
-    export default {
-        name: 'PageFooter',
-        setup
-    }
 
-    function setup() {
         const meStore = useMeStore();
         const menuStore = useMenusStore();
         const { footer: menus, footerCredits: creditsMenus } = storeToRefs(menuStore);
@@ -76,8 +70,8 @@
             console.log('edit menu');
         }
 
-        return { meStore, headerLinkStyle, style, t, menus, creditsMenus, editMenu }
-    }
+    //     return { meStore, headerLinkStyle, style, t, menus, creditsMenus, editMenu }
+    // }
 
 
 </script>

@@ -68,7 +68,7 @@ export const useImageGenStore = defineStore('imageGenerator', {
     }}),
     actions:{
         getImage (ctx) {
-
+            if(!ctx) return
             const type   = this.getTypePath(ctx);// || this.getTypePath(ctx);
         
             if(!this.countMap[type]) consola.warn('No images for type: ', type )

@@ -49,7 +49,6 @@
 
 
 </template>
-<i18n src="@/i18n/dist/components/page/body/media/index.json"></i18n>
 <script setup>
 import { usePageStore } from "~/stores/page";
 

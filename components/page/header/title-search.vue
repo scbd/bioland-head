@@ -119,7 +119,6 @@
         </div> 
     </div> 
 </template>
-<i18n src="@/i18n/dist/components/page/header/title-search.json"></i18n>
 <script>
 import {  useSiteStore } from "~/stores/site";
 import {  usePageStore } from "~/stores/page";
@@ -127,7 +126,6 @@ import { useElementSize } from '@vueuse/core';
 
 export default {
     name: 'PageTitleSearch',
-    methods: { onClick },
     setup
 }
 
@@ -155,23 +153,17 @@ function setup() {
         return name.value.length > 14;
     })
 
+    async function onClick(value){
 
-    const hasHeroImage = computed(() => pageStore.page.hasHeroImage );
-    
-    return { localePath, t, logo , hasHeroImage , name, rowElWidth, cont, hasLargeName, navigateTo, queryText }
-}
 
-async function onClick(value){
-    const   route   = useRoute();
 
-const   localePath     = useLocalePath();
-
-    if(!value) return this.navigateTo(localePath(`/search`))
+consola.warn('localePath(`/search`)', localePath(`/search`))
+    if(!value) return navigateTo(localePath(`/search`))
     
 
     
     if(route.path !== '/search'){
-        this.navigateTo(localePath(`/search?freeText=${value}`))
+        navigateTo(localePath(`/search?freeText=${value}`))
 
     }else{
         const router = useRouter();
@@ -181,6 +173,14 @@ const   localePath     = useLocalePath();
     //this.navigateTo(localePath(`/search?freeText=${value}`))
     this.queryText='';
 }
+
+
+    const hasHeroImage = computed(() => pageStore.page.hasHeroImage );
+    
+    return { onClick, localePath, t, logo , hasHeroImage , name, rowElWidth, cont, hasLargeName, navigateTo, queryText }
+}
+
+
 </script>
 
 <style  scoped>
