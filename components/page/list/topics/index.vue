@@ -8,31 +8,33 @@
                 <PageBreadCrumbs :count="results?.topics?.length"/>
             </div>
             <div class="col-12 col-md-3 ps-0" >
-                <!-- <h2 class="page-type text-capitalize">{{t('Topic',2)}}</h2> -->
                 <h2 class="page-type mb-1">{{results?.name}}</h2>
-                <div v-html="results?.description?.processed"></div>
-  
-         
             </div>
 
             <ClientOnly >
                 <div name="list" tag="div" class="col-12 col-md-9 data-body">
+                    <div>
+                        <div v-html="results?.description?.value || ''"></div>
 
-                    <!-- <PageListPager v-if="showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results.count}`"/> -->
+                        <!-- <FormCommentInput /> -->
+                    </div>
                     <transition-group name="list">
                         <PageListTopicsRow  :a-line="aLine" v-for="(aLine,index) in results?.topics" :key="index" />
                         <span :key="`showTopPage${showTopPager}${results?.topics?.count}-span`">&nbsp;</span>
                     </transition-group>
                 </div>
                 <template #fallback>
-                    <div name="list" tag="div" class="col-12 col-md-9 data-body">
+                    <div>
+                        <div v-html="results?.description?.value || ''"></div>
 
-                        <!-- <PageListPager v-if="showTopPager" :count="results?.count" /> -->
+                        <!-- <FormCommentInput /> -->
+                    </div>
+                    <div name="list" tag="div" class="col-12 col-md-9 data-body">
                         <PageListTopicsRow  :a-line="aLine" v-for="(aLine,index) in results?.topics" :key="index" />
                     </div>
                 </template>
             </ClientOnly>
-<!-- <pre>{{results}}</pre> -->
+
 
             <div class="col-12 col-md-9 offset-md-3 ">
                 <PageListPager :count="results?.count"/>
@@ -41,7 +43,6 @@
     </div>
 
 </template>
-<i18n src="@/i18n/dist/components/page/list/index.json"></i18n>
 <script setup>
 
     import clone from 'lodash.clonedeep';
@@ -81,7 +82,7 @@
 
 
     function getApiUri(){
-        return `/api/forums/${r.params.forumId}`;    
+        return `/api/forums/${r.params[1]}`;    
     }
 
     // function changeTab(){ refresh(); }

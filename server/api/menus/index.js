@@ -1,12 +1,18 @@
 import { defineEventHandler } from 'h3';
 export default cachedEventHandler(async (event) => {
     try{
-        const { context } = parseCookies(event)
+        // const { context } = parseCookies(event)
 
         const query       = getQuery(event)
 
+        const context = getContext(event);
+
         const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(context || query || {}))};` };
 
+        const { siteCode, localizedHost } = {...context, ...query}
+
+        if(!siteCode || localizedHost.includes('undefined')) return createError({ statusCode: 404, statusMessage: 'Server.drupal.user.getToken: no context derived' })
+ 
         const [absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes,  forums , languages ] = (await Promise.allSettled([
             $fetch('/api/menus/absch',         { query, method:'get', headers }),
             $fetch('/api/menus/bch',           { query, method:'get', headers }),
@@ -19,7 +25,7 @@ export default cachedEventHandler(async (event) => {
             $fetch('/api/menus/topics',        { query, method:'get', headers }),
             $fetch('/api/menus/languages',     { query, method:'get', headers })
         ])).map(({ value }) => value || []);
-        
+
         return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, forums, languages, menus  }
     }
     catch(e){

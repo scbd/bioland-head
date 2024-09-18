@@ -13,9 +13,6 @@
         </PageHeaderMegaMenuCustomCountryTab>
     </div>
 </template>
-
-<i18n src="@/i18n/dist/components/page/header/mega-menu/custom/national-report/list.json"></i18n>
-
 <script setup >
     import { useMenusStore } from '~/stores/menus';
 

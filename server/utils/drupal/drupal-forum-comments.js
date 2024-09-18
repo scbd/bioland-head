@@ -3,7 +3,7 @@
 import { stripHtml } from 'string-strip-html'; 
 import * as changeKeys from "change-case/keys";
 
-
+import clone from 'lodash.clonedeep'
 
 export const useDrupalForumComments = async (ctx) => {
 
@@ -12,28 +12,87 @@ export const useDrupalForumComments = async (ctx) => {
 
 async function getComments(ctx) {
 
-    const { host, siteCode  } = ctx;
+    const data = await getCommentsFromApiPager(ctx);
 
-    const $http = await useDrupalLogin(siteCode);
 
-    const params        = getParams(ctx);
-    const uri           = `${host}/jsonapi/comment/comment_forum?jsonapi_include=1&include=uid,uid.user_picture${params}`;
-
-    const { body }  = await $http.get(uri).withCredentials().accept('json');
-
-    const { data } = body
-
-    return data.map(cleanComment(ctx));
+    return embedThreads(ctx,data);
 };
 
+export async function getCommentsFromApiPager (ctx, next){
+    try {
+        const { localizedHost, siteCode  } = ctx;
+
+        const $http = await useDrupalLogin(siteCode);
+    
+        const params        = getParams(ctx);
+    
+        const uri           = next || `${localizedHost}/jsonapi/comment/comment_forum?jsonapi_include=1&include=uid,uid.user_picture${params}`;
+
+        const { body }  = await $http.get(uri).withCredentials().accept('json')
+
+        const { links, data } = body
+
+        if(nextUri(links)) return [ ...data, ...await getCommentsFromApiPager(ctx, nextUri(links)) ]
+
+        return data
+    }
+    catch(e){
+       // console.error('Menus.getMenusFromApiPager - recursive', e)
+    }
+}
+
+async function embedThreads(ctx,comments){
+    const commentClone = clone(comments);
+    const removeIndexs =[];
+
+    for (let index = 0; index < commentClone.length; index++) {
+        const post = commentClone[index];
+
+        if(!post?.pid?.id) continue;
+
+        
+        const parent = commentClone.find(({id})=>id===post.pid.id);
+
+        if(!parent) continue;
+        if(!parent?.comments) parent.comments = [];
+
+        parent.comments.push(clone(post));
+        parent.comments.sort((a,b)=>new Date(b.changed)-new Date(a.changed))
+
+        removeIndexs.push(post.id);
+    }
+
+    for (const i of removeIndexs){
+        const index = commentClone.findIndex(({id})=>id===i);
+        commentClone.splice(index, 1)
+    }
+
+    const cleanComments = []
+    for (const post of commentClone) {
+
+        cleanComments.push(await cleanComment(ctx)(post))
+    }
+
+
+    return cleanComments
+ }
 function cleanComment(ctx){
-    return (comment)=> {
-        const { id, drupal_internal__cid, status, subject, created, changed, thread, comment_body, uid } = comment;
+    return async (comment)=> {
+        const { field_name, id, drupal_internal__cid, status, subject, created, changed, thread, comment_body, uid, comments:commentsRaw, pid, entity_id } = comment;
         const user = cleanUser(ctx)(uid);
         comment_body.summary = stripHtml(comment_body.value).result
-        const dateString = getTimeStringFromIso(changed);
+        const dateString = await getTimeStringFromIso(ctx, changed);
+        const type = `comment--${field_name}`;
 
-        return changeKeys.camelCase({ id, drupal_internal__cid, status, subject, created, changed, thread, user,dateString,  comment_body }, {deep:true} );
+        let comments = [];
+        if(commentsRaw?.length)
+            for (const c of clone(commentsRaw))
+                comments.push(await cleanComment(ctx)(c))
+            
+        // if(comments?.length) consola.warn('comment.length',comments.length)
+        // if(comments?.length) consola.warn('comment.length',comment_body.value)
+
+        return changeKeys.camelCase({ type, id, drupal_internal__cid, status, subject, created, changed, thread, user,dateString,  comment_body, comments, pid , entity_id }, {deep:true} );
     }
 }
 function cleanUser(ctx){
@@ -56,8 +115,10 @@ function cleanUserPicture(ctx){
         return changeKeys.camelCase({ id, drupal_internal__fid, filename, uri, meta, src }, {deep:true} );
     }
 }
+
 function getParams(ctx){
-    return getFreeTextFilterParams(ctx)+getFilterParams(ctx)+getSortParams(ctx)
+    //getStatusFilter(ctx)+
+    return getFreeTextFilterParams(ctx)+getFilterParams(ctx)+getStatusFilter(ctx)+getSortParams(ctx)
 }
 
 function getSortParams(ctx){
@@ -67,10 +128,17 @@ function getSortParams(ctx){
 
     return filterQueryString;
 }
-function getFilterParams({ topicId }){
+function getFilterParams({ event, topicId }){
+    const { me } = event.context;
+    const { isAdmin, isSiteManager, isContentManager, isContributor } = me;
+    let sortQueryString = '';
+    
+    // sortQueryString += `&filter[thread-filter][condition][path]=pid`
+    // sortQueryString += `&filter[thread-filter][condition][operator]=${encodeURIComponent('IS NULL')}`;
+
     if(!topicId) return '';
 
-    let sortQueryString = `&filter[topic-filter][condition][path]=entity_id.id`;
+    sortQueryString += `&filter[topic-filter][condition][path]=entity_id.id`;
     sortQueryString += `&filter[topic-filter][condition][operator]=%3D`;
     sortQueryString += `&filter[topic-filter][condition][value]=${topicId}`;
 
@@ -93,4 +161,33 @@ function getFreeTextFilterParams({ freeText}){
     sortQueryString += `&filter[free-text-body][condition][memberOf]=or-group`;
 
     return sortQueryString;
+}
+
+function getStatusFilter({event}){
+    const { duuid, isAuthenticated, isSiteManager } = event?.context?.me || {};
+
+
+    let sortQueryString = isAuthenticated && (duuid || !isSiteManager)?'&filter[or-group-status][group][conjunction]=OR' : '';
+
+    if(isAuthenticated && duuid){
+        sortQueryString += `&filter[is-owner][condition][path]=uid.id`;
+        sortQueryString += `&filter[is-owner][condition][operator]=%3D`;
+        sortQueryString += `&filter[is-owner][condition][value]=${duuid}`;
+        sortQueryString += `&filter[is-owner][condition][memberOf]=or-group-status`;
+    }
+
+    if(isAuthenticated && !isSiteManager){
+        sortQueryString += `&filter[status][condition][path]=status`;
+        sortQueryString += `&filter[status][condition][operator]=%3D`;
+        sortQueryString += `&filter[status][condition][value]=true`;
+        sortQueryString += `&filter[status][condition][memberOf]=or-group-status`;
+    }
+
+    // consola.warn(sortQueryString)
+    return ''//sortQueryString;
+}
+
+function nextUri ({ next } = {}){
+    if(!next) return
+    return next.href
 }

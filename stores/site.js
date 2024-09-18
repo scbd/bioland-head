@@ -1,10 +1,8 @@
 export const useSiteStore = defineStore('site', {
-    state: () => ({  locale  : undefined, identifier                : undefined, siteCode                  : undefined, pageIdentifiers           : undefined, defaultLocale             : undefined, gaiaApi                   : undefined, drupalMultisiteIdentifier : undefined, multiSiteCode             : undefined, baseHost                  : undefined, logo                      : undefined, config                    : undefined, name                      : undefined, redirect                  : undefined, drupalInternalRevisionId : undefined, }),
+    state: () => ({ i18nStrategy: 'prefix', locale  : undefined, identifier                : undefined, siteCode                  : undefined, pageIdentifiers           : undefined, defaultLocale             : undefined, gaiaApi                   : undefined, drupalMultisiteIdentifier : undefined, multiSiteCode             : undefined, baseHost                  : undefined, logo                      : undefined, config                    : undefined, name                      : undefined, redirect                  : undefined, drupalInternalRevisionId : undefined, }),
     actions:{
         set(name, value){
 
-            //if(!Object.keys(initState).includes(name)) throw new Error(`useSiteStore.set -> State ${name} is not defined`);
-        
             this.$patch({ [name]: unref(value) } );
         
             return this;
@@ -39,11 +37,11 @@ export const useSiteStore = defineStore('site', {
             return `${base}${pathLocale}`;
         },
         drupalizePathLocales(locale, defaultLocale){
-            const drupalLocaleMap = new Map([['/zh','/zh-hans']]);
-            
-            if(!defaultLocale || !locale) return '';
+            const drupalLocaleMap = new Map([['/zh','/zh']]);
+
+            if(!this.locale) throw new Error('siteStore: Default locale or locale not set');
         
-            const pathPreFix = locale === defaultLocale? '' : `/${locale}`;
+            const pathPreFix = this.locale === this.defaultLocale? `/${this.locale}` : `/${this.locale}`;
         
             if(!pathPreFix) return pathPreFix;
         
@@ -58,15 +56,15 @@ export const useSiteStore = defineStore('site', {
     },
     getters:{
         allLocales(){
-            return [this.defaultLocale, ...this?.config?.locales || []]
+            return [...Array.from(new Set([this.defaultLocale, ...this?.config?.locales ] || []))]
         },
         isDefaultLocale(){
             return this.locale === this.defaultLocale
         },
         getLogoUri(){
-            const config = this.config
+            const config     = this.config
             const hasCountry = config?.country || (config?.countries? config?.countries[0] : undefined)
-        
+          
             if(config?.logo)  return config.logo;
         
             if(hasCountry) return `https://www.cbd.int/images/flags/96/flag-${hasCountry}-96.png`
@@ -74,24 +72,24 @@ export const useSiteStore = defineStore('site', {
             return 'https://seed.chm-cbd.net/sites/default/files/images/country/flag/xx.png'
         },
         host(){
-            return this.getHost(true)
+            return this.getHost(true);
         },
         localizedHost(){
-            return this.getHost()
+            return this.getHost();
         },
         drupalApiUriBase(){
-            return this.getHost()
+            return this.getHost();
         },
         params(){
-            const { identifier, baseHost, siteCode, config, locale, defaultLocale, host, localizedHost, redirect } = this;
+            const { i18nStrategy, identifier, baseHost, siteCode, config, locale, defaultLocale, host, localizedHost, redirect } = this || {};
             const { country:c, countries:cs } = config || {};
-            const countries = this?.countries?.length?  this?.countries :(cs?.length? Array.from(new Set([c, ...cs])) : c? [c] : []).filter(x=>x && x !== 'undefined');
+            const countries = this.countries || [];
             const locales = this.allLocales;
-        
-            return { locales, baseHost, siteCode,identifier, country:c, locale, defaultLocale, countries, redirect, host, localizedHost };
+
+            return {i18nStrategy,locales, baseHost, siteCode,identifier, country:c, locale, defaultLocale, countries, redirect, host, localizedHost };
         },
         countries(){
-            const { config } = this;
+            const { config } = this || {};
         
             const countries = config?.countries || config?.runtime?.countries || [];
             const country   = config?.country? [config?.country] : []

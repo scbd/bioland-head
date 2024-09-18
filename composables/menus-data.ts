@@ -13,10 +13,10 @@ export const useMainMenus = () => {
 
 async function getMenuData(menuName: string){
     const { locale, identifier,   baseHost, defaultLocale } = useSiteStore();
-    const pathPreFix = locale === defaultLocale?.locale? '' : `/${locale}`;
-    const pathLocale = pathPreFix === '/zh'? '/zh-hans' : pathPreFix;
+    // const pathPreFix = locale === defaultLocale?.locale? '' : `/${locale}`;
+    // const pathLocale = pathPreFix === '/zh'? '/zh-hans' : pathPreFix;
 
-    const uri = `https://${identifier}${baseHost}${pathLocale}/system/menu/${encodeURIComponent(menuName)}/linkset`;
+    const uri = `https://${identifier}${baseHost}${locale}/system/menu/${encodeURIComponent(menuName)}/linkset`;
 
     const data = await $fetch(uri, { mode: 'cors' });
 

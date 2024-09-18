@@ -1,5 +1,5 @@
 <template>
-    <div v-if="meStore.showEdit" class="tabs">
+    <div v-if="showEdit()" class="tabs">
         <ul  class="nav nav-tabs" >
             <li   class="nav-item " id="page-view">
                 <span :style="getStyle()"  class="nav-link  text-capitalize" >{{t('View')}}</span> 
@@ -19,11 +19,11 @@
                     {{t('Revisions')}}
                 </NuxtLink>
             </li>
-            <li   class="nav-item ">
+            <!-- <li   class="nav-item ">
                 <NuxtLink :style="getStyleActive()" :to="cloneUrl" class="nav-link  text-capitalize"  target="_blank">
                     {{t('Clone')}}
                 </NuxtLink>
-            </li>
+            </li> -->
             <li   class="nav-item ">
                 <NuxtLink :style="getStyleActive()" :to="baseUrl+'/translations'+returnUrl " class="nav-link  text-capitalize"  target="_blank">
                     {{t('Translate')}}
@@ -35,16 +35,28 @@
 
 <script setup>
 
-
-    const { t  }   = useI18n();
-    const   route        = useRoute();
+    const { t  }    = useI18n();
+    const route     = useRoute();
     const meStore   = useMeStore();
     const pageStore = usePageStore();
     const siteStore = useSiteStore();
-    const cloneUrl  = computed(()=> `${siteStore.host}/clone/${pageStore?.page?.drupalInternalNid}/quick_clone`);
-    const baseUrl   = computed(()=> `${siteStore.host}/node/${pageStore?.page?.drupalInternalNid}`);
+
+
+    const baseUrl   = computed(()=> `${siteStore.host}${getUrlComponent()}`);
     const returnUrl = computed(()=> `?destination=${route.fullPath}?kill-cash=1`);
 
+    function getUrlComponent(){
+        if(pageStore?.isMediaPage) return `/media/${pageStore?.page?.drupalInternalMid}`
+        if(pageStore?.isTaxonomyPage) return `/taxonomy/term/${pageStore?.page?.drupalInternalTid}`
+
+        return `/node/${pageStore?.page?.drupalInternalNid}`
+    }
+    
+function showEdit(){
+    if(pageStore?.isTaxonomyPage) return meStore?.showEditSystemPages;
+
+    return meStore?.showEdit;
+}
     function getStyleActive(){
         return reactive({
             'z-index': 2,
@@ -56,7 +68,6 @@
             'border-bottom': `black solid 1px`
         })
     }
- 
 
 
 

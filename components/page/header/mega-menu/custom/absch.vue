@@ -5,7 +5,6 @@
         <PageHeaderMegaMenuLink v-for="(aMenu,j) in menu.children" :key="j" :menu="aMenu" />
     </div>
 </template>
-<i18n src="@/i18n/dist/components/page/header/mega-menu/custom/absch.json"></i18n>
 <script>
     import { unLocales } from "~/util";
     import { useSiteStore } from "~/stores/site";
@@ -43,10 +42,10 @@
         const menus   = [];
 
         for (const schemaName in data) {
-
+            const isDatabase = schemaName === 'database';
             if(!schemas.includes(schemaName)) continue;
             menus.push({
-                            title: t(schemaName),
+                            title: isDatabase? t(schemaName+`-abs`) : t(schemaName),
                             href : data[schemaName].href,
                             count: data[schemaName].count,
                             target:'_blank'
@@ -54,7 +53,7 @@
         }
 
         menus.push({
-            title: `${name} ${t('view')}`,
+            title: `${name} ${t('View in ABS Portal')}`,
             href : `https://absch.cbd.int/${locale}/search?${country}`,
             class: ['main-nav-final-link'],
             target:'_blank'

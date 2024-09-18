@@ -35,7 +35,7 @@ export const getIndexQuery = (s, { countries, country }={}) => {
     const countryQueryString = getIndexCountryQuery({ countries, country });
 
 
-    return`q=(${schema})+AND+government_s:(${countryQueryString})`; //NOT+version_s:*+AND+realm_ss:chm+AND+schema_s:*++AND+
+    return countryQueryString? `q=(${schema})+AND+government_s:(${countryQueryString})`:`q=(${schema})`; //NOT+version_s:*+AND+realm_ss:chm+AND+schema_s:*++AND+
 }
 
 //https://api.cbd.int/api/v2013/index/select?q=realm_ss:chm AND (schema_s:focalPoint) AND government_s :(bn id kh la mm my ph sg th tl vn)&fl=type_EN_txt,hostGovernments_ss,type_ss&rows=500&sort=createdDate_dt+desc&start=0&wt=json
@@ -79,6 +79,35 @@ export const getIndexFocalPointTypesFields = (localePassed) => {
     return `fl=${fields.join(',')}`;
 }
 
+export const getIndexFocalPointTypesFieldsFull = (localePassed) => {
+    const locale = getIndexLocale(localePassed);
+
+    const fields = ['firstName_s',
+                    'lastName_s',
+                    'title_s',
+                    `title_${locale}_s`,
+                    `description_${locale}_s`,
+                    `salutation_${locale}_s`,
+                    `address_${locale}_s`,
+                    `function_${locale}_s`,
+                    `department_${locale}_s`,
+                    `organization_${locale}_s`,
+                    `government_${locale}_s`,
+                    `thematicArea_${locale}_ss`,
+                    'thematicArea_ss',
+                    `addressCountry_${locale}_s`,
+                    `thematicArea_C${locale}_ss`,
+                    `type_C${locale}_ss`,
+                    'email_ss',
+                    'telephone_ss',
+                    `type_${locale}_txt`,
+                    'hostGovernments_ss',
+                    `type_ss`,
+                    'url_ss',
+                ];
+
+    return `fl=${fields.join(',')}`;
+}
 export const getIndexNrFields = (localePassed) => {
     const locale = getIndexLocale(localePassed);
 
@@ -101,12 +130,13 @@ export const normalizeIndexKeys = (obj) => {
     for (const key in obj) {
 
             const newKey = key
+            // .replace(/_C[A-Z]{2}/, '')
                             .replace(/_[A-Z]{2}_txt/, 'Texts')
                             .replace(/_[A-Z]{2}_ss/, 's')
                             .replace(/_ss/, 's')
                             .replace(/_[A-Z]{2}_s/, '')
                             .replace(/_[A-Z]{2}_t/, '')
-                            .replace(/_C[A-Z]{2}/, '')
+                            
                             .replace('_s', '')
                             .replace('_t', '')
                             .replace(/_dt/, '');

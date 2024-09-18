@@ -21,8 +21,15 @@ export async function getPageData(ctx){
 
         return  await mapData(ctx)(data)
     }catch(e){
+        const { localizedHost }       = ctx;
         consola.error(e)
-        if(e.status === 404) throw createError({ statusCode: 404, statusMessage: `Failed to get page from path: ${ctx.path}`})
+
+        throw createError({ 
+            statusCode   : e.statusCode, 
+            statusMessage: e.statusMessage,
+            message      : `Server.util.drupal-page.getPageData: failed to get page identifiers for site/path: ${localizedHost}${ctx.path}`,
+            data: e
+        });
     }
 
 }
@@ -94,32 +101,53 @@ function getLocalizationFromPath(ctx, path){
 }
 
 async function getPageIdentifiers(ctx){
+    try{
+        const { localizedHost, path } = ctx;
 
-    const { locale, host,localizedHost, path, isLocalizationException  } = ctx;
+        if(!localizedHost || localizedHost?.includes('undefined')) 
+             throw createError({ 
+                statusCode   : 422, 
+                statusMessage: 'Unprocessable Content',
+                message      : `Server.util.drupal-page.getPageIdentifiers: localizedHost is is not derived`,
+                data: ctx,
+                fatal:  true
+            });
 
-    
-    const pathLocal = getLocalizationFromPath(ctx, path)
-    const isOnLocaleChange = pathLocal && (locale !== pathLocal);
-    const cleanPath = removeLocalizationFromPath(ctx, path);
-    const isDefaultLocale  = !!((locale === ctx.defaultLocale) || (isOnLocaleChange && (pathLocal ===ctx.defaultLocale)));
 
-    const uriHost = isLocalizationException || isDefaultLocale ? host : isOnLocaleChange? `${host}/${pathLocal}` :localizedHost;
+        // const pathLocal        = getLocalizationFromPath(ctx, path);
+        // const isOnLocaleChange = pathLocal && (locale !== pathLocal);
 
-    const uri = `${uriHost}/router/translate-path?path=${encodeURIComponent(cleanPath||'/')}`;
+        // const isDefaultLocale  = !!((locale === ctx.defaultLocale) || (isOnLocaleChange && (pathLocal ===ctx.defaultLocale)));
 
-    const data = await $fetch(uri, { mode: 'cors' })
-    const { uuid, id, type, bundle } = data?.entity || {};
+        // const uriHost = isLocalizationException || isDefaultLocale ? host : isOnLocaleChange? `${host}/${pathLocal}` :localizedHost;
 
-    // if(error?.value) throw new Error(`Error occurred fetching page uuid for path ${pagePath}`);
+        const cleanPath  = removeLocalizationFromPath(ctx, path);
+        const uri        = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanPath||'/')}`;
+        const data       = await $fetch(uri, { mode: 'cors'});
 
-    return { uuid, id, type, bundle, pagePath:path, path };
+        const { uuid, id, type, bundle } = data?.entity || {};
+
+        return { uuid, id, type, bundle, pagePath:path, path };
+    }catch(e){
+        const { localizedHost, path } = ctx;
+        consola.error(e);
+
+
+        throw createError({ 
+            statusCode   : e.statusCode, 
+            statusMessage: e.statusMessage,
+            message      : `Server.util.drupal-page.getPageIdentifiers: failed to get page identifiers for site/path: ${localizedHost}${ctx.path}`,
+            data: e,
+            fatal:  true
+        });
+    }
 }
 
 async function getThumbFiles(data,  {localizedHost, host }){
     const allRequests =[];
 
-    const images = data.filter(({ type })=> 'media--image' === type);
-    const heros = data.filter(({ type })=> 'media--hero' === type);
+    const images = data.filter(({ type })=> 'media--image'        === type);
+    const heros  = data.filter(({ type })=> 'media--hero'         === type);
     const videos = data.filter(({ type })=> 'media--remote-video' === type);
 
     for(const attachment of [...images, ...heros, ...videos]){
@@ -135,7 +163,7 @@ async function getThumbFiles(data,  {localizedHost, host }){
 }
 
 function mapData(ctx){
-    const pathAlias = usePathAlias(ctx)
+    const pathAlias = usePathAlias(ctx);
 
     return async (document)=>{
         const promises = [];
@@ -181,7 +209,7 @@ function mapTagsByType(tags){
 function getSearchParams(ctx, type, bundle, prop){
     const search = {jsonapi_include: 1};
 
-    if(type === 'taxonomy_term' && bundle === 'system_pages') search['include'] = 'field_attachments,field_attachments.field_media_image,field_search,parent,field_type_placement';
+    if(type === 'taxonomy_term' && bundle === 'system_pages') search['include'] = 'field_attachments,field_attachments.field_media_image,field_search,parent';
     if(type === 'node' && bundle === 'content' && !prop)  setContentSearchParams(search);
     if(type === 'media' &&  ['image', 'document'].includes(bundle))  setMediaImageSearchParams(search);
     if(prop === 'field_attachments') search['include'] = 'thumbnail';
@@ -197,11 +225,3 @@ function setMediaImageSearchParams(search){
 }
 
 
-// function cleanToPath(ctx, path){
-
-//     const pathParts = path.split('/');
-
-//     const isLocalizedPath = pathParts[1] === ctx.locale;
-
-//     return isLocalizedPath?   [ '', ...pathParts.slice(2) ].join('/')    :  pathParts.join('/');
-// }

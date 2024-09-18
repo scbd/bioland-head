@@ -51,7 +51,6 @@
         </div>
 </div>
 </template>
-<i18n src="@/i18n/dist/components/page/media-file-details.json"></i18n>
 <script setup>
         import { DateTime     } from 'luxon'        ;
         import { usePageStore } from '~/stores/page';

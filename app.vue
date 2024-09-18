@@ -1,17 +1,26 @@
 <template>
+
     <IconSymbols v-once/>
-    
+    <ClientOnly>
+        <NuxtLoadingIndicator :height="6"/>
+      </ClientOnly>    
     <PageHeader/>
 
     <main class="">
-      <NuxtLoadingIndicator :height="6"/>
+
       <!-- <Spinner v-if="pageStore.loading" /> -->
       <NuxtPage />
+
     </main>
-    {{viewport.breakpoint}}
+
     <PageFooter/>
+  <ModalsContainer/>
+  <UserAlerts/>
 </template> 
 <script setup >
+import { ModalsContainer } from 'vue-final-modal'
+
+const route = useRouter();
 const viewport        = useViewport();
 const pageStore = usePageStore();
 const { env } =useRuntimeConfig().public;
@@ -34,6 +43,9 @@ useHead({
 export default { name      : 'BL2App', };
 </script>
 <style lang="css">
+/* main{
+  margin-bottom: 700px;
+} */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 .debug{
   border: 1px dashed red;

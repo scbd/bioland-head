@@ -8,7 +8,6 @@
         </a>
     </div>
 </template>
-<i18n src="@/i18n/dist/components/page/list/text-search.json"></i18n>
 <script setup>
 
 const { t        } = useI18n    ();
@@ -22,14 +21,15 @@ const queryText = ref(route.query.freeText || '')
     watch(queryText, debounce(async (value) => {
         const query = { ...route.query, freeText: value } ;
         
-        if(!value)
-            delete(query.freeText);
+        if(!value) delete(query.freeText);
         
-            delete(query.page);
-        await router.push({ query });
 
+        if(!(!value || value.length > 2)) return;
+
+        delete(query.page);
         eventBus.emit('changePage');
-
+        await router.replace({ query });
+        // abortNavigation();
     }, 500))
 
     watch(() => route.query, (value) => {

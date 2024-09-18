@@ -66,7 +66,6 @@
         </div>
     </div>
 </template>
-<i18n src="@/i18n/dist/components/page/body-tags-date.json"></i18n>
 <script setup>
     import   Popper         from 'vue3-popper'  ;
     import { DateTime     } from 'luxon'        ;

@@ -1,10 +1,14 @@
 
 
 import c from 'consola';
-
+import TimeAgo from 'javascript-time-ago'
+import en from 'javascript-time-ago/locale/en'
 import { DateTime } from 'luxon';
 
 import isNill from 'lodash.isnil';
+
+TimeAgo.addDefaultLocale(en)
+
 
 export const consola = c;
 export const unLocales = ['en', 'ar', 'es', 'fr', 'ru', 'zh'];
@@ -35,10 +39,10 @@ export function sortArrayOfObjectsByProp(a,b, prop){
 
     return 0;
 }
-export function getTimeStringFromIso(dateTimeIso){
+export async function getTimeStringFromIso(ctx, dateTimeIso){
     if(!dateTimeIso) return '';
 
-    return getTimeString(DateTime.fromISO(dateTimeIso))
+    return getTimeAgo(ctx, DateTime.fromISO(dateTimeIso).toJSDate())
 }
 
 export function getTimeStringFromSeconds(seconds){
@@ -58,9 +62,10 @@ export function getTimeString(lastCommentTime){
     const days    = now.diff(lastCommentTime, 'days').toObject().days;
     const hours   = now.diff(lastCommentTime, 'hours').toObject().hours;
     const minutes = now.diff(lastCommentTime, 'minutes').toObject().minutes;
+    const seconds = now.diff(lastCommentTime, 'minutes').toObject().seconds;
 
-    const formatMap = { years:'y', months:'m', days:'d', hours:'h', minutes:'mins' };
-    const timeMap   = { years, months, days,  hours, minutes  };
+    const formatMap = { years:'y', months:'m', days:'d', hours:'h', minutes:'mins', seconds:'s' };
+    const timeMap   = { years, months, days,  hours, minutes, seconds  };
 
     for (const key in timeMap)
         if( Math.floor(timeMap[key])) 
@@ -68,6 +73,27 @@ export function getTimeString(lastCommentTime){
 
 }
 
+export async function getTimeAgo(ctx,lastCommentTime){
+
+    const timeAgo = await getTimeAgoService(ctx);
+
+    return  timeAgo.format(lastCommentTime, 'mini')
+}
+
+async function getTimeAgoService(ctx){
+    try {
+        const { locale } = ctx;
+
+        if(!locale || locale === 'en') return new TimeAgo('en');
+        const { default: timeAgoLocale } = await import(`javascript-time-ago/locale/${locale}`);
+
+        TimeAgo.addLocale(timeAgoLocale);
+
+        return  new TimeAgo(locale);
+    }catch(e){
+        return new TimeAgo('en');
+    }
+}
 
 export function removeLocalizationFromPath(ctx, path){
 
@@ -78,7 +104,7 @@ export function removeLocalizationFromPath(ctx, path){
     return isLocalizedPath?   [ '', ...pathParts.slice(2) ].join('/')    :  pathParts.join('/');
 }
 export function drupalizeLocale(locale){
-    if(locale === 'zh') return 'zh-hans';
+    // if(locale === 'zh') return 'zh-hans';
 
     return locale;
 }
@@ -89,7 +115,6 @@ export async function getSiteDefinedName (ctx) {
     const localizedHost  = getHost(ctx)
     const query          = { jsonapi_include: 1 };
     const uri            = `${localizedHost}/jsonapi/site/site?api-key=${apiKey}`
-
 
     const resp = await $fetch(uri,{query})
     const name = resp?.data?.name
@@ -131,12 +156,13 @@ export function nextUri ({ next } = {}){
     return next.href
 }
 
-const drupalLocaleMap = new Map([['/zh','/zh-hans']]);
+const drupalLocaleMap = new Map([['/zh','/zh']]);
 
 function drupalizePathLocales(locale, defaultLocale){
-    if(!defaultLocale?.locale || !locale) return '';
 
-    const pathPreFix = locale === defaultLocale?.locale? '' : `/${locale}`;
+    if(!defaultLocale || !locale) return '';
+
+    const pathPreFix = locale === defaultLocale?.locale? `/${locale}` : `/${locale}`;
 
     if(!pathPreFix) return pathPreFix;
 

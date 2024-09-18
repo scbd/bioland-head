@@ -1,11 +1,10 @@
 <template>
     <Widget v-if="!error && record" :loading="loading" :name="t('Technical & scientific cooperation')" :record="record" :links="links"/>
 </template>
-<i18n src="@/i18n/dist/components/widget/index.json"></i18n>
 <script setup>
 
-    import { useSiteStore } from '~/stores/site' ;
-   
+
+    import   clone          from 'lodash.clonedeep' ;
     const siteStore  = useSiteStore();
     const { t, locale } = useI18n();
     const unLocales  = ['en', 'fr', 'es', 'ru', 'ar', 'zh'];
@@ -13,7 +12,8 @@ const indexLocale = unLocales.includes(locale.value)? locale.value.toUpperCase()
 const queryFields = `fl=thematicArea_${indexLocale}_ss,country_${indexLocale}_s,logo*,id,title_${indexLocale}_s,description_${indexLocale}_s,*date*,government*,city_${indexLocale}_s,startDate*,endDate*,organization_${indexLocale}_s,summary_${indexLocale}_s`
 const uri = `https://api.cbd.int/api/v2013/index/select?${queryFields}&q=NOT+version_s:*+AND+realm_ss:chm+AND+schema_s:*++AND+(schema_s:bbiRequest)&rows=25&sort=createdDate_dt+desc&start=0&wt=json`
    // const { data: record  }= 
-    const { data: record, status, error  } = await useFetch('/api/list/tsc', {  method: 'GET', onResponse });
+   const   query  = clone({...siteStore.params, rowsPerPage:5 });
+    const { data: record, status, error  } = await useLazyFetch('/api/list/tsc', {  method: 'GET', query, onResponse });
 
     const loading = computed(()=> status.value === 'pending');
     function onResponse({ request, response, options}){

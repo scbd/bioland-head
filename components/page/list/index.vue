@@ -28,7 +28,6 @@
         </div>
     </div>
 </template>
-<!-- <i18n src="@/i18n/dist/components/page/list/index.json"></i18n> -->
 <script setup>
     import { useSiteStore  } from '~/stores/site'   ;
     import { useMenusStore } from '~/stores/menus'  ;
@@ -69,7 +68,7 @@
     const primaryColorStyle       = reactive({ 'color': siteStore.primaryColor, 'border-top': `${siteStore.primaryColor} .5rem solid`});
   
     
-    const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query });
+    const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query});
 
 
     const loading = computed(()=> pageStore.loading || status.value === 'pending');

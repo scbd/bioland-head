@@ -4,7 +4,6 @@
         <PageHeaderMegaMenuLink v-for="(aMenu,j) in menu.children" :key="j" :menu="aMenu" />
     </div>
 </template>
-<i18n src="@/i18n/dist/components/page/header/mega-menu/bch.json"></i18n>
 <script>
     import { unLocales } from "~/util";
     import { useSiteStore } from "~/stores/site";
@@ -48,7 +47,7 @@
         }
 
         menus.push({
-            title: `${name} ${t('view')}`,
+            title: `${name} ${t('View in BCH Portal')}`,
             href : `https://bch.cbd.int/${locale}/search?currentPage=1${country}`,
             class: ['main-nav-final-link'],
             target:'_blank'

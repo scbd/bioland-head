@@ -5,7 +5,7 @@
             <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
         </div>
         </ClientOnly>
-        <div class="card-body">
+        <div class="card-body mb-1" style="max-height: 300px; overflow:hidden;">
             <h6 class="card-subtitle text-muted mb-2">{{type}} {{record.schema? `- ${record.schema}`: ''}}</h6>
             <h5 class="card-title  mb-3">
                 <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''">{{record.title}}</NuxtLink>
@@ -28,7 +28,7 @@
         </div>
     </div>
 </template>
-<i18n src="@/i18n/dist/components/cards/index.json"></i18n>
+
 <script setup>
     import { getGbfUrl    } from '~/util'        ;
     import { useSiteStore } from '~/stores/site' ;
@@ -82,7 +82,7 @@
         
         const imgSrc = img(imgUri, imgOptions);
 
-        return {'background':`url('${imgSrc}') no-repeat center fixed`,  'object-fit': 'contain' , 'background-size': '100% auto', 'background-size': '150%'}
+        return {'background':`url('${imgSrc}') no-repeat center fixed`,  'background-size': 'cover'}
     })
 
 
@@ -94,7 +94,7 @@
         'background-color': siteStore.secondaryColor
       })
 </script>
-<i18n src="@/i18n/dist/components/cards/index.json"></i18n>
+
 <style lang="scss" scoped>
 .i-top{
     max-height: 250px;

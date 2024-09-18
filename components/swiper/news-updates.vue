@@ -3,8 +3,9 @@
         <h3 :style="headerStyle">{{t('Latest News and Updates')}}</h3>
         <NuxtLink :to="localePath({path:'/news-and-updates', query:{ schemas:[2,3]}})" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more news and updates')}} <Icon  name="arrow-right" class="arrow" /></NuxtLink>
     </div>
-    <div  class="position-relative mt-1" >
-
+    <div  class="position-relative mt-1" style="min-height:250px;">
+        <Spinner v-if="loading" :is-modal="true"/>
+        <ClientOnly>
             <swiper
                 :loop="true"
                 :slidesPerView="slidePerView"
@@ -13,21 +14,19 @@
                 :modules="modules"
             >
 
-                <SwiperButton v-if="arrows && leftArrow && hideArrows" direction="left"/> 
+                <SwiperButton  direction="left"/> 
 
                 <SwiperSlide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
 
                     <LazyCards :record="slide" />
                 </SwiperSlide>
 
-                <SwiperButton v-if="arrows && hideArrows" direction="right"/> 
+                <SwiperButton  direction="right"/> 
             </swiper>
+        </ClientOnly>
     </div>
-    <!-- <pre>{{data}}</pre> -->
 </template>
-<i18n src="@/i18n/dist/components/swiper/news-updates.json"></i18n>
 <script setup>
-import { useSiteStore }  from '~/stores/site';
 import { Pagination  }   from 'swiper/modules';
 import { useWindowSize } from '@vueuse/core';
 import 'swiper/css';
@@ -35,16 +34,17 @@ import clone from 'lodash.clonedeep';
 const localePath = useLocalePath();
 const { t } = useI18n();
 const props = defineProps({ 
-                            slides: { type: Array},
-                            pagination: { type: Boolean, default: true },
+                         
+                            pagination: { type: Boolean, default: false },
                             arrows:     { type: Boolean, default: true },
-                            leftArrow:  { type: Boolean, default: false },
+                            leftArrow:  { type: Boolean, default: true },
+                            hideArrowsCount:  { type: Number, default: 4 },
                         });
-// const { pagination, arrows, slides , leftArrow  } = toRefs(props);
-
-const pagination = false;
-const arrows     = true;
-const leftArrow  = false;
+const { pagination, arrows, leftArrow ,  hideArrowsCount } = toRefs(props);
+const loading = ref(true)
+// const pagination = false;
+// const arrows     = true;
+// const leftArrow  = false;
 
 const { width: rowElWidth } = useWindowSize();
 
@@ -52,7 +52,7 @@ const { width: rowElWidth } = useWindowSize();
 const modules      = computed(()=> pagination.value? [ Pagination ] : []); 
 const viewport     = useViewport();
 // const { breakpoint } = toRefs(viewport);
-const hideArrows   = computed(()=> (viewport.breakpoint.value === 'lg' || viewport.breakpoint.value === 'xl'|| viewport.breakpoint.value === 'xxl')? slides.value.length >2 : slides.value.length >1  );
+const hideArrows   = computed(()=> (viewport.breakpoint.value === 'lg' || viewport.breakpoint.value === 'xl'|| viewport.breakpoint.value === 'xxl')? slides.value.length > hideArrowsCount.value : slides.value.length > 1  );
 
 const slidePerView = computed(()=> {
     if(rowElWidth.value > 1600 ) return 4;
@@ -75,8 +75,11 @@ const spaceBetween = computed(()=> {
 const siteStore = useSiteStore();
 const query     = clone({ ...siteStore.params });
 
-const { data:slides } = await useFetch(`/api/list/latest`, {  method: 'GET', query });
+const { data:slides, status } = await useFetch(`/api/list/latest`, {  method: 'GET', query });
 
+setTimeout(() => {
+    loading.value = false
+}, 1500);
 const headerStyle = reactive({
     display: 'inline-block',
   'border-bottom': `.25rem solid ${siteStore.primaryColor}`,

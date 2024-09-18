@@ -1,7 +1,10 @@
 <template>
-    <!-- <pre>{{pageStore}}</pre> -->
-    <PageBody v-if="pageStore.isPage"/>
-    <PageList v-if="pageStore.isSearch"/>
+    <LazyPageBody              v-if="pageStore.isPage"/>
+    <LazyPageList              v-if="pageStore.isSearch"/>
+    <LazyPageListForums        v-if="pageStore.isForumsList"/>
+    <LazyPageListTopics        v-if="pageStore.isTopicsList" />
+    <LazyPageListTopicComments v-if="pageStore.isTopicsCommentsList" /> 
+    <LazyPageListNcps          v-if="pageStore.isNcpsList" />
 </template>
 
 <script setup>

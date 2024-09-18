@@ -4,6 +4,8 @@ import SA      from 'superagent' ;
 const $http   = {}//SA.agent()
 
 
+
+
 export const useDrupalLogin = async (siteCode) => {
   try{
 
@@ -25,15 +27,16 @@ export const useDrupalLogin = async (siteCode) => {
 
     await saAgent.post(uri)
             .set('Content-Type', 'application/json')
-            .send(JSON.stringify({ name, pass }));
+            .send(JSON.stringify({ name, pass }))
+            .redirects(1)
 
     $http[cacheId] = saAgent
     return $http[cacheId]
   }
   catch(e){
     console.error('DrupalAuth.login: ', e)
-    console.error(e)
-    return false
+    console.error(e.response)
+    return { get: (x)=>x }
   }
 }
 

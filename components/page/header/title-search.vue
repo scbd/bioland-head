@@ -2,7 +2,6 @@
     <div class="w-100 small-header position-fixed top-0 start-0 justify-content-start align-items-center  d-flex flex-row   d-md-none">
     
             <NuxtLink  class="me-0" :to="localePath(`/`)" :alt="t('Home')"  >
-                <!-- <img class="small-header-logo m-2 me-1" :src="logo" /> -->
                 <NuxtImg  :src="logo" class="small-header-logo m-2 me-1"/>
             </NuxtLink>
             <NuxtLink class="navbar-brand small-line mx-0 px-0 me-1"  :to="localePath(`/`)" :alt="t('Home')" > ccc&nbsp; </NuxtLink>
@@ -119,7 +118,6 @@
         </div> 
     </div> 
 </template>
-<i18n src="@/i18n/dist/components/page/header/title-search.json"></i18n>
 <script>
 import {  useSiteStore } from "~/stores/site";
 import {  usePageStore } from "~/stores/page";
@@ -127,7 +125,6 @@ import { useElementSize } from '@vueuse/core';
 
 export default {
     name: 'PageTitleSearch',
-    methods: { onClick },
     setup
 }
 
@@ -150,28 +147,22 @@ function setup() {
     const name = siteName.value?  siteName : ref(t('Bioland Biodiversity'));
 
     const hasLargeName = computed(()=>{ 
-        if(viewport.isGreaterThan('lg') && name.value.length <= 24) return false;
+        if(viewport?.isGreaterThan('lg') && name?.value?.length <= 24) return false;
 
-        return name.value.length > 14;
+        return name?.value?.length > 14;
     })
 
+    async function onClick(value){
 
-    const hasHeroImage = computed(() => pageStore.page.hasHeroImage );
-    
-    return { localePath, t, logo , hasHeroImage , name, rowElWidth, cont, hasLargeName, navigateTo, queryText }
-}
 
-async function onClick(value){
-    const   route   = useRoute();
 
-const   localePath     = useLocalePath();
-
-    if(!value) return this.navigateTo(localePath(`/search`))
+consola.warn('localePath(`/search`)', localePath(`/search`))
+    if(!value) return navigateTo(localePath(`/search`))
     
 
     
     if(route.path !== '/search'){
-        this.navigateTo(localePath(`/search?freeText=${value}`))
+        navigateTo(localePath(`/search?freeText=${value}`))
 
     }else{
         const router = useRouter();
@@ -181,6 +172,14 @@ const   localePath     = useLocalePath();
     //this.navigateTo(localePath(`/search?freeText=${value}`))
     this.queryText='';
 }
+
+
+    const hasHeroImage = computed(() => pageStore.page.hasHeroImage );
+    
+    return { onClick, localePath, t, logo , hasHeroImage , name, rowElWidth, cont, hasLargeName, navigateTo, queryText }
+}
+
+
 </script>
 
 <style  scoped>

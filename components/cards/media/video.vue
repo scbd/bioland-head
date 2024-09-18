@@ -33,7 +33,6 @@
         </div>
     </div>
 </template>
-<i18n src="@/i18n/dist/components/cards/media/index.json"></i18n>
 <script setup>
     import { getGbfUrl    } from '~/util'        ;
     import { useSiteStore } from '~/stores/site' ;

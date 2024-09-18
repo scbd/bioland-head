@@ -2,7 +2,7 @@
     <div class="position-relative">
         <Spinner v-if="loading" :is-modal="true" />
         <div v-if="!error">
-            <div class="text-capitalize mt-5">
+            <div class="text-capitalize">
                 <h4 :style="style" class="bm-3">{{t('GBIF')}} </h4>
             </div>
 
@@ -12,6 +12,7 @@
                     ref="map"
                     :zoom="zoom"
                     :center="config?.coordinates.reverse()"
+                    :use-global-leaflet="false"
                 >
                 <LTileLayer
                     url="https://tile.gbif.org/3857/omt/{z}/{x}/{y}@2x.png?style=gbif-classic"
@@ -49,11 +50,8 @@
         </div>
     </div>
   </template>
-<i18n src="@/i18n/dist/components/widget/index.json"></i18n>
-  
   <script setup>
   import cCenter from '~/util/country-center.js'
-  import { useSiteStore } from '~/stores/site' ;
   import clone from 'lodash.clonedeep';
   const { t, locale } = useI18n();
 
@@ -115,7 +113,7 @@
 ]
 
     const   query  = clone({...siteStore.params });
-    const { data, status, error } =  await useFetch(`/api/list/gbif`, {  method: 'GET', query });
+    const { data, status, error } =  await useLazyFetch(`/api/list/gbif`, {  method: 'GET', query });
     const loading = computed(()=> status.value === 'pending'); 
   </script>
   

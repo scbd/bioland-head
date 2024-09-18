@@ -11,6 +11,7 @@ export default cachedEventHandler(async (event) => {
 
         const response   = await $indexFetch(query);
 
+        
         const countryMap = mapByCountry(response, context);
 
         const links = getLinks(countryMap);
@@ -28,9 +29,12 @@ export default cachedEventHandler(async (event) => {
     }
     
 },{
-    maxAge: 60 * 60 * 24,
+    maxAge: 1,
     getKey,
-    base:'db'
+    base:'db',
+    varies:['host', 'x-forwarded-host'],
+    shouldBypassCache,
+    shouldInvalidateCache
 })
 
 function mapByCountry({ docs }, ctx){
@@ -88,6 +92,8 @@ function getQueryString({ countries, country, indexLocal }={}){
 
 async function getProtocolContacts(ctx, map){
     const { countries } = ctx;
+
+    if(countries || !countries?.length) return;
     const promises = [];
     for (const country of countries) {
         const promiseAbs = getAbsContacts(ctx, country)

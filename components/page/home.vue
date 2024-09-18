@@ -8,7 +8,7 @@
         </div>
         <div class="row">
             <div class="col-12 pe-0 me-0 mb-4" >
-                <SwiperNewsUpdates  :slides="slides" :arrows="true" :pagination="false" :leftArrow="false"/>
+                <SwiperNewsUpdates  />
             </div>
             <div class="col-md-4 col-12 border-col">
                 <WidgetPanorama/>
@@ -43,9 +43,9 @@ const drupalInternalIds = [2,3]
 // const query = {drupalInternalIds, freeText}
 const query  = clone({ drupalInternalIds, ...siteStore.params });
 
-const { data } = await useFetch(`/api/list/content`, {  method: 'GET', query });
+// const { data } = await useFetch(`/api/list/content`, {  method: 'GET', query });
 
-const slides = computed(()=>data.value.data)
+// const slides = computed(()=>data.value.data)
 </script>
 <style>
 .border-col{

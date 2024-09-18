@@ -1,73 +1,112 @@
 import clone from 'lodash.clonedeep';
+import isPlainObject from 'lodash.isplainobject';
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  const nuxtApp   = useNuxtApp()
-  const context   = useCookie('context');
-  const siteStore = useSiteStore(nuxtApp.$pinia);
-  const pStore    = usePageStore(nuxtApp.$pinia);
+  const nuxtApp     = useNuxtApp()
+  const siteStore   = useSiteStore(nuxtApp.$pinia);
+  const pStore      = usePageStore(nuxtApp.$pinia);
   const menuStore   = useMenusStore(nuxtApp.$pinia)
-  const meStore  = useMeStore(nuxtApp.$pinia)
-  const isNewLocale = isLocaleChange(to, from) && !!pStore.drupalInternalNid;
+  const meStore     = useMeStore(nuxtApp.$pinia)
+  const context     = useCookie('context');
 
-  const localePath  = siteStore.locale === siteStore.defaultLocale? '' : `/${siteStore.locale}`;
-  const path        = to.path//isNewLocale? `${localePath}/node/${pStore.drupalInternalNid}` : to.path;
+  const path        = to.path;
+
+
+  await changeLocale()
+  
+  // if(!context.value)
+  //   throw createError({ 
+  //     statusCode: 404, 
+  //     statusMessage: 'Not Found',
+  //     message: `no context`,
+  //     fatal:true
+  // });
+
+  updateAppConfig({ path })
 
   await getMe();
-  if(!context.value) context.value = {};
-    context.value.path = path;
 
   const [ pData, fetch ]= await Promise.all([getPage(path), getMenus()])
 
-  const { data:menuData } = fetch || { data: undefined};
+  const { data: menuData } = fetch || { data: undefined};
   
 
-  if(!pData?.value) return
+  if(!pData) return
 
-  pStore.initialize(pData.value)
+
+  pStore.initialize(pData)
 
 
   if(menuData?.value)
     menuStore.loadAllMenus(menuData.value);
 
   async function getPage(passedPath){ 
-    const path = ref(passedPath.endsWith('/topics')? passedPath.replace('/topics', '') : passedPath);
-    const { multiSiteCode } = useRuntimeConfig().public;
+
+    const   path                  = ref(passedPath.endsWith('/topics')? passedPath.replace('/topics', '') : passedPath);
+    const { multiSiteCode }       = useRuntimeConfig().public;
     const { identifier,  locale } = siteStore;
 
     const key = ref(`${multiSiteCode}-${identifier}-${locale}-${encodeURIComponent(path.value)}`);
 
-    const { data, error } = await useFetch(`/api/page/${key.value}/${encodeURIComponent(path.value)}`, {  method: 'GET', params: clone({ ...siteStore.params, path:path.value }) })//.then(({ data }) => data);
-  
-    if(error.value || !data.value) throw  createError({ statusCode: 404, statusMessage: `Page not found for path: ${path}` }) 
+    try{
+      if(key.value?.includes('undefined'))  throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}` }) 
 
-    return data
+      const  data  = await $fetch(`/api/page/${key.value}/${encodeURIComponent(path.value)}`, {  method: 'GET', query: clone({ ...siteStore.params, path:path.value }) })//.then(({ data }) => data);
+  
+      return data;
+    }catch(e){
+      
+        throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}`, fatal:true }) 
+    }
+
+  }
+  function isLocaleChange(){
+    const { locale } = nuxtApp.$i18n;
+
+    if(to.path.startsWith(`/${locale.value}`)) return false;
+
+    return to.path.split('/')[1]
   }
 
-  async function getMenus(){
-    if(menuStore.isLoaded) return undefined;
+  async function changeLocale(){
+    const isChange = isLocaleChange();
 
-    return useFetch(`/api/menus`, { params: clone({...siteStore.params, path:to.path})})
+    if(!isChange) return;
+
+    nuxtApp.$i18n.setLocale(isChange)
+
+    await nuxtApp.$i18n.waitForPendingLocaleChange()
+  }
+  
+  async function getMenus(){
+    if(menuStore.isLoaded || !context.value) return undefined;
+
+    
+    return useFetch(`/api/menus`, { query: clone({...siteStore.params, path:to.path})})
   }
 
   async function getMe(){
-    if(meStore.isAuthenticated) return;
-    const { data, error } = await useFetch(`/api/me`, {  method: 'GET' })//.then(({ data }) => data);
 
-    meStore.initialize(data)
+    try{
+      if(meStore.isAuthenticated && !meStore.isExpired) return;
+
+      const { data, error } = await useFetch(`/api/me`, {  method: 'GET', query: clone({...siteStore.params, path:to.path})})//.then(({ data }) => data);
+
+
+      if(!error.value) meStore.initialize(data)
+    }catch(e){
+      console.error(e)
+
+      throw createError({ statusCode: 500, statusMessage: 'Internal Server Error', message: 'Error getting user'})
+    }
+  
+
+  }
+
+  function updateAppConfig(updateCtx){
+    if(!context.value || !isPlainObject(context.value)) context.value = {};
+
+    for(const key in updateCtx)
+        context.value[key] = updateCtx[key];
   }
 })
-
-function isLocaleChange({ name: to }, { name: from }){
-
-  const toLocale   = getLocaleFromRouteName(to);
-  const fromLocale = getLocaleFromRouteName(from);
-
-  return toLocale !== fromLocale;
-}
-
-function getLocaleFromRouteName(name){
-  if(!name)return '';
-  const indexToSlice = name.lastIndexOf('_');
-  return name.slice(indexToSlice + 1);
-}
-

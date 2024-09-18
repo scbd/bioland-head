@@ -6,13 +6,14 @@ export default cachedEventHandler(async (event) => {
 
         ctx.topicId = getRouterParam(event, 'topicId')
 
-        const topic = await useDrupalTopics ({...ctx,...query })
-        topic.comments = await useDrupalForumComments({...ctx,...query })
+        const topic    = await useDrupalTopics ({event,...ctx,...query })
+        topic.comments = await useDrupalForumComments({event,...ctx,...query })
 
         return topic
  
     }
     catch(e){
+        consola.error(e);
         consola.error(e.response);
         throw createError({
             statusCode: 500,
@@ -23,5 +24,8 @@ export default cachedEventHandler(async (event) => {
 },{
     maxAge: 1,
     getKey,
-    base:'db'
+    base:'db',
+    varies:['host', 'x-forwarded-host'],
+    shouldBypassCache,
+    shouldInvalidateCache
 })

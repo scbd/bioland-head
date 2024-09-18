@@ -17,7 +17,6 @@
         </PageHeaderMegaMenuCustomCountryTab>
     </div>
 </template>
-<i18n src="@/i18n/dist/components/page/header/mega-menu/custom/country-profiles.json"></i18n>
 <script setup>
     import {  useSiteStore } from "~/stores/site";
     const { t } = useI18n();
@@ -50,7 +49,7 @@
         const title = ' '+t('Country Profile');
         return [
             {
-                title: t('CBD') + title,
+                title: t('Convention on Biological Diversity') + title,
                 href : `https://www.cbd.int/countries/?country=${countryCode}`
             },
             {

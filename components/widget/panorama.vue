@@ -1,7 +1,6 @@
 <template>
     <Widget  v-if="!error && record" :loading="loading" :t="'solution'" :name="t('Panorama Solutions')" :record="record" :links="links"/>
 </template>
-<i18n src="@/i18n/dist/components/widget/index.json"></i18n>
 <script setup>
 
     import { useSiteStore } from '~/stores/site' ;
@@ -11,7 +10,7 @@
     const { t  }     = useI18n();
     const query      = clone({ ...siteStore.params });
 
-    const { data: record, status, error } = await useFetch('/api/list/panorama', {  method: 'GET', onResponse, query });
+    const { data: record, status, error } = await useLazyFetch('/api/list/panorama', {  method: 'GET', onResponse, query });
 
     const loading = computed(()=> status.value === 'pending'); 
 

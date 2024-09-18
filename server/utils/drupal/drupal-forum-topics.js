@@ -53,11 +53,11 @@ function mapTopicMeta(topics){
 
 async function getTopics (ctx) {
 
-    const { host, rowsPerPage, topicId } = ctx;
+    const { localizedHost, rowsPerPage, topicId } = ctx;
     const params = getTopicFilterQueryString(ctx)+getFreeTextFilterParams(ctx);
 
     const id =  topicId? `/${topicId}` : '';
-    const uri           = `${host}/jsonapi/node/forum${id}?jsonapi_include=1&include=taxonomy_forums&page[limit]=${rowsPerPage}${params}`;
+    const uri           = `${ localizedHost}/jsonapi/node/forum${id}?jsonapi_include=1&include=taxonomy_forums&page[limit]=${rowsPerPage}${params}`;
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
@@ -112,8 +112,8 @@ async function getLatestCommentsUsersFromForum(ctx, topicId){
 
     const queryString = getCommentByTopicFilterQueryString(topicId);
     
-    const { host, rowsPerPage=20, } = ctx;
-    const uri                      = `${host}/jsonapi/comment/comment_forum?jsonapi_include=1&include=uid.user_picture&page[limit]=${rowsPerPage}${queryString}`;
+    const { host,  localizedHost,rowsPerPage=20, } = ctx;
+    const uri                      = `${localizedHost}/jsonapi/comment/comment_forum?jsonapi_include=1&include=uid.user_picture&page[limit]=${rowsPerPage}${queryString}`;
 
 
     const { body }  = await $http.get(uri).withCredentials().accept('json');

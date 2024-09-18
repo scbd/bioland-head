@@ -1,11 +1,11 @@
 <template>
-        <footer class="text-white-75" >
+        <footer class=" text-white-75 " style="z-index:2000;">
             <div class="container-fluid bg-light footer-sitemap ">
                 <div class="container">
                     <div class="row pt-4 row-cols-2 row-cols-sm-4 row-cols-md-4 row-cols-lg-4 row-cols-xl-4 row-cols-xxl-4">
                         <div v-for="(aMenu,index) in menus" :key="index"   class="col mb-4">
                           <div v-if="meStore.showEditMenu" class="position-relative">
-                            <button @click="editMenu" type="button" class="btn btn-outline-secondary btn-sm m-1 position-absolute top-0 end-0">
+                            <button @click="editMenu('footer')" type="button" class="btn btn-outline-secondary btn-sm m-1 position-absolute top-0 end-0">
                                 <Icon name="edit" :size="2"/>
                             </button>
                           </div>
@@ -23,13 +23,23 @@
                 <div class="container p-0 pl-md-3 pr-md-3">
                     <div class="row align-items-center w-100x">
                         <div class="align-items-center col-12 col-sm-8 d-flex">
-                            <NuxtLink class="logo navbar-btn" to="https://www.un.org/" :title="t('United Nations')" target="_blank" external>
-                                <NuxtImg   src="/images/un-logo-white-en.svg" />
+                            <NuxtLink class="logo navbar-btn link-light " to="https://www.un.org/" :title="t('United Nations')" target="_blank" external>
+                              <div class="d-flex align-items-center py-2">
+                            
+                                <NuxtImg  class="un-logo" src="/images/UN_emblem_blue.svg" />
+
+                                
+                                <div class="d-flex flex-column ms-1 ">
+                                  <span class="fs-3 lh-1 link-light text-capitalize">{{t('united')}}</span>
+                                  <span class="fs-3 lh-1 link-light text-capitalize">{{t('nations')}}</span>
+                                </div>
+                              </div>
+                                
                             </NuxtLink>
-                            <NuxtLink  to="https://www.un.org/" :title="t('United Nations')" target="_blank" external>
+                            <NuxtLink  to="https://www.cbd.int" :title="t('United Nations')" target="_blank" external>
                                 <NuxtImg  class="sublogo  me-2" src="/images/cbd-logo-white.svg" />
                             </NuxtLink>
-                            <NuxtLink  class="navbar-brand" to="https://www.cbd.int/" :title="t('Convention on Biological Diversity')" target="_blank" external>{{t('Convention on')}}<br/>{{t('Biological Diversity')}}</NuxtLink>
+                            <NuxtLink  class="navbar-brand link-light" to="https://www.cbd.int" :title="t('Convention on Biological Diversity')" target="_blank" external>{{t('Convention on')}}<br/>{{t('Biological Diversity')}}</NuxtLink>
                         </div>
                         <div class="col-12 col-sm-4 d-flex justify-content-end">
 
@@ -50,16 +60,10 @@
             </div>
         </footer>
 </template>
-<i18n src="@/i18n/dist/components/page/footer/index.json"></i18n>
-<script>
+<script setup>
     import { useMenusStore } from "~/stores/menus";
 
-    export default {
-        name: 'PageFooter',
-        setup
-    }
 
-    function setup() {
         const meStore = useMeStore();
         const menuStore = useMenusStore();
         const { footer: menus, footerCredits: creditsMenus } = storeToRefs(menuStore);
@@ -76,9 +80,6 @@
             console.log('edit menu');
         }
 
-        return { meStore, headerLinkStyle, style, t, menus, creditsMenus, editMenu }
-    }
-
 
 </script>
 
@@ -91,17 +92,19 @@
   }
 .logo {
 
-    max-height: 4rem;
+  
     border-right: 1px solid white;
 }
 .logo img {
-    max-height: 4rem;
+    max-height:6rem;
 }
 .sublogo {
     height: 3rem;
   }
 
-
+  .un-logo {
+    height: 10rem;
+  }
 .footer-sitemap li {
   font-size: 0.875rem;
   line-height: 1rem;

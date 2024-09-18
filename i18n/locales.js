@@ -14,12 +14,7 @@ export default[
         "code": "ar",
         "name": "Arabic",
         "nativeName": "العربية",
-        dir: 'rtl'
-    },
-    {
-        "code": "ast",
-        "name": "Asturian",
-        "nativeName": "Asturianu"
+        "dir": 'rtl'
     },
     {
         "code": "az",
@@ -155,11 +150,6 @@ export default[
         "code": "gl",
         "name": "Galician",
         "nativeName": "Galego"
-    },
-    {
-        "code": "gsw-berne",
-        "name": "Swiss German",
-        "nativeName": "Schwyzerdütsch"
     },
     {
         "code": "gu",
@@ -316,16 +306,11 @@ export default[
         "name": "Dutch",
         "nativeName": "Nederlands"
     },
-    {
-        "code": "nb",
-        "name": "Norwegian Bokmål",
-        "nativeName": "Norsk, bokmål"
-    },
-    {
-        "code": "nn",
-        "name": "Norwegian Nynorsk",
-        "nativeName": "Norsk, nynorsk"
-    },
+    // {
+    //     "code": "nb",
+    //     "name": "Norwegian Bokmål",
+    //     "nativeName": "Norsk, bokmål"
+    // },
     {
         "code": "oc",
         "name": "Occitan",
@@ -342,14 +327,9 @@ export default[
         "nativeName": "Polski"
     },
     {
-        "code": "pt-pt",
+        "code": "pt",
         "name": "Portuguese, Portugal",
         "nativeName": "Português, Portugal"
-    },
-    {
-        "code": "pt-br",
-        "name": "Portuguese, Brazil",
-        "nativeName": "Português, Brasil"
     },
     {
         "code": "ro",
@@ -360,11 +340,6 @@ export default[
         "code": "ru",
         "name": "Russian",
         "nativeName": "Русский"
-    },
-    {
-        "code": "sco",
-        "name": "Scots",
-        "nativeName": "Scots"
     },
     {
         "code": "se",
@@ -412,11 +387,6 @@ export default[
         "nativeName": "தமிழ்"
     },
     {
-        "code": "ta-lk",
-        "name": "Tamil, Sri Lanka",
-        "nativeName": "தமிழ், இலங்கை"
-    },
-    {
         "code": "te",
         "name": "Telugu",
         "nativeName": "తెలుగు"
@@ -430,11 +400,6 @@ export default[
         "code": "tr",
         "name": "Turkish",
         "nativeName": "Türkçe"
-    },
-    {
-        "code": "tyv",
-        "name": "Tuvan",
-        "nativeName": "Тыва дыл"
     },
     {
         "code": "ug",
@@ -462,10 +427,13 @@ export default[
         "nativeName": "简体中文"
     }
 ].map((l)=> {
+    const { code, name, nativeName } = l;
     const rtlLangs = [ "am","ar","az", "he", "fa", "ur", 'mv', 'ku' ];
+    const file = `${code}.json`;
 
-    return { ...l, iso:l.code, dir: rtlLangs.includes(l.code)? 'rtl' : 'ltr'}
+    return { nativeName, file, name, code,  language:code, dir: rtlLangs.includes(code)? 'rtl' : 'ltr'}
 })
+//.filter(({ code })=>  ['en','fr'].includes(code));
 
 // export default localeObjects;
 // export const localeCodes = localeObjects.map(({ code })=> code);

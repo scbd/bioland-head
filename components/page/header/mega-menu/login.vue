@@ -4,7 +4,7 @@
           <span v-if="!isAuthenticated"> {{aMenu.title}} </span>
       </NuxtLink>
       <button v-if="isAuthenticated" @click="toggle" class="nav-link text-white" :to="loginUrl" :title="aMenu.title" >
-          <span v-if="isAuthenticated"> <Icon name="drupal" color="#ffffff" :size="1.5" class="me-1"></Icon> {{name}} </span>
+          <span v-if="isAuthenticated"> <Icon name="drupal" color="#ffffff" :size="1.5" class="me-1"></Icon> </span>
       </button>
       <div v-if="show"  @click="toggle" class="overflow-scroll mm" v-click-outside="toggle">
           <div class="container px-0 cont">
@@ -69,7 +69,7 @@
            const menus = data?.value?.linkset[0]?.item || []
             const accountMenu = menus?.find(item => item?.href?.includes('/logout'));
 
-            consola.info(menus)
+
             if(!accountMenu) return ''
            return `${siteStore.host}${accountMenu?.href || '/user/logout'}`
         });

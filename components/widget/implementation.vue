@@ -1,7 +1,7 @@
 <template>
-    <Widget v-if="!error && record" :loading="loading" :name="t('implementation')" :record="record" :links="links"/>
+    <Widget  :loading="loading" :name="t('implementation')" :record="record" :links="links"/>
 </template>
-<i18n src="@/i18n/dist/components/widget/index.json"></i18n>
+
 <script setup>
 
     import { useSiteStore } from '~/stores/site' ;
@@ -12,7 +12,7 @@
     const localePath = useLocalePath();
 
 
-    const { data: record , status, error }= await useFetch(`/api/list/content/5`, {  method: 'GET', query, onResponse });
+    const { data: record , status, error }= await useLazyFetch(`/api/list/content/5`, {  method: 'GET', query, onResponse });
 
     const loading = computed(()=> status.value === 'pending'); 
 
@@ -21,8 +21,8 @@
 
         const { length } = data || []
 
-
-        response._data = data[Math.floor(Math.random() * length)];
+        if(!length) return response._data = {}
+      response._data = length? data[Math.floor(Math.random() * length)] : undefined;
     }
    
     

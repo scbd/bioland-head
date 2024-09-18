@@ -4,12 +4,12 @@
 
         <div v-for="(aChild,j) in children" :key="j" class="row mb-2">
             <div class="col-6">
-                <NuxtLink  class="child-link"   :to="aChild?.path?.alias || ''" :title="aChild.title" >
+                <NuxtLink  class="child-link"   :to="localePath(aChild?.path?.alias) || ''" :title="aChild.title" >
                     {{aChild.title}}
                 </NuxtLink>
             </div>
             <div class="col-3 ps-0 align-self-center">
-                <NuxtLink  class="child-link"   :to="aChild.forum.href" :title="aChild.forum.name" >
+                <NuxtLink  class="child-link"   :to="localePath(aChild.forum.href)" :title="aChild.forum.name" >
                     <span class="badge bg-primary">{{aChild.forum.name}}</span>
                 </NuxtLink>
             </div>
@@ -23,14 +23,12 @@
 
     </div>
 </template>
-<i18n src="@/i18n/dist/components/page/header/mega-menu/custom/forums.json"></i18n>
 <script setup>
+    const   localePath  = useLocalePath();
+    const   props       = defineProps({ menu: Object });
+    const { menu }      = toRefs     (props           );
+    const { t     }     = useI18n    (                );
 
-    const { t     } = useI18n    (                );
-    const   props   = defineProps({ menu: Object });
-    const { menu } = toRefs     (props           );
-
-    const siteStore = useSiteStore();
     const menuStore = useMenusStore();
     
     const children      = computed(() => {
@@ -45,8 +43,6 @@
 
         for(const aMenu of subMenus){
             theMenu.children
-
-
         }
 
         return countryMap
