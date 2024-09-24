@@ -114,11 +114,12 @@ export async function getSiteDefinedName (ctx) {
     const { apiKey }     = useRuntimeConfig()
     const localizedHost  = getHost(ctx)
     const query          = { jsonapi_include: 1 };
-    const uri            = `${localizedHost}/jsonapi/site/site?api-key=${apiKey}`
+    const uri            = `${localizedHost}/${ctx.locale}/jsonapi/site/site?api-key=${apiKey}`
 
+    consola.warn('getSiteDefinedName', uri)
     const resp = await $fetch(uri,{query})
     const name = resp?.data?.name
-
+    consola.warn('getSiteDefinedName', name)
     return name === '_'? '' : name;
 }
 

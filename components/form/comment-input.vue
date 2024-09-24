@@ -181,9 +181,9 @@ if(commentEditor.value[key.value])
         commentEditor.value[key.value].innerHTML = `<p id="placeholder" class="mb-0 mt-1 fw-lighter  .text-white-50 fs-6">${editorPlaceholder.value}</p>`;
     }
 
-    function onEdit(event){
-        consola.warn(event?.target?.innerHTML)
-    }
+    // function onEdit(event){
+    //     consola.warn(event?.target?.innerHTML)
+    // }
 
     function onSelectEmoji(emoji){
 

@@ -20,12 +20,12 @@ export const useSiteStore = defineStore('site', {
             this.set('locale',                    locale);
             this.set('identifier',                identifier || siteCode);
             this.set('siteCode',                  identifier || siteCode);
-            this.set('defaultLocale',             defaultLocale);
+            this.set('defaultLocale',             defaultLocale ||config?.defaultLocale);
         
             this.set('config', config);
             this.set('logo',   this.getLogoUri);
             this.set('name',   siteName);
-            this.set('redirect', env === 'production'? config.redirect : '');
+            this.set('redirect', env === 'production'? config?.redirect || '' : '');
         },
         getHost(ignoreLocale = false){
     
@@ -56,10 +56,10 @@ export const useSiteStore = defineStore('site', {
     },
     getters:{
         allLocales(){
-            return [...Array.from(new Set([this.defaultLocale, ...this?.config?.locales ] || []))]
+            return [...Array.from(new Set([this?.config?.defaultLocale, ...this?.config?.locales|| [] ] || []))]
         },
         isDefaultLocale(){
-            return this.locale === this.defaultLocale
+            return this.locale === this?.config?.defaultLocale //this.defaultLocale
         },
         getLogoUri(){
             const config     = this.config

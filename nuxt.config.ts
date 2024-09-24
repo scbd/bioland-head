@@ -54,7 +54,7 @@ export default defineNuxtConfig({
     '@nuxtjs/leaflet',
     'nuxt-gravatar',
     'nuxt-emoji-picker',
-    '@vue-final-modal/nuxt',
+    // '@vue-final-modal/nuxt',
     
   ],
 

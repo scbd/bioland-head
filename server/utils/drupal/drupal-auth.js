@@ -23,19 +23,19 @@ export const useDrupalLogin = async (siteCode) => {
 
     const uri  = `https://${siteCode}.${baseHost}/user/login?_format=json`
 
-    saAgent.query({ 'jsonapi_include': 1 });
-
     await saAgent.post(uri)
             .set('Content-Type', 'application/json')
             .send(JSON.stringify({ name, pass }))
-            .redirects(1)
+            .redirects(3)
+
+            saAgent.query({ 'jsonapi_include': 1 });
 
     $http[cacheId] = saAgent
     return $http[cacheId]
   }
   catch(e){
     console.error('DrupalAuth.login: ', e)
-    console.error(e.response)
+    console.error(e.data)
     return { get: (x)=>x }
   }
 }

@@ -2,35 +2,28 @@ export default defineEventHandler(async (event) => {
     try{
         const siteCode   = getRouterParam(event, 'siteCode');
         const l          = getRouterParam(event, 'locale');
-
-        const ctx        =  { siteCode };
-
+        const ctx        = { siteCode };
         const config     = await getSiteConfig(ctx);
         const locale     = isValidLocale(l)? l : config?.defaultLocale;
-    
+
         if(!config?.locales?.includes(locale) && locale !== config?.defaultLocale)
             throw createError({ statusCode: 404, message: `Locale [${locale}] not found in site [${siteCode}] config`, statusMessage:'Not Found' });
-                                
-        const defaultLocale = (await getDefaultLocale({ ...ctx, locale,config }) || {}).locale;
-        const siteName      = await getSiteDefinedName({ ...ctx, locale, config, defaultLocale });
+
+        const siteName = await getSiteDefinedName({ ...ctx, locale, config });
 
         await cleanStorage();
         
-        return  { ...ctx, locale, config, defaultLocale, siteName };
+        return  { ...ctx, locale, config, siteName };
 
         async function cleanStorage(){
             const keys = await useStorage('db').getKeys();
 
-            for(let key of keys){
-                if(key.includes('nitro:handlers:_:undefined')){
+            for(let key of keys)
+                if(key.includes('nitro:handlers:_:undefined'))
                     await useStorage('db').removeItem(key);
-
-                    consola.warn('storage contains undefined key:', key);
-                }
-            }
         }
     }
-    catch(e){
+    catch (e) {
         const   siteCode           = getRouterParam(event, 'siteCode');
         const   locale             = getRouterParam(event, 'locale');
         const   host               = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');

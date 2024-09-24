@@ -1,12 +1,17 @@
 import vClickOutside from "click-outside-vue3";
 import isPlainObject from 'lodash.isplainobject';
+import { createVfm } from 'vue-final-modal';
+
 
 import clone from 'lodash.clonedeep';
 
 export default defineNuxtPlugin({
     name: 'site',
     async setup (nuxtApp){
+        const vfm = createVfm();
+        
         nuxtApp.vueApp.use(vClickOutside);
+        nuxtApp.vueApp.use(vfm);
 
         const runTime = useRuntimeConfig().public;
         const siteStore = useSiteStore(nuxtApp.$pinia);
@@ -29,7 +34,7 @@ export default defineNuxtPlugin({
 
             updateAppConfig(ctx);
 
-            consola.success('i18n:beforeLocaleSwitch', ctx)
+            // consola.success('i18n:beforeLocaleSwitch', ctx)
             useFetch(`/api/menus`,{ params: clone(siteStore.params) })
             .then(({data})=>menuStore.loadAllMenus(data.value));
 

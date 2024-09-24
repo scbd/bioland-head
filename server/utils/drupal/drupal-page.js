@@ -5,13 +5,12 @@ const localizationExceptionPaths = ['/forums/', '/forums', '/topics/'];
 
 export async function getPageData(ctx){
     try{
-    
-        ctx.isLocalizationException   = hasLocalizationException(ctx);
-        const { uuid,  type, bundle } = await getPageIdentifiers(ctx);
-        const { localizedHost }       = ctx;
-        const   query                 = getSearchParams(ctx, type, bundle);
-        const   uri                   = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
+        ctx.isLocalizationException       = hasLocalizationException(ctx);
+        const { uuid,  type, bundle }     = await getPageIdentifiers(ctx);
+        const { localizedHost, locale }   = ctx;
+        const   query                     = getSearchParams(ctx, type, bundle);
+        const   uri                       = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
         const { data } = await $fetch(uri, { query });
 
@@ -21,14 +20,15 @@ export async function getPageData(ctx){
 
         return  await mapData(ctx)(data)
     }catch(e){
-        const { localizedHost }       = ctx;
-        consola.error(e)
+        const { localizedHost } = ctx;
+
+        consola.error(e);
 
         throw createError({ 
             statusCode   : e.statusCode, 
             statusMessage: e.statusMessage,
             message      : `Server.util.drupal-page.getPageData: failed to get page identifiers for site/path: ${localizedHost}${ctx.path}`,
-            data: e
+            data         : e
         });
     }
 
@@ -102,7 +102,7 @@ function getLocalizationFromPath(ctx, path){
 
 async function getPageIdentifiers(ctx){
     try{
-        const { localizedHost, path } = ctx;
+        const { localizedHost, path, host } = ctx;
 
         if(!localizedHost || localizedHost?.includes('undefined')) 
              throw createError({ 
@@ -113,23 +113,16 @@ async function getPageIdentifiers(ctx){
                 fatal:  true
             });
 
-
-        // const pathLocal        = getLocalizationFromPath(ctx, path);
-        // const isOnLocaleChange = pathLocal && (locale !== pathLocal);
-
-        // const isDefaultLocale  = !!((locale === ctx.defaultLocale) || (isOnLocaleChange && (pathLocal ===ctx.defaultLocale)));
-
-        // const uriHost = isLocalizationException || isDefaultLocale ? host : isOnLocaleChange? `${host}/${pathLocal}` :localizedHost;
-
         const cleanPath  = removeLocalizationFromPath(ctx, path);
         const uri        = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanPath||'/')}`;
-        const data       = await $fetch(uri, { mode: 'cors'});
+
+        const data       = await $fetch(uri);
 
         const { uuid, id, type, bundle } = data?.entity || {};
 
         return { uuid, id, type, bundle, pagePath:path, path };
     }catch(e){
-        const { localizedHost, path } = ctx;
+        const { localizedHost, path, host } = ctx;
         consola.error(e);
 
 

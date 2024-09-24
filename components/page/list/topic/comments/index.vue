@@ -97,13 +97,13 @@
     onMounted(() => { 
 
         noCacheKey.value = results.value[r.name];
-        consola.info(clone(results.value));
+        // consola.info(clone(results.value));
         eventBus.on('changePage', ({ noCache } = {})=>{
         results.value = {};
 
         if(noCache) headers.value = { 'No-Cache': noCacheKey.value};
 
-        consola.info(results)
+        // consola.info(results)
         setTimeout(refresh, 250);
 
     }); });

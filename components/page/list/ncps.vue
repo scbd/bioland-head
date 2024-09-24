@@ -36,8 +36,8 @@
                         <span>{{fp.addressCountry}}</span>
                         </div>
                         <div class="d-flex flex-column w-25">
-                            <span v-for="(phone,index) in fp.telephones" :key="index">{{phone}}</span>
-                            <span v-for="(email,index) in fp.emails" :key="index">{{email}}</span>
+                            <span class="text-nowrap small" v-for="(phone,index) in fp.telephones" :key="index">{{phone}} <br></span>
+                            <span class="text-nowrap small" v-for="(email,index) in fp.emails" :key="index">{{email}} <br></span>
                         </div>
                     </div>
 

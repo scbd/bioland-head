@@ -55,8 +55,12 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   
       return data;
     }catch(e){
-      
-        throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}`, fatal:true }) 
+      consola.error(e)
+
+      if(e.statusCode === 404)
+        throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}`, fatal:true })
+  
+      throw createError({ statusCode: e.statusCode, statusMessage: e.statusMessage, fatal:true }) 
     }
 
   }
