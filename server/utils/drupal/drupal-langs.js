@@ -1,6 +1,6 @@
 import * as changeKeys from "change-case/keys";
 
-export const drupalLangs = [ "af", "am", "ar", "ast", "az", "be", "bg", "bn", "bo", "bs", "ca", "cs", "cy", "da", "de", "dz", "el", "en", "eo", "es", "et", "eu", "fa", "fi", "fil", "fo", "fr", "fy", "ga", "gd", "gl", "gsw-berne", "gu", "he", "hi", "hr", "ht", "hu", "hy", "id", "is", "it", "ja", "jv", "ka", "kk", "km", "kn", "ko", "ku", "ky", "lo", "lt", "lv", "mg", "mk", "ml", "mn", "mr", "ms", "my", "ne", "nl", "nb", "nn", "oc", "pa", "pl", "pt-pt", "pt-br", "ro", "ru", "sco", "se", "si", "sk", "sl", "sq", "sr", "sv", "sw", "ta", "ta-lk", "te", "th", "tr", "tyv", "ug", "uk", "ur", "vi", "zh-hans", "zh-hant" ]
+export const drupalLangs = [ "xx","af", "am", "ar", "ast", "az", "be", "bg", "bn", "bo", "bs", "ca", "cs", "cy", "da", "de", "dz", "el", "en", "eo", "es", "et", "eu", "fa", "fi", "fil", "fo", "fr", "fy", "ga", "gd", "gl", "gsw-berne", "gu", "he", "hi", "hr", "ht", "hu", "hy", "id", "is", "it", "ja", "jv", "ka", "kk", "km", "kn", "ko", "ku", "ky", "lo", "lt", "lv", "mg", "mk", "ml", "mn", "mr", "ms", "my", "ne", "nl", "nb", "nn", "oc", "pa", "pl", "pt-pt", "pt-br", "ro", "ru", "sco", "se", "si", "sk", "sl", "sq", "sr", "sv", "sw", "ta", "ta-lk", "te", "th", "tr", "tyv", "ug", "uk", "ur", "vi", "zh-hans", "zh-hant" ]
 export const rtl         = [ "am", "ar","az", "he", "fa", "ur", 'mv', 'ku' ]
 
 export const getInstalledLanguages = async ({ localizedHost, host, siteCode }) => {
@@ -38,13 +38,14 @@ export const normalizeLanguageData = (data=[]) => {
 export const getLanguage = (locale) => {
     const { locales } = useRuntimeConfig().public;
 
-    return locales.find((language) => {
+    return [...locales,{code:'xx'}].find((language) => {
         return language.code.startsWith(locale.substring(0, 2));
     });
 }
 
 export function mapDrupalLocaleToLocale({ drupalInternalId }){
     if(drupalInternalId === 'zh-hans') return 'zh'
+     if(drupalInternalId === 'xx-lolspeak') return 'xx'
 
     return drupalInternalId
 }
