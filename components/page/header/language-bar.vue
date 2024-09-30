@@ -8,14 +8,14 @@
                 <div v-if="!(limitedMenus.length > 1) && pageLoaded" class="col-4 col-sm-8 d-flex justify-content-end">
                     <ul class="nav" >
                         <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
-                            <NuxtLink class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}">&nbsp;</NuxtLink>
+                            <NuxtLink v-if="aMenu.code !== 'xx'" class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}">&nbsp;</NuxtLink>
                         </li>
                     </ul>
                 </div>
                 <div v-if="limitedMenus.length > 1 && pageLoaded " class="col-4 col-sm-8 d-flex justify-content-end">
                     <ul class="nav" >
                         <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
-                            <NuxtLink class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}">{{aMenu.nativeName}}</NuxtLink>
+                            <NuxtLink v-if="aMenu.code !== 'xx'" class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}">{{aMenu.nativeName}}</NuxtLink>
                         </li>
 
                         <li v-if="otherMenus?.length" @click.stop.prevent="toggle" class="nav-item dropdown d-block " v-click-outside="close">
@@ -50,21 +50,19 @@
 
 
         const isDevSite = computed(()=> !siteStore?.config?.published);
-
-        const { languages: menus } = storeToRefs(menuStore);
+        const menus     = computed(()=> menuStore.languages.filter(aMenu => aMenu.code !== 'xx'));
 
         const brandBarStyle = reactive({
             background     : siteStore.theme.backGround.secondary,
             'border-bottom': `.25rem solid ${siteStore.primaryColor}`
         });
 
-
         limitedMenus.value = menus?.value?.length? cloneDeep(menus.value).splice(0, limit.value) : [];
-        
+
 
         if(menus?.value && menus.value?.length > limit.value)
             otherMenus.value = cloneDeep(menus.value).splice(limit.value, menus.value.length-limit.value);
-        
+
         const pageLoaded = computed(()=> pageStore?.page?.aliases && Object.keys(pageStore.page.aliases).length );
 
         function toggle(e){

@@ -1,11 +1,11 @@
 <template>
     <p  v-if="!showThumbs || isFinalLink && !showCards " class="text-wrap">
-        <NuxtLink  class="child-link" :class="menu.class"   :to="menu.href" :title="title || menu.title" :external="isExternal" :target="target">
+        <NuxtLink  class="child-link" :class="menu.class"   :to="localePath(menu.href)" :title="title || menu.title" :external="isExternal" :target="target">
             {{title || menu.title}}<span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<Icon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
         </NuxtLink>
     </p>
     <section v-if="!showCards">
-        <NuxtLink  v-if="showThumbs && !isFinalLink " class="child-link" :class="menu.class"   :to="menu.href" :title="menu.title" :external="isExternal" :target="target">
+        <NuxtLink  v-if="showThumbs && !isFinalLink " class="child-link" :class="menu.class"   :to="localePath(menu.href)" :title="menu.title" :external="isExternal" :target="target">
             <div class="d-flex mb-2">
                 <div class="col-3 align-self-center">
                     <NuxtImg :src="menu.thumb || '/images/no-image.png'" class="img-fluid" :alt="title || menu.title" width="64" height="64"/>
@@ -32,20 +32,18 @@
     </section>
 </template>
 
-<script>
+<script setup>
     import { DateTime } from 'luxon';
 
-    export default {
-        name: 'PageHeaderMegaMenuLink',
-        props:{ menu: Object, showThumbs: Boolean, showCards: Boolean, title: String, type: String},
-        methods: { dateFormat },
-        setup
-    }
-
-    function setup(props) {
-        
+        const   localePath  = useLocalePath();
+        const   props       = defineProps({ 
+                                            menu: Object, 
+                                            showThumbs: Boolean, 
+                                            showCards: Boolean, 
+                                            title: String, 
+                                            type: String
+                                        });
         const { menu, showThumbs, type } = toRefs(props);
-        const { locale           } = useI18n();
 
         const   isFinalLink  = computed(()=> menu?.value?.class?.includes('main-nav-final-link') || menu?.value?.class?.includes('mm-main-nav-final-link'));
         const   isSpecial    = computed(()=> menu?.value?.class?.includes('special'));
@@ -60,8 +58,6 @@
         if(!menu?.value?.thumb || menu?.value?.thumb === '/images/no-image.png')
             menu.value.thumb= imageGenStore.getImage(menu.value).src
 
-        return {  locale, menu, isExternal, target, isSpecial, isFinalLink, showThumbs }
-    }
 
     function dateFormat({ startDate, created, changed }){
         const date = startDate || created || changed;

@@ -21,6 +21,7 @@
 <script setup>
     import   clone           from 'lodash.clonedeep';
     
+    const   localePath         = useLocalePath();
     const   props              = defineProps({ type: String, menu: Object });
     const { menu: passedMenu } = toRefs(props);
     const   menuStore          = useMenusStore();
@@ -58,22 +59,18 @@
 
         const countries = siteStore.countries;
         const aMenu     = clone(unref(passedMenu));
+        const children  = aMenu?.children?.filter(aMenu => !isFinalLink(aMenu)) || [];
 
-        const children = aMenu?.children?.filter(aMenu => !isFinalLink(aMenu)) || [];
-
-        aMenu.children = [ ...children ];
-
+        aMenu.children  = [ ...children ];
         aMenu.dataMap = {};
-
 
         if(!aMenu.href || aMenu.href === '#'){
             const contentType = menuStore.getContentTypeByName(getContentType());
 
             if(!contentType) throw new Error(`No content type found in menu item: ${getContentType()}`);
 
-            aMenu.href = `${contentType.slug}`;
+            aMenu.href = localePath(`${contentType.slug}`);
         }
-
 
         const horizontalCardMax = siteStore?.config?.runTime?.theme?.megaMenu?.horizontalCardMax
 
