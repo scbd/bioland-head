@@ -23,7 +23,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   // });
 
   updateAppConfig({ path })
-
+  // isValidLocalePrefix();
   await getMe();
 
   const [ pData, fetch ]= await Promise.all([getPage(path), getMenus()])
@@ -36,12 +36,12 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   pStore.initialize(pData)
 
-
+ 
   if(menuData?.value)
     menuStore.loadAllMenus(menuData.value);
 
   async function getPage(passedPath){ 
-
+    
     const   path                  = ref(passedPath.endsWith('/topics')? passedPath.replace('/topics', '') : passedPath);
     const { multiSiteCode }       = useRuntimeConfig().public;
     const { identifier,  locale } = siteStore;
@@ -64,6 +64,20 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     }
 
   }
+
+  function isValidLocalePrefix(){
+
+    
+    const { locales} = useRuntimeConfig().public;
+    const   preFixes = locales.map(({ code })=> code);
+
+    const defaultLocale = siteStore.defaultLocale || 'en'
+    const isValid = preFixes.includes(to.path.split('/')[1])
+
+    if(!isValid) consola.warn('isValidLocalePrefix', to.path, defaultLocale)
+    if(!isValid) return navigateTo(`/${defaultLocale}${to.path}`)
+}
+
   function isLocaleChange(){
     const { locale } = nuxtApp.$i18n;
 

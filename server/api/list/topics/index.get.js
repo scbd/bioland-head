@@ -8,16 +8,23 @@ export default cachedEventHandler(async (event) => {
 
         return useDrupalTopicMenus({...ctx,...query});
     }
-    catch(e){
-        consola.error(e);
+    catch (e) {
+
+        const { siteCode, locale } = getContext(event);
+        const   host               = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
+        const   requestUrl         = new URL(getRequestURL(event));
+        const { pathname }         = requestUrl;
+        const { baseHost, env }    = useRuntimeConfig().public;
+
+        console.error(`${host}/server/api/list/topics/index.get.js`, e);
+
         throw createError({
-            statusCode: 500,
-            statusMessage: `/api/list/topics: Failed to list forums`,
+            statusCode    : e.statusCode,
+            statusMessage : e.statusMessage,
+            message       : `${host}/server/api/list/topics/index.get.js`,
+            data          : { siteCode, locale, host, baseHost, env, pathname, requestUrl, errorData:e.data },
+            fatal         : true
         }); 
     }
     
-},{
-    maxAge: 1,
-    getKey,
-    base:'db'
-})
+},forumsCache)

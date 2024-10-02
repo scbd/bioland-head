@@ -1,43 +1,59 @@
 import { defineEventHandler } from 'h3';
 export default cachedEventHandler(async (event) => {
-    try{
-        // const { context } = parseCookies(event)
+        try{
+            // const { context } = parseCookies(event)
+            const { me:meString }= parseCookies(event, 'me') 
 
-        const query       = getQuery(event)
+            const me = meString? JSON.parse(decodeURIComponent(meString)) : undefined;
 
-        const context = getContext(event);
+            const query       = getQuery(event)
 
-        const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(context || query || {}))};` };
+            const context = getContext(event);
 
-        const { siteCode, localizedHost } = {...context, ...query}
+            const headers = { Cookie: me?`me=${me};context=${encodeURIComponent(JSON.stringify(context || query || {}))};` : `context=${encodeURIComponent(JSON.stringify(context || query || {}))};` };
 
-        if(!siteCode || localizedHost.includes('undefined')) return createError({ statusCode: 404, statusMessage: 'Server.drupal.user.getToken: no context derived' })
- 
-        const [absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes,  forums , languages ] = (await Promise.allSettled([
-            $fetch('/api/menus/absch',         { query, method:'get', headers }),
-            $fetch('/api/menus/bch',           { query, method:'get', headers }),
-            $fetch('/api/menus/drupal',        { query, method:'get', headers }),
-            $fetch('/api/menus/nr',            { query, method:'get', headers }),
-            $fetch('/api/menus/nr6',           { query, method:'get', headers }),
-            $fetch('/api/menus/nbsap',         { query, method:'get', headers }),
-            $fetch('/api/menus/focal-points',  { query, method:'get', headers }),
-            $fetch('/api/menus/content-types', { query, method:'get', headers }),
-            $fetch('/api/menus/topics',        { query, method:'get', headers }),
-            $fetch('/api/menus/languages',     { query, method:'get', headers })
-        ])).map(({ value }) => value || []);
+            const { siteCode, localizedHost } = {...context, ...query}
 
-        return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, forums, languages, menus  }
-    }
-    catch(e){
-        console.error('/api/menus--------------------------',e)
-        throw createError({
-            statusCode: 500,
-            statusMessage: '/api/menus/index: Failed to  query the drupal menus',
-        }) 
-    }
+            if(!siteCode || localizedHost.includes('undefined')) return createError({ statusCode: 404, statusMessage: 'Server.drupal.user.getToken: no context derived' })
     
-},{
-    maxAge: 1,
-    getKey,
-    base:'db'
-})
+            const allRequests = (await Promise.allSettled([
+                $fetch('/api/menus/absch',         { query, method:'get', headers }),
+                $fetch('/api/menus/bch',           { query, method:'get', headers }),
+                $fetch('/api/menus/drupal',        { query, method:'get', headers }),
+                $fetch('/api/menus/nr',            { query, method:'get', headers }),
+                $fetch('/api/menus/nr6',           { query, method:'get', headers }),
+                $fetch('/api/menus/nbsap',         { query, method:'get', headers }),
+                $fetch('/api/menus/focal-points',  { query, method:'get', headers }),
+                $fetch('/api/menus/content-types', { query, method:'get', headers }),
+                $fetch('/api/menus/topics',        { query, method:'get', headers }),
+                $fetch('/api/menus/languages',     { query, method:'get', headers })
+            ]))
+            const rejected = allRequests.filter(({ status }) => status === 'rejected');
+
+            for (const { reason } of rejected)
+                consola.error('menus/index.js', reason);
+
+            const [absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes,  forums , languages ] = allRequests.map(({ value }) => value || []);
+
+            return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, forums, languages, menus  }
+        }
+        catch (e) {
+
+            const { siteCode, locale } = getContext(event);
+            const   host               = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
+            const   requestUrl         = new URL(getRequestURL(event));
+            const { pathname }         = requestUrl;
+            const { baseHost, env }    = useRuntimeConfig().public;
+
+            console.error(`${host}/server/api/menus/index.js`, e);
+
+            throw createError({
+                statusCode    : e.statusCode,
+                statusMessage : e.statusMessage,
+                message       : `${host}/server/api/menus/index.js`,
+                data          : { siteCode, locale, host, baseHost, env, pathname, requestUrl, errorData:e.data }
+            }); 
+        }
+    },
+    menusCache
+)

@@ -1,26 +1,34 @@
+import { menusCache } from "~/server/utils/cache";
 
 
 export default cachedEventHandler(async (event) => {
-    try{
-        const context  = getContext(event);
-        const query    = getQueryString(context);
-        const response = await $indexFetch(query);
+        try{
+            const context  = getContext(event);
+            const query    = getQueryString(context);
+            const response = await $indexFetch(query);
 
-        return mapByGov(response,context);
-    }
-    catch(e){
-        console.log(e)
-        throw createError({
-            statusCode: 500,
-            statusMessage: 'Failed to  query the chm index api for national reports',
-        }) 
-    }
-    
-},{
-    maxAge: 60 * 60 * 24,
-    getKey,
-    base:'db'
-})
+            return mapByGov(response,context);
+        }
+        catch (e) {
+
+            const { siteCode, locale } = getContext(event);
+            const   host               = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
+            const   requestUrl         = new URL(getRequestURL(event));
+            const { pathname }         = requestUrl;
+            const { baseHost, env }    = useRuntimeConfig().public;
+
+            console.error(`${host}/server/api/menus/nr.js`, e);
+
+            throw createError({
+                statusCode    : e.statusCode,
+                statusMessage : e.statusMessage,
+                message       : `${host}/server/api/menus/nr.js`,
+                data          : { siteCode, locale, host, baseHost, env, pathname, requestUrl, errorData:e.data }
+            }); 
+        }
+    },
+    menusCache
+)
 
 function getQueryString({ countries, country, locale }={}){
     

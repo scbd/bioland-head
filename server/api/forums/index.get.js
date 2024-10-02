@@ -1,24 +1,30 @@
 
 
 export default cachedEventHandler(async (event) => {
-    try{
+        try{
 
-        const query             = getQuery      (event);
-        const ctx               = getContext    (event);
+            const query             = getQuery      (event);
+            const ctx               = getContext    (event);
 
+            return useDrupalForums({...ctx,...query});
+        }
+        catch (e) {
+            const { siteCode, locale } = getContext(event);
+            const   host               = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
+            const   requestUrl         = new URL(getRequestURL(event));
+            const { pathname }         = requestUrl;
+            const { baseHost, env }    = useRuntimeConfig().public;
 
-        return useDrupalForums({...ctx,...query});
-    }
-    catch(e){
-        consola.error(e);
-        throw createError({
-            statusCode: 500,
-            statusMessage: `/api/forums: Failed to list forums`,
-        }); 
-    }
-    
-},{
-    maxAge: 1,
-    getKey,
-    base:'db'
-})
+            console.error(`${host}/server/api/forums/index.get.js`, e);
+
+            throw createError({
+                statusCode    : e.statusCode,
+                statusMessage : e.statusMessage,
+                message       : `${host}/server/api/forums/index.get.js`,
+                data          : { siteCode, locale, host, baseHost, env, pathname, requestUrl, errorData:e.data },
+                fatal         : true
+            }); 
+        }
+    },
+    forumsCache
+)

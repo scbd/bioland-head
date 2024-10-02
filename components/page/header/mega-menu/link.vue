@@ -20,7 +20,7 @@
     </section>
 
     <section v-if="showCards && !isFinalLink">
-        <NuxtLink  class="child-link" :class="menu.class"   :to="menu.href" :title="menu.title" :external="isExternal" :target="target">
+        <NuxtLink  class="child-link" :class="menu.class"   :to="localePath(menu.href)" :title="menu.title" :external="isExternal" :target="target">
             <div class="card" style="max-width: 160px;">
                 <NuxtImg :src="menu.thumb" class="img-fluid" :alt="menu.title" width="160" height="100"/>
                 <div class="card-body">
@@ -35,16 +35,19 @@
 <script setup>
     import { DateTime } from 'luxon';
 
-        const   localePath  = useLocalePath();
+       
         const   props       = defineProps({ 
                                             menu: Object, 
                                             showThumbs: Boolean, 
                                             showCards: Boolean, 
                                             title: String, 
-                                            type: String
+                                            type: String, 
+                                            localize: { type: Boolean, default: true }
                                         });
-        const { menu, showThumbs, type } = toRefs(props);
+        const { menu, showThumbs, type, localize } = toRefs(props);
 
+        const localizePath = useLocalePath();
+        const   localePath  = (to)=> localize.value? localizePath(to): to;
         const   isFinalLink  = computed(()=> menu?.value?.class?.includes('main-nav-final-link') || menu?.value?.class?.includes('mm-main-nav-final-link'));
         const   isSpecial    = computed(()=> menu?.value?.class?.includes('special'));
         const   isExternal   = computed(()=> menu?.value?.href?.includes('http'));

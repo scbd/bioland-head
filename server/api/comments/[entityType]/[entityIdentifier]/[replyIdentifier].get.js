@@ -1,25 +1,25 @@
 
 export default cachedEventHandler(async (event) => {
     try{
-        const ctx        = getContext    (event);
-
+        const ctx = getContext(event);
 
         return getComments(ctx);
     }
     catch(e){
-        consola.error(e);
-        consola.error(e.response);
+        const host             = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
+        const entityType       = getRouterParam(event, 'entityType');
+        const entityIdentifier = getRouterParam(event, 'entityIdentifier');
+        const replyIdentifier  = getRouterParam(event, 'replyIdentifier');
+
+        console.error(`${host}/server/api/comments/[${entityType}]/[${entityIdentifier}]/[${replyIdentifier}].get.js`, e);
+
         throw createError({
-            statusCode: 500,
-            statusMessage: `/api/comments/ Failed to list reply comments`,
+            statusCode: e.statusCode,
+            statusMessage: e.statusMessage,
+            message:`${host}/server/api/comments/[${entityType}]/[${entityIdentifier}]/[${replyIdentifier}].get.js`+e.message,
+            data: e.data,
         }); 
     }
-    
-},{
-    maxAge: 1,
-    getKey,
-    base:'db',
-    varies:['host', 'x-forwarded-host'],
-    shouldBypassCache,
-    shouldInvalidateCache
-})
+},
+    commentCache
+)

@@ -105,7 +105,7 @@ export default defineNuxtConfig({
 
   delayHydration: {
     mode: 'init',
-    debug: !['prod','production'].includes(process.env.ENV)
+   // debug: !['prod','production'].includes(process.env.ENV)
   },
 
   image: {
@@ -123,16 +123,26 @@ export default defineNuxtConfig({
 
   nitro: {
     logLevel: 4,
-
-    // devProxy: {
-    //   '/sites/**': {
-    //       target: 'https://mseed.bl2.cbddev.xyz',
-    //       changeOrigin: true,
-    //       prependPath: true
-    //   },
-    // },
-    devStorage: { db: { driver: 'fs', base: './.nuxt/data/db' } },
-    storage: { db: { driver: 'fs', base: './cache/db' } }
+    devStorage: { 
+      db       : { driver: 'fs', base: './.nuxt/data/db' },
+      comments : { driver: 'fs', base: './.nuxt/data/comments' },
+      pages    : { driver: 'fs', base: './.nuxt/data/pages' },
+      context  : { driver: 'fs', base: './.nuxt/data/context' },
+      lists    : { driver: 'fs', base: './.nuxt/data/lists' },
+      forums   : { driver: 'fs', base: './.nuxt/data/forums' },
+      external : { driver: 'fs', base: './.nuxt/data/external' },
+      menus : { driver: 'fs', base: './.nuxt/data/menus' },
+    },
+    storage: { 
+      db       : { driver: 'fs', base: './cache/db' },
+      comments : { driver: 'fs', base: './cache/comments' },
+      pages    : { driver: 'fs', base: './cache/pages' },
+      context  : { driver: 'fs', base: './cache/context' },
+      lists    : { driver: 'fs', base: './cache/lists' },
+      forums   : { driver: 'fs', base: './cache/forums' },
+      external : { driver: 'fs', base: './cache/external' },
+      menus : { driver: 'fs', base: './cache/menus' },
+    }
   },
 
   experimental: {

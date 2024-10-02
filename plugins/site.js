@@ -42,18 +42,23 @@ export default defineNuxtPlugin({
 
         async function getSiteContext(paddedLocale = locale){
             try{
+                const locale = sanitizeLocale(unref(paddedLocale))
                 const id         = getBiolandSiteIdentifier();
-                const uri        = `/api/context/${id}/${unref(paddedLocale)}`;
+                const uri        = `/api/context/${id}/${unref(locale)}`;
                 const { data }   = await useFetch(uri);
                 const i18nStrategy = runTime?.i18n?.strategy || 'prefix';
+                const runTimePublic = clone(rtPublic);
 
-                siteStore.initialize({ ...rtPublic,i18nStrategy,...(data?.value|| {}), locale:unref(paddedLocale) }) ;
+                delete(runTimePublic.locales);
+                delete(runTimePublic.i18n);
+
+                siteStore.initialize({ ...runTimePublic,i18nStrategy,...(data?.value|| {}), locale}) ;
 
                 ensureContext(siteStore.params);
 
                 updateAppConfig(siteStore.params);
 
-                return { ...rtPublic,i18nStrategy, ...data.value, locale:unref(paddedLocale)};
+                return { ...runTimePublic, i18nStrategy, ...data.value, locale};
             }catch(e){
                 const id = getBiolandSiteIdentifier ();
 
@@ -67,6 +72,19 @@ export default defineNuxtPlugin({
                     fatal:true
                 });
             }
+        }
+
+        function sanitizeLocale(locale, defaultLocale = 'en'){
+
+        
+            const { locales} = useRuntimeConfig().public;
+            const   preFixes = locales.map(({ code })=> code);
+        
+            const isValid = preFixes.includes(locale)
+        
+            if(!isValid) return defaultLocale
+
+            return locale;
         }
 
         function getBiolandSiteIdentifier () {

@@ -77,7 +77,6 @@
 
             navigateTo(`${siteStore.host}/admin/structure/menu/manage/${menuName}`,{ external: true, open:{ target: '_blank'} });
 
-            console.log('edit menu');
         }
 
 

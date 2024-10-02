@@ -209,11 +209,16 @@ export const usePageStore = defineStore('page', {
             const route         = useRoute();
             const { defaultLocale, siteCode, locale } = useSiteStore()
 
-            const migratedObject =  parseJson(this.page?.fieldMigratedFromLink);
+            const migratedObject =  parseJson(this.page?.fieldMigrated);
 
-            if(!migratedObject?.alias) return `https://${siteCode}.chm-cbd.net/${removeDefaultLocal(route.fullPath, defaultLocale)}`;
+            if(!migratedObject) return '';
 
-            return `https://${siteCode}.chm-cbd.net/${removeDefaultLocal(migratedObject.alias[locale],defaultLocale)}`;
+
+            return `https://${siteCode}.chm-cbd.net/node/${migratedObject?.drupal_internal__nid}`;        
+
+            // if(!migratedObject?.alias) return `https://${siteCode}.chm-cbd.net/${removeDefaultLocal(route.fullPath, defaultLocale)}`;
+
+            // return `https://${siteCode}.chm-cbd.net/${removeDefaultLocal(migratedObject.alias[locale],defaultLocale)}`;
         },
     }
 })

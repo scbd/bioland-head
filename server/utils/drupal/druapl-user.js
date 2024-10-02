@@ -6,16 +6,18 @@ export async function getUser(event, force = false) {
 
         const me = meCookieString? JSON.parse(decodeURIComponent(meCookieString)) : undefined;
 
-        if(!force && me && new Date(me.expires) > new Date()) return me;
+        if(!force && me ) return me;
 
-        const { localizedHost, siteCode } = getContext(event);
+        const { localizedHost, siteCode, locale , locales, defaultLocale} = getContext(event);
 
-        if(!siteCode) return anonUser;
+        const { pathname } = new URL(getRequestURL(event))
+
+        if(!siteCode ||  !isValidLocalePrefix({defaultLocale, locales, locale})) return anonUser;
 
         const uri           = `${localizedHost}/jsonapi`;
         const method        = 'get';
         const headers       = { 'Content-Type': 'application/json', Cookie: getHeader(event, 'Cookie') };//getHeader(event, 'Cookie')
-
+   
         const {  meta:m } = await $fetch(uri, { method, headers });
 
         if(!m?.links?.me) return anonUser
@@ -33,7 +35,10 @@ export async function getUser(event, force = false) {
         return anonUser;
     }   
 };
+function isValidLocalePrefix({defaultLocale, locales, locale}){
 
+    return locales.includes(locale) || locale === defaultLocale;
+}
 export async function getToken(event) {
     const { me:meCookieString } = parseCookies(event, 'me') || {};
 

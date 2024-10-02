@@ -16,13 +16,14 @@
                         path:String,
                                     id: String,
                                     drupalInternalId: Number,
-                                    crumbs: [String, Array]
+                                    crumbs: [String, Array],
+                                    localize: { type: Boolean, default: false },
                                 });
-    const { href, title, target:targets, path, hierarchy, children, machineName,  id, drupalInternalId, crumbs   } = toRefs(props);
+    const { href, title, target:targets, path, hierarchy, children, machineName,  id, drupalInternalId, crumbs , localize  } = toRefs(props);
 
 
 
-    const   localeP     = useLocalePath();
+    const   localeP     = (path)=> localize.value? useLocalePath(path): path;
     // const { title, href, target:targets } = toRefs(props);
 
     const targetValue = targets;

@@ -17,41 +17,39 @@ export default defineEventHandler(async (event) => {
     try{
 
         const { entityIdentifier, entityType, replyIdentifier, replyType, comment, localeChosen } = await readBody(event);
-        const   context                             = await getContext (event);
 
-const resp = await postComment()
-        return resp//{ identifier, type, replyIdentifier, comment } //resp////resp//{ identifier, type, replyIdentifier, comment,  token , context } 
+        const context = await getContext (event);
+        const resp    = await postComment();
+
+        return resp;
 
 
-
-
-        
         async function postComment(){
             const { locale: localeCtx } = context;
-            const locale = localeChosen || localeCtx;
-            const uri           = `${context.host}/${locale}${typeMap[entityType]}`;//`${context.localizedHost}${typeMap[type]}`
-            const method        = 'post';
+            const   locale              = localeChosen || localeCtx;
+            const   uri                 = `${context.host}/${locale}${typeMap[entityType]}`;
+            const   method              = 'post';
 
 
-            const { headers }      = event?.context || {}//{ 'Content-Type': 'application/vnd.api+json', 'X-CSRF-Token':token, Cookie: getHeader(event, 'Cookie')}; //,Cookie: getHeader(event, 'Cookie')
-            const body          = getCommentTemplate({ entityIdentifier, entityType, replyIdentifier, replyType, comment })
+            const { headers }   = event?.context || {};
+            const body          = getCommentTemplate({ entityIdentifier, entityType, replyIdentifier, replyType, comment });
 
 
             return  $fetch(uri, { method, headers, body });
         }
     }
     catch(e){
-        // console.error(e);
-        // console.error(e.statusCode);
-        // console.error(e.statusMessage);
-        // console.error(e.data.errors);
+        const host = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
+
+        console.error(`${host}/server/api/comments/index.post`, e);
+
         throw createError({
             statusCode: e.statusCode,
             statusMessage: e.statusMessage,
+            message:`${host}/server/api/comments/index.post`+e.message,
             data: e.data,
         }); 
     }
-    
 })
 
 function getCommentTemplate({ entityIdentifier, entityType, replyIdentifier, replyType, comment,}){

@@ -4,40 +4,36 @@ const focalPointTypes = [ 'CBD-FP1', 'CHM-FP',   'ABS-FP', 'BCH-FP', 'CPB-FP1' ]
 const focalPointAll = [ 'CBD-FP1',  'CBD-FP2', 'CPB-FP1', 'ABS-FP', 'CHM-FP', 'BCH-FP', 'CPB-A17-FP', 'RM-FP', 'PA-FP', 'TKBD-FP', 'SBSTTA-FP', 'GTI-FP', 'GSPC-FP' ];
 
 export default cachedEventHandler(async (event) => {
-    try{
-        const context    = getContext(event);
-        const query      = getQueryString(context);
+        try{
+            const context    = getContext(event);
+            const query      = getQueryString(context);
+            const response   = await $indexFetch(query);
+            const countryMap = mapByCountry(response, context);
 
+            return countryMap
+        }
+        catch (e) {
 
-        const response   = await $indexFetch(query);
+            const { siteCode, locale } = getContext(event);
+            const   host               = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
+            const   requestUrl         = new URL(getRequestURL(event));
+            const { pathname }         = requestUrl;
+            const { baseHost, env }    = useRuntimeConfig().public;
 
+            console.error(`${host}/server/api/list/contact-points.js`, e);
 
-    //  return response 
-
-        const countryMap = mapByCountry(response, context);
-
-       return countryMap
-
-
-
-
-    }
-    catch(e){
-        console.error(e);
-        throw createError({
-            statusCode: 500,
-            statusMessage: 'Failed to  query contact points',
-        }); 
-    }
+            throw createError({
+                statusCode    : e.statusCode,
+                statusMessage : e.statusMessage,
+                message       : `${host}/server/api/list/contact-points.js`,
+                data          : { siteCode, locale, host, baseHost, env, pathname, requestUrl, errorData:e.data },
+                fatal         : true
+            }); 
+        }
     
-},{
-    maxAge: 1,
-    getKey,
-    base:'db',
-    varies:['host', 'x-forwarded-host'],
-    shouldBypassCache,
-    shouldInvalidateCache
-})
+    },
+    externalCache
+)
 
 function mapByCountry({ docs }, ctx){
 

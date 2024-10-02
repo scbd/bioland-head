@@ -28,7 +28,7 @@ export default defineNuxtPlugin({
 
             if(path !== '/') return;
 
-            navigateTo({ path: `/${siteStore.defaultLocale}`, query });
+            return navigateTo({ path: `/${siteStore.defaultLocale}`, query });
         }
     },
     hooks: {

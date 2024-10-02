@@ -19,7 +19,7 @@
             <span v-if="count" :style="badgePrimaryStyle" class="badge rounded-pill  float-end" >{{count}}</span>
         </span>
         <span v-if="showMigratedLInk" class="align-self-center" id="breadCrumbControls">
-            <NuxtLink  class="btn btn-outline-secondary btn-sm " :to="pageStore.migratedFromLink" external>
+            <NuxtLink  class="btn btn-outline-secondary btn-sm " :to="pageStore.migratedFromLink" target="_blank" :external="true">
                 {{t('Bioland 1')}}  <Icon name="external-link" :size="1.5"/>
             </NuxtLink>
         </span>

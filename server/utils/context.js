@@ -2,30 +2,28 @@ import isString from 'lodash.isstring'
 
 export const parseQuery = (event) => {
     const { locales:localesArray, country, siteCode, identifier, locale, defaultLocale, countries: countriesArray } = getQuery(event);
-    
-
 
     const countries      = (Array.isArray(countriesArray) && countriesArray?.length? countriesArray : country? [country] : []).filter(x=>x && x !== 'undefined');
     const locales        = (Array.isArray(localesArray)? localesArray : [localesArray]).filter(x=>x && x !== 'undefined');;
 
-    // const defaultLocale      =  !isPlainObject(defaultLocaleRaw)? JSON.parse(defaultLocaleRaw || {}).locale : defaultLocaleRaw.locale;
     const { baseHost, env, multiSiteCode }  = useRuntimeConfig().public;
-    const pathPreFix         = getPathPrefix(locale, defaultLocale)
+
+    const localeClean = sanitizeLocale(locale, defaultLocale)
+    const pathPreFix         = getPathPrefix(localeClean, defaultLocale)
     const hasRedirect        = env === 'production' && redirect;
     const host               = hasRedirect? `https://${redirect}` : `https://${siteCode}.${baseHost}`;
     const localizedHost      = `${host}${pathPreFix}`;
-    const indexLocal         = getIndexLocale(locale);
-    const key                = `context-${env}-${multiSiteCode}-${siteCode}-${locale}`;
+    const indexLocal         = getIndexLocale(localeClean);
+    const key                = `context-${env}-${multiSiteCode}-${siteCode}-${localeClean}`;
+    const ctx                = removeNullProps({ key, env, multiSiteCode, locales, host, localizedHost, country, countries, siteCode, identifier, locale:localeClean, defaultLocale, indexLocal });
 
-    const ctx = removeNullProps({ key, env, multiSiteCode, locales, host, localizedHost, country, countries, siteCode, identifier, locale, defaultLocale, indexLocal })
+    if(!ctx.siteCode) return {};
 
-    if(!ctx.siteCode) return {}//createError({ statusCode: 500, statusMessage: 'SiteCode not found' })
+    useStorage('db').setItem(key, ctx);
 
-
-    useStorage('db').setItem(key, ctx)
-
-    return ctx//removeNullProps({ multiSiteCode, locales, host, localizedHost, baseHost, country, countries,siteCode, identifier, locale, defaultLocale, pathPreFix, indexLocal  })
+    return ctx;
 }
+
 
 export const getContext = (event, key) => {
     const { context:cookieContext } = parseCookies(event)
@@ -44,16 +42,17 @@ export function parseContext (context) {
     
     const   countries       = (Array.isArray(countriesArray) && countriesArray?.length? [country,...countriesArray] : country? [country] : []).filter(x=>x && x !== 'undefined');
 
+    const localeClean = sanitizeLocale(locale, defaultLocale)
     // const   defaultLocale   =  defaultLocale
     const { baseHost, env, multiSiteCode}  = useRuntimeConfig().public;
-    const   pathPreFix      = getPathPrefix(locale, defaultLocale)
+    const   pathPreFix      = getPathPrefix(localeClean , defaultLocale)
     const   hasRedirect     = env === 'production' && redirect;
     const   host            = hasRedirect? `https://${redirect}` : `https://${siteCode}.${baseHost}`;
     const   localizedHost   = lh? lh : `${host}${pathPreFix}`;
-    const   indexLocale     = getIndexLocale(locale);
-    const key                = `context-${env}-${multiSiteCode}-${siteCode}-${locale}`;
+    const   indexLocale     = getIndexLocale(localeClean );
+    const key                = `context-${env}-${multiSiteCode}-${siteCode}-${localeClean }`;
 
-    const ctxClean = removeNullProps({ key, env, multiSiteCode, locales, host, localizedHost, country, countries, siteCode, identifier, locale, defaultLocale, indexLocal:indexLocale, indexLocale, path })
+    const ctxClean = removeNullProps({ key, env, multiSiteCode, locales, host, localizedHost, country, countries, siteCode, identifier, locale:localeClean,   defaultLocale, indexLocal:indexLocale, indexLocale, path })
 
     if(!ctxClean.siteCode) return {}
 
@@ -61,7 +60,18 @@ export function parseContext (context) {
 
     return ctxClean //removeNullProps({key, multiSiteCode, locales,  host, localizedHost, country,countries, siteCode, identifier, locale, defaultLocale, indexLocal:indexLocale, indexLocale, path })
 }
+function sanitizeLocale(locale, defaultLocale = 'en'){
 
+        
+    const { locales} = useRuntimeConfig().public;
+    const   preFixes = locales.map(({ code })=> code);
+
+    const isValid = preFixes.includes(locale)
+
+    if(!isValid) return defaultLocale
+
+    return locale;
+}
 export async function getSiteConfig({  siteCode }){
 
     try{
@@ -87,6 +97,6 @@ export async function getSiteConfig({  siteCode }){
 function getPathPrefix(locale, defaultLocale){
     if(!locale || !defaultLocale) return '';
 
-    return locale === 'und' || locale === defaultLocale  ? `/${defaultLocale}` : '/'+ drupalizeLocale(locale);
+    return locale === 'und' || locale === defaultLocale  ? `/${defaultLocale}` : '/'+ sanitizeLocale(locale, defaultLocale);
 }
 
