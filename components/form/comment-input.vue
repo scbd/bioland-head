@@ -148,8 +148,8 @@
         if(commentEditor?.value[key.value]?.innerHTML?.includes('id="placeholder" class='))
             commentEditor.value[key.value].innerHTML = '';
 
-if(commentEditor.value[key.value])
-        textCursorHelper.goToEnd(commentEditor.value[key.value]);
+        if(commentEditor.value[key.value])
+            textCursorHelper.goToEnd(commentEditor.value[key.value]);
     }
 
     function blurEditor(event){
@@ -165,7 +165,7 @@ if(commentEditor.value[key.value])
     onMounted(() => { 
 
         setPlaceHolder();
-        eventBus.on('focusEditorField'+key.value,focusEditor);//(e)=>{e.key = key.value; focusEditor(e);}
+        eventBus.on('focusEditorField'+key.value,focusEditor);
 
         showInput.value = isReply.value? false : true;
     })
