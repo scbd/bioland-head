@@ -4,9 +4,9 @@
 
 <script setup>
 
-    import { useSiteStore } from '~/stores/site' ;
+
     import clone from 'lodash.clonedeep';
-    const { t  } = useI18n();
+
     const siteStore = useSiteStore();
     const query     = clone({ ...siteStore.params });
     const localePath = useLocalePath();
@@ -24,7 +24,7 @@
         if(!length) return response._data = {}
       response._data = length? data[Math.floor(Math.random() * length)] : undefined;
     }
-   
+
     
     const links = [
         { name: t('View National Reports'),    to: { path:localePath('/search/secretariat'), query:{ schemas:['cpbNationalReport2','cpbNationalReport3','cpbNationalReport4','absNationalReport','nationalReport','nationalReport6']}} },

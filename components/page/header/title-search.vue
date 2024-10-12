@@ -156,7 +156,7 @@ function setup() {
 
 
 
-consola.warn('localePath(`/search`)', localePath(`/search`))
+    const searchPath = computed(()=>menusStore.getSystemPagePath({ alias:'/search', locale:unref(locale)}));
     if(!value) return navigateTo(localePath(`/search`))
     
 
