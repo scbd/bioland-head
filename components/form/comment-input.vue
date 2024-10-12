@@ -1,6 +1,5 @@
 <template>
     <div @click="openLogin">
-        <!-- <div class="debug">count:{{count}}</div> -->
         <div  class="d-flex  align-items-end  fs-5 mt-5" :class="{ 'justify-content-end' : (!likes && count), 'justify-content-between' : (likes )}" style="margin-bottom:-10px;">
             <span v-if="likes" class="text-muted">{{likes}} {{ t('like', likes) }}</span> 
             <span>
@@ -16,11 +15,9 @@
         <div class="d-flex justify-content-between  align-items-center px-5 fs-4">
 
             <button @click.prevent.stop="focusOnCommentField" type="button" class="btn btn-outline-dark nb"> <Icon name="comment" :size="1.25" /> &nbsp;<span v-if="!isReply" class="text-capitalize">{{t('comment')}}</span><span v-if="isReply">{{t('Reply')}}</span></button>
-            <!-- <button type="button" class="btn btn-outline-dark nb"> <Icon name="mail-forward" :size="1.25" /> &nbsp;<span class="text-capitalize">{{t('share')}}</span></button> -->
 
         </div>
         <hr class="my-0" />
-        <!-- :class="{ 'my-1': !isReply, 'my-0': isReply}" -->
 
         <div v-show="showInput" class="comment position-relative mt-1" v-click-outside="blurEditor">
             <input  class="form-control" type="hidden" placeholder="Write a public comment" aria-label="Amount (to the nearest dollar)">
@@ -32,11 +29,11 @@
                 <div class="input-group-text" >
                     <div class="d-flex justify-content-between align-items-center w-100">
                         <div >
-                        <!-- <button v-if="meStore.isAuthenticated" type="button" class="btn btn-outline-dark nb me-1"><Icon name="camera" :size="1.25" /> </button> -->
+
                         <button @click="showEmojiSelector" :class="{'emoji-btn-active':showEmojiPicker}" type="button" class="btn btn-outline-dark nb me-1 ">
                             <Icon name="happy-face" :size="1.25" /> 
                         </button>
-                        <!--  <Icon name="video" :size="1.25" /> -->
+
                         </div>
                         <button @click="sendComment" type="button" class="btn btn-outline-dark nb ">
                             <Icon name="send" :size="1.25" />
@@ -110,10 +107,6 @@
 
             return resp;
         }catch(e){
-        //     consola.error(e);
-        //     consola.error(e.statusCode);
-        // consola.error(e.statusMessage);
-        // consola.error(e.data);
         alertStore.addError({
         message: 'Failed to POST comment',
             statusCode: e.statusCode,
@@ -160,7 +153,7 @@ if(commentEditor.value[key.value])
     }
 
     function blurEditor(event){
-   
+
         if(event && isReply.value && showInput.value) showInput.value = false;
         if(commentEditor?.value[key.value]?.innerHTML !== '') return;
         
@@ -170,7 +163,7 @@ if(commentEditor.value[key.value])
     }
 
     onMounted(() => { 
-        // commentEditor.value[key.value].addEventListener('input',onEdit,false);
+
         setPlaceHolder();
         eventBus.on('focusEditorField'+key.value,focusEditor);//(e)=>{e.key = key.value; focusEditor(e);}
 
@@ -180,10 +173,6 @@ if(commentEditor.value[key.value])
     function setPlaceHolder(){
         commentEditor.value[key.value].innerHTML = `<p id="placeholder" class="mb-0 mt-1 fw-lighter  .text-white-50 fs-6">${editorPlaceholder.value}</p>`;
     }
-
-    // function onEdit(event){
-    //     consola.warn(event?.target?.innerHTML)
-    // }
 
     function onSelectEmoji(emoji){
 

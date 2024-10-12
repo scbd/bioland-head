@@ -26,8 +26,6 @@
     </div>
 </template>
 <script setup>
-
-    const meStore       = useMeStore();
     const siteStore     = useSiteStore();
     const { t }         = useI18n();
     const props         = defineProps({ count: { type: Number } });
@@ -58,20 +56,12 @@
         if(!inMenu.value) return [];
 
         for (const aCrumb of inMenu.value?.crumbs ) 
-            if(aCrumb?.contentTypeId && aCrumb?.href === '') aCrumb.href = menusStore.getContentTypeById(aCrumb.contentTypeId).slug
+            if(aCrumb?.contentTypeId && aCrumb?.href === '') aCrumb.href = menusStore.getContentTypeById(aCrumb.contentTypeId).slug;
         
-        return inMenu.value?.crumbs 
+        return inMenu.value?.crumbs;
     }
 
-    const style             = reactive({ color: siteStore.primaryColor, })
-    const badgePrimaryStyle = reactive({ 'background-color': siteStore.primaryColor })
-
-    const showMigratedLInk = computed(()=> pageStore?.page?.fieldMigrated && showBl1Link );
-    // consola.warn(JSON.parse(pageStore.page.fieldMigrated))
-    // function editPage () {
-    //     const id       =  pageStore.drupalInternalNid;
-    //     const typePath = pageStore.drupalEntityTypePath;
-
-    //     navigateTo(`${siteStore.localizedHost}${typePath}/${id}/edit?destination=${route.fullPath}`,{ external: true, open:{ target: '_blank'} });
-    // }
+    const style             = reactive({ color: siteStore.primaryColor, });
+    const badgePrimaryStyle = reactive({ 'background-color': siteStore.primaryColor });
+    const showMigratedLInk  = computed(()=> pageStore?.page?.fieldMigrated && showBl1Link );
 </script>

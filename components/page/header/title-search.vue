@@ -158,8 +158,7 @@ function setup() {
 
 
     const searchPath = computed(()=>menusStore.getSystemPagePath({ alias:'/search', locale:unref(locale)}));
-
-    if(!value) return navigateTo(localePath(searchPath.value))
+    if(!value) return navigateTo(localePath(`/search`))
     
 
     

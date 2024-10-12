@@ -14,7 +14,6 @@
                         <section v-for="(aChild,j) in aMenu.children" :key="j">
                             <PageHeaderMegaMenuLink v-if="!isHeader(aChild)"  :show-thumbs="showThumbs(aMenu)" :menu="aChild" />
                             <PageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
-                         
                         </section>
                     </section>
 
