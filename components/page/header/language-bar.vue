@@ -1,6 +1,6 @@
 <template>
     <div class="brandbar-header fixed-top d-none d-md-block" :class="{'dev-site': isDevSite}" :style="brandBarStyle">
-        <div class="container py-0 pl-sm-3 pr-sm-3">
+        <div class=" container py-0 pl-sm-3 pr-sm-3">
             <div class="row">
                 <div class="col-sm-5 d-flex align-items-center">
                     <NuxtLink class="navbar-brand" to="https://www.cbd.int" external target="_blank">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</NuxtLink>

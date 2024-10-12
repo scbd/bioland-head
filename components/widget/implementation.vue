@@ -4,7 +4,7 @@
 
 <script setup>
 
-    import { useSiteStore } from '~/stores/site' ;
+
     import clone from 'lodash.clonedeep';
 
     const { t, locale  } = useI18n();

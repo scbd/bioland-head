@@ -28,8 +28,6 @@ export const useDrupalLogin = async (siteCode) => {
             .send(JSON.stringify({ name, pass }))
             .redirects(3)
 
-            saAgent.query({ 'jsonapi_include': 1 });
-
     $http[cacheId] = saAgent
     return $http[cacheId]
   }

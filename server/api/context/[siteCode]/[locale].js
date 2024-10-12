@@ -15,7 +15,6 @@ export default cachedEventHandler(async (event) => {
 
            
             await cleanStorage();
-// consola.warn('/api/conext/[siteCode]/[locale]', { siteCode, locale, config, siteName, defaultLocale: config.defaultLocale });
             const respCtx = { ...ctx, locale, config, siteName, defaultLocale: config.defaultLocale };
 
             await useStorage('context').setItem(host, respCtx);
