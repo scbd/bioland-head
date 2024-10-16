@@ -23,7 +23,7 @@
     }
     
     const links = [
-        { name: t('Browse Solutions'),  to:'https://panorama.solutions/en/explorer' }
+        { name: t('Browse Solutions'),  to:'https://panorama.solutions/explore-solutions' }
     ];
 </script>
 

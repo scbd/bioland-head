@@ -133,9 +133,10 @@ function setup() {
     const cont         = ref(null);
     const contL         = ref(null);
     const localePath   = useLocalePath();
-    const { t  }       = useI18n();
+    const { t, locale  }       = useI18n();
     const siteStore    = useSiteStore();
     const pageStore    = usePageStore();
+    const menusStore = useMenusStore();
     const viewport     = useViewport();
     const route        = useRoute();
     const { width    } = useElementSize(cont);
@@ -156,18 +157,19 @@ function setup() {
 
 
 
-consola.warn('localePath(`/search`)', localePath(`/search`))
-    if(!value) return navigateTo(localePath(`/search`))
+    const searchPath = computed(()=>menusStore.getSystemPagePath({ alias:'/search', locale:unref(locale)}));
+
+    if(!value) return navigateTo(localePath(searchPath.value))
     
 
     
-    if(route.path !== '/search'){
-        navigateTo(localePath(`/search?freeText=${value}`))
+    if(route.path !== searchPath?.value){
 
+        navigateTo(localePath(`${searchPath.value}?freeText=${value}`))
     }else{
         const router = useRouter();
         
-        await router.push({ path:localePath(`/search`), query: { freeText: value } });
+        await router.push({ path:localePath(searchPath.value), query: { freeText: value } });
     }
     //this.navigateTo(localePath(`/search?freeText=${value}`))
     this.queryText='';

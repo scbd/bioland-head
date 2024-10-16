@@ -183,7 +183,6 @@ function getStatusFilter({event}){
         sortQueryString += `&filter[status][condition][memberOf]=or-group-status`;
     }
 
-    // consola.warn(sortQueryString)
     return ''//sortQueryString;
 }
 

@@ -7,7 +7,7 @@
     "dev": "rm -rf .data && nuxt cleanup && nuxt dev --host mseed.localhost",
     "dev-open": "rm -rf .data && nuxt cleanup && nuxt dev --open --host mseed.localhost",
     "generate": "nuxt generate",
-    "preview": "nuxt preview",
+    "preview": "nuxt preview --open",
     "postinstall": "nuxt prepare",
     "clean": "nuxt cleanup",
     "analyze": "nuxt analyze",

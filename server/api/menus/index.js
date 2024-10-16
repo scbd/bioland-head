@@ -26,16 +26,17 @@ export default cachedEventHandler(async (event) => {
                 $fetch('/api/menus/focal-points',  { query, method:'get', headers }),
                 $fetch('/api/menus/content-types', { query, method:'get', headers }),
                 $fetch('/api/menus/topics',        { query, method:'get', headers }),
-                $fetch('/api/menus/languages',     { query, method:'get', headers })
+                $fetch('/api/menus/languages',     { query, method:'get', headers }),
+                $fetch('/api/menus/system-pages',  { query, method:'get', headers }),
             ]))
             const rejected = allRequests.filter(({ status }) => status === 'rejected');
 
             for (const { reason } of rejected)
                 consola.error('menus/index.js', reason);
 
-            const [absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes,  forums , languages ] = allRequests.map(({ value }) => value || []);
+            const [absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes,  forums , languages, systemPages ] = allRequests.map(({ value }) => value || []);
 
-            return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, forums, languages, menus  }
+            return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, forums, languages, menus, systemPages  }
         }
         catch (e) {
 

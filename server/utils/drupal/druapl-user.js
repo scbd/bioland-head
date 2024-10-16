@@ -6,7 +6,7 @@ export async function getUser(event, force = false) {
 
         const me = meCookieString? JSON.parse(decodeURIComponent(meCookieString)) : undefined;
 
-        if(!force && me ) return me;
+        if(!force && me && me.isAuthenticated ) return me;
 
         const { localizedHost, siteCode, locale , locales, defaultLocale} = getContext(event);
 

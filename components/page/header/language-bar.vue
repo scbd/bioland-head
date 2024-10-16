@@ -2,17 +2,18 @@
     <div class="brandbar-header fixed-top d-none d-md-block" :class="{'dev-site': isDevSite}" :style="brandBarStyle">
         <div class="container py-0 pl-sm-3 pr-sm-3">
             <div class="row">
-                <div class="col-8 col-sm-4 d-flex align-items-center">
+                <div class="col-sm-5 d-flex align-items-center">
                     <NuxtLink class="navbar-brand" to="https://www.cbd.int" external target="_blank">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</NuxtLink>
                 </div>
-                <div v-if="!(limitedMenus.length > 1) && pageLoaded" class="col-4 col-sm-8 d-flex justify-content-end">
+
+                <div v-if="!(limitedMenus.length > 1) && pageLoaded" class="col-sm-7 d-flex justify-content-end">
                     <ul class="nav" >
                         <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
                             <NuxtLink v-if="aMenu.code !== 'xx'" class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}">&nbsp;</NuxtLink>
                         </li>
                     </ul>
                 </div>
-                <div v-if="limitedMenus.length > 1 && pageLoaded " class="col-4 col-sm-8 d-flex justify-content-end">
+                <div v-if="limitedMenus.length > 1 && pageLoaded " class="col-sm-7 d-flex justify-content-end">
                     <ul class="nav" >
                         <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
                             <NuxtLink v-if="aMenu.code !== 'xx'" class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}">{{aMenu.nativeName}}</NuxtLink>

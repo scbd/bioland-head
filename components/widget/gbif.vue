@@ -46,6 +46,8 @@
                 &nbsp;
 
                 <Icon   name="external-link" class="arrow" />
+
+                <span class="hide">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{config.identifier}} {{zoom}}</span>
             </div>
         </div>
     </div>
@@ -125,5 +127,10 @@
     cursor: pointer;
     margin-bottom: 0.2rem;
 }
-
+.hide{
+    color:white;
+}
+.hide:hover{
+    color: black
+}
   </style>

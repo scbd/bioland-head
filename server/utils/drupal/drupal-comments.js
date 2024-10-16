@@ -110,9 +110,6 @@ function cleanComment(ctx){
             for (const c of clone(commentsRaw))
                 comments.push(await cleanComment(ctx)(c))
             
-        // if(comments?.length) consola.warn('comment.length',comments.length)
-        // if(comments?.length) consola.warn('comment.length',comment_body.value)
-
         return changeKeys.camelCase({ type, id, drupal_internal__cid, status, subject, created, changed, thread, user,dateString,  comment_body, comments, pid , entity_id }, {deep:true} );
     }
 }
@@ -211,7 +208,6 @@ function getStatusFilter({event}){
         sortQueryString += `&filter[status][condition][memberOf]=or-group-status`;
     }
 
-    // consola.warn(sortQueryString)
     return ''//sortQueryString;
 }
 
