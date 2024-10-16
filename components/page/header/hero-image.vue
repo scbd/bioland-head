@@ -4,9 +4,9 @@
         
         <div v-if="hasHeroImage"  class="container text-white">
             <div class="row pb-1 position-relative ">
-                <div v-if="meStore.showEdit" class="position-absolute text-end" style="min-width:3rem;">
+                <div v-if="meStore.showEdit" class="position-absolute text-end bottom-50" style="min-width:3rem;">
                     <button @click="editHero" type="button" class="btn btn-outline-secondary btn-sm mt-1">
-                        <Icon name="edit" :size="2"/>
+                        <Icon name="edit" style="margin-top: .2rem;" :size="2"/>
                     </button>
                 </div>
                 <div v-if="hi?.fieldDescription?.value" v-html="hi?.fieldDescription?.value">
@@ -61,7 +61,7 @@ const meStore = useMeStore();
             const menuName =  hi.value?.drupalInternalMid
 
 
-            navigateTo(`${siteStore.host}/media/${menuName}/edit`,{ external: true, open:{ target: '_blank'} });
+            navigateTo(`${siteStore.host}/media/${menuName}/edit`,{ external: true });
 
         }
     return { isDevSite, hasHeroImage , backgroundStyles, hi, meStore, editHero }
