@@ -6,7 +6,7 @@
                         <div v-for="(aMenu,index) in menus" :key="index"   class="col mb-4">
                           <div v-if="meStore.showEditMenu" class="position-relative">
                             <button @click="editMenu('footer')" type="button" class="btn btn-outline-secondary btn-sm m-1 position-absolute top-0 end-0">
-                                <Icon name="edit" :size="2"/>
+                                <Icon name="edit" style="margin-top: .3rem;" :size="2"/>
                             </button>
                           </div>
                             <h4 :style="headerLinkStyle">{{aMenu.title}} </h4> 
@@ -48,9 +48,9 @@
                                     <PageMenuLink v-bind="aChildMenu" />
                                 </li>
                             </ul>
-                            <div v-if="meStore.showEditMenu" class="position-relative  bg-white" style="min-width:3rem;">
+                            <div v-if="meStore.showEditMenu" class="position-relative" style="min-width:3rem;">
                                 <button  @click="editMenu('footer-credits')" type="button" class="btn btn-outline-secondary btn-sm position-absolute start-30">
-                                    <Icon name="edit" :size="2"/>
+                                    <Icon name="edit" style="margin-top: .2rem;" :size="2"/>
                                 </button>
                             </div>
 
@@ -75,7 +75,7 @@
         function editMenu (name) {
             const menuName = name || 'footer'
 
-            navigateTo(`${siteStore.host}/admin/structure/menu/manage/${menuName}`,{ external: true, open:{ target: '_blank'} });
+            navigateTo(`${siteStore.host}/admin/structure/menu/manage/${menuName}`,{ external: true });
 
         }
 
