@@ -4,7 +4,7 @@
             <div class="row  m-0">
                 <div v-if="meStore.showEditMenu" class="position-absolute top-0 end-0 text-end p-1">
                     <button @click="editMenu" type="button" class="btn btn-outline-secondary btn-sm ">
-                        <Icon name="edit" :size="2"/>
+                        <Icon name="edit" style="margin-top: .3rem;" :size="2"/>
                     </button>
                 </div>
                 <div  class="menu-section text-wrap"  :class="[getGridValue(aMenu)]" v-for="(aMenu,index) in sections" :key="index">
@@ -64,7 +64,7 @@
 
             if(!menuName) return;
 
-            navigateTo(`${siteStore.host}/admin/structure/menu/manage/${menuName}`,{ external: true, open:{ target: '_blank'} });
+            navigateTo(`${siteStore.host}/admin/structure/menu/manage/${menuName}`,{ external: true });
 
             console.log('edit menu');
         }
