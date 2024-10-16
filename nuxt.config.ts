@@ -1,17 +1,17 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
-
 import locales from './i18n/locales';
 import en from './i18n/locales/en.json';
-import consola from 'consola'
-const css  =   [ '@/assets/custom.scss', 'vue-final-modal/style.css' ]
+
+const css   =   [ '@/assets/custom.scss', 'vue-final-modal/style.css' ]
+const hour  = 60 * 60;
+const week  = 60 * 60 * 24 * 7;
 
 const  routeRules = {
-  '/sites/**': { proxy: 'https://mseed.bl2.cbddev.xyz', changeOrigin: true, prependPath: true}
-}
-export default defineNuxtConfig({
-  // routeRules,
-  devtools: { enabled: false},//!!['prod','production'].includes(process.env.ENV) },
+                      '/*/**'    : { headers: { 'Cache-Control': `max-age=${hour} s-maxage=${hour}, stale-if-error=${week}, stale-while-revalidate=${week}` } },
+                    }
 
+export default defineNuxtConfig({
+  routeRules,
+  devtools: { enabled: false},
   debug: false,
   sourcemap: { server: true, client: true },
   css,
