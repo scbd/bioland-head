@@ -1,4 +1,4 @@
-import   random          from 'lodash.sample' ;
+
 import   camelCaseKeys   from 'camelcase-keys';
 import { useSiteStore }  from "~/stores/site";
 
@@ -94,7 +94,10 @@ export const usePageStore = defineStore('page', {
         
             if(!heroImages.length) return undefined;
         
-            return random(heroImages);
+            const picIndex = randomTime(heroImages.length);
+
+       
+            return heroImages[ picIndex];
         },
         typeName(){ 
             if(this.isTaxonomyTerm || this.isSystemPage) return this.page?.name || '';
@@ -240,4 +243,13 @@ function parseJson(json){
     } catch (error) {
         return false
     }
+}
+
+function randomTime(total = 3){
+    const minutes = new Date().getMinutes();
+
+    for(let i = 0; i < total; i++)
+        if(minutes <= ((60/total) * i+1)) return i;
+
+    return 0
 }
