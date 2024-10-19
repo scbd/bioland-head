@@ -21,7 +21,7 @@
 
             </div>
             <div class="card-footer">
-                <span v-if="record?.city" class="badge bg-primary me-1"> {{record.city}}</span>
+                <span v-if="record?.city" :style="bgStyle" class="badge me-1"> {{record.city}}</span>
                 <span v-if="record?.country" class="badge bg-secondary me-1"> {{record.country}}</span>
 
 
@@ -55,7 +55,6 @@
 </template>
 <script setup>
     import { getGbfUrl    } from '~/util'        ;
-    import { useSiteStore } from '~/stores/site' ;
     import { DateTime     } from 'luxon'         ;
 
     const { trunc  } = useText();
@@ -64,7 +63,6 @@
     const { name, record, links, t:passedType, loading    } = toRefs(props);
 
     const recordExists = computed(()=> record?.value?.title)
-
 
     const { t, locale } = useI18n();
 
@@ -76,6 +74,7 @@
 
         return false
     });
+
     const type = computed(()=> { 
         let  typeText = ''
         if(record?.value?.fieldTypePlacement?.name) 
@@ -106,9 +105,8 @@
         return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
     }
 
-   
-    const img = useImage();
-    const imgUri = record.value? (record?.value?.mediaImage?.src || imageGenStore.getImage(record?.value)?.src) : undefined;//'/images/no-image.png';
+    const img    = useImage();
+    const imgUri = record.value? (record?.value?.mediaImage?.src || imageGenStore.getImage(record?.value)?.src) : undefined;
     const hasImg = imgUri && imgUri !== '/images/no-image.png';  
 
     const backgroundStyles = computed(() => {
@@ -119,29 +117,18 @@
                                 quality: 60,
                                 format: ['webp', 'avif', 'jpeg', 'jpg', 'png','gif']
                             }
-        
-                         
+
+
         const imgSrc = img(imgUri, imgOptions)
 
         return {'background':`url('${imgSrc}') no-repeat center`,  'background-size': 'cover'}
         })
 
 
-    const style = reactive({
-        '--bs-primary': siteStore.primaryColor,
-        // color: siteStore.primaryColor
-      })
-      const colorStyle = reactive({
-        color: siteStore.primaryColor,
-      })
-      const linkStyle = reactive({
-        '--bs-primary': siteStore.primaryColor,
-        color: siteStore.primaryColor,
-        'text-decoration': `underline ${siteStore.primaryColor}`
-      })
-      const bgStyle = reactive({
-        'background-color': siteStore.primaryColor
-      })
+    const style      = reactive({ '--bs-primary': siteStore.primaryColor, })
+    const colorStyle = reactive({ color: siteStore.primaryColor, })
+    const linkStyle  = reactive({ '--bs-primary': siteStore.primaryColor, color: siteStore.primaryColor, 'text-decoration': `underline ${siteStore.primaryColor}` })
+    const bgStyle    = reactive({ 'background-color': siteStore.primaryColor })
 </script>
 <style lang="scss" scoped>
 

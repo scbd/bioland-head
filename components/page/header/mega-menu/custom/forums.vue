@@ -10,7 +10,7 @@
             </div>
             <div class="col-3 ps-0 align-self-center">
                 <NuxtLink  class="child-link"   :to="localePath(aChild.forum.href)" :title="aChild.forum.name" >
-                    <span class="badge bg-primary">{{aChild.forum.name}}</span>
+                    <span :style="bgStyle" class="badge">{{aChild.forum.name}}</span>
                 </NuxtLink>
             </div>
             <div class="col-1 px-0 align-self-center">
@@ -24,16 +24,16 @@
     </div>
 </template>
 <script setup>
+    const   siteStore   = useSiteStore ();
+    const   menuStore   = useMenusStore();
     const   localePath  = useLocalePath();
     const   props       = defineProps({ menu: Object });
     const { menu }      = toRefs     (props           );
     const { t     }     = useI18n    (                );
+    const   bgStyle     = reactive({ 'background-color': siteStore.primaryColor })
 
-    const menuStore = useMenusStore();
     
-    const children      = computed(() => {
-        return menuStore.forums;
-    });
+    const children      = computed(() => { return menuStore.forums; });
 
 
     function generateMenus(){

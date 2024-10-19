@@ -15,7 +15,7 @@
                 </span>
             </div>
             <div class="mt-1">
-                <span class="badge bg-primary me-2">{{forum.forum.name}}</span>
+                <span :style="bgStyle" class="badge  me-2">{{forum.forum.name}}</span>
                 <span class="me-2">{{forum.dateString}}</span>
                 <span>{{forum.count}} {{t('Replies')}}</span>
             </div>
@@ -45,4 +45,5 @@
     const loading   = computed(()=> status.value === 'pending');
     const style     = reactive({ '--bs-primary': siteStore.primaryColor })
     const linkStyle = reactive({ '--bs-primary': siteStore.primaryColor, color: siteStore.primaryColor, 'text-decoration': `underline ${siteStore.primaryColor}` })
+    const bgStyle   = reactive({ 'background-color': siteStore.primaryColor })
 </script>
