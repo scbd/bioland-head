@@ -1,8 +1,6 @@
 export default defineEventHandler((event) => {
     const { pathname } = new URL(getRequestURL(event))
 
-    consola.error('CACHE CONTROL ==================', pathname)
-
     const res = event.node.res
     const year  = 31536000;
     const min   = 60*5;
