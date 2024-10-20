@@ -11,7 +11,7 @@
         <div class="row ">
             <div class="col-12 col-md-3 ps-0" >
 
-                <h2 class="page-type mb-1">{{results?.title}}</h2>
+                <h2 :style="primaryColorStyle" class="page-type mb-1">{{results?.title}}</h2>
             </div>
 
             <ClientOnly >
@@ -64,10 +64,10 @@
                                                         types: { type: Array, default: () => [] },
                                                     });
 
-    const { showTopPager, title  }       = toRefs(props);
+    const { showTopPager  }     = toRefs(props);
+    const { primaryColorStyle } = useTheme();
 
-
-    const noCacheKey      = ref('');
+    const noCacheKey    = ref('');
     const freeText      = computed(() => r?.query?.freeText? r?.query?.freeText : '');
     const page          = computed(() => r?.query?.page? r?.query?.page : 1);
     const rowsPerPage   = computed(() => r?.query?.rowsPerPage? r?.query?.rowsPerPage : 10);

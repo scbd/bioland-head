@@ -29,12 +29,9 @@
     </div>
 </template>
 <script setup>
-    import { useSiteStore  } from '~/stores/site'   ;
-    import { useMenusStore } from '~/stores/menus'  ;
-    import { usePageStore  } from '~/stores/page'   ;
     import   clone           from 'lodash.clonedeep';
-    
-    
+
+    const { primaryColorStyle } = useTheme();
     const   isMobile    = isMobileFn   ();
     const { t         } = useI18n      ();
     const   r           = useRoute     ();
@@ -65,7 +62,7 @@
     const query             = clone({ ...r.query, ...siteStore.params, freeText, page, rowsPerPage, schemas });
     const typeId            = computed(getContentTypeId);
     const contentTypeName         = computed(getContentTypeName);
-    const primaryColorStyle       = reactive({ 'color': siteStore.primaryColor, 'border-top': `${siteStore.primaryColor} .5rem solid`});
+    //const primaryColorStyle       = reactive({ 'color': siteStore.primaryColor, 'border-top': `${siteStore.primaryColor} .5rem solid`});
   
     
     const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query});

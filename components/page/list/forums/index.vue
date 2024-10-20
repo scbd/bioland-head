@@ -8,7 +8,7 @@
                 <PageBreadCrumbs :count="results?.length"/>
             </div>
             <div class="col-12 col-md-3 ps-0" >
-                <h2 class="page-type text-capitalize">{{t('Forums',2)}}</h2>
+                <h2  :style="primaryColorStyle"  class="page-type text-capitalize">{{t('Forums',2)}}</h2>
                 <PageListTextSearch/>
             </div>
 
@@ -41,7 +41,6 @@
     const { t  }                        = useI18n();
     const   r                           = useRoute();
     const   siteStore                   = useSiteStore();
-
     const   eventBus                    = useEventBus();
     const   props                       = defineProps({ 
                                                         showTopPager: { type: Boolean, default: false },
@@ -49,8 +48,8 @@
                                                         types: { type: Array, default: () => [] },
                                                     });
 
-    const { showTopPager, title  }       = toRefs(props);
-
+    const { showTopPager  }     = toRefs(props);
+    const { primaryColorStyle } = useTheme();
 
 
     const freeText      = computed(() => r?.query?.freeText? r?.query?.freeText : '');

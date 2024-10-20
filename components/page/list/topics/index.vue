@@ -8,7 +8,7 @@
                 <PageBreadCrumbs :count="results?.topics?.length"/>
             </div>
             <div class="col-12 col-md-3 ps-0" >
-                <h2 class="page-type mb-1">{{results?.name}}</h2>
+                <h2 :style="primaryColorStyle" class="page-type mb-1">{{results?.name}}</h2>
             </div>
 
             <ClientOnly >
@@ -52,8 +52,8 @@
                                                         types       : { type: Array, default: () => [] },
                                                     });
 
-    const { showTopPager, title  }       = toRefs(props);
-
+    const { showTopPager  }     = toRefs(props);
+    const { primaryColorStyle } = useTheme();
 
 
     const freeText      = computed(() => r?.query?.freeText? r?.query?.freeText : '');
