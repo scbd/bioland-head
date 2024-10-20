@@ -7,7 +7,7 @@
         </div>
         <div v-for="(forum,i) in data || []" :key="i"  class="mb-4">
             <h5 class="card-title  mb-2">
-                <NuxtLink :style="linkStyle" class="fw-bold"  :to="localePath(forum.href)">{{forum.title}}</NuxtLink>
+                <NuxtLink :style="linkStyle" class="fw-bold"  :to="getHref(forum)">{{forum.title}}</NuxtLink>
             </h5>
             <div>
                 <span v-for="(user,j) in forum?.users || []" :key="j" >
@@ -22,7 +22,7 @@
         </div>
         <div class="mb-5">
             <div class="text-start my-3 mb-3">
-                <NuxtLink :style="linkStyle" :to="localePath('/forums')" class=" fw-bold fs-5" >
+                <NuxtLink :style="linkStyle" :to="localePath('/'+t('forums'))" class=" fw-bold fs-5" >
                         {{t('Browse Discussions')}}
                 </NuxtLink>
                 &nbsp;
@@ -35,15 +35,21 @@
 <script setup>
     import   clone          from 'lodash.clonedeep' ;
 
-    const { t         , locale } = useI18n      ();
-    const   localePath           = useLocalePath()
-    const   siteStore            = useSiteStore ();
+    const { t, locale  } = useI18n();
+    const   localePath  = useLocalePath();
+    const   siteStore   = useSiteStore ();
 
-    const   query  = clone({...siteStore.params, rowsPerPage:5 });
+    const   query                 = clone({...siteStore.params, rowsPerPage:5 });
     const { data, status, error } =  await useLazyFetch(`/api/list/topics`, {  method: 'GET', query });
 
+    function getHref(topic){
+        const { nodeId } = topic;
+
+        return locale.value === 'en'? localePath(topic.href) : localePath(`/node/${nodeId}`);
+    }
+
     const loading   = computed(()=> status.value === 'pending');
-    const style     = reactive({ '--bs-primary': siteStore.primaryColor })
-    const linkStyle = reactive({ '--bs-primary': siteStore.primaryColor, color: siteStore.primaryColor, 'text-decoration': `underline ${siteStore.primaryColor}` })
+    const style     = reactive({ '--bs-primary'    : siteStore.primaryColor })
+    const linkStyle = reactive({ '--bs-primary'    : siteStore.primaryColor, color: siteStore.primaryColor, 'text-decoration': `underline ${siteStore.primaryColor}` })
     const bgStyle   = reactive({ 'background-color': siteStore.primaryColor })
 </script>

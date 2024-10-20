@@ -18,65 +18,16 @@
 
             <div class="col-12">
                 <div class="card-footer">
-                    <!-- <div class="debug">
-                        <span>{{aLine.dateString}}</span>&nbsp;
-                        <a href="#">{{t('Reply')}}</a>
-
-                    </div> -->
                     <FormCommentInput />
-                    
                 </div>
             </div>
         </div>
     </div>
 </template>
 <script setup>
-    import { DateTime     } from 'luxon';
-    import { useMenusStore } from '~/stores/menus';
-
-    const   route                       = useRoute();
-    const   type                        = route?.params?.type;
-    const   drupalInternalIds           = route?.path?.includes('/media/photos-and-videos')? ['image', 'remote_video'] : undefined
-    const { contentTypes, mediaTypes }  = useMenusStore();
- 
-    const { t, locale  } = useI18n();
-    const   props     = defineProps({ 
-                                        aLine: { type: Object  },
-                                    });
+    const   props     = defineProps({  aLine: { type: Object  } });
     const { aLine }   = toRefs(props);
-
-    const isChm         = computed(()=> aLine.value?.realms?.length);
-    const isContentType = computed(()=>!!contentTypes[type]);
-    // const isMediaType   = computed(()=> drupalInternalIds?.length || !!mediaTypes[type]);
-    const isDrupalType  = computed(()=> isContentType.value );
-
-
-    const  href  = computed(()=> {
-
-        const uri = aLine.value?.path.alias//aLine.value?.path?.alias || aLine.value?.url;
-
-        return uri;
-
-
-    });
-
-    async function goTo(path){
-        if(!path) return 
-
-        const localePath = useLocalePath();
-
-        await navigateTo({ path: localePath(path) })
-    }
-
-
-
-
-    function dateFormat(date){
-
-        return DateTime.fromISO(date)
-                .setLocale(locale.value)
-                .toFormat('dd LLL yyyy HH:mm');
-    }
+    
 </script>
 <style scoped>
 .card{
@@ -84,7 +35,6 @@
     border-left: 7px solid var(--bs-blue);
 }
 .card:hover{
-    /* cursor: pointer !important; */
     box-shadow:  0 10px 20px rgb(0 0 0 / 19%), 0 6px 6px rgb(0 0 0 / 23%) ;
     background-color: #e1e1e1;
 }
@@ -111,8 +61,6 @@ li:last-child{
 li a{
     color: #333;
 }
-
-
 
 .icon{
     fill:var(--bs-primary);

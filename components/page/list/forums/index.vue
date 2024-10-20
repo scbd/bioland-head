@@ -15,7 +15,6 @@
             <ClientOnly >
                 <div name="list" tag="div" class="col-12 col-md-9 data-body">
 
-                    <!-- <PageListPager v-if="showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results.count}`"/> -->
                     <transition-group name="list">
                         <PageListForumsRow  :a-line="aLine" v-for="(aLine,index) in results" :key="index" />
                         <span :key="`showTopPage${showTopPager}${results?.count}-span`">&nbsp;</span>
@@ -24,7 +23,6 @@
                 <template #fallback>
                     <div name="list" tag="div" class="col-12 col-md-9 data-body">
 
-                        <!-- <PageListPager v-if="showTopPager" :count="results?.count" /> -->
                         <PageListForumsRow  :a-line="aLine" v-for="(aLine,index) in results" :key="index" />
                     </div>
                 </template>

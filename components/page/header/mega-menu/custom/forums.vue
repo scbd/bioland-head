@@ -4,7 +4,7 @@
 
         <div v-for="(aChild,j) in children" :key="j" class="row mb-2">
             <div class="col-6">
-                <NuxtLink  class="child-link"   :to="localePath(aChild?.path?.alias) || ''" :title="aChild.title" >
+                <NuxtLink  class="child-link"   :to="getHref(aChild)" :title="aChild.title" >
                     {{aChild.title}}
                 </NuxtLink>
             </div>
@@ -29,23 +29,17 @@
     const   localePath  = useLocalePath();
     const   props       = defineProps({ menu: Object });
     const { menu }      = toRefs     (props           );
-    const { t     }     = useI18n    (                );
+    const { t  , locale   }     = useI18n    (                );
     const   bgStyle     = reactive({ 'background-color': siteStore.primaryColor })
 
     
     const children      = computed(() => { return menuStore.forums; });
 
 
-    function generateMenus(){
-        const theMenu = unref(menu);
+    function getHref(topic){
+        const { nodeId } = topic;
 
-        if(!theMenu.children) return theMenu.children = [];
-
-        for(const aMenu of subMenus){
-            theMenu.children
-        }
-
-        return countryMap
+        return locale.value === 'en'? localePath(topic.href) : localePath(`/node/${nodeId}`);
     }
 
 

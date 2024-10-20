@@ -15,8 +15,6 @@
                 <div name="list" tag="div" class="col-12 col-md-9 data-body">
                     <div>
                         <div v-html="results?.description?.value || ''"></div>
-
-                        <!-- <FormCommentInput /> -->
                     </div>
                     <transition-group name="list">
                         <PageListTopicsRow  :a-line="aLine" v-for="(aLine,index) in results?.topics" :key="index" />
@@ -26,8 +24,6 @@
                 <template #fallback>
                     <div>
                         <div v-html="results?.description?.value || ''"></div>
-
-                        <!-- <FormCommentInput /> -->
                     </div>
                     <div name="list" tag="div" class="col-12 col-md-9 data-body">
                         <PageListTopicsRow  :a-line="aLine" v-for="(aLine,index) in results?.topics" :key="index" />
@@ -46,15 +42,14 @@
 <script setup>
 
     import clone from 'lodash.clonedeep';
-    const { t  }                        = useI18n();
+
     const   r                           = useRoute();
     const   siteStore                   = useSiteStore();
-
     const   eventBus                    = useEventBus();
     const   props                       = defineProps({ 
                                                         showTopPager: { type: Boolean, default: false },
                                                         title       : { type: String,  default: '' },
-                                                        types: { type: Array, default: () => [] },
+                                                        types       : { type: Array, default: () => [] },
                                                     });
 
     const { showTopPager, title  }       = toRefs(props);
@@ -67,25 +62,16 @@
     const query         = clone({ ...r.query, ...siteStore.params, freeText, page, rowsPerPage });
 
 
-
     const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query, onResponse });
 
     function onResponse({ request, response, options}){
-
         response._data =response._data[0] || {}
     }
 
     onMounted(() => { eventBus.on('changePage', refresh); });
- 
- 
 
+    function getApiUri(){ return `/api/forums/${r.params[1]}`;     }
 
-
-    function getApiUri(){
-        return `/api/forums/${r.params[1]}`;    
-    }
-
-    // function changeTab(){ refresh(); }
 
     function isNumberString(string) {
         return /^[0-9]*$/.test(string);

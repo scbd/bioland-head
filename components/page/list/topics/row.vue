@@ -1,5 +1,5 @@
 <template>
-    <NuxtLink :to="goTo(href)" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" >
+    <NuxtLink :to="getHref(aLine)" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" >
         <div   class="card p-1 mb-3"  >
             <div  class="row g-0">
                 <div class="col-8 fw-bold"> {{t('Topic')}} </div>
@@ -35,44 +35,17 @@
     </NuxtLink>
 </template>
 <script setup>
-    import { DateTime     } from 'luxon';
-    import { useMenusStore } from '~/stores/menus';
-
-    const   route                       = useRoute();
-    const   type                        = route?.params?.type;
-    const   drupalInternalIds           = route?.path?.includes('/media/photos-and-videos')? ['image', 'remote_video'] : undefined
-    const { contentTypes, mediaTypes }  = useMenusStore();
- 
+    const   localePath   = useLocalePath();
     const { t, locale  } = useI18n();
-    const   props     = defineProps({ 
-                                        aLine: { type: Object  },
-                                    });
-    const { aLine }   = toRefs(props);
+    const   props        = defineProps({  aLine: { type: Object  } });
+    const { aLine }      = toRefs(props);
 
-    const isChm         = computed(()=> aLine.value?.realms?.length);
-    const isContentType = computed(()=>!!contentTypes[type]);
+    function getHref(aLine){
+        const   topic    = unref(aLine);
+        const { nodeId } = topic;
 
-    const isDrupalType  = computed(()=> isContentType.value );
-
-
-    const  href  = computed(()=> {
-        // consola.info('aLine', aLine.value)
-        const uri = aLine.value?.path.alias//aLine.value?.path?.alias || aLine.value?.url;
-
-        return uri;
-
-
-    });
-
-    function goTo(path){
-        if(!path) return 
-
-        const localePath = useLocalePath();
-
-        return localePath(path)
+        return locale.value === 'en'? localePath(topic.href) : localePath(`/node/${nodeId}`);
     }
-
-
 
     const user = computed(lastUser);
 
@@ -80,12 +53,6 @@
         return aLine.value?.users?.find((u)=>u.uid === aLine.value?.lastCommentUid)
     }
 
-    function dateFormat(date){
-
-        return DateTime.fromISO(date)
-                .setLocale(locale.value)
-                .toFormat('dd LLL yyyy HH:mm');
-    }
 </script>
 <style scoped>
 .line{
