@@ -17,8 +17,8 @@
                 <div class="w-100 text-center fs-5"><p>{{t('for an account in order to comment or interact.')}}</p></div>
               </div>
               <div class="modal-footer d-flex justify-content-center align-items-center mb-3">
-                <NuxtLink :to="loginUri" type="button" class="btn btn-secondary mx-3 mb-2" external target="_blank">{{t('Login')}}</NuxtLink>
-                <NuxtLink :to="registerUri" type="button" class="btn btn-secondary mx-3 mb-2" external target="_blank">{{t('Sign Up')}}</NuxtLink>
+                <NuxtLink :to="loginUri" type="button" class="btn btn-secondary mx-3 mb-2" external :target="target">{{t('Login')}}</NuxtLink>
+                <NuxtLink :to="registerUri" type="button" class="btn btn-secondary mx-3 mb-2" external :target="target">{{t('Sign Up')}}</NuxtLink>
               </div>
             </div>
           </div>
@@ -29,17 +29,20 @@
 <script setup >
   import { VueFinalModal } from 'vue-final-modal';
 
-  const   localePath  = useLocalePath();
-  const { t    } = useI18n ( );
-  const   emit   = defineEmits(['confirm']);
-  const siteStore = useSiteStore();
+  const { isLocalHost } = useRuntimeConfig().public;
+  const   localePath     = useLocalePath (           );
+  const { t            } = useI18n       (           );
+  const   emit           = defineEmits   (['confirm']);
+  const   siteStore      = useSiteStore  (           );
   
   const registerUri = computed(() => siteStore.saml? siteStore.saml.registerUri :  `${siteStore.getHost(true)}${localePath(`/user/register`)}`);
-  const loginUri = computed(() => siteStore.saml? siteStore.saml.loginUri : `${siteStore.getHost(true)}${localePath(`/user/login`)}`) //`
+  const loginUri    = computed(() => siteStore.saml? siteStore.saml.loginUri    : `${siteStore.getHost(true)}${localePath(`/user/login`)}`) //`
 
   function close(){  emit('confirm'); }
-//reloadNuxtApp
 
+  const target = computed(()=>isLocalHost? '_blank' : '_self');
+
+// consola.error('isLocaleHost ', isLocaleHost )
 </script>
 
 <style lang="scss" scoped>
