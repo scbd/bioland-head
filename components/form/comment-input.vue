@@ -1,5 +1,6 @@
 <template>
-    <div @click="openLogin">
+    <div >
+        <!--  -->
         <div  class="d-flex  align-items-end  fs-5 mt-5" :class="{ 'justify-content-end' : (!likes && count), 'justify-content-between' : (likes )}" style="margin-bottom:-10px;">
             <span v-if="likes" class="text-muted">{{likes}} {{ t('like', likes) }}</span> 
             <span>
@@ -19,7 +20,7 @@
         </div>
         <hr class="my-0" />
 
-        <div v-show="showInput" class="comment position-relative mt-1" v-click-outside="blurEditor">
+        <div @click="openLogin" v-show="showInput" class="comment position-relative mt-1" v-click-outside="blurEditor">
             <input  class="form-control" type="hidden" placeholder="Write a public comment" aria-label="Amount (to the nearest dollar)">
             
             <div :class="{'input-group': !isFocused, 'input-group-focus': isFocused}" class="input-group input-group-lg    mb-3">
@@ -29,19 +30,15 @@
                 <div class="input-group-text" >
                     <div class="d-flex justify-content-between align-items-center w-100">
                         <div >
-
-                        <button @click="showEmojiSelector" :class="{'emoji-btn-active':showEmojiPicker}" type="button" class="btn btn-outline-dark nb me-1 ">
-                            <Icon name="happy-face" :size="1.25" /> 
-                        </button>
-
+                            <button @click="showEmojiSelector" :class="{'emoji-btn-active':showEmojiPicker}" type="button" class="btn btn-outline-dark nb me-1 ">
+                                <Icon name="happy-face" :size="1.25" /> 
+                            </button>
                         </div>
                         <button @click="sendComment" type="button" class="btn btn-outline-dark nb ">
                             <Icon name="send" :size="1.25" />
                         </button>
                     </div>
-
                 </div>
-                
             </div> 
             <div v-click-outside="hideEmojiSelector" class="emoji-container z-1 ps-1" v-if="showEmojiPicker" >
                 <NuxtEmojiPicker  :hide-search="false" theme="dark" @select="onSelectEmoji" />

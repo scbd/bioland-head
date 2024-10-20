@@ -1,5 +1,5 @@
 <template>
-    <div class="w-100 ps-3"  @click="openLogin">
+    <div class="w-100 ps-3" >
 
         <div class="reply-text ms-1 mb-0 d-flex align-items-center">
             <span class="ps-2 me-1 small text-muted text-capitalize">{{reply.dateString}}</span> 
@@ -10,7 +10,7 @@
             <button  @click="showReplies" type="button" class="btn btn-outline-dark nb  fs-5 font-weight-bold btn-sm"><span style="font-weight: bold; letter-spacing: 0.05em; "><span class="text-capitalize">{{ t('view') }}</span> <span v-if="count">{{ t('all') }}</span> <span>{{ count }}</span> <span>{{ t('reply', count) }}</span> </span></button>
         </div>
         <Spinner v-if="loading" :size="60"/>
-        <div v-show="showInput" class="comment position-relative ps-1" v-click-outside="blurEditor">
+        <div  @click="openLogin" v-show="showInput" class="comment position-relative ps-1" v-click-outside="blurEditor">
             <input  class="form-control" type="hidden" placeholder="Write a public comment" aria-label="Amount (to the nearest dollar)">
             
             <div :class="{'input-group': !isFocused, 'input-group-focus': isFocused}" class="input-group input-group-lg    mb-3">
