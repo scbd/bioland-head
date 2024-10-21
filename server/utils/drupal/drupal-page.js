@@ -1,7 +1,7 @@
 
 import * as changeKeys from 'change-case/keys';
 
-const localizationExceptionPaths = ['/forums/', '/forums', '/topics/'];
+const localizationExceptionPaths =  [] //['/forums/', '/forums', '/topics/'];
 
 export async function getPageData(ctx){
     try{
