@@ -7,13 +7,10 @@
                         <NuxtLink  v-if="!aMenu.class?.includes('login')" :class="aMenu.class" class="nav-link" :to="aMenu.href" :title="aMenu.title"  >
                             {{aMenu.title}}
                         </NuxtLink>
-                        <!-- <NuxtLink v-if="aMenu.class?.includes('login')" :class="aMenu.class" class="nav-link" :to="loginUrl" :title="aMenu.title" external target="_blank">
-                            <span v-if="!meStore.canEdit">xxxx <Icon name="drupal" :size="2"></Icon></span>
-                            {{aMenu.title}} {{meStore.name}} ssss {{meStore.canEdit}} dd
-                        </NuxtLink> -->
+
                         <span v-if="!aMenu.class?.includes('login')" ref="spacers" :class="{ 'opacity-0': isLastSpacer(index) }" class="spacer"></span>
                         
-                        <PageHeaderMegaMenuLogin v-show="aMenu.class?.includes('login')" :aMenu="aMenu"/>
+                        <PageHeaderMegaMenuLogin v-if="aMenu.class?.includes('login')" :aMenu="aMenu"/>
 
                         <LazyPageHeaderMegaMenuDropDown v-if="aMenu.children && toggles[index]" :menus="aMenu.children"  v-click-outside="unToggle"/>
                     </li>

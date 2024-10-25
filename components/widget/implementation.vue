@@ -4,7 +4,7 @@
 
 <script setup>
 
-
+    import { useSiteStore } from '~/stores/site' ;
     import clone from 'lodash.clonedeep';
 
     const { t, locale  } = useI18n();
@@ -24,11 +24,10 @@
         const { length } = data || []
 
         if(!length) return response._data = {}
-
-        response._data = length? data[Math.floor(Math.random() * length)] : undefined;
+      response._data = length? data[Math.floor(Math.random() * length)] : undefined;
     }
 
-    const searchPath            = computed(()=>menuStore.getSystemPagePath({ alias:'/search', locale:unref(locale)}));
+    const searchPath = computed(()=>menuStore.getSystemPagePath({ alias:'/search', locale:unref(locale)}));
     const searchSecretariatPath = computed(()=>menuStore.getSystemPagePath({ alias:'/search-secretariat', locale:unref(locale)}));
 
     const links = [

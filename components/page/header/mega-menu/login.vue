@@ -58,11 +58,9 @@
 
     //    consola.info("[fetch request]",  options.headers)
     //      }
-         const headers = useRequestHeaders(['cookie'])
+        const headers = useRequestHeaders(['cookie'])
 
-
-        const { data, status, error } =  await useFetch(`${siteStore.host}/system/menu/account/linkset`, {  method: 'GET',headers });
-
+        const { data, status, error } =  await useFetch(`${siteStore.localizedHost}/system/menu/account/linkset`, {  method: 'GET',headers });
 
         const logOutUrl = computed(() => { 
 

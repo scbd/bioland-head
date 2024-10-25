@@ -55,14 +55,14 @@
                     
                     <span   :style="bgStyle" class="badge text-wrap  me-1 w-100">
                         <NuxtImg :alt="aCountry.name" :src="`https://www.cbd.int/images/flags/96/flag-${aCountry.identifier}-96.png`"  class="flag mb-1"/>
-                        <br>{{aCountry.name}}</span>
+                        <br>{{t(aCountry.name)}}</span>
                 </NuxtLink>
             </section>
         </div>
         <div v-if="tags?.subjects?.length" class="mb-2">
             <h5 >{{t("Thematic Areas")}}</h5>
             
-            <span  v-for="(subject,i) in tags.subjects" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{subject.name}}</span>
+            <span  v-for="(subject,i) in tags.subjects" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ t(subject.name) }}</span>
         </div>
     </div>
 </template>

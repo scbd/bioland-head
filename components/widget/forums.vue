@@ -49,7 +49,7 @@
     }
 
     const loading   = computed(()=> status.value === 'pending');
-    const style     = reactive({ '--bs-primary'    : siteStore.primaryColor })
-    const linkStyle = reactive({ '--bs-primary'    : siteStore.primaryColor, color: siteStore.primaryColor, 'text-decoration': `underline ${siteStore.primaryColor}` })
+    const style     = reactive({ '--bs-primary': siteStore.primaryColor })
+    const linkStyle = reactive({ '--bs-primary': siteStore.primaryColor, color: siteStore.primaryColor, 'text-decoration': `underline ${siteStore.primaryColor}` })
     const bgStyle   = reactive({ 'background-color': siteStore.primaryColor })
 </script>

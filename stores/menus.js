@@ -26,11 +26,11 @@ export const useMenusStore = defineStore('menus', {
             this.set('nfps', menus?.nfps);
             this.set('contentTypes', menus?.contentTypes);
             this.set('forums', menus?.forums);
-            this.set('systemPages', menus?.systemPages);
+        
         },
         isInMenu(menu, href){
-            const hrefMatch = menu?.href === href && menu?.href && href
-
+const hrefMatch = menu?.href === href && menu?.href && href
+// const isContentType = this.isContentTypeId(href)
             if(hrefMatch) return menu;
         
             if(menu?.children?.length)

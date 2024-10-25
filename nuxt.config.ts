@@ -1,6 +1,6 @@
 import locales from './i18n/locales';
 import en from './i18n/locales/en.json';
-
+import domains from './configs/domains';
 const css   =   [ '@/assets/custom.scss', 'vue-final-modal/style.css' ]
 const hour  = 60 * 60;
 const week  = 60 * 60 * 24 * 7;
@@ -43,6 +43,7 @@ export default defineNuxtConfig({
   },
 
   modules: [
+    '@nuxtjs/leaflet',
     '@nuxt/devtools',
     'nuxt-viewport',
     '@nuxtjs/i18n',
@@ -51,7 +52,6 @@ export default defineNuxtConfig({
     '@nuxt/image',
     'nuxt-delay-hydration',
     'nuxt-swiper',
-    '@nuxtjs/leaflet',
     'nuxt-gravatar',
     'nuxt-emoji-picker',
     // '@vue-final-modal/nuxt',
@@ -109,7 +109,8 @@ export default defineNuxtConfig({
   },
 
   image: {
-    domains: ['chm-cbd.net', 'cbd.int', 'https://panorama.solutions/'],
+    dir: 'public',
+    domains: ['chm-cbd.net','be.bl2.chm-cbd.net', 'cbd.int', 'https://panorama.solutions/', ...domains ],
     format: ['webp', 'avif', 'jpeg', 'jpg', 'png','gif'],
     quality: 70,
     screens: {
@@ -152,6 +153,8 @@ export default defineNuxtConfig({
     scanPageMeta       : true,
     cookieStore        : true
   },
-
+  build:{
+    transpile:['@vue-leaflet']
+  },
   compatibilityDate: '2024-09-08',
 })

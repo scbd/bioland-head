@@ -22,13 +22,12 @@
             <div :style="style" class="container-fluid bg-secondary footer-links">
                 <div class="container p-0 pl-md-3 pr-md-3">
                     <div class="row align-items-center w-100x">
-                        <div class="align-items-center col-12 col-sm-8 d-flex">
+                        <div class="align-items-center col-12 col-sm-8 d-flex flex-sm-column">
                             <NuxtLink class="logo navbar-btn link-light " to="https://www.un.org/" :title="t('United Nations')" target="_blank" external>
                               <div class="d-flex align-items-center py-2">
-                            
+
                                 <NuxtImg  class="un-logo" src="/images/UN_emblem_blue.svg" />
 
-                                
                                 <div class="d-flex flex-column ms-1 ">
                                   <span class="fs-3 lh-1 link-light text-capitalize">{{t('united')}}</span>
                                   <span class="fs-3 lh-1 link-light text-capitalize">{{t('nations')}}</span>
@@ -146,10 +145,6 @@
     text-decoration: none;
     padding: 0;
   }
-
-
-
-
 
   .nav-item > .nav-link {
     color: $gray-400;
