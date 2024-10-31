@@ -29,6 +29,7 @@
 <script setup>
 import { Pagination  } from 'swiper/modules';
 import 'swiper/css';
+
 const props = defineProps({ 
                             slides: { type: Array},
                             type: { type: String },
@@ -37,9 +38,10 @@ const props = defineProps({
                             leftArrow:  { type: Boolean, default: false },
                         });
 const { type, pagination, arrows, slides , leftArrow  } = toRefs(props);
+
 const modules      = computed(()=> pagination.value? [ Pagination ] : []); 
 const viewport     = useViewport();
-// const { breakpoint } = toRefs(viewport);
+
 const hideArrows   = computed(()=> (viewport.breakpoint.value === 'lg' || viewport.breakpoint.value === 'xl'|| viewport.breakpoint.value === 'xxl')? slides.value.length >2 : slides.value.length >1  );
 
 const slidePerView = computed(()=> {
@@ -47,25 +49,5 @@ const slidePerView = computed(()=> {
 
     return 1
 });
-
-
-// :breakpoints="{
-//             '640': {
-//                 slidesPerView: 1,
-//                 spaceBetween: 30,
-//             },
-//             '768': {
-//                 slidesPerView: 2,
-//                 spaceBetween: 30,
-//             },
-//             '1400': {
-//                 slidesPerView: 2,
-//                 spaceBetween: 30,
-//             },
-//             '1600': {
-//                 slidesPerView: 3,
-//                 spaceBetween: 30,
-//             }
-//             }"
 </script>
 

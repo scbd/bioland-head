@@ -26,7 +26,6 @@
     </div>
 </template>
 <script setup>
-    const siteStore     = useSiteStore();
     const { t }         = useI18n();
     const props         = defineProps({ count: { type: Number } });
     const { count }     = toRefs(props);
@@ -60,8 +59,7 @@
         
         return inMenu.value?.crumbs;
     }
+    const { style, badgePrimaryStyle } = useTheme();
 
-    const style             = reactive({ color: siteStore.primaryColor, });
-    const badgePrimaryStyle = reactive({ 'background-color': siteStore.primaryColor });
     const showMigratedLInk  = computed(()=> pageStore?.page?.fieldMigrated && showBl1Link );
 </script>

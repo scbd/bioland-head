@@ -32,10 +32,6 @@
 
       const sizes = computed(() => sizeMap[size.value]);
 
-      const siteStore = useSiteStore();
-      const iconStyle = reactive({
-        fill: siteStore.primaryColor,
-        stroke: 'white'
-      })
+      const { iconStyle } = useTheme();
 </script>
 

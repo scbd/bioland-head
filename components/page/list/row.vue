@@ -19,13 +19,13 @@
                         <li v-if="!isSingleType"><span :style="typeStyle" class="fw-bold text-uppercase">{{getDocumentTypeName(aLine)}}</span></li>
                         <li v-if="aLine?.tags?.countries?.length" v-for="(aCountry,i) in aLine.tags?.countries" :key="i"   class="text-uppercase" >
                             <NuxtLink :to="`https://www.cbd.int/countries/?country=${aCountry.identifier}`" target="_blank" external>
-                                {{aCountry.name}}
+                                {{t(aCountry.identifier)}}
                             </NuxtLink>
                         </li>
                     </ul>
 
                     <span v-if="aLine?.tags?.gbfTargets?.length" v-for="(aTarget,i) in aLine?.tags?.gbfTargets" :key="i"  >
-                        <GbfIcon :identifier="aTarget.identifier" size="xs"/>
+                        <GbfIcon :identifier="aTarget.identifier" size="xs" class="me-1"/>
                     </span>
                     <span v-if="aLine?.tags?.sdgs?.length" v-for="(aSdg,i) in aLine?.tags?.sdgs" :key="i"  >
                         <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>

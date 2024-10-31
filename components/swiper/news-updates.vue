@@ -31,7 +31,9 @@ import { Pagination  }   from 'swiper/modules';
 import { useWindowSize } from '@vueuse/core';
 import 'swiper/css';
 import clone from 'lodash.clonedeep';
+
 const localePath = useLocalePath();
+const siteStore = useSiteStore();
 const { t } = useI18n();
 const props = defineProps({ 
                          
@@ -51,7 +53,7 @@ const { width: rowElWidth } = useWindowSize();
 
 const modules      = computed(()=> pagination.value? [ Pagination ] : []); 
 const viewport     = useViewport();
-// const { breakpoint } = toRefs(viewport);
+
 const hideArrows   = computed(()=> (viewport.breakpoint.value === 'lg' || viewport.breakpoint.value === 'xl'|| viewport.breakpoint.value === 'xxl')? slides.value.length > hideArrowsCount.value : slides.value.length > 1  );
 
 const slidePerView = computed(()=> {
@@ -72,14 +74,15 @@ const spaceBetween = computed(()=> {
     return 5
 });
 
-const siteStore = useSiteStore();
+
 const query     = clone({ ...siteStore.params });
 
 const { data:slides, status } = await useFetch(`/api/list/latest`, {  method: 'GET', query });
 
 setTimeout(() => {
     loading.value = false
-}, 1500);
+}, 500);
+
 const headerStyle = reactive({
     display: 'inline-block',
   'border-bottom': `.25rem solid ${siteStore.primaryColor}`,

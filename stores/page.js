@@ -1,29 +1,22 @@
 
 import   camelCaseKeys   from 'camelcase-keys';
-import { useSiteStore }  from "~/stores/site";
-
 
 
 export const usePageStore = defineStore('page', {
     state: ()=>({ page: {}, loading: true, cancelLoading: true, isInitialized: false, cacheKeys:{} }), 
     actions:{
         isLoading(){
-
             return this.loading && !this.cancelLoading;
         },
         stopLoading(){
-            setTimeout(() => {
-                this.loading = false;
-            }, 500);
+            setTimeout(() => { this.loading = false; }, 500);
         },
         initialize(pageDataRaw, key){
-
-
             this.loadPage(pageDataRaw, key)
         } ,
         loadPage(pageDataRaw, key){
             this.$reset()
-            this.isInitialized = key
+            this.isInitialized = key;
             if(!pageDataRaw) throw new Error('usePageStore.initialize -> pageDataRaw is undefined');
 
             const pageData = camelCaseKeys(pageDataRaw);
@@ -96,8 +89,7 @@ export const usePageStore = defineStore('page', {
         
             const picIndex = randomTime(heroImages.length);
 
-       
-            return heroImages[ picIndex];
+            return heroImages[picIndex];
         },
         typeName(){ 
             if(this.isTaxonomyTerm || this.isSystemPage) return this.page?.name || '';
@@ -209,26 +201,18 @@ export const usePageStore = defineStore('page', {
             return '/node';
         },
         migratedFromLink(){
-            const route         = useRoute();
-            const { defaultLocale, siteCode, locale } = useSiteStore()
+            const { siteCode } = useSiteStore();
 
-            const migratedObject =  parseJson(this.page?.fieldMigrated);
+            const migratedObject = parseJson(this.page?.fieldMigrated);
 
             if(!migratedObject) return '';
 
-
-            return `https://${siteCode}.chm-cbd.net/node/${migratedObject?.drupal_internal__nid}`;        
-
-            // if(!migratedObject?.alias) return `https://${siteCode}.chm-cbd.net/${removeDefaultLocal(route.fullPath, defaultLocale)}`;
-
-            // return `https://${siteCode}.chm-cbd.net/${removeDefaultLocal(migratedObject.alias[locale],defaultLocale)}`;
+            return `https://${siteCode}.chm-cbd.net/node/${migratedObject?.drupal_internal__nid}`;
         },
     }
 })
 
-function removeDefaultLocal(path, defaultLocale){
-    return path.replace(`/${defaultLocale}/`, '');
-}
+
 function getTids(searchField){
     if(!searchField || !searchField?.length) return false;
 
@@ -245,11 +229,3 @@ function parseJson(json){
     }
 }
 
-function randomTime(total = 3){
-    const minutes = new Date().getMinutes();
-
-    for(let i = 0; i < total; i++)
-        if(minutes <= ((60/total) * i+1)) return i;
-
-    return 0
-}

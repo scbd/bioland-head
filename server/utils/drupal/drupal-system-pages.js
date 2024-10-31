@@ -3,6 +3,7 @@
 export const getSystemPagesMap= async (ctx) => {
     const systemPages = await getSystemPageTerms(ctx)
     
+ 
     return formatSystemPages(ctx, systemPages)
 }
 

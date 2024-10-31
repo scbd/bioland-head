@@ -28,7 +28,7 @@
 
             <hr class="my-2" v-if="tags?.subjects || tags?.sdgs || tags?.gbfTargets"/>
             <h6 class="card-subtitle text-primary">
-                <NuxtLink   :to="linkTo" :title="imageAlt" >
+                <NuxtLink  :style="arrowFill" :to="linkTo" :title="imageAlt" >
                     {{t('View more')}} <Icon  name="arrow-right" class="arrow" />
                 </NuxtLink>
             </h6>
@@ -37,29 +37,22 @@
 </template>
 
 <script setup>
-    import { getGbfUrl    } from '~/util'        ;
-    import { useSiteStore } from '~/stores/site' ;
-    import { DateTime     } from 'luxon'         ;
-
     const { trunc, isTruncated: isTrunc } = useText();
-    const siteStore = useSiteStore();
+    const   siteStore   = useSiteStore();
     const   props       = defineProps({ record: { type: Object } });
     const { record    } = toRefs(props);
 
     const { t, locale } = useI18n();
 
-    const tags = computed(()=> record?.value?.tags);
+    const {  getGbfUrl }   = useDocumentHelpers(record);
+    
+    const tags     = computed(()=> record?.value?.tags);
+    const imageSrc = computed(()=> siteStore.host + record.value.fieldMediaImage?.uri?.url) ;
+    const imageAlt = computed(()=> record?.value?.fieldMediaImage?.meta?.alt);
+    const linkTo   = computed(()=> record?.value?.path?.alias);
 
-
-    const imageSrc = computed(()=> siteStore.host + record.value.fieldMediaImage?.uri?.url) //siteStore.host + fieldMediaImage?.value?.uri?.url
-    const imageAlt = computed(()=> record?.value?.fieldMediaImage?.meta?.alt)
-    const linkTo  = computed(()=> record?.value?.path?.alias)
-
-    function dateFormat(date){
-        return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
-    }
-
-    const style = reactive({ '--bs-primary': siteStore.primaryColor });
+    const dateFormat  = useDateFormat(locale);
+    const { style, arrowFill      } = useTheme();
 </script>
 <style lang="scss" scoped>
 .i-top{

@@ -118,17 +118,10 @@
         </div> 
     </div> 
 </template>
-<script>
-import {  useSiteStore } from "~/stores/site";
-import {  usePageStore } from "~/stores/page";
-import { useElementSize } from '@vueuse/core';
+<script setup>
+    import { useElementSize } from '@vueuse/core';
 
-export default {
-    name: 'PageTitleSearch',
-    setup
-}
-
-function setup() {
+    const router = useRouter();
     const queryText    = ref('');
     const cont         = ref(null);
     const contL         = ref(null);
@@ -154,32 +147,27 @@ function setup() {
     })
 
     async function onClick(value){
-
-
-
-    const searchPath = computed(()=>menusStore.getSystemPagePath({ alias:'/search', locale:unref(locale)}));
-
-    if(!value) return navigateTo(localePath(searchPath.value))
-    
-
-    
-    if(route.path !== searchPath?.value){
-
-        navigateTo(localePath(`${searchPath.value}?freeText=${value}`))
-    }else{
-        const router = useRouter();
         
-        await router.push({ path:localePath(searchPath.value), query: { freeText: value } });
+        const searchPath = computed(()=>menusStore.getSystemPagePath({ alias:'/search', locale:unref(locale)}));
+
+        consola.warn('=============', searchPath.value);
+        consola.warn('=============', value);
+
+        if(!value) return navigateTo(localePath(searchPath.value));
+
+        if(route.path !== searchPath?.value)
+            navigateTo(localePath(`${searchPath.value}?freeText=${value}`));
+        else
+            await router.push({ path:localePath(searchPath.value), query: { freeText: value } });
+
+        this.queryText='';
     }
-    //this.navigateTo(localePath(`/search?freeText=${value}`))
-    this.queryText='';
-}
 
 
     const hasHeroImage = computed(() => pageStore.page.hasHeroImage );
     
-    return { onClick, localePath, t, logo , hasHeroImage , name, rowElWidth, cont, hasLargeName, navigateTo, queryText }
-}
+    // return { onClick, localePath, t, logo , hasHeroImage , name, rowElWidth, cont, hasLargeName, navigateTo, queryText }
+
 
 
 </script>

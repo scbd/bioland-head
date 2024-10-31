@@ -66,9 +66,11 @@ function cleanIndexDataMap(record){
     record.href =record.urls[0];
 
     if(record.eventCountry)
-        record.eventCountry = JSON.parse(record.eventCountry).en;
+        record.eventCountry = JSON.parse(record.eventCountry);
 
-    //record.mediaImage =getRandomImage(record);
+    if(record.eventCountry_CEN)
+        record.eventCountry = JSON.parse(record.eventCountry_CEN);
+
 
     return record
 }

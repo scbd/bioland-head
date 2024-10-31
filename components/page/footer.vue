@@ -62,23 +62,20 @@
 <script setup>
     import { useMenusStore } from "~/stores/menus";
 
-
-        const meStore = useMeStore();
+        const meStore   = useMeStore   ();
         const menuStore = useMenusStore();
+        const siteStore = useSiteStore ();
+
         const { footer: menus, footerCredits: creditsMenus } = storeToRefs(menuStore);
-        const { t  } = useI18n();
-        const siteStore = useSiteStore();
-        const style = reactive({ '--bs-primary': siteStore.primaryColor });
-        const headerLinkStyle = reactive({ '--bs-primary': siteStore.primaryColor });
+        const { style,  headerLinkStyle } = useTheme();
+        const { t  }                      = useI18n();
+
 
         function editMenu (name) {
             const menuName = name || 'footer'
 
             navigateTo(`${siteStore.host}/admin/structure/menu/manage/${menuName}`,{ external: true });
-
         }
-
-
 </script>
 
 <style lang="scss" scoped>

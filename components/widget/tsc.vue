@@ -2,35 +2,30 @@
     <Widget v-if="!error && record" :loading="loading" :name="t('Technical & scientific cooperation')" :record="record" :links="links"/>
 </template>
 <script setup>
+    import clone from 'lodash.clonedeep';
+
+    const   siteStore  = useSiteStore();
+    const { t }        = useI18n();
+    const   query      = clone({...siteStore.params, rowsPerPage: 5 });
 
 
-    import   clone          from 'lodash.clonedeep' ;
-    const siteStore  = useSiteStore();
-    const { t, locale } = useI18n();
-    const unLocales  = ['en', 'fr', 'es', 'ru', 'ar', 'zh'];
-const indexLocale = unLocales.includes(locale.value)? locale.value.toUpperCase() : 'EN';
-const queryFields = `fl=thematicArea_${indexLocale}_ss,country_${indexLocale}_s,logo*,id,title_${indexLocale}_s,description_${indexLocale}_s,*date*,government*,city_${indexLocale}_s,startDate*,endDate*,organization_${indexLocale}_s,summary_${indexLocale}_s`
-const uri = `https://api.cbd.int/api/v2013/index/select?${queryFields}&q=NOT+version_s:*+AND+realm_ss:chm+AND+schema_s:*++AND+(schema_s:bbiRequest)&rows=25&sort=createdDate_dt+desc&start=0&wt=json`
-   // const { data: record  }= 
-   const   query  = clone({...siteStore.params, rowsPerPage:5 });
     const { data: record, status, error  } = await useLazyFetch('/api/list/tsc', {  method: 'GET', query, onResponse });
 
     const loading = computed(()=> status.value === 'pending');
-    function onResponse({ request, response, options}){
-       
-        const data    = response._data;
-        const { length } = data || []
 
+    function onResponse({ response}){
+        const   data     = response._data;
+        const { length } = data || [];
 
         response._data = data[Math.floor(Math.random() * length)];
     }
     
     const links = [
-        { name: t('Browse TSC Opportunities'),  to:'https://www.cbd.int/biobridge/platform/search?schema_s=bbiOpportunity' },
-        { name: t('Browse TSC Assistance and Providers'),  to:'https://www.cbd.int/biobridge/platform/search?schema_s=bbiProfile&schema_s=bbiRequest'},
-        { name: t('Request TSC Assistance'),  to: 'https://www.cbd.int/biobridge/platform/submit/bbi-request/new'},
-        { name: t('Provide TSC Assistance'),  to: 'https://www.cbd.int/biobridge/platform/submit/bbi-profile/new'},
-        { name: t('Provide TSC Opportunity'),  to: 'https://www.cbd.int/biobridge/platform/submit/bbi-opportunity/new' }
+        { name: t('Browse TSC Opportunities'),             to: 'https://www.cbd.int/biobridge/platform/search?schema_s=bbiOpportunity' },
+        { name: t('Browse TSC Assistance and Providers'),  to: 'https://www.cbd.int/biobridge/platform/search?schema_s=bbiProfile&schema_s=bbiRequest' },
+        { name: t('Request TSC Assistance'),               to: 'https://www.cbd.int/biobridge/platform/submit/bbi-request/new' },
+        { name: t('Provide TSC Assistance'),               to: 'https://www.cbd.int/biobridge/platform/submit/bbi-profile/new' },
+        { name: t('Provide TSC Opportunity'),              to: 'https://www.cbd.int/biobridge/platform/submit/bbi-opportunity/new' }
     ];
 </script>
 

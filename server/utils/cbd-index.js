@@ -131,6 +131,7 @@ export const normalizeIndexKeys = (obj) => {
 
             const newKey = key
             // .replace(/_C[A-Z]{2}/, '')
+            // .replace(/_[A-Z]{2}_CEN/, '')
                             .replace(/_[A-Z]{2}_txt/, 'Texts')
                             .replace(/_[A-Z]{2}_ss/, 's')
                             .replace(/_ss/, 's')

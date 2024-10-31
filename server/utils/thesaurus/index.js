@@ -13,7 +13,7 @@ export const getThesaurusByKey = async (keysRaw) => {
         else promises.push($fetch(uri, { mode: 'cors' }));
     }
 
-    return Promise.all(promises)
+    return Promise.all(promises);
 }
 
 export const thesaurusApisUrls = {

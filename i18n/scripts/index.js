@@ -18,9 +18,10 @@ async function main(){
     let start = false;
     for (const locale of locales) {
 
-        if(locale.code === 'en') continue;
-        // if(locale.code === 'de') start = true;
-        // if(!start) continue;
+        if(['bo','en', 'fo', 'se'].includes(locale.code)) continue;
+
+        if(locale.code === 'sw') start = true;
+        if(!start) continue;
 
         const fileName = resolve(rootContext, `./i18n/locales/${locale.file}`);
         // const fileExists = fs.existsSync(fileName);

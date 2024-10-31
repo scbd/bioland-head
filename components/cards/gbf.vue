@@ -9,13 +9,12 @@
 
             <p class="card-text">{{trunc(record.description)}}
                 
-                <!-- <Icon v-if="isTruncated" name="read-more"  class="fs-4"/> -->
             </p>
         </div>
         <div class="card-footer">
             <h6 class="card-subtitle my-2 ">
-                <NuxtLink  :style="c2Style" :to="getGbfUrl()" :title="name" external target="_blank">
-                    {{t('View more')}} <Icon   name="arrow-right" class="arrow" />
+                <NuxtLink  :style="arrowFill" :to="getGbfUrl()" :title="name" external target="_blank">
+                    {{t('View more')}} <Icon   :style="arrowFill"  name="arrow-right" class="arrow" />
                 </NuxtLink>
             </h6>
         </div>
@@ -26,11 +25,10 @@
     const   props       = defineProps({ record: { type: Object } });
     const { record    } = toRefs(props);
 
-    const { t, locale } = useI18n();
+    const { t } = useI18n();
     const { trunc, isTruncated: isTrunc } = useText()
     const name = computed(()=> record.value.name.substring(8));
 
-    const isTruncated = computed(()=> isTrunc(record.value.description));
 
     function getGbfUrl(){
         const number = Number(record.value.identifier.replace('GBF-TARGET-', ''));
@@ -38,23 +36,19 @@
         return `https://www.cbd.int/gbf/targets/${number}`
     }
 
-    const siteStore = useSiteStore();
-    const bgStyle = reactive({ 'background-color': siteStore.secondaryColor });
-    const c2Style = reactive({ 'color': siteStore?.theme?.color?.secondaryTextOver });
+    const { bgStyle,  arrowFill } = useTheme();
+
 </script>
 <style lang="scss" scoped>
-
-
 .card {
     width: 350px ;
     height: 450px !important;
-    // background-color: rgba(0,158, 219, .15) !important;
 }
 .arrow{
-    fill:var(--bs-primar);
-    width       : 1em;
-    height      : 1em;
-    cursor: pointer;
+    // fill         : var(--bs-primar);
+    width        : 1em;
+    height       : 1em;
+    cursor       : pointer;
     margin-bottom: 0.2rem;
 }
 @media (max-width: 991px) {

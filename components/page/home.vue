@@ -12,7 +12,7 @@
             </div>
             <div class="col-md-4 col-12 border-col">
                 <WidgetPanorama/>
-                <WidgetGbif/>
+                <!-- <WidgetGbif/> -->
                 <WidgetELearning/>
             </div>
             <div class="col-md-4 col-12 border-col">

@@ -72,6 +72,14 @@ export default { name      : 'BL2App', };
 </style>
 <style lang="scss">
 @import "@/assets/scss/variables.scss";
+
+.arrow{
+    width        : 1.3e m            ;
+    height       : 1.3e m            ;
+    cursor       :      pointer      ;
+    margin-bottom: 0.2  rem          ;
+}
+
 // Typography
 @media (max-width: 1375.98px) {
   html {

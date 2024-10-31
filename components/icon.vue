@@ -12,7 +12,7 @@ const   props        = defineProps({  name : { type: String, required: true },
                                     });
 
 const { name, flip, color, size } = toRefs(props);
-// :style="`width:${size}em;height:${size}em;`"
+
 const iconStyle = reactive({ 
   'fill': color.value || siteStore.primaryColor,
   'width': `${size.value}em`,

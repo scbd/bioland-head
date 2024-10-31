@@ -76,23 +76,18 @@
     </div>
 </template>
 <script setup>
-import { usePageStore } from "~/stores/page";
-
 const { t } = useI18n();
 
 const localePath = useLocalePath();
 const pageStore  = usePageStore();
-// const page       = computed(()=> pageStore.page);
 
 const isImageOrVideo = computed(()=> pageStore?.isImageOrVideo);
 const isImage        = computed(()=> pageStore?.isImage );
 // const isVideo        = computed(()=> pageStore?.isVideo);
 const isDocument     = computed(()=> pageStore?.isDocument );
 
-// const media = computed(()=> Array.isArray(pageStore?.page?.fieldAttachments?.value)? pageStore?.page?.fieldAttachments?.value.filter(({ type })=> !type.endsWith('hero')) : []);
+const { pageTypeStyle } = useTheme();
 
-const siteStore    = useSiteStore();
-const pageTypeStyle = reactive({ '--bs-primary': siteStore.primaryColor });
 
 </script>
 

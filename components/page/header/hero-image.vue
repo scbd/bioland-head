@@ -30,8 +30,8 @@ export default {
 }
 
 function setup() {
-//v-if="meStore.canEditMenu" @click="editMenu('footer-credits')" 
-const meStore = useMeStore();
+
+    const meStore = useMeStore();
     const siteStore    = useSiteStore();
     const pageStore    = usePageStore();
     const hasHeroImage = computed(() => pageStore?.page?.hasHeroImage);
@@ -44,7 +44,7 @@ const meStore = useMeStore();
 
     const backgroundStyles = computed(() => {
 
-        if(!hasHeroImage.value) return {}//getBackgroundStyles('/images/hero-image.jpg')
+        if(!hasHeroImage.value) return {}
         const imgOptions = { 
                                 ...getWidthHeightImg(viewport),
                                 fit: 'outside',
