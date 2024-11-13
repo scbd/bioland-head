@@ -22,23 +22,25 @@
             <div :style="style" class="container-fluid bg-secondary footer-links">
                 <div class="container p-0 pl-md-3 pr-md-3">
                     <div class="row align-items-center w-100x">
-                        <div class="align-items-center col-12 col-sm-8 d-flex flex-sm-column">
+                        <div class="align-items-center col-12 col-sm-8 d-flex">
                             <NuxtLink class="logo navbar-btn link-light " to="https://www.un.org/" :title="t('United Nations')" target="_blank" external>
                               <div class="d-flex align-items-center py-2">
 
                                 <NuxtImg  class="un-logo" src="/images/UN_emblem_blue.svg" />
 
                                 <div class="d-flex flex-column ms-1 ">
-                                  <span class="fs-3 lh-1 link-light text-capitalize">{{t('united')}}</span>
-                                  <span class="fs-3 lh-1 link-light text-capitalize">{{t('nations')}}</span>
+                                  <span class=" un-text lh-1 link-light text-capitalize">{{t('united')}}</span>
+                                  <span class="un-text lh-1 link-light text-capitalize">{{t('nations')}}</span>
                                 </div>
                               </div>
                                 
                             </NuxtLink>
-                            <NuxtLink  to="https://www.cbd.int" :title="t('United Nations')" target="_blank" external>
-                                <NuxtImg  class="sublogo  me-2" src="/images/cbd-logo-white.svg" />
-                            </NuxtLink>
-                            <NuxtLink  class="navbar-brand link-light" to="https://www.cbd.int" :title="t('Convention on Biological Diversity')" target="_blank" external>{{t('Convention on')}}<br/>{{t('Biological Diversity')}}</NuxtLink>
+                            <div class="d-flex align-items-center">
+                              <NuxtLink  to="https://www.cbd.int" :title="t('United Nations')" target="_blank" external>
+                                  <NuxtImg  class="sublogo  me-2" src="/images/cbd-logo-white.svg" />
+                              </NuxtLink>
+                              <NuxtLink  class="navbar-brand link-light" to="https://www.cbd.int" :title="t('Convention on Biological Diversity')" target="_blank" external>{{t('Convention on')}}<br/>{{t('Biological Diversity')}}</NuxtLink>
+                            </div>
                         </div>
                         <div class="col-12 col-sm-4 d-flex justify-content-end">
 
@@ -60,7 +62,6 @@
         </footer>
 </template>
 <script setup>
-    import { useMenusStore } from "~/stores/menus";
 
         const meStore   = useMeStore   ();
         const menuStore = useMenusStore();
@@ -98,7 +99,10 @@
   }
 
   .un-logo {
-    height: 10rem;
+    height: 6rem;
+  }
+  .un-text {
+    font-size: 2rem;
   }
 .footer-sitemap li {
   font-size: 0.875rem;
@@ -125,7 +129,12 @@
 }
 
 @media (max-width: 991.98px) {
-
+  .un-logo {
+    height: 3rem;
+  }
+  .un-text {
+    font-size: 1.2rem;
+  }
   .footer-sitemap .col-6 {
       border-left: 0;
   }

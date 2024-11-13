@@ -42,7 +42,6 @@
 
   const target = computed(()=>isLocalHost? '_blank' : '_self');
 
-// consola.error('isLocaleHost ', isLocaleHost )
 </script>
 
 <style lang="scss" scoped>

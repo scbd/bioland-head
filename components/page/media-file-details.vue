@@ -3,10 +3,11 @@
 <div></div>
 
         <div class="media-details-container p-2" :class="{ 'p-1': !vertical }">
-                <div v-if="media.name" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
+
+                <div v-if="media.name" :class="{ 'flex-column mb-1': vertical }" class="d-flex">
                         <h5 >{{t('File Name')}}</h5>
-                        <span v-if="!pageStore?.isImage">{{media.name}}</span>
-                        <span v-if="pageStore?.isImage">
+                        <span class="text-break" v-if="!pageStore?.isImage">{{media.name}}</span>
+                        <span class="text-break" v-if="pageStore?.isImage ">
                                 <NuxtLink :to="pageStore?.image.src" target="_blank" download>
                                         {{media.name}}  <Icon name="download" class="fs-4 ms-1"/>
                                 </NuxtLink>
@@ -25,13 +26,13 @@
                         <h5 >{{t('Width')}}</h5>
                         <span>{{media.fieldWidth}} {{t('px')}}</span>
                 </div> 
-                <div v-if="media.fieldMime" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
+                <div v-if="media.fieldMime || media.filemime" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
                         <h5 >{{t('Mime Type')}}</h5>
-                        <span>{{media.fieldMime}}</span>
+                        <span>{{media.fieldMime || media.filemime}}</span>
                 </div> 
-        <div v-if="media.fieldSize" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
+        <div v-if="media.fieldSize || media.filesize" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
                 <h5 >{{t('File Size')}}</h5>
-                <span>{{fileSize(media.fieldSize)}}</span>
+                <span>{{fileSize(media.fieldSize || media.filesize)}}</span>
         </div>
         <div v-if="media.created" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
                 <h5 >{{t('Created Date')}}</h5>
@@ -41,7 +42,7 @@
                 <h5 >{{t('Updated Date')}}</h5>
                 <span>{{dateFormat(media.changed)}}</span>
         </div>
-        <div v-if="pageStore?.isDocument && media?.downloadUrl" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
+        <div v-if="(pageStore?.isDocument || pageStore?.isMediaDocument)  && media?.downloadUrl" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
                 <h5 >{{t('Download')}}</h5>
                 <span>
                         <NuxtLink :to="media.downloadUrl" target="_blank" download>
@@ -53,24 +54,21 @@
 </template>
 <script setup>
         import { DateTime     } from 'luxon'        ;
-        import { usePageStore } from '~/stores/page';
-        import { useSiteStore } from '~/stores/site';
         import prettyBytes from 'pretty-bytes';
 
         const   props       = defineProps({ vertical: { type: Boolean, default: false } });
         const { vertical    } = toRefs(props);
         const { t, locale } = useI18n();
-        const siteStore = useSiteStore();
+
 
         const pageStore = usePageStore();
 
-        // const { typeId, videos,video,document, image, name, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImag, documentUri  } = storeToRefs( usePageStore());
 
 const media = computed(()=> {
 
-        if(pageStore.isImage) return {...pageStore.image, fieldPublished:pageStore.publishedOn};
-        if(pageStore.isVideo) return { ...pageStore.video, fieldPublished:pageStore.publishedOn};
-        if(pageStore.isDocument) {
+        if(pageStore.isImage || pageStore.isMediaImage) return {...pageStore.image, fieldPublished:pageStore.publishedOn};
+        if(pageStore.isVideo || pageStore.isMediaRemoteVideo) return { ...pageStore.video, fieldPublished:pageStore.publishedOn};
+        if(pageStore.isDocument || pageStore.isMediaDocument) {
    
                 return {...pageStore.document,fieldPublished:pageStore.publishedOn};
         }

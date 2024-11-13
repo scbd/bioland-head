@@ -10,6 +10,17 @@ const headers ={
     "authorization": `Bearer ${process.env.SCBD_AUTH_TOKEN}`
 }
 
+
+const toAdd={
+    pdfNotice  : "This browser does not support PDFs. Please download the PDF to view it: ",
+    downloadPdf: "Download PDF"                                                            ,
+    media      : "media"                                                                   ,
+    document   : "document"                                                                ,
+    video      : "video"                                                                   ,
+    image      : "image"                                                                   ,
+    heroHeader : "hero header"
+}
+
 await main();
 
 async function main(){
@@ -20,8 +31,8 @@ async function main(){
 
         if(['bo','en', 'fo', 'se'].includes(locale.code)) continue;
 
-        if(locale.code === 'sw') start = true;
-        if(!start) continue;
+        // if(locale.code === 'sw') start = true;
+        // if(!start) continue;
 
         const fileName = resolve(rootContext, `./i18n/locales/${locale.file}`);
         // const fileExists = fs.existsSync(fileName);
@@ -30,10 +41,17 @@ async function main(){
 
        // if(fileExists)continue;
 
-        const data = await $fetch(`http://localhost:3001/api/i18n/${locale.code}`, {  method: 'POST', headers, body: en  })
+        const newData = await $fetch(`http://localhost:3001/api/i18n/${locale.code}`, {  method: 'POST', headers, body: toAdd  })
+
+        const langData= getLanguageData(locale);
+
+        const data = {...langData, ...newData};
 
         fs.writeFileSync(fileName, JSON.stringify(data, null, 2));
         consola.success(`Done ${locale.name} ${locale.file}`)
+        consola.success();
+        consola.success();
+        // consola.success(langData);
     }
 
 }
@@ -41,4 +59,8 @@ async function main(){
 
 function getEnglish(){
     return fs.readFileSync(resolve(rootContext, './i18n/locales/en.json')).toString();
+}
+
+function getLanguageData(locale){
+    return JSON.parse(fs.readFileSync(resolve(rootContext, `./i18n/locales/${locale.file}`)).toString());
 }

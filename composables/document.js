@@ -42,12 +42,14 @@ function getGbfUrl(identifier){
     return `https://www.cbd.int/gbf/targets/${number}`
 }
 
-function getDocumentIcon(uri){
+export function getDocumentIcon(uri){
     const mime = lookup(uri);
 
-    if(mime?.includes('pdf')) return 'bl2-icon-document-file-pdfn';
-    if(mime?.includes('word')) return 'bl2-icon-document-file-docx';
-    if(mime?.includes('excel')) return 'bl2-icon-document-file-xlsx';
+    if(mime?.includes('pdf'))      return { name: 'document-file-pdf', color: '#f40f02' };
+    if(mime?.includes('word'))     return { name: 'document-file-docx', color: '#00A4EF' };
+    if(mime?.includes('excel'))    return { name: 'document-file-xlsx', color: '#fadff2f' };
+    if(mime?.includes('ppt'))      return  { name: 'document-file-pptx', color: '#C13B1B' };
+    if(mime?.includes('image'))    return  { name: 'file-image-o', color: '#C13B1B' };
 
-    return 'file';
+    return { name: 'document-file-txt', color: '#222222' };
 }

@@ -15,7 +15,6 @@ export default cachedEventHandler(async (event) => {
                 index++
             }
 
-            consola.error(JSON.stringify(sdgList))
             return useScbdIndex ({ ...ctx, ...query });
         }
         catch (e) {

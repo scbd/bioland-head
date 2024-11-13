@@ -150,9 +150,6 @@
         
         const searchPath = computed(()=>menusStore.getSystemPagePath({ alias:'/search', locale:unref(locale)}));
 
-        consola.warn('=============', searchPath.value);
-        consola.warn('=============', value);
-
         if(!value) return navigateTo(localePath(searchPath.value));
 
         if(route.path !== searchPath?.value)

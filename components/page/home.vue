@@ -28,29 +28,9 @@
 </template>
 <script setup>
 
-import { usePageStore } from "~/stores/page";
-import { useSiteStore } from '~/stores/site';
-import clone from 'lodash.clonedeep';
-
-
 const pageStore         = usePageStore();
-const siteStore         = useSiteStore();
 const body              = computed(()=>pageStore?.page?.body);
 
-
-
-
-// onMounted(() => {
-//     consola.error(document?.cookie)
-// });
-// const drupalInternalIds = [2,3];
-
-// const query = {drupalInternalIds, freeText}
-// const query  = clone({ drupalInternalIds, ...siteStore.params });
-
-// const { data } = await useFetch(`/api/list/content`, {  method: 'GET', query });
-
-// const slides = computed(()=>data.value.data)
 </script>
 <style>
 .border-col{

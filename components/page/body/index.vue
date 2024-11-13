@@ -30,12 +30,23 @@
 
                 <hr class="mt-1">
 
-                <div v-if="isImage && pageStore?.image?.src" >
-                    <NuxtImg format="webp"  :alt="pageStore?.image.alt" :src="pageStore?.image.src" class="img-fluid mt-0 mb-1 w-100"/>
+                <div v-if="isImageOrVideo" class="d-flex flex-row justify-content-end" >
+                    <div class="align-self-start w-100">
+                        <NuxtImg v-if="pageStore?.image?.src" format="webp"  :alt="pageStore?.image.alt" :src="pageStore?.image.src" class="img-fluid mt-0 mb-1 w-100"/>
+                        <PageBodyMediaYouTube  v-if="pageStore?.isVideo" :url="pageStore?.video?.fieldMediaOembedVideo" :title="pageStore?.video?.name || pageStore?.media?.title"/>
+                    </div>
+                    <PageBodyTagsDate class="mt-2" />
                 </div>
-
-                <div class="d-none d-md-block">
-                    <PageBodyTagsDate />
+                <div class="d-md-flex"  >
+                    <div v-if="!isImageOrVideo" class="d-md-none align-self-start"> 
+                        <PageBodyTagsDate /> 
+                    </div>
+                    <div class="align-self-start w-100">
+                        <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="pageStore?.body"></div>
+                    </div>
+                    <div v-if="!isImageOrVideo"class="d-none d-md-block align-self-start"> 
+                        <PageBodyTagsDate /> 
+                    </div>
                 </div>
 
                 <div class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
@@ -43,16 +54,13 @@
                 </div>
 
                 <div v-if="pageStore?.image?.url" class="col-12 d-md-none px-0">
-                    <NuxtLink :to="pageStore?.image?.url">
-                        <NuxtImg :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
-                    </NuxtLink>
+
+                    <NuxtImg :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
+
                     <PageBodyTagsDate />
                 </div>
-
-                <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="pageStore?.body"></div>
-
             </div>
-            <PageBodyMediaYouTube v-if="pageStore?.isVideo" :url="pageStore?.video?.fieldMediaOembedVideo" :title="pageStore?.video?.name || pageStore?.media?.title"/>
+            
         </div>
     
         <div v-if="pageStore?.media?.length"  class="row mt-3">
@@ -85,6 +93,7 @@ const isImageOrVideo = computed(()=> pageStore?.isImageOrVideo);
 const isImage        = computed(()=> pageStore?.isImage );
 // const isVideo        = computed(()=> pageStore?.isVideo);
 const isDocument     = computed(()=> pageStore?.isDocument );
+
 
 const { pageTypeStyle } = useTheme();
 

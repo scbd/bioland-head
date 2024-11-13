@@ -76,6 +76,9 @@ export const usePageStore = defineStore('page', {
             return ['media--hero', 'media--image', 'media--document', 'media--remote_video'].includes(this?.page?.type);
 
         },
+        mediaTypeName(){
+           return this?.page?.type.replace('media--', '');
+        },
         isTaxonomyPage(){
             return this?.page?.type.startsWith('taxonomy_term--');
         },
@@ -94,7 +97,7 @@ export const usePageStore = defineStore('page', {
         typeName(){ 
             if(this.isTaxonomyTerm || this.isSystemPage) return this.page?.name || '';
 
-
+            if(this.isMediaPage) return  this.mediaTypeName
             const menusStore = useMenusStore();
 
             return  this.page?.fieldTypePlacement?.name || ''; 
@@ -110,20 +113,30 @@ export const usePageStore = defineStore('page', {
             return this.page?.fieldTypePlacement?.drupal_internal__tid || this.page?.fieldTypePlacement?.drupalInternalTid  || this.page?.drupalInternalTid || undefined; 
         },
         image(){
+            if(this.isMediaImage) return this.page.fieldMediaImage;
             if(!this.images || !this.images?.length) return undefined;
         
             return {...this.images[0] };
         },
         document(){
+            const siteStore   = useSiteStore();
+            if(this.isMediaDocument) {
+                const dl =  `${siteStore.host}${this.page?.fieldMediaDocument?.uri?.url}`;
+
+                consola.error('this.page?.fieldMediaDocument?.uri?.url', `${siteStore.host}${this.page?.fieldMediaDocument?.uri?.url}`)
+                return {...this.page.fieldMediaDocument, downloadUrl:dl};
+            }
             if( !this?.documents?.length) return undefined;
         
-            const siteStore   = useSiteStore();
+            
             const downloadUrl =  `${siteStore.host}${this.documents[0]?.fieldMediaDocument?.uri?.url}`;
 
             return { ...this.documents[0], downloadUrl };
         },
 
-        video(){ return this?.videos?.length? this.videos[0] : undefined; },
+        video(){ 
+            if(this.isMediaRemoteVideo) return this.page.fieldMediaRemoteVideo;
+            return this?.videos?.length? this.videos[0] : undefined; },
         images(){
             if(!this.page?.fieldAttachments?.length ) return [];
         
@@ -135,6 +148,7 @@ export const usePageStore = defineStore('page', {
             return this.page.fieldAttachments.filter(({ type })=> type === 'media--document');
         },
         videos(){
+          
             if(!this.page?.fieldAttachments?.length) return [];
         
             return this.page.fieldAttachments.filter(({ type })=> type === 'media--remote_video');
@@ -155,7 +169,10 @@ export const usePageStore = defineStore('page', {
         isImage(){ return this.isImageOrVideo && !this.videos.length; },
         isVideo(){ return this.isImageOrVideo && !!this.videos.length; },
         isDocument(){ return this.typeId === 12; },
-
+        isMediaDocument(){ return this?.page?.type?.includes('document') },
+        isMediaImage(){ return this?.page?.type?.includes('image') },
+        isMediaRemoteVideo(){ return this?.page?.type?.includes('remote_video') },
+        isMediaHero(){ return this?.page?.type?.includes('hero') },
         isContentType(){
             return this?.page?.type === 'taxonomy_term--tags';
         },

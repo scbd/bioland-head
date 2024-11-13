@@ -1,7 +1,7 @@
 export default defineEventHandler(async (event) => {
     try{
         const ctx  =  await getContext(event)
-        // consola.warn('ctx.localizedHost',ctx.localizedHost)
+
        // const systemPageMap = await getSystemPagesMap(ctx)
 
         return ctx.localizedHost? getSystemPagesMap(ctx) : ctx//{}//systemPageMap

@@ -65,9 +65,9 @@ function mergeMain(allMenus){
         // delete allMenus[mainMenuChildName]
     }
     allMenus.main = newMain.sort(sortMenus);
-
-    // consola.info( newMain)
 }
+
+
 function buildMainChildren(allMenus){
     for (const aMenu of allMenus.main) {
         if(!mainMenuHasChild(aMenu)) continue;
@@ -192,8 +192,6 @@ async function getMenuData(menuName, ctx){
 
 
     const data = await $fetch(uri, { mode: 'cors' });
-
-    // consola.info(data?.linkset)
 
     return data?.linkset && data?.linkset?.length ? formatMenus(data.linkset[0].item) : [];
 }

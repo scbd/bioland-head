@@ -1,15 +1,15 @@
 <template >
     <div :style="style" class="cont" style="float: right; width: 200px; ">
         <div v-if="pageStore?.startDate" class="mb-2">
-            <h5 class="mb-0">{{t('Start Date')}}</h5>
+            <h5 class="mb-0 text-nowrap">{{t('Start Date')}}</h5>
             {{ formatDate(pageStore?.startDate)}}
         </div>
         <div v-if="pageStore?.endDate" class="mb-2">
-            <h5 class="mb-0" >{{t('End Date')}}</h5>
+            <h5 class="mb-0 text-nowrap" >{{t('End Date')}}</h5>
             <span >{{formatDate(pageStore?.endDate)}}</span>
         </div>
         <div v-if="!pageStore?.startDate && pageStore?.publishedOn" class="mb-2">
-            <h5 class="mb-0">{{t('Published on')}}</h5>
+            <h5 class="mb-0 text-nowrap">{{t('Published on')}}</h5>
             {{formatDate(pageStore?.publishedOn)}}
         </div>
         <div v-if="tags?.gbfTargets?.length" class="mb-2">

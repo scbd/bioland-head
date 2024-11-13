@@ -34,7 +34,6 @@ export default defineNuxtPlugin({
 
             updateAppConfig(ctx);
 
-            // consola.success('i18n:beforeLocaleSwitch', ctx)
             useFetch(`/api/menus`,{ params: clone(siteStore.params) })
             .then(({data})=>menuStore.loadAllMenus(data.value));
 

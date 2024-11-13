@@ -1,11 +1,14 @@
 <template>
-    <div class="card p-2" >
-        <NuxtImg :alt="record.name" :src="imageSrc" class="card-img-top i-top"/>
+    <div  :style="style" class="card p-2 text-center" >
+        <div class="d-flex justify-content-center text-center">
+            <NuxtImg v-if="imageSrc" :alt="record.name" :src="imageSrc" class="card-img-top i-top"/>
+            <Icon v-if="!imageSrc" :name="'video'" :color="siteStore.primaryColor" :size="8" class="card-img-top i-top"/>
+        </div>
         <div class="card-body">
             <h6 class="card-subtitle text-muted mb-2">{{t('Video')}}</h6>
             <h5 class="card-title  mb-1">{{record.name}}</h5>
 
-            <p class="card-text">{{trunc(record.description)}}</p>
+            <p class="card-text">{{descriptionTruncated}}</p>
 
         </div>
         <div class="card-footer">
@@ -26,16 +29,14 @@
 
             <hr class="my-2" v-if="tags?.subjects || tags?.sdgs || tags?.gbfTargets"/>
             <h6 class="card-subtitle text-primary">
-                <NuxtLink   :style="arrowFill"  :to="linkTo" :title="record.name" >
-                    {{t('View more')}} <Icon  name="arrow-right" class="arrow" />
+                <NuxtLink  :style="arrowFill" :to="linkTo" :title="record.name" >
+                    {{t('View more')}} <Icon  name="arrow-right"  />
                 </NuxtLink>
             </h6>
         </div>
     </div>
 </template>
 <script setup>
-
-    const { trunc, isTruncated: isTrunc } = useText();
     const   siteStore      = useSiteStore();
     const   props          = defineProps({ record: { type: Object } });
     const { record    }    = toRefs(props);
@@ -43,11 +44,10 @@
 
     const { t, locale } = useI18n();
 
-    const tags       = computed(()=> record?.value?.tags);
-    const imageSrc   = computed(()=> siteStore.host + record.value.thumbnail?.uri?.url) //siteStore.host + fieldMediaImage?.value?.uri?.url
-    const linkTo     = computed(()=> record?.value?.path?.alias)
-    const dateFormat = useDateFormat(locale);
-    const { arrowFill } = useTheme();
+    const   dateFormat  = useDateFormat(locale);
+    const { arrowFill, style } = useTheme();
+
+    const { descriptionTruncated, tags, imageSrc, linkTo, iconName, iconColor} = useMediaRecord(record);
 </script>
 <style lang="scss" scoped>
 .i-top{
@@ -55,14 +55,14 @@
     object-fit: cover;
 }
 .card {
-    width: 350px ;
-    height: 650px !important;
-    border: .5px solid var(--bs-blue);
+    width: 350px;
+    height: 450px !important;
+    border: .5px solid var(--bs-primary);
 }
 .arrow{
-    fill:var(--bs-blue);
-    width       : 1.5em;
-    height      : 1.5em;
+    fill:var(--bs-primary);
+    width       : 1em;
+    height      : 1em;
     cursor: pointer;
     margin-bottom: 0.2rem;
 }

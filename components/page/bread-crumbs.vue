@@ -39,6 +39,7 @@
     const eventBus        = useEventBus();
     const crumbs          = computed(makeCrumb);
     const { showBl1Link } = useRuntimeConfig().public;
+
     function isSelf(href){ return href === route.path; }
 
     function openMenu({ href, index }){
@@ -63,3 +64,8 @@
 
     const showMigratedLInk  = computed(()=> pageStore?.page?.fieldMigrated && showBl1Link );
 </script>
+<style scoped>
+a{
+    color: var(--bs-primary);
+}
+</style>

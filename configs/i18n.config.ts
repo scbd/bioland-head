@@ -1,5 +1,4 @@
 import en from '../i18n/locales/en.json';
-import fr from '../i18n/locales/en.json';
 import locales from '../i18n/locales';
 
 // console.log(locales)

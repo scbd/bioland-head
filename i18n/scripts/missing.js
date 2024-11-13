@@ -21,11 +21,10 @@ async function main(){
     // const vueFiles = readVueFiles(resolve(rootContext,vueFileGlob ));
     // const langFiles = readLanguageFiles(resolve(rootContext, languageFileGlob));
     await translateAll()
-    //consola.error(await getMissingEnKeys())
+
     // const missingKeys = readJson('i18n-report.json').missingKeys
     // const allLangs = Array.from(new Set(missingKeys.map(({ language })=> language)))
-    // consola.warn(missingKeys )
-    // consola.warn(allLangs )
+
 
 }
 

@@ -8,10 +8,13 @@ export async function getPageData(ctx){
 
         ctx.isLocalizationException       = hasLocalizationException(ctx);
         const { uuid,  type, bundle }     = await getPageIdentifiers(ctx);
+
+
         const { localizedHost, locale }   = ctx;
         const   query                     = getSearchParams(ctx, type, bundle);
         const   uri                       = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
+        consola.error('query', query)
         const { data } = await $fetch(uri, { query });
 
         await addPageAliases(ctx,data).then((aliases)=> data.aliases=aliases)
@@ -205,6 +208,7 @@ function getSearchParams(ctx, type, bundle, prop){
     if(type === 'taxonomy_term' && bundle === 'system_pages') search['include'] = 'field_attachments,field_attachments.field_media_image,field_search,parent';
     if(type === 'node' && bundle === 'content' && !prop)  setContentSearchParams(search);
     if(type === 'media' &&  ['image', 'document'].includes(bundle))  setMediaImageSearchParams(search);
+    if(type === 'media' &&  ['document'].includes(bundle))  setMediaDocumentSearchParams(search);
     if(prop === 'field_attachments') search['include'] = 'thumbnail';
     
     return search;
@@ -217,4 +221,8 @@ function setMediaImageSearchParams(search){
     search['include'] = 'field_media_image';
 }
 
+function setMediaDocumentSearchParams(search){
+    search['include'] = 'field_media_image,field_media_document';
+    
+}
 

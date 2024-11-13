@@ -1,11 +1,14 @@
 <template>
-    <div :style="style" class="card p-2" >
-        <NuxtImg :alt="imageAlt" :src="imageSrc" class="card-img-top image-top i-top"/>
+    <div :style="style" class="card p-2 text-center" >
+        <div class="d-flex justify-content-center text-center">
+            <NuxtImg  v-if="imageSrc" :alt="imageAlt" :src="imageSrc" class="card-img-top image-top i-top"/>
+            <Icon v-if="!imageSrc" :name="'file-image-o'"  :size="8" />
+        </div>
         <div class="card-body">
             <h6 class="card-subtitle text-muted mb-2">{{t('Image')}}</h6>
             <h5 class="card-title  mb-1">{{imageAlt}}</h5>
 
-            <p class="card-text">{{trunc(record.fieldCaption)}}</p>
+            <p class="card-text">{{descriptionTruncated}}</p>
 
         </div>
         <div class="card-footer">
@@ -23,7 +26,7 @@
 
 
             <section v-if="tags?.subjects" class="mt-1">
-                <span  v-for="(subject,i) in tags.subjects" :key="i" class="badge bg-primary me-1">{{subject.name}}</span>
+                <span  v-for="(subject,i) in tags.subjects" :key="i" class="badge bg-primary me-1">{{t(subject.identifier)}}</span>
             </section>
 
             <hr class="my-2" v-if="tags?.subjects || tags?.sdgs || tags?.gbfTargets"/>
@@ -37,22 +40,16 @@
 </template>
 
 <script setup>
-    const { trunc, isTruncated: isTrunc } = useText();
-    const   siteStore   = useSiteStore();
+
     const   props       = defineProps({ record: { type: Object } });
     const { record    } = toRefs(props);
-
     const { t, locale } = useI18n();
 
     const {  getGbfUrl }   = useDocumentHelpers(record);
-    
-    const tags     = computed(()=> record?.value?.tags);
-    const imageSrc = computed(()=> siteStore.host + record.value.fieldMediaImage?.uri?.url) ;
-    const imageAlt = computed(()=> record?.value?.fieldMediaImage?.meta?.alt);
-    const linkTo   = computed(()=> record?.value?.path?.alias);
-
-    const dateFormat  = useDateFormat(locale);
+    const dateFormat       = useDateFormat(locale);
     const { style, arrowFill      } = useTheme();
+
+    const { descriptionTruncated, imageAlt, tags, imageSrc, linkTo, iconName, iconColor} = useMediaRecord(record);
 </script>
 <style lang="scss" scoped>
 .i-top{
@@ -61,7 +58,7 @@
 }
 .card {
     width: 350px;
-    height: 650px !important;
+    height: 450px !important;
     border: .5px solid var(--bs-primary);
 }
 .arrow{

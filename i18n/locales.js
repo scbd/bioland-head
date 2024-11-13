@@ -37,11 +37,6 @@ export default[
         "nativeName": "বাংলা"
     },
     {
-        "code": "bo",
-        "name": "Tibetan",
-        "nativeName": "བོད་སྐད་"
-    },
-    {
         "code": "bs",
         "name": "Bosnian",
         "nativeName": "Bosanski"
@@ -120,11 +115,6 @@ export default[
         "code": "fil",
         "name": "Filipino",
         "nativeName": "Filipino"
-    },
-    {
-        "code": "fo",
-        "name": "Faeroese",
-        "nativeName": "Føroyskt"
     },
     {
         "code": "fr",
@@ -306,11 +296,6 @@ export default[
         "name": "Dutch",
         "nativeName": "Nederlands"
     },
-    // {
-    //     "code": "nb",
-    //     "name": "Norwegian Bokmål",
-    //     "nativeName": "Norsk, bokmål"
-    // },
     {
         "code": "oc",
         "name": "Occitan",
@@ -340,11 +325,6 @@ export default[
         "code": "ru",
         "name": "Russian",
         "nativeName": "Русский"
-    },
-    {
-        "code": "se",
-        "name": "Northern Sami",
-        "nativeName": "Sámi"
     },
     {
         "code": "si",

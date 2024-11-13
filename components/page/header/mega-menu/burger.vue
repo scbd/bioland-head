@@ -14,37 +14,59 @@
         <div v-if="burgerToggle" class="navbar d-flex flex-column justify-content-start pt-3" >
 
             <div class="overflow-scroll" style="height:100%; width:100%;">
-                    <h5 v-for="(aMenu,index) in menus" :key="index" class="m-row" @click.stop="toggle(index)" :class="{'bg-primary': aMenu.class?.includes('login')}"   >
-                        {{aMenu.class}}
-                        <NuxtLink  :class="aMenu.class" class="nav-link" to="#" :title="aMenu.title" >
+                    <h5 v-for="(aMenu,index) in menus" :key="index" class="m-row mb-0" @click.stop="toggle(index)" :class="{'bg-primary': aMenu.class?.includes('login')}"   >
+                        <NuxtLink  :class="aMenu.class" class="nav-link" :title="aMenu.title" >
                             {{aMenu.title}}
                         </NuxtLink>
                     </h5 >
+
+                    <h5 @click.stop="toggle(langToggleIndex)" class="m-row">
+                        <NuxtLink  class="nav-link" :title="currentLanguage.nativeName" :alt="currentLanguage.nativeName" >
+                            {{currentLanguage.nativeName}}
+                            <Icon name="language" :size="1.5"/>
+                        </NuxtLink>
+                    </h5>
+                    <div  class="input-group px-1 position-fixed bottom-0 mb-1" >
+                        <input @keyup.enter="()=>{onClick(queryText);}" type="text" v-model="queryText" class="form-control"  :placeholder="t('Search this site')" aria-label="search" >
+
+                        <a  v-on:click="onClick(queryText)" class="input-group-text"  :alt="t('Search this site')"  >
+                            <Icon name="search" class="white-icon" />&nbsp;
+                        </a>
+                    </div>
             </div>
             <section  v-for="(aMenu,index) in menus" :key="index">
                     <LazyPageHeaderMegaMenuDropDown v-if="aMenu.children && toggles[index]" :menus="aMenu.children"  v-click-outside="unToggle"/>
                 &nbsp;
             </section>
+            <LazyPageHeaderMegaMenuLanguageMobile v-if="toggles[langToggleIndex]"   v-click-outside="unToggle"/>
         </div>
     </Transition>
 </template>
 <script setup>
-    import { useMenusStore } from '~/stores/menus';
-    const eventBus   = useEventBus();
+    const { t, locale  }          = useI18n();
+    const   eventBus      = useEventBus();
     const   menuStore     = useMenusStore();
+
     const   toggles       = ref([]);
     const   burgerToggle  = ref(false);
     const { main: menus } = storeToRefs(menuStore);
-    const router = useRouter()
+    const   router        = useRouter();
+    const   queryText     = ref('');
+
+    const onClick   = userTextSearch();
+
+    const currentLanguage = computed(()=> menuStore.languages.find(lang => lang.code === locale.value));
+
+    const langToggleIndex = menus?.value?.length? menus?.value?.length+1 : 1
     onMounted(() => { 
             eventBus.on('openMenu', (index) => { 
                 toggleBurger();
                 toggle(index);
-             });
-            
+            });
         });
 
     const toggleBurger = () => {
+        queryText.value='';
         const hasSubOpen = unToggle();
 
         if(hasSubOpen) return;
@@ -53,11 +75,13 @@
     }
 
     function toggle(index){
+        queryText.value='';
         unToggle();
         toggles.value[index] = !toggles.value[index];
     }
 
     function unToggle(){
+        queryText.value='';
         const hasOpen = toggles.value.filter(toggle => toggle === true).length > 0;
 
         for (let index = 0; index < toggles.value.length; index++)
@@ -67,12 +91,13 @@
     }
 
     router.beforeEach(() => {
-       
-          for (let index = 0; index < unref(toggles).length; index++)
-              toggles.value[index] = false;
+                                for (let index = 0; index < unref(toggles).length; index++)
+                                    toggles.value[index] = false;
 
-              burgerToggle.value = false;
+                                    toggles.value[langToggleIndex.value] = false;    
+                                burgerToggle.value = false;
         })
+
 </script>
 <style scoped>  
 .slide-fade-enter-active,

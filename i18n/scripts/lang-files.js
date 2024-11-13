@@ -23,7 +23,7 @@ export function readLanguageFiles (src){
     const langPath = path.resolve(process.cwd(), f);
 
 
-// consola.error(langPath)
+
     const langObj =JSON.parse(fs.readFileSync(langPath, 'utf8'));
 
 

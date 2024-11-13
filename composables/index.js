@@ -62,3 +62,25 @@ export     function getGbfUrl(identifier){
 
     return `https://www.cbd.int/gbf/targets/${number}`
 }
+
+
+
+export const userTextSearch = () => {
+    const { locale  }  = useI18n();
+    const   route      = useRoute();
+    const   router     = useRouter();
+    const menusStore   = useMenusStore();
+    const localePath   = useLocalePath();
+    const searchPath   = computed(()=>menusStore.getSystemPagePath({ alias:'/search', locale:unref(locale)}));
+
+    return async (value) => { 
+        consola.warn('loaded text search', value)
+        if(!value) return navigateTo(localePath(searchPath.value));
+
+        if(route.path !== searchPath?.value)
+            navigateTo(localePath(`${searchPath.value}?freeText=${value}`));
+        else
+            await router.push({ path:localePath(searchPath.value), query: { freeText: value } });
+    }
+
+}

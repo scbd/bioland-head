@@ -54,10 +54,7 @@
                 show.value = !show.value;
         }
 
-    //     function     onRequest({request, options}) {
 
-    //    consola.info("[fetch request]",  options.headers)
-    //      }
         const headers = useRequestHeaders(['cookie'])
 
         const { data, status, error } =  await useFetch(`${siteStore.localizedHost}/system/menu/account/linkset`, {  method: 'GET',headers });
