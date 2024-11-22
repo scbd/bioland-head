@@ -17,7 +17,7 @@
                 <h2 :style="pageTypeStyle" class="page-type">{{pageStore?.typeName}}</h2>
 
                 <NuxtLink v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  :to="localePath(pageStore?.image?.url)">
-                    <NuxtImg :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-5 w-100"/>
+                    <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-5 w-100"/>
                 </NuxtLink>
 
                 <PageMediaFileDetails v-if="isImageOrVideo || isDocument" :vertical="true" />
@@ -32,7 +32,7 @@
 
                 <div v-if="isImageOrVideo" class="d-flex flex-row justify-content-end" >
                     <div class="align-self-start w-100">
-                        <NuxtImg v-if="pageStore?.image?.src" format="webp"  :alt="pageStore?.image.alt" :src="pageStore?.image.src" class="img-fluid mt-0 mb-1 w-100"/>
+                        <NuxtImg v-if="pageStore?.image?.src" format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image.alt" :src="pageStore?.image.src" class="img-fluid mt-0 mb-1 w-100"/>
                         <PageBodyMediaYouTube  v-if="pageStore?.isVideo" :url="pageStore?.video?.fieldMediaOembedVideo" :title="pageStore?.video?.name || pageStore?.media?.title"/>
                     </div>
                     <PageBodyTagsDate class="mt-2" />
@@ -55,7 +55,7 @@
 
                 <div v-if="pageStore?.image?.url" class="col-12 d-md-none px-0">
 
-                    <NuxtImg :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
+                    <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
 
                     <PageBodyTagsDate />
                 </div>

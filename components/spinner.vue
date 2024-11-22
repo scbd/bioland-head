@@ -1,7 +1,7 @@
 <template>
     <div :class="{'modal-mask':isModal}" class="w-100 text-center  justify-content-center d-flex align-items-center">
         <div :class="{'modal-container':isModal}" >
-            <img src="/images/cbd-gbf-logo.jpeg" class="rotate" width="size" :height="size" />
+            <NuxtImg src="/images/cbd-gbf-logo.jpeg" format="webp" class="rotate" :width="size" :height="size" />
             <p  v-if="message">{{ message }}</p>
             <p v-if="!message" >{{t('loading')}}...</p>
         </div>

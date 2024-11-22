@@ -357,11 +357,6 @@ export default[
         "nativeName": "Svenska"
     },
     {
-        "code": "sw",
-        "name": "Swahili",
-        "nativeName": "Kiswahili"
-    },
-    {
         "code": "ta",
         "name": "Tamil",
         "nativeName": "தமிழ்"
@@ -409,7 +404,7 @@ export default[
 ].map((l)=> {
     const { code, name, nativeName } = l;
     const rtlLangs = [ "am","ar","az", "he", "fa", "ur", 'mv', 'ku' ];
-    const file = `${code}.json`;
+    const file = `locales/${code}.json`;
 
     return { nativeName, file, name, code,  language:code, dir: rtlLangs.includes(code)? 'rtl' : 'ltr'}
 })

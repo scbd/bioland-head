@@ -27,7 +27,7 @@ export default cachedEventHandler(async (event) => {
             }); 
         }
     },
-    menusCache
+    externalCache
 )
 
 function getQueryString({ countries, country, locale }={}){

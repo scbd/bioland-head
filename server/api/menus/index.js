@@ -56,5 +56,5 @@ export default cachedEventHandler(async (event) => {
             }); 
         }
     },
-    menusCache
+    // menusCache
 )

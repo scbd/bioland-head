@@ -1,7 +1,7 @@
 <template>
     <div :style="style" class="card p-2 text-center" >
         <div class="d-flex justify-content-center text-center">
-            <NuxtImg  v-if="imageSrc" :alt="imageAlt" :src="imageSrc" class="card-img-top image-top i-top"/>
+            <NuxtImg  v-if="imageSrc" :alt="imageAlt" :src="imageSrc" :width="imgWidth" :height="imgHeight"  format="webp" class="card-img-top image-top i-top"/>
             <Icon v-if="!imageSrc" :name="'file-image-o'"  :size="8" />
         </div>
         <div class="card-body">
@@ -49,12 +49,12 @@
     const dateFormat       = useDateFormat(locale);
     const { style, arrowFill      } = useTheme();
 
-    const { descriptionTruncated, imageAlt, tags, imageSrc, linkTo, iconName, iconColor} = useMediaRecord(record);
+    const { descriptionTruncated, imageAlt, tags, imageSrc, linkTo,  imgHeight, imgWidth, iconName, iconColor} = useMediaRecord(record);
 </script>
 <style lang="scss" scoped>
 .i-top{
     max-height: 250px;
-    object-fit: cover;
+    // object-fit: cover;
 }
 .card {
     width: 350px;

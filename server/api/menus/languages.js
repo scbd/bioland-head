@@ -23,5 +23,5 @@ export default cachedEventHandler(async (event) => {
             }); 
         }
     },
-    menusCache
+    externalCache
 )

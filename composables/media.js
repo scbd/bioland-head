@@ -15,6 +15,10 @@ export const useMediaRecord = (r) => {
     const descriptionTruncated = computed(()=> trunc(record.description));
     const tags     = computed(()=> record?.tags);
     const imageSrc = computed(()=> record?.fieldMediaImage?.uri?.url? siteStore.host + record?.fieldMediaImage?.uri?.url : '') ;
+
+    const imgHeight = computed(()=> record?.fieldMediaImage?.meta?.height);
+    const imgWidth  = computed(()=> record?.fieldMediaImage?.meta?.width);
+
     const linkTo   = computed(()=> {
         if(record?.path?.alias && record?.path?.langcode === unref(locale)) return localPath(record?.path?.alias);
 
@@ -32,6 +36,8 @@ export const useMediaRecord = (r) => {
         iconName,
         iconColor,
         downloadUrl,
-        imageAlt
+        imageAlt,
+        imgHeight,
+        imgWidth
     }
 }

@@ -2,17 +2,17 @@ import clone from 'lodash.clonedeep';
 import isPlainObject from 'lodash.isplainobject';
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  const nuxtApp     = useNuxtApp()
+  const nuxtApp     = useNuxtApp();
   const siteStore   = useSiteStore(nuxtApp.$pinia);
   const pStore      = usePageStore(nuxtApp.$pinia);
-  const menuStore   = useMenusStore(nuxtApp.$pinia)
-  const meStore     = useMeStore(nuxtApp.$pinia)
+  const menuStore   = useMenusStore(nuxtApp.$pinia);
+  const meStore     = useMeStore(nuxtApp.$pinia);
   const context     = useCookie('context');
-
+  const getPage     = useGetPage(nuxtApp.$i18n.locale.value);
   const path        = to.path;
 
 
-  await changeLocale()
+  await changeLocale();
   
   // if(!context.value)
   //   throw createError({ 
@@ -22,48 +22,44 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   //     fatal:true
   // });
 
-  updateAppConfig({ path })
-  // isValidLocalePrefix();
+  updateAppConfig({ path });
+  isValidLocalePrefix();
   await getMe();
 
-  const [ pData, fetch ]= await Promise.all([getPage(path), getMenus()])
-
+  const [ pData, fetch ]   = await Promise.all([getPage(path), getMenus()]);
   const { data: menuData } = fetch || { data: undefined};
-  
 
-  if(!pData) return
+  if(!pData) return;
 
+  pStore.initialize(pData);
 
-  pStore.initialize(pData)
-
- 
   if(menuData?.value)
     menuStore.loadAllMenus(menuData.value);
 
-  async function getPage(passedPath){ 
+  // async function getPage(passedPath){ 
     
-    const   path                  = ref(passedPath.endsWith('/topics')? passedPath.replace('/topics', '') : passedPath);
-    const { multiSiteCode }       = useRuntimeConfig().public;
-    const { identifier,  locale } = siteStore;
+  //   const   path                  = ref(passedPath.endsWith('/topics')? passedPath.replace('/topics', '') : passedPath);
+  //   const { multiSiteCode }       = useRuntimeConfig().public;
+  //   const { identifier,  locale } = siteStore;
 
-    const key = ref(`${multiSiteCode}-${identifier}-${locale}-${encodeURIComponent(path.value)}`);
+  //   const key = ref(`${multiSiteCode}-${identifier}-${locale}-${encodeURIComponent(path.value)}`);
 
-    try{
-      if(key.value?.includes('undefined'))  throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}` }) 
+  //   try{
+  //     if(key.value?.includes('undefined'))  throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}` }) 
 
-      const  data  = await $fetch(`/api/page/${key.value}/${encodeURIComponent(path.value)}`, {  method: 'GET', query: clone({ ...siteStore.params, path:path.value }) })//.then(({ data }) => data);
+  //     const  data  = await $fetch(`/api/page/${key.value}/${encodeURIComponent(path.value)}`, {  method: 'GET', query: clone({ ...siteStore.params, path:path.value }) })//.then(({ data }) => data);
   
-      return data;
-    }catch(e){
-      consola.error(e)
+  //     return data;
+  //   }catch(e){
+  //     consola.error(e)
 
-      if(e.statusCode === 404)
-        throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}`, fatal:true })
+  //     if(e.statusCode === 404)
+  //       throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}`, fatal:true })
   
-      throw createError({ statusCode: e.statusCode, statusMessage: e.statusMessage, fatal:true }) 
-    }
+  //     throw createError({ statusCode: e.statusCode, statusMessage: e.statusMessage, fatal:true }) 
+  //   }
 
-  }
+  // }
 
   function isValidLocalePrefix(){
 
@@ -71,11 +67,11 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     const { locales} = useRuntimeConfig().public;
     const   preFixes = locales.map(({ code })=> code);
 
-    const defaultLocale = siteStore.defaultLocale || 'en'
-    const isValid = preFixes.includes(to.path.split('/')[1])
+    const defaultLocale = siteStore.defaultLocale || 'en';
+    const isValid = preFixes.includes(to.path.split('/')[1]);
 
-    if(!isValid) consola.warn('isValidLocalePrefix', to.path, defaultLocale)
-    if(!isValid) return navigateTo(`/${defaultLocale}${to.path}`)
+    if(!isValid) consola.warn('isValidLocalePrefix', to.path, defaultLocale);
+    if(!isValid) return navigateTo(`/${defaultLocale}${to.path}`);
 }
 
   function isLocaleChange(){
@@ -83,7 +79,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
     if(to.path.startsWith(`/${locale.value}`)) return false;
 
-    return to.path.split('/')[1]
+    return to.path.split('/')[1];
   }
 
   async function changeLocale(){

@@ -16,7 +16,7 @@
                 <h2 :style="pageTypeStyle" class="page-type">{{pageStore?.typeName}} <span class="fs-4 fw-light">({{t('media')}})</span></h2>
                 <div class="d-flex justify-content-center text-center">
 
-                    <NuxtImg v-if="imageSrc && !pageStore?.isMediaImage" :alt="pageStore?.image?.alt" :src="imageSrc" class="card-img-top i-top"/>
+                    <NuxtImg v-if="imageSrc && !pageStore?.isMediaImage" :alt="pageStore?.image?.alt" :src="imageSrc" format="webp" :width="imgWidth" :height="imgHeight" class="card-img-top i-top"/>
                     <Icon v-if="(!imageSrc || pageStore?.isMediaImage) && !pageStore?.isMediaRemoteVideo" :name="iconName" :color="iconColor" :size="8" class="card-img-top i-top"/>
                     <Icon v-if="!imageSrc && pageStore?.isMediaRemoteVideo" :name="'video'" :color="siteStore.primaryColor" :size="8" />
                 </div>
@@ -31,7 +31,7 @@
 
                 <div class="d-md-flex  flex-row justify-content-end" v-if="pageStore?.isMediaImage && pageStore?.mediaImage?.src" >
                     <NuxtLink :to="pageStore?.mediaImage?.src" target="_blank" external>
-                        <NuxtImg  :alt="pageStore?.page.name" :src="pageStore?.mediaImage.src" format="webp" class="image-fluid mt-0 mb-1 w-100"/>
+                        <NuxtImg  :alt="pageStore?.page.name" format="webp" :height="pageStore?.mediaImage?.fieldHeight"  :width="pageStore?.mediaImage?.fieldWidth" :src="pageStore?.mediaImage.src"  class="image-fluid mt-0 mb-1 w-100"/>
                     </NuxtLink>
                     <div class="d-none d-md-block flex-fill"><PageBodyTagsDate /></div>
                 </div>
@@ -57,7 +57,7 @@
                 </div>
                 <div v-if="pageStore?.image?.url" class="col-12 d-md-none px-0">
                     <NuxtLink :to="pageStore?.image?.url">
-                        <NuxtImg :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
+                        <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
                     </NuxtLink>
                     <PageBodyTagsDate />
                 </div>
@@ -80,7 +80,7 @@ const   isDocument     = computed(()=> pageStore?.isMediaDocument );
 
 const { pageTypeStyle } = useTheme();
 
-const { downloadUrl, imageSrc, linkTo, iconName, iconColor} = useMediaRecord(pageStore.page);
+const { downloadUrl, imageSrc, imgHeight, imgWidth, iconName, iconColor} = useMediaRecord(pageStore.page);
 </script>
 
 <style lang="scss" scoped>

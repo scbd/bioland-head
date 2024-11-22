@@ -28,5 +28,5 @@ export default cachedEventHandler(async (event) => {
             }); 
         }
     },
-    pageCache
+    // pageCache
 )

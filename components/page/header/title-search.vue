@@ -2,11 +2,11 @@
     <div class="w-100 small-header position-fixed top-0 start-0 justify-content-start align-items-center  d-flex flex-row   d-md-none">
     
             <NuxtLink  class="me-0" :to="localePath(`/`)" :alt="t('Home')"  >
-                <NuxtImg  :src="logo" class="small-header-logo m-2 me-1"/>
+                <NuxtImg  :alt="name" height="64" width="100%" format="webp" :src="logo" class="small-header-logo m-2 me-1"/>
             </NuxtLink>
             <NuxtLink class="navbar-brand small-line mx-0 px-0 me-1"  :to="localePath(`/`)" :alt="t('Home')" > ccc&nbsp; </NuxtLink>
 
-            <NuxtLink class="sublogo" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')" >
+            <!-- <NuxtLink class="sublogo" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')" > -->
                 <svg class="scbd-logo-small me-1" :class="{ hero: hasHeroImage }" width="19.34" height="24" viewBox="0 0 34 42"  fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g opacity="0.8">
                         <path d="M27.3342 6.08834C30.7265 6.08834 32.611 2.60188 32.988 1V9.90459C32.988 14.0035 30.1611 15.9823 27.3342 15.9823H23.094C19.1364 15.9823 17.4874 19.9399 16.8749 21.9187V14.0035C16.8749 8.68905 20.6911 6.08834 22.8584 6.08834H27.3342Z"  stroke-width="1.5" stroke-miterlimit="4.62023"/>
@@ -14,7 +14,7 @@
                         <path d="M27.3342 25.1696C30.7265 25.1696 32.611 21.6831 32.988 20.0812V28.9858C32.988 33.0848 30.1611 35.0636 27.3342 35.0636H23.094C19.1364 35.0636 17.4874 39.0212 16.8749 41V33.0848C16.8749 27.7703 20.6911 25.1696 22.8584 25.1696H27.3342Z"  stroke-width="1.5" stroke-miterlimit="4.62023"/>
                     </g>
                 </svg>
-            </NuxtLink>
+            <!-- </NuxtLink> -->
 
 
             <div class="brand-small">
@@ -34,7 +34,7 @@
         <div class=" navbar-header row align-items-center pe-3" :style="{ width: rowElWidth?`${rowElWidth+64}px`: '100%' }">
             <div class="col-md-9 col-lg-9 d-flex  justify-content-start align-items-center">
                 <NuxtLink  class="me-2" :to="localePath(`/`)" :alt="t('Home')"  >
-                    <NuxtImg class="logo" :src="logo"  />
+                    <NuxtImg  :alt="name" height="64" width="100%" format="webp" class="logo" :src="logo"  />
                 </NuxtLink>
                 <NuxtLink class="me-0 pe-0 navbar-brand"  :class="{ hero: hasHeroImage }" :to="localePath(`/`)" :alt="t('Home')" >
                     {{name}}
@@ -76,7 +76,7 @@
         <div class=" navbar-header row align-items-center pe-3" :style="{ width: rowElWidth?`${rowElWidth+64}px`: '100%' }">
             <div class="col-md-9 col-lg-9 d-flex  justify-content-start align-items-center">
                 <NuxtLink  class="me-2" :to="localePath(`/`)" :alt="t('Home')"  >
-                    <NuxtImg class="logo" :src="logo"  />
+                    <NuxtImg format="webp"  :alt="name" height="64" width="100%" class="logo" :src="logo"  />
                 </NuxtLink>
 
                 <NuxtLink class="line-left align-self-stretch pe-1 " :class="{ hero: hasHeroImage }" :to="localePath(`/`)" :alt="t('Home')" > &nbsp; </NuxtLink>

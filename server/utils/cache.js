@@ -21,7 +21,7 @@ export const getKey =  (event) => {
 
 export const shouldInvalidateCache = async (event, storageName='db') => {
     const clearAll = getHeader(event, 'Clear-All-Cache');
-    const key      = getHeader(event, 'Clear-Cache');
+    const key      = getHeader(event, 'Clear-Cache')? getKey (event) : '';
 
     if(clearAll) {
         useStorage(storageName).clear();

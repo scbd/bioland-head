@@ -58,8 +58,7 @@
     import   ModalLogin         from '~/components/modal/login.vue' ;
     import { useModal         } from 'vue-final-modal'              ;
 
-    const alertStore      = useAlertStore();
-    const    siteStore       = useSiteStore();
+    const    alertStore      = useAlertStore();
     const    pageStore       = usePageStore();
     const    meStore         = useMeStore();
     const    eventBus        = useEventBus();
@@ -70,13 +69,13 @@
 
 
     const   props  = defineProps({ 
-                                    type           : { type:  String },
-                                    identifier     : { type:  String },
-                                    replyIdentifier: { type:  String },
-                                    replyType: { type:  String, default: 'comment--comment_forum' },
-                                    count: { type: Number, default: 0 },
-                                    likes: { type: Number, default: 0 },
-                                    replies: { type: Array, default: [] }
+                                    type            : { type:  String },
+                                    identifier      : { type:  String },
+                                    replyIdentifier : { type:  String },
+                                    replyType       : { type:  String, default: 'comment--comment_forum' },
+                                    count           : { type: Number, default: 0 },
+                                    likes           : { type: Number, default: 0 },
+                                    replies         : { type: Array, default: [] }
                                 });
 
     const {  type: passedType, identifier: passedIdentifier, replyIdentifier, count, likes, replyType} = toRefs(props);

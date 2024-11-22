@@ -26,5 +26,5 @@ export default cachedEventHandler(async (event) => {
             }); 
         }
     },
-    forumsCache
+    // forumsCache
 )

@@ -30,7 +30,7 @@ export default cachedEventHandler(async (event) => {
             }); 
         }
     },
-    menusCache
+    externalCache
 )
 
 function mapByCountry({ docs }, ctx){

@@ -41,9 +41,9 @@
     const pageStore = usePageStore();
     const siteStore = useSiteStore();
 
-
+consola.warn('route',route)
     const baseUrl   = computed(()=> `${siteStore.host}${getUrlComponent()}`);
-    const returnUrl = computed(()=> `?destination=${route.fullPath}?kill-cash=1`);
+    const returnUrl = computed(()=> `?destination=${route.path}?clear-page-cache=${encodeURIComponent(route.path)}`);
 
     function getUrlComponent(){
         if(pageStore?.isMediaPage) return `/media/${pageStore?.page?.drupalInternalMid}`

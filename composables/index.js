@@ -1,4 +1,5 @@
 import { DateTime     } from 'luxon';
+import clone from 'lodash.clonedeep';
 
 export function debounce(fn, wait){
     let timer;
@@ -83,4 +84,36 @@ export const userTextSearch = () => {
             await router.push({ path:localePath(searchPath.value), query: { freeText: value } });
     }
 
+}
+
+
+export const useGetPage = (locale) => {
+    const nuxtApp            = useNuxtApp();
+    const siteStore          = useSiteStore(nuxtApp.$pinia);
+
+    const { multiSiteCode }  = useRuntimeConfig().public;
+
+    return   async (passedPath, clearCache = false) =>{ 
+    
+        const   path                  = ref(passedPath); //ref(passedPath.endsWith('/topics')? passedPath.replace('/topics', '') : passedPath);
+        const { identifier } = siteStore;
+    
+        const headers = clearCache? { 'Clear-Cache': true } : {};
+        const key = ref(`${multiSiteCode}-${identifier}-${locale}-${encodeURIComponent(path.value)}`);
+    
+        try{
+            if(key.value?.includes('undefined'))  throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}` }) 
+        
+            const  data  = await $fetch(`/api/page/${key.value}/${encodeURIComponent(path.value)}`, {  method: 'GET', headers, query: clone({ ...siteStore.params, path:path.value }) })//.then(({ data }) => data);
+        
+            return data;
+        }catch(e){
+            consola.error(e)
+        
+            if(e.statusCode === 404)
+                throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}`, fatal:true })
+        
+            throw createError({ statusCode: e.statusCode, statusMessage: e.statusMessage, fatal:true }) 
+        }
+    }
 }

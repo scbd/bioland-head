@@ -86,7 +86,7 @@ export default defineNuxtConfig({
     // detectBrowserLanguage : { alwaysRedirect: true, },
     precompile           : { strictMessage: false, },
     lazy                 : true,
-    langDir              : './i18n/locales',
+    langDir              : '',
     strategy             : "prefix",
   },
 
@@ -110,9 +110,9 @@ export default defineNuxtConfig({
 
   image: {
     dir: 'public',
-    domains: ['chm-cbd.net','be.bl2.chm-cbd.net', 'cbd.int', 'https://panorama.solutions/', ...domains ],
+    domains: ['chm-cbd.net','be.bl2.chm-cbd.net', 'cbd.int', 'www.cbd.int', 'https://panorama.solutions/', ...domains ],
     format: ['webp', 'avif', 'jpeg', 'jpg', 'png','gif'],
-    quality: 70,
+    quality: 60,
     screens: {
       xs: 320,
       sm: 552,

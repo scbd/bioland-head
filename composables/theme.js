@@ -28,7 +28,7 @@ export function useTheme(){
 const defaultImageOptions = { 
     height : 300      ,
     width  : 500      ,
-    fit    : 'outside',
+    fit    : 'contain',
     quality: 60       ,
     format: ['webp', 'avif', 'jpeg', 'jpg', 'png','gif']
 };
@@ -45,7 +45,7 @@ export function useImageBackground(record, options = defaultImageOptions){
 
         const imgSrc = img(imgUri, imageOptions);
 
-        return {'background':`url('${imgSrc}') no-repeat center`,  'background-size': 'cover'}
+        return {'background':`url('${imgSrc}') no-repeat center`,  'background-size': 'contain'}
         })
 
     return { backgroundStyles, imgUri, hasImg }

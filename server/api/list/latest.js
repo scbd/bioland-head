@@ -40,7 +40,7 @@ export default cachedEventHandler(async (event) => {
             }); 
         }
     },
-    listCache
+    // listCache
 )
 
 
