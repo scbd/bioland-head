@@ -24,7 +24,7 @@
             </div>
 
             <div  class="col-12 col-md-9">
-                <PageBodyTabs/>
+                <LazyPageBodyTabs v-if="showEdit()"/>
                 <h2  class="data-body mb-0" :class="{'has-hero': pageStore?.heroImage}" >{{ pageStore?.title}}</h2>
                 <NuxtLink :style="pageTypeStyle" v-if="pageStore?.url" :to="pageStore?.url" target="_blank" class="fs-5" external>{{pageStore?.url}}</NuxtLink>
 
@@ -87,17 +87,20 @@
 const { t } = useI18n();
 
 const localePath = useLocalePath();
-const pageStore  = usePageStore();
+const meStore   = useMeStore();
+const pageStore = usePageStore();
 
 const isImageOrVideo = computed(()=> pageStore?.isImageOrVideo);
-const isImage        = computed(()=> pageStore?.isImage );
-// const isVideo        = computed(()=> pageStore?.isVideo);
 const isDocument     = computed(()=> pageStore?.isDocument );
 
 
 const { pageTypeStyle } = useTheme();
 
+function showEdit(){
+        if(pageStore?.isTaxonomyPage) return meStore?.showEditSystemPages;
 
+        return meStore?.showEdit;
+}
 </script>
 
 <style lang="scss" scoped>

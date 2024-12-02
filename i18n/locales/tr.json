@@ -805,5 +805,11 @@
   "pdfNotice": "Bu tarayıcı PDF'leri desteklemez. Görüntülemek için lütfen PDF'yi indirin: ",
   "downloadPdf": "PDF indir",
   "media": "ortam",
-  "heroHeader": "kahraman başlığı"
+  "heroHeader": "kahraman başlığı",
+  "Browse EBV Datasets": "EBV Veri Kümelerine Göz Atın",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Dünya Gözlemleri Grubu Biyoçeşitlilik Gözlem Ağı Portalı)",
+  "GEO BON Portal": "GEO BON Portalı",
+  "GEO BON": "GEO BON",
+  "EBV dataset": "EBV veri kümesi",
+  "EBV datasets": "EBV veri kümeleri"
 }

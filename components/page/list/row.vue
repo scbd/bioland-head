@@ -11,7 +11,7 @@
                 </div>
             </div>
             <div v-if="aLine.mediaImage" class="col-md-3">
-                <NuxtImg  format="webp" loading="lazy" quality="50" class="img-fluid" :alt="aLine.mediaImage.alt" :src="aLine.mediaImage.src" :width="aLine.mediaImage.width" :height="aLine.mediaImage.height" />
+                <NuxtImg  format="webp" loading="lazy" quality="25" class="img-fluid" :alt="aLine.mediaImage.alt" :src="aLine.mediaImage.src" :width="aLine.mediaImage.width" :height="aLine.mediaImage.height" />
             </div>
             <div class="col-12 ">
                 <div class="card-footer pb-0 text-center">

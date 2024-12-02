@@ -35,7 +35,7 @@
 <script setup>
     import { DateTime } from 'luxon';
 
-       
+    const { locale  } = useI18n();
         const   props       = defineProps({ 
                                             menu: Object, 
                                             showThumbs: Boolean, 
@@ -65,7 +65,7 @@
     function dateFormat({ startDate, created, changed }){
         const date = startDate || created || changed;
 
-        return DateTime.fromISO(date).setLocale(this.locale).toFormat('dd LLL yyyy');
+        return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
     }
 
 

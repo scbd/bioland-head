@@ -805,5 +805,11 @@
   "pdfNotice": "Бул браузер PDF файлдарын колдоого албайт. Сураныч, аны көрүү үчүн PDF жүктөп алыңыз: ",
   "downloadPdf": "PDF жүктөп алуу",
   "media": "маалымат каражаттары",
-  "heroHeader": "баатыр баш"
+  "heroHeader": "баатыр баш",
+  "Browse EBV Datasets": "EBV берилиштер топтомун карап чыгуу",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Group on Earth Observations биоартүрдүүлүктү байкоо тармагынын порталы)",
+  "GEO BON Portal": "GEO BON порталы",
+  "GEO BON": "GEO ЖАКШЫ",
+  "EBV dataset": "EBV маалымат топтому",
+  "EBV datasets": "EBV маалымат топтому"
 }

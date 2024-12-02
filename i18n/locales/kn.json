@@ -805,5 +805,11 @@
   "pdfNotice": "ಈ ಬ್ರೌಸರ್ ಪಿಡಿಎಫ್ಗಳನ್ನು ಬೆಂಬಲಿಸುವುದಿಲ್ಲ. ಅದನ್ನು ವೀಕ್ಷಿಸಲು ದಯವಿಟ್ಟು ಪಿಡಿಎಫ್ ಡೌನ್ಲೋಡ್ ಮಾಡಿ: ",
   "downloadPdf": "PDF ಡೌನ್ಲೋಡ್ ಮಾಡಿ",
   "media": "ಮಾಧ್ಯಮ",
-  "heroHeader": "ನಾಯಕ ಹೆಡರ್"
+  "heroHeader": "ನಾಯಕ ಹೆಡರ್",
+  "Browse EBV Datasets": "ಇಬಿವಿ ಡೇಟಾಸೆಟ್ಗಳನ್ನು ಬ್ರೌಸ್ ಮಾಡಿ",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (ಗ್ರೂಪ್ ಆನ್ ಅರ್ಥ್ ಅಬ್ಸರ್ವೇಷನ್ಸ್ ಜೈವಿಕ ವೈವಿಧ್ಯತೆ ವೀಕ್ಷಣೆ",
+  "GEO BON Portal": "ಜಿಯೋ ಬಾನ್ ಪೋರ್ಟಲ್",
+  "GEO BON": "ಜಿಯೋ ಬಾನ್",
+  "EBV dataset": "ಇಬಿವಿ ಡೇಟಾಸೆಟ್",
+  "EBV datasets": "ಇಬಿವಿ ಡೇಟಾಸೆಟ್ಗಳು"
 }

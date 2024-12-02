@@ -33,7 +33,6 @@
                 </NuxtLink>
 
                 <span  :style="bgStyle" v-if="tags?.subjects?.length" v-for="(subject,i) in tags.subjects" :key="i" class="badge  me-1"><span v-if="subject.identifier">{{t(subject.identifier)}}</span></span>
-                <!-- t(subject.identifier) -->
 
                 <span v-if="record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate" class="float-end card-subtitle text-nowrap text-muted text-small mt-1 mb-2">{{dateFormat(record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate)}}</span>
 
@@ -63,14 +62,4 @@
     const { backgroundStyles, hasImg }                              = useImageBackground(record);
     const { external, goTo, recordExists, tags, type, getGbfUrl }   = useDocumentHelpers(record, { passedType });
 </script>
-<!-- <style lang="scss" scoped>
 
-.arrow{
-    fill         :var(--bs     -blue);
-    width        : 1.3e m            ;
-    height       : 1.3e m            ;
-    cursor       :      pointer      ;
-    margin-bottom: 0.2  rem          ;
-}
-
-</style> -->

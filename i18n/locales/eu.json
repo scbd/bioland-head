@@ -805,5 +805,11 @@
   "pdfNotice": "Arakatzaile honek ez ditu PDFak onartzen. Mesedez, deskargatu PDFa ikusteko: ",
   "downloadPdf": "Deskargatu PDFa",
   "media": "komunikabideak",
-  "heroHeader": "heroien goiburua"
+  "heroHeader": "heroien goiburua",
+  "Browse EBV Datasets": "Arakatu EBV datu multzoak",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Group on Earth Observations Biodibertsitatearen Behaketa Sarearen Ataria)",
+  "GEO BON Portal": "GEO BON Ataria",
+  "GEO BON": "GEO ONGI",
+  "EBV dataset": "EBV datu multzoa",
+  "EBV datasets": "EBV datu multzoak"
 }

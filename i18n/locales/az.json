@@ -805,5 +805,11 @@
   "pdfNotice": "Bu brauzer PDF-ləri dəstəkləmir. Zəhmət olmasa onu görmək üçün PDF-i yükləyin: ",
   "downloadPdf": "PDF yükləyin",
   "media": "media",
-  "heroHeader": "qəhrəman başlığı"
+  "heroHeader": "qəhrəman başlığı",
+  "Browse EBV Datasets": "EBV məlumat dəstlərinə baxın",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Yer Müşahidələri üzrə Qrup Biomüxtəliflik Müşahidə Şəbəkə",
+  "GEO BON Portal": "GEO BON Portalı",
+  "GEO BON": "GEO BON",
+  "EBV dataset": "EBV məlumat dəsti",
+  "EBV datasets": "EBV məlumat dəstləri"
 }

@@ -12,19 +12,19 @@ const headers ={
 
 
 const toAdd={
-    pdfNotice  : "This browser does not support PDFs. Please download the PDF to view it: ",
-    downloadPdf: "Download PDF"                                                            ,
-    media      : "media"                                                                   ,
-    document   : "document"                                                                ,
-    video      : "video"                                                                   ,
-    image      : "image"                                                                   ,
-    heroHeader : "hero header"
+  "Browse EBV Datasets": "Browse EBV Datasets",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)":"GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)",
+  "GEO BON Portal": "GEO BON Portal",
+  "GEO BON": "GEO BON",
+  "EBV dataset": "EBV dataset",
+  "EBV datasets": "EBV datasets"
 }
 
 await main();
 
 async function main(){
     const en = getEnglish();
+
 
     let start = false;
     for (const locale of locales) {
@@ -34,7 +34,7 @@ async function main(){
         // if(locale.code === 'sw') start = true;
         // if(!start) continue;
 
-        const fileName = resolve(rootContext, `./i18n/locales/${locale.file}`);
+        const fileName = resolve(rootContext, `./i18n/${locale.file}`);
         // const fileExists = fs.existsSync(fileName);
 
         consola.warn(`Starting ${locale.name} ${locale.file}`)
@@ -62,5 +62,5 @@ function getEnglish(){
 }
 
 function getLanguageData(locale){
-    return JSON.parse(fs.readFileSync(resolve(rootContext, `./i18n/locales/${locale.file}`)).toString());
+    return JSON.parse(fs.readFileSync(resolve(rootContext, `./i18n/${locale.file}`)).toString());
 }

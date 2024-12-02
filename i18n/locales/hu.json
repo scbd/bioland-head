@@ -805,5 +805,11 @@
   "pdfNotice": "Ez a böngésző nem támogatja a PDF-fájlokat. Kérjük, töltse le a PDF-fájlt a megtekintéshez: ",
   "downloadPdf": "Letöltés PDF",
   "media": "média",
-  "heroHeader": "hős fejléc"
+  "heroHeader": "hős fejléc",
+  "Browse EBV Datasets": "Böngésszen az EBV adatkészletekben",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Földmegfigyelési csoport a biodiverzitás megfigyelési hálózati portálja)",
+  "GEO BON Portal": "GEO BON portál",
+  "GEO BON": "GEO-BON",
+  "EBV dataset": "EBV adatkészlet",
+  "EBV datasets": "EBV adatkészletek"
 }

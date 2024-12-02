@@ -805,5 +805,11 @@
   "pdfNotice": "Hindi sinusuportahan ng browser na ito ang mga PDF. Mangyaring i-download ang PDF upang tingnan ito: ",
   "downloadPdf": "I-download ang PDF",
   "media": "media",
-  "heroHeader": "header ng bayani"
+  "heroHeader": "header ng bayani",
+  "Browse EBV Datasets": "Mag-browse sa EBV Datasets",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Grupo sa Mga Obserbasyon sa Daigdig Biodiversity Observation Network Portal)",
+  "GEO BON Portal": "Portal ng GEO BON",
+  "GEO BON": "GEO BON",
+  "EBV dataset": "EBV dataset",
+  "EBV datasets": "Mga dataset ng EBV"
 }

@@ -805,5 +805,11 @@
   "pdfNotice": "ຕົວທ່ອງເວັບນີ້ບໍ່ຮອງຮັບ PDFs. ກະລຸນາດາວໂຫລດ PDF ເພື່ອເບິ່ງມັນ: ",
   "downloadPdf": "ດາວໂຫລດ PDF",
   "media": "ສື່​ມວນ​ຊົນ",
-  "heroHeader": "ຫົວ hero"
+  "heroHeader": "ຫົວ hero",
+  "Browse EBV Datasets": "ຄົ້ນຫາຊຸດຂໍ້ມູນ EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (ກຸ່ມກ່ຽວກັບການສັງເກດການໂລກ, ປະຕູເຄືອຂ່າຍການສັງເກດການຊີວະນາໆພັນ)",
+  "GEO BON Portal": "GEO BON Portal",
+  "GEO BON": "GEO ດີ",
+  "EBV dataset": "ຊຸດຂໍ້ມູນ EBV",
+  "EBV datasets": "ຊຸດຂໍ້ມູນ EBV"
 }

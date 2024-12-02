@@ -805,5 +805,11 @@
   "pdfNotice": "ఈ బ్రౌజర్ PDF లకు మద్దతు ఇవ్వదు. దయచేసి దీన్ని వీక్షించడానికి PDF ని డౌన్లోడ్ చేయండి: ",
   "downloadPdf": "PDF డౌన్లోడ్",
   "media": "మీడియా",
-  "heroHeader": "హీరో శీర్షిక"
+  "heroHeader": "హీరో శీర్షిక",
+  "Browse EBV Datasets": "EBV డేటాసెట్లను బ్రౌజ్ చేయండి",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (గ్రూప్ ఆన్ ఎర్త్ అబ్జర్వేషన్స్ బయోడైవర్సిటీ అబ్జర్వేషన్ నెట్వర్",
+  "GEO BON Portal": "జియో బాన్ పోర్టల్",
+  "GEO BON": "జియో బాన్",
+  "EBV dataset": "EBV డేటాసెట్",
+  "EBV datasets": "EBV డేటాసెట్లు"
 }

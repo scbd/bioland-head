@@ -805,5 +805,11 @@
   "pdfNotice": "Овој прелистувач не поддржува PDF-датотеки. Ве молиме преземете го PDF за да го видите: ",
   "downloadPdf": "Преземи PDF",
   "media": "медиуми",
-  "heroHeader": "заглавје на херој"
+  "heroHeader": "заглавје на херој",
+  "Browse EBV Datasets": "Прелистајте ги EBV сетовите на податоци",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "ГЕО БОН (Група за набљудувања на Земјата Портал на мрежата за набљудување",
+  "GEO BON Portal": "ГЕО БОН портал",
+  "GEO BON": "ГЕО БОН",
+  "EBV dataset": "EBV база на податоци",
+  "EBV datasets": "EBV сетови на податоци"
 }

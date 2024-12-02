@@ -6,11 +6,15 @@ const hour  = 60 * 60;
 const week  = 60 * 60 * 24 * 7;
 
 const  routeRules = {
+
                       '/*/**'    : { headers: { 'Cache-Control': `max-age=${hour} s-maxage=${hour}, stale-if-error=${week}, stale-while-revalidate=${week}` } },
+                      '/*/*/**'    : { headers: { 'Cache-Control': `max-age=${hour} s-maxage=${hour}, stale-if-error=${week}, stale-while-revalidate=${week}` } },
+                      '/*/*/*/**'    : { headers: { 'Cache-Control': `max-age=${hour} s-maxage=${hour}, stale-if-error=${week}, stale-while-revalidate=${week}` } },
+                      // '/_nuxt/**': { headers: { 'cache-control': `max-age=31536000 s-maxage=31536000, stale-if-error=${week}` } },
                     }
 
 export default defineNuxtConfig({
-  routeRules,
+  // routeRules,
   devtools: { enabled: false},
   debug: false,
   sourcemap: { server: true, client: true },
@@ -54,6 +58,7 @@ export default defineNuxtConfig({
     'nuxt-swiper',
     'nuxt-gravatar',
     'nuxt-emoji-picker',
+    '@nuxtjs/google-fonts'
     // '@vue-final-modal/nuxt',
     
   ],
@@ -79,6 +84,7 @@ export default defineNuxtConfig({
   i18n: { 
     locales              ,
     debug                : false,
+    baseUrl              : '/en',
     messages             :{ en },
     defaultLocale        : 'en',
     fallbackLocale       : 'en',
@@ -110,9 +116,9 @@ export default defineNuxtConfig({
 
   image: {
     dir: 'public',
-    domains: ['chm-cbd.net','be.bl2.chm-cbd.net', 'cbd.int', 'www.cbd.int', 'https://panorama.solutions/', ...domains ],
+    domains: ['portal.geobon.org','chm-cbd.net','be.bl2.chm-cbd.net', 'cbd.int', 'www.cbd.int', 'https://panorama.solutions/', ...domains ],
     format: ['webp', 'avif', 'jpeg', 'jpg', 'png','gif'],
-    quality: 60,
+    quality: 50,
     screens: {
       xs: 320,
       sm: 552,
@@ -155,6 +161,11 @@ export default defineNuxtConfig({
   },
   build:{
     transpile:['@vue-leaflet']
+  },
+  googleFonts: {
+    families: {
+      Roboto: [300,400,500,700,900]
+    }
   },
   compatibilityDate: '2024-09-08',
 })

@@ -805,5 +805,11 @@
   "pdfNotice": "এই ব্রাউজারটি পিডিএফ সমর্থন করে না। এটি দেখতে দয়া করে পিডিএফ ডাউনলোড করুন: ",
   "downloadPdf": "পিডিএফ ডাউনলোড",
   "media": "মিডিয়া",
-  "heroHeader": "নায়ক হেডার"
+  "heroHeader": "নায়ক হেডার",
+  "Browse EBV Datasets": "ইবিভি ডেটাসেট ব্রাউজ করুন",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "জিও বিওএন (গ্রুপ অন আর্থ পর্যবেক্ষণ জীববৈচিত্র্য পর্যবেক্ষণ নেট",
+  "GEO BON Portal": "জিও বন পোর্টাল",
+  "GEO BON": "জিও বন",
+  "EBV dataset": "ইবিভি ডেটাসেট",
+  "EBV datasets": "ইবিভি ডেটাসেট"
 }

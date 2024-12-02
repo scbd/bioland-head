@@ -805,5 +805,11 @@
   "pdfNotice": "Browser iki ora ndhukung PDF. Mangga download PDF kanggo ndeleng: ",
   "downloadPdf": "Ngundhuh PDF",
   "media": "media",
-  "heroHeader": "header pahlawan"
+  "heroHeader": "header pahlawan",
+  "Browse EBV Datasets": "Telusuri Set Data EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)",
+  "GEO BON Portal": "Portal GEO BON",
+  "GEO BON": "GEO apik",
+  "EBV dataset": "EBV dataset",
+  "EBV datasets": "data EBV"
 }

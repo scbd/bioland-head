@@ -805,5 +805,11 @@
   "pdfNotice": "ਇਹ ਬ੍ਰਾਊਜ਼ਰ PDF ਦਾ ਸਮਰਥਨ ਨਹੀਂ ਕਰਦਾ। ਕਿਰਪਾ ਕਰਕੇ ਇਸਨੂੰ ਵੇਖਣ ਲਈ ਪੀਡੀਐਫ ਡਾਉਨਲੋਡ ਕਰੋ: ",
   "downloadPdf": "PDF ਡਾਊਨਲੋਡ ਕਰੋ",
   "media": "ਮੀਡੀਆ",
-  "heroHeader": "ਹੀਰੋ ਸਿਰਲੇਖ"
+  "heroHeader": "ਹੀਰੋ ਸਿਰਲੇਖ",
+  "Browse EBV Datasets": "ਈਬੀਵੀ ਡੇਟਾਸੈਟ ਬ੍ਰਾਊਜ਼ ਕਰੋ",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "ਜੀਓ ਬੋਨ (ਗਰੁੱਪ ਆਨ ਅਰਥ ਆਬਜ਼ਰਵੇਸ਼ਨ ਜੈਵ ਵਿਭਿੰਨਤਾ ਨਿਗਰਾ",
+  "GEO BON Portal": "ਜੀਓ ਬੋਨ ਪੋਰਟਲ",
+  "GEO BON": "ਜੀਓ ਬੋਨ",
+  "EBV dataset": "ਈਬੀਵੀ ਡੇਟਾਸੈਟ",
+  "EBV datasets": "ਈਬੀਵੀ ਡੇਟਾਸੈਟ"
 }

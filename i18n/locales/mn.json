@@ -805,5 +805,11 @@
   "pdfNotice": "Энэ хөтөч нь PDF-ийг дэмждэггүй. Үүнийг үзэхийн тулд PDF-ийг татаж авна уу: ",
   "downloadPdf": "PDF татаж авах",
   "media": "хэвлэл мэдээллийн хэрэгсэл",
-  "heroHeader": "баатрын толгой"
+  "heroHeader": "баатрын толгой",
+  "Browse EBV Datasets": "EBV өгөгдлийн багцыг үзэх",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Дэлхийн ажиглалтын олон янз байдлын ажиглалтын сүлжээний портал дээрх бүлэг)",
+  "GEO BON Portal": "ГЕО БОН портал",
+  "GEO BON": "ГЕО БОН",
+  "EBV dataset": "EBV мэдээллийн багц",
+  "EBV datasets": "EBV өгөгдлийн багц"
 }

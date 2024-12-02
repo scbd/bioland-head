@@ -805,5 +805,11 @@
   "pdfNotice": "ဤဘရောက်ဆာသည် PDF များကိုမပံ့ပိုးပါ။ ၎င်းကိုကြည့်ရှုရန် PDF ကိုဒေါင်းလုဒ်လုပ်ပါ။ ",
   "downloadPdf": "PDF ဒေါင်းလုဒ်လုပ်ပါ။",
   "media": "မီဒီယာ",
-  "heroHeader": "သူရဲကောင်းခေါင်းစီး"
+  "heroHeader": "သူရဲကောင်းခေါင်းစီး",
+  "Browse EBV Datasets": "EBV ဒေတာအတွဲများကို ရှာဖွေပါ။",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)",
+  "GEO BON Portal": "GEO BON မုခ်ဦး",
+  "GEO BON": "GEO ကောင်းတယ်",
+  "EBV dataset": "EBV ဒေတာအတွဲ",
+  "EBV datasets": "EBV ဒေတာအတွဲများ"
 }

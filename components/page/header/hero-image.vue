@@ -34,7 +34,7 @@ function setup() {
     const meStore = useMeStore();
     const siteStore    = useSiteStore();
     const pageStore    = usePageStore();
-    const hasHeroImage = computed(() => pageStore?.page?.hasHeroImage);
+    const hasHeroImage = computed(() => pageStore?.page?.hasHeroImage || pageStore?.heroImage?.fieldMediaImage?.uri?.url);
     const viewport     = useViewport();
     const img          = useImage();
 

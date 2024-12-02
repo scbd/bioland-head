@@ -805,5 +805,11 @@
   "pdfNotice": "Este navegador no admite archivos PDF. Descargue el PDF para verlo: ",
   "downloadPdf": "Descargar PDF",
   "media": "Medios de comunicación",
-  "heroHeader": "encabezado de héroe"
+  "heroHeader": "encabezado de héroe",
+  "Browse EBV Datasets": "Explore los conjuntos de datos de EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (portal de la red de observación de la biodiversidad del Grupo de Observaciones de la Tierra)",
+  "GEO BON Portal": "Portal GEO BON",
+  "GEO BON": "HUESO GEO",
+  "EBV dataset": "Conjunto de datos EBV",
+  "EBV datasets": "Conjuntos de datos EBV"
 }

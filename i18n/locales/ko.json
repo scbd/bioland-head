@@ -805,5 +805,11 @@
   "pdfNotice": "이 브라우저는 PDF를 지원하지 않습니다.보려면 PDF를 다운로드하십시오. ",
   "downloadPdf": "PDF 다운로드",
   "media": "미디어",
-  "heroHeader": "히어로 헤더"
+  "heroHeader": "히어로 헤더",
+  "Browse EBV Datasets": "EBV 데이터세트 찾아보기",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (지구관측 그룹 생물다양성 관측 네트워크 포털)",
+  "GEO BON Portal": "지오본 포털",
+  "GEO BON": "지오 본",
+  "EBV dataset": "EBV 데이터세트",
+  "EBV datasets": "EBV 데이터세트"
 }

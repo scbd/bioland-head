@@ -805,5 +805,11 @@
   "pdfNotice": "See brauser ei toeta PDF-faile. Selle vaatamiseks laadige alla PDF: ",
   "downloadPdf": "Laadige alla PDF",
   "media": "meediumid",
-  "heroHeader": "kangelase päis"
+  "heroHeader": "kangelase päis",
+  "Browse EBV Datasets": "Sirvige EBV andmekogumeid",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Maa vaatluste rühm bioloogilise mitmekesisuse vaatlusvõrgustiku portaal)",
+  "GEO BON Portal": "GEO BON portaal",
+  "GEO BON": "GEO-BON",
+  "EBV dataset": "EBV andmekogum",
+  "EBV datasets": "EBV andmekogumid"
 }

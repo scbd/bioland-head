@@ -805,5 +805,11 @@
   "pdfNotice": "Den här webbläsaren stöder inte PDF-filer. Ladda ner PDF-filen för att se den: ",
   "downloadPdf": "Ladda ner PDF",
   "media": "media",
-  "heroHeader": "hjälterubrik"
+  "heroHeader": "hjälterubrik",
+  "Browse EBV Datasets": "Bläddra i EBV-datauppsättningar",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Gruppen för jordobservationer Nätverksportal för biologisk mångfald)",
+  "GEO BON Portal": "GEO BON-portalen",
+  "GEO BON": "GEOBON",
+  "EBV dataset": "EBV-datauppsättning",
+  "EBV datasets": "EBV-datamängder"
 }

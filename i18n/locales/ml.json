@@ -805,5 +805,11 @@
   "pdfNotice": "ഈ ബ്രൗസർ PDF- കളെ പിന്തുണയ്ക്കുന്നില്ല. ഇത് കാണുന്നതിന് ദയവായി PDF ഡൗൺലോഡ് ചെയ്യുക: ",
   "downloadPdf": "PDF ഡൗൺലോഡുചെയ്യുക",
   "media": "മാധ്യമങ്ങൾ",
-  "heroHeader": "ഹീറോ ഹെഡർ"
+  "heroHeader": "ഹീറോ ഹെഡർ",
+  "Browse EBV Datasets": "EBV ഡാറ്റാസെറ്റുകൾ ബ്രൗസ് ചെയ്യുക",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "ജിയോ ബോൺ (ഗ്രൂപ്പ് ഓൺ എർത്ത് ഒബ്സർവേഷൻസ് ബയോഡൈവേഴ്സിറ്റി ഒബ്സർവേഷൻ",
+  "GEO BON Portal": "ജിയോ ബോൺ പോർട്ടൽ",
+  "GEO BON": "ജിയോ ബോൺ",
+  "EBV dataset": "ഇബിവി ഡാറ്റാസെറ്റ്",
+  "EBV datasets": "ഇബിവി ഡാറ്റാസെറ്റുകൾ"
 }

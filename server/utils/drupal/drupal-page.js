@@ -14,7 +14,6 @@ export async function getPageData(ctx){
         const   query                     = getSearchParams(ctx, type, bundle);
         const   uri                       = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
-        consola.error('query', query)
         const { data } = await $fetch(uri, { query });
 
         await addPageAliases(ctx,data).then((aliases)=> data.aliases=aliases)

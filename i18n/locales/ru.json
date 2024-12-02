@@ -805,5 +805,11 @@
   "pdfNotice": "Этот браузер не поддерживает PDF-файлы. Пожалуйста, скачайте PDF-файл, чтобы просмотреть его: ",
   "downloadPdf": "Загрузить PDF-файл",
   "media": "СМИ",
-  "heroHeader": "заголовок героя"
+  "heroHeader": "заголовок героя",
+  "Browse EBV Datasets": "Просмотр наборов данных EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Сетевой портал наблюдения за биоразнообразием Группы по наблюдениям Земли)",
+  "GEO BON Portal": "Портал GEO BON",
+  "GEO BON": "ГЕО БОНД",
+  "EBV dataset": "Набор данных EBV",
+  "EBV datasets": "Наборы данных EBV"
 }

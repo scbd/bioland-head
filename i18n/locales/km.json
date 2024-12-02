@@ -805,5 +805,11 @@
   "pdfNotice": "កម្មវិធីរុករកតាមអ៊ីនធឺណិតនេះមិនគាំទ្រឯកសារ PDF ទេ។ សូមទាញយក PDF ដើម្បីមើលវា៖ ",
   "downloadPdf": "ទាញយក PDF",
   "media": "ប្រព័ន្ធផ្សព្វផ្សាយ",
-  "heroHeader": "ក្បាលវីរបុរស"
+  "heroHeader": "ក្បាលវីរបុរស",
+  "Browse EBV Datasets": "រកមើលសំណុំទិន្នន័យ EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (វិបផតថល​បណ្តាញ​សង្កេតការណ៍​ជីវចម្រុះ​នៅ​លើ​ផែនដី)",
+  "GEO BON Portal": "ផតថល GEO BON",
+  "GEO BON": "GEO ល្អ។",
+  "EBV dataset": "សំណុំទិន្នន័យ EBV",
+  "EBV datasets": "សំណុំទិន្នន័យ EBV"
 }

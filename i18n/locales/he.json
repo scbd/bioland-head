@@ -805,5 +805,11 @@
   "pdfNotice": "דפדפן זה אינו תומך בקובצי PDF. אנא הורד את ה- PDF כדי להציג אותו: ",
   "downloadPdf": "הורד PDF",
   "media": "התקשורת",
-  "heroHeader": "כותרת גיבור"
+  "heroHeader": "כותרת גיבור",
+  "Browse EBV Datasets": "עיין במערכי נתונים של EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (קבוצה לתצפיות כדור הארץ פורטל רשת תצפית על המגוון הביולוגי)",
+  "GEO BON Portal": "פורטל גיאו בון",
+  "GEO BON": "גיאו בון",
+  "EBV dataset": "מערך נתונים של EBV",
+  "EBV datasets": "מערכי נתונים של EBV"
 }

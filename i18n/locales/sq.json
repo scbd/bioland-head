@@ -805,5 +805,11 @@
   "pdfNotice": "Ky shfletues nuk mbështet PDF. Ju lutemi shkarkoni PDF-në për ta parë atë: ",
   "downloadPdf": "Shkarkoni PDF",
   "media": "media",
-  "heroHeader": "kokë hero"
+  "heroHeader": "kokë hero",
+  "Browse EBV Datasets": "Shfletoni grupet e të dhënave EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Portali i Rrjetit të Vëzhgimit të Biodiversitetit të Grupit për V",
+  "GEO BON Portal": "Portali GEO BON",
+  "GEO BON": "GJEO BON",
+  "EBV dataset": "Seti i të dhënave EBV",
+  "EBV datasets": "Seti i të dhënave EBV"
 }

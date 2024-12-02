@@ -805,5 +805,11 @@
   "pdfNotice": "Този браузър не поддържа PDF файлове. Моля, изтеглете PDF файла, за да го видите: ",
   "downloadPdf": "Изтегляне на PDF",
   "media": "медии",
-  "heroHeader": "заглавка на героя"
+  "heroHeader": "заглавка на героя",
+  "Browse EBV Datasets": "Разгледайте EBV набори от данни",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Група за наблюдения на Земята Портал на мрежата за наблюдение на биологичното разнообразие)",
+  "GEO BON Portal": "Портал ГЕО БОН",
+  "GEO BON": "ГЕО БОН",
+  "EBV dataset": "EBV набор от данни",
+  "EBV datasets": "EBV набори от данни"
 }

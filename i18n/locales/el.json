@@ -805,5 +805,11 @@
   "pdfNotice": "Αυτό το πρόγραμμα περιήγησης δεν υποστηρίζει αρχεία PDF. Κατεβάστε το PDF για να το δείτε: ",
   "downloadPdf": "Κατεβάστε το PDF",
   "media": "μέσα",
-  "heroHeader": "κεφαλίδα ήρωα"
+  "heroHeader": "κεφαλίδα ήρωα",
+  "Browse EBV Datasets": "Αναζήτηση συνόλων δεδομένων EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Πύλη Δικτύου Παρατήρησης Βιοποικιλότητας Ομάδας Παρατηρήσεων Γης)",
+  "GEO BON Portal": "Πύλη GEO BON",
+  "GEO BON": "ΓΕΩ ΜΠΟΝ",
+  "EBV dataset": "Σύνολο δεδομένων EBV",
+  "EBV datasets": "Σύνολα δεδομένων EBV"
 }

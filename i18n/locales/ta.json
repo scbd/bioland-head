@@ -805,5 +805,11 @@
   "pdfNotice": "இந்த உலாவி PDF களை ஆதரிக்காது. அதைப் பார்க்க PDF ஐ பதிவிறக்கவும்: ",
   "downloadPdf": "PDF ஐ பதிவிறக்கவும்",
   "media": "ஊடகங்கள்",
-  "heroHeader": "ஹீரோ தலைப்பு"
+  "heroHeader": "ஹீரோ தலைப்பு",
+  "Browse EBV Datasets": "EBV தரவுத்தொகுப்புகளை உலாவுக",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (பூமி அவதானிப்புகள் குழு பல்லுயிர் கண்காணிப்பு வலைய",
+  "GEO BON Portal": "ஜியோ பான் போர்டல்",
+  "GEO BON": "ஜியோ பான்",
+  "EBV dataset": "EBV தரவுத்தொகுப்பு",
+  "EBV datasets": "EBV தரவுத்தொகுப்புகள்"
 }

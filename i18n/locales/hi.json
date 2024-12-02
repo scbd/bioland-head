@@ -805,5 +805,11 @@
   "pdfNotice": "यह ब्राउज़र PDF का समर्थन नहीं करता है। इसे देखने के लिए कृपया PDF डाउनलोड करें: ",
   "downloadPdf": "PDF डाउनलोड करें",
   "media": "मीडिया",
-  "heroHeader": "हीरो हेडर"
+  "heroHeader": "हीरो हेडर",
+  "Browse EBV Datasets": "EBV डेटासेट ब्राउज़ करें",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (ग्रुप ऑन अर्थ ऑब्जर्वेशन बायोडायवर्सिटी ऑब्जर्वेशन नेटवर्क पोर्टल)",
+  "GEO BON Portal": "जियो बॉन पोर्टल",
+  "GEO BON": "जियो बॉन",
+  "EBV dataset": "EBV डेटासेट",
+  "EBV datasets": "EBV डेटासेट"
 }

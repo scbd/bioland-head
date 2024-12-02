@@ -805,5 +805,11 @@
   "pdfNotice": "Trình duyệt này không hỗ trợ các tệp PDF. Vui lòng tải xuống PDF để xem nó: ",
   "downloadPdf": "Tải về PDF",
   "media": "phương tiện truyền thông",
-  "heroHeader": "tiêu đề anh hùng"
+  "heroHeader": "tiêu đề anh hùng",
+  "Browse EBV Datasets": "Duyệt bộ dữ liệu EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Cổng thông tin mạng quan sát đa dạng sinh học của nhóm quan sát trái đất)",
+  "GEO BON Portal": "Cổng thông tin GEO BON",
+  "GEO BON": "ĐỊA LÝ TỐT",
+  "EBV dataset": "Tập dữ liệu EBV",
+  "EBV datasets": "Bộ dữ liệu EBV"
 }

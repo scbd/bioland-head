@@ -805,5 +805,11 @@
   "pdfNotice": "Chan eil am brabhsair seo a' toirt taic do PDFs. Feuch an luchdaich thu sìos am PDF airson fhaicinn: ",
   "downloadPdf": "Luchdaich sìos PDF",
   "media": "meadhanan",
-  "heroHeader": "ceann laoch"
+  "heroHeader": "ceann laoch",
+  "Browse EBV Datasets": "Dèan brobhsadh air seataichean dàta EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Buidheann air Portal Lìonra Amharc Bith-iomadachd Amharcan Talmhainn)",
+  "GEO BON Portal": "Portal GEO BON",
+  "GEO BON": "GEO MAITH",
+  "EBV dataset": "Stòr-dàta EBV",
+  "EBV datasets": "Stòr-dàta EBV"
 }

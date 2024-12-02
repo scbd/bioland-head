@@ -805,5 +805,11 @@
   "pdfNotice": "བརྡ་འཚོལ་འདི་གིས་ པི་ཌི་ཨེཕ་ཚུ་ལུ་ རྒྱབ་སྐྱོར་མི་འབད། འདི་བལྟ་ནིའི་དོན་ལུ་ PDF ཕབ་ལེན་འབད་གནང་། ",
   "downloadPdf": "PDF ཕབ་ལེན།",
   "media": "བརྡ་ལམ།",
-  "heroHeader": "དཔའ་བོ་མགོ།"
+  "heroHeader": "དཔའ་བོ་མགོ།",
+  "Browse EBV Datasets": "ཨི་བི་ཝི་གནད་སྡུད་ཆ་ཚན་ཚུ་བརྡ་འཚོལ་འབད།",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (འཛམ་གླིང་བལྟ་བརྟོག་སྡེ་ཚན། སྐྱེ་ལྡན་རིགས་སྣ་བལྟ་བརྟོག་དྲ་རྒྱའི་དྲ་རྒྱ།)",
+  "GEO BON Portal": "GEO BON དྲ་ཚིགས།",
+  "GEO BON": "GEO གུཌ།",
+  "EBV dataset": "EBV གནད་སྡུད་ཆ་ཚན།",
+  "EBV datasets": "EBV གནད་སྡུད་ཆ་ཚན།"
 }

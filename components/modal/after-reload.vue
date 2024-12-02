@@ -32,7 +32,8 @@
   import { VueFinalModal } from 'vue-final-modal';
   import clone from 'lodash.clonedeep';
 
-  const { t     } = useI18n   ();
+  const { t , locale    } = useI18n   ();
+  const getPage     = useGetPage(locale.value);
   const   router  = useRouter ();
   const   route      = useRoute   ();
   const   emit           = defineEmits   (['confirm']);
@@ -54,18 +55,24 @@
 
   async function reload(){
 
-
+    await getPage(route.path, true);
+    await getPage(route.path, true);
     // const query = { reload: true };
 
     // await router.replace({ query });
+    emit('confirm');
+    consola.error(route);
+    await clearQueryString();
 
-    // await reloadNuxtApp();
+    setTimeout(()=>reloadNuxtApp({ path:`${route.path}` }), 5000)
+    reloadNuxtApp({ path:`${route.path}` });
 
     consola.success('after reload clear query string');
-    close();
+    // close();
   }
 
-setTimeout(reload, 5000)
+  await getPage(route.path, true);
+setTimeout(reload, 80000)
 </script>
 
 <style lang="scss" scoped>

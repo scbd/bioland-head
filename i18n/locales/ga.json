@@ -805,5 +805,11 @@
   "pdfNotice": "Ní thacaíonn an brabhsálaí seo le PDFanna. Íoslódáil an PDF le do thoil chun é a fheiceáil: ",
   "downloadPdf": "Íoslódáil PDF",
   "media": "meáin",
-  "heroHeader": "ceanntásc laoch"
+  "heroHeader": "ceanntásc laoch",
+  "Browse EBV Datasets": "Brabhsáil Tacair Sonraí EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Tairseach Líonra Breathnóireachta Bithéagsúlachta an Grúpa ar",
+  "GEO BON Portal": "Tairseach GEO BON",
+  "GEO BON": "GEO-BON",
+  "EBV dataset": "Tacar sonraí EBV",
+  "EBV datasets": "Tacair sonraí EBV"
 }

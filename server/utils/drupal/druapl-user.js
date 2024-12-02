@@ -4,7 +4,7 @@ export async function getUser(event, force = false) {
     try{
         const { me:meCookieString }= parseCookies(event, 'me') || {};
 
-        const me = meCookieString? JSON.parse(decodeURIComponent(meCookieString)) : undefined;
+        const me = meCookieString? parseJson(decodeURIComponent(meCookieString)) : undefined;
 
         if(!force && me && me.isAuthenticated ) return me;
 
@@ -89,3 +89,4 @@ function mapUserFromDrupal({ data, included }, token){
 function mapRolesFromDrupal(included=[]){
     return included.filter(({ type }) => type === 'user_role--user_role').map(({ attributes }) => (attributes?.drupal_internal__id))
 }
+

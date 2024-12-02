@@ -13,7 +13,6 @@ export default cachedEventHandler(async (event) => {
 
             const siteName = await getSiteDefinedName({ ...ctx, locale, config });
 
-           
             await cleanStorage();
             const respCtx = { ...ctx, locale, config, siteName, defaultLocale: config.defaultLocale };
 
@@ -47,7 +46,7 @@ export default cachedEventHandler(async (event) => {
             }); 
         }
     },
-    contextCache
+    // contextCache
 );
 
 function isValidLocale(locale){

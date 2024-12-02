@@ -29,7 +29,16 @@ export const thesaurusApisUrls = {
     gbfTargets   : 'https://api.cbd.int/api/v2013/thesaurus/domains/GBF-TARGETS/terms',
     gbfGoals     : 'https://api.cbd.int/api/v2013/thesaurus/domains/GBF-GOALS/terms'
 }
-
+export const getCountryName = defineCachedFunction(async (identifier) => {
+    const data = await $fetch(`https://api.cbd.int/api/v2013/thesaurus/terms/${identifier}`)
+  
+    return data.name
+},{
+    maxAge: 60 * 60 * 60 * 24 * 30 * 6,
+    getKey:(identifier) => identifier,
+    base:'external',
+    varies:['host', 'x-forwarded-host'],
+})
 export  const dataSources = [ ...Object.keys(thesaurusApisUrls), 'geoLocations',  'all' ];
 
 function getSdgNumber(key){

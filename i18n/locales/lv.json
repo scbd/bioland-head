@@ -805,5 +805,11 @@
   "pdfNotice": "Šī pārlūkprogramma neatbalsta PDF failus. Lūdzu, lejupielādējiet PDF failu, lai to apskatītu: ",
   "downloadPdf": "Lejupielādēt PDF",
   "media": "mediji",
-  "heroHeader": "varoņa galvene"
+  "heroHeader": "varoņa galvene",
+  "Browse EBV Datasets": "Pārlūkot EBV datu kopas",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Zemes novērojumu grupa bioloģiskās daudzveidības novērošanas tīkla portāls)",
+  "GEO BON Portal": "GEO BON portāls",
+  "GEO BON": "ĢEOGRĀFISKAIS",
+  "EBV dataset": "EBV datu kopa",
+  "EBV datasets": "EBV datu kopas"
 }

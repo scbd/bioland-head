@@ -805,5 +805,11 @@
   "pdfNotice": "لا يدعم هذا المتصفح ملفات PDF. يرجى تنزيل ملف PDF لمشاهدته: ",
   "downloadPdf": "تنزيل ملف PDF",
   "media": "وسائط",
-  "heroHeader": "رأس البطل"
+  "heroHeader": "رأس البطل",
+  "Browse EBV Datasets": "تصفح مجموعات بيانات EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (بوابة شبكة مراقبة التنوع البيولوجي للمجموعة المعنية برصد الأرض)",
+  "GEO BON Portal": "بوابة جيو بون",
+  "GEO BON": "جيو بون",
+  "EBV dataset": "مجموعة بيانات EBV",
+  "EBV datasets": "مجموعات بيانات EBV"
 }

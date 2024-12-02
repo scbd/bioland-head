@@ -805,5 +805,11 @@
   "pdfNotice": "Гэты браўзер не падтрымлівае файлы PDF. Калі ласка, спампуйце PDF, каб праглядзець яго: ",
   "downloadPdf": "Спампаваць PDF",
   "media": "СМІ",
-  "heroHeader": "загаловак героя"
+  "heroHeader": "загаловак героя",
+  "Browse EBV Datasets": "Прагляд набораў даных EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Сеткавы партал назіранняў за біяразнастайнасцю групы па назіраннях за Зямлёй)",
+  "GEO BON Portal": "Партал GEO BON",
+  "GEO BON": "GEO ДОБРА",
+  "EBV dataset": "Набор даных EBV",
+  "EBV datasets": "Наборы даных EBV"
 }

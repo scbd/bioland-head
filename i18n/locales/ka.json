@@ -805,5 +805,11 @@
   "pdfNotice": "ეს ბრაუზერი მხარს არ უჭერს PDF-ებს. გთხოვთ ჩამოტვირთოთ PDF მისი სანახავად: ",
   "downloadPdf": "ჩამოტვირთეთ PDF",
   "media": "მედია",
-  "heroHeader": "გმირის სათაური"
+  "heroHeader": "გმირის სათაური",
+  "Browse EBV Datasets": "დაათვალიერეთ EBV მონაცემთა ნაკრ",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (დედამიწის დაკვირვების ჯგუფი ბიომრავალფეროვნების დაკვ",
+  "GEO BON Portal": "გეო ბონ პორტალი",
+  "GEO BON": "გეო ბონი",
+  "EBV dataset": "EBV მონაცემთა ნაკრები",
+  "EBV datasets": "EBV მონაცემთა ბაზები"
 }

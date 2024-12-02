@@ -805,5 +805,11 @@
   "pdfNotice": "Ši naršyklė nepalaiko PDF rinkmenų. Norėdami jį peržiūrėti, atsisiųskite PDF: ",
   "downloadPdf": "Atsisiųsti PDF",
   "media": "žiniasklaida",
-  "heroHeader": "herojaus antraštė"
+  "heroHeader": "herojaus antraštė",
+  "Browse EBV Datasets": "Naršykite EBV duomenų rinkinius",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Žemės stebėjimų biologinės įvairovės stebėjimo tinklo portalo grupė)",
+  "GEO BON Portal": "GEO BON portalas",
+  "GEO BON": "GEO BON",
+  "EBV dataset": "EBV duomenų rinkinys",
+  "EBV datasets": "EBV duomenų rinkiniai"
 }

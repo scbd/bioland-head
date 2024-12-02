@@ -805,5 +805,11 @@
   "pdfNotice": "این مرورگر از PDF پشتیبانی نمی کند. لطفا PDF را برای مشاهده دانلود کنید: ",
   "downloadPdf": "دانلود PDF",
   "media": "رسانه ها",
-  "heroHeader": "هدر قهرمان"
+  "heroHeader": "هدر قهرمان",
+  "Browse EBV Datasets": "مرور مجموعه داده های EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (گروه پورتال شبکه مشاهده تنوع زیستی مشاهدات زمین)",
+  "GEO BON Portal": "پورتال GEO BON",
+  "GEO BON": "جئو بون",
+  "EBV dataset": "مجموعه داده EBV",
+  "EBV datasets": "مجموعه داده های EBV"
 }

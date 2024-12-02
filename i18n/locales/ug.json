@@ -805,5 +805,11 @@
   "pdfNotice": "بۇ توركۆرگۈچ PDF نى قوللىمايدۇ. ئۇنى كۆرۈش ئۈچۈن PDF نى چۈشۈرۈڭ: ",
   "downloadPdf": "PDF نى چۈشۈرۈڭ",
   "media": "media",
-  "heroHeader": "hero header"
+  "heroHeader": "hero header",
+  "Browse EBV Datasets": "EBV سانلىق مەلۇمات جەدۋىلىنى كۆرۈڭ",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (يەرشارىنى كۆزىتىش گۇرۇپپىسى جانلىقلارنىڭ كۆپ خىللىقىنى كۆزىتىش تورى ئېغىزى)",
+  "GEO BON Portal": "GEO BON Portal",
+  "GEO BON": "GEO GOOD",
+  "EBV dataset": "EBV سانلىق مەلۇمات",
+  "EBV datasets": "EBV سانلىق مەلۇمات جەدۋىلى"
 }

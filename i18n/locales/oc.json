@@ -805,5 +805,11 @@
   "pdfNotice": "Aqueste navigador pren pas en carga los PDF. Telecargatz lo PDF per lo veire: ",
   "downloadPdf": "Telecargar PDF",
   "media": "mèdias",
-  "heroHeader": "entèsta d'eròi"
+  "heroHeader": "entèsta d'eròi",
+  "Browse EBV Datasets": "Navegar pels ensembles de donadas EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Portal de la ret d'observacion de la biodiversitat del grop sus la tèrra)",
+  "GEO BON Portal": "Portal GEO BON",
+  "GEO BON": "GEO BON",
+  "EBV dataset": "Ensemble de donadas EBV",
+  "EBV datasets": "Ensems de donadas EBV"
 }

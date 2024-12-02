@@ -805,5 +805,11 @@
   "pdfNotice": "ይህ አሳሽ ፒዲኤፎችን አይደግፍም። እባክዎ እባክዎን ፒዲኤፍ ለማየት ያውርዱ ",
   "downloadPdf": "ፒዲኤፍ አውር",
   "media": "የመገናኛ ዘዴ",
-  "heroHeader": "ጀግና ርዕስ"
+  "heroHeader": "ጀግና ርዕስ",
+  "Browse EBV Datasets": "የኢቢቪ የውሂብ ስብስቦችን",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "ጂኦ ቦን (በምድር ትልከታዎች ቡድን የባሕዝነት መመልከቻ አ",
+  "GEO BON Portal": "ጂኦ ቦን ፖርታል",
+  "GEO BON": "ጂዮ ቦን",
+  "EBV dataset": "ኢቢቪ የውሂብ ስብስብ",
+  "EBV datasets": "ኢቢቪ የውሂብ ስብስቦች"
 }

@@ -3,13 +3,12 @@
 export function useTheme(){
     const siteStore = useSiteStore ();
 
-    const primaryColorStyle  = reactive({ 'color': siteStore.primaryColor, 'border-top': `${siteStore.primaryColor} .5rem solid`});
-
-    const badgePrimaryStyle = reactive({ 'background-color': siteStore.primaryColor })
+    const primaryColorStyle   = reactive({ 'color': siteStore.primaryColor, 'border-top': `${siteStore.primaryColor} .5rem solid`});
+    const badgePrimaryStyle   = reactive({ 'background-color': siteStore.primaryColor })
 
     const badgeSecondaryStyle = reactive({ 'background-color': siteStore.secondaryColor }) 
-    const bgStyle = reactive({ 'background-color': siteStore.secondaryColor });
-    const c2Style = reactive({ 'color': siteStore?.theme?.color?.secondaryTextOver });
+    const bgStyle             = reactive({ 'background-color': siteStore.secondaryColor });
+    const c2Style             = reactive({ 'color': siteStore?.theme?.color?.secondaryTextOver });
 
     const style           = reactive({ '--bs-primary': siteStore.primaryColor, })
     const colorStyle      = reactive({ color: siteStore.primaryColor, })
@@ -25,12 +24,12 @@ export function useTheme(){
 
 }
 
-const defaultImageOptions = { 
-    height : 300      ,
-    width  : 500      ,
-    fit    : 'contain',
+export const defaultImageOptions = { 
+    height : 150     ,
+    width  : 400      ,
+    fit    : 'cover',
     quality: 60       ,
-    format: ['webp', 'avif', 'jpeg', 'jpg', 'png','gif']
+    format : ['webp', 'avif', 'jpeg', 'jpg', 'png','gif']
 };
 
 export function useImageBackground(record, options = defaultImageOptions){
@@ -45,7 +44,7 @@ export function useImageBackground(record, options = defaultImageOptions){
 
         const imgSrc = img(imgUri, imageOptions);
 
-        return {'background':`url('${imgSrc}') no-repeat center`,  'background-size': 'contain'}
+        return {'background':`url('${imgSrc}') no-repeat center`,  'background-size': 'cover'}
         })
 
     return { backgroundStyles, imgUri, hasImg }

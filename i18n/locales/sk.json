@@ -805,5 +805,11 @@
   "pdfNotice": "Tento prehliadač nepodporuje súbory PDF. Stiahnite si PDF a pozrite si ho: ",
   "downloadPdf": "Stiahnite si PDF",
   "media": "médiá",
-  "heroHeader": "hlavička hrdinu"
+  "heroHeader": "hlavička hrdinu",
+  "Browse EBV Datasets": "Prehľadávať súbory údajov EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Portál siete pre pozorovanie biodiverzity skupiny pre pozorovanie Zeme)",
+  "GEO BON Portal": "Portál GEO BON",
+  "GEO BON": "GEO-BON",
+  "EBV dataset": "EBV súbor údajov",
+  "EBV datasets": "EBV dátové súbory"
 }

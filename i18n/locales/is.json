@@ -805,5 +805,11 @@
   "pdfNotice": "Þessi vafri styður ekki PDF skjöl. Vinsamlegast hlaðið niður PDF til að skoða það: ",
   "downloadPdf": "Sækja PDF",
   "media": "fjölmiðlum",
-  "heroHeader": "hetjuhaus"
+  "heroHeader": "hetjuhaus",
+  "Browse EBV Datasets": "Skoðaðu EBV gagnasett",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Hópur um athuganir á jörðinni Líffræðilegur fjölbreytileiki athugunar net vef",
+  "GEO BON Portal": "GEO BON vefgátt",
+  "GEO BON": "GEO GOOD",
+  "EBV dataset": "EBV gagnasett",
+  "EBV datasets": "EBV gagnasett"
 }

@@ -805,5 +805,11 @@
   "pdfNotice": "Nid yw'r porwr hwn yn cefnogi PDFs. Lawrlwythwch y PDF i'w weld: ",
   "downloadPdf": "Lawrlwytho PDF",
   "media": "cyfryngau",
-  "heroHeader": "pennawd arwr"
+  "heroHeader": "pennawd arwr",
+  "Browse EBV Datasets": "Porwch setiau data EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Grŵp ar Borth Rhwydwaith Arsylwi Bioamrywiaeth Arsylwadau ar y Ddaear)",
+  "GEO BON Portal": "Porth GEO BON",
+  "GEO BON": "GEO BON",
+  "EBV dataset": "Set ddata EBV",
+  "EBV datasets": "Setiau data EBV"
 }

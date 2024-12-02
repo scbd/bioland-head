@@ -1,6 +1,6 @@
 
 
-export default cachedEventHandler(async (event) => {
+export default defineEventHandler(async (event) => {
         try{
 
             const path = decodeURIComponent(getRouterParam(event, 'path'))

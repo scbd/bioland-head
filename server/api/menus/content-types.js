@@ -1,4 +1,4 @@
-export default cachedEventHandler(async (event) => {
+export default defineEventHandler(async (event) => {
         try{
             const context = getContext(event);
 

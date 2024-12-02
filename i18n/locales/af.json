@@ -805,5 +805,11 @@
   "pdfNotice": "Hierdie blaaier ondersteun nie PDF's nie. Laai asseblief die PDF af om dit te sien: ",
   "downloadPdf": "Laai PDF af",
   "media": "media",
-  "heroHeader": "heldkopskrif"
+  "heroHeader": "heldkopskrif",
+  "Browse EBV Datasets": "Blaai deur EBV-datastelle",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Groep op Aardwaarnemings Biodiversiteitswaarnemingsnetwerkportaal)",
+  "GEO BON Portal": "GEO BON-portaal",
+  "GEO BON": "GEO-BON",
+  "EBV dataset": "EBV datastel",
+  "EBV datasets": "EBV datastelle"
 }

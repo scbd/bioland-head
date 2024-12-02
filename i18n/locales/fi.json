@@ -805,5 +805,11 @@
   "pdfNotice": "Tämä selain ei tue PDF-tiedostoja. Lataa PDF nähdäksesi sen: ",
   "downloadPdf": "Lataa PDF",
   "media": "tiedotusvälineet",
-  "heroHeader": "sankari-otsikko"
+  "heroHeader": "sankari-otsikko",
+  "Browse EBV Datasets": "Selaa EBV-tietojoukkoja",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (maapallon havaintojen biologisen monimuotoisuuden havainnointiverkoston portaali)",
+  "GEO BON Portal": "GEO BON -portaali",
+  "GEO BON": "GEO-BON",
+  "EBV dataset": "EBV-tietoaineisto",
+  "EBV datasets": "EBV-tietojoukot"
 }

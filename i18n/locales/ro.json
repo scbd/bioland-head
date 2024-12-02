@@ -805,5 +805,11 @@
   "pdfNotice": "Acest browser nu acceptă PDF-uri. Vă rugăm să descărcați PDF-ul pentru a-l vizualiza: ",
   "downloadPdf": "Descarcă PDF",
   "media": "media",
-  "heroHeader": "antetul eroului"
+  "heroHeader": "antetul eroului",
+  "Browse EBV Datasets": "Răsfoiți seturile de date EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Portalul rețelei de observare a biodiversității Grupului pentru Observații Pământului)",
+  "GEO BON Portal": "Portalul GEO BON",
+  "GEO BON": "GEO BON",
+  "EBV dataset": "Setul de date EBV",
+  "EBV datasets": "Seturi de date EBV"
 }

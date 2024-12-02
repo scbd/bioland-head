@@ -805,5 +805,11 @@
   "pdfNotice": "આ બ્રાઉઝર પીડીએફને સપોર્ટ કરતું નથી. કૃપા કરીને તેને જોવા માટે પીડીએફ ડાઉનલોડ કરો: ",
   "downloadPdf": "પીડીએફ ડાઉનલોડ કરો",
   "media": "મીડિયા",
-  "heroHeader": "હીરો હેડર"
+  "heroHeader": "હીરો હેડર",
+  "Browse EBV Datasets": "ઇબીવી ડેટાસેટ્સ બ્રાઉઝ કરો",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "જીઓ બોન (ગ્રુપ ઓન અર્થ ઓબ્ઝર્વેશન્સ બાયોડિવિડીટી ઓબ્ઝ",
+  "GEO BON Portal": "જીઓ બોન પોર્ટલ",
+  "GEO BON": "જીઓ બોન",
+  "EBV dataset": "ઇબીવી ડેટાસેટ",
+  "EBV datasets": "ઇબીવી ડેટાસેટ્સ"
 }

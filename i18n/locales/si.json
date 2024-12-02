@@ -805,5 +805,11 @@
   "pdfNotice": "මෙම බ්රව්සරය PDF වලට සහාය නොදක්වයි. කරුණාකර එය බැලීමට PDF බාගන්න: ",
   "downloadPdf": "PDF බාගන්න",
   "media": "මාධ්ය",
-  "heroHeader": "වීර ශීර්ෂය"
+  "heroHeader": "වීර ශීර්ෂය",
+  "Browse EBV Datasets": "EBV දත්ත කට්ටල පිරික්සන්න",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (පෘථිවි නිරීක්ෂණ ජෛව විවිධත්ව නිරීක්ෂණ ජාල ද්වාරය පිළිබඳ",
+  "GEO BON Portal": "ජියෝ බොන් පෝටලය",
+  "GEO BON": "ජියෝ බොන්",
+  "EBV dataset": "EBV දත්ත කට්ටලය",
+  "EBV datasets": "EBV දත්ත කට්ටල"
 }

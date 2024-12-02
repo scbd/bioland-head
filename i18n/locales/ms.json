@@ -805,5 +805,11 @@
   "pdfNotice": "Pelayar ini tidak menyokong PDF. Sila muat turun PDF untuk melihatnya: ",
   "downloadPdf": "Muat turun PDF",
   "media": "media",
-  "heroHeader": "tajuk pahlawan"
+  "heroHeader": "tajuk pahlawan",
+  "Browse EBV Datasets": "Semak imbas Set Data EBV",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Portal Rangkaian Pemerhatian Biodiversiti Kumpulan Pemerhatian Bumi)",
+  "GEO BON Portal": "Portal GEO BON",
+  "GEO BON": "GEO BON",
+  "EBV dataset": "Kumpulan data EBV",
+  "EBV datasets": "Set data EBV"
 }

@@ -4,8 +4,9 @@ import c from 'consola';
 import TimeAgo from 'javascript-time-ago'
 import en from 'javascript-time-ago/locale/en'
 import { DateTime } from 'luxon';
-
+import isPlainObject from 'lodash.isplainobject';
 import isNill from 'lodash.isnil';
+import json5 from 'json5';
 
 TimeAgo.addDefaultLocale(en)
 
@@ -173,4 +174,23 @@ function drupalizePathLocales(locale, defaultLocale){
             return pathPreFix.replace(aKey,drupalLocaleMap.get(aKey))
 
     return pathPreFix;
+}
+
+export function parseJson(dataString){
+    try {
+        if(isPlainObject(dataString))   return dataString;
+        return json5.parse(dataString);
+    }catch(e){
+        return undefined;
+    }
+}
+
+export function getCountryCode({ country, countries }={ country, countries:[] }){
+
+    if(country) return country;
+
+
+    const index = Math.floor(Math.random() * countries.length);
+
+    return countries[index];
 }

@@ -805,5 +805,11 @@
   "pdfNotice": "Denne browser understøtter ikke PDF-filer. Download PDF-filen for at se den: ",
   "downloadPdf": "Hent PDF",
   "media": "medier",
-  "heroHeader": "helteoverskrift"
+  "heroHeader": "helteoverskrift",
+  "Browse EBV Datasets": "Gennemse EBV-datasæt",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Gruppe for jordobservationer Biodiversitetsobservationsnetværksportal)",
+  "GEO BON Portal": "GEO BON-portalen",
+  "GEO BON": "GEO-BON",
+  "EBV dataset": "EBV datasæt",
+  "EBV datasets": "EBV datasæt"
 }

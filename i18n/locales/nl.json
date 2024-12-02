@@ -805,5 +805,11 @@
   "pdfNotice": "Deze browser ondersteunt geen PDF's. Download de PDF om deze te bekijken: ",
   "downloadPdf": "PDF downloaden",
   "media": "media",
-  "heroHeader": "heldenkop"
+  "heroHeader": "heldenkop",
+  "Browse EBV Datasets": "Bekijk EBV-datasets",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (portaal van het Group on Earth Observations Biodiversity Observation Network)",
+  "GEO BON Portal": "GEO BON-portaal",
+  "GEO BON": "GEOGRAFISCH GOED",
+  "EBV dataset": "EBV-gegevensset",
+  "EBV datasets": "EBV-gegevenssets"
 }

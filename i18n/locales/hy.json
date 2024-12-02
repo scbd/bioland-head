@@ -805,5 +805,11 @@
   "pdfNotice": "Այս զննարկիչը չի աջակցում PDF- ներին: Խնդրում ենք ներբեռնել PDF- ը դիտելու համար. ",
   "downloadPdf": "Ներբեռնեք PDF",
   "media": "մեդիա",
-  "heroHeader": "հերոսի վերնագիր"
+  "heroHeader": "հերոսի վերնագիր",
+  "Browse EBV Datasets": "Թերթիր EBV տվյալների հավաքածուները",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON (Երկրի դիտարկումների խումբ կենսաբազմազանության դիտորդական ցանցի պորտալ)",
+  "GEO BON Portal": "ԳԵՈ ԲՈՆ Պորտալ",
+  "GEO BON": "ԳԵՈ ԲՈՆ",
+  "EBV dataset": "EBV տվյալների հավաքածու",
+  "EBV datasets": "EBV տվյալների հավաքածուներ"
 }

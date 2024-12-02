@@ -75,11 +75,11 @@ function sanitizeLocale(locale, defaultLocale = 'en'){
 export async function getSiteConfig({  siteCode }){
 
     try{
-    const { multiSiteCode, env, dmsm } = useRuntimeConfig().public;
+        const { multiSiteCode, env, dmsm } = useRuntimeConfig().public;
 
-    const uri = `${dmsm}/config/${env}/${multiSiteCode}/${siteCode}`//`${gaiaApi}/v2023/drupal/multisite/${multiSiteCode}/configs/${identifier}`
+        const uri = `${dmsm}/config/${env}/${multiSiteCode}/${siteCode}`
 
-    return $fetch(uri);
+        return $fetch(uri);
     }catch(e){
         const { multiSiteCode, env, dmsm } = useRuntimeConfig().public;
         const uri = `${dmsm}/config/${env}/${multiSiteCode}/${siteCode}`;

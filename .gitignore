@@ -27,3 +27,5 @@ i18n/.to-delete*
 server/efs*
 pages-*
 cypress*
+.unlighthouse
+outputDir

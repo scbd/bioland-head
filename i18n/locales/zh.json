@@ -805,5 +805,11 @@
   "pdfNotice": "此浏览器不支持 PDF。请下载 PDF 进行查看： ",
   "downloadPdf": "下载PDF",
   "media": "媒体",
-  "heroHeader": "英雄标题"
+  "heroHeader": "英雄标题",
+  "Browse EBV Datasets": "浏览 EBV 数据集",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "GEO BON（地球观测小组生物多样性观测网络门户）",
+  "GEO BON Portal": "GEO BON 门户",
+  "GEO BON": "GEO BON",
+  "EBV dataset": "EBV 数据集",
+  "EBV datasets": "EBV 数据集"
 }

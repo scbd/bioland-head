@@ -805,5 +805,11 @@
   "pdfNotice": "हा ब्राउझर पीडीएफ समर्थन देत कृपया ते पाहण्यासाठी PDF डाउनलोड करा: ",
   "downloadPdf": "PDF डाउनलोड",
   "media": "मीडिया",
-  "heroHeader": "हिरो हेडर"
+  "heroHeader": "हिरो हेडर",
+  "Browse EBV Datasets": "EBV डेटासेट ब्राउझ",
+  "GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)": "जीईओ बॉन (पृथ्वी निरीक्षणांवरील ग्रुप ऑन",
+  "GEO BON Portal": "जीओ बॉन पोर्",
+  "GEO BON": "जिओ बोन",
+  "EBV dataset": "ईबीव्ही डेटासेट",
+  "EBV datasets": "ईबीव्ही डेटासेट"
 }
