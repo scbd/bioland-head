@@ -31,8 +31,8 @@ export default defineEventHandler(async (event) => {
             ]))
             const rejected = allRequests.filter(({ status }) => status === 'rejected');
 
-            for (const { reason } of rejected)
-                consola.error('menus/index.js', reason);
+            for (const a of rejected)
+                consola.error('menus/index.js', a);
 
             const [absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes,  forums , languages, systemPages ] = allRequests.map(({ value }) => value || []);
 

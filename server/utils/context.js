@@ -15,7 +15,7 @@ export const parseQuery = (event) => {
     const localizedHost      = `${host}${pathPreFix}`;
     const indexLocal         = getIndexLocale(localeClean);
     const key                = `context-${env}-${multiSiteCode}-${siteCode}-${localeClean}`;
-    const ctx                = removeNullProps({ key, env, multiSiteCode, locales, host, localizedHost, country, countries, siteCode, identifier, locale:localeClean, defaultLocale, indexLocal });
+    const ctx                = removeNullPropsFromPlainObject({ key, env, multiSiteCode, locales, host, localizedHost, country, countries, siteCode, identifier, locale:localeClean, defaultLocale, indexLocal });
 
     if(!ctx.siteCode) return {};
 
@@ -52,13 +52,13 @@ export function parseContext (context) {
     const   indexLocale     = getIndexLocale(localeClean );
     const key                = `context-${env}-${multiSiteCode}-${siteCode}-${localeClean }`;
 
-    const ctxClean = removeNullProps({ key, env, multiSiteCode, locales, host, localizedHost, country, countries, siteCode, identifier, locale:localeClean,   defaultLocale, indexLocal:indexLocale, indexLocale, path })
+    const ctxClean = removeNullPropsFromPlainObject({ key, env, multiSiteCode, locales, host, localizedHost, country, countries, siteCode, identifier, locale:localeClean,   defaultLocale, indexLocal:indexLocale, indexLocale, path })
 
     if(!ctxClean.siteCode) return {}
 
     useStorage('db').setItem(key, ctxClean);
 
-    return ctxClean //removeNullProps({key, multiSiteCode, locales,  host, localizedHost, country,countries, siteCode, identifier, locale, defaultLocale, indexLocal:indexLocale, indexLocale, path })
+    return ctxClean //removeNullPropsFromPlainObject({key, multiSiteCode, locales,  host, localizedHost, country,countries, siteCode, identifier, locale, defaultLocale, indexLocal:indexLocale, indexLocale, path })
 }
 function sanitizeLocale(locale, defaultLocale = 'en'){
 
@@ -92,6 +92,16 @@ export async function getSiteConfig({  siteCode }){
             data:e
         })
     }
+}
+
+export function getCountryCode({ country, countries }={ country, countries:[] }){
+
+    if(country) return country;
+
+
+    const index = Math.floor(Math.random() * countries.length);
+
+    return countries[index];
 }
 
 function getPathPrefix(locale, defaultLocale){

@@ -1,7 +1,8 @@
 
 
 export function useTheme(){
-    const siteStore = useSiteStore ();
+    const nuxtApp   = useNuxtApp();
+    const siteStore = useSiteStore (nuxtApp.$pinia);
 
     const primaryColorStyle   = reactive({ 'color': siteStore.primaryColor, 'border-top': `${siteStore.primaryColor} .5rem solid`});
     const badgePrimaryStyle   = reactive({ 'background-color': siteStore.primaryColor })
@@ -33,7 +34,8 @@ export const defaultImageOptions = {
 };
 
 export function useImageBackground(record, options = defaultImageOptions){
-    const imageGenStore = useImageGenStore();
+    const nuxtApp       = useNuxtApp();
+    const imageGenStore = useImageGenStore(nuxtApp.$pinia);
     const img           = useImage();
     const imgUri        = unref(record)? (unref(record)?.mediaImage?.src || imageGenStore.getImage(unref(record))?.src) : undefined;
     const hasImg        = imgUri && imgUri !== '/images/no-image.png';  

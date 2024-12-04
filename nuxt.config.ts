@@ -1,25 +1,15 @@
-import locales from './i18n/locales';
-import en from './i18n/locales/en.json';
-import domains from './configs/domains';
+import locales from './i18n/locales'        ;
+import en      from './i18n/locales/en.json';
+import domains from './configs/domains'     ;
+
 const css   =   [ '@/assets/custom.scss', 'vue-final-modal/style.css' ]
-const hour  = 60 * 60;
-const week  = 60 * 60 * 24 * 7;
-
-const  routeRules = {
-
-                      '/*/**'    : { headers: { 'Cache-Control': `max-age=${hour} s-maxage=${hour}, stale-if-error=${week}, stale-while-revalidate=${week}` } },
-                      '/*/*/**'    : { headers: { 'Cache-Control': `max-age=${hour} s-maxage=${hour}, stale-if-error=${week}, stale-while-revalidate=${week}` } },
-                      '/*/*/*/**'    : { headers: { 'Cache-Control': `max-age=${hour} s-maxage=${hour}, stale-if-error=${week}, stale-while-revalidate=${week}` } },
-                      // '/_nuxt/**': { headers: { 'cache-control': `max-age=31536000 s-maxage=31536000, stale-if-error=${week}` } },
-                    }
 
 export default defineNuxtConfig({
-  // routeRules,
+
   devtools: { enabled: false},
   debug: false,
   sourcemap: { server: true, client: true },
   css,
-
   runtimeConfig:{
     apiUser     : process.env.API_USER,
     apiUserPass : process.env.API_USER_PASS,
@@ -37,7 +27,6 @@ export default defineNuxtConfig({
       dmsm: 'https://dmsm.cbddev.xyz/api'
     }
   },
-
   imports: {
     dirs: ['stores'],
     presets: [ 
@@ -45,7 +34,6 @@ export default defineNuxtConfig({
       { from: 'vue-final-modal', imports: ['useModal'] }
     ]
   },
-
   modules: [
     '@nuxtjs/leaflet',
     '@nuxt/devtools',
@@ -59,28 +47,20 @@ export default defineNuxtConfig({
     'nuxt-gravatar',
     'nuxt-emoji-picker',
     '@nuxtjs/google-fonts'
-    // '@vue-final-modal/nuxt',
-    
   ],
-
   piniaPersistedstate: {
-    cookieOptions: {
-      sameSite: 'strict',
-    },
+    cookieOptions: { sameSite: 'strict', },
     storage: 'cookies'
   },
   viewport: {
     breakpoints: { xs: 1, sm: 752, md: 992, lg: 1330, xl: 1600 },
-
     defaultBreakpoints: {
       desktop: 'lg',
       mobile: 'sm',
       tablet: 'md',
     },
-
     fallbackBreakpoint: 'lg'
   },
-
   i18n: { 
     locales              ,
     debug                : false,
@@ -95,39 +75,19 @@ export default defineNuxtConfig({
     langDir              : '',
     strategy             : "prefix",
   },
-
   vite: {
     server: {
-      hmr: { protocol: 'ws', host: 'localhost', clientPort: 3000 },
-    //   proxy: {
-    //     '/sites/**': {
-    //         target: 'https://mseed.bl2.cbddev.xyz',
-    //         changeOrigin: true,
-    //         prependPath: true
-    //     },
-    //  },
+      hmr: { protocol: 'ws', host: 'localhost', clientPort: 3000 }
     }
   },
-
-  delayHydration: {
-    mode: 'init',
-   // debug: !['prod','production'].includes(process.env.ENV)
-  },
+  delayHydration: { mode: 'init' },
 
   image: {
-    dir: 'public',
     domains: ['portal.geobon.org','chm-cbd.net','be.bl2.chm-cbd.net', 'cbd.int', 'www.cbd.int', 'https://panorama.solutions/', ...domains ],
     format: ['webp', 'avif', 'jpeg', 'jpg', 'png','gif'],
     quality: 50,
-    screens: {
-      xs: 320,
-      sm: 552,
-      md: 992,
-      lg: 1330,
-      xl: 1600
-    },
+    screens: { xs: 320, sm: 552, md: 992, lg: 1330, xl: 1600 },
   },
-
   nitro: {
     logLevel: 4,
     devStorage: { 
@@ -151,16 +111,12 @@ export default defineNuxtConfig({
       menus : { driver: 'fs', base: './cache/menus' },
     }
   },
-
   experimental: {
     restoreState       : true,
     clientFallback     : true,
     sharedPrerenderData: true,
     scanPageMeta       : true,
     cookieStore        : true
-  },
-  build:{
-    transpile:['@vue-leaflet']
   },
   googleFonts: {
     families: {

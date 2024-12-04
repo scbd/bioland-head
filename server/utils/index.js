@@ -1,196 +1,34 @@
-
-
 import c from 'consola';
-import TimeAgo from 'javascript-time-ago'
-import en from 'javascript-time-ago/locale/en'
-import { DateTime } from 'luxon';
-import isPlainObject from 'lodash.isplainobject';
-import isNill from 'lodash.isnil';
-import json5 from 'json5';
 
-TimeAgo.addDefaultLocale(en)
+export { nextUri, removeLocalizationFromPath, drupalizeLocale, getSiteDefinedName, getSiteDefinedHome } from '~/server/utils/drupal/index';
 
+export { useDrupalLogin      } from '~/server/utils/drupal/drupal-auth'         ;
+export { useContentTypeMenus } from '~/server/utils/drupal/drupal-content-types';
+export { getSystemPagesMap   } from '~/server/utils/drupal/drupal-system-pages' ;
 
-export const consola = c;
-export const unLocales = ['en', 'ar', 'es', 'fr', 'ru', 'zh'];
+export { getUser                , getToken                } from '~/server/utils/drupal/drupal-user'                  ;
+export { useMediaTypeCounts     , useMediaTypeMenus       } from '~/server/utils/drupal/drupal-media-types'    ;
+export { useDrupalForumComments , getCommentsFromApiPager } from '~/server/utils/drupal/drupal-forum-comments' ;
+export { usePathAlias           , mapAliasByLocale        } from '~/server/utils/drupal/drupal-path-alias'     ;
 
-export const absMegaMenuSchemas = [ 'measure', 'absProcedure', 'absNationalModelContractualClause', 'absPermit', 'database', 'absCheckpoint']
-export const bchMegaMenuSchemas = [ 'biosafetyLaw', 'biosafetyDecision', 'nationalRiskAssessment', 'database', 'nationalReport', 'biosafetyExpert']
+export { commentEntityTypeMap, getComments                , getRepliesFromApiPager              } from '~/server/utils/drupal/drupal-comments'    ;
+export { useDrupalTopicMenus , useDrupalTopics            , getDrupalTopicMetaByForumIdentifier } from '~/server/utils/drupal/drupal-forum-topics';
+export { useDrupalForums     , addForumIdentifierToContext, getForumTidFromAlias                } from '~/server/utils/drupal/drupal-forums'      ;
+export { getPageData         , getPageDates               , getPageThumb                        } from '~/server/utils/drupal/drupal-page'        ;
 
-export function uniqueObjects(passedArray){
-    return Array.from(new Set(passedArray.map(e => JSON.stringify(e)))).map(e => JSON.parse(e));
-}
+export { drupalLangs, rtl, getInstalledLanguages, getDefaultLocale, normalizeDrupalJsonApiData, normalizeLanguageData, getLanguage, mapDrupalLocaleToLocale } from '~/server/utils/drupal/drupal-langs';
 
-export function removeNullProps(obj){
-    for (const key in obj) {
-        if(isNill(obj[key])) delete obj[key];
-    }
+export { getTagFilterParams, getPaginationParams, mapTagsByType } from '~/server/utils/lists/index';
+export { useAllContent     , useContentTypeList                 } from '~/server/utils/lists/content';
+export { useAllMedia       , useMediaTypeList                   } from '~/server/utils/lists/media';
 
-    return obj;
-}
+export { useMenus     , getMenusFromApiPager } from '~/server/utils/menus/drupal-menus';
+export { getAbschMenus                       } from '~/server/utils/menus/absch-menus' ;
+export { getBchMenus                         } from '~/server/utils/menus/bch-menus'   ;
 
+export { thesaurusSourceMap } from '~/server/utils/thesaurus/source-map';
+export { getThesaurusByKey, thesaurusApisUrls, getCountryName, dataSources, getSdg, sdgsData } from '~/server/utils/thesaurus/index';
 
-
-
-
-
-export function sortArrayOfObjectsByProp(a,b, prop){
-    if(a[prop] < b[prop]) return -1; 
-    if(a[prop] > b[prop]) return 1;
-
-    return 0;
-}
-export async function getTimeStringFromIso(ctx, dateTimeIso){
-    if(!dateTimeIso) return '';
-
-    return getTimeAgo(ctx, DateTime.fromISO(dateTimeIso).toJSDate())
-}
-
-export function getTimeStringFromSeconds(seconds){
-    if(!seconds) return '';
-
-    return getTimeString(DateTime.fromSeconds(seconds))
-}
-
-export function getTimeString(lastCommentTime){
-
-    const now             = DateTime.now();
-    // const lastCommentTime = DateTime.fromSeconds(timeStamp);
-    
-    const years   = now.diff(lastCommentTime, 'years').toObject().years;
-    const months  = now.diff(lastCommentTime, 'months').toObject().months;
-    // const weeks   = now.diff(lastCommentTime, 'months').toObject().weeks;
-    const days    = now.diff(lastCommentTime, 'days').toObject().days;
-    const hours   = now.diff(lastCommentTime, 'hours').toObject().hours;
-    const minutes = now.diff(lastCommentTime, 'minutes').toObject().minutes;
-    const seconds = now.diff(lastCommentTime, 'minutes').toObject().seconds;
-
-    const formatMap = { years:'y', months:'m', days:'d', hours:'h', minutes:'mins', seconds:'s' };
-    const timeMap   = { years, months, days,  hours, minutes, seconds  };
-
-    for (const key in timeMap)
-        if( Math.floor(timeMap[key])) 
-            return `${Math.floor(timeMap[key])}${formatMap[key]}`
-
-}
-
-export async function getTimeAgo(ctx,lastCommentTime){
-
-    const timeAgo = await getTimeAgoService(ctx);
-
-    return  timeAgo.format(lastCommentTime, 'mini')
-}
-
-async function getTimeAgoService(ctx){
-    try {
-        const { locale } = ctx;
-
-        if(!locale || locale === 'en') return new TimeAgo('en');
-        const { default: timeAgoLocale } = await import(`javascript-time-ago/locale/${locale}`);
-
-        TimeAgo.addLocale(timeAgoLocale);
-
-        return  new TimeAgo(locale);
-    }catch(e){
-        return new TimeAgo('en');
-    }
-}
-
-export function removeLocalizationFromPath(ctx, path){
-
-    const pathParts = path.split('/');
-
-    const isLocalizedPath = ctx?.locales?.includes(pathParts[1]);
-
-    return isLocalizedPath?   [ '', ...pathParts.slice(2) ].join('/')    :  pathParts.join('/');
-}
-export function drupalizeLocale(locale){
-    // if(locale === 'zh') return 'zh-hans';
-
-    return locale;
-}
-
-
-export async function getSiteDefinedName (ctx) {
-    const { apiKey }     = useRuntimeConfig()
-    const localizedHost  = getHost(ctx)
-    const query          = { jsonapi_include: 1 };
-    const uri            = `${localizedHost}/${ctx.locale}/jsonapi/site/site?api-key=${apiKey}`
-
-    const resp = await $fetch(uri,{query})
-    const name = resp?.data?.name
-
-    return name === '_'? '' : name;
-}
-
-export async function getSiteDefinedHome (ctx) {
-    const { apiKey }     = useRuntimeConfig()
-    const localizedHost  = getHost(ctx)
-    const query          = { jsonapi_include: 1 };
-    const uri            = `${localizedHost}/jsonapi/site/site?api-key=${apiKey}`
-
-
-    const resp = await $fetch(uri,{query})
-
-
-
-    return resp?.data?.page_front
-}
-
-
-
-
-function getHost(ctx, ignoreLocale = false){
-    const { baseHost, env }  = useRuntimeConfig().public;
-    const { locale, identifier, siteCode,defaultLocale, config } = ctx;
-    const   hasRedirect     = env === 'production' && config?.redirect;
-    const pathLocale = ignoreLocale? '' : drupalizePathLocales(locale, defaultLocale);
-    const base       = hasRedirect? `https://${config.redirect}` : `https://${encodeURIComponent(siteCode)}.${encodeURIComponent(baseHost)}`;
-
-    return `${base}${pathLocale}`;
-}
-
-
-
-export function nextUri ({ next } = {}){
-    if(!next) return
-    return next.href
-}
-
-const drupalLocaleMap = new Map([['/zh','/zh']]);
-
-function drupalizePathLocales(locale, defaultLocale){
-
-    if(!defaultLocale || !locale) return '';
-
-    const pathPreFix = locale === defaultLocale?.locale? `/${locale}` : `/${locale}`;
-
-    if(!pathPreFix) return pathPreFix;
-
-    const keys = drupalLocaleMap.keys();
-
-    for (const aKey of keys)
-        if(pathPreFix.startsWith(aKey))
-            return pathPreFix.replace(aKey,drupalLocaleMap.get(aKey))
-
-    return pathPreFix;
-}
-
-export function parseJson(dataString){
-    try {
-        if(isPlainObject(dataString))   return dataString;
-        return json5.parse(dataString);
-    }catch(e){
-        return undefined;
-    }
-}
-
-export function getCountryCode({ country, countries }={ country, countries:[] }){
-
-    if(country) return country;
-
-
-    const index = Math.floor(Math.random() * countries.length);
-
-    return countries[index];
-}
+export { unLocales } from '~/utils/index';
+export const consola   = c;
+// export const unLocales = ['en', 'ar', 'es', 'fr', 'ru', 'zh'];

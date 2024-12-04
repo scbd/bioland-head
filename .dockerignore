@@ -18,3 +18,4 @@ dist
 server/efs*
 pages-*
 cypress*
+.vscode

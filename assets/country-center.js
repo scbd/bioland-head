@@ -204,8 +204,9 @@ export const zoomLevels = new Set([
     const zoomLevel = Array.from(zoomLevels).find(zl => zl.id === identifier)
 
     return { identifier, coordinates, ...zoomLevel}
-  }
-  export default [
+  };
+
+export const coordinates = [
     {
         "identifier": "AS",
         "coordinates": [

@@ -1,7 +1,7 @@
 
 
 import { stripHtml } from 'string-strip-html'; 
-import * as changeKeys from "change-case/keys";
+import { camelCase } from 'change-case/keys';
 
 import clone from 'lodash.clonedeep'
 
@@ -90,7 +90,7 @@ function cleanComment(ctx){
                 comments.push(await cleanComment(ctx)(c))
             
 
-        return changeKeys.camelCase({ type, id, drupal_internal__cid, status, subject, created, changed, thread, user,dateString,  comment_body, comments, pid , entity_id }, {deep:true} );
+        return camelCase({ type, id, drupal_internal__cid, status, subject, created, changed, thread, user,dateString,  comment_body, comments, pid , entity_id }, {deep:true} );
     }
 }
 function cleanUser(ctx){
@@ -99,7 +99,7 @@ function cleanUser(ctx){
 
         const img = cleanUserPicture(ctx)(user_picture);
 
-        return changeKeys.camelCase({ id, drupal_internal__uid, mail, status, display_name, created, changed, img }, {deep:true} );
+        return camelCase({ id, drupal_internal__uid, mail, status, display_name, created, changed, img }, {deep:true} );
     }
 }
 function cleanUserPicture(ctx){
@@ -110,7 +110,7 @@ function cleanUserPicture(ctx){
         
         const src = ctx.host+uri.url;
 
-        return changeKeys.camelCase({ id, drupal_internal__fid, filename, uri, meta, src }, {deep:true} );
+        return camelCase({ id, drupal_internal__fid, filename, uri, meta, src }, {deep:true} );
     }
 }
 
@@ -184,7 +184,7 @@ function getStatusFilter({event}){
     return ''//sortQueryString;
 }
 
-function nextUri ({ next } = {}){
-    if(!next) return
-    return next.href
-}
+// function nextUri ({ next } = {}){
+//     if(!next) return
+//     return next.href
+// }

@@ -41,7 +41,7 @@
     </div>
 </template>
 <script setup>
-    import cCenter from '~/util/country-center.js'
+    import { coordinates as cCenter } from '~/assets/country-center.js'
     import clone   from 'lodash.clonedeep';
 
     const { t }     = useI18n();

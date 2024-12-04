@@ -31,6 +31,7 @@ const getUrl = (schemaName, passedLocale='en', passedCountry, countries) => {
     
         return allUrls[schemaName];
 }
+export const absMegaMenuSchemas = [ 'measure', 'absProcedure', 'absNationalModelContractualClause', 'absPermit', 'database', 'absCheckpoint']
 
 export async function getAbschMenus({ country:aCountry, countries, locale }){
     const uri       = 'https://api.cbd.int/api/v2013/index/select'

@@ -34,6 +34,8 @@ const getUrl = (schemaName, passedLocale='en', passedCountry, countries) => {
 
     return allUrls[schemaName]
 }
+export const bchMegaMenuSchemas = [ 'biosafetyLaw', 'biosafetyDecision', 'nationalRiskAssessment', 'database', 'nationalReport', 'biosafetyExpert']
+
 export async function getBchMenus({ country:aCountry, countries, locale }){
     const uri       = 'https://api.cbd.int/api/v2013/index/select'
 

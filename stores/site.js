@@ -7,11 +7,6 @@ export const useSiteStore = defineStore('site', {
         
             return this;
         },
-        setLocale(locale){
-            this.set('locale', locale);
-            
-            return this;
-        },
         initialize( { locale, identifier,siteCode, defaultLocale, config, siteName, gaiaApi, multiSiteCode, baseHost, env }){
             this.set('baseHost',                  baseHost);
             this.set('gaiaApi',                   gaiaApi);
@@ -31,27 +26,9 @@ export const useSiteStore = defineStore('site', {
     
             const { locale, siteCode, baseHost, defaultLocale, redirect } = this;
         
-            const pathLocale = ignoreLocale? '' : this.drupalizePathLocales(locale, defaultLocale);
-            const base       = redirect    ? `https://${redirect}` : `https://${encodeURIComponent(siteCode)}.${encodeURIComponent(baseHost)}`;
+            const base = redirect    ? `https://${redirect}` : `https://${encodeURIComponent(siteCode)}.${encodeURIComponent(baseHost)}`;
         
-            return `${base}${pathLocale}`;
-        },
-        drupalizePathLocales(locale, defaultLocale){
-            const drupalLocaleMap = new Map([['/zh','/zh']]);
-
-            if(!this.locale) throw new Error('siteStore: Default locale or locale not set');
-        
-            const pathPreFix = this.locale === this.defaultLocale? `/${this.locale}` : `/${this.locale}`;
-        
-            if(!pathPreFix) return pathPreFix;
-        
-            const keys = drupalLocaleMap.keys();
-        
-            for (const aKey of keys)
-                if(pathPreFix.startsWith(aKey))
-                    return pathPreFix.replace(aKey,drupalLocaleMap.get(aKey))
-        
-            return pathPreFix;
+            return `${base}/${locale}`;
         }
     },
     getters:{

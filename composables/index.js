@@ -56,7 +56,7 @@ export const useDateFormat = () => (date, format = 'dd LLL yyyy')=>{
     return DateTime.fromISO(date).setLocale(locale?.value || 'en').toFormat(format);
 }
 
-export const unLocales = ['en', 'ar', 'es', 'fr', 'ru', 'zh'];
+// export const unLocales = ['en', 'ar', 'es', 'fr', 'ru', 'zh'];
 
 export     function getGbfUrl(identifier){
     const number = Number(identifier.replace('GBF-TARGET-', ''));

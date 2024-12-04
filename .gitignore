@@ -29,3 +29,4 @@ pages-*
 cypress*
 .unlighthouse
 outputDir
+.vscode

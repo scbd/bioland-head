@@ -1,7 +1,6 @@
 
-import   camelCaseKeys   from 'camelcase-keys';
-
-
+import { camelCase } from 'change-case/keys';
+ 
 export const usePageStore = defineStore('page', {
     state: ()=>({ page: {}, loading: true, cancelLoading: true, isInitialized: false, cacheKeys:{} }), 
     actions:{
@@ -19,7 +18,7 @@ export const usePageStore = defineStore('page', {
             this.isInitialized = key;
             if(!pageDataRaw) throw new Error('usePageStore.initialize -> pageDataRaw is undefined');
 
-            const pageData = camelCaseKeys(pageDataRaw);
+            const pageData = camelCase(pageDataRaw);
 
             this.page = { ...pageData };
 

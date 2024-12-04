@@ -28,7 +28,7 @@
     </div>
 </template>
 <script setup>
-    import { pascalCase   } from 'pascal-case';
+    import { pascalCase   } from 'change-case';
 
         const   props       = defineProps({ menus: Array });
         const   siteStore   = useSiteStore(     );

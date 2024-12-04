@@ -1,6 +1,6 @@
-import {    stripHtml  }                from 'string-strip-html';
-import * as changeKeys                  from 'change-case/keys' ;
-import {    validate   as validateUuid} from 'uuid'             ;
+import { stripHtml                } from 'string-strip-html' ;
+import { camelCase                } from 'change-case/keys'  ;
+import { validate  as validateUuid} from 'uuid'              ;
 
 export const useDrupalForums = async (ctx) => {
     return getForums(ctx)
@@ -76,7 +76,7 @@ async function mapForumMeta(ctx, forums){
 }
 
 function cleanForumData(forum){
-    const { id, drupalInternalTid, status, description, name, weight, path, fieldColor } = changeKeys.camelCase (forum, { deep: true });
+    const { id, drupalInternalTid, status, description, name, weight, path, fieldColor } = camelCase (forum, { deep: true });
 
     const summary = description?.value? stripHtml(description.value).result.substring(0, 400): '';
 
