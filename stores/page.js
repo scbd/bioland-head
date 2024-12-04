@@ -1,6 +1,6 @@
 
 import { camelCase } from 'change-case/keys';
- 
+
 export const usePageStore = defineStore('page', {
     state: ()=>({ page: {}, loading: true, cancelLoading: true, isInitialized: false, cacheKeys:{} }), 
     actions:{
@@ -234,14 +234,3 @@ function getTids(searchField){
 
     return searchField.map(({ drupalInternalTid })=> drupalInternalTid);
 }
-
-
-function parseJson(json){
-    if(!json) return false;
-    try {
-        return JSON.parse(json);
-    } catch (error) {
-        return false
-    }
-}
-

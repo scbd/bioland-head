@@ -1,4 +1,4 @@
-import isPlainObject from 'lodash.isplainobject' ;
+
 import isNill        from 'lodash.isnil'         ;
 import json5         from 'json5'                ;
 
@@ -22,12 +22,4 @@ export function sortArrayOfObjectsByProp(a,b, prop){
     return 0;
 }
 
-export function parseJson(dataString){
-    try {
-        if(isPlainObject(dataString))   return dataString;
-
-        return json5.parse(dataString);
-    }catch(e){
-        return undefined;
-    }
-}
+export { parseJson } from '~/utils/index';

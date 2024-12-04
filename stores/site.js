@@ -26,18 +26,19 @@ export const useSiteStore = defineStore('site', {
     
             const { locale, siteCode, baseHost, defaultLocale, redirect } = this;
         
+            const pathLocale = ignoreLocale? '' : `/${locale}`;
             const base = redirect    ? `https://${redirect}` : `https://${encodeURIComponent(siteCode)}.${encodeURIComponent(baseHost)}`;
         
-            return `${base}/${locale}`;
+            return `${base}${pathLocale}`;
         }
     },
     getters:{
         allLocales(){
             return [...Array.from(new Set([this?.config?.defaultLocale, ...this?.config?.locales|| [] ] || []))]
         },
-        isDefaultLocale(){
-            return this.locale === this?.config?.defaultLocale //this.defaultLocale
-        },
+        // isDefaultLocale(){
+        //     return this.locale === this?.config?.defaultLocale //this.defaultLocale
+        // },
         getLogoUri(){
             const config     = this.config
             const hasCountry = config?.country || (config?.countries? config?.countries[0] : undefined)
@@ -54,9 +55,9 @@ export const useSiteStore = defineStore('site', {
         localizedHost(){
             return this.getHost();
         },
-        drupalApiUriBase(){
-            return this.getHost();
-        },
+        // drupalApiUriBase(){
+        //     return this.getHost();
+        // },
         params(){
             const { i18nStrategy, identifier, baseHost, siteCode, config, locale, defaultLocale, host, localizedHost, redirect } = this || {};
             const { country:c, countries:cs } = config || {};
