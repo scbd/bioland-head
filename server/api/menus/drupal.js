@@ -3,7 +3,7 @@ export default defineEventHandler(async (event) => {
         try{
             const context = getContext(event);
 
-            return useMenus ({...context});
+            return getDrupalMenus ({...context});
         }
         catch (e) {
 

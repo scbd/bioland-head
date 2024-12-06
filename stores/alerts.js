@@ -5,8 +5,9 @@ export const useAlertStore = defineStore('alert', {
 
     actions:{
         addAlert(alert, type='info'){
-            alert.id = alert.id? alert.id: uuidv4();
+            alert.id   = alert.id? alert.id: uuidv4();
             alert.type = alert.type?  alert.type: type;
+
             this.alerts.push(alert);
         },
         addInfo(alert){
@@ -25,7 +26,7 @@ export const useAlertStore = defineStore('alert', {
             this.alerts.splice(index, 1);
         },
         clearAll(){
-            this.alerts.length=0
+            this.alerts.length = 0;
         },
         doNotRepeat(id){
             this.noRepeat.push(id);
@@ -33,7 +34,7 @@ export const useAlertStore = defineStore('alert', {
     },
     getters:{
         hasAlert(){
-            return this.alerts.length
+            return this.alerts.length;
         }
     }
 }, { persist: true });

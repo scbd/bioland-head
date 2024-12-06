@@ -1,69 +1,29 @@
 import { DateTime     } from 'luxon' ; 
 
-export const indexUri = 'https://api.cbd.int/api/v2013/index/select?';
+const indexUri = 'https://api.cbd.int/api/v2013/index/select?';
+
+const getIndexCountryQuery = ({ countries, country } = {}) => {
+    return cleanCountries({ countries, country }).map((s)=>`${s.toLowerCase()}`).join('+');
+}
 
 export const $indexFetch = async (queryString) => {
+    const   method      = 'get';
+    const   headers     = { 'Content-Type': 'application/json' };
+    const { response }  = await $fetch(indexUri+queryString, { method, headers });
 
-    const uri           = indexUri;
-    const method        = 'get';
-    const headers       = { 'Content-Type': 'application/json' };
+    response.docs       = response.docs.map(normalizeIndexKeys);
 
-    const { response } = await $fetch(uri+queryString, { method, headers });
-
-    // console.log(response.docs)
-    response.docs = response.docs.map(normalizeIndexKeys);
-
-    return response
+    return response;
 };
 
 export const getIndexLocale = (locale) => ['en', 'ar', 'es', 'fr', 'ru', 'zh'].includes(locale)? locale.toLocaleUpperCase() : 'EN';
 
-
-function cleanCountries({countries, country}){
-    if(!country && !countries?.length) return [];
-    if(!country && countries?.length) return countries;
-
-    return Array.from(new Set([country, ...countries])) ;
-}
-export const getIndexCountryQuery = ({ countries, country }={}) => {
-  
-    return cleanCountries({ countries, country }).map((s)=>`${s.toLowerCase()}`).join('+');
-}
-export const getIndexQuery = (s, { countries, country }={}) => {
+export const getIndexQuery = (s, { countries, country } = {}) => {
 
     const schema = Array.isArray(s)? s.map((aSchema)=>`schema_s:${aSchema}`).join('+OR+'): `schema_s:${s}`;
     const countryQueryString = getIndexCountryQuery({ countries, country });
 
-
     return countryQueryString? `q=(${schema})+AND+government_s:(${countryQueryString})`:`q=(${schema})`; //NOT+version_s:*+AND+realm_ss:chm+AND+schema_s:*++AND+
-}
-
-//https://api.cbd.int/api/v2013/index/select?q=realm_ss:chm AND (schema_s:focalPoint) AND government_s :(bn id kh la mm my ph sg th tl vn)&fl=type_EN_txt,hostGovernments_ss,type_ss&rows=500&sort=createdDate_dt+desc&start=0&wt=json
-export const getIndexFocalPointFields = (localePassed) => {
-    const locale = getIndexLocale(localePassed);
-
-    const fields = [
-                    `title_${locale}_s`,
-                    `schema_${locale}_s`,
-                    `type_${locale}_txt`,
-                    `description_${locale}_s`,
-                    `salutation_${locale}_s`,
-                    `address_${locale}_s`,
-                    `function_${locale}_s`,
-                    `department_${locale}_s`,
-                    `organization_${locale}_s`,
-                    `addressCountry_${locale}_s`,
-                    `treaty_${locale}_ss`,
-                    `firstName_s`,
-                    `lastName_s`,
-                    `telephone_ss`,
-                    `fax_ss`,
-                    `type_ss`,
-                    `createdDate_dt`,
-                    `url_ss`
-                ];
-
-    return `fl=${fields.join(',')}`;
 }
 
 export const getIndexFocalPointTypesFields = (localePassed) => {
@@ -124,20 +84,15 @@ export const getIndexNrFields = (localePassed) => {
 }
 
 export const normalizeIndexKeys = (obj) => {
-
     const newObj = {};
 
     for (const key in obj) {
-
             const newKey = key
-            // .replace(/_C[A-Z]{2}/, '')
-            // .replace(/_[A-Z]{2}_CEN/, '')
                             .replace(/_[A-Z]{2}_txt/, 'Texts')
                             .replace(/_[A-Z]{2}_ss/, 's')
                             .replace(/_ss/, 's')
                             .replace(/_[A-Z]{2}_s/, '')
                             .replace(/_[A-Z]{2}_t/, '')
-                            
                             .replace('_s', '')
                             .replace('_t', '')
                             .replace(/_dt/, '');
@@ -155,20 +110,26 @@ export const normalizeIndexKeys = (obj) => {
     return newObj;
 }
 
-export const useScbdIndex = async (ctx) => {
+export const queryScbdIndex = async (ctx, queryBody) => {
     const uri = 'https://api.cbd.int/api/v2013/index/select';
 
-    //return  JSON.parse(getAllQuery(ctx))
-    // console.log(getAllQuery(ctx))
-    // return JSON.parse(getAllQuery(ctx))
-    const { response, facet_counts: facetCounts } = await $fetch(uri,  { method:'post', body: getAllQuery(ctx), headers: {'Content-Type': 'application/json'}});
+    const body = queryBody? JSON.stringify(queryBody) : getAllQuery(ctx);
+
+    const { response, facet_counts: facetCounts } = await $fetch(uri,  { method:'post', body, headers: {'Content-Type': 'application/json'}});
 
     response.data  = response.docs.map(normalizeIndexKeys)//.filter(({ title, summary })=> (title && summary));
     response.count = response.numFound;
 
     delete response.docs;
 
-    return { ...response, facetCounts };
+    return { ...response, facetCounts, facet_counts:facetCounts };
+}
+
+function cleanCountries({countries, country}){
+    if(!country && !countries?.length) return [];
+    if(!country && countries?.length) return countries;
+
+    return Array.from(new Set([country, ...countries])) ;
 }
 
 const filterSchemas = (schemas) => (s)=> schemas.includes(s);
@@ -180,29 +141,27 @@ function getAllQuery(ctx){
     const bchSchemas   = [ 'biosafetyLaw', 'biosafetyDecision', 'nationalRiskAssessment', 'database', 'nationalReport', 'biosafetyExpert','authority', 'supplementaryAuthority',   'cpbNationalReport4', 'cpbNationalReport3', 'cpbNationalReport2',  'biosafetyNews', 'independentRiskAssessment', 'organism', 'dnaSequence', 'modifiedOrganism', 'laboratoryDetection' ];
     const allSchemas   = Array.from(new Set([ ...chmSchemas, ...abschSchemas, ...bchSchemas ]));
 
-    
-
     const { country, countries, locale, indexLocal, page: passedPage, rowsPerPage, freeText, schemas: passedSchemas, filters:passedFilters, realms: passedRealms } = ctx;
 
-const realms                  = Array.isArray(passedRealms)? passedRealms : passedRealms? [ passedRealms ] : '';
-const schemas                 = Array.isArray(passedSchemas)? passedSchemas : passedSchemas? [ passedSchemas ] : '';
-const filters                 = Array.isArray(passedFilters)? passedFilters : passedFilters? [ passedFilters ] : '';
-const countryString           = Array.isArray(countries)? countries.join(' ')+` ${country}` : country;
-const hasCbdSchemas           = schemas?.length? schemas.some((s)=>cbdSchemas.includes(s)): false;
-const cbdSchemaQueryText      = hasCbdSchemas? `(schema_s:(${cbdSchemas.filter(filterSchemas(schemas)).join(' ')}))` : '';
-const hasOtherSchemas         = schemas?.length? schemas.some((s)=>allSchemas.includes(s)): false;
-const hasBothSchemaQueryTypes = hasCbdSchemas && hasOtherSchemas;
-const otherSchemaQueryText    = hasOtherSchemas? `((schema_s:(${allSchemas.filter(filterSchemas(schemas)).join(' ')})) AND ((hostGovernments_ss:(${countryString})) OR (countryRegions_ss:(${countryString}) OR countryRegions_REL_ss:(${countryString}))))` : '';
+    const realms                  = Array.isArray(passedRealms)? passedRealms : passedRealms? [ passedRealms ] : '';
+    const schemas                 = Array.isArray(passedSchemas)? passedSchemas : passedSchemas? [ passedSchemas ] : '';
+    const filters                 = Array.isArray(passedFilters)? passedFilters : passedFilters? [ passedFilters ] : '';
+    const countryString           = Array.isArray(countries)? countries.join(' ')+` ${country}` : country;
+    const hasCbdSchemas           = schemas?.length? schemas.some((s)=>cbdSchemas.includes(s)): false;
+    const cbdSchemaQueryText      = hasCbdSchemas? `(schema_s:(${cbdSchemas.filter(filterSchemas(schemas)).join(' ')}))` : '';
+    const hasOtherSchemas         = schemas?.length? schemas.some((s)=>allSchemas.includes(s)): false;
+    const hasBothSchemaQueryTypes = hasCbdSchemas && hasOtherSchemas;
+    const otherSchemaQueryText    = hasOtherSchemas? `((schema_s:(${allSchemas.filter(filterSchemas(schemas)).join(' ')})) AND ((hostGovernments_ss:(${countryString})) OR (countryRegions_ss:(${countryString}) OR countryRegions_REL_ss:(${countryString}))))` : '';
 
 
-const schemaQuery  = schemas?.length?  `{!tag=government}${cbdSchemaQueryText}${hasBothSchemaQueryTypes? ' OR ': ''} ${otherSchemaQueryText}` : `{!tag=government}(schema_s:(${cbdSchemas.join(' ')})) OR ((schema_s:(${allSchemas.join(' ')})) AND (countryRegions_ss:(${countryString}) OR countryRegions_REL_ss:(${countryString})))`;
-const filtersQuery = filters?.length? `{!tag=keywords}all_terms_ss:(${filters.join(' ')})` : '';
-const realmText    = realms?.length? `realm_ss:(${realms.join(' ')})` : 'realm_ss:abs OR realm_ss:chm OR realm_ss:bch';
-const rows         = rowsPerPage? rowsPerPage : 10;
-const page         = passedPage? passedPage : 1;
-const start        = page <=1? 0 : ((page -1) * rows);
+    const schemaQuery  = schemas?.length?  `{!tag=government}${cbdSchemaQueryText}${hasBothSchemaQueryTypes? ' OR ': ''} ${otherSchemaQueryText}` : `{!tag=government}(schema_s:(${cbdSchemas.join(' ')})) OR ((schema_s:(${allSchemas.join(' ')})) AND (countryRegions_ss:(${countryString}) OR countryRegions_REL_ss:(${countryString})))`;
+    const filtersQuery = filters?.length? `{!tag=keywords}all_terms_ss:(${filters.join(' ')})` : '';
+    const realmText    = realms?.length? `realm_ss:(${realms.join(' ')})` : 'realm_ss:abs OR realm_ss:chm OR realm_ss:bch';
+    const rows         = rowsPerPage? rowsPerPage : 10;
+    const page         = passedPage? passedPage : 1;
+    const start        = page <=1? 0 : ((page -1) * rows);
 
-const q            = getQ(ctx);
+    const q            = getQ(ctx);
 
 
     const query = {
@@ -254,3 +213,33 @@ function getQ({ freeText, from, to }){
 function cleanTime(time){
     return time.replace(/-/g, '\\-').replace(/:/g, '\\:');
 }
+
+
+
+
+// export const getIndexFocalPointFields = (localePassed) => {
+//     const locale = getIndexLocale(localePassed);
+
+//     const fields = [
+//                     `title_${locale}_s`,
+//                     `schema_${locale}_s`,
+//                     `type_${locale}_txt`,
+//                     `description_${locale}_s`,
+//                     `salutation_${locale}_s`,
+//                     `address_${locale}_s`,
+//                     `function_${locale}_s`,
+//                     `department_${locale}_s`,
+//                     `organization_${locale}_s`,
+//                     `addressCountry_${locale}_s`,
+//                     `treaty_${locale}_ss`,
+//                     `firstName_s`,
+//                     `lastName_s`,
+//                     `telephone_ss`,
+//                     `fax_ss`,
+//                     `type_ss`,
+//                     `createdDate_dt`,
+//                     `url_ss`
+//                 ];
+
+//     return `fl=${fields.join(',')}`;
+// }

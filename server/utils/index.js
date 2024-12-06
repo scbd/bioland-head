@@ -22,13 +22,14 @@ export { getTagFilterParams, getPaginationParams, mapTagsByType } from '~/server
 export { useAllContent     , useContentTypeList                 } from '~/server/utils/lists/content';
 export { useAllMedia       , useMediaTypeList                   } from '~/server/utils/lists/media';
 
-export { useMenus     , getMenusFromApiPager } from '~/server/utils/menus/drupal-menus';
-export { getAbschMenus                       } from '~/server/utils/menus/absch-menus' ;
-export { getBchMenus                         } from '~/server/utils/menus/bch-menus'   ;
+export { getDrupalMenus } from '~/server/utils/menus/drupal-menus' ;
+export { getAbschMenus  } from '~/server/utils/menus/absch-menus'  ;
+export { getBchMenus    } from '~/server/utils/menus/bch-menus'    ;
 
 export { thesaurusSourceMap } from '~/server/utils/thesaurus/source-map';
 export { getThesaurusByKey, thesaurusApisUrls, getCountryName, dataSources, getSdg, sdgsData } from '~/server/utils/thesaurus/index';
 
 export { unLocales } from '~/utils/index';
-export const consola   = c;
-// export const unLocales = ['en', 'ar', 'es', 'fr', 'ru', 'zh'];
+export const consola = c;
+
+export function isOddNumber(num) { return num % 2;}

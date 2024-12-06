@@ -31,14 +31,15 @@ const getUrl = (schemaName, passedLocale='en', passedCountry, countries) => {
     
         return allUrls[schemaName];
 }
-export const absMegaMenuSchemas = [ 'measure', 'absProcedure', 'absNationalModelContractualClause', 'absPermit', 'database', 'absCheckpoint']
 
-export async function getAbschMenus({ country:aCountry, countries, locale }){
-    const uri       = 'https://api.cbd.int/api/v2013/index/select'
+export async function getAbschMenus(ctx){
+    const { country:aCountry, countries, locale } = ctx;
+
     const country   = countries?.length? countries : aCountry;
-    if(!country) return
-    const response  = await $fetch(uri,  { method:'post', body: JSON.stringify(getIndexQuery(country)), headers: {'Content-Type': 'application/json'}});
+    
+    if(!country) return;
 
+    const response  = await queryScbdIndex(ctx,getIndexQuery(country));
 
     return makeObject(response?.facet_counts?.facet_fields?.schema_s, { country, locale, countries } );
 }
@@ -51,7 +52,7 @@ function makeObject(facetsArray=[], { country, countries, locale }){
     const facets         = { };
 
     for (let index = 0; index < facetsArray.length; index+=2) {
-        if( isOdd(index) ) continue;
+        if( isOddNumber(index) ) continue;
         
         const schemaName = facetsArray[index];
 
@@ -68,7 +69,7 @@ function makeObject(facetsArray=[], { country, countries, locale }){
     return facets
 }
 
-function isOdd(num) { return num % 2;}
+
 
 function getIndexQuery(passedCountry){
     const country = Array.isArray(passedCountry)? passedCountry.join(' ') : passedCountry;

@@ -4,7 +4,7 @@ import intersect from 'lodash.intersection';
 const mainChildren = [ 'convention-protocols','biodiversity-facts','cooperation', 'implementation','news-updates', 'resources'  ];
 const menuNames    = ['main', 'footer', 'footer-credits'];
 
-export async function useMenus(ctx){
+export async function getDrupalMenus(ctx){
 
     const newStructure = await hasNewMenuStructure(ctx);
     const allMenuNames = newStructure? [ ...menuNames, ...mainChildren ] : menuNames;
@@ -160,7 +160,7 @@ function addMissingDataRecursive(menus, { siteCode,identifier, pathPreFix, rawMe
 }
 
 
-export async function getMenusFromApiPager ({ siteCode,identifier, pathPreFix, pathAlias, localizedHost }, next){
+async function getMenusFromApiPager ({ siteCode,identifier, pathPreFix, pathAlias, localizedHost }, next){
     try {
         let filterQueryString = '?jsonapi_include=1';
         filterQueryString += `&filter[tag-filter-desc][condition][path]=description`

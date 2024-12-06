@@ -34,14 +34,16 @@ const getUrl = (schemaName, passedLocale='en', passedCountry, countries) => {
 
     return allUrls[schemaName]
 }
-export const bchMegaMenuSchemas = [ 'biosafetyLaw', 'biosafetyDecision', 'nationalRiskAssessment', 'database', 'nationalReport', 'biosafetyExpert']
+// export const bchMegaMenuSchemas = [ 'biosafetyLaw', 'biosafetyDecision', 'nationalRiskAssessment', 'database', 'nationalReport', 'biosafetyExpert']
 
-export async function getBchMenus({ country:aCountry, countries, locale }){
-    const uri       = 'https://api.cbd.int/api/v2013/index/select'
+export async function getBchMenus(ctx){
+    const { country:aCountry, countries, locale } = ctx;
 
     const country = countries?.length? countries : aCountry;
+
     if(!country) return
-    const response  = await $fetch(uri,  { method:'post', body: JSON.stringify(getIndexQuery(country)), headers: {'Content-Type': 'application/json'}});
+
+    const response  = await queryScbdIndex(ctx,getIndexQuery(country));
 
     return makeObject(response?.facet_counts?.facet_fields?.schema_s, { country, locale, countries } );
 }
@@ -56,14 +58,14 @@ function makeObject(facetsArray=[], { country, locale, countries }){
     const facets         = { nationalReport };
 
     for (let index = 0; index < facetsArray.length; index+=2) {
-        if( isOdd(index) ) continue;
+        if( isOddNumber(index) ) continue;
         
         const schemaName = facetsArray[index];
 
         if(nationalReportSchemas.includes(schemaName)) continue;
 
         const count = facetsArray[index+1];
-        const href  = getUrl(schemaName, locale, country, countries )
+        const href  = getUrl(schemaName, locale, country, countries );
 
 
         if(!count) continue;
@@ -78,7 +80,7 @@ function generateNationalReportFacet(facetsArray=[], { country, locale, countrie
     let   count           = 0 ;
 
     for (let index = 0; index < facetsArray.length; index+=2) {
-        if( isOdd(index)) continue;
+        if( isOddNumber(index)) continue;
 
         const schemaName = facetsArray[index];
 
@@ -92,7 +94,6 @@ function generateNationalReportFacet(facetsArray=[], { country, locale, countrie
     return { count, href }
 }
 
-function isOdd(num) { return num % 2;}
 
 function getIndexQuery(passedCountry){
     const country = Array.isArray(passedCountry)? passedCountry.join(' ') : passedCountry;

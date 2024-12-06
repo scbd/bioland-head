@@ -37,7 +37,7 @@ export async function getCommentsFromApiPager (ctx, next){
         return data
     }
     catch(e){
-       // console.error('Menus.getMenusFromApiPager - recursive', e)
+       // console.error(' recursive', e)
     }
 }
 

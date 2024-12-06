@@ -477,4 +477,4 @@ export const thesaurusSourceMap = {
   'GBF-TARGET-21': 'gbfTargets',
   'GBF-TARGET-22': 'gbfTargets',
   'GBF-TARGET-23': 'gbfTargets'
-}
+};

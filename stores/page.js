@@ -180,7 +180,6 @@ export const usePageStore = defineStore('page', {
         },
         title(){
             return this.page?.title || this.page?.name;
-        
         },
         body(){
             return this.page?.body?.processed || this.page?.body?.value || this.page?.description?.processed || this.page?.description?.value;
@@ -194,28 +193,28 @@ export const usePageStore = defineStore('page', {
         publishedOn(){
             return this.page?.fieldPublished || this.page?.created || this.page?.revisionCreated
         },
-        editedOn(){
-            if(this.page?.created === this.page?.changed) return ''
+        // editedOn(){
+        //     if(this.page?.created === this.page?.changed) return ''
 
-            return this.page?.changed
-        },
-        url(){
-            if(!this.page?.fieldUrl?.uri) return ''
+        //     return this.page?.changed
+        // },
+        // url(){
+        //     if(!this.page?.fieldUrl?.uri) return ''
 
-            return this.page.fieldUrl.uri;
-        },
+        //     return this.page.fieldUrl.uri;
+        // },
         tags(){
             return this?.page?.tags || {}
         },
         media(){
             return this?.page?.fieldAttachments
         },
-        drupalEntityTypePath(){
-            if (this.isSystemPage || this.isContentType ) return '/taxonomy/term';
-            if (this.isMediaPage) return '/media';  
+        // drupalEntityTypePath(){
+        //     if (this.isSystemPage || this.isContentType ) return '/taxonomy/term';
+        //     if (this.isMediaPage) return '/media';  
 
-            return '/node';
-        },
+        //     return '/node';
+        // },
         migratedFromLink(){
             const { siteCode } = useSiteStore();
 

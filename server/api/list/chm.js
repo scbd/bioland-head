@@ -15,7 +15,7 @@ export default cachedEventHandler(async (event) => {
                 index++
             }
 
-            return useScbdIndex ({ ...ctx, ...query });
+            return queryScbdIndex ({ ...ctx, ...query });
         }
         catch (e) {
 

@@ -29,8 +29,8 @@ export const useMenusStore = defineStore('menus', {
             this.set('systemPages', menus?.systemPages);
         },
         isInMenu(menu, href){
-const hrefMatch = menu?.href === href && menu?.href && href
-// const isContentType = this.isContentTypeId(href)
+            const hrefMatch = menu?.href === href && menu?.href && href
+
             if(hrefMatch) return menu;
         
             if(menu?.children?.length)
@@ -91,14 +91,11 @@ const hrefMatch = menu?.href === href && menu?.href && href
             return this.systemPages.find((sp)=> sp.drupalInternalId === id);
         },
         getSystemPageByAlias(alias){
-            return this.systemPages.find((sp)=> {
-
-                return sp?.aliases?.en === alias});
+            return this.systemPages.find((sp)=> sp?.aliases?.en === alias);
         },
         getSystemPagePath({alias,id, locale}){
             const term = alias? this.getSystemPageByAlias(alias) : this.getSystemPageById(id);
 
-            
             if(!term) return '';
 
             return term.aliases[locale]

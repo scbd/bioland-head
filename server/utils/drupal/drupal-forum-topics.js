@@ -68,7 +68,7 @@ async function getTopics (ctx) {
 
     const userPromises = []
     for (const forum of forums) {
-        userPromises.push(getLatestCommentsUsersFromForum(ctx, forum.id).then((users)=> forum.users = uniqueObjects(users)))
+        userPromises.push(getLatestCommentsUsersFromForum(ctx, forum.id).then((users)=> forum.users = uniqueArrayOfObjects(users)))
         
     }
 

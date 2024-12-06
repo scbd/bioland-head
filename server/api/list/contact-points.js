@@ -58,14 +58,14 @@ function mapByCountry({ docs }, ctx){
                 if(!tMap[aCountryCode][tKey]) tMap[aCountryCode][tKey ]=[]
                 tMap[aCountryCode][tKey].push(aDoc)
                 
-               tMap[aCountryCode][tKey] = uniqueObjects(tMap[aCountryCode][tKey])
+                tMap[aCountryCode][tKey] = uniqueArrayOfObjects(tMap[aCountryCode][tKey])
             }
         }
     }
 
     for (const code in tMap) {
         const country = tMap[code];
-        country['CBD']= uniqueObjects([...country['CBD-FP1']||[], ...country['CBD-FP1']||[]])
+        country['CBD']= uniqueArrayOfObjects([...country['CBD-FP1']||[], ...country['CBD-FP1']||[]])
         delete country['CBD-FP1']
         delete country['CBD-FP2']
     }

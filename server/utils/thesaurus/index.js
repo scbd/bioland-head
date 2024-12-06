@@ -32,20 +32,15 @@ export const thesaurusApisUrls = {
 export const getCountryName = defineCachedFunction(async (identifier) => {
     const data = await $fetch(`https://api.cbd.int/api/v2013/thesaurus/terms/${identifier}`)
   
-    return data.name
+    return data.name;
 },{
     maxAge: 60 * 60 * 60 * 24 * 30 * 6,
     getKey:(identifier) => identifier,
-    base:'external',
-    varies:['host', 'x-forwarded-host'],
+    base:'external'
 })
+
 export  const dataSources = [ ...Object.keys(thesaurusApisUrls), 'geoLocations',  'all' ];
 
-function getSdgNumber(key){
-    return Number(key.replace('SDG-GOAL-',''));
-}
-
-export const getSdg = (identifier) =>  sdgsData.find((anSdg) => identifier === anSdg.identifier);
 export const sdgsData = [
     {
         "identifier": "SDG-GOAL-01",
@@ -201,3 +196,5 @@ export const sdgsData = [
         "@context": "https://schema.org"
     }
 ]
+
+export const getSdg = (identifier) => sdgsData.find((anSdg) => identifier === anSdg.identifier);

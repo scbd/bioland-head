@@ -33,25 +33,27 @@ export const useMeStore = defineStore('me', {
             return this.canEditSystemPages && this.editMode;
         },
         canEditSystemPages(){
-            const menuRoles = ["administrator"]
+            const roles = [ "administrator" ];
 
-            return this.isAuthenticated && intersect(this.roles, menuRoles).length;
+            return this.isAuthenticated && intersect(this.roles, roles).length;
         },
         canEditMenu(){
-            const menuRoles = ["administrator","site_manager","content_manager"]
+            const roles = [ "administrator", "site_manager", "content_manager"]
 
-            return this.isAuthenticated && intersect(this.roles, menuRoles).length;
+            return this.isAuthenticated && intersect(this.roles, roles).length;
         },
         canEdit(){
-            const menuRoles = ["administrator","site_manager","content_manager","contributor"]
+            const roles = [ "administrator", "site_manager", "content_manager", "contributor" ]
 
-            return this.isAuthenticated && intersect(this.roles, menuRoles).length;
+            return this.isAuthenticated && intersect(this.roles,roles).length;
         },
         isExpired(){
             const isExpired = DateTime.now() > this.expire;
+
             if(!isExpired) return false;
 
             this.$reset();
+
             return true;
         }
     },
