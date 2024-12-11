@@ -1,6 +1,5 @@
 <template>
     <div >
-        <!--  -->
         <div  class="d-flex  align-items-end  fs-5 mt-5" :class="{ 'justify-content-end' : (!likes && count), 'justify-content-between' : (likes )}" style="margin-bottom:-10px;">
             <span v-if="likes" class="text-muted">{{likes}} {{ t('like', likes) }}</span> 
             <span>
@@ -15,7 +14,7 @@
 
         <div class="d-flex justify-content-between  align-items-center px-5 fs-4">
 
-            <button @click.prevent.stop="focusOnCommentField" type="button" class="btn btn-outline-dark nb"> <Icon name="comment" :size="1.25" /> &nbsp;<span v-if="!isReply" class="text-capitalize">{{t('comment')}}</span><span v-if="isReply">{{t('Reply')}}</span></button>
+            <button @click.prevent.stop="focusOnCommentField" type="button" class="btn btn-outline-dark nb"> <LazyIcon name="comment" :size="1.25" /> &nbsp;<span v-if="!isReply" class="text-capitalize">{{t('comment')}}</span><span v-if="isReply">{{t('Reply')}}</span></button>
 
         </div>
         <hr class="my-0" />
@@ -31,24 +30,22 @@
                     <div class="d-flex justify-content-between align-items-center w-100">
                         <div >
                             <button @click="showEmojiSelector" :class="{'emoji-btn-active':showEmojiPicker}" type="button" class="btn btn-outline-dark nb me-1 ">
-                                <Icon name="happy-face" :size="1.25" /> 
+                                <LazyIcon name="happy-face" :size="1.25" /> 
                             </button>
                         </div>
                         <button @click="sendComment" type="button" class="btn btn-outline-dark nb ">
-                            <Icon name="send" :size="1.25" />
+                            <LazyIcon name="send" :size="1.25" />
                         </button>
                     </div>
                 </div>
             </div> 
             <div v-click-outside="hideEmojiSelector" class="emoji-container z-1 ps-1" v-if="showEmojiPicker" >
-                <NuxtEmojiPicker  :hide-search="false" theme="dark" @select="onSelectEmoji" />
+                <LazyNuxtEmojiPicker  :hide-search="false" theme="dark" @select="onSelectEmoji" />
             </div>
         </div>
         <div v-if="repliesVisible" class="my-1">
             <div  v-for="(reply,index) in replies" :key="index">
-
-                <PageCommentReply :reply="reply" />
-
+                <LazyPageCommentReply :reply="reply" />
             </div>
         </div>
     </div>
@@ -207,11 +204,9 @@
 </script>
 <style lang="scss" scoped>
 .reply{
-
     background-color: #d3d3d3;
 }
 .reply-text{
-
     min-width:80%;
 }
 .emoji-container{
@@ -233,11 +228,8 @@ border: none;
 }
 .input-group {
     border: 1px solid var(--bs-gray-300);
-
-    /* border-radius: .5rem; */
     text-decoration: none;
     flex-direction: wrap;
-    
 }
 .input-group-focus{
     border: 1px solid var(--bs-gray-300);
@@ -254,30 +246,23 @@ border: none;
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
     border-bottom: none;
-    // border-right: 1px solid #BFBFBF !important;
 }
 .input-group-focus > .form-control
 {
-  width: 100%
+    width: 100%
 }
 .input-group-focus > .input-group-text{
     background-color: lightgray;
-
-border-top-left-radius: 0 !important;
-border-top-right-radius: 0 !important;
-border-bottom-left-radius: .5rem !important;
-border-bottom-right-radius: .5rem !important;
-border-top: none;
-/* border-right: 1px solid #BFBFBF !important; */
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-left-radius: .5rem !important;
+    border-bottom-right-radius: .5rem !important;
+    border-top: none;
 }
 .input-group-text, .form-control {
     background-color: lightgray;
-
-//   border-color: #4D4D4D;
-  
-  text-decoration: none;
-
-   border-right: none; 
+    text-decoration: none;
+    border-right: none; 
 }
 .input-group-text{
     cursor: pointer;
@@ -289,12 +274,9 @@ border-top: none;
     background-color: lightgray;
     border-color: #BFBFBF;
 }
-/* input[type=text]{
-    width:100%;
-} */
 
 #comment-editor:focus {
-  outline: none;
-  box-shadow: none;
+    outline: none;
+    box-shadow: none;
 }
 </style>

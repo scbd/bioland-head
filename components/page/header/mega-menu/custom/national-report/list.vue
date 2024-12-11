@@ -1,20 +1,19 @@
 <template>
     <div class="col-12 text-wrap px-0">
-        <PageHeaderMegaMenuHeader  :menu="menu" />
+        <LazyPageHeaderMegaMenuHeader  :menu="menu" />
 
-        <PageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menus" >
+        <LazyPageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menus" >
             <Transition :name="slotProps.fadeName">
                 <section v-if="slotProps.hide">
-                    <PageHeaderMegaMenuLink v-for="(aChild,i) in menus[slotProps.country]" :key="i" :menu="aChild" />
+                    <LazyPageHeaderMegaMenuLink v-for="(aChild,i) in menus[slotProps.country]" :key="i" :menu="aChild" />
 
-                    <PageHeaderMegaMenuLink :menu="finalLink(slotProps.country)" />
+                    <LazyPageHeaderMegaMenuLink :menu="finalLink(slotProps.country)" />
                 </section>
             </Transition>
-        </PageHeaderMegaMenuCustomCountryTab>
+        </LazyPageHeaderMegaMenuCustomCountryTab>
     </div>
 </template>
 <script setup >
-    import { useMenusStore } from '~/stores/menus';
 
     const { t }      = useI18n();
     const menusStore = useMenusStore();

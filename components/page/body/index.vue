@@ -5,7 +5,7 @@
             <div   class="col-md-3 d-lg-block"> &nbsp; </div>
 
             <div  class="col-12 col-md-9">
-                <PageBreadCrumbs/>
+                <LazyPageBreadCrumbs/>
             </div>
 
             <div  class="col-12 d-md-none">
@@ -20,7 +20,7 @@
                     <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-5 w-100"/>
                 </NuxtLink>
 
-                <PageMediaFileDetails v-if="isImageOrVideo || isDocument" :vertical="true" />
+                <LazyPageMediaFileDetails v-if="isImageOrVideo || isDocument" :vertical="true" />
             </div>
 
             <div  class="col-12 col-md-9">
@@ -33,31 +33,31 @@
                 <div v-if="isImageOrVideo" class="d-flex flex-row justify-content-end" >
                     <div class="align-self-start w-100">
                         <NuxtImg v-if="pageStore?.image?.src" format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image.alt" :src="pageStore?.image.src" class="img-fluid mt-0 mb-1 w-100"/>
-                        <PageBodyMediaYouTube  v-if="pageStore?.isVideo" :url="pageStore?.video?.fieldMediaOembedVideo" :title="pageStore?.video?.name || pageStore?.media?.title"/>
+                        <LazyPageBodyMediaYouTube  v-if="pageStore?.isVideo" :url="pageStore?.video?.fieldMediaOembedVideo" :title="pageStore?.video?.name || pageStore?.media?.title"/>
                     </div>
-                    <PageBodyTagsDate class="mt-2" />
+                    <LazyPageBodyTagsDate class="mt-2" />
                 </div>
                 <div class="d-md-flex"  >
                     <div v-if="!isImageOrVideo" class="d-md-none align-self-start"> 
-                        <PageBodyTagsDate /> 
+                        <LazyPageBodyTagsDate /> 
                     </div>
                     <div class="align-self-start w-100">
                         <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="pageStore?.body"></div>
                     </div>
                     <div v-if="!isImageOrVideo"class="d-none d-md-block align-self-start"> 
-                        <PageBodyTagsDate /> 
+                        <LazyPageBodyTagsDate /> 
                     </div>
                 </div>
 
                 <div class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
-                    <PageMediaFileDetails />
+                    <LazyPageMediaFileDetails />
                 </div>
 
                 <div v-if="pageStore?.image?.url" class="col-12 d-md-none px-0">
 
                     <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
 
-                    <PageBodyTagsDate />
+                    <LazyPageBodyTagsDate />
                 </div>
             </div>
             
@@ -84,23 +84,22 @@
     </div>
 </template>
 <script setup>
-const { t } = useI18n();
+    const { t } = useI18n();
 
-const localePath = useLocalePath();
-const meStore   = useMeStore();
-const pageStore = usePageStore();
+    const localePath = useLocalePath();
+    const meStore    = useMeStore();
+    const pageStore  = usePageStore();
 
-const isImageOrVideo = computed(()=> pageStore?.isImageOrVideo);
-const isDocument     = computed(()=> pageStore?.isDocument );
+    const isImageOrVideo = computed(()=> pageStore?.isImageOrVideo);
+    const isDocument     = computed(()=> pageStore?.isDocument );
 
+    const { pageTypeStyle } = useTheme();
 
-const { pageTypeStyle } = useTheme();
+    function showEdit(){
+            if(pageStore?.isTaxonomyPage) return meStore?.showEditSystemPages;
 
-function showEdit(){
-        if(pageStore?.isTaxonomyPage) return meStore?.showEditSystemPages;
-
-        return meStore?.showEdit;
-}
+            return meStore?.showEdit;
+    }
 </script>
 
 <style lang="scss" scoped>

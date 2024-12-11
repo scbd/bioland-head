@@ -5,20 +5,23 @@
             <div   class="col-md-3 d-lg-block"> &nbsp; </div>
 
             <div  class="col-12 col-md-9 ps-0">
-                <PageBreadCrumbs/>
+                <LazyPageBreadCrumbs/>
             </div>
             <div v-if="meStore.showEditSystemPages" class="col-9 offset-3 b-line">
-                <PageBodyTabs/>
+                <LazyPageBodyTabs/>
             </div>
             <div  class="col-9 offset-3 b-line ps-0">
-                <h1  class="d-flex align-items-center" >{{ pageStore?.title}}</h1>
+                <h1  class="d-flex align-items-center mt-2" >{{ pageStore?.title}}</h1>
+                <LazySpinner v-if="loading" :size="100"/>
             </div>
+            
         </div>
+
         <div  v-for="(aType,index) in types" :key="index" class="row">
             <div  class="col-12 d-md-none">
                 <h2 :style="pageTypeStyle"  class="page-type">{{t(`${aType}-type`)}}</h2>
             </div>
-     
+
             <div  class="col-3 d-none d-md-block" >
                 <h2  :style="pageTypeStyle" class="page-type pt-5">{{t(`${aType}-type`)}}</h2>
             </div>
@@ -52,21 +55,22 @@
 <script setup>
 import clone from 'lodash.clonedeep';
 
-const { t } = useI18n();
-const route   = useRoute();
-const meStore = useMeStore();
-const pageStore  = usePageStore();
+const { t }       = useI18n();
+const   route     = useRoute();
+const   meStore   = useMeStore();
+const   pageStore = usePageStore();
+const   siteStore = useSiteStore();
 
-const siteStore    = useSiteStore();
 const pageTypeStyle = reactive({ '--bs-primary': siteStore.primaryColor });
 
-const query = computed(() =>clone ({ ...route.query, ...siteStore.params }))
+const query = computed(() =>clone ({ ...route.query, ...siteStore.params }));
 
-const { data, status, refresh } = await useFetch(()=>`/api/list/contact-points`, {  method: 'GET', query });
+const { data, status } = await useLazyFetch(()=>`/api/list/contact-points`, {  method: 'GET', query });
 
+const loading = computed(()=> pageStore.loading || status.value === 'pending');
 const contactTypes = [ 'CBD', 'CPB-FP1', 'ABS-FP', 'CHM-FP', 'BCH-FP', 'CPB-A17-FP', 'RM-FP', 'PA-FP', 'TKBD-FP', 'SBSTTA-FP', 'GTI-FP', 'GSPC-FP' ];
 
-const types = computed(() => contactTypes.filter((t)=>Object.keys(data.value[siteStore?.config?.country]).includes(t)));
+const types     = computed(() => contactTypes.filter((t)=>Object.keys(data.value[siteStore?.config?.country]).includes(t)));
 const typesData = computed(() => data.value[siteStore?.config?.country]);
 </script>
 

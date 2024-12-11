@@ -19,11 +19,6 @@
                     {{t('Revisions')}}
                 </NuxtLink>
             </li>
-            <!-- <li   class="nav-item ">
-                <NuxtLink :style="getStyleActive()" :to="cloneUrl" class="nav-link  text-capitalize"  >
-                    {{t('Clone')}}
-                </NuxtLink>
-            </li> -->
             <li   class="nav-item ">
                 <NuxtLink :style="getStyleActive()" :to="baseUrl+'/translations'+returnUrl " class="nav-link  text-capitalize"  >
                     {{t('Translate')}}
@@ -44,34 +39,32 @@
     const returnUrl = computed(()=> `?destination=${route.path}?clear-page-cache=${encodeURIComponent(route.path)}`);
 
     function getUrlComponent(){
-        if(pageStore?.isMediaPage) return `/media/${pageStore?.page?.drupalInternalMid}`
-        if(pageStore?.isTaxonomyPage) return `/taxonomy/term/${pageStore?.page?.drupalInternalTid}`
+        if(pageStore?.isMediaPage) return `/media/${pageStore?.page?.drupalInternalMid}`;
+        if(pageStore?.isTaxonomyPage) return `/taxonomy/term/${pageStore?.page?.drupalInternalTid}`;
 
-        return `/node/${pageStore?.page?.drupalInternalNid}`
+        return `/node/${pageStore?.page?.drupalInternalNid}`;
     }
     
     function getStyleActive(){
         return reactive({
-            'z-index': 2,
-            // color: 'white',
-            'font-size': '1.2rem',
-            'text-decoration': 'none',
-            // 'background-color': siteStore.secondaryColor,
-            'border-color': 'black',
-            'border-bottom': `black solid 1px`
-        })
+                            'z-index'        : 2,
+                            'font-size'      : '1.2rem',
+                            'text-decoration': 'none',
+                            'border-color'   : 'black',
+                            'border-bottom'  : `black solid 1px`
+                        });
     }
 
     function getStyle(){
         return reactive({
-            'z-index': 2,
-            color: 'white',
-            'font-size': '1.3rem',
-            'text-decoration': 'none',
-            'background-color': siteStore.primaryColor,
-            'border-color': siteStore.primaryColor,
-            'border-bottom': `black solid 1px`
-        })
+                            'z-index'         : 2,
+                            color             : 'white',
+                            'font-size'       : '1.3rem',
+                            'text-decoration' : 'none',
+                            'background-color': siteStore.primaryColor,
+                            'border-color'    : siteStore.primaryColor,
+                            'border-bottom'   : `black solid 1px`
+                        });
     }
 </script>
 <style lang="scss"  scoped>

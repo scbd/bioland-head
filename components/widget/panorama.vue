@@ -1,9 +1,7 @@
 <template>
-    <Widget  v-if="!error && record" :loading="loading" :t="'solution'" :name="t('Panorama Solutions')" :record="record" :links="links"/>
+    <LazyWidget  v-if="!error && record" :loading="loading" :t="'solution'" :name="t('Panorama Solutions')" :record="record" :links="links"/>
 </template>
 <script setup>
-
-    import { useSiteStore } from '~/stores/site' ;
     import clone from 'lodash.clonedeep';
 
     const siteStore  = useSiteStore();

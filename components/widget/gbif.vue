@@ -1,6 +1,6 @@
 <template>
     <div class="position-relative">
-        <Spinner v-if="loading" :is-modal="true" />
+        <LazySpinner v-if="loading" :is-modal="true" />
         <div v-if="!error">
             <div class="text-capitalize">
                 <h4 :style="style" class="bm-3">{{t('GBIF')}} </h4>
@@ -33,7 +33,7 @@
                 </NuxtLink>
                 &nbsp;
 
-                <Icon   name="external-link" />
+                <LazyIcon   name="external-link" />
 
                 <span class="hide">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{config.identifier}} {{zoom}}</span>
             </div>

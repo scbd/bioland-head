@@ -3,7 +3,7 @@
         <div  class="row g-0">
             <div class="col-12">
                 <div class="card-header">
-                    <Avatar :user="aLine.user" />
+                    <LazyAvatar :user="aLine.user" />
                     <span class="text-muted ms-2">{{aLine.user.displayName}}</span>
                     <hr class="my-0 mx-0 mt-1" :style="`border: 1px solid ${aLine.fieldColor};`">
                 </div>
@@ -18,7 +18,7 @@
 
             <div class="col-12">
                 <div class="card-footer">
-                    <FormCommentInput />
+                    <LazyFormCommentInput />
                 </div>
             </div>
         </div>

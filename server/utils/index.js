@@ -33,3 +33,19 @@ export { unLocales } from '~/utils/index';
 export const consola = c;
 
 export function isOddNumber(num) { return num % 2;}
+
+export function passError(event, error){
+    const { siteCode, locale } = getContext(event);
+    const   requestUrl         = new URL(getRequestURL(event));
+    const { pathname, host }   = requestUrl;
+    const { baseHost, env }    = useRuntimeConfig().public;
+
+    console.error(`${host}${pathname}.js`,error);
+
+    throw createError({
+        statusCode    : error.statusCode,
+        statusMessage : error.statusMessage,
+        message       : `${host}${pathname}.js`,
+        data          : { siteCode, locale, host, baseHost, env, pathname, requestUrl, errorData:error.data }
+    }); 
+}

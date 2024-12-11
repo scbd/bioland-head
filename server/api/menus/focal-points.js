@@ -7,35 +7,16 @@ export default cachedEventHandler(async (event) => {
         try{
             const context    = getContext(event);
             const query      = getQueryString(context);
-
-
             const response   = await $indexFetch(query);
-
-            
             const countryMap = mapByCountry(response, context);
-
-            const links = getLinks(countryMap);
+            const links      = getLinks(countryMap);
 
             await getProtocolContacts(context, links);
 
-            return links
+            return links;
         }
         catch (e) {
-
-            const { siteCode, locale } = getContext(event);
-            const   host               = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
-            const   requestUrl         = new URL(getRequestURL(event));
-            const { pathname }         = requestUrl;
-            const { baseHost, env }    = useRuntimeConfig().public;
-
-            console.error(`${host}/server/api/menus/focal-points.js`, e);
-
-            throw createError({
-                statusCode    : e.statusCode,
-                statusMessage : e.statusMessage,
-                message       : `${host}/server/api/menus/focal-points.js`,
-                data          : { siteCode, locale, host, baseHost, env, pathname, requestUrl, errorData:e.data }
-            }); 
+            passError(event, e);
         }
     
     },
@@ -54,17 +35,16 @@ function mapByCountry({ docs }, ctx){
         tMap[aCountryCode] = []
 
         for (const aDoc of docs){
-     
             if(!aDoc.hostGovernmentss?.includes(aCountryCode.toLowerCase())) continue;
 
             for (let index = 0; index < aDoc.types.length; index++) {
         
                 const tKey  = aDoc.types[index];
 
-                if( !tMap[aCountryCode] )  tMap[aCountryCode]  ={}
-                tMap[aCountryCode] [tKey] = aDoc.url
-                
-               // tMap[aCountryCode] = Array.from(new Set([ ...tMap[aCountryCode], tKey ]))
+                if( !tMap[aCountryCode] )
+                    tMap[aCountryCode]  = {};
+
+                tMap[aCountryCode] [tKey] = aDoc.url;
             }
         }
     }
@@ -80,8 +60,7 @@ function mapByCountry({ docs }, ctx){
 
             countryTypeMap[aCountryCode][type]=aLink
         }
-        // if(countryTypeMap[aCountryCode].includes('ABS-FP'))
-        //     countryTypeMap[aCountryCode].push('ABSCH-FP')
+
     }
     return countryTypeMap
 }
@@ -169,9 +148,6 @@ function getLinks(countryTypeMap){
         for (const [title, href] of Object.entries(countryTypeMap[aCountryCode]) ) {
             const countryPath = onlyOneCountry? '' : `/${aCountryCode}`;
             const url        =  `/focal-points${countryPath}#${title}`;
-
-            // const title       = type;
-
 
             linksMap[aCountryCode].push({ href, title, url });
         }

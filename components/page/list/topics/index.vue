@@ -2,22 +2,22 @@
     <div class="container mt-1">
         <div class="row">
             <div class="col-md-3">
-                <PageListTextSearch class="mb-1"/>
+                <LazyPageListTextSearch class="mb-1"/>
             </div>
             <div class="col-12 col-md-9 px-0">
-                <PageBreadCrumbs :count="results?.topics?.length"/>
+                <LazyPageBreadCrumbs :count="results?.topics?.length"/>
             </div>
             <div class="col-12 col-md-3 ps-0" >
                 <h2 :style="primaryColorStyle" class="page-type mb-1">{{results?.name}}</h2>
             </div>
-
+            <LazySpinner v-if="loading" :size="75"/>
             <ClientOnly >
                 <div name="list" tag="div" class="col-12 col-md-9 data-body">
                     <div>
                         <div v-html="results?.description?.value || ''"></div>
                     </div>
                     <transition-group name="list">
-                        <PageListTopicsRow  :a-line="aLine" v-for="(aLine,index) in results?.topics" :key="index" />
+                        <LazyPageListTopicsRow  :a-line="aLine" v-for="(aLine,index) in results?.topics" :key="index" />
                         <span :key="`showTopPage${showTopPager}${results?.topics?.count}-span`">&nbsp;</span>
                     </transition-group>
                 </div>
@@ -26,24 +26,24 @@
                         <div v-html="results?.description?.value || ''"></div>
                     </div>
                     <div name="list" tag="div" class="col-12 col-md-9 data-body">
-                        <PageListTopicsRow  :a-line="aLine" v-for="(aLine,index) in results?.topics" :key="index" />
+                        <LazyPageListTopicsRow  :a-line="aLine" v-for="(aLine,index) in results?.topics" :key="index" />
                     </div>
                 </template>
             </ClientOnly>
 
 
             <div class="col-12 col-md-9 offset-md-3 ">
-                <PageListPager :count="results?.count"/>
+                <LazyPageListPager :count="results?.count"/>
             </div>
         </div>
     </div>
 
 </template>
 <script setup>
-
     import clone from 'lodash.clonedeep';
 
-    const   r                           = useRoute();
+    const   pageStore                   = usePageStore();
+    const   route                       = useRoute();
     const   siteStore                   = useSiteStore();
     const   eventBus                    = useEventBus();
     const   props                       = defineProps({ 
@@ -55,27 +55,22 @@
     const { showTopPager  }     = toRefs(props);
     const { primaryColorStyle } = useTheme();
 
-
-    const freeText      = computed(() => r?.query?.freeText? r?.query?.freeText : '');
-    const page          = computed(() => r?.query?.page? r?.query?.page : 1);
-    const rowsPerPage   = computed(() => r?.query?.rowsPerPage? r?.query?.rowsPerPage : 10);
-    const query         = clone({ ...r.query, ...siteStore.params, freeText, page, rowsPerPage });
-
+    const freeText      = computed(() => route?.query?.freeText?    route?.query?.freeText    : '');
+    const page          = computed(() => route?.query?.page?        route?.query?.page        : 1);
+    const rowsPerPage   = computed(() => route?.query?.rowsPerPage? route?.query?.rowsPerPage : 10);
+    const query         = clone({ ...route.query, ...siteStore.params, freeText, page, rowsPerPage });
 
     const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query, onResponse });
 
-    function onResponse({ request, response, options}){
+    function onResponse({ request, response }){
         response._data =response._data[0] || {}
     }
 
+    const loading = computed(()=> pageStore.loading || status.value === 'pending');
+
     onMounted(() => { eventBus.on('changePage', refresh); });
 
-    function getApiUri(){ return `/api/forums/${r.params[1]}`;     }
-
-
-    function isNumberString(string) {
-        return /^[0-9]*$/.test(string);
-    }
+    function getApiUri(){ return `/api/forums/${route.params[1]}`; }
 </script>
 
 <style scoped>

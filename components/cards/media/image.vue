@@ -2,7 +2,7 @@
     <div :style="style" class="card p-2 text-center" >
         <div class="d-flex justify-content-center text-center">
             <NuxtImg  v-if="imageSrc" quality="35" :alt="imageAlt" :src="imageSrc" :width="imgWidth" :height="imgHeight"  format="webp" class="card-img-top image-top i-top"/>
-            <Icon v-if="!imageSrc" :name="'file-image-o'"  :size="8" />
+            <LazyIcon v-if="!imageSrc" :name="'file-image-o'"  :size="8" />
         </div>
         <div class="card-body">
             <h6 class="card-subtitle text-muted mb-2">{{t('Image')}}</h6>
@@ -17,7 +17,7 @@
             <hr class="mb-2 mt-1"/>
 
             <NuxtLink  v-for="(aTarget,i) in tags?.gbfTargets || []" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
-                <GbfIcon :identifier="aTarget.identifier" size="xs"/>
+                <LazyGbfIcon :identifier="aTarget.identifier" size="xs"/>
             </NuxtLink>
 
             <NuxtLink  v-for="(aSdg,i) in tags?.sdgs || []" :key="i"  :to="aSdg.url" target="_blank" external>
@@ -32,7 +32,7 @@
             <hr class="my-2" v-if="tags?.subjects || tags?.sdgs || tags?.gbfTargets"/>
             <h6 class="card-subtitle text-primary">
                 <NuxtLink  :style="arrowFill" :to="linkTo" :title="imageAlt" >
-                    {{t('View more')}} <Icon  name="arrow-right" class="arrow" />
+                    {{t('View more')}} <LazyIcon  name="arrow-right" class="arrow" />
                 </NuxtLink>
             </h6>
         </div>
@@ -45,11 +45,10 @@
     const { record    } = toRefs(props);
     const { t, locale } = useI18n();
 
-    const {  getGbfUrl }   = useDocumentHelpers(record);
     const dateFormat       = useDateFormat(locale);
     const { style, arrowFill      } = useTheme();
 
-    const { descriptionTruncated, imageAlt, tags, imageSrc, linkTo,  imgHeight, imgWidth, iconName, iconColor} = useMediaRecord(record);
+    const { getGbfUrl, descriptionTruncated, imageAlt, tags, imageSrc, linkTo,  imgHeight, imgWidth, iconName, iconColor} = useMediaRecord(record);
 </script>
 <style lang="scss" scoped>
 .i-top{

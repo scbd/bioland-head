@@ -1,31 +1,25 @@
-import clone from 'lodash.clonedeep';
+import clone         from 'lodash.clonedeep';
 import isPlainObject from 'lodash.isplainobject';
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
   const nuxtApp     = useNuxtApp();
+
+  await changeLocale();
+
   const siteStore   = useSiteStore(nuxtApp.$pinia);
   const pStore      = usePageStore(nuxtApp.$pinia);
   const menuStore   = useMenusStore(nuxtApp.$pinia);
   const meStore     = useMeStore(nuxtApp.$pinia);
   const context     = useCookie('context');
-  const getPage     = useGetPage(nuxtApp.$i18n.locale.value);
   const path        = to.path;
 
-
-  await changeLocale();
-  
-  // if(!context.value)
-  //   throw createError({ 
-  //     statusCode: 404, 
-  //     statusMessage: 'Not Found',
-  //     message: `no context`,
-  //     fatal:true
-  // });
-
   updateAppConfig({ path });
+
   isValidLocalePrefix();
+
   await getMe();
 
+  const   getPage          = useGetPage(nuxtApp.$i18n.locale.value);
   const [ pData, fetch ]   = await Promise.all([getPage(path), getMenus()]);
   const { data: menuData } = fetch || { data: undefined};
 
@@ -36,30 +30,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   if(menuData?.value)
     menuStore.loadAllMenus(menuData.value);
 
-  // async function getPage(passedPath){ 
-    
-  //   const   path                  = ref(passedPath.endsWith('/topics')? passedPath.replace('/topics', '') : passedPath);
-  //   const { multiSiteCode }       = useRuntimeConfig().public;
-  //   const { identifier,  locale } = siteStore;
-
-  //   const key = ref(`${multiSiteCode}-${identifier}-${locale}-${encodeURIComponent(path.value)}`);
-
-  //   try{
-  //     if(key.value?.includes('undefined'))  throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}` }) 
-
-  //     const  data  = await $fetch(`/api/page/${key.value}/${encodeURIComponent(path.value)}`, {  method: 'GET', query: clone({ ...siteStore.params, path:path.value }) })//.then(({ data }) => data);
-  
-  //     return data;
-  //   }catch(e){
-  //     consola.error(e)
-
-  //     if(e.statusCode === 404)
-  //       throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}`, fatal:true })
-  
-  //     throw createError({ statusCode: e.statusCode, statusMessage: e.statusMessage, fatal:true }) 
-  //   }
-
-  // }
 
   function isValidLocalePrefix(){
 
@@ -102,6 +72,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   async function getMe(){
 
     try{
+
+      consola.info('meStore.isAuthenticated', meStore.isAuthenticated)
+      consola.info('meStore.isExpired', meStore.isExpired)
       if(meStore.isAuthenticated && !meStore.isExpired) return;
 
       const { data, error } = await useFetch(`/api/me`, {  method: 'GET', query: clone({...siteStore.params, path:to.path})})//.then(({ data }) => data);

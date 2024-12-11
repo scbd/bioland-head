@@ -1,10 +1,10 @@
 <template>
     <div class="col-12 mt-3 mb-0">
         <h3 :style="headerStyle">{{t('Latest News and Updates')}}</h3>
-        <NuxtLink :to="localePath({path:'/news-and-updates', query:{ schemas:[2,3]}})" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more news and updates')}} <Icon  name="arrow-right" class="arrow" /></NuxtLink>
+        <NuxtLink :to="localePath({path:'/news-and-updates', query:{ schemas:[2,3]}})" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more news and updates')}} <LazyIcon  name="arrow-right" class="arrow" /></NuxtLink>
     </div>
     <div  class="position-relative mt-1" style="min-height:250px;">
-        <Spinner v-if="loading" :is-modal="true"/>
+        <LazySpinner v-if="loading" :is-modal="true"/>
         <ClientOnly>
             <swiper
                 :loop="true"
@@ -33,8 +33,9 @@ import 'swiper/css';
 import clone from 'lodash.clonedeep';
 
 const localePath = useLocalePath();
-const siteStore = useSiteStore();
-const { t } = useI18n();
+const siteStore  = useSiteStore();
+const { t }      = useI18n();
+
 const props = defineProps({ 
                          
                             pagination: { type: Boolean, default: false },
@@ -44,9 +45,7 @@ const props = defineProps({
                         });
 const { pagination, arrows, leftArrow ,  hideArrowsCount } = toRefs(props);
 const loading = ref(true)
-// const pagination = false;
-// const arrows     = true;
-// const leftArrow  = false;
+
 
 const { width: rowElWidth } = useWindowSize();
 

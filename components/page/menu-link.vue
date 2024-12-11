@@ -1,6 +1,6 @@
 <template>
     <NuxtLink v-if="isExternal" class="nav-link" :to="href || '#'" :alt="title" :target="targetValue" external >{{ title }}</NuxtLink>
-    <NuxtLink active-class="footer-active" v-if="!isExternal" class="nav-link" :to="to" :alt="title" :target="targetValue" >{{ title }}</NuxtLink>
+    <NuxtLink  v-if="!isExternal" active-class="footer-active" class="nav-link" :to="to" :alt="title" :target="targetValue" >{{ title }}</NuxtLink>
 </template>
 
 <script setup>
@@ -10,31 +10,26 @@
                                     target: String,
                                     class: String,
                                     hierarchy: Array,
-                                    // 'machine-name': Array,
                                     children: Array,
                                     machineName: String,
-                        path:String,
+                                    path:String,
                                     id: String,
                                     drupalInternalId: Number,
                                     crumbs: [String, Array],
                                     localize: { type: Boolean, default: false },
                                 });
-    const { href, title, target:targets, path, hierarchy, children, machineName,  id, drupalInternalId, crumbs , localize  } = toRefs(props);
 
+    const { href, title, target:targets, localize: shouldLocalize  } = toRefs(props);
 
+    const locale = (path) => shouldLocalize.value? useLocalePath(path): path;
 
-    const   localeP     = (path)=> localize.value? useLocalePath(path): path;
-    // const { title, href, target:targets } = toRefs(props);
 
     const targetValue = targets;
+    const isExternal  = computed(()=>unref(href).includes(['http'],['https'])) 
+    const to          = computed(() => {
 
-    // return { localePath, title, href, targetValue }
-
-    const isExternal = computed(()=>unref(href).includes(['http'],['https'])) 
-    const to = computed(() => {
-  
-        if (!unref(isExternal) && href.value==='/') return localeP('/');
-        return !unref(isExternal) && href.value?  localeP(href.value) : '/#';
+        if (!unref(isExternal) && href.value==='/') return locale('/');
+        return !unref(isExternal) && href.value?  locale(href.value) : '/#';
     });
 
 
@@ -50,12 +45,11 @@
     padding: 0.5rem 0.66rem;
 }
 .footer-links .nav-item > .nav-link:hover {
-  color: var(--black);
-  text-decoration: underline;
+    color: var(--black);
+    text-decoration: underline;
 }
 .footer-sitemap li > .nav-link:hover {
     color: var(--black);
-  text-decoration: underline;
+    text-decoration: underline;
 }
-
 </style>

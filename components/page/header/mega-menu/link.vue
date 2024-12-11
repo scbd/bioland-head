@@ -1,7 +1,7 @@
 <template>
     <p  v-if="!showThumbs || isFinalLink && !showCards " class="text-wrap">
         <NuxtLink  class="child-link" :class="menu.class"   :to="localePath(menu.href)" :title="title || menu.title" :external="isExternal" :target="target">
-            {{title || menu.title}}<span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<Icon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
+            {{title || menu.title}}<span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<LazyIcon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
         </NuxtLink>
     </p>
     <section v-if="!showCards">
@@ -12,7 +12,7 @@
                 </div>
                 <div class="col-9 align-self-center">
                     <p class="text-wrap card-text ps-1">
-                        {{title || menu.title}}<span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<Icon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
+                        {{title || menu.title}}<span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<LazyIcon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
                     </p>
                 </div>
             </div>
@@ -35,31 +35,31 @@
 <script setup>
     import { DateTime } from 'luxon';
 
-    const { locale  } = useI18n();
-        const   props       = defineProps({ 
-                                            menu: Object, 
-                                            showThumbs: Boolean, 
-                                            showCards: Boolean, 
-                                            title: String, 
-                                            type: String, 
-                                            localize: { type: Boolean, default: true }
-                                        });
-        const { menu, showThumbs, type, localize } = toRefs(props);
+    const { locale  }   = useI18n();
+    const   props       = defineProps({ 
+                                        menu      : Object,
+                                        showThumbs: Boolean,
+                                        showCards : Boolean,
+                                        title     : String,
+                                        type      : String,
+                                        localize  : { type: Boolean, default: true }
+                                    });
+    const { menu, showThumbs, type, localize } = toRefs(props);
 
-        const localizePath = useLocalePath();
-        const   localePath  = (to)=> localize.value? localizePath(to): to;
-        const   isFinalLink  = computed(()=> menu?.value?.class?.includes('main-nav-final-link') || menu?.value?.class?.includes('mm-main-nav-final-link'));
-        const   isSpecial    = computed(()=> menu?.value?.class?.includes('special'));
-        const   isExternal   = computed(()=> menu?.value?.href?.includes('http'));
-        const   target       = computed(()=> menu?.value?.target? menu?.value?.target[0] : isExternal.value? '_blank':'_self');
+    const   localizePath = useLocalePath();
+    const   localePath   = (to)=> localize.value? localizePath(to): to;
+    const   isFinalLink  = computed(()=> menu?.value?.class?.includes('main-nav-final-link') || menu?.value?.class?.includes('mm-main-nav-final-link'));
+    const   isSpecial    = computed(()=> menu?.value?.class?.includes('special'));
+    const   isExternal   = computed(()=> menu?.value?.href?.includes('http'));
+    const   target       = computed(()=> menu?.value?.target? menu?.value?.target[0] : isExternal.value? '_blank':'_self');
 
-        if(type.value)
-            menu.value.schema= type;
+    if(type.value)
+        menu.value.schema= type;
 
-        const imageGenStore = useImageGenStore();
+    const imageGenStore = useImageGenStore();
 
-        if(!menu?.value?.thumb || menu?.value?.thumb === '/images/no-image.png')
-            menu.value.thumb= imageGenStore.getImage(menu.value).src
+    if(!menu?.value?.thumb || menu?.value?.thumb === '/images/no-image.png')
+        menu.value.thumb= imageGenStore.getImage(menu.value).src;
 
 
     function dateFormat({ startDate, created, changed }){
@@ -67,8 +67,6 @@
 
         return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
     }
-
-
 </script>
 
 <style lang="scss" scoped>
@@ -101,9 +99,9 @@
 }
 @media (max-width: 991.98px) { 
     .mm-main-nav-final-link,
-.main-nav-final-link{
-    position: relative;
-    bottom: unset;
-}
+    .main-nav-final-link{
+        position: relative;
+        bottom: unset;
+    }
 }
 </style>

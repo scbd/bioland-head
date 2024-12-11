@@ -64,7 +64,6 @@
     box-shadow:  0 10px 20px rgb(0 0 0 / 19%), 0 6px 6px rgb(0 0 0 / 23%) ;
     background-color: #e1e1e1;
 }
-
 ul{
     display: inline-block;
     list-style-type: disc;
@@ -81,13 +80,7 @@ li{
     border-right: solid 1px #999;
     padding-right: .5rem;
 }
-li:last-child{
-    border-right: none;
-}
-li a{
-    color: #333;
-}
-.icon{
-    fill:var(--bs-primary);
-}
+li:last-child{ border-right: none; }
+li a{ color: #333; }
+.icon{ fill:var(--bs-primary); }
 </style>

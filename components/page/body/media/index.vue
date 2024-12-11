@@ -5,7 +5,7 @@
             <div   class="col-md-3 d-lg-block"> &nbsp; </div>
 
             <div  class="col-12 col-md-9">
-                <PageBreadCrumbs/>
+                <LazyPageBreadCrumbs/>
             </div>
 
             <div  class="col-12 d-md-none">
@@ -17,11 +17,11 @@
                 <div class="d-flex justify-content-center text-center">
 
                     <NuxtImg v-if="imageSrc && !pageStore?.isMediaImage" :alt="pageStore?.image?.alt" :src="imageSrc" format="webp" :width="imgWidth" :height="imgHeight" class="card-img-top i-top"/>
-                    <Icon v-if="(!imageSrc || pageStore?.isMediaImage) && !pageStore?.isMediaRemoteVideo" :name="iconName" :color="iconColor" :size="8" class="card-img-top i-top"/>
-                    <Icon v-if="!imageSrc && pageStore?.isMediaRemoteVideo" :name="'video'" :color="siteStore.primaryColor" :size="8" />
+                    <LazyIcon v-if="(!imageSrc || pageStore?.isMediaImage) && !pageStore?.isMediaRemoteVideo" :name="iconName" :color="iconColor" :size="8" class="card-img-top i-top"/>
+                    <LazyIcon v-if="!imageSrc && pageStore?.isMediaRemoteVideo" :name="'video'" :color="siteStore.primaryColor" :size="8" />
                 </div>
 
-                <PageMediaFileDetails  :vertical="true" />
+                <LazyPageMediaFileDetails  :vertical="true" />
             </div>
 
             <div  class="col-12 col-md-9">
@@ -33,7 +33,7 @@
                     <NuxtLink :to="pageStore?.mediaImage?.src" target="_blank" external>
                         <NuxtImg  :alt="pageStore?.page.name" format="webp" :height="pageStore?.mediaImage?.fieldHeight"  :width="pageStore?.mediaImage?.fieldWidth" :src="pageStore?.mediaImage.src"  class="image-fluid mt-0 mb-1 w-100"/>
                     </NuxtLink>
-                    <div class="d-none d-md-block flex-fill"><PageBodyTagsDate /></div>
+                    <div class="d-none d-md-block flex-fill"><LazyPageBodyTagsDate /></div>
                 </div>
 
                 <div class="d-md-flex " v-if="isDocument">
@@ -42,24 +42,24 @@
                             <p class="text-wrap">This browser does not support PDFs. Please download the PDF to view it: <a :href="downloadUrl">Download PDF</a>.</p>
                         </embed>
                     </object>
-                    <PageBodyTagsDate class="d-none d-md-block align-self-start"/>
+                    <LazyPageBodyTagsDate class="d-none d-md-block align-self-start"/>
                 </div>
 
-                <PageBodyMediaYouTube  v-if="pageStore?.isMediaRemoteVideo" :url="pageStore?.page?.fieldMediaOembedVideo" :title="pageStore?.page?.name || pageStore?.page?.title"/>
+                <LazyPageBodyMediaYouTube  v-if="pageStore?.isMediaRemoteVideo" :url="pageStore?.page?.fieldMediaOembedVideo" :title="pageStore?.page?.name || pageStore?.page?.title"/>
 
                 <div class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
                     
-                    <PageMediaFileDetails />
+                    <LazyPageMediaFileDetails />
                 </div>
                 <div class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
                     
-                    <PageBodyTagsDate />
+                    <LazyPageBodyTagsDate />
                 </div>
                 <div v-if="pageStore?.image?.url" class="col-12 d-md-none px-0">
                     <NuxtLink :to="pageStore?.image?.url">
                         <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
                     </NuxtLink>
-                    <PageBodyTagsDate />
+                    <LazyPageBodyTagsDate />
                 </div>
 
                 <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="pageStore?.body"></div>
@@ -71,32 +71,25 @@
     </div>
 </template>
 <script setup>
-const {   t }          = useI18n();
-const   pageStore      = usePageStore();
-const   siteStore      = useSiteStore();
-const   isImage        = computed(()=> pageStore?.isMediaImage );
-const   isDocument     = computed(()=> pageStore?.isMediaDocument );
+    const { t }            = useI18n();
+    const   pageStore      = usePageStore();
+    const   siteStore      = useSiteStore();
+    const   isDocument     = computed(()=> pageStore?.isMediaDocument );
 
+    const { pageTypeStyle } = useTheme();
 
-const { pageTypeStyle } = useTheme();
-
-const { downloadUrl, imageSrc, imgHeight, imgWidth, iconName, iconColor} = useMediaRecord(pageStore.page);
+    const { downloadUrl, imageSrc, imgHeight, imgWidth, iconName, iconColor} = useMediaRecord(pageStore.page);
 </script>
 
 <style lang="scss" scoped>
-.page-body{
-    min-height: 60vh;
-}
+.page-body{ min-height: 60vh; }
 .data-body{
-
     padding-left: 0;
     border-top: black .5rem solid;
     padding-top: 1rem;
 
 }
-.has-hero{
-        font-size: 1.2rem;
-    }
+.has-hero{ font-size: 1.2rem; }
 .page-type{
     padding-left: 0;
     padding-top: 1rem;

@@ -19,7 +19,6 @@
     const matches = ombedHtml.value?.html?.match(pattern);
     const match   = matches? ref(matches[1]) : ref(null);
 
-    consola.warn(match)
 </script>
 <style lang="scss" scoped>
 .youtube-video {

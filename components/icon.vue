@@ -14,12 +14,12 @@ const   props        = defineProps({  name : { type: String, required: true },
 const { name, flip, color, size } = toRefs(props);
 
 const iconStyle = reactive({ 
-  'fill': color.value || siteStore.primaryColor,
-  'width': `${size.value}em`,
-  'height': `${size.value}em`
-  });
+                              'fill'  : color.value || siteStore.primaryColor,
+                              'width' : `${size.value}em`,
+                              'height': `${size.value}em`
+                            });
 </script>
-<style>
+<style scoped>
 .bl2-icon {
   display     : inline-block;
   width       : 1em;
@@ -32,5 +32,4 @@ const iconStyle = reactive({
 .bl2-icon-flip{
   transform: scaleX(-1);
 }
-
 </style>

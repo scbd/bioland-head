@@ -1,21 +1,21 @@
 <template>
-        <PageHeaderMegaMenuHeader  :menu="menu" />
+        <LazyPageHeaderMegaMenuHeader  :menu="menu" />
 
-        <PageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menu.dataMap" >
+        <LazyPageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menu.dataMap" >
             <Transition :name="slotProps.fadeName">
                 <section v-if="slotProps.hide">
                     <div :class="{ 'd-flex justify-content-between':isCardView}">
                         <section v-for="(aChild,j) in menu.dataMap[slotProps.country]" :key="j">
 
-                            <PageHeaderMegaMenuLink v-if="!isHeader(aChild)" :type="getContentType()" :show-thumbs="menu.class?.includes('bl2-show-thumbs')" :show-cards="isCardView"  :menu="aChild" />
-                            <PageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
+                            <LazyPageHeaderMegaMenuLink v-if="!isHeader(aChild)" :type="getContentType()" :show-thumbs="menu.class?.includes('bl2-show-thumbs')" :show-cards="isCardView"  :menu="aChild" />
+                            <LazyPageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
 
-                            <PageHeaderMegaMenuLink v-if="hasFinalLink && isCardView"  :menu="hasFinalLink" />
+                            <LazyPageHeaderMegaMenuLink v-if="hasFinalLink && isCardView"  :menu="hasFinalLink" />
                         </section>
                     </div>
                 </section>
             </Transition>
-        </PageHeaderMegaMenuCustomCountryTab>
+        </LazyPageHeaderMegaMenuCustomCountryTab>
 </template>
 
 <script setup>
@@ -83,7 +83,6 @@
         return aMenu;
     })
 
-
     function isHeader(m){
         const menu = unref(m);
 
@@ -100,7 +99,7 @@
         if(!name) throw new Error('No content type found in menu  item');
 
 
-        return name //classes.length >1? classes : classes[0];
+        return name 
     }
     function getMaxRowsPerColumn(){
         const [max] = (unref(passedMenu)?.class?.filter(aClass => aClass.startsWith('bl2-ct-max-row-per-column-')) || []).map((aClass)=> aClass.replace('bl2-ct-max-row-per-column-',''));
@@ -120,9 +119,6 @@
         const showDefault = returnData.length > 5;
         const last        = unref(hasFinalLink)? [unref(hasFinalLink)] : showDefault? [getDefaultFinalLink()] : [];
 
-        return [...returnData, ...last]//.slice(0,6);
+        return [...returnData, ...last]
     }
-
-
-
 </script>

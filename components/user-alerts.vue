@@ -1,12 +1,10 @@
 
 <template>
-    <ModalAlert >
-
-    </ModalAlert>
+    <LazyModalAlert />
 </template>
 <script setup>
-    import   ModalError         from '~/components/modal/alert.vue' ;
-    import { useModal         } from 'vue-final-modal'      
+    import   ModalError   from '~/components/modal/alert.vue';
+    import { useModal   } from 'vue-final-modal';    
 
     const alertStore = useAlertStore();
 
@@ -18,14 +16,10 @@
             onConfirm: () => close(),
             onClose: () => close()
         }
-    })
-
-
-
-
+    });
 
     watch(alertStore.alerts, (newValue, oldValue) => {
-        const old = oldValue?.length || 0;
+        const old  = oldValue?.length || 0;
         const newV = newValue?.length || 0;
 
         if(newV) open();

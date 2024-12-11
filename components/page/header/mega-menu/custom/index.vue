@@ -13,8 +13,9 @@
 </template>
 
 <script setup>
-    const   props              = defineProps({ is: String, menu: Object });
+    const   props = defineProps({ is: String, menu: Object });
+
     const { is:componentName, menu } = toRefs(props);
-    
+
     const is = (name) => componentName.value === name;
 </script>

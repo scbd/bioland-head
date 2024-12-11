@@ -10,7 +10,7 @@
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header d-flex justify-content-end">
-                <button @click="close" type="button " class="btn btn-dark"><Icon name="close"></Icon></button>
+                <button @click="close" type="button " class="btn btn-dark"><LazyIcon name="close"/></button>
               </div>
               <div class="modal-body p-3">
                 <h3 class="modal-title border-dark w-100 text-center  mb-3">{{t('Clear page cache to see changes?')}}</h3>
@@ -28,27 +28,21 @@
 
 <script setup >
   import { VueFinalModal } from 'vue-final-modal';
-  import clone from 'lodash.clonedeep';
 
-  
-  const { t, locale     } = useI18n   ();
-  const   router  = useRouter ();
-  const   route      = useRoute   ();
-  const   emit           = defineEmits   (['confirm']);
-  const getPage     = useGetPage(locale.value);
-  const loginUri    = computed(() => '/') //`
+  const { t , locale } = useI18n();
+  const getPage        = useGetPage(locale.value);
+  const   router       = useRouter();
+  const   route        = useRoute();
+  const   emit         = defineEmits   (['confirm']);
 
 
   const close = async () => { 
     emit('confirm');
     await clearQueryString();
-
   }
 
   async function clearQueryString(){
     const query = {};
-
-    // delete(query['clear-page-cache']);
 
     await router.replace({ query });
   }
@@ -60,17 +54,10 @@
     emit('confirm');
     
     reloadNuxtApp({ path:`${route.path}?after-reload=true` });
-
-    // const query = { 'after-reload': true };
-
-
-    // await router.replace({ query });
   }
 
 </script>
 
 <style lang="scss" scoped>
-.modal-dialog{
-  width: 50vw;
-}
+.modal-dialog{ width: 50vw; }
 </style>

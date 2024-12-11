@@ -9,7 +9,7 @@
         <div v-if="count && !repliesVisible" class="ms-1 mt-1 mb-0">
             <button  @click="showReplies" type="button" class="btn btn-outline-dark nb  fs-5 font-weight-bold btn-sm"><span style="font-weight: bold; letter-spacing: 0.05em; "><span class="text-capitalize">{{ t('view') }}</span> <span v-if="count">{{ t('all') }}</span> <span>{{ count }}</span> <span>{{ t('reply', count) }}</span> </span></button>
         </div>
-        <Spinner v-if="loading" :size="60"/>
+        <LazySpinner v-if="loading" :size="60"/>
         <div  @click="openLogin" v-show="showInput" class="comment position-relative ps-1" v-click-outside="blurEditor">
             <input  class="form-control" type="hidden" placeholder="Write a public comment" aria-label="Amount (to the nearest dollar)">
             
@@ -19,25 +19,24 @@
                     <div class="d-flex justify-content-between align-items-center w-100">
                         <div >
                             <button @click="showEmojiSelector" :class="{'emoji-btn-active':showEmojiPicker}" type="button" class="btn btn-outline-dark nb me-1 ">
-                                <Icon name="happy-face" :size="1.25" /> 
+                                <LazyIcon name="happy-face" :size="1.25" /> 
                             </button>
                         </div>
                         <button @click="sendComment" type="button" class="btn btn-outline-dark nb ">
-                            <Icon name="send" :size="1.25" />
+                            <LazyIcon name="send" :size="1.25" />
                         </button>
                     </div>
                 </div>
             </div> 
             <div v-click-outside="hideEmojiSelector" class="emoji-container z-1 ps-1" v-if="showEmojiPicker" >
-                <NuxtEmojiPicker  :hide-search="false" theme="dark" @select="onSelectEmoji" />
+                <LazyNuxtEmojiPicker  :hide-search="false" theme="dark" @select="onSelectEmoji" />
             </div>
         </div>
 
         <div v-if="count && (repliesVisible )" class="my-1">
             
             <div  v-for="(reply,index) in replies" :key="index">
-               
-                <PageCommentReply :reply="reply" />
+                <LazyPageCommentReply :reply="reply" />
             </div>
         </div>
     </div>
@@ -46,17 +45,17 @@
     import   textCursorHelper   from 'text-cusor-helper'            ;
     import   ModalLogin         from '~/components/modal/login.vue' ;
     import { useModal         } from 'vue-final-modal'              ;
-import clone from 'lodash.clonedeep';
-    const   route                           = useRoute();
-    const    alertStore      = useAlertStore();
-    const    meStore         = useMeStore();
-    const siteStore         = useSiteStore();
-    const   pageStore                   = usePageStore ();
-    const    eventBus        = useEventBus();
-    const  { t,  }             = useI18n();
-    const    replyEditor   = ref();
-    const    isFocused       = ref(false);
-    const    showEmojiPicker = ref(false);
+    import   clone              from 'lodash.clonedeep'             ;
+
+    const   route              = useRoute     (     );
+    const   alertStore         = useAlertStore(     );
+    const   meStore            = useMeStore   (     );
+    const   siteStore          = useSiteStore (     );
+    const   eventBus           = useEventBus  (     );
+    const { t              , } = useI18n      (     );
+    const   replyEditor        = ref          (     );
+    const   isFocused          = ref          (false);
+    const   showEmojiPicker    = ref          (false);
 
 
     const   props    = defineProps({ reply: { type: Object } });
@@ -68,34 +67,32 @@ import clone from 'lodash.clonedeep';
     const editorPlaceholder = ref(t('Write a public comment ...'));
     const repliesVisible    = ref(false);
     
-const noCacheKey = ref('')
+    const noCacheKey = ref('')
 
-const { entityId, pid, id } = passedReply.value
-const headers = ref({})
-const query         = computed(() =>clone ({ ...route.query || {}, ...siteStore.params,  }))
-
-
-const { data, status, refresh } = await useLazyFetch(()=>`/api/comments/${entityId.type}/${entityId.id}/${id}`, {  method: 'GET', query,  onResponse,onRequest });
-
-const reply = computed(()=> data.value || passedReply.value);
-const count = computed(()=> reply?.value?.comments?.length || 0);
-
-const key     = computed(()=> unref(reply?.value?.id));
-const inProgress = ref(false);
-const replies = computed(()=> reply?.value?.comments || []);
-const loading = computed(()=>  inProgress.value);
-
-function onRequest({ request, options }) { options.headers = headers.value; }
-
-function onResponse({ response }){
-    const key = response.headers.get('c-key');
-
-    if(!key || key === 'undefined') return;
-
-    response._data.cacheKey = key;
-}
+    const { entityId, pid, id } = passedReply.value
+    const headers = ref({})
+    const query         = computed(() =>clone ({ ...route.query || {}, ...siteStore.params,  }))
 
 
+    const { data, status, refresh } = await useLazyFetch(()=>`/api/comments/${entityId.type}/${entityId.id}/${id}`, {  method: 'GET', query,  onResponse,onRequest });
+
+    const reply = computed(()=> data.value || passedReply.value);
+    const count = computed(()=> reply?.value?.comments?.length || 0);
+
+    const key     = computed(()=> unref(reply?.value?.id));
+    const inProgress = ref(false);
+    const replies = computed(()=> reply?.value?.comments || []);
+    const loading = computed(()=>  inProgress.value);
+
+    function onRequest({ request, options }) { options.headers = headers.value; }
+
+    function onResponse({ response }){
+        const key = response.headers.get('c-key');
+
+        if(!key || key === 'undefined') return;
+
+        response._data.cacheKey = key;
+    }
 
     async function sendComment(){
         try{
@@ -125,11 +122,8 @@ function onResponse({ response }){
             blurEditor();
 
             refreshReplies();
-            // inProgress.value = false;
         }
     }
-
-
 
 
     const { open, close } = useModal({ 
@@ -235,11 +229,9 @@ function onResponse({ response }){
 </script>
 <style lang="scss" scoped>
 .reply{
-
     background-color: #d3d3d3;
 }
 .reply-text{
-
     min-width:80%;
 }
 .emoji-container{
@@ -262,11 +254,8 @@ border: none;
 }
 .input-group {
     border: 1px solid var(--bs-gray-300);
-
-    /* border-radius: .5rem; */
     text-decoration: none;
     flex-direction: wrap;
-    
 }
 .input-group-focus{
     border: 1px solid var(--bs-gray-300);
@@ -277,13 +266,11 @@ border: none;
 }
 .input-group-focus > .form-control{
     background-color: lightgray;
-    
     border-top-left-radius: .5rem !important;
     border-top-right-radius: .5rem !important;
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
     border-bottom: none;
-    // border-right: 1px solid #BFBFBF !important;
 }
 .input-group-focus > .form-control
 {
@@ -291,22 +278,16 @@ border: none;
 }
 .input-group-focus > .input-group-text{
     background-color: lightgray;
-
-border-top-left-radius: 0 !important;
-border-top-right-radius: 0 !important;
-border-bottom-left-radius: .5rem !important;
-border-bottom-right-radius: .5rem !important;
-border-top: none;
-/* border-right: 1px solid #BFBFBF !important; */
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-left-radius: .5rem !important;
+    border-bottom-right-radius: .5rem !important;
+    border-top: none;
 }
 .input-group-text, .form-control {
     background-color: lightgray;
-
-//   border-color: #4D4D4D;
-  
-  text-decoration: none;
-
-   border-right: none; 
+    text-decoration: none;
+    border-right: none; 
 }
 .input-group-text{
     cursor: pointer;
@@ -318,12 +299,9 @@ border-top: none;
     background-color: lightgray;
     border-color: #BFBFBF;
 }
-/* input[type=text]{
-    width:100%;
-} */
 
 #comment-editor:focus {
-  outline: none;
-  box-shadow: none;
+    outline: none;
+    box-shadow: none;
 }
 </style>

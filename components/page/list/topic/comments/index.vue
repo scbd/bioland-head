@@ -2,10 +2,10 @@
     <div class="container mt-0">
         <div class="row align-items-end">
             <div class="col-md-3 ps-0 ">
-                <PageListTextSearch class="mb-1"/>
+                <LazyPageListTextSearch class="mb-1"/>
             </div>
             <div class="col-12 col-md-9 px-0">
-                <PageBreadCrumbs :count="results?.comments?.length"/>
+                <LazyPageBreadCrumbs :count="results?.comments?.length"/>
             </div>
         </div>
         <div class="row ">
@@ -20,12 +20,12 @@
                     <div>
                         <div v-html="results?.body?.value || ''"></div>
 
-                        <FormCommentInput :likes="likes" :count="results?.comments?.length"/>
+                        <LazyFormCommentInput :likes="likes" :count="results?.comments?.length"/>
                     </div>
-                    <Spinner v-if="loading" :size="75"/>
+                    <LazySpinner v-if="loading" :size="75"/>
                     <transition-group name="list">
                         
-                        <PageComment   :comment="aLine" v-for="(aLine,index) in results?.comments" :key="index" />
+                        <LazyPageComment   :comment="aLine" v-for="(aLine,index) in results?.comments" :key="index" />
                         <span :key="`showTopPage${showTopPager}${results?.comments?.count}-span`">&nbsp;</span>
                     </transition-group>
                 </div>
@@ -34,9 +34,9 @@
                         <div>
                             <div v-html="results?.body?.value || ''"></div>
 
-                            <FormCommentInput :likes="likes" :count="results?.comments?.length"/>
+                            <LazyFormCommentInput :likes="likes" :count="results?.comments?.length"/>
                         </div>
-                        <PageComment  :comment="aLine" v-for="(aLine,index) in results?.comments" :key="index" />
+                        <LazyPageComment  :comment="aLine" v-for="(aLine,index) in results?.comments" :key="index" />
                     </div>
                 </template>
             </ClientOnly>
@@ -44,7 +44,7 @@
 
             <div class="col-12 col-md-9 offset-md-3 ">
                 
-                <PageListPager :count="results?.comments?.count"/>
+                <LazyPageListPager :count="results?.comments?.count"/>
             </div>
         </div>
     </div>
@@ -54,7 +54,7 @@
 <script setup>
     import clone from 'lodash.clonedeep';
 
-    const   r                           = useRoute();
+    const   route                       = useRoute();
     const   siteStore                   = useSiteStore();
     const   pageStore                   = usePageStore ();
     const   eventBus                    = useEventBus();
@@ -68,12 +68,12 @@
     const { primaryColorStyle } = useTheme();
 
     const noCacheKey    = ref('');
-    const freeText      = computed(() => r?.query?.freeText? r?.query?.freeText : '');
-    const page          = computed(() => r?.query?.page? r?.query?.page : 1);
-    const rowsPerPage   = computed(() => r?.query?.rowsPerPage? r?.query?.rowsPerPage : 10);
-    const query         = computed(() =>clone ({ ...r.query, ...siteStore.params, freeText:unref(freeText), page:unref(page), rowsPerPage:unref(rowsPerPage) }))
+    const freeText      = computed(() => route?.query?.freeText? route?.query?.freeText : '');
+    const page          = computed(() => route?.query?.page? route?.query?.page : 1);
+    const rowsPerPage   = computed(() => route?.query?.rowsPerPage? route?.query?.rowsPerPage : 10);
+    const query         = computed(() =>clone ({ ...route.query, ...siteStore.params, freeText:unref(freeText), page:unref(page), rowsPerPage:unref(rowsPerPage) }))
     const headers       = ref({});                                             
-    const likes = ref(pageStore?.page?.likes || 0);
+    const likes         = ref(pageStore?.page?.likes || 0);
 
     const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query,  onResponse,onRequest });
 
@@ -118,17 +118,7 @@
 </script>
 
 <style scoped>
-.nb{
-border: none;
-}
-/* .input-group > .form-control > input[type=text]:focus:focus {
-    
-} */
-
-/* input[type=text]:focus:focus
-{
-  width: 250px;
-} */
+.nb{ border: none; }
 .page-type{
     padding-left: 0;
     padding-top: 1rem;
@@ -137,26 +127,19 @@ border: none;
     color: var(--bs-primary);
 }
 .data-body{
-
-padding-left: 0;
-padding-right: 0;
-border-top: black .5rem solid;
-padding-top: 1rem;
-
+    padding-left: 0;
+    padding-right: 0;
+    border-top: black .5rem solid;
+    padding-top: 1rem;
 }
-
-
 .list-move,
 .list-enter-active,
-.list-leave-active {
-        transition: all 1s cubic-bezier(0.075, 0.82, 0.165, 1);
-}
+.list-leave-active { transition: all 1s cubic-bezier(0.075, 0.82, 0.165, 1); }
+
 .list-enter-from,
 .list-leave-to {
         opacity: 0;
         transform: translateX(-2rem);
 }
-.list-leave-active {
-        position: absolute;
-}
+.list-leave-active { position: absolute; }
 </style>

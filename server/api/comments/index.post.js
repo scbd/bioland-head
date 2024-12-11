@@ -38,17 +38,8 @@ export default defineEventHandler(async (event) => {
             return  $fetch(uri, { method, headers, body });
         }
     }
-    catch(e){
-        const host = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
-
-        console.error(`${host}/server/api/comments/index.post`, e);
-
-        throw createError({
-            statusCode: e.statusCode,
-            statusMessage: e.statusMessage,
-            message:`${host}/server/api/comments/index.post`+e.message,
-            data: e.data,
-        }); 
+    catch (e) {
+        passError(event, e);
     }
 })
 

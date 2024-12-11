@@ -5,13 +5,13 @@
                 <NuxtLink :style="style" class="fw-bold" :to="localePath('/')">
                     {{t('National CHM')}}
                 </NuxtLink>
-                <span>&nbsp; <Icon name="triangle-right"/> &nbsp;</span>
+                <span>&nbsp; <LazyIcon name="triangle-right"/> &nbsp;</span>
             </span>
             <span class="text-nowrap" v-for="(aCrumb,index) in crumbs" :key="index">
                 <NuxtLink :style="style" @click="openMenu(aCrumb)" v-if="!isSelf(aCrumb.href)" :to="localePath(aCrumb.href)"  >
                     {{aCrumb.title}}
                 </NuxtLink>
-                <span v-if="!isSelf(aCrumb.href)">&nbsp; <Icon name="triangle-right"/> &nbsp;</span>
+                <span v-if="!isSelf(aCrumb.href)">&nbsp; <LazyIcon name="triangle-right"/> &nbsp;</span>
             </span>
         </span>
         <span id="breadCrumbCount">
@@ -20,27 +20,27 @@
         </span>
         <span v-if="showMigratedLInk" class="align-self-center" id="breadCrumbControls">
             <NuxtLink  class="btn btn-outline-secondary btn-sm " :to="pageStore.migratedFromLink" target="_blank" :external="true">
-                {{t('Bioland 1')}}  <Icon name="external-link" :size="1.5"/>
+                {{t('Bioland 1')}}  <LazyIcon name="external-link" :size="1.5"/>
             </NuxtLink>
         </span>
     </div>
 </template>
 <script setup>
-    const { t }         = useI18n();
-    const props         = defineProps({ count: { type: Number } });
-    const { count }     = toRefs(props);
-    const isMobile      = isMobileFn();
-    const route         = useRoute();
-    const localePath    = useLocalePath();
-    const pageStore     = usePageStore();
-    const contentTypeId = computed(()=> pageStore?.typeId);
-    const menusStore    = useMenusStore();
-    const inMenu          = ref(menusStore.isInMainMenu(route.path) || menusStore.isInMainMenu(parentPath()) || menusStore.isInMainMenuByContentTypeId(contentTypeId.value));
-    const eventBus        = useEventBus();
-    const crumbs          = computed(makeCrumb);
+    const { t }           = useI18n();
+    const   props         = defineProps({ count: { type: Number } });
+    const { count }       = toRefs(props);
+    const   isMobile      = isMobileFn();
+    const   route         = useRoute();
+    const   localePath    = useLocalePath();
+    const   pageStore     = usePageStore();
+    const   contentTypeId = computed(()=> pageStore?.typeId);
+    const   menusStore    = useMenusStore();
+    const   inMenu        = ref(menusStore.isInMainMenu(route.path) || menusStore.isInMainMenu(parentPath()) || menusStore.isInMainMenuByContentTypeId(contentTypeId.value));
+    const   eventBus      = useEventBus();
+    const   crumbs        = computed(makeCrumb);
     const { showBl1Link } = useRuntimeConfig().public;
 
-    function isSelf(href){ return href === route.path; }
+    function isSelf(href){ return href === route.path; };
 
     function openMenu({ href, index }){
         if(href !== '') return;
@@ -60,6 +60,7 @@
         
         return inMenu.value?.crumbs;
     }
+    
     const { style, badgePrimaryStyle } = useTheme();
 
     const showMigratedLInk  = computed(()=> pageStore?.page?.fieldMigrated && showBl1Link );

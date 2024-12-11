@@ -8,20 +8,20 @@
         </div>
         <div class="row">
             <div class="col-12 pe-0 me-0 mb-4" >
-                <SwiperNewsUpdates  />
+                <LazySwiperNewsUpdates  />
             </div>
             <div class="col-md-4 col-12 border-col">
-                <WidgetPanorama/>
-                <WidgetGbif/>
-                <WidgetELearning/>
+                <LazyWidgetPanorama/>
+                <LazyWidgetGbif/>
+                <LazyWidgetELearning/>
             </div>
             <div class="col-md-4 col-12 border-col">
-                <WidgetImplementation/>
-                <WidgetTsc/>
+                <LazyWidgetImplementation/>
+                <LazyWidgetTsc/>
             </div>
             <div class="col-md-4 col-12">
-                <WidgetForums/>
-                <WidgetGeobon/>
+                <LazyWidgetForums/>
+                <LazyWidgetGeobon/>
             </div>
         </div>
     </div>
@@ -29,11 +29,11 @@
 </template>
 <script setup>
 
-const pageStore         = usePageStore();
-const body              = computed(()=>pageStore?.page?.body);
+const pageStore = usePageStore();
+const body      = computed(()=>pageStore?.page?.body);
 
 </script>
-<style>
+<style scoped>
 .border-col{
     border-right: 1px solid rgba(0,0,0,0.2) !important;
 }

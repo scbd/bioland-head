@@ -16,7 +16,7 @@
     </nav>
 </template>
 <script setup>
-
+const   siteStore = useSiteStore();
 const { t  }      = useI18n();
 const   props     = defineProps({ count: { type: Number } });
 const { count }   = toRefs(props);
@@ -63,22 +63,13 @@ const range = computed(()=> {
     return [page.value-4,page.value-3,page.value-2,page.value-1,page.value]
 
 });
-const siteStore = useSiteStore();
 
+//TODO : Add the style to the store
 const linkStyle = reactive({
-        // 'color': `${siteStore?.primaryColor} !important`,
-        // 'border-color': `${siteStore?.primaryColor} !important`,
-    //     position: 'relative',
-    // display: 'block',
-    // padding: 'var(--bs-pagination-padding-y) var(--bs-pagination-padding-x)',
-    // 'font-size': 'var(--bs-pagination-font-size)',
-    // color: siteStore?.primaryColor,
-    // 'background-color': 'var(--bs-pagination-bg)',
-    // border: 'var(--bs-pagination-border-width) solid var(--bs-pagination-border-color)',
-'--bs-pagination-bg': siteStore?.theme?.backGround?.secondary,
-'--bs-pagination-border-color':siteStore?.primaryColor,
-'--bs-pagination-disabled-border-color': siteStore?.primaryColor,
-'    --bs-pagination-active-border-color': siteStore?.primaryColor,
+    '--bs-pagination-bg': siteStore?.theme?.backGround?.secondary,
+    '--bs-pagination-border-color':siteStore?.primaryColor,
+    '--bs-pagination-disabled-border-color': siteStore?.primaryColor,
+    '--bs-pagination-active-border-color': siteStore?.primaryColor,
     '--bs-pagination-hover-color': '#fff',
     '--bs-pagination-color': siteStore?.primaryColor,
     '--bs-pagination-hover-bg': siteStore?.primaryColor,

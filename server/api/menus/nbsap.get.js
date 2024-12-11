@@ -1,29 +1,14 @@
 
 export default cachedEventHandler(async (event) => {
         try{
-        
             const receivedQuery = parseQuery(event);
-            const query         = getQueryString(receivedQuery)
-            const response      = await $indexFetch(query)
+            const query         = getQueryString(receivedQuery);
+            const response      = await $indexFetch(query);
 
             return response?.docs?.length? response.docs.map(mapDocs(receivedQuery.locale)).filter(filterDocs(receivedQuery.locale)) : {};
         }
         catch (e) {
-
-            const { siteCode, locale } = getContext(event);
-            const   host               = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
-            const   requestUrl         = new URL(getRequestURL(event));
-            const { pathname }         = requestUrl;
-            const { baseHost, env }    = useRuntimeConfig().public;
-
-            console.error(`${host}/server/api/menus/nbsap.js`, e);
-
-            throw createError({
-                statusCode    : e.statusCode,
-                statusMessage : e.statusMessage,
-                message       : `${host}/server/api/menus/nbsap.js`,
-                data          : { siteCode, locale, host, baseHost, env, pathname, requestUrl, errorData:e.data }
-            }); 
+            passError(event, e);
         }
     },
     externalCache
@@ -47,7 +32,6 @@ function mapDocs(locale){ return (aDoc) => {
 }
 
 function filterDocs(locale){ return (aDoc) => {
-
     return aDoc.title.includes('NBSAP');
 }
 }

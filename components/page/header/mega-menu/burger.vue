@@ -23,14 +23,14 @@
                     <h5 @click.stop="toggle(langToggleIndex)" class="m-row">
                         <NuxtLink  class="nav-link" :title="currentLanguage.nativeName" :alt="currentLanguage.nativeName" >
                             {{currentLanguage.nativeName}}
-                            <Icon name="language" :size="1.5"/>
+                            <LazyIcon name="language" :size="1.5"/>
                         </NuxtLink>
                     </h5>
                     <div  class="input-group px-1 position-fixed bottom-0 mb-1" >
                         <input @keyup.enter="()=>{onClick(queryText);}" type="text" v-model="queryText" class="form-control"  :placeholder="t('Search this site')" aria-label="search" >
 
                         <a  v-on:click="onClick(queryText)" class="input-group-text"  :alt="t('Search this site')"  >
-                            <Icon name="search" class="white-icon" />&nbsp;
+                            <LazyIcon name="search" class="white-icon" />&nbsp;
                         </a>
                     </div>
             </div>
@@ -43,7 +43,7 @@
     </Transition>
 </template>
 <script setup>
-    const { t, locale  }          = useI18n();
+    const { t, locale  }  = useI18n();
     const   eventBus      = useEventBus();
     const   menuStore     = useMenusStore();
 
@@ -52,12 +52,12 @@
     const { main: menus } = storeToRefs(menuStore);
     const   router        = useRouter();
     const   queryText     = ref('');
-
-    const onClick   = userTextSearch();
+    const   onClick       = userTextSearch();
 
     const currentLanguage = computed(()=> menuStore.languages.find(lang => lang.code === locale.value));
 
-    const langToggleIndex = menus?.value?.length? menus?.value?.length+1 : 1
+    const langToggleIndex = menus?.value?.length? menus?.value?.length+1 : 1;
+
     onMounted(() => { 
             eventBus.on('openMenu', (index) => { 
                 toggleBurger();
@@ -169,17 +169,16 @@
 
 
 .menu-toggle-bar {
-  display: block;
-  position: absolute;
-  top: 50%;
-  margin-top: -1px;
-  right: 0;
-  width: 100%;
-  height: 4px;
-  border-radius: 4px;
-  background-color: white;
-  transition: all 0.3s ease;
-
+    display: block;
+    position: absolute;
+    top: 50%;
+    margin-top: -1px;
+    right: 0;
+    width: 100%;
+    height: 4px;
+    border-radius: 4px;
+    background-color: white;
+    transition: all 0.3s ease;
 
     &.menu-toggle-bar--top {
         transform: translate(0, -8px);

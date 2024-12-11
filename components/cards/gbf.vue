@@ -1,7 +1,7 @@
 <template>
     <div :style="bgStyle"  class="card p-2" >
         <div class="card-header">
-            <GbfIcon :identifier="record.identifier" size="lg"/>
+            <LazyGbfIcon :identifier="record.identifier" size="lg"/>
             
         </div>
         <div class="card-body">
@@ -14,7 +14,7 @@
         <div class="card-footer">
             <h6 class="card-subtitle my-2 ">
                 <NuxtLink  :style="arrowFill" :to="getGbfUrl()" :title="name" external target="_blank">
-                    {{t('View more')}} <Icon   :style="arrowFill"  name="arrow-right" class="arrow" />
+                    {{t('View more')}} <LazyIcon   :style="arrowFill"  name="arrow-right" class="arrow" />
                 </NuxtLink>
             </h6>
         </div>

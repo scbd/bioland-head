@@ -1,39 +1,26 @@
 <template>
     <div class="col-12 text-wrap px-0">
-        <PageHeaderMegaMenuHeader  :menu="menu" />
-        <PageHeaderMegaMenuLink v-for="(aMenu,j) in menu.children" :key="j" :menu="aMenu" />
+        <LazyPageHeaderMegaMenuHeader  :menu="menu" />
+        <LazyPageHeaderMegaMenuLink v-for="(aMenu,j) in menu.children" :key="j" :menu="aMenu" />
     </div>
 </template>
-<script>
-    // import { unLocales } from "~/util";
-    // import { useSiteStore } from "~/stores/site";
-    // import { useMenusStore } from "~/stores/menus";
-    export default {
-        name: 'PageHeaderMegaMenuBch',
+<script setup>
+    const { t , locale } = useI18n();
+    const   siteStore    = useSiteStore();
+    const   menuStore    = useMenusStore();
 
-        setup
-    }
+    const country = siteStore.config?.countries?.length? [...siteStore.config.countries, siteStore.config?.country] : siteStore.config?.country;
 
-    async function setup() {
-        const { t , locale } = useI18n();
-        const siteStore    = useSiteStore();
-        const menuStore = useMenusStore();
+    const { bch:data } = storeToRefs(menuStore);
+    const   children   = makeMenu(data.value,t, siteStore.name,country, locale.value);
+    const   menu       = ref({ title: t('bch'), href: 'https://bch.cbd.int', class: ['main-nav-sub-heading', 'arrow'], children });
 
-        const country = siteStore.config?.countries?.length? [...siteStore.config.countries, siteStore.config?.country] : siteStore.config?.country
-
-        const { bch:data } = storeToRefs(menuStore);
-        const children = makeMenu(data.value,t, siteStore.name,country, locale.value);
-        const menu = ref({ title: t('bch'), href: 'https://bch.cbd.int', class: ['main-nav-sub-heading', 'arrow'], children });
-
-        return { t, menu}
-    }
 
     function makeMenu(data,t, name, passedCountry, passedLocale){
         const locale  = unLocales.includes(passedLocale.toLocaleLowerCase())? passedLocale.toLocaleLowerCase() : 'en';
         const country = Array.isArray(passedCountry)? passedCountry.map((c)=>`&country=${c}`).join('') : `&country=${passedCountry}`;
         const schemas = [ 'biosafetyLaw', 'biosafetyDecision', 'nationalRiskAssessment', 'database', 'nationalReport', 'biosafetyExpert']
         const menus   = [];
-
 
         for (const schemaName in data) {
 

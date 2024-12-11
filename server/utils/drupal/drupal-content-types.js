@@ -1,12 +1,5 @@
 import limax from 'limax';
 
-// export const useContentTypeCounts = async (ctx) => {
-//     await useDrupalLogin(ctx.identifier)
-//     const allCounts = await Promise.all([getAllContentCounts(ctx), getAllMediaCounts(ctx)])
-
-//     return makeTypeMap(allCounts.flat())
-// }
-
 export const useContentTypeMenus = async (ctx) => {
     await useDrupalLogin(ctx.siteCode);
 
@@ -122,6 +115,7 @@ async function getAllContentTypeMenus(ctx){
 function getEnglishTerms ({ host }) {
     return getTerms({ localizedHost:host+'/en', host })
 }
+
 async function getTerms ({ localizedHost}) {
     const uri           = `${localizedHost}/jsonapi/taxonomy_term/tags?jsonapi_include=1`;
     const method        = 'get';
@@ -132,34 +126,4 @@ async function getTerms ({ localizedHost}) {
     return data.filter(({ status })=> status)
                 .map(({ drupal_internal__tid:drupalInternalId, name, uuid, path, field_plural, langcode })=> ({ drupalInternalId, langcode, name, slug:field_plural? `/${limax(field_plural)}`: path?.alias, plural: field_plural, uuid, hrefs:[path?.alias, field_plural?`/${limax(field_plural)}`:''].filter(x=>x)  }))
 };
-
-
-
-// async function getAllContentCounts(ctx){
-//     const terms    = await getTerms(ctx);
-//     const requests = [];
-
-//     for(const term of terms){
-//         const aRequest = getContentCounts(ctx, term.drupalInternalId).then(( { count } )=> ({ ...term, count }))
-
-//         requests.push(aRequest)
-//     }
-
-//     return Promise.all(requests);
-// }
-
-// async function getContentCounts ({ localizedHost }, drupalInternalId) {
-
-//     const uri           = `${localizedHost}/jsonapi/node/content?jsonapi_include=1&include=field_type_placement&filter[taxonomy_term--tags][condition][path]=field_type_placement.drupal_internal__tid&filter[taxonomy_term--tags][condition][operator]=IN&filter[taxonomy_term--tags][condition][value][]=${drupalInternalId}&page[limit]=1`;
-//     const method        = 'get';
-//     const headers       = { 'Content-Type': 'application/json' };
-
-//     const { meta } = await $fetch(uri, { method, headers });
-
-
-//     return meta
-// };
-
-
-
 

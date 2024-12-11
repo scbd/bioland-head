@@ -1,10 +1,8 @@
 <template>
     <div class="card " >
-        <ClientOnly>
         <div :style="backgroundStyles" class="cit bg-light">
             <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
         </div>
-        </ClientOnly>
         <div class="card-body mb-1" style="max-height: 300px; overflow:hidden;">
             <h6 class="card-subtitle text-muted mb-2">{{type}} {{record.schema? `- ${record.schema}`: ''}}</h6>
             <h5 class="card-title  mb-3">
@@ -21,7 +19,7 @@
             <span v-for="(aCountry,i) in record?.tags?.countries" class="badge me-1" :style="badgeSecondaryStyle"> {{ t(aCountry.identifier) }}</span>
 
             <NuxtLink class="me-1" v-for="(aTarget,i) in record?.tags?.gbfTargets || []" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
-                <GbfIcon :identifier="aTarget.identifier" size="xs"/>
+                <LazyGbfIcon :identifier="aTarget.identifier" size="xs"/>
             </NuxtLink>
 
             <NuxtLink class="me-1" v-for="(aSdg,i) in record?.tags?.sdgs || []" :key="i"  :to="aSdg.url" target="_blank" external>

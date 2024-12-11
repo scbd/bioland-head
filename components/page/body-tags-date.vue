@@ -17,7 +17,7 @@
             <NuxtLink  v-for="(aTarget,i) in tags.gbfTargets" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
                 <ClientOnly>
                     <Popper class="dark" :hover="true" :arrow="true" placement="bottom">
-                        <GbfIcon :identifier="aTarget.identifier" size="xs"/>
+                        <LazyGbfIcon :identifier="aTarget.identifier" size="xs"/>
                         <template #content class="w-50">
                         <div >
                             <h5>{{aTarget.title.en}}</h5>
@@ -26,7 +26,7 @@
                         </template>
                     </Popper>
                     <template #fallback>
-                        <GbfIcon :identifier="aTarget.identifier" size="xs"/>
+                        <LazyGbfIcon :identifier="aTarget.identifier" size="xs"/>
                     </template>
                 </ClientOnly>
             </NuxtLink>
@@ -75,19 +75,19 @@
     const   formatDate      = useDateFormat();
     const   pageStore       = usePageStore ();
     const { bgStyle, style} = useTheme();
-    const   tags            = computed(()=> pageStore?.tags);
 
-    const {  getGbfUrl }   = useDocumentHelpers(pageStore.page);
+
+    const {  getGbfUrl, tags }   = useDocumentHelpers(pageStore.page);
 </script>
 
 <style lang="scss" scoped>
-  :deep(.popper) {
-    max-width: 35% !important;
-    h5{
-        color: #99f184;
+    :deep(.popper) {
+        max-width: 35% !important;
+        h5{
+            color: #99f184;
+        }
     }
-  }
-  
+
 .flag{
     max-width: 75px;
 }

@@ -5,39 +5,39 @@
                 &nbsp;
             </div>
             <div class="col-12 col-md-9 px-0">
-                <PageBreadCrumbs :count="results?.length"/>
+                <LazyPageBreadCrumbs :count="results?.length"/>
             </div>
             <div class="col-12 col-md-3 ps-0" >
                 <h2  :style="primaryColorStyle"  class="page-type text-capitalize">{{t('Forums',2)}}</h2>
-                <PageListTextSearch/>
+                <LazyPageListTextSearch/>
             </div>
 
             <ClientOnly >
                 <div name="list" tag="div" class="col-12 col-md-9 data-body">
 
                     <transition-group name="list">
-                        <PageListForumsRow  :a-line="aLine" v-for="(aLine,index) in results" :key="index" />
+                        <LazyPageListForumsRow  :a-line="aLine" v-for="(aLine,index) in results" :key="index" />
                         <span :key="`showTopPage${showTopPager}${results?.count}-span`">&nbsp;</span>
                     </transition-group>
                 </div>
                 <template #fallback>
                     <div name="list" tag="div" class="col-12 col-md-9 data-body">
 
-                        <PageListForumsRow  :a-line="aLine" v-for="(aLine,index) in results" :key="index" />
+                        <LazyPageListForumsRow  :a-line="aLine" v-for="(aLine,index) in results" :key="index" />
                     </div>
                 </template>
             </ClientOnly>
 
             <div class="col-12 col-md-9 offset-md-3 ">
-                <PageListPager :count="results?.count"/>
+                <LazyPageListPager :count="results?.count"/>
             </div>
         </div>
     </div>
 
 </template>
 <script setup>
-
     import clone from 'lodash.clonedeep';
+
     const { t  }                        = useI18n();
     const   r                           = useRoute();
     const   siteStore                   = useSiteStore();
@@ -57,27 +57,14 @@
     const rowsPerPage   = computed(() => r?.query?.rowsPerPage? r?.query?.rowsPerPage : 10);
     const query         = clone({ ...r.query, ...siteStore.params, freeText, page, rowsPerPage });
 
-
-
     const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query });
 
-
-
     onMounted(() => { eventBus.on('changePage', refresh); });
- 
- 
-
-
 
     function getApiUri(){
         return `/api/forums`;
     }
 
-    // function changeTab(){ refresh(); }
-
-    function isNumberString(string) {
-        return /^[0-9]*$/.test(string);
-    }
 </script>
 
 <style scoped>

@@ -5,7 +5,7 @@ export default cachedEventHandler(async (event) => {
             const ctx        = { siteCode };
             const config     = await getSiteConfig(ctx);
             const locale     = isValidLocale(l)? l : config?.defaultLocale;
-            const host = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
+            const host       = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
             
             if(!siteCode) throw createError({ statusCode: 404, message: `Site code not found in request`, statusMessage:'Not Found' });
             if(!config?.locales?.includes(locale) && locale !== config?.defaultLocale)
@@ -28,25 +28,9 @@ export default cachedEventHandler(async (event) => {
             }
         }
         catch (e) {
-            const   siteCode           = getRouterParam(event, 'siteCode');
-            const   locale             = getRouterParam(event, 'locale');
-            const   host               = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
-            const   requestUrl         = new URL(getRequestURL(event));
-            const { pathname }         = requestUrl;
-            const { baseHost, env }    = useRuntimeConfig().public;
-
-            console.error(`${host}/server/api/context/[${siteCode}]/[${locale}].js`, e);
-
-            throw createError({
-                statusCode    : e.statusCode,
-                statusMessage : e.statusMessage,
-                message       : `${host}/api/context/[${siteCode}]/[${locale}]: Failed to get initial context from api`,
-                data          : { siteCode, locale, host, baseHost, env, pathname, requestUrl, errorData:e.data },
-                fatal         : true
-            }); 
+            passError(event, e);
         }
-    },
-    // contextCache
+    }
 );
 
 function isValidLocale(locale){

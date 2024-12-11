@@ -22,22 +22,7 @@ export default cachedEventHandler(async (event) => {
             return sortData([ ...drupalContent.data, ...chmContent]); //
         }
         catch (e) {
-
-            const { siteCode, locale } = getContext(event);
-            const   host               = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
-            const   requestUrl         = new URL(getRequestURL(event));
-            const { pathname }         = requestUrl;
-            const { baseHost, env }    = useRuntimeConfig().public;
-
-            console.error(`${host}/server/api/list/latest.js`, e);
-
-            throw createError({
-                statusCode    : e.statusCode,
-                statusMessage : e.statusMessage,
-                message       : `${host}/server/api/list/latest.js`,
-                data          : { siteCode, locale, host, baseHost, env, pathname, requestUrl, errorData:e.data },
-                fatal         : true
-            }); 
+            passError(event, e);
         }
     },
     // listCache

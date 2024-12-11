@@ -6,7 +6,6 @@
     <LazyPageListTopics        v-if="pageStore.isTopicsList" />
     <LazyPageListTopicComments v-if="pageStore.isTopicsCommentsList" /> 
     <LazyPageListNcps          v-if="pageStore.isNcpsList" />
-
 </template>
 
 <script setup>

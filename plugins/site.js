@@ -1,4 +1,4 @@
-import vClickOutside from "click-outside-vue3";
+import vClickOutside from 'click-outside-vue3';
 import isPlainObject from 'lodash.isplainobject';
 import { createVfm } from 'vue-final-modal';
 
@@ -13,7 +13,7 @@ export default defineNuxtPlugin({
         nuxtApp.vueApp.use(vClickOutside);
         nuxtApp.vueApp.use(vfm);
 
-        const runTime = useRuntimeConfig().public;
+        const runTime   = useRuntimeConfig().public;
         const siteStore = useSiteStore(nuxtApp.$pinia);
         const menuStore = useMenusStore(nuxtApp.$pinia);
 
@@ -21,14 +21,12 @@ export default defineNuxtPlugin({
         const locale    = nuxtApp.$i18n.locale;
         const rtPublic  = useRuntimeConfig().public;
 
-
         await getSiteContext();
 
-
-        nuxtApp.hook('i18n:beforeLocaleSwitch', async ({oldLocale, newLocale}) => {
+        nuxtApp.hook('i18n:beforeLocaleSwitch', async ({ oldLocale, newLocale }) => {
             siteStore.set('locale', newLocale);
 
-            updateAppConfig(siteStore.params)
+            updateAppConfig(siteStore.params);
 
             const ctx = await getSiteContext(newLocale);
 
@@ -41,11 +39,11 @@ export default defineNuxtPlugin({
 
         async function getSiteContext(paddedLocale = locale){
             try{
-                const locale = sanitizeLocale(unref(paddedLocale))
-                const id         = getBiolandSiteIdentifier();
-                const uri        = `/api/context/${id}/${unref(locale)}`;
-                const { data }   = await useFetch(uri);
-                const i18nStrategy = runTime?.i18n?.strategy || 'prefix';
+                const locale        = sanitizeLocale(unref(paddedLocale))
+                const id            = getBiolandSiteIdentifier();
+                const uri           = `/api/context/${id}/${unref(locale)}`;
+                const { data }      = await useFetch(uri);
+                const i18nStrategy  = runTime?.i18n?.strategy || 'prefix';
                 const runTimePublic = clone(rtPublic);
 
                 delete(runTimePublic.locales);
@@ -76,12 +74,12 @@ export default defineNuxtPlugin({
         function sanitizeLocale(locale, defaultLocale = 'en'){
 
         
-            const { locales} = useRuntimeConfig().public;
-            const   preFixes = locales.map(({ code })=> code);
+            const { locales } = useRuntimeConfig().public;
+            const   preFixes  = locales.map(({ code })=> code);
         
-            const isValid = preFixes.includes(locale)
+            const isValid     = preFixes.includes(locale);
         
-            if(!isValid) return defaultLocale
+            if(!isValid) return defaultLocale;
 
             return locale;
         }
@@ -116,7 +114,7 @@ export default defineNuxtPlugin({
 
 
 function ensureContext(ctx = {}){
-    const hasContext = ctx.siteCode && ctx.locale && ctx.host //&& (ctx.country || ctx.countries?.length)
+    const hasContext = ctx.siteCode && ctx.locale && ctx.host;
 
     if(!hasContext)
             throw new Error('plugins/site: Context not derived');

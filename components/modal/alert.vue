@@ -11,7 +11,7 @@
       <div :class="typeClass" class="alert  alert-dismissible mb-0" role="alert">
         <div class="container">
           <div v-if="!hasMultiple">
-            <h4 class="alert-heading"><Icon v-if="getIcon(alert)" :name="getIcon(alert)" :size="1.25" class="me-1"/> {{t(alert.message)}}</h4>
+            <h4 class="alert-heading"><LazyIcon v-if="getIcon(alert)" :name="getIcon(alert)" :size="1.25" class="me-1"/> {{t(alert.message)}}</h4>
             <p v-if="alert.statusCode || alert.statusMessage">{{alert.statusCode}} {{t(alert.statusMessage)}} </p>
             <p v-if="alert.description">{{alert.description}}</p>
             <hr v-if="alert.notice || alert.data?.data?.errors?.length">
@@ -24,7 +24,7 @@
 
 
           <div v-for="(anAlert,index) in alerts" :key="index"  :class="getTypeClass(anAlert)" class="alert  alert-dismissible mb-2" role="alert">
-            <h4 class="alert-heading"><Icon v-if="getIcon(anAlert)" :name="getIcon(anAlert)" :size="1.25" class="me-1"/> {{t(anAlert.message)}}</h4>
+            <h4 class="alert-heading"><LazyIcon v-if="getIcon(anAlert)" :name="getIcon(anAlert)" :size="1.25" class="me-1"/> {{t(anAlert.message)}}</h4>
             <p v-if="anAlert.statusCode || anAlert.statusMessage">{{anAlert.statusCode}} {{t(anAlert.statusMessage)}} </p>
             <p v-if="anAlert.description">{{anAlert.description}}</p>
             <hr v-if="anAlert.notice || anAlert.data?.data?.errors?.length">
@@ -35,12 +35,12 @@
             </div>
 
             <button @click="alertStore.clearAlert(index)"  type="button" class=" text-danger btn btn-outline-dark nb position-absolute top-0 end-0 me-5" data-bs-dismiss="alert" aria-label="Close">
-              <Icon name="close" :size="2" color="currentColor"/>
+              <LazyIcon name="close" :size="2" color="currentColor"/>
             </button>
           </div>
 
           <button @click="closeAll"  type="button" class="btn btn-outline-dark nb position-absolute top-0 end-0 me-5" data-bs-dismiss="alert" aria-label="Close">
-            <Icon name="close" :size="2" :color="!hasMultiple? 'currentColor': ''"/>
+            <LazyIcon name="close" :size="2" :color="!hasMultiple? 'currentColor': ''"/>
           </button>
         </div>
 
@@ -53,10 +53,8 @@
 import { VueFinalModal } from 'vue-final-modal';
 
 const alertStore = useAlertStore();
-// const   props    = defineProps({  alerts : { type: Array, default: ()=>[] } });
-const { t    } = useI18n ( );
-const   emit   = defineEmits(['close', 'update:modelValue']);
-// const { alerts }  = toRefs(props);
+const { t    }   = useI18n ( );
+const   emit     = defineEmits(['close', 'update:modelValue']);
 
 const hasMultiple = computed(() => alertStore.alerts.length > 1);
 const type        = computed(() => hasMultiple.value? 'light': alertStore.alerts[0]?.type);
@@ -95,23 +93,14 @@ function getIcon({type} ={}){
   if(type === 'success') return 'success';
 }
 
-function clearOne(index){
-  alertStore.clearOne(index);
-}
-// function closeBtn(){  emit('close'); }
+
 function closeAll(){  
   alertStore.clearAll();
   emit('close'); 
 }
-
 </script>
 
 <style lang="scss" scoped>
-h4{
-  border-bottom: none;
-}
-.nb{
-border: none;
-}
-
+h4{ border-bottom: none; }
+.nb{ border: none; }
 </style>

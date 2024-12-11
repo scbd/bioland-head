@@ -1,6 +1,6 @@
 <template>
 <div class="position-relative">
-    <Spinner v-if="loading" :is-modal="true"/>
+    <LazySpinner v-if="loading" :is-modal="true"/>
     <div >
         <div class="text-capitalize">
             <h4 :style="style"  >{{name}} </h4>
@@ -25,7 +25,7 @@
                 <span v-if="record?.country" class="badge bg-secondary me-1"> {{t(record?.countryIdentifier || record?.country?.identifier ||  record?.country)}}</span>
 
                 <NuxtLink  v-for="(aTarget,i) in record?.tags?.gbfTargets || []" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
-                    <GbfIcon :identifier="aTarget.identifier" size="xs" class="me-1"/>
+                    <LazyGbfIcon :identifier="aTarget.identifier" size="xs" class="me-1"/>
                 </NuxtLink>
 
                 <NuxtLink  v-for="(aSdg,i) in record?.tags?.sdgs || []" :key="i"  :to="aSdg.url" target="_blank" external>
@@ -44,8 +44,8 @@
                     <span :style="linkStyle">{{link.name}}</span>
                 </NuxtLink>
                 &nbsp;
-                <Icon  v-if="!external" name="arrow-right" class="arrow" />
-                <Icon  v-if="external" name="external-link" class="arrow" />
+                <LazyIcon  v-if="!external" name="arrow-right" class="arrow" />
+                <LazyIcon  v-if="external" name="external-link" class="arrow" />
             </div>
         </div>
     </div>

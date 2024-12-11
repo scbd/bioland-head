@@ -1,34 +1,29 @@
 <template>
     <header >
-        <PageHeaderDevSite/>
-        <PageHeaderLanguageBar/>
-        <PageHeaderHeroImage :key="path">
+        <LazyPageHeaderDevSite v-if="isDevSite"/>
+        <LazyPageHeaderStagingSite v-if="isBl2Staging"/>
+        <LazyPageHeaderLanguageBar v-if="!isMobile"/>
+        <LazyPageHeaderHeroImage :key="path">
 
-            <PageHeaderTitleSearch /> 
-            <PageHeaderMegaMenu/> 
+            <LazyPageHeaderTitleSearch /> 
+            <LazyPageHeaderMegaMenu v-if="!isMobile"/> 
 
-        </PageHeaderHeroImage>
+        </LazyPageHeaderHeroImage>
 
     </header>
 </template>
+
 <script setup>
-const { path }= useRoute();
+    const viewport     = useViewport();
+    const { path }     = useRoute();
+    const isMobile     = computed(()=> !!!viewport?.isGreaterThan('sm'));
+    const siteStore    = useSiteStore();
+    const isDevSite    = computed(()=> !siteStore?.config?.published);
+    const isBl2Staging = computed(()=> siteStore?.config?.hasBl1);
 </script>
 
 <style lang="scss" scoped>
 header {
-    // overflow: clip;
     position: relative;
 }
-// UN3 "Masthead": Brand Bar, Header, and Menu
-// .navbar {
-//   padding: 0;
-//   padding-top: 2.5rem;
-// }
-
-// @media (max-width: 721.98px) {
-//   .navbar {
-//       padding-top: 0;
-//   }
-// }
 </style>

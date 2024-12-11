@@ -26,3 +26,57 @@ export function parseJson(dataString){
 }
 
 export const unLocales = ['en', 'ar', 'es', 'fr', 'ru', 'zh'];
+
+export function debounce(fn, wait){
+    let timer;
+    return function(...args){
+        if(timer) {
+            clearTimeout(timer); // clear any pre-existing timer
+        }
+        const context = this; // get the current context
+        timer = setTimeout(()=>{
+            fn.apply(context, args); // call the function if time expires
+        }, wait);
+    }
+}
+
+export function randomArrayIndexTimeBased(total = 3){
+    const minutes = new Date().getMinutes();
+
+    for(let i = 0; i < total; i++)
+        if(minutes <= ((60/total) * i+1)) return i;
+
+    return 0
+}
+
+export const randomTime = randomArrayIndexTimeBased;
+
+export  function getGbfUrl(identifier){
+    const number = Number(identifier.replace('GBF-TARGET-', ''));
+
+    return `https://www.cbd.int/gbf/targets/${number}`
+}
+
+export function hasSessionCookie(){
+    if(process.server) return false;
+    
+    const cookies = document.cookie.split(';');
+
+    for (let cookie of cookies) {
+        const [key] = cookie.trim().split('=');
+
+        if (!key.startsWith('SSESS')) continue;
+        
+        return key;
+    }
+
+    return null;
+}
+export function sortArrayOfObjectsByProp(a,b, prop, direction = 'asc'){
+    const isAsc = direction === 'asc';
+
+    if(a[prop] < b[prop]) return isAsc? 1 : -1; 
+    if(a[prop] > b[prop]) return isAsc? -1 : 1; 
+
+    return 0;
+}

@@ -1,6 +1,6 @@
 <template>
 <div class="position-relative">
-    <Spinner v-if="loading" :is-modal="true"/>
+    <LazySpinner v-if="loading" :is-modal="true"/>
     <div v-if="!error && data?.length">
         <div class="text-capitalize">
             <h4 :style="style" class="bm-3">{{t('Latest Discussions')}} </h4>
@@ -11,7 +11,7 @@
             </h5>
             <div>
                 <span v-for="(user,j) in forum?.users || []" :key="j" >
-                    <Avatar :user="user" />
+                    <LazyAvatar :user="user" />
                 </span>
             </div>
             <div class="mt-1">
@@ -26,7 +26,7 @@
                         {{t('Browse Discussions')}}
                 </NuxtLink>
                 &nbsp;
-                <Icon name="arrow-right" class="arrow" />
+                <LazyIcon name="arrow-right" class="arrow" />
             </div>
         </div>
     </div>

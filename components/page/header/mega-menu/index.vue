@@ -19,17 +19,9 @@
         </div>
     </div>
 </template>
-<script>
+<script setup>
 import { useElementBounding } from '@vueuse/core'
 
-    export default {
-        name: 'PageMegaMenu',
-        methods: { loginStyle,isLogin, isLastIndex , isLastSpacer, toggle, unToggle},
-        setup,
-
-    }
-
-    function setup() {
         const meStore = useMenusStore();
         const spacers   = ref(undefined);
         const spacersY  = ref([]);
@@ -60,57 +52,52 @@ import { useElementBounding } from '@vueuse/core'
                                                             stop();
                                                             }, { immediate: true });
 
-        //open menu from crumbs
+
         onMounted(() => { 
             eventBus.on('openMenu', (index) => toggles.value[index] = true );
             
         });
 
-        return { loginUrl, menus,  spacers, spacersY, toggles, meStore }
-    }
 
     function isLogin(aMenu){
         return aMenu.class?.includes('login');
     }
     function loginStyle(aMenu){
-      if(!this.isLogin(aMenu)) return {};
+      if(!isLogin(aMenu)) return {};
 
-      const siteStore = useSiteStore();
+
 
       return reactive({
         'background-color': siteStore.primaryColor
       });
     }
     function toggle(index){
-      this.unToggle();
-      this.toggles[index] = !this.toggles[index];
+      unToggle();
+      toggles.value[index] = !toggles.value[index];
     }
 
     function unToggle(){
-      for (let index = 0; index < this.toggles.length; index++)
-        this.toggles[index] = false;
+      for (let index = 0; index < toggles.value.length; index++)
+        toggles.value[index] = false;
     }
 
     function isLastSpacer(i=0){
-        const isLastIndex = this.menus?.length === i+1
+        const isLastIndex = menus?.value?.length === i+1
 
         if(isLastIndex) return true
 
-        if( this.menus[i+1]?.class?.includes('login')) return true
+        if( menus?.value[i+1]?.class?.includes('login')) return true
 
-        if(!i || !this.spacersY?.length) return false;
+        if(!i || !spacersY.value?.length) return false;
 
-        const selfY = this.spacersY[i].value
-        const nextY = this.spacersY[i+1].value
+        const selfY = spacersY.value[i].value
+        const nextY = spacersY.value[i+1].value
 
         if(selfY !== nextY) return true
 
         return false;
     }
 
-    function isLastIndex(array=[], i=0){
-        return array.length === i+1;
-    }
 </script>
 
 <style lang="scss" scoped>
@@ -416,4 +403,30 @@ nav {
   z-index: 0;
 }
 
+</style>
+<style>
+
+.slide-fade-enter-active,
+.slide-fade-leave-active,
+.slide-fade-left-leave-active,
+.slide-fade-left-enter-active {
+        transition: all 0.4s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from{
+    transform: translateX(-100px);
+    opacity: 0;
+}
+.slide-fade-leave-to {
+  transform: translateX(125px);
+  opacity: 0;
+}
+.slide-fade-left-enter-from{
+    transform: translateX(100px);
+    opacity: 0;
+}
+.slide-fade-left-leave-to {
+    transform: translateX(-125px);
+    opacity: 0;
+}
 </style>

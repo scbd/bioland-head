@@ -8,11 +8,7 @@ export function removeNullPropsFromPlainObject(obj){
     return obj;
 }
 
-export function sortArrayOfObjectsByProp(a,b, prop){
-    if(a[prop] < b[prop]) return -1; 
-    if(a[prop] > b[prop]) return 1;
 
-    return 0;
-}
 
-export { parseJson, uniqueArrayOfObjects, uniqueArray } from '~/utils/index';
+export { parseJson, uniqueArrayOfObjects, uniqueArray, sortArrayOfObjectsByProp } from '~/utils/index';
+

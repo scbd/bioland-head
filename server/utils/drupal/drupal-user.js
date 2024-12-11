@@ -62,13 +62,7 @@ export async function getToken(event) {
 };
 
 
-function hasSessionCookie(event){
-    const cookies = parseCookies(event);
 
-    const [hasDrupalSession] = Object.keys(cookies).filter(key => key.startsWith('SSESS'))|| [false];
-
-    return hasDrupalSession;
-}
 
 function mapUserFromDrupal({ data, included }, token){
     const { id, attributes } = data;

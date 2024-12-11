@@ -17,29 +17,18 @@
 </template>
 
 <script setup>
-    import { usePageStore  } from '~/stores/page';
-
-    const { t  }   = useI18n();
-    const   r        = useRoute();
+    const { t  }     = useI18n();
     const localePath = useLocalePath();
+    const siteStore  = useSiteStore();
+    const pageStore  = usePageStore();
 
-
-    const pageStore = usePageStore();
     const showTabs  = computed(()=>  (pageStore?.page?.children?.length || (pageStore?.page?.parent?.length && pageStore?.page?.parent[0].id !== 'virtual')));
 
-    const siteContentTo = computed(()=> {
+    const siteContentTo = computed(()=> getParentAlias() || localePath(pageStore?.path?.alias));
 
-        return getParentAlias() || localePath(pageStore?.path?.alias)
-    });
+    const secretariatContentTo = computed(()=> getChildAlias() || localePath(pageStore?.path?.alias));
 
-    const secretariatContentTo = computed(()=> {
-
-        return getChildAlias() || localePath(pageStore?.path?.alias)
-    });
-
-    const isActive = (to)=>{
-        return localePath(pageStore?.path?.alias) === to
-    }
+    const isActive = (to) => localePath(pageStore?.path?.alias) === to
 
     function getParentAlias(){
         if(!pageStore?.page?.parent?.length || pageStore?.page?.parent[0].id === 'virtual') return ''
@@ -53,7 +42,7 @@
         return localePath(pageStore?.page?.children[0].path?.alias)
     }
 
-    const siteStore = useSiteStore();
+//TODO put in theme composable
     function getStyle(link){
         if(!isActive(link)) return {}
 

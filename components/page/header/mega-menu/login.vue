@@ -1,73 +1,82 @@
 <template>
     <div >
-      <NuxtLink v-if="!isAuthenticated"  class="nav-link text-white" :to="loginUrl" :title="aMenu.title" >
-          <span v-if="!isAuthenticated"> {{aMenu.title}} </span>
-      </NuxtLink>
-      <button v-if="isAuthenticated" @click="toggle" class="nav-link text-white" :to="loginUrl" :title="aMenu.title" >
-          <span v-if="isAuthenticated"> <Icon name="drupal" color="#ffffff" :size="1.5" class="me-1"></Icon> </span>
-      </button>
-      <div v-if="show"  @click="toggle" class="overflow-scroll mm" v-click-outside="toggle">
-          <div class="container px-0 cont">
-              <div class="row  m-0">
+        <NuxtLink v-if="!isAuthenticated"  class="nav-link text-white" :to="loginUrl" :title="aMenu.title" >
+            <span v-if="!isAuthenticated"> {{aMenu.title}} </span>
+        </NuxtLink>
+        <button v-if="isAuthenticated" @click="toggle" class="nav-link text-white" :to="loginUrl" :title="aMenu.title" >
+            <span v-if="isAuthenticated"> 
+                <LazyIcon name="drupal" color="#ffffff" :size="1.5" class="me-1"/> 
+            </span>
+        </button>
+        <div v-if="show"  @click="toggle" class="overflow-scroll mm" >
+            <div class="container px-0 cont" v-click-outside="toggle">
+                <div class="row  m-0">
 
-                
-                    <div  class="col-8 menu-section text-wrap" >
-                      <div style="min-height: 100px;">
-                          &nbsp;
-                      </div>
-                    </div>
-   
-                    <div  class="col-4 menu-section text-wrap" >
                     
-                      <p v-if=" logOutUrl">
-                        <NuxtLink class="nav-link text-black" :to="logOutUrl" external >
-                          <Icon name="lock" color="#000000" :size="1.5" class="me-1"></Icon> Logout
-                        </NuxtLink>
-                      </p>
-                      <p>
-                        <button class="nav-link text-black" @click="meStore.toggleEditMode()">
-                          <Icon name="edit" color="#000000" :size="1.5" class="me-1"></Icon> Edit Mode
-                        </button>
-                      </p>
-                    </div>
-           
-              </div>
-          </div>
-      </div>
-  </div>
+                        <div  class="col-8 menu-section text-wrap" >
+                        <div style="min-height: 100px;">
+                            &nbsp;
+                        </div>
+                        </div>
+    
+                        <div  class="col-4 menu-section text-wrap" >
+                        
+                        <p v-if=" logOutUrl">
+                            <NuxtLink class="nav-link text-black" :to="logOutUrl" external >
+                            <LazyIcon name="lock" color="#000000" :size="1.5" class="me-1"/> Logout
+                            </NuxtLink>
+                        </p>
+                        <p>
+                            <button class="nav-link text-black" @click="meStore.toggleEditMode()">
+                            <LazyIcon name="edit" color="#000000" :size="1.5" class="me-1"/> Edit Mode
+                            </button>
+                        </p>
+                        </div>
+            
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 <script setup>
-        const meStore = useMeStore();
-        const siteStore = useSiteStore();
-        const   props       = defineProps({ aMenu: { type: Object } });
-        const { aMenu    } = toRefs(props);
-        const show = ref(false);
-        const isAuthenticated = computed(() => meStore.isAuthenticated && meStore.canEdit);
-        const name = computed(() => meStore.name);
-        const loginUrl = computed(() => {
-          if(meStore.canEdit) return `${siteStore.host}/user/${meStore.diuid}`
-          return `${siteStore.host}/user/login`
-        });
+    const   meStore       = useMeStore();
+    const   siteStore     = useSiteStore();
+    const   props         = defineProps({ aMenu: { type: Object } });
+    const { aMenu    }    = toRefs(props);
+    const   show          = ref(false);
+    const isAuthenticated = computed(() => meStore.isAuthenticated );
 
-        function toggle() {
-            if(!isAuthenticated.value) return;
-                show.value = !show.value;
-        }
+    const loginUrl = computed(() => {
+        if(meStore.canEdit) return `${siteStore.host}/user/${meStore.diuid}`
 
+        return `${siteStore.host}/user/login`
+    });
 
-        const headers = useRequestHeaders(['cookie'])
-
-        const { data, status, error } =  await useFetch(`${siteStore.localizedHost}/system/menu/account/linkset`, {  method: 'GET',headers });
-
-        const logOutUrl = computed(() => { 
-
-           const menus = data?.value?.linkset[0]?.item || []
-            const accountMenu = menus?.find(item => item?.href?.includes('/logout'));
+    function toggle() {
+        if(!isAuthenticated.value) return;
+            show.value = !show.value;
+    }
 
 
-            if(!accountMenu) return ''
-           return `${siteStore.host}${accountMenu?.href || '/user/logout'}`
-        });
+    const headers = useRequestHeaders(['cookie'])
+
+    const { data, status, error } =  await useFetch(`${siteStore.localizedHost}/system/menu/account/linkset`, {  method: 'GET', headers });
+
+    const logOutUrl = computed(() => { 
+
+        const menus = data?.value?.linkset[0]?.item || []
+        const accountMenu = menus?.find(item => item?.href?.includes('/logout'));
+
+        if(accountMenu) return `${siteStore.host}${accountMenu?.href || '/user/logout'}`
+
+        if(!hasSessionCookie()) return
+        const sesCookie = useCookie(hasSessionCookie())
+
+        sesCookie.value = undefined;
+        
+    });
+
+    consola.warn('hasSessionCookie()',hasSessionCookie())
 </script>
 
 <style lang="scss" scoped>

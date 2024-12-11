@@ -6,7 +6,7 @@
                 <h5 >
                     <NuxtLink  class="nav-link" :title="currentLanguage.nativeName" :alt="currentLanguage.nativeName" >
                         {{currentLanguage.nativeName}}
-                        <Icon name="language" :size="1.5"/>
+                        <LazyIcon name="language" :size="1.5"/>
                     </NuxtLink>
                     <hr>
                 </h5>
@@ -21,32 +21,12 @@
     </div>
 </template>
 <script setup>
-        const { locale  }          = useI18n();
-
+        const { locale  }   = useI18n();
         const   props       = defineProps({ menus: Array });
-        const   siteStore   = useSiteStore(     );
         const   menuStore   = useMenusStore();
-        const pageStore       = usePageStore();
-        const meStore    = useMeStore();
-        const isDevSite  = computed(()=> !siteStore?.config?.published);
-        const maxColumns = computed(()=> siteStore.config?.runTime?.theme?.megaMenu?.maxColumns || 5);
-        const viewport   = useViewport();
-        const isMobile   = computed(() => !['lg','xl', 'xxl'].includes(viewport.breakpoint.value));
-
- 
-        const editMenu = () => {
-            const menuName = sections.value[0].machineName || '';
-
-            if(!menuName) return;
-
-            navigateTo(`${siteStore.host}/admin/structure/menu/manage/${menuName}`,{ external: true });
-
-            console.log('edit menu');
-        }
-
+        const   pageStore   = usePageStore();
 
         const menus           = computed(()=> (menuStore.languages.filter(aMenu =>  !['xx',locale.value].includes(aMenu.code))).reverse());
-
         const currentLanguage = computed(()=> menuStore.languages.find(lang => lang.code === locale.value));
 </script>
 

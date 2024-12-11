@@ -1,24 +1,24 @@
 <template>
     <div class="col-12 text-wrap px-0">
-        <PageHeaderMegaMenuHeader  :menu="menu" />
+        <LazyPageHeaderMegaMenuHeader  :menu="menu" />
 
-        <PageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menus" >
+        <LazyPageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menus" >
             <Transition :name="slotProps.fadeName">
                 <section v-if="slotProps.hide">
                     <section v-for="(aChild,j) in menus[slotProps.country]" :key="j">
                         <p >
                             <NuxtLink  class="child-link" :class="aChild.class"   :to="aChild.href" :title="aChild.title"  external target="_blank">
-                                {{aChild.title}}<span class="text-nowrap">&#65279;&nbsp;<Icon name="external-link"  class="ex-link" /></span>
+                                {{aChild.title}}<span class="text-nowrap">&#65279;&nbsp;<LazyIcon name="external-link"  class="ex-link" /></span>
                             </NuxtLink>
                         </p>
                     </section>
                 </section>
             </Transition>
-        </PageHeaderMegaMenuCustomCountryTab>
+        </LazyPageHeaderMegaMenuCustomCountryTab>
     </div>
 </template>
 <script setup>
-    import {  useSiteStore } from "~/stores/site";
+
     const { t } = useI18n();
     const menu  = ref({ 
                         title: t('Country Profiles'), 

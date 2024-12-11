@@ -3,7 +3,7 @@
         <div  class="row g-0">
             <div class="col-12">
                 <div class="card-header">
-                    <Avatar :user="comment.user" />
+                    <LazyAvatar :user="comment.user" />
                     <span class="text-muted ms-2">{{comment.user.displayName}}</span>
                     <span class="float-end me-2">{{comment.dateString}}</span>&nbsp;
             
@@ -18,7 +18,7 @@
             </div>
 
             <div class="col-12 card-footer">
-                <FormCommentInput  :reply-type="comment.type" :reply-identifier="comment.id" :count="count" :replies="comment.comments"/>
+                <LazyFormCommentInput  :reply-type="comment.type" :reply-identifier="comment.id" :count="count" :replies="comment.comments"/>
             </div>
         </div>
     </div>

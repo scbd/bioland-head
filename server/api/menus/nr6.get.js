@@ -9,34 +9,17 @@ export default cachedEventHandler(async (event) => {
 
             const resp = await $indexFetch (queryString, context);
 
-            return mapByCountry(resp, context)
+            return mapByCountry(resp, context);
 
         }
         catch (e) {
-
-            const { siteCode, locale } = getContext(event);
-            const   host               = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
-            const   requestUrl         = new URL(getRequestURL(event));
-            const { pathname }         = requestUrl;
-            const { baseHost, env }    = useRuntimeConfig().public;
-
-            console.error(`${host}/server/api/menus/nr6.js`, e);
-
-            throw createError({
-                statusCode    : e.statusCode,
-                statusMessage : e.statusMessage,
-                message       : `${host}/server/api/menus/nr6.js`,
-                data          : { siteCode, locale, host, baseHost, env, pathname, requestUrl, errorData:e.data }
-            }); 
+            passError(event, e);
         }
     },
     externalCache
 )
 
 function mapByCountry({ docs }, ctx){
-
-    // console.log('===============',docs)
-    // return docs
     const countries = !ctx?.country? [ ...(ctx?.countries || [])] : [ ctx.country, ...(ctx?.countries || []) ];
 
     if(!docs || !countries?.length) return {};
@@ -53,22 +36,8 @@ function mapByCountry({ docs }, ctx){
             const   doc           = { title, href:urls[0] };
 
             tMap[aCountryCode] = Array.from(new Set([ ...tMap[aCountryCode], doc ]))
-
         }
 
     }
-
-    // const countryTypeMap = {};
-    // for (const aCountryCode of countries) {
-    //     countryTypeMap[aCountryCode] = [];
-    //     for (const type of focalPointTypes) {
-    //         const aLink = tMap[aCountryCode].find((t)=> t === type)
-
-    //         if(!aLink) continue;
-
-    //         countryTypeMap[aCountryCode].push(aLink)
-    //     }
-
-    // }
-    return tMap
+    return tMap;
 }

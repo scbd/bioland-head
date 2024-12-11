@@ -1,6 +1,6 @@
 <template>
     <div class="col-12 text-wrap px-0">
-        <PageHeaderMegaMenuHeader  :menu="menu" />
+        <LazyPageHeaderMegaMenuHeader  :menu="menu" />
 
         <div v-for="(aChild,j) in children" :key="j" class="row mb-2">
             <div class="col-6">
@@ -28,21 +28,16 @@
     const   menuStore   = useMenusStore();
     const   localePath  = useLocalePath();
     const   props       = defineProps({ menu: Object });
-    const { menu }      = toRefs     (props           );
-    const { t  , locale   }     = useI18n    (                );
     const   bgStyle     = reactive({ 'background-color': siteStore.primaryColor })
-
-    
+    const { menu }      = toRefs(props);
+    const { t, locale } = useI18n();
     const children      = computed(() => { return menuStore.forums; });
-
 
     function getHref(topic){
         const { nodeId } = topic;
 
         return locale.value === 'en'? localePath(topic.href) : localePath(`/node/${nodeId}`);
     }
-
-
 </script>
 
 <style lang="scss" scoped>

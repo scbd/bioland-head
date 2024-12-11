@@ -1,6 +1,6 @@
 <template>
     <div class="position-relative">
-        <Spinner v-if="loading" :is-modal="true" />
+        <LazySpinner v-if="loading" :is-modal="true" />
         <div v-if="!error">
             <div class="text-capitalize">
                 <h4 :style="style" class="bm-3">{{t('GEO BON')}} </h4>
@@ -38,8 +38,8 @@
                 </NuxtLink>
                 &nbsp;
 
-                <Icon  v-if="!link.external" name="arrow-right" class="arrow" />
-                <Icon  v-if="link.external" name="external-link" class="arrow" />
+                <LazyIcon  v-if="!link.external" name="arrow-right" class="arrow" />
+                <LazyIcon  v-if="link.external" name="external-link" class="arrow" />
 
 
             </div>

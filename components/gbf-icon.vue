@@ -8,19 +8,20 @@
 </template>
 
 <script setup>
-      const   props       = defineProps({ 
-                                          identifier: { type: String },
-                                          size: { type: String, default: 'lg' },
-                                        });
-      const { identifier, size    } = toRefs(props);
+      const props = defineProps({ 
+                                  identifier: { type: String },
+                                  size      : { type: String, default: 'lg' },
+                                });
+      const { identifier, size } = toRefs(props);
 
       const number = computed(() => {
-        if(Number.isInteger(identifier.value)) return identifier.value
+        if(Number.isInteger(identifier.value)) return identifier.value;
 
-        if(!identifier?.value?.includes('GBF-TARGET-')) return Number(identifier.value)
+        if(!identifier?.value?.includes('GBF-TARGET-')) return Number(identifier.value);
 
-        return Number(identifier.value.replace('GBF-TARGET-', ''))
+        return Number(identifier.value.replace('GBF-TARGET-', ''));
       })
+      
       const isGreaterThanNine = computed(() => number.value > 9);
 
 

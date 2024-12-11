@@ -1,11 +1,12 @@
-import intersect from 'lodash.intersection';
-import { DateTime } from "luxon";
+import   intersect   from 'lodash.intersection';
+import { DateTime  } from "luxon"              ;
+
 export const useMeStore = defineStore('me', { 
     state: () => ({ userID: '', duuid: '', diuid: '', preferredLang: '', displayName: '', name: '', email: '', isAuthenticated: false, roles: [], editMode: false, token: '', expire: new Date() }),
 
     actions:{
         initialize( user){
-            this.expire = DateTime.now().plus({ minutes: 30 }).toJSDate();
+            this.expire = DateTime.now().plus({ minutes: 1 }).toJSDate();
             this.userID = user.value.userID;
             this.duuid = user.value.duuid;
             this.diuid = user.value.diuid;
@@ -48,7 +49,8 @@ export const useMeStore = defineStore('me', {
             return this.isAuthenticated && intersect(this.roles,roles).length;
         },
         isExpired(){
-            const isExpired = DateTime.now() > this.expire;
+
+            const isExpired = DateTime.now() > DateTime.fromISO(this.expire);
 
             if(!isExpired) return false;
 

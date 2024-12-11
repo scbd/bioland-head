@@ -1,46 +1,17 @@
-import { DateTime     } from 'luxon';
-import clone from 'lodash.clonedeep';
+import { DateTime } from 'luxon'           ;
+import   clone      from 'lodash.clonedeep';
+import   mitt       from 'mitt'            ;
+import { lookup   } from 'mrmime'          ;
 
-export function debounce(fn, wait){
-    let timer;
-    return function(...args){
-        if(timer) {
-            clearTimeout(timer); // clear any pre-existing timer
-        }
-        const context = this; // get the current context
-        timer = setTimeout(()=>{
-            fn.apply(context, args); // call the function if time expires
-        }, wait);
-    }
-}
+// Create a new event bus using mitt
+const eventBus = mitt();
+
+export const useEventBus = () => eventBus;
 
 export function isMobileFn(){
-
     const viewport = useViewport();
 
     return computed(()=> ['sm','xs'].includes(viewport.breakpoint.value));
-}
-
-// export function useDateFormat(locale){
-//     const dateFormat = (date)=> DateTime.fromISO(date).setLocale(unref(locale)).toFormat('dd LLL yyyy')
-
-//     return { dateFormat }
-// }
-
-
-export function randomArrayIndexTimeBased(total = 3){
-    const minutes = new Date().getMinutes();
-
-    for(let i = 0; i < total; i++)
-        if(minutes <= ((60/total) * i+1)) return i;
-
-    return 0
-}
-
-export const randomTime = randomArrayIndexTimeBased;
-
-export function removeDefaultLocal(path, defaultLocale){
-    return path.replace(`/${defaultLocale}/`, '');
 }
 
 export const useDateFormat = () => (date, format = 'dd LLL yyyy')=>{
@@ -55,16 +26,6 @@ export const useDateFormat = () => (date, format = 'dd LLL yyyy')=>{
 
     return DateTime.fromISO(date).setLocale(locale?.value || 'en').toFormat(format);
 }
-
-// export const unLocales = ['en', 'ar', 'es', 'fr', 'ru', 'zh'];
-
-export     function getGbfUrl(identifier){
-    const number = Number(identifier.replace('GBF-TARGET-', ''));
-
-    return `https://www.cbd.int/gbf/targets/${number}`
-}
-
-
 
 export const userTextSearch = () => {
     const { locale  }  = useI18n();
@@ -116,4 +77,53 @@ export const useGetPage = (locale) => {
             throw createError({ statusCode: e.statusCode, statusMessage: e.statusMessage, fatal:true }) 
         }
     }
+}
+
+
+export const useDocumentHelpers = (passedContentRecord, {passedType} = {}) => {
+    const { t }      = useI18n();
+    const localePath = useLocalePath();
+
+    const  record       = unref(passedContentRecord);
+    const  recordExists = computed(()=> record?.title)
+    const  tags         = computed(()=> record?.tags);
+    const  external     = computed(()=> {
+                                        if(record?.href?.startsWith('https://')) return true;
+                                        if(record?.realms?.length) return true;
+
+                                        return false;
+                                    });
+
+    const goTo = computed(() => unref(external)? record.href : localePath(record.href));
+
+    const type = computed(()=> { 
+        let  typeText = ''
+        if(record?.fieldTypePlacement?.name) 
+            return  record?.fieldTypePlacement?.name;
+
+
+        if(record?.schema)
+            typeText += t(record?.schema);
+        if(unref(passedType)) 
+            typeText+= t(unref(passedType));
+        if(record?.realms?.length)
+            typeText += t('from the secretariat');
+    
+        return typeText
+    });
+
+    return { external, goTo, recordExists, tags, type, getGbfUrl:getGbfUrl }
+
+}
+
+export function getDocumentIcon(uri){
+    const mime = lookup(uri);
+
+    if(mime?.includes('pdf'))      return { name: 'document-file-pdf', color: '#f40f02' };
+    if(mime?.includes('word'))     return { name: 'document-file-docx', color: '#00A4EF' };
+    if(mime?.includes('excel'))    return { name: 'document-file-xlsx', color: '#fadff2f' };
+    if(mime?.includes('ppt'))      return  { name: 'document-file-pptx', color: '#C13B1B' };
+    if(mime?.includes('image'))    return  { name: 'file-image-o', color: '#C13B1B' };
+
+    return { name: 'document-file-txt', color: '#222222' };
 }

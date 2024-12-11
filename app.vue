@@ -1,10 +1,10 @@
 <template>
 
-    <IconSymbols v-once/>
+    <LazyIconSymbols v-once/>
     <ClientOnly>
-        <NuxtLoadingIndicator :height="6"/>
-      </ClientOnly>    
-    <PageHeader/>
+      <NuxtLoadingIndicator :height="6"/>
+    </ClientOnly>    
+    <LazyPageHeader/>
 
     <main class="">
 
@@ -13,9 +13,9 @@
 
     </main>
 
-    <PageFooter/>
+    <LazyPageFooter/>
   <ModalsContainer/>
-  <UserAlerts/>
+  <LazyUserAlerts/>
 </template> 
 <script setup >
 import { ModalsContainer } from 'vue-final-modal'

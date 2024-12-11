@@ -1,6 +1,6 @@
 
 
-export function useTheme(){
+export function useTheme(record){
     const nuxtApp   = useNuxtApp();
     const siteStore = useSiteStore (nuxtApp.$pinia);
 
@@ -30,7 +30,7 @@ export const defaultImageOptions = {
     width  : 400      ,
     fit    : 'cover',
     quality: 60       ,
-    format : ['webp', 'avif', 'jpeg', 'jpg', 'png','gif']
+    format : [ 'webp', 'avif', 'jpeg', 'jpg', 'png','gif' ]
 };
 
 export function useImageBackground(record, options = defaultImageOptions){
@@ -42,11 +42,11 @@ export function useImageBackground(record, options = defaultImageOptions){
 
     const backgroundStyles = computed(() => {
 
-        const imageOptions = {...defaultImageOptions, ...options}
+        const imageOptions = { ...defaultImageOptions, ...options };
 
         const imgSrc = img(imgUri, imageOptions);
 
-        return {'background':`url('${imgSrc}') no-repeat center`,  'background-size': 'cover'}
+        return { 'background':`url('${imgSrc}') no-repeat center`,  'background-size': 'cover' };
         })
 
     return { backgroundStyles, imgUri, hasImg }

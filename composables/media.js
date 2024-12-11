@@ -1,20 +1,17 @@
+export const useMediaRecord = (passedMediaRecord) => {
 
-
-export const useMediaRecord = (r) => {
-
-    const localPath = useLocalePath( );
-    const siteStore = useSiteStore ( );
-    const record    = unref        (r);
-    const { trunc } = useText();
-    const { locale } = useI18n();
+    const   localPath   = useLocalePath ( );
+    const   siteStore   = useSiteStore  ( );
+    const   record      = unref         (passedMediaRecord);
+    const { trunc     } = useText       ( );
+    const { locale    } = useI18n       ( );
 
     const downloadUrl =  `${siteStore.host}${record?.fieldMediaDocument?.uri?.url}`;
-
-    const imageAlt = computed(()=> record?.fieldMediaImage?.meta?.alt);
+    const imageAlt    = computed(()=> record?.fieldMediaImage?.meta?.alt);
 
     const descriptionTruncated = computed(()=> trunc(record.description));
-    const tags     = computed(()=> record?.tags);
-    const imageSrc = computed(()=> record?.fieldMediaImage?.uri?.url? siteStore.host + record?.fieldMediaImage?.uri?.url : '') ;
+    const tags                 = computed(()=> record?.tags);
+    const imageSrc             = computed(()=> record?.fieldMediaImage?.uri?.url? siteStore.host + record?.fieldMediaImage?.uri?.url : '');
 
     const imgHeight = computed(()=> record?.fieldMediaImage?.meta?.height);
     const imgWidth  = computed(()=> record?.fieldMediaImage?.meta?.width);
@@ -38,6 +35,7 @@ export const useMediaRecord = (r) => {
         downloadUrl,
         imageAlt,
         imgHeight,
-        imgWidth
+        imgWidth,
+        getGbfUrl:getGbfUrl
     }
 }

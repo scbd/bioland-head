@@ -1,7 +1,4 @@
 <template >
-
-<div></div>
-
         <div class="media-details-container p-2" :class="{ 'p-1': !vertical }">
 
                 <div v-if="media.name" :class="{ 'flex-column mb-1': vertical }" class="d-flex">
@@ -9,7 +6,7 @@
                         <span class="text-break" v-if="!pageStore?.isImage">{{media.name}}</span>
                         <span class="text-break" v-if="pageStore?.isImage ">
                                 <NuxtLink :to="pageStore?.image.src" target="_blank" download>
-                                        {{media.name}}  <Icon name="download" class="fs-4 ms-1"/>
+                                        {{media.name}}  <LazyIcon name="download" class="fs-4 ms-1"/>
                                 </NuxtLink>
                         </span> 
                 </div>
@@ -46,22 +43,20 @@
                 <h5 >{{t('Download')}}</h5>
                 <span>
                         <NuxtLink :to="media.downloadUrl" target="_blank" download>
-                                <Icon name="download" class="fs-2"/>
+                                <LazyIcon name="download" class="fs-2"/>
                         </NuxtLink>
                 </span>  
         </div>
 </div>
 </template>
-<script setup>
-        import { DateTime     } from 'luxon'        ;
+<script setup> 
         import prettyBytes from 'pretty-bytes';
 
-        const   props       = defineProps({ vertical: { type: Boolean, default: false } });
+        const   props         = defineProps({ vertical: { type: Boolean, default: false } });
         const { vertical    } = toRefs(props);
-        const { t, locale } = useI18n();
-
-
-        const pageStore = usePageStore();
+        const { t, locale }   = useI18n();
+        const   dateFormat    = useDateFormat();
+        const pageStore       = usePageStore();
 
 
 const media = computed(()=> {
@@ -69,14 +64,11 @@ const media = computed(()=> {
         if(pageStore.isImage || pageStore.isMediaImage) return {...pageStore.image, fieldPublished:pageStore.publishedOn};
         if(pageStore.isVideo || pageStore.isMediaRemoteVideo) return { ...pageStore.video, fieldPublished:pageStore.publishedOn};
         if(pageStore.isDocument || pageStore.isMediaDocument) {
-   
+
                 return {...pageStore.document,fieldPublished:pageStore.publishedOn};
         }
 return {}
 });
-        function dateFormat(date){
-                return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
-        }
 
         function fileSize(size){
                 return prettyBytes(Number(size), { locale: locale.value });

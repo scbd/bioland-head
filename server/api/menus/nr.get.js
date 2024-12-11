@@ -1,6 +1,3 @@
-import { menusCache } from "~/server/utils/cache";
-
-
 export default cachedEventHandler(async (event) => {
         try{
             const context  = getContext(event);
@@ -11,20 +8,7 @@ export default cachedEventHandler(async (event) => {
         }
         catch (e) {
 
-            const { siteCode, locale } = getContext(event);
-            const   host               = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
-            const   requestUrl         = new URL(getRequestURL(event));
-            const { pathname }         = requestUrl;
-            const { baseHost, env }    = useRuntimeConfig().public;
-
-            console.error(`${host}/server/api/menus/nr.js`, e);
-
-            throw createError({
-                statusCode    : e.statusCode,
-                statusMessage : e.statusMessage,
-                message       : `${host}/server/api/menus/nr.js`,
-                data          : { siteCode, locale, host, baseHost, env, pathname, requestUrl, errorData:e.data }
-            }); 
+            passError(event, e);
         }
     },
     externalCache
@@ -60,8 +44,8 @@ function mapByGov({ docs }, ctx){
             tMap[aCountryCode] = Array.from(new Set([ ...tMap[aCountryCode], doc ]))
 
         }
-        const nbsaps = tMap[aCountryCode].filter(({ symbol })=> symbol === 'B0EBAE91-9581-4BB2-9C02-52FCF9D82721').sort((a,b)=> sort(a,b, 'createdDate'));
-        const nrs =  tMap[aCountryCode].filter(({ symbol })=> symbol !== 'B0EBAE91-9581-4BB2-9C02-52FCF9D82721').sort((a,b)=> sort(a,b, 'createdDate'));
+        const nbsaps = tMap[aCountryCode].filter(({ symbol })=> symbol === 'B0EBAE91-9581-4BB2-9C02-52FCF9D82721').sort((a,b)=> sortArrayOfObjectsByProp(a,b, 'createdDate'));
+        const nrs =  tMap[aCountryCode].filter(({ symbol })=> symbol !== 'B0EBAE91-9581-4BB2-9C02-52FCF9D82721').sort((a,b)=> sortArrayOfObjectsByProp(a,b, 'createdDate'));
 
         
 
@@ -74,35 +58,9 @@ function mapByGov({ docs }, ctx){
     return tMap
 }
 
-function sort(a,b, prop){
-    if(a[prop] < b[prop]) return 1; 
-    if(a[prop] > b[prop]) return -1;
+// function sort(a,b, prop){
+//     if(a[prop] < b[prop]) return 1; 
+//     if(a[prop] > b[prop]) return -1;
 
-    return 0;
-}
-// [
-//     {
-//       "reportType": "National Biodiversity Strategies and Action Plans (NBSAPs)",
-//       "symbol": "B0EBAE91-9581-4BB2-9C02-52FCF9D82721"
-//     },
-//     {
-//       "reportType": "5th National Report (2009-2014)",
-//       "symbol": "B3079A36-32A3-41E2-BDE0-65E4E3A51601"
-//     },
-//     {
-//       "reportType": "4th National Report (2005-2009)",
-//       "symbol": "272B0A17-5569-429D-ADF5-2A55C588F7A7"
-//     },
-//     {
-//       "reportType": "3rd National Report (2001-2005)",
-//       "symbol": "DA7E04F1-D2EA-491E-9503-F7923B1FD7D4"
-//     },
-//     {
-//       "reportType": "2nd National Report (1997-2001)",
-//       "symbol": "A49393CA-2950-4EFD-8BCC-33266D69232F"
-//     },
-//     {
-//       "reportType": "1st National Report (1992-1998)",
-//       "symbol": "F27DBC9B-FF25-471B-B624-C0F73E76C8B3"
-//     }
-//   ]
+//     return 0;
+// }
