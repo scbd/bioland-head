@@ -2,7 +2,7 @@
     <section>
         <div v-if="hasCountries">
             <div v-if="!hasOneCountry" class="country-select mb-2 d-flex position-relative align-items-center justify-content-between flex-row">
-                <div @click="clickLeft" class="arrow-cont"><Icon name="arrow-left" class="arrow"/></div>
+                <div @click="clickLeft" class="arrow-cont"><LazyIcon name="arrow-left" class="arrow"/></div>
 
                 <div class="flag-box">
                     <Transition :name="fadeName">
@@ -11,7 +11,7 @@
                     &nbsp;
                 </div>
 
-                <div @click="clickRight" class="arrow-cont align-self-stretch d-flex justify-content-end align-items-center" style="width:30%; "><Icon name="arrow-right" class="arrow"/></div>
+                <div @click="clickRight" class="arrow-cont align-self-stretch d-flex justify-content-end align-items-center" style="width:30%; "><LazyIcon name="arrow-right" class="arrow"/></div>
             </div>
 
             <slot :country="selectedCountry" :hide="!hide" :fade-name="fadeName"></slot>
@@ -94,31 +94,4 @@ min-height: 24px;
 max-height: 24px;
     }
 
-</style>
-
-<style>
-
-.slide-fade-enter-active,
-.slide-fade-leave-active,
-.slide-fade-left-leave-active,
-.slide-fade-left-enter-active {
-        transition: all 0.4s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.slide-fade-enter-from{
-    transform: translateX(-100px);
-    opacity: 0;
-}
-.slide-fade-leave-to {
-  transform: translateX(125px);
-  opacity: 0;
-}
-.slide-fade-left-enter-from{
-    transform: translateX(100px);
-    opacity: 0;
-}
-.slide-fade-left-leave-to {
-    transform: translateX(-125px);
-    opacity: 0;
-}
 </style>

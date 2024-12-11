@@ -2,13 +2,18 @@
     <div class="overflow-scroll mm">
         <div class="container px-0 cont">
             <div class="row  m-0">
+                <div v-if="meStore.showEditMenu" class="position-absolute top-0 end-0 text-end p-1">
+                    <button @click="editMenu" type="button" class="btn btn-outline-secondary btn-sm ">
+                        <LazyIcon name="edit" style="margin-top: .3rem;" :size="2"/>
+                    </button>
+                </div>
                 <div  class="menu-section text-wrap"  :class="[getGridValue(aMenu)]" v-for="(aMenu,index) in sections" :key="index">
+                    
                     <section v-if="!isComponent(aMenu)">
-                        <PageHeaderMegaMenuHeader :menu="aMenu" />
-
+                        <LazyPageHeaderMegaMenuHeader :menu="aMenu" />
                         <section v-for="(aChild,j) in aMenu.children" :key="j">
-                            <PageHeaderMegaMenuLink v-if="!isHeader(aChild)"  :show-thumbs="showThumbs(aMenu)" :menu="aChild" />
-                            <PageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
+                            <LazyPageHeaderMegaMenuLink v-if="!isHeader(aChild)"  :show-thumbs="showThumbs(aMenu)" :menu="aChild" />
+                            <LazyPageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
                         </section>
                     </section>
 
@@ -23,33 +28,57 @@
     </div>
 </template>
 <script setup>
-    import { pascalCase   } from 'pascal-case';
-    import { useSiteStore } from '~/stores/site';
-    import { useMenusStore } from '~/stores/menus';
+    import { pascalCase   } from 'change-case';
 
+        const props      = defineProps({ menus: Array });
+        const siteStore  = useSiteStore();
+        const menuStore  = useMenusStore();
+        const meStore    = useMeStore();
+        const isDevSite  = computed(()=> !siteStore?.config?.published);
+        const maxColumns = computed(()=> siteStore.config?.runTime?.theme?.megaMenu?.maxColumns || 5);
+        const viewport   = useViewport();
+        const isMobile   = computed(() => !['lg','xl', 'xxl'].includes(viewport.breakpoint.value));
 
-        const   props              = defineProps({ menus: Array });
-        // const { menus    } = toRefs      (props);
-        const   toggle      = ref         (false);
-        const   siteStore   = useSiteStore(     );
-        const viewport = useViewport();
-        const isMobile = computed(() => !['lg','xl', 'xxl'].includes(viewport.breakpoint.value));
         const sections = computed(() => {
 
                                     if(!props?.menus?.length) return []
 
                                     const menusFiltered = [];
-
+                                    let   totalColumns = 0;
                                     for (let index = 0; index < props?.menus?.length; index++) {
-
+                                        if(hasMaxColumns(totalColumns, props?.menus[index+1])) continue;
                                         if(isEmptySection(props?.menus[index])) continue;
 
                                         menusFiltered.push(props?.menus[index]);
+
+                                        isDoubleCol(props?.menus[index])? totalColumns += 2 : totalColumns += 1;
                                     }
+
+                                    if(totalColumns > maxColumns.value) return menusFiltered.slice(0, maxColumns.value);
 
                                     return menusFiltered;
         });
 
+        const editMenu = () => {
+            const menuName = sections.value[0].machineName || '';
+
+            if(!menuName) return;
+
+            navigateTo(`${siteStore.host}/admin/structure/menu/manage/${menuName}`,{ external: true });
+
+            console.log('edit menu');
+        }
+
+        function hasMaxColumns(totalColumns, nextMenu = {}){
+
+            if(totalColumns > maxColumns.value) return true;
+
+            const nextTotalColumns = totalColumns + (isDoubleCol(nextMenu)? 2 : 1);
+
+            if(nextTotalColumns > maxColumns.value) return true;
+
+            return false
+        }
 
         function hasDoubleCol(){
             for (const aMenu of unref(sections)) 
@@ -67,13 +96,13 @@
         }
 
         function isDoubleCol(aMenu){
-            const isXl = ['xl', 'xxl'].includes(viewport.breakpoint.value);
+            const isXl = ['xl', 'xxl'].includes(viewport?.breakpoint?.value);
 
-            if(aMenu.class.includes('bl2-2x')) return true;
+            if(aMenu?.class?.includes('bl2-2x')) return true;
 
-            if(aMenu.class.includes('bl2-2x-xl') && isXl) return true;
+            if(aMenu?.class?.includes('bl2-2x-xl') && isXl) return true;
 
-            return false
+            return false;
         }
 
         const lengthColSizeMap = { 1: 12, 2: 6, 3: 4, 4: 3, 5: 2 }
@@ -94,7 +123,7 @@
 
 
     function componentName(aMenu, short = false){
-        const   siteStore                   = useSiteStore(     );
+        
         const   componentNameStart          = 'LazyPageHeaderMegaMenuCustom';
         const { drupalMultisiteIdentifier } = siteStore;
         const   componentClasses            = aMenu?.class?.filter(aClass => aClass.startsWith(`${drupalMultisiteIdentifier}-component`));
@@ -105,7 +134,7 @@
 
         if(!componentClass) return '';
 
-        return componentClass
+        return componentClass;
     }
 
     function getContentTypes(aMenu){
@@ -122,10 +151,6 @@
         return componentName(aMenu);
     }
 
-    function hasChildrenAndValidHref(menu){
-        return menu?.children?.length && menu?.href !== '#';
-    }
-
     function isHeader(menu){
         return  Array.isArray(menu?.class) && (menu?.class?.includes('mm-main-nav-sub-heading') || menu?.class?.includes('main-nav-sub-heading'));
     }
@@ -134,11 +159,11 @@
         return menu?.class?.includes('bl2-show-thumbs') || menu?.class?.includes('mm-show-thumbs');
     }
 
-    const emptyMap = { FocalPoints, NationalReport, Absch, Bch };
+    const emptyMap = { Forums, FocalPoints, NationalReport, Absch, Bch };
 
     function isEmptySection(menu){
 
-        if(!isComponent(menu)) return false;
+        if(!isComponent(menu) || isDevSite.value) return false;
 
         const cName = componentName(menu, true);
 
@@ -228,7 +253,9 @@
 
         return true;
     }
-
+    function Forums(){
+        return !menuStore?.forums?.length
+    }
     function hasCountry(){
         const   siteStore   = useSiteStore();
 

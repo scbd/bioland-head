@@ -1,19 +1,18 @@
 <template>
-    <PageHeaderMegaMenuHeader :menu="menu" />
+    <LazyPageHeaderMegaMenuHeader :menu="menu" />
     <div :class="{ 'd-flex justify-content-between':isCardView}">
         <section v-for="(aChild,j) in menu.children" :key="j">
 
-                <PageHeaderMegaMenuLink v-if="!isHeader(aChild)"  :show-thumbs="menu.class?.includes('bl2-show-thumbs')" :show-cards="isCardView"  :menu="aChild" />
-                <PageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
+                <LazyPageHeaderMegaMenuLink v-if="!isHeader(aChild)"  :show-thumbs="menu.class?.includes('bl2-show-thumbs')" :show-cards="isCardView"  :menu="aChild" />
+                <LazyPageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
             
         </section>
     </div>
-    <PageHeaderMegaMenuLink v-if="hasFinalLink && isCardView"  :menu="hasFinalLink" />
+    <LazyPageHeaderMegaMenuLink v-if="hasFinalLink && isCardView"  :menu="hasFinalLink" />
 </template>
 
 <script setup>
     import   clone           from 'lodash.clonedeep';
-    import { useMenusStore } from '~/stores/menus';
 
     const   props              = defineProps({ type: String, menu: Object });
     const { menu: passedMenu } = toRefs(props);
@@ -40,7 +39,7 @@
 
     const isCardView = computed(()=> {
         const isXl = ['xl', 'xxl'].includes(viewport.breakpoint.value);
-        const isShowThumbs = unref(passedMenu).class.includes('bl2-show-thumbs')
+        const isShowThumbs = unref(passedMenu).class.includes('bl2-show-thumbs');
         
         if(unref(passedMenu).class.includes('bl2-2x') && isShowThumbs) return true;
 
@@ -81,21 +80,13 @@
 
     function getMediaTypeData(){
         const mediaTypes = Array.isArray(getMediaType())? getMediaType(): [getMediaType()];
-  
+
         let data = []
-        for (const type of mediaTypes) {
-            data = [...data, ...menuStore?.mediaTypes[type]?.data || []]
-        }
-        // const data        = menuStore?.mediaTypes[contentType]?.data || [];
-        const menuPaths   = unref(passedMenu)?.children?.map(aMenu => aMenu.href) || [];
+        for (const type of mediaTypes)
+            data = [...data, ...menuStore?.mediaTypes[type]?.data || []];
 
-        return data.filter(aMenu => !menuPaths.includes(aMenu.href)).sort((a,b)=>sort(a,b, 'created'));
-    }
+        const menuPaths = unref(passedMenu)?.children?.map(aMenu => aMenu.href) || [];
 
-    function sort(a,b, prop){
-        if(a[prop] < b[prop]) return -1; 
-        if(a[prop] > b[prop]) return 1;
-
-        return 0;
+        return data.filter(aMenu => !menuPaths.includes(aMenu.href)).sort((a,b)=>sortArrayOfObjectsByProp(a,b, 'created'));
     }
 </script>

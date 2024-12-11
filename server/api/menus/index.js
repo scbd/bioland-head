@@ -1,36 +1,41 @@
-import { defineEventHandler } from 'h3';
-export default cachedEventHandler(async (event) => {
-    try{
-        const { context } = parseCookies(event)
+export default defineEventHandler(async (event) => {
+        try{
+            const { me:meString } = parseCookies(event, 'me') 
+            const   me            = meString? JSON.parse(decodeURIComponent(meString)) : undefined;
+            const   query         = getQuery(event)
+            const   context       = getContext(event);
 
-        const query       = getQuery(event)
+            const headers = { Cookie: me?`me=${me};context=${encodeURIComponent(JSON.stringify(context || query || {}))};` : `context=${encodeURIComponent(JSON.stringify(context || query || {}))};` };
 
-        const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(context || query || {}))};` };
+            const { siteCode, localizedHost } = { ...context, ...query };
 
-        const [absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes,  forums , languages ] = await Promise.all([
-            $fetch('/api/menus/absch',         { query, method:'get', headers }),
-            $fetch('/api/menus/bch',           { query, method:'get', headers }),
-            $fetch('/api/menus/drupal',        { query, method:'get', headers }),
-            $fetch('/api/menus/nr',            { query, method:'get', headers }),
-            $fetch('/api/menus/nr6',           { query, method:'get', headers }),
-            $fetch('/api/menus/nbsap',         { query, method:'get', headers }),
-            $fetch('/api/menus/focal-points',  { query, method:'get', headers }),
-            $fetch('/api/menus/content-types', { query, method:'get', headers }),
-            $fetch('/api/menus/topics',        { query, method:'get', headers }),
-            $fetch('/api/menus/languages',     { query, method:'get', headers })
-        ]);
-        return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, forums, languages, menus  }
-    }
-    catch(e){
-        console.error('/api/menus--------------------------',e)
-        throw createError({
-            statusCode: 500,
-            statusMessage: '/api/menus/index: Failed to  query the drupal menus',
-        }) 
-    }
+            if(!siteCode || localizedHost.includes('undefined')) return createError({ statusCode: 404, statusMessage: 'Server.drupal.user.getToken: no context derived' });
     
-},{
-    maxAge: 1,
-    getKey,
-    base:'db'
-})
+            const allRequests = (await Promise.allSettled([
+                $fetch('/api/menus/absch',         { query, method:'get', headers }),
+                $fetch('/api/menus/bch',           { query, method:'get', headers }),
+                $fetch('/api/menus/drupal',        { query, method:'get', headers }),
+                $fetch('/api/menus/nr',            { query, method:'get', headers }),
+                $fetch('/api/menus/nr6',           { query, method:'get', headers }),
+                $fetch('/api/menus/nbsap',         { query, method:'get', headers }),
+                $fetch('/api/menus/focal-points',  { query, method:'get', headers }),
+                $fetch('/api/menus/content-types', { query, method:'get', headers }),
+                $fetch('/api/menus/topics',        { query, method:'get', headers }),
+                $fetch('/api/menus/languages',     { query, method:'get', headers }),
+                $fetch('/api/menus/system-pages',  { query, method:'get', headers }),
+            ]))
+            const rejected = allRequests.filter(({ status }) => status === 'rejected');
+
+            for (const a of rejected)
+                consola.error('menus/index.js', a);
+
+            const [ absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes,  forums , languages, systemPages ] = allRequests.map(({ value }) => value || []);
+
+            return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, forums, languages, menus, systemPages  }
+        }
+        catch (e) {
+
+            passError(event, e);
+        }
+    }
+)

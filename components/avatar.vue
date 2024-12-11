@@ -14,9 +14,8 @@ const   props   = defineProps({
                                 user: { type: Object },
                                 size: { type: Number, default: 32 },
                             });
+
 const { user, size } = toRefs(props);
 
 const hasImage = computed(()=> user?.value?.img?.src);
-
-
 </script>

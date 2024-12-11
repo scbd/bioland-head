@@ -1,26 +1,41 @@
-export default defineEventHandler(async (event) => {
-    try{
-        const siteCode   = getRouterParam(event, 'siteCode')
-        const locale     = getRouterParam(event, 'locale')
-        const ctx        =  { siteCode, locale }
+export default cachedEventHandler(async (event) => {
+        try{
+            const siteCode   = getRouterParam(event, 'siteCode');
+            const l          = getRouterParam(event, 'locale');
+            const ctx        = { siteCode };
+            const config     = await getSiteConfig(ctx);
+            const locale     = isValidLocale(l)? l : config?.defaultLocale;
+            const host       = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
+            
+            if(!siteCode) throw createError({ statusCode: 404, message: `Site code not found in request`, statusMessage:'Not Found' });
+            if(!config?.locales?.includes(locale) && locale !== config?.defaultLocale)
+                throw createError({ statusCode: 404, message: `Locale [${locale}] not found in site [${siteCode}] config`, statusMessage:'Not Found' });
 
-        const config = await getSiteConfig(ctx);
+            const siteName = await getSiteDefinedName({ ...ctx, locale, config });
 
+            await cleanStorage();
+            const respCtx = { ...ctx, locale, config, siteName, defaultLocale: config.defaultLocale };
 
-        const defaultLocale = (await getDefaultLocale({ ...ctx, config }) || {}).locale;
-        const siteName      = await getSiteDefinedName({ ...ctx, config, defaultLocale })
+            await useStorage('context').setItem(host, respCtx);
+            return  respCtx;
 
-        // console.log({ ...ctx, config, defaultLocale, siteName })
-        return  { ...ctx, config, defaultLocale, siteName }
+            async function cleanStorage(){
+                const keys = await useStorage('db').getKeys();
+
+                for(let key of keys)
+                    if(key.includes('nitro:handlers:_:undefined'))
+                        await useStorage('db').removeItem(key);
+            }
+        }
+        catch (e) {
+            passError(event, e);
+        }
     }
-    catch(e){
-        const siteCode = getRouterParam(event, 'siteCode')
-        const locale     = getRouterParam(event, 'locale')
-        console.error(e);
-        throw createError({
-            statusCode: 500,
-            statusMessage: ` /api/context/[${siteCode}]/[${locale}]: Failed to get initial context from api`,
-        }); 
-    }
-    
-})
+);
+
+function isValidLocale(locale){
+    const { locales } = useRuntimeConfig().public;
+    const   languages = locales.map(l => l.language);
+
+    return languages.includes(locale);
+}

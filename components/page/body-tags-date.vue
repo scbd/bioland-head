@@ -1,21 +1,23 @@
 <template >
-    <div class="cont" style="float: right; width: 200px; ">
-        <div v-if="fieldStartDate" class="mb-2">
-            <h5 class="mb-0">{{t('Start Date')}}</h5>
-            {{dateFormat(fieldStartDate)}}
-            <h5 class="mb-0"  v-if="fieldEndDate">{{t('End Date')}}</h5>
-            <span v-if="fieldEndDate">{{dateFormat(fieldEndDate)}}</span>
+    <div :style="style" class="cont" style="float: right; width: 200px; ">
+        <div v-if="pageStore?.startDate" class="mb-2">
+            <h5 class="mb-0 text-nowrap">{{t('Start Date')}}</h5>
+            {{ formatDate(pageStore?.startDate)}}
         </div>
-        <div v-if="!fieldStartDate" class="mb-2">
-            <h5 class="mb-0">{{t('Published on')}}</h5>
-            {{dateFormat(fieldPublished || created)}}
+        <div v-if="pageStore?.endDate" class="mb-2">
+            <h5 class="mb-0 text-nowrap" >{{t('End Date')}}</h5>
+            <span >{{formatDate(pageStore?.endDate)}}</span>
+        </div>
+        <div v-if="!pageStore?.startDate && pageStore?.publishedOn" class="mb-2">
+            <h5 class="mb-0 text-nowrap">{{t('Published on')}}</h5>
+            {{formatDate(pageStore?.publishedOn)}}
         </div>
         <div v-if="tags?.gbfTargets?.length" class="mb-2">
             <h5 >{{t('GBF Targets')}}</h5>
             <NuxtLink  v-for="(aTarget,i) in tags.gbfTargets" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
                 <ClientOnly>
                     <Popper class="dark" :hover="true" :arrow="true" placement="bottom">
-                        <GbfIcon :identifier="aTarget.identifier" size="xs"/>
+                        <LazyGbfIcon :identifier="aTarget.identifier" size="xs"/>
                         <template #content class="w-50">
                         <div >
                             <h5>{{aTarget.title.en}}</h5>
@@ -24,7 +26,7 @@
                         </template>
                     </Popper>
                     <template #fallback>
-                        <GbfIcon :identifier="aTarget.identifier" size="xs"/>
+                        <LazyGbfIcon :identifier="aTarget.identifier" size="xs"/>
                     </template>
                 </ClientOnly>
             </NuxtLink>
@@ -53,51 +55,39 @@
             <section v-for="(aCountry,i) in tags.countries" :key="i" class="mb-1">
                 <NuxtLink   :to="`https://www.cbd.int/countries/?country=${aCountry.identifier}`" target="_blank" external>
                     
-                    <span   class="badge text-wrap bg-primary me-1 w-100">
+                    <span   :style="bgStyle" class="badge text-wrap  me-1 w-100">
                         <NuxtImg :alt="aCountry.name" :src="`https://www.cbd.int/images/flags/96/flag-${aCountry.identifier}-96.png`"  class="flag mb-1"/>
-                        <br>{{aCountry.name}}</span>
+                        <br>{{t(aCountry.identifier)}}</span>
                 </NuxtLink>
             </section>
         </div>
         <div v-if="tags?.subjects?.length" class="mb-2">
             <h5 >{{t("Thematic Areas")}}</h5>
             
-            <span  v-for="(subject,i) in tags.subjects" :key="i" class="badge text-wrap bg-primary  w-100 mb-1">{{subject.name}}</span>
+            <span  v-for="(subject,i) in tags.subjects" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ t(subject.identifier) }}</span>
         </div>
     </div>
 </template>
-<i18n src="@/i18n/dist/components/page/body-tags-date.json"></i18n>
 <script setup>
     import   Popper         from 'vue3-popper'  ;
-    import { DateTime     } from 'luxon'        ;
+
+    const { t          }    = useI18n      ();
+    const   formatDate      = useDateFormat();
+    const   pageStore       = usePageStore ();
+    const { bgStyle, style} = useTheme();
 
 
-    const { t, locale } = useI18n();
-    const pageStore = usePageStore();
-
-    const { path, created, fieldStartDate, fieldPublished, fieldEndDate, tags } = storeToRefs( usePageStore().page); //path, created, fieldStartDate, fieldPublished, fieldEndDate, tags
-
-    function getGbfUrl(identifier){
-        const number = Number(identifier.replace('GBF-TARGET-', ''));
-
-        return `https://www.cbd.int/gbf/targets/${number}`
-    }
-
-    function dateFormat(date){
-        return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
-    }
+    const {  getGbfUrl, tags }   = useDocumentHelpers(pageStore.page);
 </script>
 
 <style lang="scss" scoped>
-  :deep(.popper) {
-    max-width: 35% !important;
-    h5{
-        color: #99f184;
-   
-    
+    :deep(.popper) {
+        max-width: 35% !important;
+        h5{
+            color: #99f184;
+        }
     }
-  }
-  
+
 .flag{
     max-width: 75px;
 }

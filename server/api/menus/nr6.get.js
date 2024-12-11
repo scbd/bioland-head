@@ -1,34 +1,25 @@
+import { menusCache } from "~/server/utils/cache";
 
 
 export default cachedEventHandler(async (event) => {
-    try{
-        const context = getContext(event);
+        try{
+            const context = getContext(event);
 
-        const queryString = getIndexQuery('nationalReport6', context) + '&' +getIndexNrFields(context.locale);
+            const queryString = getIndexQuery('nationalReport6', context) + '&' +getIndexNrFields(context.locale);
 
-        const resp = await $indexFetch (queryString, context);
+            const resp = await $indexFetch (queryString, context);
 
-        return mapByCountry(resp, context)
+            return mapByCountry(resp, context);
 
-    }
-    catch(e){
-        console.log(e)
-        throw createError({
-            statusCode: 500,
-            statusMessage: 'Failed to  query the chm api for nr6',
-        }) 
-    }
-    
-},{
-    maxAge: 60 * 60 * 24,
-    getKey,
-    base:'db'
-})
+        }
+        catch (e) {
+            passError(event, e);
+        }
+    },
+    externalCache
+)
 
 function mapByCountry({ docs }, ctx){
-
-    // console.log('===============',docs)
-    // return docs
     const countries = !ctx?.country? [ ...(ctx?.countries || [])] : [ ctx.country, ...(ctx?.countries || []) ];
 
     if(!docs || !countries?.length) return {};
@@ -45,22 +36,8 @@ function mapByCountry({ docs }, ctx){
             const   doc           = { title, href:urls[0] };
 
             tMap[aCountryCode] = Array.from(new Set([ ...tMap[aCountryCode], doc ]))
-
         }
 
     }
-
-    // const countryTypeMap = {};
-    // for (const aCountryCode of countries) {
-    //     countryTypeMap[aCountryCode] = [];
-    //     for (const type of focalPointTypes) {
-    //         const aLink = tMap[aCountryCode].find((t)=> t === type)
-
-    //         if(!aLink) continue;
-
-    //         countryTypeMap[aCountryCode].push(aLink)
-    //     }
-
-    // }
-    return tMap
+    return tMap;
 }

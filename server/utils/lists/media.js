@@ -1,6 +1,6 @@
 
 import { stripHtml } from 'string-strip-html'; 
-import * as changeKeys from 'change-case/keys';
+import { camelCase } from 'change-case/keys';
 
 const defaultTypes = ['image', 'document', 'remote_video'];
 
@@ -109,7 +109,7 @@ function mapData(ctx){
 
             const mediaImage =  getMediaImage(ctx, field_media_image.data? field_media_image : thumbnail);
 
-            results.data[key] = changeKeys.camelCase({field_media_image, thumbnail, type, mediaImage, name, tags, path, field_description, changed, id, summary: field_description?.summary }, {deep: true} )
+            results.data[key] = camelCase({field_media_image, thumbnail, type, mediaImage, name, tags, path, field_description, changed, id, summary: field_description?.summary }, {deep: true} )
         }
 
         return results

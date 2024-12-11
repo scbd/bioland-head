@@ -1,7 +1,7 @@
-
+import { noCase } from 'change-case';
 
 export const useMenusStore = defineStore('menus', { 
-    state: () => ({ footer: [], main: [], footerCredits: [], languages: [], nrSix:[], nr:[], nbsap:{}, bch:[], absch:[], nfps:[], contentTypes:{}, forums: [], }),
+    state: () => ({ footer: [], main: [], footerCredits: [], languages: [], nrSix:[], nr:[], nbsap:{}, bch:[], absch:[], nfps:[], contentTypes:{}, forums: [], systemPages:[]}),
     actions:{
         set(name, value){
 
@@ -26,11 +26,12 @@ export const useMenusStore = defineStore('menus', {
             this.set('nfps', menus?.nfps);
             this.set('contentTypes', menus?.contentTypes);
             this.set('forums', menus?.forums);
-        
+            this.set('systemPages', menus?.systemPages);
         },
         isInMenu(menu, href){
+            const hrefMatch = menu?.href === href && menu?.href && href
 
-            if(menu.href === href && menu.href && href) return menu;
+            if(hrefMatch) return menu;
         
             if(menu?.children?.length)
                 for(let i = 0; i < menu.children.length; i++)
@@ -53,16 +54,18 @@ export const useMenusStore = defineStore('menus', {
         getContentTypeById(id){
             return Object.values(this.contentTypes).find((ct)=> ct.drupalInternalId === id);
         },
+        getContentTypeByName(name){
+            
+            return Object.values(this.contentTypes).find((ct)=> { 
+                return ct.name.toLowerCase() === noCase(name) || ct.plural.toLowerCase() === noCase(name)});
+        },
         isContentTypeId(id){
             return (Object.values(this.contentTypes).map((ct)=> ct.drupalInternalId)).includes(Number(id));
         },
         getContentType(name,country){
-            const typeMapIds = { news:2, event:3, 'learning-resource':4, project:5, 'basic-page':6, 'government-ministry-or-institute':8, ecosystem:9, 'protected-area':10, 'biodiversity-data':11, document:12, 'related-website':13, other:15, 'image-or-video':16 };
-        
-        
+            const typeMapIds  = { news:2, event:3, 'learning-resource':4, project:5, 'basic-page':6, 'government-ministry-or-institute':8, ecosystem:9, 'protected-area':10, 'biodiversity-data':11, document:12, 'related-website':13, other:15, 'image-or-video':16 };
             const hasKey      = this.contentTypes[name];
             const id          = typeMapIds[name]
-        
             const contentType = hasKey? hasKey : this.getContentTypeById(id);
         
             return country? contentType?.dataMap[country] : contentType;
@@ -83,6 +86,22 @@ export const useMenusStore = defineStore('menus', {
                     if(this.isInMenuByContentTypeId(menu.children[i], id)) return this.isInMenuByContentTypeId(menu.children[i], id);
         
             return false;
-        }
+        },
+        getSystemPageById(id){
+            return this.systemPages.find((sp)=> sp.drupalInternalId === id);
+        },
+        getSystemPageByAlias(alias){
+            return this.systemPages.find((sp)=> sp?.aliases?.en === alias);
+        },
+        getSystemPagePath({alias,id, locale}){
+            const term = alias? this.getSystemPageByAlias(alias) : this.getSystemPageById(id);
+
+            if(!term) return '';
+
+            return term.aliases[locale]
+        },
+    },
+    getters:{
+        isLoaded: state => !!state?.footer?.length
     }
 });

@@ -7,9 +7,6 @@
 </template>
 
 <script setup >
-    import { useMenusStore } from '~/stores/menus';
-    import { useSiteStore } from '~/stores/site';
-
     const menusStore   = useMenusStore();
     const siteStore    = useSiteStore();
     const menus        = computed(() => menusStore.nrSix);
