@@ -1,19 +1,19 @@
 <template>
 
     <div  @click="direction != 'right'? sw.slidePrev() : sw.slideNext()"  :class="{ left: direction === 'left', right: direction !== 'left' }" class="arrow-container d-flex align-items-center">
-        <Icon v-if="!(!sw.activeIndex && direction==='left')"  :name="`arrow-${direction}`" class="arrow" />
+        <LazyIcon v-if="!(!sw.activeIndex && direction==='left')"  :name="`arrow-${direction}`" class="arrow" :size="4"/>
         &nbsp;
     </div>
 
 </template>
 <script setup>
-import { useSwiper } from 'swiper/vue';
+    import { useSwiper } from 'swiper/vue';
 
     const   props       = defineProps({ direction: { type: String } });
-    const { direction    } = toRefs(props);
+    const { direction } = toRefs(props);
 
     const sw = useSwiper();
-//@click="direction === 'left'? sw.slidePrev() : sw.slideNext()" 
+
 </script>
 <style lang="scss" scoped>
 .arrow{

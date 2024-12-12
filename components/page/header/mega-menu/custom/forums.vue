@@ -1,16 +1,16 @@
 <template>
     <div class="col-12 text-wrap px-0">
-        <PageHeaderMegaMenuHeader  :menu="menu" />
+        <LazyPageHeaderMegaMenuHeader  :menu="menu" />
 
         <div v-for="(aChild,j) in children" :key="j" class="row mb-2">
             <div class="col-6">
-                <NuxtLink  class="child-link"   :to="aChild?.path?.alias || ''" :title="aChild.title" >
+                <NuxtLink  class="child-link"   :to="getHref(aChild)" :title="aChild.title" >
                     {{aChild.title}}
                 </NuxtLink>
             </div>
             <div class="col-3 ps-0 align-self-center">
-                <NuxtLink  class="child-link"   :to="aChild.forum.href" :title="aChild.forum.name" >
-                    <span class="badge bg-primary">{{aChild.forum.name}}</span>
+                <NuxtLink  class="child-link"   :to="localePath(aChild.forum.href)" :title="aChild.forum.name" >
+                    <span :style="bgStyle" class="badge">{{aChild.forum.name}}</span>
                 </NuxtLink>
             </div>
             <div class="col-1 px-0 align-self-center">
@@ -23,38 +23,21 @@
 
     </div>
 </template>
-<i18n src="@/i18n/dist/components/page/header/mega-menu/custom/forums.json"></i18n>
 <script setup>
-    import {  useSiteStore } from '~/stores/site';
-    import { useMenusStore } from '~/stores/menus';
+    const   siteStore   = useSiteStore ();
+    const   menuStore   = useMenusStore();
+    const   localePath  = useLocalePath();
+    const   props       = defineProps({ menu: Object });
+    const   bgStyle     = reactive({ 'background-color': siteStore.primaryColor })
+    const { menu }      = toRefs(props);
+    const { t, locale } = useI18n();
+    const children      = computed(() => { return menuStore.forums; });
 
-    const { t     } = useI18n    (                );
-    const   props   = defineProps({ menu: Object });
-    const { menu } = toRefs     (props           );
+    function getHref(topic){
+        const { nodeId } = topic;
 
-    const siteStore = useSiteStore();
-    const menuStore = useMenusStore();
-    
-    const children      = computed(() => {
-        return menuStore.forums;
-    });
-
-
-    function generateMenus(){
-        const theMenu = unref(menu);
-
-        if(!theMenu.children) return theMenu.children = [];
-
-        for(const aMenu of subMenus){
-            theMenu.children
-
-
-        }
-
-        return countryMap
+        return locale.value === 'en'? localePath(topic.href) : localePath(`/node/${nodeId}`);
     }
-
-
 </script>
 
 <style lang="scss" scoped>

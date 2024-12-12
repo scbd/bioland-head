@@ -8,46 +8,32 @@
         </div>
         <div class="row">
             <div class="col-12 pe-0 me-0 mb-4" >
-                <SwiperNewsUpdates  :slides="slides" :arrows="true" :pagination="false" :leftArrow="false"/>
+                <LazySwiperNewsUpdates  />
             </div>
             <div class="col-md-4 col-12 border-col">
-                <WidgetPanorama/>
-                <WidgetGbif/>
-                <WidgetELearning/>
+                <LazyWidgetPanorama/>
+                <LazyWidgetGbif/>
+                <LazyWidgetELearning/>
             </div>
             <div class="col-md-4 col-12 border-col">
-                <WidgetImplementation/>
-                <WidgetTsc/>
+                <LazyWidgetImplementation/>
+                <LazyWidgetTsc/>
             </div>
             <div class="col-md-4 col-12">
-                <WidgetForums/>
+                <LazyWidgetForums/>
+                <LazyWidgetGeobon/>
             </div>
         </div>
     </div>
 
 </template>
 <script setup>
-// import { useMenusStore } from "~/stores/menus";
-import { usePageStore } from "~/stores/page";
-import { useSiteStore } from '~/stores/site';
-import clone from 'lodash.clonedeep';
-// const route = useRoute();
-// const localePath = useLocalePath();
-const pageStore  = usePageStore();
-// const menuStore = useMenusStore();
-const   siteStore                   = useSiteStore();
 
-const body = computed(()=>pageStore?.page?.body);
-const drupalInternalIds = [2,3]
+const pageStore = usePageStore();
+const body      = computed(()=>pageStore?.page?.body);
 
-// const query = {drupalInternalIds, freeText}
-const query  = clone({ drupalInternalIds, ...siteStore.params });
-
-const { data } = await useFetch(`/api/list/content`, {  method: 'GET', query });
-
-const slides = computed(()=>data.value.data)
 </script>
-<style>
+<style scoped>
 .border-col{
     border-right: 1px solid rgba(0,0,0,0.2) !important;
 }

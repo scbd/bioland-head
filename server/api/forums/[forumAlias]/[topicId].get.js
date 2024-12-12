@@ -1,27 +1,20 @@
 
-export default cachedEventHandler(async (event) => {
-    try{
-        const query      = getQuery      (event);
-        const ctx        = getContext    (event);
+export default defineEventHandler(async (event) => {
+        try{
+            const query      = getQuery      (event);
+            const ctx        = getContext    (event);
 
-        ctx.topicId = getRouterParam(event, 'topicId')
+            ctx.topicId = getRouterParam(event, 'topicId');
 
-        const topic = await useDrupalTopics ({...ctx,...query })
-        topic.comments = await useDrupalForumComments({...ctx,...query })
+            const topic    = await useDrupalTopics ({event,...ctx,...query });
 
-        return topic
- 
+            topic.comments = await useDrupalForumComments({event,...ctx,...query });
+
+            return topic
+
+        }
+        catch (e) {
+            passError(event, e);
+        }
     }
-    catch(e){
-        consola.error(e.response);
-        throw createError({
-            statusCode: 500,
-            statusMessage: `/api/forums/forumAlias/topicId: Failed to list comments`,
-        }); 
-    }
-    
-},{
-    maxAge: 1,
-    getKey,
-    base:'db'
-})
+)

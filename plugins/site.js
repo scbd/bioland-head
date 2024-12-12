@@ -1,128 +1,124 @@
-// import {  useSiteStore } from "~/stores/site";
-// import {  usePageStore } from "~/stores/page";
-// import {  useMenusStore } from "~/stores/menus";
+import vClickOutside from 'click-outside-vue3';
+import isPlainObject from 'lodash.isplainobject';
+import { createVfm } from 'vue-final-modal';
 
-import vClickOutside from "click-outside-vue3";
+
 import clone from 'lodash.clonedeep';
 
-export default defineNuxtPlugin(async (nuxtApp) => {
+export default defineNuxtPlugin({
+    name: 'site',
+    async setup (nuxtApp){
+        const vfm = createVfm();
+        
+        nuxtApp.vueApp.use(vClickOutside);
+        nuxtApp.vueApp.use(vfm);
 
+        const runTime   = useRuntimeConfig().public;
+        const siteStore = useSiteStore(nuxtApp.$pinia);
+        const menuStore = useMenusStore(nuxtApp.$pinia);
 
-    nuxtApp.vueApp.use(vClickOutside);
+        const context   = useCookie('context');
+        const locale    = nuxtApp.$i18n.locale;
+        const rtPublic  = useRuntimeConfig().public;
 
-    const siteStore = useSiteStore(nuxtApp.$pinia);
-    const menuStore = useMenusStore(nuxtApp.$pinia);
-    const context   = useCookie('context');
-    const route     = useRoute();
+        await getSiteContext();
 
+        nuxtApp.hook('i18n:beforeLocaleSwitch', async ({ oldLocale, newLocale }) => {
+            siteStore.set('locale', newLocale);
 
-    const id         = getBiolandSiteIdentifier ();
-    const locale     = unref(nuxtApp.$i18n.locale);
-    const uri        = `/api/context/${id}/${locale}`;
-    const rtPublic   = useRuntimeConfig().public;
+            updateAppConfig(siteStore.params);
 
-    const { data } = await useFetch(uri)
+            const ctx = await getSiteContext(newLocale);
 
+            updateAppConfig(ctx);
 
-    siteStore.initialize({ ...rtPublic, ...data.value, locale}) ;
-    //context.value = { ...rtPublic, ...data.value, locale }; //path:route.path
-    context.value = { ...siteStore.params, locale }; 
-  
-//     consola.log('context.value',context.value )
-// consola.log('siteStore.params',siteStore.params )
+            useFetch(`/api/menus`,{ params: clone(siteStore.params) })
+            .then(({data})=>menuStore.loadAllMenus(data.value));
 
-  ensureContext(siteStore.params)// const { data:menuData } = await useFetch(`/api/menus`, { params: clone({...siteStore.params, path:route.path})});
-//  if()
-    const { data:menuData } = await useFetch(`/api/menus`, { params: clone({...siteStore.params, path:route.path})});
+        })
 
-    await menuStore.loadAllMenus(menuData.value);
+        async function getSiteContext(paddedLocale = locale){
+            try{
+                const locale        = sanitizeLocale(unref(paddedLocale))
+                const id            = getBiolandSiteIdentifier();
+                const uri           = `/api/context/${id}/${unref(locale)}`;
+                const { data }      = await useFetch(uri);
+                const i18nStrategy  = runTime?.i18n?.strategy || 'prefix';
+                const runTimePublic = clone(rtPublic);
 
-    nuxtApp.hook('i18n:localeSwitched', async ({oldLocale, newLocale}) => {
-        const context       = useCookie('context');
-        const localeChanged = newLocale === siteStore.defaultLocale ? 'en' : newLocale;
+                delete(runTimePublic.locales);
+                delete(runTimePublic.i18n);
 
-        siteStore.set('locale', localeChanged);
+                siteStore.initialize({ ...runTimePublic,i18nStrategy,...(data?.value|| {}), locale}) ;
 
-        context.value = siteStore.params;
+                ensureContext(siteStore.params);
 
-        menuStore.loadAllMenus((await useFetch(`/api/menus`,{ params: clone(siteStore.params) })).data.value)
-    })
+                updateAppConfig(siteStore.params);
 
+                return { ...runTimePublic, i18nStrategy, ...data.value, locale};
+            }catch(e){
+                const id = getBiolandSiteIdentifier ();
 
-    //middleware before every route change
+                consola.error(e);
 
-    const  setAppStates = async (to, from)=>{
+                throw createError({ 
+                    statusCode    : e.statusCode || 404, 
+                    statusMessage : e.statusMessage || 'Not Found',
+                    message       : `Not Found Plugins.site.getSiteContext: no context derived for site [${id}] locale [${unref(paddedLocale)}]`,
+                    data:e,
+                    fatal:true
+                });
+            }
+        }
 
-        const pStore      = usePageStore(nuxtApp.$pinia);
+        function sanitizeLocale(locale, defaultLocale = 'en'){
 
+        
+            const { locales } = useRuntimeConfig().public;
+            const   preFixes  = locales.map(({ code })=> code);
+        
+            const isValid     = preFixes.includes(locale);
+        
+            if(!isValid) return defaultLocale;
 
-        if(to.path.startsWith('/zh-hans')) 
-            return navigateTo({ path: to.path.replace('/zh-hans', '/zh'), query: to.query });
-        if(to.path.endsWith('node/18'))
-            return navigateTo({ path: to.path.replace('/node/18', '/'), query: to.query });
-        if(to.path.endsWith('node/25'))
-            return navigateTo({ path: to.path.replace('/node/25', '/search'), query: to.query });
-        if(to.path.endsWith('node/87'))
-            return navigateTo({ path: to.path.replace('/node/87', '/search/secretariat'), query: to.query });
-        if(to.path.endsWith('node/88'))
-            return navigateTo({ path: to.path.replace('/node/88', '/news-and-updates'), query: to.query });
-        if(to.path.endsWith('node/90'))
-            return navigateTo({ path: to.path.replace('/node/90', '/forums'), query: to.query });
+            return locale;
+        }
 
-        const isNewLocale = isLocaleChange(to, from) && !!pStore.drupalInternalNid;
+        function getBiolandSiteIdentifier () {
+            const hostName = useRequestURL().hostname;
 
-        const localePath  = siteStore.locale === siteStore.defaultLocale? '' : `/${siteStore.locale}`;
-        const path        = isNewLocale? `${localePath}/node/${pStore.drupalInternalNid}` : to.path;
+            if(!hostName)
+                    throw createError({ 
+                        statusCode: 404, 
+                        statusMessage: 'Not Found Plugins.site.getBiolandSiteIdentifier: no host derived to find env site context.'
+                    });
 
-        context.value.path = path;
+            if(hostName.split('.').length <= 1)
+                        throw createError({ 
+                            statusCode: 404, 
+                            statusMessage: 'Not Found Plugins.site.getBiolandSiteIdentifier: no siteKey derived to find env site context.'
+                        });
 
-        const pData = (await getPage(path)).value;
+            return hostName.split('.')[0];
+        }
 
-        pStore.initialize(pData)
+        function updateAppConfig(updateCtx){
+            if(!context.value || !isPlainObject(context.value)) context.value = {};
+        
+            for(const key in updateCtx)
+                context.value[key] = updateCtx[key];
+        }
     }
-
-    addRouteMiddleware('bioland-route-change',  async (to, from) => setAppStates(to, from), { global: true });
-
-
-    function getPage(passedPath){
-        const path = passedPath.endsWith('/topics')? passedPath.replace('/topics', '') : passedPath;
-        const { drupalMultisiteIdentifier } = useRuntimeConfig().public;
-        const { identifier,  locale } = siteStore;
-
-        const key = `${drupalMultisiteIdentifier}-${identifier}-${locale}`;
-
-        return useFetch(`/api/page/${key}/${encodeURIComponent(path)}`, {  method: 'GET', params: clone({ ...siteStore.params, path }) }).then(({ data }) => data);
-    }
-
-
-    function getBiolandSiteIdentifier () {
-        const hostName = useRequestURL().hostname;
-
-        if(!hostName || hostName.split('.').length <= 1)
-            return  'demo';
-    console.log('===========plugins/site.getBiolandSiteIdentifier',hostName.split('.'))
-        return hostName.split('.')[0];
-    }
-
 });
 
-function isLocaleChange({ name: to }, { name: from }){
 
-    const toLocale   = getLocaleFromRouteName(to);
-    const fromLocale = getLocaleFromRouteName(from);
-
-    return toLocale !== fromLocale;
-}
-
-function getLocaleFromRouteName(name){
-    const indexToSlice = name.lastIndexOf('_');
-    return name.slice(indexToSlice + 1);
-}
 
 function ensureContext(ctx = {}){
-    const hasContext = ctx.siteCode && ctx.locale && ctx.host && (ctx.country || ctx.countries?.length)
+    const hasContext = ctx.siteCode && ctx.locale && ctx.host;
 
     if(!hasContext)
             throw new Error('plugins/site: Context not derived');
     
 }
+
+

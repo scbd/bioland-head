@@ -6,13 +6,14 @@ export const getThesaurusByKey = async (keysRaw) => {
     const promises = [];
 
     for (const key of keys) {
-        const uri = `https://api.cbd.int/api/v2013/thesaurus/terms/${key}`;
+        if(key.includes('keywords:634')) continue;
+        const uri = `https://api.cbd.int/api/v2013/thesaurus/terms/${encodeURIComponent(key)}`;
 
         if(key.includes('SDG-GOAL-'))  promises.push(getSdg(key ) )
         else promises.push($fetch(uri, { mode: 'cors' }));
     }
 
-    return Promise.all(promises)
+    return Promise.all(promises);
 }
 
 export const thesaurusApisUrls = {
@@ -28,14 +29,18 @@ export const thesaurusApisUrls = {
     gbfTargets   : 'https://api.cbd.int/api/v2013/thesaurus/domains/GBF-TARGETS/terms',
     gbfGoals     : 'https://api.cbd.int/api/v2013/thesaurus/domains/GBF-GOALS/terms'
 }
+export const getCountryName = defineCachedFunction(async (identifier) => {
+    const data = await $fetch(`https://api.cbd.int/api/v2013/thesaurus/terms/${identifier}`)
+  
+    return data.name;
+},{
+    maxAge: 60 * 60 * 60 * 24 * 30 * 6,
+    getKey:(identifier) => identifier,
+    base:'external'
+})
 
 export  const dataSources = [ ...Object.keys(thesaurusApisUrls), 'geoLocations',  'all' ];
 
-function getSdgNumber(key){
-    return Number(key.replace('SDG-GOAL-',''));
-}
-
-export const getSdg = (identifier) =>  sdgsData.find((anSdg) => identifier === anSdg.identifier);
 export const sdgsData = [
     {
         "identifier": "SDG-GOAL-01",
@@ -191,3 +196,5 @@ export const sdgsData = [
         "@context": "https://schema.org"
     }
 ]
+
+export const getSdg = (identifier) => sdgsData.find((anSdg) => identifier === anSdg.identifier);

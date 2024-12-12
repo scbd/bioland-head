@@ -1,24 +1,16 @@
 
 
-export default cachedEventHandler(async (event) => {
-    try{
+export default defineEventHandler(async (event) => {
+        try{
 
-        const path = decodeURIComponent(getRouterParam(event, 'path'))
-        const ctx  =  getContext(event)
+            const path = decodeURIComponent(getRouterParam(event, 'path'));
+            const ctx  =  getContext(event);
 
 
-        return  getPageData({...ctx, path})
+            return  getPageData({...ctx, path});
+        }
+        catch (e) {
+            passError(event, e);
+        }
     }
-    catch(e){
-
-        // throw createError({
-        //     statusCode: 500,
-        //     statusMessage: 'Failed to get page data',
-        // }); 
-    }
-    
-},{
-    maxAge: 1,
-    getKey,
-    base:'db'
-})
+)

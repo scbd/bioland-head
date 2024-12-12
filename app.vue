@@ -1,26 +1,28 @@
 <template>
-    <IconSymbols v-once/>
-    
-    <!-- <div class="page-loader"></div> -->
-    <PageHeader/>
-    <!-- <PageEditorControls  /> -->
+
+    <LazyIconSymbols v-once/>
+    <ClientOnly>
+      <NuxtLoadingIndicator :height="6"/>
+    </ClientOnly>    
+    <LazyPageHeader/>
 
     <main class="">
-      <!-- <test/> -->
-      <!-- <div class="text-muted text-center">Main Page Content</div> -->
-      <NuxtLoadingIndicator :height="6"/>
 
-      <NuxtPage/>
-      <br/><br/><br/><br/><br/><br/><br/>
-      <br/><br/><br/><br/><br/><br/><br/>
+      <!-- <Spinner v-if="pageStore.loading" /> -->
+      <NuxtPage />
 
-      <!-- <div class="text-muted text-center">Main Page Content</div> -->
     </main>
-    <div v-if="!isProd" class="text-center"><HydrationStatus /> </div>
-    <PageFooter/>
+
+    <LazyPageFooter/>
+  <ModalsContainer/>
+  <LazyUserAlerts/>
 </template> 
 <script setup >
+import { ModalsContainer } from 'vue-final-modal'
 
+const route = useRouter();
+const viewport        = useViewport();
+const pageStore = usePageStore();
 const { env } =useRuntimeConfig().public;
 const isProd = env === 'production';
 const { locale } = useI18n();
@@ -34,25 +36,17 @@ useHead({
   htmlAttrs: {
     lang: locale,
     dir: () => localHead.value.htmlAttrs.dir
-  },
-  // link: [
-  //   {
-  //     rel: 'preconnect',
-  //     href: 'https://fonts.googleapis.com'
-  //   },
-  //   {
-  //     rel: 'stylesheet',
-  //     href: 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap',
-  //     crossorigin: ''
-  //   }
-  // ]
+  }
 })
 </script>
 <script>
 export default { name      : 'BL2App', };
 </script>
 <style lang="css">
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+/* main{
+  margin-bottom: 700px;
+} */
+
 .debug{
   border: 1px dashed red;
 }
@@ -78,6 +72,14 @@ export default { name      : 'BL2App', };
 </style>
 <style lang="scss">
 @import "@/assets/scss/variables.scss";
+
+.arrow{
+    width        : 1.3e m            ;
+    height       : 1.3e m            ;
+    cursor       :      pointer      ;
+    margin-bottom: 0.2  rem          ;
+}
+
 // Typography
 @media (max-width: 1375.98px) {
   html {
@@ -149,13 +151,13 @@ h1 {
 
 h3 {
   display: inline-block;
-  border-bottom: .25rem solid $primary;
+  border-bottom: .25rem solid var(--bs-primary);
   margin-bottom: 3rem;
 }
 
 h4 {
   display: inline-block;
-  border-bottom: .25rem solid $primary;
+  border-bottom: .25rem solid var(--bs-primary);
   margin-bottom: 1.5rem;
 }
 
@@ -164,7 +166,7 @@ h5.lead {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.25rem;
-  border-bottom: .25rem solid $primary;
+  border-bottom: .25rem solid var(--bs-primary);
   margin-bottom: 1.5rem;
 }
 

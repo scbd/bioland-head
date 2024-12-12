@@ -3,89 +3,58 @@
         <ul  class="nav nav-tabs mb-1" >
 
             <li   class="nav-item ">
-                <NuxtLink :class="{a:siteContentActive}" :to="siteContentTo" class="nav-link  text-capitalize">
+                <NuxtLink :style="getStyle(siteContentTo)"  :to="siteContentTo" class="nav-link  text-capitalize">
                     {{t('Site Content')}}
                 </NuxtLink>
             </li>
             <li   class="nav-item ">
-                <NuxtLink :class="{a:secretariatContentActive}" :to="secretariatContentTo" class="nav-link  text-capitalize">
+                <NuxtLink :style="getStyle(secretariatContentTo)" :to="secretariatContentTo" class="nav-link  text-capitalize">
                     {{t('Secretariat')}}
                 </NuxtLink>
             </li>
         </ul>
     </div>
 </template>
-<i18n src="@/i18n/dist/components/page/list/index.json"></i18n>
+
 <script setup>
-    import { usePageStore  } from '~/stores/page';
-
-    const { t  }   = useI18n();
-    const   r      = useRoute();
-
+    const { t  }     = useI18n();
     const localePath = useLocalePath();
+    const siteStore  = useSiteStore();
+    const pageStore  = usePageStore();
 
-    const showNodes = [25,87,88]
-    const pageStore = usePageStore();
-    const showTabs = computed(()=> showNodes.includes(pageStore?.page?.drupalInternalNid));
+    const showTabs  = computed(()=>  (pageStore?.page?.children?.length || (pageStore?.page?.parent?.length && pageStore?.page?.parent[0].id !== 'virtual')));
 
-    const siteContentTo = computed(()=> {
-        const pageNid = pageStore?.page?.drupalInternalNid;
+    const siteContentTo = computed(()=> getParentAlias() || localePath(pageStore?.path?.alias));
 
-        if([25,87].includes(pageNid)) return localePath(`/search`)
-        if(pageNid === 87) return localePath(`/search/secretariat`) 
-        if(pageNid === 88) return localePath({path:`/news-and-updates`, query:{ schemas: [2,3] }})
+    const secretariatContentTo = computed(()=> getChildAlias() || localePath(pageStore?.path?.alias));
 
-        return localePath(`/search`)
-    });
+    const isActive = (to) => localePath(pageStore?.path?.alias) === to
 
-    const secretariatContentTo = computed(()=> {
-        const pageNid = pageStore?.page?.drupalInternalNid;
+    function getParentAlias(){
+        if(!pageStore?.page?.parent?.length || pageStore?.page?.parent[0].id === 'virtual') return ''
 
-        if([25,87].includes(pageNid)) return localePath(`/search/secretariat`)
+        return localePath(pageStore?.page?.parent[0].path?.alias)
+    }
 
-        if(pageNid === 88) return localePath({path:`/news-and-updates`, query:{ schemas: [ 'news', 'notification', 'statement', 'meeting', 'pressRelease' ] }})
+    function getChildAlias(){
+        if(!pageStore?.page?.children?.length) return ''
 
-        return localePath(`/search/secretariat`)
-    });
+        return localePath(pageStore?.page?.children[0].path?.alias)
+    }
 
-    const secretariatContentActive = computed(()=> {
-        const pageNid = pageStore?.page?.drupalInternalNid;
+//TODO put in theme composable
+    function getStyle(link){
+        if(!isActive(link)) return {}
 
-        if([87].includes(pageNid)) return true
-
-        if(pageNid === 88 && r?.query?.schemas?.length > 2) return true;
-
-        return false
-    });
-
-    const siteContentActive = computed(()=> {
-        const pageNid = pageStore?.page?.drupalInternalNid;
-
-        if([25].includes(pageNid)) return true
-
-        if(pageNid === 88 && r?.query?.schemas?.length === 2) return true;
-
-        return false
-    });
-    // const   router    = useRouter();
-    // const   eventBus  = useEventBus();
-    
-    // const   props     = defineProps({   modelValue: { type: String, default: null, },
-    //                                     types     : { type: Array, default: () => [] }
-    //                                 });
-// consola.warn(r )
-    
-    // const   emit                = defineEmits(['update:modelValue']);
-    // const { types, modelValue } = toRefs(props);
-
-    // async function changeType(type){
-    //     if(type===modelValue.value) return;
-
-    //     await router.push({ query:{ } });
-
-    //     emit('update:modelValue', type);
-    //     eventBus.emit('changeTab');
-    // }
+        return reactive({
+            'z-index': 2,
+            color: 'white',
+            'text-decoration': 'none',
+            'background-color': siteStore.primaryColor,
+            'border-color': 'white',
+            'border-bottom': `${siteStore.primaryColor} solid 1px`
+        })
+    }
 </script>
 <style lang="scss"  scoped>
     .nav-link{

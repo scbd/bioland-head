@@ -1,29 +1,18 @@
-import SA      from 'superagent'               ;
-
-const $http   = {}//SA.agent()
 
 export default cachedEventHandler(async (event) => {
-    try{
-    
-        const receivedQuery = parseQuery(event);
-        const query         = getQueryString(receivedQuery)
-        const response      = await $indexFetch(query)
+        try{
+            const receivedQuery = parseQuery(event);
+            const query         = getQueryString(receivedQuery);
+            const response      = await $indexFetch(query);
 
-        return response?.docs?.length? response.docs.map(mapDocs(receivedQuery.locale)).filter(filterDocs(receivedQuery.locale)) : {};
-    }
-    catch(e){
-        console.log(e)
-        throw createError({
-            statusCode: 500,
-            statusMessage: 'Failed to  query the chm api',
-        }) 
-    }
-    
-},{
-    maxAge: 60 * 60 * 24,
-    getKey,
-    base:'db'
-})
+            return response?.docs?.length? response.docs.map(mapDocs(receivedQuery.locale)).filter(filterDocs(receivedQuery.locale)) : {};
+        }
+        catch (e) {
+            passError(event, e);
+        }
+    },
+    externalCache
+)
 
 function getQueryString({ countries, country, locale }={}){
     
@@ -43,7 +32,6 @@ function mapDocs(locale){ return (aDoc) => {
 }
 
 function filterDocs(locale){ return (aDoc) => {
-
     return aDoc.title.includes('NBSAP');
 }
 }

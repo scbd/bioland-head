@@ -1,20 +1,25 @@
 export default cachedEventHandler(async (event) => {
-    try{
-        const query            = getQuery   (event);
-        const ctx              = getContext (event);
+        try{
+            const query            = getQuery   (event);
+            const ctx              = getContext (event);
 
-        return useScbdIndex ({ ...ctx, ...query });
-    }
-    catch(e){
-        consola.error(e);
-        throw createError({
-            statusCode: 500,
-            statusMessage: `Failed to get list/chm`,
-        }); 
-    }
-    
-},{
-    maxAge: 1,
-    getKey,
-    base:'db'
-})
+            const sdgList = {};
+
+            let index =1
+            for (const key in sdgsData) {
+                const name    = `sdg${index}Name`;
+                const altName = `sdg${index}AltName`;
+                sdgList[sdgsData[key].identifier] = sdgsData[key].name;
+                sdgList[sdgsData[key].identifier+'Alt'] = sdgsData[key].alternateName;
+
+                index++
+            }
+
+            return queryScbdIndex ({ ...ctx, ...query });
+        }
+        catch (e) {
+            passError(event, e);
+        }
+    },
+    externalCache
+)

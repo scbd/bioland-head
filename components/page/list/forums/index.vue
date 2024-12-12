@@ -5,46 +5,42 @@
                 &nbsp;
             </div>
             <div class="col-12 col-md-9 px-0">
-                <PageBreadCrumbs :count="results?.length"/>
+                <LazyPageBreadCrumbs :count="results?.length"/>
             </div>
             <div class="col-12 col-md-3 ps-0" >
-                <h2 class="page-type text-capitalize">{{t('Forums',2)}}</h2>
-                <PageListTextSearch/>
+                <h2  :style="primaryColorStyle"  class="page-type text-capitalize">{{t('Forums',2)}}</h2>
+                <LazyPageListTextSearch/>
             </div>
 
             <ClientOnly >
                 <div name="list" tag="div" class="col-12 col-md-9 data-body">
 
-                    <!-- <PageListPager v-if="showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results.count}`"/> -->
                     <transition-group name="list">
-                        <PageListForumsRow  :a-line="aLine" v-for="(aLine,index) in results" :key="index" />
+                        <LazyPageListForumsRow  :a-line="aLine" v-for="(aLine,index) in results" :key="index" />
                         <span :key="`showTopPage${showTopPager}${results?.count}-span`">&nbsp;</span>
                     </transition-group>
                 </div>
                 <template #fallback>
                     <div name="list" tag="div" class="col-12 col-md-9 data-body">
 
-                        <!-- <PageListPager v-if="showTopPager" :count="results?.count" /> -->
-                        <PageListForumsRow  :a-line="aLine" v-for="(aLine,index) in results" :key="index" />
+                        <LazyPageListForumsRow  :a-line="aLine" v-for="(aLine,index) in results" :key="index" />
                     </div>
                 </template>
             </ClientOnly>
 
             <div class="col-12 col-md-9 offset-md-3 ">
-                <PageListPager :count="results?.count"/>
+                <LazyPageListPager :count="results?.count"/>
             </div>
         </div>
     </div>
 
 </template>
-<i18n src="@/i18n/dist/components/page/list/index.json"></i18n>
 <script setup>
-
     import clone from 'lodash.clonedeep';
+
     const { t  }                        = useI18n();
     const   r                           = useRoute();
     const   siteStore                   = useSiteStore();
-
     const   eventBus                    = useEventBus();
     const   props                       = defineProps({ 
                                                         showTopPager: { type: Boolean, default: false },
@@ -52,8 +48,8 @@
                                                         types: { type: Array, default: () => [] },
                                                     });
 
-    const { showTopPager, title  }       = toRefs(props);
-
+    const { showTopPager  }     = toRefs(props);
+    const { primaryColorStyle } = useTheme();
 
 
     const freeText      = computed(() => r?.query?.freeText? r?.query?.freeText : '');
@@ -61,29 +57,14 @@
     const rowsPerPage   = computed(() => r?.query?.rowsPerPage? r?.query?.rowsPerPage : 10);
     const query         = clone({ ...r.query, ...siteStore.params, freeText, page, rowsPerPage });
 
-
-
     const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query });
 
-    // function onResponse({ request, response, options}){
-    //     consola.error('onResponse response._data',response._data)
-    // }
-
     onMounted(() => { eventBus.on('changePage', refresh); });
- 
- 
-
-
 
     function getApiUri(){
         return `/api/forums`;
     }
 
-    // function changeTab(){ refresh(); }
-
-    function isNumberString(string) {
-        return /^[0-9]*$/.test(string);
-    }
 </script>
 
 <style scoped>

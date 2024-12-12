@@ -1,11 +1,14 @@
 <template>
-    <div class="card p-2" >
-        <NuxtImg :alt="imageAlt" :src="imageSrc" class="card-img-top image-top i-top"/>
+    <div :style="style" class="card p-2 text-center" >
+        <div class="d-flex justify-content-center text-center">
+            <NuxtImg  v-if="imageSrc" quality="35" :alt="imageAlt" :src="imageSrc" :width="imgWidth" :height="imgHeight"  format="webp" class="card-img-top image-top i-top"/>
+            <LazyIcon v-if="!imageSrc" :name="'file-image-o'"  :size="8" />
+        </div>
         <div class="card-body">
             <h6 class="card-subtitle text-muted mb-2">{{t('Image')}}</h6>
             <h5 class="card-title  mb-1">{{imageAlt}}</h5>
 
-            <p class="card-text">{{trunc(record.fieldCaption)}}</p>
+            <p class="card-text">{{descriptionTruncated}}</p>
 
         </div>
         <div class="card-footer">
@@ -14,7 +17,7 @@
             <hr class="mb-2 mt-1"/>
 
             <NuxtLink  v-for="(aTarget,i) in tags?.gbfTargets || []" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
-                <GbfIcon :identifier="aTarget.identifier" size="xs"/>
+                <LazyGbfIcon :identifier="aTarget.identifier" size="xs"/>
             </NuxtLink>
 
             <NuxtLink  v-for="(aSdg,i) in tags?.sdgs || []" :key="i"  :to="aSdg.url" target="_blank" external>
@@ -23,52 +26,39 @@
 
 
             <section v-if="tags?.subjects" class="mt-1">
-                <span  v-for="(subject,i) in tags.subjects" :key="i" class="badge bg-primary me-1">{{subject.name}}</span>
+                <span  v-for="(subject,i) in tags.subjects" :key="i" class="badge bg-primary me-1">{{t(subject.identifier)}}</span>
             </section>
 
             <hr class="my-2" v-if="tags?.subjects || tags?.sdgs || tags?.gbfTargets"/>
             <h6 class="card-subtitle text-primary">
-                <NuxtLink   :to="linkTo" :title="imageAlt" >
-                    {{t('View more')}} <Icon  name="arrow-right" class="arrow" />
+                <NuxtLink  :style="arrowFill" :to="linkTo" :title="imageAlt" >
+                    {{t('View more')}} <LazyIcon  name="arrow-right" class="arrow" />
                 </NuxtLink>
             </h6>
         </div>
     </div>
 </template>
-<i18n src="@/i18n/dist/components/cards/media/index.json"></i18n>
-<script setup>
-    import { getGbfUrl    } from '~/util'        ;
-    import { useSiteStore } from '~/stores/site' ;
-    import { DateTime     } from 'luxon'         ;
 
-    const { trunc, isTruncated: isTrunc } = useText();
-    const siteStore = useSiteStore();
+<script setup>
+
     const   props       = defineProps({ record: { type: Object } });
     const { record    } = toRefs(props);
-
     const { t, locale } = useI18n();
 
-    const tags = computed(()=> record?.value?.tags);
+    const dateFormat       = useDateFormat(locale);
+    const { style, arrowFill      } = useTheme();
 
-
-    const imageSrc = computed(()=> siteStore.host + record.value.fieldMediaImage?.uri?.url) //siteStore.host + fieldMediaImage?.value?.uri?.url
-    const imageAlt = computed(()=> record?.value?.fieldMediaImage?.meta?.alt)
-    const linkTo  = computed(()=> record?.value?.path?.alias)
-
-    function dateFormat(date){
-        return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
-    }
+    const { getGbfUrl, descriptionTruncated, imageAlt, tags, imageSrc, linkTo,  imgHeight, imgWidth, iconName, iconColor} = useMediaRecord(record);
 </script>
-<i18n src="@/i18n/dist/components/cards/media/index.json"></i18n>
 <style lang="scss" scoped>
 .i-top{
     max-height: 250px;
-    object-fit: cover;
+    // object-fit: cover;
 }
 .card {
     width: 350px;
-    height: 650px !important;
-    border: .5px solid var(--bs-blue);
+    height: 450px !important;
+    border: .5px solid var(--bs-primary);
 }
 .arrow{
     fill:var(--bs-blue);

@@ -1,26 +1,18 @@
-
-
 export default cachedEventHandler(async (event) => {
-    try{
-        const context  = getContext(event);
-        const query    = getQueryString(context);
-        const response = await $indexFetch(query);
+        try{
+            const context  = getContext(event);
+            const query    = getQueryString(context);
+            const response = await $indexFetch(query);
 
-        return mapByGov(response,context);
-    }
-    catch(e){
-        console.log(e)
-        throw createError({
-            statusCode: 500,
-            statusMessage: 'Failed to  query the chm index api for national reports',
-        }) 
-    }
-    
-},{
-    maxAge: 60 * 60 * 24,
-    getKey,
-    base:'db'
-})
+            return mapByGov(response,context);
+        }
+        catch (e) {
+
+            passError(event, e);
+        }
+    },
+    externalCache
+)
 
 function getQueryString({ countries, country, locale }={}){
     
@@ -52,8 +44,8 @@ function mapByGov({ docs }, ctx){
             tMap[aCountryCode] = Array.from(new Set([ ...tMap[aCountryCode], doc ]))
 
         }
-        const nbsaps = tMap[aCountryCode].filter(({ symbol })=> symbol === 'B0EBAE91-9581-4BB2-9C02-52FCF9D82721').sort((a,b)=> sort(a,b, 'createdDate'));
-        const nrs =  tMap[aCountryCode].filter(({ symbol })=> symbol !== 'B0EBAE91-9581-4BB2-9C02-52FCF9D82721').sort((a,b)=> sort(a,b, 'createdDate'));
+        const nbsaps = tMap[aCountryCode].filter(({ symbol })=> symbol === 'B0EBAE91-9581-4BB2-9C02-52FCF9D82721').sort((a,b)=> sortArrayOfObjectsByProp(a,b, 'createdDate'));
+        const nrs =  tMap[aCountryCode].filter(({ symbol })=> symbol !== 'B0EBAE91-9581-4BB2-9C02-52FCF9D82721').sort((a,b)=> sortArrayOfObjectsByProp(a,b, 'createdDate'));
 
         
 
@@ -66,35 +58,9 @@ function mapByGov({ docs }, ctx){
     return tMap
 }
 
-function sort(a,b, prop){
-    if(a[prop] < b[prop]) return 1; 
-    if(a[prop] > b[prop]) return -1;
+// function sort(a,b, prop){
+//     if(a[prop] < b[prop]) return 1; 
+//     if(a[prop] > b[prop]) return -1;
 
-    return 0;
-}
-// [
-//     {
-//       "reportType": "National Biodiversity Strategies and Action Plans (NBSAPs)",
-//       "symbol": "B0EBAE91-9581-4BB2-9C02-52FCF9D82721"
-//     },
-//     {
-//       "reportType": "5th National Report (2009-2014)",
-//       "symbol": "B3079A36-32A3-41E2-BDE0-65E4E3A51601"
-//     },
-//     {
-//       "reportType": "4th National Report (2005-2009)",
-//       "symbol": "272B0A17-5569-429D-ADF5-2A55C588F7A7"
-//     },
-//     {
-//       "reportType": "3rd National Report (2001-2005)",
-//       "symbol": "DA7E04F1-D2EA-491E-9503-F7923B1FD7D4"
-//     },
-//     {
-//       "reportType": "2nd National Report (1997-2001)",
-//       "symbol": "A49393CA-2950-4EFD-8BCC-33266D69232F"
-//     },
-//     {
-//       "reportType": "1st National Report (1992-1998)",
-//       "symbol": "F27DBC9B-FF25-471B-B624-C0F73E76C8B3"
-//     }
-//   ]
+//     return 0;
+// }

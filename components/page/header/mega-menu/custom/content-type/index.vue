@@ -1,28 +1,27 @@
 <template>
-        <PageHeaderMegaMenuHeader  :menu="menu" />
+        <LazyPageHeaderMegaMenuHeader  :menu="menu" />
 
-        <PageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menu.dataMap" >
+        <LazyPageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menu.dataMap" >
             <Transition :name="slotProps.fadeName">
                 <section v-if="slotProps.hide">
                     <div :class="{ 'd-flex justify-content-between':isCardView}">
                         <section v-for="(aChild,j) in menu.dataMap[slotProps.country]" :key="j">
 
-                            <PageHeaderMegaMenuLink v-if="!isHeader(aChild)" :type="getContentType()" :show-thumbs="menu.class?.includes('bl2-show-thumbs')" :show-cards="isCardView"  :menu="aChild" />
-                            <PageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
+                            <LazyPageHeaderMegaMenuLink v-if="!isHeader(aChild)" :type="getContentType()" :show-thumbs="menu.class?.includes('bl2-show-thumbs')" :show-cards="isCardView"  :menu="aChild" />
+                            <LazyPageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
 
-                            <PageHeaderMegaMenuLink v-if="hasFinalLink && isCardView"  :menu="hasFinalLink" />
+                            <LazyPageHeaderMegaMenuLink v-if="hasFinalLink && isCardView"  :menu="hasFinalLink" />
                         </section>
                     </div>
                 </section>
             </Transition>
-        </PageHeaderMegaMenuCustomCountryTab>
+        </LazyPageHeaderMegaMenuCustomCountryTab>
 </template>
 
 <script setup>
     import   clone           from 'lodash.clonedeep';
-    import { useMenusStore } from '~/stores/menus';
-    import {  useSiteStore } from "~/stores/site";
     
+    const   localePath         = useLocalePath();
     const   props              = defineProps({ type: String, menu: Object });
     const { menu: passedMenu } = toRefs(props);
     const   menuStore          = useMenusStore();
@@ -30,7 +29,8 @@
     const   hasFinalLink       = computed(()=> unref(passedMenu)?.children?.find(aMenu => isFinalLink(aMenu)));
     const   viewport           = useViewport();
     const   siteStore          = useSiteStore();
-    
+
+
     function getDefaultFinalLink(){
         const   contentType         = getContentType();
         const { count, name, slug } = menuStore.contentTypes[contentType] || {};
@@ -59,19 +59,29 @@
 
         const countries = siteStore.countries;
         const aMenu     = clone(unref(passedMenu));
+        const children  = aMenu?.children?.filter(aMenu => !isFinalLink(aMenu)) || [];
 
-        const children = aMenu?.children?.filter(aMenu => !isFinalLink(aMenu)) || [];
-
-        aMenu.children = [ ...children ];
-
+        aMenu.children  = [ ...children ];
         aMenu.dataMap = {};
 
+        if(!aMenu.href || aMenu.href === '#'){
+            const contentType = menuStore.getContentTypeByName(getContentType());
+
+            if(!contentType) throw new Error(`No content type found in menu item: ${getContentType()}`);
+
+            aMenu.href = localePath(`${contentType.slug}`);
+        }
+
+        const horizontalCardMax = siteStore?.config?.runTime?.theme?.megaMenu?.horizontalCardMax
+
         for (const country of countries)
-            aMenu.dataMap[country] = getContentTypeData(country)
+            if(!isCardView.value)
+                aMenu.dataMap[country] = getContentTypeData(country).slice(0,getMaxRowsPerColumn() || 6);
+            else
+                aMenu.dataMap[country] = getContentTypeData(country).slice(0,horizontalCardMax);
 
         return aMenu;
     })
-
 
     function isHeader(m){
         const menu = unref(m);
@@ -84,9 +94,20 @@
 
         if(!Array.isArray(classes)) return '';
 
-        return classes.length >1? classes : classes[0];
-    }
+        const name = classes.length >1? classes : classes[0];
 
+        if(!name) throw new Error('No content type found in menu  item');
+
+
+        return name 
+    }
+    function getMaxRowsPerColumn(){
+        const [max] = (unref(passedMenu)?.class?.filter(aClass => aClass.startsWith('bl2-ct-max-row-per-column-')) || []).map((aClass)=> aClass.replace('bl2-ct-max-row-per-column-',''));
+
+        if(max) return max;
+
+        return siteStore?.config?.runTime?.theme?.megaMenu?.maxRowsPerColumn 
+    }
     function getContentTypeData(country){
         const contentTypeName = getContentType();
 
@@ -98,9 +119,6 @@
         const showDefault = returnData.length > 5;
         const last        = unref(hasFinalLink)? [unref(hasFinalLink)] : showDefault? [getDefaultFinalLink()] : [];
 
-        return [...returnData, ...last].slice(0,6);
+        return [...returnData, ...last]
     }
-
-
-
 </script>

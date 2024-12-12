@@ -1,90 +1,78 @@
 <template>
-    <div class="container mt-3">
+    <div class="container page-body">
         <div class="row">
             <div class="col-md-3">
                 &nbsp;
             </div>
             <div class="col-12 col-md-9 px-0">
-                <PageBreadCrumbs :count="results?.count"/>
+                <LazyPageBreadCrumbs :count="results?.count"/>
             </div>
-            <div class="col-12 col-md-3 ps-0" >
-                <h2 v-if="contentTypeName && !title" class="page-type text-capitalize">{{t(contentTypeName,2)}}</h2>
-                <h2 v-if="title" class="page-type text-capitalize">{{t(title,2)}}</h2>
-                <PageListTextSearch/>
+            <div class="col-12 col-md-3" :class="{ 'ps-0': !isMobile }">
+                <h2  :style="primaryColorStyle" v-if="contentTypeName && !title" class="page-type">{{contentTypeName}}</h2>
+                <h2  :style="primaryColorStyle" v-if="title" class="page-type">{{t(title,2)}}</h2>
+                <LazyPageListTextSearch/>
+                <LazyPageListFilter v-if="!typeId"/>
             </div>
+            <div name="list" tag="div" class="col-12 col-md-9 data-body" :class="{ 'px-0': !isMobile, 'mt-3': isMobile}">
+                <LazyPageListTabs  :types="types" :key="JSON.stringify(types)"/>
+                <LazyPageListPager v-if="showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results?.count}`"/>
 
-            
-                <div name="list" tag="div" class="col-12 col-md-9 data-body">
-                    <PageListTabs  :types="types" :key="JSON.stringify(types)"/>
-                    <PageListPager v-if="showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results.count}`"/>
-                    <ClientOnly>
-                        <transition-group name="list">
-                            <PageListRow  :a-line="aLine" v-for="(aLine,index) in results?.data" :key="index" />
-                        </transition-group>
-                    </ClientOnly>
-                    <!-- <PageListRow  :a-line="aLine" v-for="(aLine,index) in results?.data" :key="index" /> -->
-                    <PageListPager :count="results?.count"/>
-                </div>
-
-          
-
-            <!-- <span :key="`showTopPage${showTopPager}${results?.count}-span`">&nbsp;</span>
-            <div class="col-12 col-md-9 offset-md-3 ">
-                <PageListPager :count="results?.count"/>
-            </div> -->
+                <LazySpinner v-if="loading" :size="75"/>
+                <ClientOnly>
+                    <transition-group  name="list">
+                        <LazyPageListRow  :a-line="aLine" v-for="(aLine,index) in results?.data" :key="index" />
+                    </transition-group>
+                </ClientOnly>
+                <LazyPageListPager :count="results?.count"/>
+            </div>
         </div>
     </div>
-
 </template>
-<i18n src="@/i18n/dist/components/page/list/index.json"></i18n>
 <script setup>
-    import { useSiteStore  } from '~/stores/site';
-    import { useMenusStore } from '~/stores/menus';
-    import { usePageStore  } from '~/stores/page';
-    import clone from 'lodash.clonedeep';
-    
-    const { t  }                        = useI18n();
-    const   r                           = useRoute();
-    const   siteStore                   = useSiteStore();
-    const   pageStore                   = usePageStore ();
-    const   eventBus                    = useEventBus();
-    const   props                       = defineProps({ 
-                                                        showTopPager: { type: Boolean, default: false },
-                                                        title       : { type: String,  default: '' },
-                                                        types: { type: Array, default: () => [] },
-                                                    });
+    import   clone           from 'lodash.clonedeep';
 
-    const { showTopPager, title  }       = toRefs(props);
+    const { primaryColorStyle } = useTheme();
+    const   isMobile    = isMobileFn   ();
+    const { t         } = useI18n      ();
+    const   r           = useRoute     ();
+    const   siteStore   = useSiteStore ();
+    const   pageStore   = usePageStore ();
+    const   eventBus    = useEventBus  ();
+    const   props       = defineProps ({    
+                                        title: { type: String,  default: '' },
+                                        types: { type: Array, default: () => [] }
+                                    });
 
-    const isSecretariat  = computed(()=> pageStore?.page?.drupalInternalNid === 87 || pageStore?.page?.drupalInternalNid === 88 && r.query?.schemas?.length > 2);   
+    const showTopPager   = computed(()=>pageStore.isSearchAll);
+
+    const { title  }     = toRefs(props);
+    const isSecretariat  = computed(()=> ((pageStore?.page?.parent?.length && pageStore?.page?.parent[0].id !== 'virtual'))); 
     const isContent      = computed(()=> pageStore?.page?.drupalInternalNid === 25 || pageStore?.page?.drupalInternalNid === 88 && r.query?.schemas?.length === 2);  
+    const type           = computed(()=> isSecretariat.value? 'secretariat' : isContent.value? 'content' : undefined);
 
-    const   type = computed(()=> isSecretariat.value? 'secretariat' : isContent.value? 'content' : undefined);
-    
+    const { isContentTypeId, getContentType }  = useMenusStore();
 
-    const { contentTypes, mediaTypes, isContentTypeId, getContentType }  = useMenusStore();
+    const schemas           = computed(() => r?.query?.schemas? r?.query?.schemas : undefined);
+    const freeText          = computed(() => r?.query?.freeText? r?.query?.freeText : '');
+    const page              = computed(() => r?.query?.page? r?.query?.page : 1);
+    const rowsPerPage       = computed(() => r?.query?.rowsPerPage? r?.query?.rowsPerPage : 10);
+    const query             = clone({ ...r.query, ...siteStore.params, freeText, page, rowsPerPage, schemas });
+    const typeId            = computed(getContentTypeId);
+    const contentTypeName   = computed(getContentTypeName);
 
+    const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query});
 
-    const drupalTypes   = { ...contentTypes };
-    const schemas       = computed(() => r?.query?.schemas? r?.query?.schemas : undefined);
-    const freeText      = computed(() => r?.query?.freeText? r?.query?.freeText : '');
-    const page          = computed(() => r?.query?.page? r?.query?.page : 1);
-    const rowsPerPage   = computed(() => r?.query?.rowsPerPage? r?.query?.rowsPerPage : 10);
-    const query         = clone({ ...r.query, ...siteStore.params, freeText, page, rowsPerPage, schemas });
-    const typeId        = computed(getContentTypeId);
-    const contentTypeName = computed(getContentTypeName)
+    const loading = computed(()=> pageStore.loading || status.value === 'pending');
 
-
-    const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query });
-
-    // function onResponse({ request, response, options}){
-    //     consola.error('onResponse response._data',response._data)
-    // }
-
-    onMounted(() => { eventBus.on('changePage', refresh); });
+    onMounted(() => { eventBus.on('changePage', () => {
+        results.value = [];
+        setTimeout(refresh, 250);
+    }); });
  
     function getContentTypeId(){
-        const contentType = r?.params?.contentType;
+        if(pageStore?.page?.type === 'taxonomy_term--system_pages') return ''
+
+        const contentType = r?.params[0];
 
         if(!contentType) return '';
 
@@ -97,21 +85,10 @@
     }
 
     function getContentTypeName(){
-        const contentType = r?.params?.contentType;
-
-        if(!contentType) return '';
-
-        if(isNumberString(contentType) && isContentTypeId(contentType))
-            return getContentTypeById(contentType)?.slug?.slice(1);
-
-        const contentTypeDataObj = getContentType(contentType)
-
-        return contentTypeDataObj?.slug?.slice(1)
+        return pageStore?.typeNamePlural;
     }
 
     function getApiUri(){
-// consola.error('type.value',type.value)
-// consola.error('typeId.value',typeId.value)
 
         if(type.value == 'secretariat')
             return `/api/list/chm`;
@@ -122,32 +99,24 @@
         return `/api/list/content`;
     }
 
-    // function changeTab(){ refresh(); }
-
     function isNumberString(string) {
         return /^[0-9]*$/.test(string);
     }
 </script>
 
 <style scoped>
-
+.page-body{
+    min-height: 60vh;
+}
 .page-type{
     padding-left: 0;
     padding-top: 1rem;
-    border-top: var(--bs-primary) .5rem solid;
     font-size: 2rem;
-    color: var(--bs-primary);
 }
 .data-body{
-
-padding-left: 0;
-padding-right: 0;
-border-top: black .5rem solid;
-padding-top: 1rem;
-
+    border-top: black .5rem solid;
+    padding-top: 1rem;
 }
-
-
 .list-move,
 .list-enter-active,
 .list-leave-active {

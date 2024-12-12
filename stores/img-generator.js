@@ -1,8 +1,5 @@
 import { defineStore } from 'pinia';
-import {kebabCase} from 'change-case';
 import clone from 'lodash.clonedeep';
-
-
 
 export const useImageGenStore = defineStore('imageGenerator', { 
     state : () => ({countMap:  {
@@ -68,15 +65,16 @@ export const useImageGenStore = defineStore('imageGenerator', {
     }}),
     actions:{
         getImage (ctx) {
+            if(!ctx) return
 
-            const type   = this.getTypePath(ctx);// || this.getTypePath(ctx);
+            const type   = this.getTypePath(ctx);
         
             if(!this.countMap[type]) consola.warn('No images for type: ', type )
             if(!this.countMap[type]) return { src: '/images/no-image.png'   , alt: '', title: ''}
         
             const src = this.getSrc(type);
         
-            const alt    = ctx?.title || ctx?.name || ctx?.fieldTitle || ctx?.fieldName || '';
+            const alt = ctx?.title || ctx?.name || ctx?.fieldTitle || ctx?.fieldName || '';
         
             return { alt, src, title: alt }
         },
@@ -97,11 +95,7 @@ export const useImageGenStore = defineStore('imageGenerator', {
         getTypePath(ctx){
             const { schema:s, fieldTypePlacement} = ctx;
             
-            const schema = s || this.getTypeNameFromDrupalRecord(ctx);
-        
-            
-            // if(!schema) return undefined;
-        
+            const schema      = s || this.getTypeNameFromDrupalRecord(ctx);
             const exists      = !!this.countMap[schema];
             const notEmpty    = !!this.countMap[schema]?.length || 0;
         
@@ -122,7 +116,6 @@ export const useImageGenStore = defineStore('imageGenerator', {
             const drupalTypes = ['', '', '', 'events']
         
             return drupalTypes[ctx?.fieldTypePlacement?.drupalInternalTid]
-        
         }
     }
 
