@@ -1,5 +1,5 @@
 <template>
-    <div v-if="isMobile" class="w-100 small-header position-fixed top-0 start-0 justify-content-start align-items-center  d-flex flex-row   d-md-none">
+    <div v-if="isMobile" id="mobile-header" class="w-100 small-header position-fixed top-0 start-0 justify-content-start align-items-center  d-flex flex-row   d-md-none">
     
             <NuxtLink  class="me-0" :to="localePath(`/`)" :alt="t('Home')"  >
                 <NuxtImg  :alt="name" height="64" width="100%" format="webp" :src="logo" class="small-header-logo m-2 me-1"/>
@@ -27,8 +27,8 @@
             </div>
             
     </div>
-    <div v-if="!hasLargeName" ref="cont" class="container d-none d-md-flex">
-        <div class=" navbar-header row align-items-center pe-3" :style="{ width: rowElWidth?`${rowElWidth+64}px`: '100%' }">
+    <div v-if="!hasLargeName" ref="cont" id="desktop-header-small" class="container d-none d-md-flex">
+        <div class="navbar-header row align-items-center pe-3" :style="{ width: rowElWidth?`${rowElWidth+64}px`: '100%' }">
             <div class="col-md-9 col-lg-9 d-flex  justify-content-start align-items-center">
                 <NuxtLink  class="me-2" :to="localePath(`/`)" :alt="t('Home')"  >
                     <NuxtImg  :alt="name" height="64" width="100%" format="webp" class="logo" :src="logo"  />
@@ -36,7 +36,7 @@
                 <NuxtLink class="me-0 pe-0 navbar-brand"  :class="{ hero: hasHeroImage }" :to="localePath(`/`)" :alt="t('Home')" >
                     {{name}}
                 </NuxtLink>
-                <NuxtLink class="navbar-brand line align-self-stretch" :class="{ hero: hasHeroImage }" :to="localePath(`/`)" :alt="t('Home')" > &nbsp; </NuxtLink>
+                <span class="navbar-brand line align-self-stretch" :class="{ hero: hasHeroImage }" > &nbsp; </span>
 
                 <NuxtLink class="sublogo ms-1" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')" >
                     <svg class="scbd-logo" :class="{ hero: hasHeroImage }" width="34" height="42" viewBox="0 0 34 42"  fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -69,7 +69,7 @@
             </div>
         </div> 
     </div>
-    <div v-if="hasLargeName" ref="contL" class="container d-none d-md-flex">
+    <div v-if="hasLargeName" ref="contL" id="desktop-header-large" class="container d-none d-md-flex">
         <div class=" navbar-header row align-items-center pe-3" :style="{ width: rowElWidth?`${rowElWidth+64}px`: '100%' }">
             <div class="col-md-9 col-lg-9 d-flex  justify-content-start align-items-center">
                 <NuxtLink  class="me-2" :to="localePath(`/`)" :alt="t('Home')"  >

@@ -1,5 +1,5 @@
 <template >
-  <svg fill="transparent"  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" :height="sizes.svg" :width="sizes.svg">
+  <svg :id="`gbf-target-${number}`" fill="transparent"  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" :height="sizes.svg" :width="sizes.svg">
     <g fill="transparent">
       <rect :style="iconStyle"  x="0" y="0" :height="sizes.rect" :width="sizes.rect"  rx="5" stroke-width="1" />
       <text :x="sizes.text" :y="sizes.textY"  :font-size="sizes.fontSize" fill="white"> {{  number }} </text>
