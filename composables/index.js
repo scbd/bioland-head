@@ -14,6 +14,18 @@ export function isMobileFn(){
     return computed(()=> ['sm','xs'].includes(viewport.breakpoint.value));
 }
 
+export const useGetCachedDataBl2= () =>  {
+    const nuxtApp    = useNuxtApp();
+    
+    return (key) => { 
+        const hasCache = nuxtApp?.payload?.data[key] || nuxtApp?.static?.data[key];
+        
+        // if(hasCache) consola.info('has cache key', key);
+
+        return hasCache
+    }
+}
+
 export const useDateFormat = () => (date, format = 'dd LLL yyyy')=>{
 
     const { locale } = useI18n();
@@ -50,6 +62,7 @@ export const userTextSearch = () => {
 
 export const useGetPage = (locale) => {
     const nuxtApp            = useNuxtApp();
+    const getCachedData      = useGetCachedDataBl2();
     const siteStore          = useSiteStore(nuxtApp.$pinia);
 
     const { multiSiteCode }  = useRuntimeConfig().public;
@@ -63,10 +76,16 @@ export const useGetPage = (locale) => {
         const key = ref(`${multiSiteCode}-${identifier}-${locale}-${encodeURIComponent(path.value)}`);
     
         try{
+            const hasCash = getCachedData(`page-${path.value}`);
+
+            if(hasCash) 
+                return hasCash;
+
             if(key.value?.includes('undefined'))  throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}` }) 
         
             const  data  = await $fetch(`/api/page/${key.value}/${encodeURIComponent(path.value)}`, {  method: 'GET', headers, query: clone({ ...siteStore.params, path:path.value }) })//.then(({ data }) => data);
         
+            nuxtApp.payload.data[`page-${path.value}`]=data;
             return data;
         }catch(e){
             consola.error(e)

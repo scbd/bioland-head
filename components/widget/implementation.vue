@@ -6,13 +6,13 @@
     import clone from 'lodash.clonedeep';
 
     const { t, locale  } = useI18n();
-    const siteStore = useSiteStore();
-    const menuStore = useMenusStore();
-    const query     = clone({ ...siteStore.params });
-    const localePath = useLocalePath();
+    const siteStore      = useSiteStore();
+    const menuStore      = useMenusStore();
+    const query          = clone({ ...siteStore.params });
+    const localePath     = useLocalePath();
+    const getCachedData  = useGetCachedDataBl2();
 
-
-    const { data: record , status, error }= await useLazyFetch(`/api/list/content/5`, {  method: 'GET', query, onResponse });
+    const { data: record , status, error }= await useLazyFetch(`/api/list/content/5`, {  method: 'GET', query, onResponse, getCachedData, key:'implementation-widget' });
 
     const loading = computed(()=> status.value === 'pending'); 
 

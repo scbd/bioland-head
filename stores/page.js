@@ -76,13 +76,13 @@ export const usePageStore = defineStore('page', {
 
         },
         mediaTypeName(){
-           return this?.page?.type.replace('media--', '');
+            return this?.page?.type?.replace('media--', '');
         },
         isTaxonomyPage(){
-            return this?.page?.type.startsWith('taxonomy_term--');
+            return this?.page?.type?.startsWith('taxonomy_term--');
         },
         isNodePage(){
-            return this?.page?.type.startsWith('node--');
+            return this?.page?.type?.startsWith('node--');
         },
         heroImage(){
             const heroImages = Array.isArray(this.page?.fieldAttachments)? this.page.fieldAttachments.filter(({ type })=> type === 'media--hero') : [];
@@ -198,11 +198,11 @@ export const usePageStore = defineStore('page', {
 
         //     return this.page?.changed
         // },
-        // url(){
-        //     if(!this.page?.fieldUrl?.uri) return ''
+        url(){
+            if(!this.page?.fieldUrl?.uri) return ''
 
-        //     return this.page.fieldUrl.uri;
-        // },
+            return this.page.fieldUrl.uri;
+        },
         tags(){
             return this?.page?.tags || {}
         },

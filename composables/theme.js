@@ -38,7 +38,7 @@ export function useImageBackground(record, options = defaultImageOptions){
     const imageGenStore = useImageGenStore(nuxtApp.$pinia);
     const img           = useImage();
     const imgUri        = unref(record)? (unref(record)?.mediaImage?.src || imageGenStore.getImage(unref(record))?.src) : undefined;
-    const hasImg        = imgUri && imgUri !== '/images/no-image.png';  
+    const hasImg        = unref(record)?.mediaImage?.src && unref(record)?.mediaImage?.src !== '/images/no-image.png';  
 
     const backgroundStyles = computed(() => {
 

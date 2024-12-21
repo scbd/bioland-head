@@ -4,11 +4,12 @@
 <script setup>
     import clone from 'lodash.clonedeep';
 
-    const siteStore  = useSiteStore();
-    const { t  }     = useI18n();
-    const query      = clone({ ...siteStore.params });
+    const getCachedData  = useGetCachedDataBl2();
+    const siteStore      = useSiteStore();
+    const { t  }         = useI18n();
+    const query          = clone({ ...siteStore.params });
 
-    const { data: record, status, error } = await useLazyFetch('/api/list/panorama', {  method: 'GET', onResponse, query });
+    const { data: record, status, error } = await useLazyFetch('/api/list/panorama', {  method: 'GET', onResponse, query, getCachedData, key:'panorama-widget' });
 
     const loading = computed(()=> status.value === 'pending'); 
 
