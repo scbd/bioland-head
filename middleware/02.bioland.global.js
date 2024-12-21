@@ -72,9 +72,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   async function getMe(){
 
     try{
-
-      consola.info('meStore.isAuthenticated', meStore.isAuthenticated)
-      consola.info('meStore.isExpired', meStore.isExpired)
       if(meStore.isAuthenticated && !meStore.isExpired) return;
 
       const { data, error } = await useFetch(`/api/me`, {  method: 'GET', query: clone({...siteStore.params, path:to.path})})//.then(({ data }) => data);

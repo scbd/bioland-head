@@ -19,8 +19,6 @@ export const useGetCachedDataBl2= () =>  {
     
     return (key) => { 
         const hasCache = nuxtApp?.payload?.data[key] || nuxtApp?.static?.data[key];
-        
-        // if(hasCache) consola.info('has cache key', key);
 
         return hasCache
     }
@@ -69,7 +67,7 @@ export const useGetPage = (locale) => {
 
     return   async (passedPath, clearCache = false) =>{ 
     
-        const   path                  = ref(passedPath); //ref(passedPath.endsWith('/topics')? passedPath.replace('/topics', '') : passedPath);
+        const   path                  = ref(passedPath);
         const { identifier } = siteStore;
     
         const headers = clearCache? { 'Clear-Cache': true } : {};
@@ -83,7 +81,7 @@ export const useGetPage = (locale) => {
 
             if(key.value?.includes('undefined'))  throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}` }) 
         
-            const  data  = await $fetch(`/api/page/${key.value}/${encodeURIComponent(path.value)}`, {  method: 'GET', headers, query: clone({ ...siteStore.params, path:path.value }) })//.then(({ data }) => data);
+            const  data  = await $fetch(`/api/page/${key.value}/${encodeURIComponent(path.value)}`, {  method: 'GET', headers, query: clone({ ...siteStore.params, path:path.value }) })
         
             nuxtApp.payload.data[`page-${path.value}`]=data;
             return data;

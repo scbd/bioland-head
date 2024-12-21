@@ -23,7 +23,7 @@
                         
                         <p v-if=" logOutUrl">
                             <NuxtLink class="nav-link text-black" :to="logOutUrl" external >
-                            <LazyIcon name="lock" color="#000000" :size="1.5" class="me-1"/> Logout
+                                <LazyIcon name="lock" color="#000000" :size="1.5" class="me-1"/> Logout
                             </NuxtLink>
                         </p>
                         <p>
@@ -75,8 +75,6 @@
         sesCookie.value = undefined;
         
     });
-
-    consola.warn('hasSessionCookie()',hasSessionCookie())
 </script>
 
 <style lang="scss" scoped>
