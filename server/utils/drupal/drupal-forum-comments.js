@@ -138,7 +138,7 @@ function getFilterParams({ event, topicId }){
 
     sortQueryString += `&filter[topic-filter][condition][path]=entity_id.id`;
     sortQueryString += `&filter[topic-filter][condition][operator]=%3D`;
-    sortQueryString += `&filter[topic-filter][condition][value]=${topicId}`;
+    sortQueryString += `&filter[topic-filter][condition][value]=${encodeURIComponent(topicId)}`;
 
     return sortQueryString;
 }
@@ -150,12 +150,12 @@ function getFreeTextFilterParams({ freeText}){
 
     sortQueryString += `&filter[free-text-title][condition][path]=subject`;
     sortQueryString += `&filter[free-text-title][condition][operator]=CONTAINS`;
-    sortQueryString += `&filter[free-text-title][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-title][condition][value]=${encodeURIComponent(freeText)}`;
     sortQueryString += `&filter[free-text-title][condition][memberOf]=or-group`;
 
     sortQueryString += `&filter[free-text-body][condition][path]=comment_body.value`;
     sortQueryString += `&filter[free-text-body][condition][operator]=CONTAINS`;
-    sortQueryString += `&filter[free-text-body][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-body][condition][value]=${encodeURIComponent(freeText)}`;
     sortQueryString += `&filter[free-text-body][condition][memberOf]=or-group`;
 
     return sortQueryString;

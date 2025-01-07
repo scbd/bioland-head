@@ -40,7 +40,7 @@ export const userTextSearch = () => {
         if(!value) return navigateTo(localePath(searchPath.value));
 
         if(route.path !== searchPath?.value)
-            navigateTo(localePath(`${searchPath.value}?freeText=${value}`));
+            navigateTo(localePath(`${searchPath.value}?freeText=${encodeURIComponent(value)}`));
         else
             await router.push({ path:localePath(searchPath.value), query: { freeText: value } });
     }
@@ -65,7 +65,7 @@ export const useGetPage = (locale) => {
         try{
             if(key.value?.includes('undefined'))  throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}` }) 
         
-            const  data  = await $fetch(`/api/page/${key.value}/${encodeURIComponent(path.value)}`, {  method: 'GET', headers, query: clone({ ...siteStore.params, path:path.value }) })//.then(({ data }) => data);
+            const  data  = await $fetch(`/api/page/${encodeURIComponent(key.value)}/${encodeURIComponent(path.value)}`, {  method: 'GET', headers, query: clone({ ...siteStore.params, path:path.value }) })//.then(({ data }) => data);
         
             return data;
         }catch(e){

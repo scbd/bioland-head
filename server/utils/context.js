@@ -65,12 +65,12 @@ export async function getSiteConfig({  siteCode }){
     try{
         const { multiSiteCode, env, dmsm } = useRuntimeConfig().public;
 
-        const uri = `${dmsm}/config/${env}/${multiSiteCode}/${siteCode}`;
+        const uri = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}/${encodeURIComponent(siteCode)}`;
 
         return $fetch(uri);
     }catch(e){
         const { multiSiteCode, env, dmsm } = useRuntimeConfig().public;
-        const uri = `${dmsm}/config/${env}/${multiSiteCode}/${siteCode}`;
+        const uri = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}/${encodeURIComponent(siteCode)}`;
         
         console.error(e);
         throw createError({ 

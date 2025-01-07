@@ -8,7 +8,7 @@ export function getTagFilterParams(filters){
     for(const filter of filters){
         filterQueryString += `&filter[tag-filter-${count}][condition][path]=field_tags`
         filterQueryString += `&filter[tag-filter-${count}][condition][operator]=CONTAINS`
-        filterQueryString += `&filter[tag-filter-${count}][condition][value]=${filter}`;
+        filterQueryString += `&filter[tag-filter-${count}][condition][value]=${encodeURIComponent(filter)}`;
         count++;
     }
 
@@ -20,7 +20,7 @@ export function getPaginationParams({ page=1, rowsPerPage=10 }){
     const limit  = Number(rowsPerPage)? Number(rowsPerPage) : 10;
     const offSet = Number(page)>1? (Number(page)-1)*limit : 0 ;
 
-    return `&page[limit]=${limit}&page[offset]=${offSet}`;
+    return `&page[limit]=${encodeURIComponent(limit)}&page[offset]=${encodeURIComponent(offSet)}`;
 }
 
 

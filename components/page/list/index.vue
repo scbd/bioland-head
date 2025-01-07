@@ -94,7 +94,7 @@
             return `/api/list/chm`;
 
         if(typeId.value )
-            return `/api/list/content/${typeId.value}`;
+            return `/api/list/content/${encodeURIComponent(typeId.value)}`;
 
         return `/api/list/content`;
     }

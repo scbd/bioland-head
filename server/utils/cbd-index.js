@@ -112,7 +112,8 @@ export const normalizeIndexKeys = (obj) => {
 }
 
 export const queryScbdIndex = async (ctx, queryBody) => {
-    const uri = 'https://api.cbd.int/api/v2013/index/select';
+    const { gaiaApi }   = useRuntimeConfig().public;
+    const   uri         = `${gaiaApi}/v2013/index/select`;
 
     const body = queryBody? JSON.stringify(queryBody) : getAllQuery(ctx);
 

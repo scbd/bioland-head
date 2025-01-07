@@ -70,7 +70,7 @@
 
     onMounted(() => { eventBus.on('changePage', refresh); });
 
-    function getApiUri(){ return `/api/forums/${route.params[1]}`; }
+    function getApiUri(){ return `/api/forums/${encodeURIComponent(route.params[1])}`; }
 </script>
 
 <style scoped>

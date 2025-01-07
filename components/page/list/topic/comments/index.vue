@@ -112,7 +112,7 @@
         const topicId = pageStore?.page?.id;
         const forumId = pageStore?.page?.taxonomyForums?.id;
 
-        return `/api/forums/${forumId}/${topicId}`;    
+        return `/api/forums/${encodeURIComponent(forumId)}/${encodeURIComponent(topicId)}`;    
     }
 
 </script>

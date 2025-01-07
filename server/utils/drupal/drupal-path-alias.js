@@ -61,7 +61,7 @@ function getSearchParams(type, nodeId, locale = 'en'){
 
     search['filter[node-id][condition][path]']     = 'path';
     search['filter[node-id][condition][operator]'] = '=';
-    search['filter[node-id][condition][value]']    = `/${type}/${nodeId}`;
+    search['filter[node-id][condition][value]']    = `/${encodeURIComponent(type)}/${encodeURIComponent(nodeId)}`;
     
     return search 
 }
@@ -75,7 +75,7 @@ function getSearchParamsByAlias(alias){
 
     search['filter[node-id][condition][path]']     = 'alias';
     search['filter[node-id][condition][operator]'] = 'ENDS_WITH';
-    search['filter[node-id][condition][value]']    = alias;
+    search['filter[node-id][condition][value]']    = encodeURIComponent(alias);
     
     return search 
 }

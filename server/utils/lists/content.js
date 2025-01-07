@@ -118,7 +118,7 @@ function getTypeFilterParams({ drupalInternalId, drupalInternalIds }){
     filterQueryString += `&filter[taxonomy_term--tags][condition][operator]=IN`
 
     for(const filter of filters)
-        filterQueryString += `&filter[taxonomy_term--tags][condition][value][]=${filter}`;
+        filterQueryString += `&filter[taxonomy_term--tags][condition][value][]=${encodeURIComponent(filter)}`;
 
 
     return  filterQueryString;
@@ -130,11 +130,11 @@ function getSortParams({ sortBy, sortDirection }){
 
     let sortQueryString = '';
     sortQueryString += `&sort[sticky][path]=sticky`
-    sortQueryString += `&sort[sticky][direction]=${direction}`
+    sortQueryString += `&sort[sticky][direction]=${encodeURIComponent(direction)}`
     sortQueryString += `&sort[sort-start][path]=field_start_date`
-    sortQueryString += `&sort[sort-start][direction]=${direction}`
-    sortQueryString += `&sort[sort-created][path]=${sortBy || 'changed'}`
-    sortQueryString += `&sort[sort-created][direction]=${direction}`
+    sortQueryString += `&sort[sort-start][direction]=${encodeURIComponent(direction)}`
+    sortQueryString += `&sort[sort-created][path]=${encodeURIComponent(sortBy || 'changed')}`
+    sortQueryString += `&sort[sort-created][direction]=${encodeURIComponent(direction)}`
 
     return sortQueryString;
 }
@@ -146,12 +146,12 @@ function getFreeTextFilterParams({ freeText }){
 
     sortQueryString += `&filter[free-text-title][condition][path]=title`;
     sortQueryString += `&filter[free-text-title][condition][operator]=CONTAINS`;
-    sortQueryString += `&filter[free-text-title][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-title][condition][value]=${encodeURIComponent(freeText)}`;
     sortQueryString += `&filter[free-text-title][condition][memberOf]=or-group`;
 
     sortQueryString += `&filter[free-text-body][condition][path]=body.value`;
     sortQueryString += `&filter[free-text-body][condition][operator]=CONTAINS`;
-    sortQueryString += `&filter[free-text-body][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-body][condition][value]=${encodeURIComponent(freeText)}`;
     sortQueryString += `&filter[free-text-body][condition][memberOf]=or-group`;
 
     return sortQueryString;

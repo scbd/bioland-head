@@ -165,7 +165,7 @@ function getFilterParams({ event }){
 
     sortQueryString += `&filter[topic-filter][condition][path]=entity_id.id`;
     sortQueryString += `&filter[topic-filter][condition][operator]=%3D`;
-    sortQueryString += `&filter[topic-filter][condition][value]=${entityIdentifier}`;
+    sortQueryString += `&filter[topic-filter][condition][value]=${encodeURIComponent(entityIdentifier)}`;
 
     return sortQueryString;
 }
@@ -177,12 +177,12 @@ function getFreeTextFilterParams({ freeText}){
 
     sortQueryString += `&filter[free-text-title][condition][path]=subject`;
     sortQueryString += `&filter[free-text-title][condition][operator]=CONTAINS`;
-    sortQueryString += `&filter[free-text-title][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-title][condition][value]=${encodeURIComponent(freeText)}`;
     sortQueryString += `&filter[free-text-title][condition][memberOf]=or-group`;
 
     sortQueryString += `&filter[free-text-body][condition][path]=comment_body.value`;
     sortQueryString += `&filter[free-text-body][condition][operator]=CONTAINS`;
-    sortQueryString += `&filter[free-text-body][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-body][condition][value]=${encodeURIComponent(freeText)}`;
     sortQueryString += `&filter[free-text-body][condition][memberOf]=or-group`;
 
     return sortQueryString;
@@ -197,7 +197,7 @@ function getStatusFilter({event}){
     if(isAuthenticated && duuid){
         sortQueryString += `&filter[is-owner][condition][path]=uid.id`;
         sortQueryString += `&filter[is-owner][condition][operator]=%3D`;
-        sortQueryString += `&filter[is-owner][condition][value]=${duuid}`;
+        sortQueryString += `&filter[is-owner][condition][value]=${encodeURIComponent(duuid)}`;
         sortQueryString += `&filter[is-owner][condition][memberOf]=or-group-status`;
     }
 
@@ -208,10 +208,5 @@ function getStatusFilter({event}){
         sortQueryString += `&filter[status][condition][memberOf]=or-group-status`;
     }
 
-    return ''//sortQueryString;
+    return ''
 }
-
-// function nextUri ({ next } = {}){
-//     if(!next) return
-//     return next.href
-// }

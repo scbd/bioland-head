@@ -38,7 +38,7 @@ export async function getPageData(ctx){
 
 async function getChildren(ctx, data){
     const { localizedHost }       = ctx;
-    const   query                 =`?jsonapi_include=1&include=parent&filter[a-label][condition][path]=parent.id&filter[a-label][condition][operator]=%3D&filter[a-label][condition][value]=${data.id}`
+    const   query                 =`?jsonapi_include=1&include=parent&filter[a-label][condition][path]=parent.id&filter[a-label][condition][operator]=%3D&filter[a-label][condition][value]=${encodeURIComponent(data.id)}`
 
     const   uri                   = `${localizedHost}/jsonapi/taxonomy_term/system_pages${query}`;
 
@@ -149,7 +149,7 @@ async function getThumbFiles(data,  {localizedHost, host }){
         const { type, thumbnail } = attachment;
         
         if(thumbnail?.id){
-            const thumb = (await $fetch(`${localizedHost}/jsonapi/file/file/${thumbnail.id}`, { query: {jsonapi_include: 1}, mode: 'cors' }) )?.data?.uri?.url
+            const thumb = (await $fetch(`${localizedHost}/jsonapi/file/file/${encodeURIComponent(thumbnail.id)}`, { query: {jsonapi_include: 1}, mode: 'cors' }) )?.data?.uri?.url
 
             if(thumb) return host+thumb
         }
