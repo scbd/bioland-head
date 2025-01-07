@@ -41,8 +41,8 @@
     const pageStore       = usePageStore();
     const { t }           = useI18n();
 
-    const dropDownEl      = ref(undefined);
-    const dropDownLinkEl  = ref(undefined);
+    const dropDownEl      = shallowRef(undefined);
+    const dropDownLinkEl  = shallowRef(undefined);
     const limitedMenus    = ref([]);
     const otherMenus      = ref([]);
     const viewport        = useViewport();

@@ -53,7 +53,7 @@
     const   siteStore          = useSiteStore (     );
     const   eventBus           = useEventBus  (     );
     const { t              , } = useI18n      (     );
-    const   replyEditor        = ref          (     );
+    const   replyEditor        = shallowRef   (     );
     const   isFocused          = ref          (false);
     const   showEmojiPicker    = ref          (false);
 
@@ -74,7 +74,7 @@
     const query         = computed(() =>clone ({ ...route.query || {}, ...siteStore.params,  }))
 
 
-    const { data, status, refresh } = await useLazyFetch(()=>`/api/comments/${entityId.type}/${entityId.id}/${id}`, {  method: 'GET', query,  onResponse,onRequest });
+    const { data, status, refresh } = await useLazyFetch(()=>`/api/comments/${encodeURIComponent(entityId.type)}/${encodeURIComponent(entityId.id)}/${encodeURIComponent(id)}`, {  method: 'GET', query,  onResponse,onRequest });
 
     const reply = computed(()=> data.value || passedReply.value);
     const count = computed(()=> reply?.value?.comments?.length || 0);
