@@ -14,7 +14,6 @@ async function getComments(ctx) {
 
     const data = await getCommentsFromApiPager(ctx);
 
-
     return embedThreads(ctx,data);
 };
 
@@ -37,7 +36,7 @@ export async function getCommentsFromApiPager (ctx, next){
         return data
     }
     catch(e){
-       // console.error(' recursive', e)
+        console.error('getCommentsFromApiPager ', e)
     }
 }
 
@@ -115,7 +114,6 @@ function cleanUserPicture(ctx){
 }
 
 function getParams(ctx){
-    //getStatusFilter(ctx)+
     return getFreeTextFilterParams(ctx)+getFilterParams(ctx)+getStatusFilter(ctx)+getSortParams(ctx)
 }
 
@@ -127,12 +125,8 @@ function getSortParams(ctx){
     return filterQueryString;
 }
 function getFilterParams({ event, topicId }){
-    const { me } = event.context;
-    const { isAdmin, isSiteManager, isContentManager, isContributor } = me;
+
     let sortQueryString = '';
-    
-    // sortQueryString += `&filter[thread-filter][condition][path]=pid`
-    // sortQueryString += `&filter[thread-filter][condition][operator]=${encodeURIComponent('IS NULL')}`;
 
     if(!topicId) return '';
 
@@ -181,10 +175,5 @@ function getStatusFilter({event}){
         sortQueryString += `&filter[status][condition][memberOf]=or-group-status`;
     }
 
-    return ''//sortQueryString;
+    return ''
 }
-
-// function nextUri ({ next } = {}){
-//     if(!next) return
-//     return next.href
-// }
