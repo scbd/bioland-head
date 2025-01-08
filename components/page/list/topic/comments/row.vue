@@ -11,8 +11,7 @@
 
             <div class="col-12">
                 <div class="card-body">
-
-                    <div v-html="aLine.commentBody.value"></div>
+                    <div v-html="htmlSanitize(aLine.commentBody.value)"></div>
                 </div>
             </div>
 

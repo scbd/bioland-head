@@ -3,7 +3,7 @@
         <div class="p-1 d-inline-flex align-items-start w-100">
             <div class="mt-1"><LazyAvatar :user="reply.user" /></div>
             <div class="">
-                <div class="reply rounded  ms-1 p-2 mb-0"  v-html="reply?.commentBody?.value"></div>           
+                <div class="reply rounded  ms-1 p-2 mb-0"  v-html="htmlSanitize(reply?.commentBody?.value)"></div>           
             </div>
             
         </div>

@@ -18,7 +18,7 @@
                 <div name="list" tag="div" class="col-12 col-md-9 data-body">
                     
                     <div>
-                        <div v-html="results?.body?.value || ''"></div>
+                        <div v-html="htmlSanitize(results?.body?.value)"></div>
 
                         <LazyFormCommentInput :likes="likes" :count="results?.comments?.length"/>
                     </div>
@@ -32,7 +32,7 @@
                 <template #fallback>
                     <div name="list" tag="div" class="col-12 col-md-9 data-body">
                         <div>
-                            <div v-html="results?.body?.value || ''"></div>
+                            <div v-html="htmlSanitize(results?.body?.value)"></div>
 
                             <LazyFormCommentInput :likes="likes" :count="results?.comments?.length"/>
                         </div>
@@ -91,12 +91,13 @@
 
         if(!key || key === 'undefined') return;
 
-        response._data[r.name] = key;
+
+        response._data[route.name] = key;
     }
 
     onMounted(() => { 
 
-        noCacheKey.value = results.value[r.name];
+        noCacheKey.value = results.value[route.name];
 
         eventBus.on('changePage', ({ noCache } = {})=>{
         results.value = {};

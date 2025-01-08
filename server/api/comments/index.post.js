@@ -52,7 +52,7 @@ function getCommentTemplate({ entityIdentifier, entityType, replyIdentifier, rep
                                 entity_type :  "node",
                                 field_name :  "comment_forum",
                                 comment_body: {
-                                    value: comment,
+                                    value: htmlSanitize(comment),
                                     format: "basic_html",
                                 }
                             },
