@@ -57,7 +57,7 @@ async function getTopics (ctx) {
     const params = getTopicFilterQueryString(ctx)+getFreeTextFilterParams(ctx);
 
     const id =  topicId? `/${topicId}` : '';
-    const uri           = `${ localizedHost}/jsonapi/node/forum${encodeURIComponent(id)}?jsonapi_include=1&include=taxonomy_forums&page[limit]=${encodeURIComponent(rowsPerPage)}${params}`;
+    const uri           = `${ localizedHost}/jsonapi/node/forum/${id}?jsonapi_include=1&include=taxonomy_forums&page[limit]=${encodeURIComponent(rowsPerPage)}${params}`;
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 

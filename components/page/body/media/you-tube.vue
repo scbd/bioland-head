@@ -12,7 +12,7 @@
     const pageStore = usePageStore();
     const url       = computed(()=>pageStore?.video?.fieldMediaOembedVideo || u.value);
     const title     = computed(()=>pageStore?.video?.name || pageStore?.media?.title || t.value);
-    const ombedUrl  = 'https://www.youtube.com/oembed?format=json&url=' + url.value;
+    const ombedUrl  = 'https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent(url.value);
     const ombedHtml = (await useFetch(ombedUrl, { method: 'GET', headers: { 'Content-Type': 'application/json' } })).data;
     const pattern   = /src="https:\/\/www.youtube.com\/embed\/([^?]+)\?feature=oembed"/;
 
