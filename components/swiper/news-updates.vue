@@ -5,8 +5,8 @@
     </div>
     <div  class="position-relative mt-1" style="min-height:250px;">
         <LazySpinner v-if="loading" :is-modal="true"/>
-        <ClientOnly>
-            <swiper
+        <!-- <ClientOnly> -->
+            <LazySwiper
                 :loop="true"
                 :slidesPerView="slidePerView"
                 :spaceBetween="spaceBetween"
@@ -14,16 +14,16 @@
                 :modules="modules"
             >
 
-                <SwiperButton  direction="left"/> 
+                <LazySwiperButton  direction="left"/> 
 
-                <SwiperSlide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
+                <LazySwiperSlide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
 
                     <LazyCards :record="slide" />
-                </SwiperSlide>
+                </LazySwiperSlide>
 
-                <SwiperButton  direction="right"/> 
-            </swiper>
-        </ClientOnly>
+                <LazySwiperButton  direction="right"/> 
+            </LazySwiper>
+        <!-- </ClientOnly> -->
     </div>
 </template>
 <script setup>
@@ -32,9 +32,10 @@ import { useWindowSize } from '@vueuse/core';
 import 'swiper/css';
 import clone from 'lodash.clonedeep';
 
-const localePath = useLocalePath();
-const siteStore  = useSiteStore();
-const { t }      = useI18n();
+const getCachedData  = useGetCachedData();
+const localePath     = useLocalePath();
+const siteStore      = useSiteStore();
+const { t }          = useI18n();
 
 const props = defineProps({ 
                          
@@ -44,7 +45,7 @@ const props = defineProps({
                             hideArrowsCount:  { type: Number, default: 4 },
                         });
 const { pagination, arrows, leftArrow ,  hideArrowsCount } = toRefs(props);
-const loading = ref(true)
+
 
 
 const { width: rowElWidth } = useWindowSize();
@@ -74,13 +75,12 @@ const spaceBetween = computed(()=> {
 });
 
 
-const query     = clone({ ...siteStore.params });
+const query = clone({ ...siteStore.params });
 
-const { data:slides, status } = await useFetch(`/api/list/latest`, {  method: 'GET', query });
+const { data:slides, status } = await useFetch(`/api/list/latest`, {  method: 'GET', query, getCachedData });
 
-setTimeout(() => {
-    loading.value = false
-}, 500);
+const loading = computed(()=> status.value === 'pending');
+
 
 const headerStyle = reactive({
     display: 'inline-block',
