@@ -35,7 +35,7 @@
 
     const backgroundStyles = computed(() => {
 
-        if(!hasHeroImage.value) return {}
+        if(!hasHeroImage.value || !pageStore?.heroImage?.fieldMediaImage?.uri?.url) return {}
 
         const imgOptions = { 
                                 height : 750,
