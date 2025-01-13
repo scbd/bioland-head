@@ -4,11 +4,12 @@
 <script setup>
     import clone from 'lodash.clonedeep';
 
-    const   siteStore  = useSiteStore();
-    const { t }        = useI18n();
-    const   query      = clone({...siteStore.params, rowsPerPage: 5 });
+    const   getCachedData  = useGetCachedData();
+    const   siteStore      = useSiteStore();
+    const { t }            = useI18n();
+    const   query          = clone({...siteStore.params, rowsPerPage: 5 });
 
-    const { data: record, status, error  } = await useLazyFetch('/api/list/tsc', {  method: 'GET', query, onResponse });
+    const { data: record, status, error  } = await useLazyFetch('/api/list/tsc', {  method: 'GET', query, onResponse,key: 'tsc-widgert', getCachedData});
 
     const loading = computed(()=> status.value === 'pending');
 

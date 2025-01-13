@@ -50,11 +50,12 @@
 
     import clone from 'lodash.clonedeep';
 
-    const { t }         = useI18n();
-    const { trunc }     = useText();
-    const localPath     = useLocalePath();
-    const siteStore     = useSiteStore();
-    const img           = useImage();
+    const { t }          = useI18n();
+    const { trunc }      = useText();
+    const localPath      = useLocalePath();
+    const siteStore      = useSiteStore();
+    const img            = useImage();
+    const getCachedData  = useGetCachedData();
 
     const { bgStyle, style, colorStyle, linkStyle} = useTheme();
 
@@ -66,11 +67,11 @@
     links.value.push( { name: t('GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)'),       to: { path: 'https://portal.geobon.org/home' }, external: true  });
 
     const query      = clone({ ...siteStore.params });
-    const { data:count, status:countStatus, error:countError } =  await useLazyFetch(`/api/list/geobon/count`, {  method: 'GET',query });
+    const { data:count, status:countStatus, error:countError } =  await useLazyFetch(`/api/list/geobon/count`, {  method: 'GET',query, getCachedData });
 
     const index = computed(()=> randomArrayIndexTimeBased(Number(count.value)));
 
-    const { data:record, status, error} =  await useLazyFetch(`/api/list/geobon/${index.value}`, {  method: 'GET',query });
+    const { data:record, status, error} =  await useLazyFetch(`/api/list/geobon/${index.value}`, {  method: 'GET',query, key: 'geobon', getCachedData });
     const loading = computed(()=> countStatus.value === 'pending' || status.value === 'pending'); 
 
     const imgUri        = computed(() => record?.value?.id? `https://portal.geobon.org/data/upload/${record?.value?.id}/${record?.value?.file}` : ''); 

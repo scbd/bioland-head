@@ -14,6 +14,14 @@ export function isMobileFn(){
     return computed(()=> ['sm','xs'].includes(viewport.breakpoint.value));
 }
 
+export const useGetCachedData= () =>  {
+        const nuxtApp    = useNuxtApp();
+        
+        return (key) => { 
+            consola.info('cache key', key)
+            return nuxtApp?.payload?.data[key] || nuxtApp?.static?.data[key];
+        }
+}
 export const useDateFormat = () => (date, format = 'dd LLL yyyy')=>{
 
     const { locale } = useI18n();
