@@ -9,7 +9,7 @@
     const { t }            = useI18n();
     const   query          = clone({...siteStore.params, rowsPerPage: 5 });
 
-    const { data: record, status, error  } = await useLazyFetch('/api/list/tsc', {  method: 'GET', query, onResponse, getCachedData});
+    const { data: record, status, error  } = await useLazyFetch('/api/list/tsc', {  method: 'GET', query, onResponse,key: 'tsc-widgert', getCachedData});
 
     const loading = computed(()=> status.value === 'pending');
 

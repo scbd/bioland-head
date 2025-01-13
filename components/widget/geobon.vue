@@ -71,7 +71,7 @@
 
     const index = computed(()=> randomArrayIndexTimeBased(Number(count.value)));
 
-    const { data:record, status, error} =  await useLazyFetch(`/api/list/geobon/${index.value}`, {  method: 'GET',query, getCachedData });
+    const { data:record, status, error} =  await useLazyFetch(`/api/list/geobon/${index.value}`, {  method: 'GET',query, key: 'geobon', getCachedData });
     const loading = computed(()=> countStatus.value === 'pending' || status.value === 'pending'); 
 
     const imgUri        = computed(() => record?.value?.id? `https://portal.geobon.org/data/upload/${record?.value?.id}/${record?.value?.file}` : ''); 

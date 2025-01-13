@@ -12,7 +12,7 @@
     const localePath     = useLocalePath();
     const getCachedData  = useGetCachedData();
 
-    const { data: record , status, error }= await useLazyFetch(`/api/list/content/5`, {  method: 'GET', query, onResponse, getCachedData });
+    const { data: record , status, error }= await useLazyFetch(`/api/list/content/5`, {  method: 'GET', query, onResponse, key: 'implimentation', getCachedData });
 
     const loading = computed(()=> status.value === 'pending'); 
 

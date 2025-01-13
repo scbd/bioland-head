@@ -41,7 +41,7 @@
     const   siteStore      = useSiteStore ();
 
     const   query                 = clone({...siteStore.params, rowsPerPage:5 });
-    const { data, status, error } =  await useLazyFetch(`/api/list/topics`, {  method: 'GET', query, getCachedData });
+    const { data, status, error } =  await useLazyFetch(`/api/list/topics`, {  method: 'GET', query,key: 'forums-widget', getCachedData });
 
     function getHref(topic){
         const { nodeId } = topic;

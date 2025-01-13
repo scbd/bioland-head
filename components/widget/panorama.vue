@@ -9,7 +9,7 @@
     const { t  }         = useI18n();
     const query          = clone({ ...siteStore.params });
 
-    const { data: record, status, error } = await useLazyFetch('/api/list/panorama', {  method: 'GET', onResponse, query, getCachedData });
+    const { data: record, status, error } = await useLazyFetch('/api/list/panorama', {  method: 'GET', onResponse, query,key: 'panorama-widget', getCachedData });
 
     const loading = computed(()=> status.value === 'pending'); 
 
