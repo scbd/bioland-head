@@ -34,7 +34,7 @@
         const siteStore  = useSiteStore();
         const menuStore  = useMenusStore();
         const meStore    = useMeStore();
-        const isDevSite  = computed(()=> !siteStore?.config?.published);
+        const isPublishedSite  = computed(()=> !siteStore?.config?.published);
         const maxColumns = computed(()=> siteStore.config?.runTime?.theme?.megaMenu?.maxColumns || 5);
         const viewport   = useViewport();
         const isMobile   = computed(() => !['lg','xl', 'xxl'].includes(viewport.breakpoint.value));
@@ -64,7 +64,7 @@
 
             if(!menuName) return;
 
-            navigateTo(`${siteStore.host}/admin/structure/menu/manage/${menuName}`,{ external: true });
+            navigateTo(`${siteStore.host}/admin/structure/menu/manage/${encodeURIComponent(menuName)}`,{ external: true });
 
             console.log('edit menu');
         }
@@ -163,7 +163,7 @@
 
     function isEmptySection(menu){
 
-        if(!isComponent(menu) || isDevSite.value) return false;
+        if(!isComponent(menu) || isPublishedSite.value) return false;
 
         const cName = componentName(menu, true);
 

@@ -30,6 +30,7 @@ export { thesaurusSourceMap } from '~/server/utils/thesaurus/source-map';
 export { getThesaurusByKey, thesaurusApisUrls, getCountryName, dataSources, getSdg, sdgsData } from '~/server/utils/thesaurus/index';
 
 export { unLocales } from '~/utils/index';
+export { htmlSanitize } from '~/utils/html';
 export const consola = c;
 
 export function isOddNumber(num) { return num % 2;}

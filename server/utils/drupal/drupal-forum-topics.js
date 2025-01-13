@@ -57,7 +57,7 @@ async function getTopics (ctx) {
     const params = getTopicFilterQueryString(ctx)+getFreeTextFilterParams(ctx);
 
     const id =  topicId? `/${topicId}` : '';
-    const uri           = `${ localizedHost}/jsonapi/node/forum${id}?jsonapi_include=1&include=taxonomy_forums&page[limit]=${rowsPerPage}${params}`;
+    const uri           = `${ localizedHost}/jsonapi/node/forum/${id}?jsonapi_include=1&include=taxonomy_forums&page[limit]=${encodeURIComponent(rowsPerPage)}${params}`;
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
@@ -113,7 +113,7 @@ async function getLatestCommentsUsersFromForum(ctx, topicId){
     const queryString = getCommentByTopicFilterQueryString(topicId);
     
     const { host,  localizedHost,rowsPerPage=20, } = ctx;
-    const uri                      = `${localizedHost}/jsonapi/comment/comment_forum?jsonapi_include=1&include=uid.user_picture&page[limit]=${rowsPerPage}${queryString}`;
+    const uri                      = `${localizedHost}/jsonapi/comment/comment_forum?jsonapi_include=1&include=uid.user_picture&page[limit]=${encodeURIComponent(rowsPerPage)}${queryString}`;
 
 
     const { body }  = await $http.get(uri).withCredentials().accept('json');
@@ -141,7 +141,7 @@ function getCommentByTopicFilterQueryString(fid){
     let filterQueryString = `&filter[forum-entity_id][condition][path]=entity_id.id`;
 
     filterQueryString += `&filter[forum-entity_id][condition][operator]=%3D`;
-    filterQueryString += `&filter[forum-entity_id][condition][value]=${fid}`;
+    filterQueryString += `&filter[forum-entity_id][condition][value]=${encodeURIComponent(fid)}`;
 
     filterQueryString += `&sort[sort-created][path]=created`;
     filterQueryString += `&sort[sort-created][direction]=DESC`;
@@ -156,7 +156,7 @@ function getTopicFilterQueryString({tfid, topicId}){
     let filterQueryString = `&filter[taxonomy_forums_id][condition][path]=taxonomy_forums.id`;
 
     filterQueryString += `&filter[taxonomy_forums_id][condition][operator]=%3D`;
-    filterQueryString += `&filter[taxonomy_forums_id][condition][value]=${tfid}`;
+    filterQueryString += `&filter[taxonomy_forums_id][condition][value]=${encodeURIComponent(tfid)}`;
 
     if(!tfid) filterQueryString = '';
 
@@ -175,12 +175,12 @@ function getFreeTextFilterParams({ freeText,  }){
 
     sortQueryString += `&filter[free-text-title][condition][path]=title`;
     sortQueryString += `&filter[free-text-title][condition][operator]=CONTAINS`;
-    sortQueryString += `&filter[free-text-title][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-title][condition][value]=${encodeURIComponent(freeText)}`;
     sortQueryString += `&filter[free-text-title][condition][memberOf]=or-group`;
 
     sortQueryString += `&filter[free-text-body][condition][path]=body.value`;
     sortQueryString += `&filter[free-text-body][condition][operator]=CONTAINS`;
-    sortQueryString += `&filter[free-text-body][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-body][condition][value]=${encodeURIComponent(freeText)}`;
     sortQueryString += `&filter[free-text-body][condition][memberOf]=or-group`;
 
     return sortQueryString;

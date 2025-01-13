@@ -3,7 +3,7 @@
     <div class="container">
         <div v-if="body?.value" class="row">
             <div class="col-12 my-2" >
-                <div  v-html="body?.value"></div>
+                <div  v-html="htmlSanitize(body?.value)"></div>
             </div>
         </div>
         <div class="row">

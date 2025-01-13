@@ -1,15 +1,16 @@
 import { DateTime     } from 'luxon' ; 
 
-const indexUri = 'https://api.cbd.int/api/v2013/index/select?';
+const indexUri = '/v2013/index/select?';
 
 const getIndexCountryQuery = ({ countries, country } = {}) => {
     return cleanCountries({ countries, country }).map((s)=>`${s.toLowerCase()}`).join('+');
 }
 
 export const $indexFetch = async (queryString) => {
+    const { gaiaApi }   = useRuntimeConfig().public;
     const   method      = 'get';
     const   headers     = { 'Content-Type': 'application/json' };
-    const { response }  = await $fetch(indexUri+queryString, { method, headers });
+    const { response }  = await $fetch(gaiaApi+indexUri+queryString, { method, headers });
 
     response.docs       = response.docs.map(normalizeIndexKeys);
 
@@ -111,7 +112,8 @@ export const normalizeIndexKeys = (obj) => {
 }
 
 export const queryScbdIndex = async (ctx, queryBody) => {
-    const uri = 'https://api.cbd.int/api/v2013/index/select';
+    const { gaiaApi }   = useRuntimeConfig().public;
+    const   uri         = `${gaiaApi}/v2013/index/select`;
 
     const body = queryBody? JSON.stringify(queryBody) : getAllQuery(ctx);
 

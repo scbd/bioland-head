@@ -42,7 +42,7 @@
                         <LazyPageBodyTagsDate /> 
                     </div>
                     <div class="align-self-start w-100">
-                        <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="pageStore?.body"></div>
+                        <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="htmlSanitize(pageStore?.body)"></div>
                     </div>
                     <div v-if="!isImageOrVideo"class="d-none d-md-block align-self-start"> 
                         <LazyPageBodyTagsDate /> 

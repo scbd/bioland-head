@@ -14,7 +14,7 @@
             <ClientOnly >
                 <div name="list" tag="div" class="col-12 col-md-9 data-body">
                     <div>
-                        <div v-html="results?.description?.value || ''"></div>
+                        <div v-html="htmlSanitize(results?.description?.value)"></div>
                     </div>
                     <transition-group name="list">
                         <LazyPageListTopicsRow  :a-line="aLine" v-for="(aLine,index) in results?.topics" :key="index" />
@@ -23,7 +23,7 @@
                 </div>
                 <template #fallback>
                     <div>
-                        <div v-html="results?.description?.value || ''"></div>
+                        <div v-html="htmlSanitize(results?.description?.value)"></div>
                     </div>
                     <div name="list" tag="div" class="col-12 col-md-9 data-body">
                         <LazyPageListTopicsRow  :a-line="aLine" v-for="(aLine,index) in results?.topics" :key="index" />
@@ -70,7 +70,7 @@
 
     onMounted(() => { eventBus.on('changePage', refresh); });
 
-    function getApiUri(){ return `/api/forums/${route.params[1]}`; }
+    function getApiUri(){ return `/api/forums/${encodeURIComponent(route.params[1])}`; }
 </script>
 
 <style scoped>

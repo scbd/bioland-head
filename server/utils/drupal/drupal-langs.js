@@ -7,7 +7,7 @@ export const getInstalledLanguages = async ({ localizedHost, host, siteCode }) =
 
     const $http = await useDrupalLogin(siteCode);
 
-    const uri  = `${host}/jsonapi/configurable_language/configurable_language`;
+    const uri  = `${localizedHost}/jsonapi/configurable_language/configurable_language`;
 
     const { body: { data } } = await $http.get(uri).query({ 'jsonapi_include': 1 });
 

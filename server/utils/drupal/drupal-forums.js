@@ -14,7 +14,7 @@ export async function addForumIdentifierToContext(ctx){
     } else ctx.uuid = '';
 
     const pathAlias = usePathAlias(ctx);
-    const { path }  = (await pathAlias.getByAlias(`/forums/${ctx.forumAlias}`)) || {};
+    const { path }  = (await pathAlias.getByAlias(`/forums/${encodeURIComponent(ctx.forumAlias)}`)) || {};
 
     if(!path){
         ctx.tid = '';
@@ -29,7 +29,7 @@ export async function addForumIdentifierToContext(ctx){
 
 export async function getForumTidFromAlias(ctx){
     const pathAlias = usePathAlias(ctx);
-    const { path }  = await pathAlias.getByAlias(`/forums/${ctx.forumAlias}`);
+    const { path }  = await pathAlias.getByAlias(`/forums/${encodeURIComponent(ctx.forumAlias)}`);
     
     if(!path) return undefined;
 
@@ -42,7 +42,7 @@ async function getForums(ctx) {
     const id            = uuid? `/${uuid}` : '';
 
     const params        = getQuestString(ctx);
-    const uri           = `${localizedHost}/jsonapi/taxonomy_term/forums${id}?jsonapi_include=1${params}`;//&include=taxonomy_forums&page[limit]=${rowsPerPage}&sort=-sticky
+    const uri           = `${localizedHost}/jsonapi/taxonomy_term/forums${encodeURIComponent(id)}?jsonapi_include=1${params}`;//&include=taxonomy_forums&page[limit]=${rowsPerPage}&sort=-sticky
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
@@ -95,7 +95,7 @@ function getTypeFilterParams({ tid, uuid }){
 
     filterQueryString += `&filter[taxonomy_term--pa][condition][path]=drupal_internal__tid`
     filterQueryString += `&filter[taxonomy_term--pa][condition][operator]=ENDS_WITH`
-    filterQueryString += `&filter[taxonomy_term--pa][condition][value]=${tid}`
+    filterQueryString += `&filter[taxonomy_term--pa][condition][value]=${encodeURIComponent(tid)}`
 
     return  filterQueryString;
 }
@@ -106,8 +106,8 @@ function getSortParams({ sortBy, sortDirection, tid, uuid }){
     const direction = !sortDirection? 'DESC' : 'ASC';
 
     let sortQueryString = '';
-    sortQueryString += `&sort[sort-created][path]=${sortBy || 'changed'}`
-    sortQueryString += `&sort[sort-created][direction]=${direction}`
+    sortQueryString += `&sort[sort-created][path]=${encodeURIComponent(sortBy || 'changed')}`
+    sortQueryString += `&sort[sort-created][direction]=${encodeURIComponent(direction)}`
 
     return sortQueryString;
 }
@@ -119,12 +119,12 @@ function getFreeTextFilterParams({ freeText, tid, uuid }){
 
     sortQueryString += `&filter[free-text-title][condition][path]=name`;
     sortQueryString += `&filter[free-text-title][condition][operator]=CONTAINS`;
-    sortQueryString += `&filter[free-text-title][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-title][condition][value]=${encodeURIComponent(freeText)}`;
     sortQueryString += `&filter[free-text-title][condition][memberOf]=or-group`;
 
     sortQueryString += `&filter[free-text-body][condition][path]=description.value`;
     sortQueryString += `&filter[free-text-body][condition][operator]=CONTAINS`;
-    sortQueryString += `&filter[free-text-body][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-body][condition][value]=${encodeURIComponent(freeText)}`;
     sortQueryString += `&filter[free-text-body][condition][memberOf]=or-group`;
 
     return sortQueryString;

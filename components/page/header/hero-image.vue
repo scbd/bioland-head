@@ -9,7 +9,7 @@
                         <LazyIcon name="edit" style="margin-top: .2rem;" :size="2"/>
                     </button>
                 </div>
-                <div v-if="hi?.fieldDescription?.value" v-html="hi?.fieldDescription?.value">
+                <div v-if="hi?.fieldDescription?.value" v-html="htmlSanitize(hi?.fieldDescription?.value)">
                 </div>
 
                 <div v-if="hi?.fieldCredits"  class="col-12 d-flex justify-content-end align-items-center">

@@ -62,7 +62,7 @@
                     <LazyPageBodyTagsDate />
                 </div>
 
-                <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="pageStore?.body"></div>
+                <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="htmlSanitize(pageStore?.body)"></div>
 
             </div>
             

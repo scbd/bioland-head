@@ -28,7 +28,7 @@ export async function getSiteDefinedName (ctx) {
     const { apiKey }     = useRuntimeConfig()
     const localizedHost  = getHost(ctx)
     const query          = { jsonapi_include: 1 };
-    const uri            = `${localizedHost}/${ctx.locale}/jsonapi/site/site?api-key=${apiKey}`
+    const uri            = `${localizedHost}/${encodeURIComponent(ctx.locale)}/jsonapi/site/site?api-key=${encodeURIComponent(apiKey)}`
 
     const resp = await $fetch(uri,{query})
     const name = resp?.data?.name
@@ -40,7 +40,7 @@ export async function getSiteDefinedHome (ctx) {
     const { apiKey }     = useRuntimeConfig()
     const localizedHost  = getHost(ctx)
     const query          = { jsonapi_include: 1 };
-    const uri            = `${localizedHost}/jsonapi/site/site?api-key=${apiKey}`
+    const uri            = `${localizedHost}/jsonapi/site/site?api-key=${encodeURIComponent(apiKey)}`
 
     const resp = await $fetch(uri,{query})
 
@@ -52,7 +52,7 @@ function getHost(ctx, ignoreLocale = false){
     const { locale, identifier, siteCode,defaultLocale, config } = ctx;
     const   hasRedirect     = env === 'production' && config?.redirect;
     const pathLocale = ignoreLocale? '' : drupalizePathLocales(locale, defaultLocale);
-    const base       = hasRedirect? `https://${config.redirect}` : `https://${encodeURIComponent(siteCode)}.${encodeURIComponent(baseHost)}`;
+    const base       = hasRedirect? `https://${config.redirect}` : `https://${siteCode}.${baseHost}`;
 
     return `${base}${pathLocale}`;
 }
@@ -63,7 +63,7 @@ function drupalizePathLocales(locale, defaultLocale){
 
     if(!defaultLocale || !locale) return '';
 
-    const pathPreFix = locale === defaultLocale?.locale? `/${locale}` : `/${locale}`;
+    const pathPreFix = locale === defaultLocale?.locale? `/${encodeURIComponent(locale)}` : `/${encodeURIComponent(locale)}`;
 
     if(!pathPreFix) return pathPreFix;
 

@@ -59,8 +59,8 @@
     const    pageStore       = usePageStore();
     const    meStore         = useMeStore();
     const    eventBus        = useEventBus();
-    const  { t,  }             = useI18n();
-    const    commentEditor   = ref({});
+    const  { t,  }           = useI18n();
+    const    commentEditor   = shallowRef({});
     const    isFocused       = ref(false);
     const    showEmojiPicker = ref(false);
 

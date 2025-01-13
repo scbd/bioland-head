@@ -42,7 +42,7 @@ async function getAllMediaPager (ctx, type, next){
         const   method          = 'get';
         const   headers         = { 'Content-Type': 'application/json' };
         const   include         = `&include=field_media_image,thumbnail${type==='document'? ',field_media_document': ''}`;
-        const   uri             = next || `${localizedHost}/jsonapi/media/${type}?jsonapi_include=1${include}`;
+        const   uri             = next || `${localizedHost}/jsonapi/media/${encodeURIComponent(type)}?jsonapi_include=1${include}`;
         const { links, data, meta }         = await $fetch(uri, { method, headers })
 
         if(nextUri(links)) return { data: [ ...data, ...await getAllMediaPager(ctx, type, nextUri(links)) ], meta: { ...meta, type } };
@@ -62,7 +62,7 @@ async function getLists(ctx, types = defaultTypes){
 async function getList(ctx, type, isMultiple = false ) {
     const { localizedHost } = ctx;
 
-    const uri            = `${localizedHost}/jsonapi/media/${type}?jsonapi_include=1&include=field_media_image,thumbnail${type==='document'? ',field_media_document': ''}`;
+    const uri            = `${localizedHost}/jsonapi/media/${encodeURIComponent(type)}?jsonapi_include=1&include=field_media_image,thumbnail${type==='document'? ',field_media_document': ''}`;
     const method         = 'get';
     const headers        = { 'Content-Type': 'application/json' };
 
@@ -137,8 +137,8 @@ function getSortParams({ sortBy, sortDirection }){
 
     let sortQueryString = '';
 
-    sortQueryString += `&sort[sort-created][path]=${sortBy || 'changed'}`
-    sortQueryString += `&sort[sort-created][direction]=${direction}`
+    sortQueryString += `&sort[sort-created][path]=${encodeURIComponent(sortBy || 'changed')}`
+    sortQueryString += `&sort[sort-created][direction]=${encodeURIComponent(direction)}`
 
     return sortQueryString;
 }
@@ -150,12 +150,12 @@ function getFreeTextFilterParams({ freeText }){
 
     sortQueryString += `&filter[free-text-title][condition][path]=name`;
     sortQueryString += `&filter[free-text-title][condition][operator]=CONTAINS`;
-    sortQueryString += `&filter[free-text-title][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-title][condition][value]=${encodeURIComponent(freeText)}`;
     sortQueryString += `&filter[free-text-title][condition][memberOf]=or-group`;
 
     sortQueryString += `&filter[free-text-body][condition][path]=field_description.value`;
     sortQueryString += `&filter[free-text-body][condition][operator]=CONTAINS`;
-    sortQueryString += `&filter[free-text-body][condition][value]=${freeText}`;
+    sortQueryString += `&filter[free-text-body][condition][value]=${encodeURIComponent(freeText)}`;
     sortQueryString += `&filter[free-text-body][condition][memberOf]=or-group`;
 
     return sortQueryString;
