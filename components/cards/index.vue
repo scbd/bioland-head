@@ -1,8 +1,13 @@
 <template>
     <div class="card " >
-        <div :style="backgroundStyles" class="cit bg-light">
+        <div v-if="hasOwnImage" :style="backgroundStyles" class="cit bg-light">
             <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
         </div>
+        <ClientOnly v-if="!hasOwnImage" >
+            <div :style="backgroundStyles" class="cit bg-light">
+                <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
+            </div>
+        </ClientOnly>
         <div class="card-body mb-1" style="max-height: 300px; overflow:hidden;">
             <h6 class="card-subtitle text-muted mb-2">{{type}} {{record.schema? `- ${record.schema}`: ''}}</h6>
             <h5 class="card-title  mb-3">
@@ -36,6 +41,7 @@
     const { trunc      } = useText();
     const   dateFormat   = useDateFormat(locale);
     const   external     = computed(()=> !!record?.value?.realms);
+    const   hasOwnImage  = computed(()=> !!unref(record)?.mediaImage?.src);
 
     const { getGbfUrl, goTo }                        = useDocumentHelpers(record);
     const { badgePrimaryStyle, badgeSecondaryStyle } = useTheme();

@@ -35,12 +35,13 @@
 <script setup>
     import   clone          from 'lodash.clonedeep' ;
 
-    const { t, locale  } = useI18n();
-    const   localePath  = useLocalePath();
-    const   siteStore   = useSiteStore ();
+    const   getCachedData  = useGetCachedData();
+    const { t, locale  }   = useI18n();
+    const   localePath     = useLocalePath();
+    const   siteStore      = useSiteStore ();
 
     const   query                 = clone({...siteStore.params, rowsPerPage:5 });
-    const { data, status, error } =  await useLazyFetch(`/api/list/topics`, {  method: 'GET', query });
+    const { data, status, error } =  await useLazyFetch(`/api/list/topics`, {  method: 'GET', query, getCachedData });
 
     function getHref(topic){
         const { nodeId } = topic;

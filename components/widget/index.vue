@@ -7,8 +7,11 @@
         </div>
         <div v-if="recordExists" class="card " >
             <h6 class="card-subtitle text-muted mb-1">{{type}}</h6>
-            <ClientOnly>
-                <div  v-if="hasImg" :style="backgroundStyles" class=" bg-light">
+            <div  v-if="hasImg" :style="backgroundStyles" class=" bg-light">
+                    <NuxtLink  :to="goTo"   :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
+            </div>
+            <ClientOnly  v-if="!hasImg">
+                <div  :style="backgroundStyles" class=" bg-light">
                     <NuxtLink  :to="goTo"   :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
                 </div>
             </ClientOnly>

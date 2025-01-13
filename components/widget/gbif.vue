@@ -47,7 +47,9 @@
     const { t }     = useI18n();
     const siteStore = useSiteStore();
     const config    = computed(getCountry)
-    const zoom      = ref(config.value?.zoomLevel)
+    const zoom      = ref(config.value?.zoomLevel);
+
+    const getCachedData  = useGetCachedData();
 
     const { style, colorStyle, linkStyle} = useTheme();
 
@@ -90,7 +92,7 @@
     const links = [ viewAllLink.value ];
     const query = clone({...siteStore.params });
     
-    const { data, status, error } =  await useLazyFetch(`/api/list/gbif`, {  method: 'GET', query, key: 'gbif' });
+    const { data, status, error } =  await useLazyFetch(`/api/list/gbif`, {  method: 'GET', query, key: 'gbif', getCachedData });
 
     const loading = computed(()=> status.value === 'pending'); 
 </script>
