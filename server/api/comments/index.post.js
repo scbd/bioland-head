@@ -23,7 +23,6 @@ export default defineEventHandler(async (event) => {
 
         return resp;
 
-
         async function postComment(){
             const { locale: localeCtx } = context;
             const   locale              = localeChosen || localeCtx;
@@ -45,26 +44,20 @@ export default defineEventHandler(async (event) => {
 
 function getCommentTemplate({ entityIdentifier, entityType, replyIdentifier, replyType, comment,}){
 
-    const data = {
-                            type: "comment--comment_forum",
-                            attributes: {
+    const entity_id =   { data: { type: entityType, id: entityIdentifier } };
 
-                                entity_type :  "node",
-                                field_name :  "comment_forum",
-                                comment_body: {
-                                    value: htmlSanitize(comment),
-                                    format: "basic_html",
-                                }
-                            },
-                            relationships: {
-                                entity_id: {
-                                    data: {
-                                        type: entityType,
-                                        id:entityIdentifier
+    const data = {
+                    type      : 'comment--comment_forum',
+                    attributes: {
+                        entity_type :  'node',
+                        field_name  :  'comment_forum',
+                        comment_body: {
+                                        value: htmlSanitize(comment),
+                                        format: 'basic_html',
                                     }
-                                }
-                            }
-                        }
+                    },
+                    relationships: { entity_id }
+                };
 
     if(replyIdentifier) 
         data.relationships.pid ={  data: {id: replyIdentifier, type: replyType} }

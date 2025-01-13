@@ -1,8 +1,8 @@
-import clone from 'lodash.clonedeep';
+import clone     from 'lodash.clonedeep'   ;
 import intersect from 'lodash.intersection';
 
 const mainChildren = [ 'convention-protocols','biodiversity-facts','cooperation', 'implementation','news-updates', 'resources'  ];
-const menuNames    = ['main', 'footer', 'footer-credits'];
+const menuNames    = [ 'main', 'footer', 'footer-credits' ];
 
 export async function getDrupalMenus(ctx){
 
@@ -10,7 +10,6 @@ export async function getDrupalMenus(ctx){
     const allMenuNames = newStructure? [ ...menuNames, ...mainChildren ] : menuNames;
     const menuPromises = [];
     const menus = {};
-
 
     for (const menuName of allMenuNames) {
         const menuPromise = getMenuData(menuName,ctx )
@@ -20,7 +19,6 @@ export async function getDrupalMenus(ctx){
     }
 
     await Promise.all(menuPromises);
-
 
     const cleanMenus  = await addMissingData(menus, ctx )
 
@@ -35,9 +33,7 @@ export async function getDrupalMenus(ctx){
 async function hasNewMenuStructure(ctx){
     try{
         const { host } = ctx;
-
-        const uri = `${host}/system/menu/${encodeURIComponent('cooperation')}/linkset`;
-    
+        const   uri    = `${host}/system/menu/${encodeURIComponent('cooperation')}/linkset`;
 
         const data = await $fetch(uri, { mode: 'cors', ignoreResponseError: true }).catch((e)=>  false);
 
@@ -48,25 +44,6 @@ async function hasNewMenuStructure(ctx){
     };
     
 }
-
-function mergeMain(allMenus){
-    const newMain = clone(allMenus.main);
-    for (const aMainMenu of allMenus.main) {
-        const mainMenuChildName = mainMenuHasChild(aMainMenu);
-
-        if(!mainMenuChildName) continue;
-
-        const mainMenuIndex = aMainMenu.hierarchy[0]
-        for (const aMainChild of allMenus[mainMenuChildName]) {
-            aMainChild.hierarchy.unshift(mainMenuIndex)
-            // aMainChild.machineName = aMainMenu.machineName;
-        }
-        //newMain.push(...allMenus[mainMenuChildName])
-        // delete allMenus[mainMenuChildName]
-    }
-    allMenus.main = newMain.sort(sortMenus);
-}
-
 
 function buildMainChildren(allMenus){
     for (const aMenu of allMenus.main) {
@@ -181,7 +158,7 @@ async function getMenusFromApiPager ({ siteCode,identifier, pathPreFix, pathAlia
         return data
     }
     catch(e){
-       // console.error('Menus.getMenusFromApiPager - recursive', e)
+        consola.error('Menus.getMenusFromApiPager - recursive', e)
     }
 }
 
@@ -286,8 +263,3 @@ function sortMenus(x,y){
 
     return 0;
 }
-
-// function nextUri ({ next } = {}){
-//     if(!next) return
-//     return next.href
-// }

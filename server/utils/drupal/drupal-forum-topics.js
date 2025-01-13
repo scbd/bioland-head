@@ -1,6 +1,5 @@
-import { DateTime } from 'luxon';
-import  paramCase  from 'limax';
-import { stripHtml } from "string-strip-html"; 
+import   paramCase   from 'limax';
+import { stripHtml } from 'string-strip-html'; 
 export const useDrupalTopicMenus = async (ctx) => {
 
     return getTopics({ ...ctx, rowsPerPage: 7 })
@@ -10,7 +9,7 @@ export const useDrupalTopics = async (ctx) => {
 
     return getTopics(ctx)
 }
-//tfid
+
 export const getDrupalTopicMetaByForumIdentifier = async (ctx, passedTopics) => {
 
     const topics = passedTopics? passedTopics : await getTopics(ctx);
@@ -18,10 +17,6 @@ export const getDrupalTopicMetaByForumIdentifier = async (ctx, passedTopics) => 
     return mapTopicMeta(topics);
 }
 
-// export const useDrupalForums = async (ctx) => {
-
-//     return getForums(ctx)
-// }
 
 function mapTopicMeta(topics){
     let count = 0;
@@ -57,7 +52,7 @@ async function getTopics (ctx) {
     const params = getTopicFilterQueryString(ctx)+getFreeTextFilterParams(ctx);
 
     const id =  topicId? `/${topicId}` : '';
-    const uri           = `${ localizedHost}/jsonapi/node/forum/${id}?jsonapi_include=1&include=taxonomy_forums&page[limit]=${encodeURIComponent(rowsPerPage)}${params}`;
+    const uri           = `${ localizedHost}/jsonapi/node/forum${encodeURIComponent(id)}?jsonapi_include=1&include=taxonomy_forums&page[limit]=${encodeURIComponent(rowsPerPage)}${params}`;
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
