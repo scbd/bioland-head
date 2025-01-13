@@ -198,11 +198,11 @@ export const usePageStore = defineStore('page', {
 
         //     return this.page?.changed
         // },
-        // url(){
-        //     if(!this.page?.fieldUrl?.uri) return ''
+        url(){
+            if(!this.page?.fieldUrl?.uri) return ''
 
-        //     return this.page.fieldUrl.uri;
-        // },
+            return this.page.fieldUrl.uri;
+        },
         tags(){
             return this?.page?.tags || {}
         },
