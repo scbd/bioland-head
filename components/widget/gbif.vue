@@ -1,7 +1,7 @@
 <template>
     <div class="position-relative">
         <LazySpinner v-if="loading" :is-modal="true" />
-        <div v-if="!error">
+        <div v-if="!error && showWidget">
             <div class="text-capitalize">
                 <h4 :style="style" class="bm-3">{{t('GBIF')}} </h4>
             </div>
@@ -48,7 +48,7 @@
     const siteStore = useSiteStore();
     const config    = computed(getCountry)
     const zoom      = ref(config.value?.zoomLevel);
-
+    const showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.gbif);
     const getCachedData  = useGetCachedData();
 
     const { style, colorStyle, linkStyle} = useTheme();
@@ -92,7 +92,7 @@
     const links = [ viewAllLink.value ];
     const query = clone({...siteStore.params });
     
-    const { data, status, error } =  await useLazyFetch(`/api/list/gbif`, {  method: 'GET', query, key: 'gbif', getCachedData });
+    const { data, status, error } =  await useLazyFetch(`/api/list/gbif`, {  method: 'GET', query, key: 'gbif-widget', getCachedData });
 
     const loading = computed(()=> status.value === 'pending'); 
 </script>

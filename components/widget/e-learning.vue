@@ -1,5 +1,5 @@
 <template>
-    <LazyWidget v-if="!error && record" :loading="loading" :name="t('e-Learning')" :record="record" :links="links"/>
+    <LazyWidget v-if="!error && record && showWidget" :loading="loading" :name="t('e-Learning')" :record="record" :links="links"/>
 </template>
 <script setup>
     import clone from 'lodash.clonedeep';
@@ -8,8 +8,8 @@
     const   siteStore    = useSiteStore();
     const   query        = clone({ ...siteStore.params });
     const   localePath   = useLocalePath();
-    const getCachedData  = useGetCachedData();
-
+    const   getCachedData  = useGetCachedData();
+    const   showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.eLearning);
     const { data: record, status, error  }= await useLazyFetch(`/api/list/content/4`, {  method: 'GET', query, onResponse,key: 'e-learning-widget', getCachedData });
 
     const loading = computed(()=> status.value === 'pending'); 
