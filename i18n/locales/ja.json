@@ -811,5 +811,9 @@
   "GEO BON Portal": "ジオボンポータル",
   "GEO BON": "ジオボン",
   "EBV dataset": "EBV データセット",
-  "EBV datasets": "EBV データセット"
+  "EBV datasets": "EBV データセット",
+  "Browse EBV Datasets for": "EBV データセットを参照",
+  "EBV Data Portal": "EBV データポータル",
+  "Provided by the": "提供元",
+  "This is a staging website to review Bioland 2 and migrations": "これは、Bioland 2とマイグレーションを確認するためのステージングWebサイトです"
 }

@@ -811,5 +811,9 @@
   "GEO BON Portal": "GEO BON-portalen",
   "GEO BON": "GEOBON",
   "EBV dataset": "EBV-datauppsättning",
-  "EBV datasets": "EBV-datamängder"
+  "EBV datasets": "EBV-datamängder",
+  "Browse EBV Datasets for": "Bläddra i EBV-datauppsättningar för",
+  "EBV Data Portal": "EBV Dataportal",
+  "Provided by the": "Tillhandahålls av",
+  "This is a staging website to review Bioland 2 and migrations": "Detta är en iscensättningswebbplats för att granska Bioland 2 och migreringar"
 }

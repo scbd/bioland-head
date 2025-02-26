@@ -811,5 +811,9 @@
   "GEO BON Portal": "ԳԵՈ ԲՈՆ Պորտալ",
   "GEO BON": "ԳԵՈ ԲՈՆ",
   "EBV dataset": "EBV տվյալների հավաքածու",
-  "EBV datasets": "EBV տվյալների հավաքածուներ"
+  "EBV datasets": "EBV տվյալների հավաքածուներ",
+  "Browse EBV Datasets for": "Թերթիր EBV տվյալների հավաքածուները",
+  "EBV Data Portal": "EBV տվյալների պորտալ",
+  "Provided by the": "Տրամադրված է",
+  "This is a staging website to review Bioland 2 and migrations": "Սա բեմականացման կայք է ՝ Bioland 2-ը և միգրացիաները վերանայելու համար"
 }
