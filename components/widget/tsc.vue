@@ -1,5 +1,5 @@
 <template>
-    <LazyWidget v-if="!error && record" :loading="loading" :name="t('Technical & scientific cooperation')" :record="record" :links="links"/>
+    <LazyWidget v-if="!error && record && showWidget" :loading="loading" :name="t('Technical & scientific cooperation')" :record="record" :links="links"/>
 </template>
 <script setup>
     import clone from 'lodash.clonedeep';
@@ -8,6 +8,7 @@
     const   siteStore      = useSiteStore();
     const { t }            = useI18n();
     const   query          = clone({...siteStore.params, rowsPerPage: 5 });
+    const   showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.tsc);
 
     const { data: record, status, error  } = await useLazyFetch('/api/list/tsc', {  method: 'GET', query, onResponse,key: 'tsc-widgert', getCachedData});
 
