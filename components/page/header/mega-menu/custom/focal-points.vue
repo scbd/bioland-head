@@ -16,13 +16,16 @@
     </div>
 </template>
 <script setup>
-    const { t }      = useI18n();
-    const menusStore = useMenusStore();
-    const menus      = computed(() => menusStore.nfps);
-    const localePath = useLocalePath();
-    const menu       = ref({ 
+    const { t, locale } = useI18n();
+    const menusStore    = useMenusStore();
+    const menus         = computed(() => menusStore.nfps);
+    const localePath    = useLocalePath();
+    const systemPage    = menusStore.getSystemPageById(30);
+    const aliasPath     = systemPage?.aliases[locale.value]? systemPage?.aliases[locale.value] : '/taxonomy/term/30';
+    const href          = localePath(aliasPath);
+    const menu          = ref({ 
                                 title: t('National Contact Points'), 
-                                href : localePath('/focal-points'), 
+                                href,
                                 class: ['mm-main-nav-sub-heading', 'mm-arrow'] 
                             });
 </script>
