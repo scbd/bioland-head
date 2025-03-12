@@ -44,9 +44,7 @@
                     <div class="align-self-start w-100">
                         <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="htmlSanitize(pageStore?.body)"></div>
                     </div>
-                    <div v-if="!isImageOrVideo"class="d-none d-md-block align-self-start"> 
-                        <LazyPageBodyTagsDate /> 
-                    </div>
+
                 </div>
 
                 <div class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
@@ -84,10 +82,10 @@
     </div>
 </template>
 <script setup>
-    const { t } = useI18n();
-
-    const localePath = useLocalePath();
-    const meStore    = useMeStore();
+    const { t }        = useI18n();
+    const   localePath = useLocalePath();
+    const   meStore    = useMeStore();
+    const   pageStore  = usePageStore();
     const pageStore  = usePageStore();
 
     const isImageOrVideo = computed(()=> pageStore?.isImageOrVideo);
@@ -100,6 +98,7 @@
 
             return meStore?.showEdit;
     }
+
 </script>
 
 <style lang="scss" scoped>
