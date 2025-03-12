@@ -148,6 +148,7 @@
     }
 
     function isComponent(aMenu){
+
         return componentName(aMenu);
     }
 

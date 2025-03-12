@@ -68,7 +68,15 @@ export const useMenusStore = defineStore('menus', {
             const id          = typeMapIds[name]
             const contentType =  this.getContentTypeById(id, locale);
         
-            return country? contentType?.dataMap[country] : contentType;
+            return contentType;
+        },
+        getContentTypeData(name,country, locale){
+            const typeMapIds  = { news:2, event:3, 'learning-resource':4, project:5, 'basic-page':6, 'government-ministry-or-institute':8, ecosystem:9, 'protected-area':10, 'biodiversity-data':11, document:12, 'related-website':13, other:15, 'image-or-video':16 };
+            const hasKey      = this.contentTypes[name];
+            const id          = typeMapIds[name]
+            const contentType =  this.getContentTypeById(id, locale);
+        
+            return country? contentType?.dataMap[country] : contentType.data;
         },
         isInMainMenuByContentTypeId(id){
             if(!id) return false;
