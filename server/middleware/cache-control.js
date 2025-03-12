@@ -23,14 +23,15 @@ export default defineEventHandler((event) => {
     const isPageApi    = pathname.match(/\/api\/page\//);
     const isNuxt       = pathname.match(/\/_nuxt\//);
 
+
     if(isNoCache)
         res.setHeader('Cache-Control', `no-store, max-age=0`);
     else if(isAsset || isNuxt)
-        res.setHeader('Cache-Control', `max-age=${year} s-maxage=${year}, stale-if-error=${hour}, stale-while-revalidate=${week}`);
-    else if(!isPageApi && (isContextApi || isApi))
-        res.setHeader('Cache-Control', `max-age=${day} s-maxage=${day}, stale-if-error=${hour}, stale-while-revalidate=${week}`);
-    else if(isPageApi || isListsApi || isMenusApi )
-        res.setHeader('Cache-Control', `max-age=${min} s-maxage=${min}, stale-if-error=${hour}, stale-while-revalidate=${week}`);
+        res.setHeader('Cache-Control', `max-age=${year}, stale-if-error=${week}`);
+    else if(!isPageApi && (isContextApi || isListsApi ||isApi))
+        res.setHeader('Cache-Control', `max-age=${day}, stale-if-error=${week}, stale-while-revalidate=${day}`);
+    else if(isPageApi ||  isMenusApi )
+        res.setHeader('Cache-Control', `max-age=${min}, stale-if-error=${week}, stale-while-revalidate=${day}`);
     else
-        res.setHeader('Cache-Control', `max-age=${min} s-maxage=${min}, stale-if-error=${hour}, stale-while-revalidate=${week}`);
+        res.setHeader('Cache-Control', `max-age=${min}, stale-if-error=${week}, stale-while-revalidate=${day}`);
 })
