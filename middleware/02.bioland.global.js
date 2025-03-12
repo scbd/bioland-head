@@ -40,7 +40,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     const defaultLocale = siteStore.defaultLocale || 'en';
     const isValid = preFixes.includes(to.path.split('/')[1]);
 
-    if(!isValid) consola.warn('isValidLocalePrefix', to.path, defaultLocale);
+
     if(!isValid) return navigateTo(`/${defaultLocale}${to.path}`);
 }
 
