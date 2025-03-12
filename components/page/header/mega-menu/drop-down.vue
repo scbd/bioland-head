@@ -30,6 +30,7 @@
 <script setup>
     import { pascalCase   } from 'change-case';
 
+        const {t, locale} = useI18n();
         const props      = defineProps({ menus: Array });
         const siteStore  = useSiteStore();
         const menuStore  = useMenusStore();
@@ -148,6 +149,7 @@
     }
 
     function isComponent(aMenu){
+
         return componentName(aMenu);
     }
 
@@ -176,7 +178,8 @@
             let contentTypesHasDocuments = false;
 
             for (const aType of getContentTypes(menu)) {
-                const hasRecords = menuStore?.getContentType(aType)?.data?.length;
+ 
+                const hasRecords = menuStore?.getContentType(aType,undefined,locale)?.data?.length;
 
                 if(hasRecords) contentTypesHasDocuments = true;
             }
