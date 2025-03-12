@@ -2,7 +2,7 @@ import   intersect   from 'lodash.intersection';
 import { DateTime  } from "luxon"              ;
 
 export const useMeStore = defineStore('me', { 
-    state: () => ({ userID: '', duuid: '', diuid: '', preferredLang: '', displayName: '', name: '', email: '', isAuthenticated: false, roles: [], editMode: false, token: '', expire: new Date() }),
+    state: () => ({ userID: '', duuid: '', diuid: '', preferredLang: '', displayName: '', name: '', email: '', img:'', isAuthenticated: false, roles: [], editMode: true, token: '', expire: new Date() }),
 
     actions:{
         initialize( user){
@@ -17,13 +17,42 @@ export const useMeStore = defineStore('me', {
             this.isAuthenticated = user.value.isAuthenticated;
             this.roles = user.value.roles;
             this.token = user.value.token;
+            this.img = user.value.img;
 
         },
         toggleEditMode(){
             this.$patch({editMode: !this.editMode});
+        },
+        hasRoles(passedRoles){
+            const roles = Array.isArray(passedRoles) ? passedRoles : [ passedRoles ];
+
+            this.isAuthenticated && intersect(this.roles, roles).length
+        },
+        logOut(){
+            this.$reset();
         }
     },
     getters:{
+        isSiteManager(){
+            const roles = [ "administrator", "site_manager"]
+
+            return this.isAuthenticated && intersect(this.roles, roles).length;
+        },
+        isContentManager(){
+            const roles = [ "administrator", "content_manager"]
+
+            return this.isAuthenticated && intersect(this.roles, roles).length;
+        },
+        isContributor(){
+            const roles = [ "administrator", "site_manager", "content_manager", "contributor" ]
+
+            return this.isAuthenticated && intersect(this.roles, roles).length;
+        },
+        isUser(){
+            const roles = [ "administrator", "site_manager", "content_manager", "contributor", "user" ]
+
+            return this.isAuthenticated && intersect(this.roles, roles).length;
+        },
         showEditMenu(){
             return this.canEditMenu && this.editMode;
         },
@@ -48,14 +77,32 @@ export const useMeStore = defineStore('me', {
 
             return this.isAuthenticated && intersect(this.roles,roles).length;
         },
+        user(){
+            return {
+                userID: this.userID,
+                duuid: this.duuid,
+                diuid: this.diuid,
+                preferredLang: this.preferredLang,
+                displayName: this.displayName,
+                name: this.name,
+                email: this.email,
+                isAuthenticated: this.isAuthenticated,
+                roles: this.roles,
+                img: this.img
+            }
+
+        },
         isExpired(){
 
             const isExpired = DateTime.now() > DateTime.fromISO(this.expire);
 
             if(!isExpired) return false;
 
+            const editMode = this.editMode;
+
             this.$reset();
 
+            this.editMode = editMode;
             return true;
         }
     },

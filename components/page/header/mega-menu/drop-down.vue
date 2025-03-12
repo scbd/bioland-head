@@ -7,8 +7,8 @@
                         <LazyIcon name="edit" style="margin-top: .3rem;" :size="2"/>
                     </button>
                 </div>
-                <div  class="menu-section text-wrap"  :class="[getGridValue(aMenu)]" v-for="(aMenu,index) in sections" :key="index">
-                    
+                <div  class="menu-section text-wrap position-relative pb-5"  :class="[getGridValue(aMenu)]" v-for="(aMenu,index) in sections" :key="index">
+
                     <section v-if="!isComponent(aMenu)">
                         <LazyPageHeaderMegaMenuHeader :menu="aMenu" />
                         <section v-for="(aChild,j) in aMenu.children" :key="j">
@@ -66,7 +66,6 @@
 
             navigateTo(`${siteStore.host}/admin/structure/menu/manage/${encodeURIComponent(menuName)}`,{ external: true });
 
-            console.log('edit menu');
         }
 
         function hasMaxColumns(totalColumns, nextMenu = {}){
