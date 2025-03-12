@@ -811,5 +811,9 @@
   "GEO BON Portal": "پورتال GEO BON",
   "GEO BON": "جئو بون",
   "EBV dataset": "مجموعه داده EBV",
-  "EBV datasets": "مجموعه داده های EBV"
+  "EBV datasets": "مجموعه داده های EBV",
+  "Browse EBV Datasets for": "مجموعه داده های EBV را مرور کنید",
+  "EBV Data Portal": "پورتال داده EBV",
+  "Provided by the": "ارائه شده توسط",
+  "This is a staging website to review Bioland 2 and migrations": "این یک وب سایت مرحله بندی برای بررسی Bioland 2 و مهاجرت است"
 }

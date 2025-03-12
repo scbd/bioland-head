@@ -811,5 +811,9 @@
   "GEO BON Portal": "GEO BON portál",
   "GEO BON": "GEO-BON",
   "EBV dataset": "EBV adatkészlet",
-  "EBV datasets": "EBV adatkészletek"
+  "EBV datasets": "EBV adatkészletek",
+  "Browse EBV Datasets for": "Böngésszen az EBV adatkészletek között",
+  "EBV Data Portal": "EBV adatportál",
+  "Provided by the": "Az általa biztosított",
+  "This is a staging website to review Bioland 2 and migrations": "Ez egy színpadozó weboldal a Bioland 2 és a migrációk áttekintésére"
 }
