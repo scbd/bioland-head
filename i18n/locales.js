@@ -112,7 +112,7 @@ export default[
         "nativeName": "Suomi"
     },
     {
-        "code": "fil",
+        "code": "tl",
         "name": "Filipino",
         "nativeName": "Filipino"
     },

@@ -811,5 +811,9 @@
   "GEO BON Portal": "지오본 포털",
   "GEO BON": "지오 본",
   "EBV dataset": "EBV 데이터세트",
-  "EBV datasets": "EBV 데이터세트"
+  "EBV datasets": "EBV 데이터세트",
+  "Browse EBV Datasets for": "EBV 데이터세트 찾아보기",
+  "EBV Data Portal": "EBV 데이터 포털",
+  "Provided by the": "제공:",
+  "This is a staging website to review Bioland 2 and migrations": "이것은 Bioland 2와 마이그레이션을 검토하기 위한 스테이징 웹사이트입니다."
 }
