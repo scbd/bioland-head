@@ -21,6 +21,7 @@
 <script setup>
     import   clone           from 'lodash.clonedeep';
     
+    const  { t, locale }       = useI18n();
     const   localePath         = useLocalePath();
     const   props              = defineProps({ type: String, menu: Object });
     const { menu: passedMenu } = toRefs(props);
