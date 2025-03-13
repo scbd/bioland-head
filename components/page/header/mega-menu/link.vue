@@ -1,7 +1,7 @@
 <template>
     <p  v-if="!showThumbs || isFinalLink && !showCards " class="text-wrap">
-        <NuxtLink  class="child-link" :class="menu.class"   :to="localePath(menu.href)" :title="title || menu.title" :external="isExternal" :target="target">
-            {{title || menu.title}}<span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<LazyIcon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
+        <NuxtLink  class="child-link" :class="menu.class"   :to="localePath (menu.href)" :title="title || menu.title" :external="isExternal" :target="target">
+            {{title || menu.title}} <span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<LazyIcon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
         </NuxtLink>
     </p>
     <section v-if="!showCards">
@@ -77,7 +77,8 @@
 .mm-main-nav-final-link,
 .main-nav-final-link{
     position: absolute;
-    bottom: 1rem;
+    bottom: 0;
+    left: 1rem;
 }
 .mm-special,
 .special{

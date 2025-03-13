@@ -7,7 +7,7 @@
                         <LazyIcon name="edit" style="margin-top: .3rem;" :size="2"/>
                     </button>
                 </div>
-                <div  class="menu-section text-wrap"  :class="[getGridValue(aMenu)]" v-for="(aMenu,index) in sections" :key="index">
+                <div  class="menu-section text-wrap position-relative pb-5"  :class="[getGridValue(aMenu)]" v-for="(aMenu,index) in sections" :key="index">
                     
                     <section v-if="!isComponent(aMenu)">
                         <LazyPageHeaderMegaMenuHeader :menu="aMenu" />
@@ -271,7 +271,7 @@
 
 .menu-section{
     border-right: 2px solid rgb(0, 0, 0, .2);
-    margin-bottom: 4rem;
+    margin-bottom: 1rem;
 }
 .menu-section:last-child{
     border-right: none;
