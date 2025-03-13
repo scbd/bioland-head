@@ -18,7 +18,6 @@ export const useGetCachedData= () =>  {
         const nuxtApp    = useNuxtApp();
         
         return (key) => { 
-            consola.info('cache key', key)
             return nuxtApp?.payload?.data[key] || nuxtApp?.static?.data[key];
         }
 }
@@ -44,7 +43,7 @@ export const userTextSearch = () => {
     const searchPath   = computed(()=>menusStore.getSystemPagePath({ alias:'/search', locale:unref(locale)}));
 
     return async (value) => { 
-        consola.warn('loaded text search', value)
+    
         if(!value) return navigateTo(localePath(searchPath.value));
 
         if(route.path !== searchPath?.value)

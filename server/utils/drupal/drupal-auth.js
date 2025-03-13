@@ -33,8 +33,9 @@ export const useDrupalLogin = async (siteCode) => {
   }
   catch(e){
     console.error('DrupalAuth.login: ', e)
-    console.error(e.data)
-    return { get: (x)=>x }
+
+    // throw e
+    // return { get: (x)=>x }
   }
 }
 
