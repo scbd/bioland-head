@@ -8,7 +8,7 @@
                     </button>
                 </div>
                 <div  class="menu-section text-wrap position-relative pb-5"  :class="[getGridValue(aMenu)]" v-for="(aMenu,index) in sections" :key="index">
-
+                    
                     <section v-if="!isComponent(aMenu)">
                         <LazyPageHeaderMegaMenuHeader :menu="aMenu" />
                         <section v-for="(aChild,j) in aMenu.children" :key="j">
@@ -148,7 +148,7 @@
     }
 
     function isComponent(aMenu){
-
+        consola.warn('componentName', componentName(aMenu));
         return componentName(aMenu);
     }
 
