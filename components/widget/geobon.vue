@@ -1,7 +1,7 @@
 <template>
     <div class="position-relative">
         <LazySpinner v-if="loading" :is-modal="true" />
-        <div v-if="!error">
+        <div v-if="!error && showWidget">
             <div class="text-capitalize">
                 <h4 :style="style" class="bm-3">{{t('GEO BON')}} </h4>
             </div>
@@ -58,6 +58,7 @@
     const img            = useImage();
     const getCachedData  = useGetCachedData();
 
+    const showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.geobon);
     const { bgStyle, style, colorStyle, linkStyle} = useTheme();
 
     const links = ref([])
