@@ -113,7 +113,7 @@
         const contentTypeName = getContentType();
 
         const children    = unref(passedMenu)?.children || [];
-        const data        = menuStore.getContentType(contentTypeName,country) || [];
+        const data        = menuStore.getContentType(contentTypeName,country, locale) || [];
         const menuPaths   = unref(passedMenu)?.children?.map(aMenu => aMenu.href) || [];
 
         const returnData  = [...children, ...data.filter(aMenu => !menuPaths.includes(aMenu.href))]
