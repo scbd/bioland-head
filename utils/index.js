@@ -57,7 +57,7 @@ export  function getGbfUrl(identifier){
     return `https://www.cbd.int/gbf/targets/${number}`
 }
 
-export function hasSessionCookie(){
+export function hasSessionCookieClient(){
     if(process.server) return false;
     
     const cookies = document.cookie.split(';');
