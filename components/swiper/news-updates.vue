@@ -1,7 +1,7 @@
 <template>
     <div class="col-12 mt-3 mb-0">
         <h3 :style="headerStyle">{{t('Latest News and Updates')}}</h3>
-        <NuxtLink :to="localePath({path:'/news-and-updates', query:{ schemas:[2,3]}})" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more news and updates')}} <LazyIcon  name="arrow-right" class="arrow" /></NuxtLink>
+        <NuxtLink :to="newsLink" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more news and updates')}} <LazyIcon  name="arrow-right" class="arrow" /></NuxtLink>
     </div>
     <div  class="position-relative mt-1" style="min-height:250px;">
         <LazySpinner v-if="loading" :is-modal="true"/>
@@ -13,7 +13,7 @@
                 :spaceBetween="spaceBetween"
                 :pagination="{ clickable: true }"
                 :modules="modules"
-             @swiper="onSwiper"
+                @swiper="onSwiper"
             >
 
                 <!--   -->
@@ -31,14 +31,14 @@
 </template>
 <script setup>
 import { Pagination  }   from 'swiper/modules';
-
 import { useWindowSize } from '@vueuse/core';
 import 'swiper/css';
 import clone from 'lodash.clonedeep';
 
-const swiperRef = ref(null)
+const swiperRef = ref(null);
 
-
+const { locale }     = useI18n();
+const menusStore     = useMenusStore();
 const getCachedData  = useGetCachedData();
 const localePath     = useLocalePath();
 const siteStore      = useSiteStore();
@@ -84,6 +84,7 @@ const spaceBetween = computed(()=> {
     return 5
 });
 
+const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ id:systemPageTidConstants.SEARCH, locale:unref(locale)}), query:{ schemas:[2,3]}}));
 
 const query = clone({ ...siteStore.params });
 
