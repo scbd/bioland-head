@@ -10,7 +10,8 @@
                             <LazyPageHeaderMegaMenuLink v-if="!isHeader(aChild)" :type="getContentType()" :show-thumbs="menu.class?.includes('bl2-show-thumbs')" :show-cards="isCardView"  :menu="aChild" />
                             <LazyPageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
 
-                            <LazyPageHeaderMegaMenuLink v-if="hasFinalLink && isCardView"  :menu="hasFinalLink" />
+                            <LazyPageHeaderMegaMenuLink v-if="isFinalLink(aChild)"  :menu="aChild" />
+                      
                         </section>
                     </div>
                 </section>
@@ -33,12 +34,12 @@
 
 
     function getDefaultFinalLink(){
-        const   contentType         = getContentType();
-        const { count, name, slug } = menuStore.contentTypes[contentType] || {};
+        const   contentTypeName         = getContentType();
+        const { count, slug } = menuStore.getContentType(contentTypeName,locale)
 
         return {
-            title: `View more`,
-            href: `/${slug}`,
+            title: t(`View more`),
+            href:  `${slug}`,
             class: ['main-nav-final-link'],
             target: ['_self'],
             count
@@ -76,10 +77,11 @@
         const horizontalCardMax = siteStore?.config?.runTime?.theme?.megaMenu?.horizontalCardMax
 
         for (const country of countries)
-            if(!isCardView.value)
-                aMenu.dataMap[country] = getContentTypeData(country).slice(0,getMaxRowsPerColumn() || 6);
-            else
-                aMenu.dataMap[country] = getContentTypeData(country).slice(0,horizontalCardMax);
+            aMenu.dataMap[country] = getContentTypeData(country)
+            // if(!isCardView.value)
+            //     aMenu.dataMap[country] = getContentTypeData(country).slice(0,getMaxRowsPerColumn() || 6);
+            // else
+            //     aMenu.dataMap[country] = getContentTypeData(country).slice(0,horizontalCardMax);
 
         return aMenu;
     })
@@ -113,13 +115,17 @@
         const contentTypeName = getContentType();
 
         const children    = unref(passedMenu)?.children || [];
-        const data        = menuStore.getContentType(contentTypeName,country, locale) || [];
+        const data        = menuStore.getContentTypeData(contentTypeName,country, locale) || [];
         const menuPaths   = unref(passedMenu)?.children?.map(aMenu => aMenu.href) || [];
 
         const returnData  = [...children, ...data.filter(aMenu => !menuPaths.includes(aMenu.href))]
         const showDefault = returnData.length > 5;
-        const last        = unref(hasFinalLink)? [unref(hasFinalLink)] : showDefault? [getDefaultFinalLink()] : [];
+        const last        = unref(hasFinalLink)? [unref(hasFinalLink)] : showDefault? [getDefaultFinalLink(country)] : [];
+        const horizontalCardMax = siteStore?.config?.runTime?.theme?.megaMenu?.horizontalCardMax
 
-        return [...returnData, ...last]
+        if(!isCardView.value)
+            return [...returnData.slice(0,getMaxRowsPerColumn() || 6), ...last]
+
+        return [...returnData.slice(0,horizontalCardMax), ...last]
     }
 </script>
