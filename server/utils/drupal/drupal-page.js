@@ -1,26 +1,29 @@
 
 import { camelCase } from 'change-case/keys';
 
-const localizationExceptionPaths =  [] //['/forums/', '/forums', '/topics/'];
+const localizationExceptionPaths =  [];
 
-export async function getPageData(ctx){
+export async function getPageData(ctx, event){
     try{
 
+        const headers =  event.context.headers;
+
         ctx.isLocalizationException       = hasLocalizationException(ctx);
-        const { uuid,  type, bundle }     = await getPageIdentifiers(ctx);
+
+        const { uuid,  type, bundle }     = await getPageIdentifiers(ctx, headers);
 
 
         const { localizedHost, locale }   = ctx;
         const   query                     = getSearchParams(ctx, type, bundle);
         const   uri                       = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
-        const { data } = await $fetch(uri, { query });
+        const { data } = await $fetch(uri, { query, headers});
 
         await addPageAliases(ctx,data).then((aliases)=> data.aliases=aliases)
         
         if(data.type === 'taxonomy_term--system_pages' && !data?.parent[0].id !== 'virtual' ) await getChildren(ctx, data);
 
-        return  await mapData(ctx)(data)
+        return  await mapData(ctx)(data);
     }catch(e){
         const { localizedHost } = ctx;
 
@@ -34,14 +37,12 @@ export async function getPageData(ctx){
         });
     }
 
-}
+}   
 
 async function getChildren(ctx, data){
     const { localizedHost }       = ctx;
-    const   query                 =`?jsonapi_include=1&include=parent&filter[a-label][condition][path]=parent.id&filter[a-label][condition][operator]=%3D&filter[a-label][condition][value]=${encodeURIComponent(data.id)}`
-
+    const   query                 =`?jsonapi_include=1&include=parent&filter[a-label][condition][path]=parent.id&filter[a-label][condition][operator]=%3D&filter[a-label][condition][value]=${encodeURIComponent(data.id)}`;
     const   uri                   = `${localizedHost}/jsonapi/taxonomy_term/system_pages${query}`;
-
 
     const { data:children } = await $fetch(uri);
 
@@ -102,12 +103,12 @@ function getLocalizationFromPath(ctx, path){
     return isLocalizedPath?  pathParts[1] : 'en'
 }
 
-async function getPageIdentifiers(ctx){
+async function getPageIdentifiers(ctx,  headers){
     try{
         const { localizedHost, path, host } = ctx;
 
         if(!localizedHost || localizedHost?.includes('undefined')) 
-             throw createError({ 
+            throw createError({ 
                 statusCode   : 422, 
                 statusMessage: 'Unprocessable Content',
                 message      : `Server.util.drupal-page.getPageIdentifiers: localizedHost is is not derived`,
@@ -118,20 +119,20 @@ async function getPageIdentifiers(ctx){
         const cleanPath  = removeLocalizationFromPath(ctx, path);
         const uri        = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanPath||'/')}`;
 
-        const data       = await $fetch(uri);
+        const data       = await $fetch(uri, { headers});
 
         const { uuid, id, type, bundle } = data?.entity || {};
 
         return { uuid, id, type, bundle, pagePath:path, path };
     }catch(e){
-        const { localizedHost, path, host } = ctx;
+        const {, host } = ctx;
         consola.error(e);
 
 
         throw createError({ 
             statusCode   : e.statusCode, 
             statusMessage: e.statusMessage,
-            message      : `Server.util.drupal-page.getPageIdentifiers: failed to get page identifiers for site/path: ${localizedHost}${ctx.path}`,
+            message      : `Server.util.drupal-page.getPageIdentifiers: failed to get page identifiers for site/path: ${host}${ctx.path}`,
             data: e,
             fatal:  true
         });

@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
             const ctx  =  getContext(event);
 
 
-            return  getPageData({...ctx, path});
+            return  getPageData({...ctx, path}, event);
         }
         catch (e) {
             passError(event, e);

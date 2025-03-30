@@ -41,10 +41,19 @@
 <script setup>
     const   meStore       = useMeStore();
     const   siteStore     = useSiteStore();
+    const   viewport      = useViewport();
+    const   meCookie      = useCookie('me');
     const   props         = defineProps({ aMenu: { type: Object } });
     const { aMenu    }    = toRefs(props);
     const   show          = ref(false);
-    const isAuthenticated = computed(() => meStore.isAuthenticated );
+    const   route         = useRoute();
+    const   headers       = useRequestHeaders(['cookie']);
+
+    const removeLocalizationFromPath = useRemoveLocalizationFromPathIfDepthX();
+    const isAuthenticated            = computed(() => meStore.isAuthenticated );
+
+    const isMd         = computed(()=> !!!viewport?.isGreaterThan('md'));
+    const isDrupalSize = computed(()=> !!!viewport?.isGreaterThan('md')? 4 : 6);
 
     const loginUrl = computed(() => {
         if(meStore.canEdit) return `${siteStore.host}/user/${meStore.diuid}`
@@ -58,25 +67,23 @@
     }
 
 
-    const headers = useRequestHeaders(['cookie'])
 
     const { data, status, error } =  await useFetch(`${siteStore.localizedHost}/system/menu/account/linkset`, {  method: 'GET', headers });
 
     const logOutUrl = computed(() => { 
 
-        const menus = data?.value?.linkset[0]?.item || []
+        const menus       = data?.value?.linkset[0]?.item || []
         const accountMenu = menus?.find(item => item?.href?.includes('/logout'));
 
         if(accountMenu) return `${siteStore.host}${accountMenu?.href || '/user/logout'}`
 
-        if(!hasSessionCookie()) return
-        const sesCookie = useCookie(hasSessionCookie())
+        if(!hasSessionCookieClient()) return
+        const sesCookie = useCookie(hasSessionCookieClient())
 
         sesCookie.value = undefined;
         
     });
 
-    consola.warn('hasSessionCookie()',hasSessionCookie())
 </script>
 
 <style lang="scss" scoped>
