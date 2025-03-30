@@ -1,4 +1,4 @@
-export default cachedEventHandler(async (event) => {
+export default defineEventHandler(async (event) => {
         try{
             const siteCode   = getRouterParam(event, 'siteCode');
             const l          = getRouterParam(event, 'locale');
