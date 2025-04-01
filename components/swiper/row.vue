@@ -1,22 +1,22 @@
 <template>
     <div class="position-relative" >
-            <swiper
+            <LazySwiperButton  v-if="arrows && leftArrow && hideArrows" direction="left" :swiper-ref="swiperRef"/>
+            <LazySwiper
                 :loop="true"
                 :slidesPerView="slidePerView"
                 :spaceBetween="350"
                 :pagination="{ clickable: true }"
                 :modules="modules"
+                @swiper="onSwiper"
             >
 
-                <SwiperButton v-if="arrows && leftArrow && hideArrows" direction="left"/> 
-
-                <SwiperSlide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
+                <LazySwiperSlide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
                     <LazyCardsGbf :record="slide" v-if="type==='gbf'"/>
                     <LazyCardsMedia :record="slide" v-if="type==='media'"/>
-                </SwiperSlide>
+                </LazySwiperSlide>
 
-                <SwiperButton v-if="arrows && hideArrows" direction="right"/> 
-            </swiper>
+            </LazySwiper>
+            <LazySwiperButton  v-if="arrows && hideArrows"  direction="right" :swiper-ref="swiperRef"/> 
     </div>
 </template>
 <script setup>
@@ -31,6 +31,8 @@ const props = defineProps({
                             leftArrow:  { type: Boolean, default: false },
                         });
 const { type, pagination, arrows, slides , leftArrow  } = toRefs(props);
+const   swiperRef    = ref(null);
+const   onSwiper     = (swiper) => swiperRef.value = swiper;
 
 const modules      = computed(()=> pagination.value? [ Pagination ] : []); 
 const viewport     = useViewport();

@@ -1,29 +1,32 @@
 <template>
     <div class="col-12 mt-3 mb-0">
         <h3 :style="headerStyle">{{t('Latest News and Updates')}}</h3>
-        <NuxtLink :to="localePath({path:'/news-and-updates', query:{ schemas:[2,3]}})" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more news and updates')}} <LazyIcon  name="arrow-right" class="arrow" /></NuxtLink>
+        <NuxtLink :to="newsLink" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more news and updates')}} <LazyIcon  name="arrow-right" class="arrow" /></NuxtLink>
     </div>
     <div  class="position-relative mt-1" style="min-height:250px;">
         <LazySpinner v-if="loading" :is-modal="true"/>
-        <!-- <ClientOnly> -->
+        <ClientOnly>
+            <LazySwiperButton  direction="left" :swiper-ref="swiperRef"/>
             <LazySwiper
                 :loop="true"
                 :slidesPerView="slidePerView"
                 :spaceBetween="spaceBetween"
                 :pagination="{ clickable: true }"
                 :modules="modules"
+                @swiper="onSwiper"
             >
 
-                <LazySwiperButton  direction="left"/> 
+                <!--   -->
 
                 <LazySwiperSlide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
 
                     <LazyCards :record="slide" />
                 </LazySwiperSlide>
 
-                <LazySwiperButton  direction="right"/> 
+               
             </LazySwiper>
-        <!-- </ClientOnly> -->
+            <LazySwiperButton  direction="right" :swiper-ref="swiperRef"/> 
+        </ClientOnly>
     </div>
 </template>
 <script setup>
@@ -32,10 +35,15 @@ import { useWindowSize } from '@vueuse/core';
 import 'swiper/css';
 import clone from 'lodash.clonedeep';
 
+const swiperRef = ref(null);
+
+const { locale }     = useI18n();
+const menusStore     = useMenusStore();
 const getCachedData  = useGetCachedData();
 const localePath     = useLocalePath();
 const siteStore      = useSiteStore();
 const { t }          = useI18n();
+
 
 const props = defineProps({ 
                          
@@ -46,7 +54,9 @@ const props = defineProps({
                         });
 const { pagination, arrows, leftArrow ,  hideArrowsCount } = toRefs(props);
 
-
+const onSwiper = (swiper) => {
+    swiperRef.value = swiper
+}
 
 const { width: rowElWidth } = useWindowSize();
 
@@ -74,6 +84,7 @@ const spaceBetween = computed(()=> {
     return 5
 });
 
+const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ id:systemPageTidConstants.SEARCH, locale:unref(locale)}), query:{ schemas:[2,3]}}));
 
 const query = clone({ ...siteStore.params });
 
