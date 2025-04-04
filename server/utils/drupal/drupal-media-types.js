@@ -90,7 +90,7 @@ async function getMediaTypes ({ siteCode, localizedHost }) {
 
 
     return body.data
-                .map(({ drupal_internal__id:drupalInternalId, label:name })=> ({ drupalInternalId, name, slug: paramCase(name) }))
+                .map(({ drupal_internal__id:drupalInternalId, label:name })=> ({ drupalInternalId, name, slug: slugify(name) }))
 };
 
 
