@@ -256,7 +256,8 @@
         return true;
     }
     function Forums(){
-        return !menuStore?.forums?.length
+
+        return siteStore?.theme?.megaMenu?.forums? !menuStore?.forums?.length  : 3;
     }
     function hasCountry(){
         const   siteStore   = useSiteStore();
