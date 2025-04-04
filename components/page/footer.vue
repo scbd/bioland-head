@@ -5,9 +5,9 @@
               <div class="row pt-4 row-cols-2 row-cols-sm-4 row-cols-md-4 row-cols-lg-4 row-cols-xl-4 row-cols-xxl-4">
                   <div v-for="(aMenu,index) in menus" :key="index"   class="col mb-4">
                     <div v-if="meStore.showEditMenu" class="position-relative">
-                      <button @click="editMenu('footer')" type="button" class="btn btn-outline-secondary btn-sm m-1 position-absolute top-0 end-0">
+                      <NuxtLink  :to="editUrl('footer')" type="button" class="btn btn-dark btn-sm m-1 position-absolute top-0 end-0">
                           <LazyIcon name="edit" style="margin-top: .3rem;" :size="2"/>
-                      </button>
+                      </NuxtLink>
                     </div>
                       <h4 :style="headerLinkStyle">{{aMenu.title}} </h4> 
                       <ul class="list-unstyled"> 
@@ -50,9 +50,9 @@
                           </li>
                       </ul>
                       <div v-if="meStore.showEditMenu" class="position-relative" style="min-width:3rem;">
-                          <button  @click="editMenu('footer-credits')" type="button" class="btn btn-outline-secondary btn-sm position-absolute start-30">
+                          <NuxtLink  :to="editUrl('footer-credits')" type="button" class="btn btn-light btn-sm position-absolute start-30">
                               <LazyIcon name="edit" style="margin-top: .2rem;" :size="2"/>
-                          </button>
+                          </NuxtLink>
                       </div>
 
                   </div>
@@ -66,11 +66,17 @@
         const meStore   = useMeStore   ();
         const menuStore = useMenusStore();
         const siteStore = useSiteStore ();
-
+        const route     = useRoute();
         const { footer: menus, footerCredits: creditsMenus } = storeToRefs(menuStore);
         const { style,  headerLinkStyle } = useTheme();
         const { t  }                      = useI18n();
 
+
+        const editUrl = (name)=> {
+            const menuName = name || 'footer'
+
+            return `${siteStore.host}/admin/structure/menu/manage/${encodeURIComponent(menuName)}?destination=${encodeURIComponent(route.path)}`
+        };
 
         function editMenu (name) {
             const menuName = name || 'footer'
