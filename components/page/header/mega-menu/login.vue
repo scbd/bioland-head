@@ -1,15 +1,16 @@
 <template>
+    
     <div >
         <NuxtLink v-if="!isAuthenticated"  class="nav-link text-white" :to="loginUrl" :title="aMenu.title" >
             <span v-if="!isAuthenticated"> {{aMenu.title}} </span>
         </NuxtLink>
-        <button v-if="isAuthenticated" @click="toggle" class="nav-link text-white" :to="loginUrl" :title="aMenu.title" >
+        <button v-if="isAuthenticated" class="nav-link text-white" :to="loginUrl" :title="aMenu.title" >
             <span v-if="isAuthenticated"> 
                 <LazyIcon name="drupal" color="#ffffff" :size="2" class="me-1"/> 
             </span>
         </button>
-        <div v-if="show"  @click="toggle" class="overflow-scroll mm" >
-            <div class="container px-0 cont" v-click-outside="toggle">
+        <div v-if="show"   class="overflow-scroll mm" >
+            <div class="container px-0 cont" >
                 <div class="row  m-0">
                         <div  class="col-8 menu-section text-center pt-1 " style="min-height: 100px;">
                             <div class="h-100 d-flex  justify-content-center align-items-center ">
@@ -36,6 +37,7 @@
                                         <LazyIcon name="drupal-reports" color="#000000" :size="1.5" class="me-1"/> {{t('Reports')}}
                                     </NuxtLink>
                                 </div>
+
                             </div>
                         </div>
     
@@ -47,11 +49,11 @@
                                 <div class="my-1">
                                     <span>{{meStore.user?.displayName}}</span>
                                 </div>
-                                <div v-if="logOutUrl" class="w-100 d-flex  justify-content-around align-items-center ">
+                                <div  class="w-100 d-flex  justify-content-around align-items-center ">
                                     
-                                    <NuxtLink class="nav-link text-black" :to="logOutUrl" @click="doLogOut()" external >
+                                    <a class="nav-link text-black" :href="logOutUrl" >
                                         <LazyIcon name="lock" color="#000000" :size="1.5" class="me-1"/> {{t('Logout')}}
-                                    </NuxtLink>
+                                    </a>
 
                                     <button class="nav-link text-black" @click="meStore.toggleEditMode()">
                                             <LazyIcon name="edit" color="#000000" :size="1" class="me-1"/> {{t('Edit Mode')}}
@@ -71,21 +73,16 @@
     const   siteStore     = useSiteStore();
 
     const   viewport      = useViewport();
-    const   meCookie      = useCookie('me');
-
-    const   props         = defineProps({ aMenu: { type: Object } });
-    const { aMenu    }    = toRefs(props);
-    const   show          = ref(false);
+    const   localePath     = useLocalePath (           );
+    const   props         = defineProps({ aMenu: { type: Object }, show: { type: Boolean } });
+    const { aMenu, show   }    = toRefs(props);
     const   route         = useRoute();
+    const   getCachedData  = useGetCachedData();
+    const   headers       = computed(()=>process.server? useRequestHeaders(['cookie']) :  { cookie:document.cookie});
 
-    const   headers       = useRequestHeaders(['cookie']);
 
     const removeLocalizationFromPath = useRemoveLocalizationFromPathIfDepthX();
     const isAuthenticated            = computed(() => meStore.isAuthenticated );
-
-    const isMd         = computed(()=> !!!viewport?.isGreaterThan('md'));
-    const isDrupalSize = computed(()=> !!!viewport?.isGreaterThan('md')? 4 : 6);
-
 
     const isMd         = computed(()=> !!!viewport?.isGreaterThan('md'));
     const isDrupalSize = computed(()=> !!!viewport?.isGreaterThan('md')? 4 : 6);
@@ -96,45 +93,26 @@
         return `${siteStore.host}/user/login?destination=${encodeURIComponent(removeLocalizationFromPath(route.path, 1))}`
     });
 
-    function toggle() {
-        if(!isAuthenticated.value) return;
-            show.value = !show.value;
-    }
 
-    const publishUrl   = computed(() => `${siteStore.host}/admin/content`);
-    const structureUrl = computed(() => `${siteStore.host}/admin/structure`);
-    const configureUrl = computed(() => `${siteStore.host}/admin/config`);
-    const peopleUrl    = computed(() => `${siteStore.host}/admin/people`);
-    const reportsUrl   = computed(() => `${siteStore.host}/admin/reports`);
+    const publishUrl   = computed(() => siteStore.host + localePath(`/admin/content`  +`?destination=${encodeURIComponent(route.path)}`));
+    const structureUrl = computed(() => siteStore.host + localePath(`/admin/structure`+`?destination=${encodeURIComponent(route.path)}`));
+    const configureUrl = computed(() => siteStore.host + localePath(`/admin/config`   +`?destination=${encodeURIComponent(route.path)}`));
+    const peopleUrl    = computed(() => siteStore.host + localePath(`/admin/people`   +`?destination=${encodeURIComponent(route.path)}`));
+    const reportsUrl   = computed(() => siteStore.host + localePath(`/admin/reports`  +`?destination=${encodeURIComponent(route.path)}`));
 
 
-    const { data, status, error } =  await useFetch(`${siteStore.localizedHost}/system/menu/account/linkset`, {  method: 'GET', headers });
+    const { data, status, error, refresh } =  await useFetch(`${siteStore.localizedHost}/system/menu/account/linkset`, {  method: 'GET', headers, key: 'logout-url', getCachedData });
 
     const logOutUrl = computed(() => { 
 
         const menus       = data?.value?.linkset[0]?.item || []
         const accountMenu = menus?.find(item => item?.href?.includes('/logout'));
 
-        const logOutPath =  '/en/user/logout/confirm'+`?destination=${encodeURIComponent(route.path)}`;
+        if(!hasSessionCookieClient() || !accountMenu?.href) return siteStore.host+localePath(`/user/logout/confirm?destination=${encodeURIComponent(route.path)}`);
 
+        return `${siteStore.host}${accountMenu?.href}&destination=${encodeURIComponent(route.path)}`;
 
-        if(!hasSessionCookieClient()) return
-        const sesCookie = useCookie(hasSessionCookieClient())
-
-
-        
     });
-
-
-    function doLogOut(){
-        toggle();
-        meStore.logOut();
-        
-        const sesCookie = useCookie(hasSessionCookie())
-
-        sesCookie.value = null;
-        meCookie.value = null;
-    }
 
 </script>
 
