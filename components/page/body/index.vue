@@ -38,11 +38,19 @@
                     <LazyPageBodyTagsDate class="mt-2" />
                 </div>
                 <div class="d-md-flex"  >
-                    <div v-if="!isImageOrVideo" class="d-md-none align-self-start"> 
+                    <div v-if="!isImageOrVideo" class="d-md-none align-self-start" > 
                         <LazyPageBodyTagsDate /> 
                     </div>
                     <div class="align-self-start w-100">
+                        <div v-if="!isImageOrVideo"class="d-none d-md-block" > 
+                            <LazyPageBodyTagsDate /> 
+                        </div>
                         <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="htmlSanitize(pageStore?.body)"></div>
+
+                    </div>
+
+
+                        <LazyPageBodyTagsDate /> 
                     </div>
 
                 </div>
@@ -100,7 +108,26 @@
     }
 
 </script>
-
+<style>
+.container-iframe {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 250vh;
+    padding-top: 56.25%;
+ /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+}
+/* Then style the iframe to fit in the container div with full height and width */
+.responsive-iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+}
+</style>
 <style lang="scss" scoped>
 .page-body{
     min-height: 60vh;

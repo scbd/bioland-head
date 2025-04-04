@@ -27,11 +27,11 @@ export const usePageStore = defineStore('page', {
 
             this.page.hasHeroImage     = hasHeroImage;
         } ,
-        mapImage({  name,fieldMediaImage, drupalInternalMid, path, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage }){
-            if(!name || !fieldMediaImage ) throw new Error('usePageStore.mapImage -> name or fieldMediaImage is undefined');
+        mapImage({  name,fieldMediaImage, drupalInternalMid, path, filename, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage }){
+           // if(!name || !fieldMediaImage ) throw new Error('usePageStore.mapImage -> name or fieldMediaImage is undefined');
 
             const siteStore = useSiteStore();
-            const alt       = fieldMediaImage?.meta?.alt|| name || filename;
+            const alt       = fieldMediaImage?.meta?.alt|| name || filename || '';
             const src       = `${siteStore.host}${fieldMediaImage?.uri?.url}`;
         
             return { name, url:path?.alias, alt, drupalInternalMid, src, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage}
@@ -122,7 +122,6 @@ export const usePageStore = defineStore('page', {
             if(this.isMediaDocument) {
                 const dl =  `${siteStore.host}${this.page?.fieldMediaDocument?.uri?.url}`;
 
-                consola.error('this.page?.fieldMediaDocument?.uri?.url', `${siteStore.host}${this.page?.fieldMediaDocument?.uri?.url}`)
                 return {...this.page.fieldMediaDocument, downloadUrl:dl};
             }
             if( !this?.documents?.length) return undefined;
