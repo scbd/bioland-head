@@ -33,7 +33,10 @@
             <div  class="col-12 col-md-9">
                 <LazyPageBodyTabs v-if="showEdit()"/>
                 <h2  class="data-body mb-0" :class="{'has-hero': pageStore?.heroImage}" >{{ pageStore?.title}}</h2>
-                <NuxtLink :style="pageTypeStyle" v-if="pageStore?.url" :to="pageStore?.url" target="_blank" class="fs-5" external>{{pageStore?.url}}</NuxtLink>
+
+                <div v-if="pageStore?.page?.fieldUrl?.length" v-for="url in pageStore?.page?.fieldUrl"  >
+                    <NuxtLink :style="pageTypeStyle" :to="url?.uri" target="_blank" class="fs-5" external :alt="url?.title">{{url.uri}} <span v-if="false">- {{url?.title}}</span> </NuxtLink>
+                </div>
 
                 <hr class="mt-1">
 
@@ -101,7 +104,7 @@
     const   localePath = useLocalePath();
     const   meStore    = useMeStore();
     const   pageStore  = usePageStore();
-    const pageStore  = usePageStore();
+    const   siteStore  = useSiteStore();
 
     const isImageOrVideo = computed(()=> pageStore?.isImageOrVideo);
     const isDocument     = computed(()=> pageStore?.isDocument );
@@ -112,6 +115,11 @@
             if(pageStore?.isTaxonomyPage) return meStore?.showEditSystemPages;
 
             return meStore?.showEdit;
+    }
+
+    function editAttachments () {
+
+        navigateTo(`${siteStore.host}/node/${pageStore?.page?.drupalInternalNid}/edit#edit-field-attachments-wrapper`,{ external: true });
     }
 
 </script>
