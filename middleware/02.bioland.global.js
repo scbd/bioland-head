@@ -11,12 +11,16 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   const menuStore   = useMenusStore(nuxtApp.$pinia);
   const meStore     = useMeStore(nuxtApp.$pinia);
   const context     = useCookie('context');
-  const path        = to.path;
+
+  const requestCookieHeader = useRequestHeaders(['cookie']);
+  const clientCookie        =  useCookie(hasSessionCookieClient())
+  const path                = to.path;
 
   updateAppConfig({ path });
 
   isValidLocalePrefix();
 
+  if(!context.value || !siteStore.siteCode) return reloadNuxtApp();
   await getMe();
 
   const   getPage          = useGetPage(nuxtApp.$i18n.locale.value);
@@ -40,7 +44,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     const defaultLocale = siteStore.defaultLocale || 'en';
     const isValid = preFixes.includes(to.path.split('/')[1]);
 
-    if(!isValid) consola.warn('isValidLocalePrefix', to.path, defaultLocale);
+
     if(!isValid) return navigateTo(`/${defaultLocale}${to.path}`);
 }
 
@@ -72,13 +76,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   async function getMe(){
 
     try{
+      const headers = requestCookieHeader?.cookie?.includes('SSESS')? requestCookieHeader: ({ cookie: {[hasSessionCookieClient()]:clientCookie.value}})
 
-      consola.info('meStore.isAuthenticated', meStore.isAuthenticated)
-      consola.info('meStore.isExpired', meStore.isExpired)
-      if(meStore.isAuthenticated && !meStore.isExpired) return;
-
-      const { data, error } = await useFetch(`/api/me`, {  method: 'GET', query: clone({...siteStore.params, path:to.path})})//.then(({ data }) => data);
-
+      const { data, error } = await useFetch(`/api/me`, {  method: 'GET',headers,  query: clone({...siteStore.params, path:to.path})})//.then(({ data }) => data);
 
       if(!error.value) meStore.initialize(data)
     }catch(e){

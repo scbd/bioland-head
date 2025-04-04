@@ -67,11 +67,18 @@ const query = computed(() =>clone ({ ...route.query, ...siteStore.params }));
 
 const { data, status } = await useLazyFetch(()=>`/api/list/contact-points`, {  method: 'GET', query });
 
-const loading = computed(()=> pageStore.loading || status.value === 'pending');
+const loading      = computed(()=> pageStore.loading || status.value === 'pending');
 const contactTypes = [ 'CBD', 'CPB-FP1', 'ABS-FP', 'CHM-FP', 'BCH-FP', 'CPB-A17-FP', 'RM-FP', 'PA-FP', 'TKBD-FP', 'SBSTTA-FP', 'GTI-FP', 'GSPC-FP' ];
 
-const types     = computed(() => contactTypes.filter((t)=>Object.keys(data.value[siteStore?.config?.country]).includes(t)));
+const types     = computed(computeTypes);
 const typesData = computed(() => data.value[siteStore?.config?.country]);
+
+
+function computeTypes(){
+    if(!data?.value) return [];
+    
+    return contactTypes.filter((t)=>Object.keys(data.value[siteStore?.country || siteStore?.config?.country]).includes(t));
+}
 </script>
 
 <style lang="scss" scoped>

@@ -69,14 +69,23 @@
     const { t }           = useI18n();
     const   meStore       = useMeStore();
     const   siteStore     = useSiteStore();
-    const viewport        = useViewport();
-    const meCookie       = useCookie('me');
+
+    const   viewport      = useViewport();
+    const   meCookie      = useCookie('me');
+
     const   props         = defineProps({ aMenu: { type: Object } });
     const { aMenu    }    = toRefs(props);
     const   show          = ref(false);
     const   route         = useRoute();
-    const   removeLocalizationFromPath = useRemoveLocalizationFromPathIfDepthX();
-    const isAuthenticated = computed(() => meStore.isAuthenticated );
+
+    const   headers       = useRequestHeaders(['cookie']);
+
+    const removeLocalizationFromPath = useRemoveLocalizationFromPathIfDepthX();
+    const isAuthenticated            = computed(() => meStore.isAuthenticated );
+
+    const isMd         = computed(()=> !!!viewport?.isGreaterThan('md'));
+    const isDrupalSize = computed(()=> !!!viewport?.isGreaterThan('md')? 4 : 6);
+
 
     const isMd         = computed(()=> !!!viewport?.isGreaterThan('md'));
     const isDrupalSize = computed(()=> !!!viewport?.isGreaterThan('md')? 4 : 6);
@@ -98,21 +107,24 @@
     const peopleUrl    = computed(() => `${siteStore.host}/admin/people`);
     const reportsUrl   = computed(() => `${siteStore.host}/admin/reports`);
 
-    const headers = useRequestHeaders(['cookie'])
 
     const { data, status, error } =  await useFetch(`${siteStore.localizedHost}/system/menu/account/linkset`, {  method: 'GET', headers });
 
     const logOutUrl = computed(() => { 
 
-        const menus = data?.value?.linkset[0]?.item || []
+        const menus       = data?.value?.linkset[0]?.item || []
         const accountMenu = menus?.find(item => item?.href?.includes('/logout'));
 
         const logOutPath =  '/en/user/logout/confirm'+`?destination=${encodeURIComponent(route.path)}`;
 
-        if(accountMenu) return `${siteStore.host}${logOutPath}`
+
+        if(!hasSessionCookieClient()) return
+        const sesCookie = useCookie(hasSessionCookieClient())
+
 
         
     });
+
 
     function doLogOut(){
         toggle();
@@ -123,6 +135,7 @@
         sesCookie.value = null;
         meCookie.value = null;
     }
+
 </script>
 
 <style lang="scss" scoped>

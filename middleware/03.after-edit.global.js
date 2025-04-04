@@ -28,7 +28,7 @@ function isClearPageCache(){
 
     //getPage(to.path);
     reloadNuxtApp();
-    consola.warn('reloading....')
+
     onNuxtReady(async () => openAfterEdit());
     //return openAfterEdit();
   }

@@ -1,7 +1,7 @@
 <template>
     <div class="position-relative">
         <LazySpinner v-if="loading" :is-modal="true" />
-        <div v-if="!error">
+        <div v-if="!error && showWidget">
             <div class="text-capitalize">
                 <h4 :style="style" class="bm-3">{{t('GEO BON')}} </h4>
             </div>
@@ -17,7 +17,8 @@
                 <div v-if="record" class="card-body">
                     
                     <h5 class="card-title">
-                        <p class="text-center">{{record?.institution}}</p>
+                        <p class="text-center mb-0"><span class="text-muted fs-6">{{t('Provided by the')}}</span> </p>
+                        <p class="text-center"> {{record?.institution}}</p>
                         <hr class="mt-1 mb-3 text-small"/>
                         <NuxtLink  :to="goTo" external target="_blank" ><span :style="colorStyle">{{record.name}}</span></NuxtLink>
 
@@ -57,14 +58,16 @@
     const img            = useImage();
     const getCachedData  = useGetCachedData();
 
+    const showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.geobon);
     const { bgStyle, style, colorStyle, linkStyle} = useTheme();
 
     const links = ref([])
+    const countryCode = siteStore?.config?.country;
 
     if(siteStore?.config?.geoBonPage)
-        links.value.push({ name: t('Browse EBV Datasets'),  to: { path: localPath(siteStore?.config?.geoBonPage) },           external: false })
+        links.value.push({ name: t('Browse EBV Datasets for')+' '+`${t(countryCode)}`,  to: { path: localPath(siteStore?.config?.geoBonPage||'/node/116') },           external: false })
 
-    links.value.push( { name: t('GEO BON (Group on Earth Observations Biodiversity Observation Network Portal)'),       to: { path: 'https://portal.geobon.org/home' }, external: true  });
+    links.value.push( { name: t('EBV Data Portal'),       to: { path: `https://portal.geobon.org/home?country=${countryCode}` }, external: true  });
 
     const query      = clone({ ...siteStore.params });
     const { data:count, status:countStatus, error:countError } =  await useLazyFetch(`/api/list/geobon/count`, {  method: 'GET',query, getCachedData });

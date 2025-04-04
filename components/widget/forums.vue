@@ -1,7 +1,7 @@
 <template>
 <div class="position-relative">
     <LazySpinner v-if="loading" :is-modal="true"/>
-    <div v-if="!error && data?.length">
+    <div v-if="!error && data?.length && showWidget">
         <div class="text-capitalize">
             <h4 :style="style" class="bm-3">{{t('Latest Discussions')}} </h4>
         </div>
@@ -39,7 +39,7 @@
     const { t, locale  }   = useI18n();
     const   localePath     = useLocalePath();
     const   siteStore      = useSiteStore ();
-
+    const   showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.forums);
     const   query                 = clone({...siteStore.params, rowsPerPage:5 });
     const { data, status, error } =  await useLazyFetch(`/api/list/topics`, {  method: 'GET', query,key: 'forums-widget', getCachedData });
 
