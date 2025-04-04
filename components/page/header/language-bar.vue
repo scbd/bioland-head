@@ -6,14 +6,14 @@
                     <NuxtLink class="navbar-brand" to="https://www.cbd.int" external target="_blank">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</NuxtLink>
                 </div>
 
-                <div v-if="!(limitedMenus.length > 1) && pageLoaded" class="col-sm-7 d-flex justify-content-end">
+                <div v-if="!(limitedMenus?.length > 1)" class="col-sm-7 d-flex justify-content-end">
                     <ul class="nav" >
                         <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
                             <NuxtLink v-if="aMenu.code !== 'xx'" class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}">&nbsp;</NuxtLink>
                         </li>
                     </ul>
                 </div>
-                <div v-if="limitedMenus.length > 1 && pageLoaded " class="col-sm-7 d-flex justify-content-end">
+                <div v-if="limitedMenus?.length > 1 " class="col-sm-7 d-flex justify-content-end">
                     <ul class="nav" >
                         <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
                             <NuxtLink v-if="aMenu.code !== 'xx'" class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}">{{aMenu.nativeName}}</NuxtLink>
@@ -43,7 +43,6 @@
 
     const dropDownEl      = shallowRef(undefined);
     const dropDownLinkEl  = shallowRef(undefined);
-    const limitedMenus    = ref([]);
     const otherMenus      = ref([]);
     const viewport        = useViewport();
     const limit           = ref(siteStore.maxLangBeforeWrap);
@@ -58,7 +57,7 @@
         'border-bottom': `.25rem solid ${siteStore.primaryColor}`
     });
 
-    limitedMenus.value = menus?.value?.length? cloneDeep(menus.value).splice(0, limit.value) : [];
+    const limitedMenus = computed(() => menus?.value?.length? cloneDeep(menus.value).splice(0, limit.value) : [] );
 
 
     if(menus?.value && menus.value?.length > limit.value)
@@ -81,6 +80,12 @@
 
         unref(dropDownEl).style.display = 'none';
     }
+
+    onMounted(()=>{
+        if(pageLoaded.value) return;
+
+        consola.warn(`${siteStore.host} => `,'Page aliases not provided to language bar', pageStore?.page)
+    });
 </script>
 
 <style scoped>
