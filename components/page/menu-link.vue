@@ -18,10 +18,10 @@
                                     crumbs: [String, Array],
                                     localize: { type: Boolean, default: false },
                                 });
-
+    const localePath  = useLocalePath()
     const { href, title, target:targets, localize: shouldLocalize  } = toRefs(props);
 
-    const locale = (path) => shouldLocalize.value? useLocalePath(path): path;
+    const locale = (path) => shouldLocalize.value? localePath(path): path;
 
 
     const targetValue = targets;

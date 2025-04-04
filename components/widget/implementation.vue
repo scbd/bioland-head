@@ -1,5 +1,5 @@
 <template>
-    <LazyWidget  :loading="loading" :name="t('implementation')" :record="record" :links="links"/>
+    <LazyWidget  v-if="showWidget" :loading="loading" :name="t('implementation')" :record="record" :links="links"/>
 </template>
 
 <script setup>
@@ -11,6 +11,7 @@
     const query          = clone({ ...siteStore.params });
     const localePath     = useLocalePath();
     const getCachedData  = useGetCachedData();
+    const showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.implementation);
 
     const { data: record , status, error }= await useLazyFetch(`/api/list/content/5`, {  method: 'GET', query, onResponse, key: 'implimentation', getCachedData });
 

@@ -7,8 +7,8 @@
                         <LazyIcon name="edit" style="margin-top: .3rem;" :size="2"/>
                     </button>
                 </div>
-                <div  class="menu-section text-wrap"  :class="[getGridValue(aMenu)]" v-for="(aMenu,index) in sections" :key="index">
-                    
+                <div  class="menu-section text-wrap position-relative pb-5"  :class="[getGridValue(aMenu)]" v-for="(aMenu,index) in sections" :key="index">
+
                     <section v-if="!isComponent(aMenu)">
                         <LazyPageHeaderMegaMenuHeader :menu="aMenu" />
                         <section v-for="(aChild,j) in aMenu.children" :key="j">
@@ -30,6 +30,7 @@
 <script setup>
     import { pascalCase   } from 'change-case';
 
+        const {t, locale} = useI18n();
         const props      = defineProps({ menus: Array });
         const siteStore  = useSiteStore();
         const menuStore  = useMenusStore();
@@ -66,7 +67,6 @@
 
             navigateTo(`${siteStore.host}/admin/structure/menu/manage/${encodeURIComponent(menuName)}`,{ external: true });
 
-            console.log('edit menu');
         }
 
         function hasMaxColumns(totalColumns, nextMenu = {}){
@@ -148,6 +148,7 @@
     }
 
     function isComponent(aMenu){
+
         return componentName(aMenu);
     }
 
@@ -176,7 +177,8 @@
             let contentTypesHasDocuments = false;
 
             for (const aType of getContentTypes(menu)) {
-                const hasRecords = menuStore?.getContentType(aType)?.data?.length;
+ 
+                const hasRecords = menuStore?.getContentType(aType,undefined,locale)?.data?.length;
 
                 if(hasRecords) contentTypesHasDocuments = true;
             }
@@ -268,7 +270,7 @@
 
 .menu-section{
     border-right: 2px solid rgb(0, 0, 0, .2);
-    margin-bottom: 4rem;
+    margin-bottom: 1rem;
 }
 .menu-section:last-child{
     border-right: none;

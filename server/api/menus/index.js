@@ -1,11 +1,11 @@
 export default defineEventHandler(async (event) => {
         try{
-            const { me:meString } = parseCookies(event, 'me') 
-            const   me            = meString? JSON.parse(decodeURIComponent(meString)) : undefined;
+
             const   query         = getQuery(event)
             const   context       = getContext(event);
 
-            const headers = { Cookie: me?`me=${me};context=${encodeURIComponent(JSON.stringify(context || query || {}))};` : `context=${encodeURIComponent(JSON.stringify(context || query || {}))};` };
+
+            const headers = { Cookie: getHeader(event, 'Cookie')};
 
             const { siteCode, localizedHost } = { ...context, ...query };
 

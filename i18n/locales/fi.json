@@ -811,5 +811,9 @@
   "GEO BON Portal": "GEO BON -portaali",
   "GEO BON": "GEO-BON",
   "EBV dataset": "EBV-tietoaineisto",
-  "EBV datasets": "EBV-tietojoukot"
+  "EBV datasets": "EBV-tietojoukot",
+  "Browse EBV Datasets for": "Selaa EBV-tietojoukkoja",
+  "EBV Data Portal": "EBV-tietoportaali",
+  "Provided by the": "Tarjoaa",
+  "This is a staging website to review Bioland 2 and migrations": "Tämä on lavastussivusto, jossa tarkastellaan Bioland 2: ta ja siirtoja"
 }

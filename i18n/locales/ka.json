@@ -811,5 +811,9 @@
   "GEO BON Portal": "გეო ბონ პორტალი",
   "GEO BON": "გეო ბონი",
   "EBV dataset": "EBV მონაცემთა ნაკრები",
-  "EBV datasets": "EBV მონაცემთა ბაზები"
+  "EBV datasets": "EBV მონაცემთა ბაზები",
+  "Browse EBV Datasets for": "დაათვალიერეთ EBV მონაცემთა ნაკრები",
+  "EBV Data Portal": "EBV მონაცემთა პორტალი",
+  "Provided by the": "უზრუნველყოფილია",
+  "This is a staging website to review Bioland 2 and migrations": "ეს არის სადადგომო ვებსაიტი Bioland 2-ისა და მიგრაციების შესამოწმებლად"
 }

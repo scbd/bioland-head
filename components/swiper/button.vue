@@ -1,18 +1,20 @@
 <template>
 
-    <div  @click="direction != 'right'? sw.slidePrev() : sw.slideNext()"  :class="{ left: direction === 'left', right: direction !== 'left' }" class="arrow-container d-flex align-items-center">
-        <LazyIcon v-if="!(!sw.activeIndex && direction==='left')"  :name="`arrow-${direction}`" class="arrow" :size="4"/>
+    <div  @click="onClick"  :class="{ left: direction === 'left', right: direction !== 'left' }" class="arrow-container d-flex align-items-center">
+        <LazyIcon v-if="!(!sw?.activeIndex && direction==='left')"  :name="`arrow-${direction}`" class="arrow" :size="4"/>
         &nbsp;
     </div>
 
 </template>
 <script setup>
-    import { useSwiper } from 'swiper/vue';
+    const   props       = defineProps({ direction: { type: String }, swiperRef: {type: Object } });
+    const { direction, swiperRef:sw } = toRefs(props);
 
-    const   props       = defineProps({ direction: { type: String } });
-    const { direction } = toRefs(props);
 
-    const sw = useSwiper();
+    function onClick(){
+        if(direction.value === 'right') sw.value.slideNext();
+        else sw.value.slidePrev();
+    }
 
 </script>
 <style lang="scss" scoped>

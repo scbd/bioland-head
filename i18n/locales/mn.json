@@ -811,5 +811,9 @@
   "GEO BON Portal": "ГЕО БОН портал",
   "GEO BON": "ГЕО БОН",
   "EBV dataset": "EBV мэдээллийн багц",
-  "EBV datasets": "EBV өгөгдлийн багц"
+  "EBV datasets": "EBV өгөгдлийн багц",
+  "Browse EBV Datasets for": "EBV өгөгдлийн багцыг үзэх",
+  "EBV Data Portal": "EBV мэдээллийн портал",
+  "Provided by the": "Зөвшөөрөгдсөн",
+  "This is a staging website to review Bioland 2 and migrations": "Энэ бол Bioland 2 болон шилжилт хөдөлгөөнийг хянахын тулд тавьсан вэбсайт юм"
 }

@@ -1,4 +1,11 @@
 {
+  "Publishing": "Publishing",
+  "Structure": "Structure",
+  "Configuration": "Configuration",
+  "Content": "Content",
+  "People": "People",
+  "Reports": "Reports",
+  "editCacheNotice":"Clearing the cache for the page can take approximately a minute.  Otherwise changes may be reflected in 1 - 24 hours.",
   "This is a development/pre-production website":"This is a development/pre-production website",
   "This is a staging website to review Bioland 2 and migrations":"This is a staging website to review Bioland 2 and migrations",
   "ecosystem": "ecosystem | ecosystems",
@@ -813,5 +820,8 @@
   "GEO BON Portal": "GEO BON Portal",
   "GEO BON": "GEO BON",
   "EBV dataset": "EBV dataset",
-  "EBV datasets": "EBV datasets"
+  "EBV datasets": "EBV datasets",
+  "Browse EBV Datasets for": "Browse EBV Datasets for",
+  "EBV Data Portal": "EBV Data Portal",
+  "Provided by the": "Provided by the"
 }

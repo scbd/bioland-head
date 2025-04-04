@@ -811,5 +811,9 @@
   "GEO BON Portal": "GEO BON Portal",
   "GEO BON": "GEO-BON",
   "EBV dataset": "EBV skup podataka",
-  "EBV datasets": "EBV skupovi podataka"
+  "EBV datasets": "EBV skupovi podataka",
+  "Browse EBV Datasets for": "Pregledajte EBV skupove podataka za",
+  "EBV Data Portal": "EBV portal podataka",
+  "Provided by the": "Obezbeđuje",
+  "This is a staging website to review Bioland 2 and migrations": "Ovo je web stranica za insceniranje za pregled Biolanda 2 i migracija"
 }

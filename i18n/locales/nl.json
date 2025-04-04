@@ -811,5 +811,9 @@
   "GEO BON Portal": "GEO BON-portaal",
   "GEO BON": "GEOGRAFISCH GOED",
   "EBV dataset": "EBV-gegevensset",
-  "EBV datasets": "EBV-gegevenssets"
+  "EBV datasets": "EBV-gegevenssets",
+  "Browse EBV Datasets for": "Bekijk EBV-datasets voor",
+  "EBV Data Portal": "EBV-dataportaal",
+  "Provided by the": "Geleverd door de",
+  "This is a staging website to review Bioland 2 and migrations": "Dit is een testwebsite om Bioland 2 en migraties te beoordelen"
 }

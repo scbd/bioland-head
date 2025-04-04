@@ -20,9 +20,8 @@
     </div>
 </template>
 <script setup>
-import { useElementBounding } from '@vueuse/core'
+        import { useElementBounding } from '@vueuse/core';
 
-        const meStore = useMenusStore();
         const spacers   = ref(undefined);
         const spacersY  = ref([]);
         const toggles   = ref([]);
@@ -35,10 +34,7 @@ import { useElementBounding } from '@vueuse/core'
 
         const eventBus   = useEventBus();
 
-        const loginUrl = computed(() => {
-          if(meStore.canEdit) return `${siteStore.host}/user/${meStore.diuid}`
-          return `${siteStore.host}/user/login`
-        });
+
         router.beforeEach(() => {
           for (let index = 0; index < unref(toggles).length; index++)
               toggles.value[index] = false;
@@ -64,8 +60,6 @@ import { useElementBounding } from '@vueuse/core'
     }
     function loginStyle(aMenu){
       if(!isLogin(aMenu)) return {};
-
-
 
       return reactive({
         'background-color': siteStore.primaryColor

@@ -49,8 +49,10 @@
 
                     </div>
 
+
                         <LazyPageBodyTagsDate /> 
                     </div>
+
                 </div>
 
                 <div class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
@@ -88,10 +90,10 @@
     </div>
 </template>
 <script setup>
-    const { t } = useI18n();
-
-    const localePath = useLocalePath();
-    const meStore    = useMeStore();
+    const { t }        = useI18n();
+    const   localePath = useLocalePath();
+    const   meStore    = useMeStore();
+    const   pageStore  = usePageStore();
     const pageStore  = usePageStore();
 
     const isImageOrVideo = computed(()=> pageStore?.isImageOrVideo);
@@ -104,6 +106,7 @@
 
             return meStore?.showEdit;
     }
+
 </script>
 <style>
 .container-iframe {

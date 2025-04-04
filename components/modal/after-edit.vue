@@ -14,7 +14,7 @@
               </div>
               <div class="modal-body p-3">
                 <h3 class="modal-title border-dark w-100 text-center  mb-3">{{t('Clear page cache to see changes?')}}</h3>
-                <div class="w-100 text-center fs-5"><p>{{t('Clearing the cache for the page can take 5 seconds to 3 minutes.  Otherwise changes will be reflected in 1 - 24 hours.')}}</p></div>
+                <div class="w-100 text-center fs-5"><p>{{t('editCacheNotice')}}</p></div>
               </div>
               <div class="modal-footer d-flex justify-content-center align-items-center mb-3">
                 <NuxtLink @click="reload()" type="button" class="btn btn-secondary mx-3 mb-2" external >{{t('Clear Cache')}}</NuxtLink>
