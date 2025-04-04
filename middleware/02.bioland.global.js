@@ -6,14 +6,14 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   await changeLocale();
 
-  const siteStore   = useSiteStore(nuxtApp.$pinia);
-  const pStore      = usePageStore(nuxtApp.$pinia);
-  const menuStore   = useMenusStore(nuxtApp.$pinia);
-  const meStore     = useMeStore(nuxtApp.$pinia);
-  const context     = useCookie('context');
+  const siteStore     = useSiteStore(nuxtApp.$pinia);
+  const pStore        = usePageStore(nuxtApp.$pinia);
+  const menuStore     = useMenusStore(nuxtApp.$pinia);
+  const meStore       = useMeStore(nuxtApp.$pinia);
+  const context       = useCookie('context');
 
   const requestCookieHeader = useRequestHeaders(['cookie']);
-  const clientCookie        =  useCookie(hasSessionCookieClient())
+  const clientCookie        =  useCookie(hasSessionCookieClient());
   const path                = to.path;
 
   updateAppConfig({ path });
@@ -27,6 +27,11 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   const [ pData, fetch ]   = await Promise.all([getPage(path), getMenus()]);
   const { data: menuData } = fetch || { data: undefined};
 
+  if(pData.redirect) {
+    await abortNavigation();
+    
+    return navigateTo(pData.redirect, { redirectCode: 301 });
+  }
   if(!pData) return;
 
   pStore.initialize(pData);
@@ -78,7 +83,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     try{
       const headers = requestCookieHeader?.cookie?.includes('SSESS')? requestCookieHeader: ({ cookie: {[hasSessionCookieClient()]:clientCookie.value}})
 
-      const { data, error } = await useFetch(`/api/me`, {  method: 'GET',headers,  query: clone({...siteStore.params, path:to.path})})//.then(({ data }) => data);
+      const { data, error } = await useFetch(`/api/me`, {  method: 'GET',headers,  query: clone({...siteStore.params, path:to.path})});
 
       if(!error.value) meStore.initialize(data)
     }catch(e){

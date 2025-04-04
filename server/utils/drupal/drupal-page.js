@@ -10,19 +10,22 @@ export async function getPageData(ctx, event){
 
         ctx.isLocalizationException       = hasLocalizationException(ctx);
 
-        const { uuid,  type, bundle }     = await getPageIdentifiers(ctx, headers);
+        const { uuid,  type, bundle, label, redirect }     = await getPageIdentifiers(ctx, headers);
 
 
         const { localizedHost, locale }   = ctx;
         const   query                     = getSearchParams(ctx, type, bundle);
         const   uri                       = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
-        const { data } = await $fetch(uri, { query, headers});
+        const { data } = await $fetch(uri, $fetchBaseOptions({ query, headers}));
+
+        data.label = label;
+        if(redirect) data.redirect = redirect;
 
         await addPageAliases(ctx,data).then((aliases)=> data.aliases=aliases)
         
         if(data.type === 'taxonomy_term--system_pages' && !data?.parent[0].id !== 'virtual' ) await getChildren(ctx, data);
-
+        
         return  await mapData(ctx)(data);
     }catch(e){
         const { localizedHost } = ctx;
@@ -121,11 +124,17 @@ async function getPageIdentifiers(ctx,  headers){
 
         const data       = await $fetch(uri, { headers});
 
-        const { uuid, id, type, bundle } = data?.entity || {};
+        const { uuid, id, type, bundle,  canonical } = data?.entity || {};
+        const aUrl = new URL(canonical);
 
-        return { uuid, id, type, bundle, pagePath:path, path };
+        const redirect = data?.isHomePath || canonical.endsWith(path)? '' : `${aUrl.pathname}`
+
+        const returnValues = { uuid, id, type, bundle, pagePath:path, path,  label:data.label };
+
+        return redirect? { ...returnValues, redirect} : returnValues
     }catch(e){
-        const {, host } = ctx;
+        const { host } = ctx;
+
         consola.error(e);
 
 
