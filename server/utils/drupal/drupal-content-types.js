@@ -124,6 +124,6 @@ async function getTerms ({ localizedHost}) {
     const { data } = await $fetch(uri, { method, headers });
 
     return data.filter(({ status })=> status)
-                .map(({ drupal_internal__tid:drupalInternalId, name, uuid, path, field_plural, langcode })=> ({ drupalInternalId, langcode, name, slug:field_plural? `/${limax(field_plural)}`: path?.alias, plural: field_plural, uuid, hrefs:[path?.alias, field_plural?`/${limax(field_plural)}`:''].filter(x=>x)  }))
+                .map(({ drupal_internal__tid:drupalInternalId, name, uuid, path, field_plural, langcode })=> ({ drupalInternalTid:drupalInternalId,drupalInternalId, langcode:mapLocaleFromDrupal(langcode), name, slug:field_plural? `/${slugify(field_plural)}`: path?.alias, plural: field_plural, uuid, hrefs:[name?`/${slugify(name)}`:'', field_plural?`/${slugify(field_plural)}`:''].filter(x=>x)  }))
 };
 
