@@ -56,9 +56,13 @@ export const userTextSearch = () => {
 
 
 export const useGetPage = (locale) => {
+    const requestUrl = useRequestURL();
+    // const fetch = useRequestFetch();
+    const rHeader =  useRequestHeader('cookie')
+    const router = useRouter();
     const nuxtApp            = useNuxtApp();
     const siteStore          = useSiteStore(nuxtApp.$pinia);
-
+    const meStore            = useSiteStore(nuxtApp.$pinia);
     const { multiSiteCode }  = useRuntimeConfig().public;
 
     return   async (passedPath, clearCache = false) =>{ 
@@ -66,22 +70,25 @@ export const useGetPage = (locale) => {
         const   path                  = ref(passedPath); //ref(passedPath.endsWith('/topics')? passedPath.replace('/topics', '') : passedPath);
         const { identifier } = siteStore;
     
-        const headers = clearCache? { 'Clear-Cache': true } : {};
+        const cookie = useCookie(hasSessionCookieClient())
+        const headers = rHeader?.cookie?.includes('SSESS')? rHeader: ({ cookie: {[hasSessionCookieClient()]:cookie.value}})
         const key = ref(`${multiSiteCode}-${identifier}-${locale}-${encodeURIComponent(path.value)}`);
     
+
         try{
             if(key.value?.includes('undefined'))  throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}` }) 
-        
-            const  data  = await $fetch(`/api/page/${encodeURIComponent(key.value)}/${encodeURIComponent(path.value)}`, {  method: 'GET', headers, query: clone({ ...siteStore.params, path:path.value }) })//.then(({ data }) => data);
-        
+
+                const options =  process.server? {  method: 'GET', headers, query: clone({ ...siteStore.params, path:path.value }) } : {  method: 'GET', query: clone({ ...siteStore.params, path:path.value }) };
+                const  data   = await $fetch(`/api/page/${encodeURIComponent(key.value)}/${encodeURIComponent(path.value)}`,options)//.then(({ data }) => data);
+
             return data;
         }catch(e){
             consola.error(e)
-        
-            if(e.statusCode === 404)
+            if(e.statusCode === 404 || e.statusCode === 403)
                 throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}`, fatal:true })
         
             throw createError({ statusCode: e.statusCode, statusMessage: e.statusMessage, fatal:true }) 
+
         }
     }
 }
@@ -133,4 +140,33 @@ export function getDocumentIcon(uri){
     if(mime?.includes('image'))    return  { name: 'file-image-o', color: '#C13B1B' };
 
     return { name: 'document-file-txt', color: '#222222' };
+}
+
+
+export function useRemoveLocalizationFromPath(){
+    const { locales:localeObjects } = useRuntimeConfig().public;
+
+    return (path) => {
+
+        const   locales                 = localeObjects.map(({ code })=> code);
+        const   pathParts               = path.split('/');
+
+        const isLocalizedPath = locales?.includes(pathParts[1]);
+
+        return isLocalizedPath?   [ '', ...pathParts.slice(2) ].join('/')    :  path;
+    }
+}
+
+export function useRemoveLocalizationFromPathIfDepthX(){
+    const { locales:localeObjects } = useRuntimeConfig().public;
+
+    return (path, depth = 1) => {
+
+        const   locales                 = localeObjects.map(({ code })=> code);
+        const   pathParts               = path.split('/').filter(falsyFilter);
+
+        const isLocalizedPath = locales?.includes(pathParts[0]);
+
+        return isLocalizedPath && pathParts.length === depth?   [ '','', ...pathParts.slice(depth) ].join('/')    :  path;
+    }
 }
