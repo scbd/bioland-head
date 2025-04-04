@@ -16,9 +16,16 @@
 
                 <h2 :style="pageTypeStyle" class="page-type">{{pageStore?.typeName}}</h2>
 
-                <NuxtLink v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  :to="localePath(pageStore?.image?.url)">
-                    <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-5 w-100"/>
-                </NuxtLink>
+                <div v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  class="mt-3 position-relative">
+                    <div v-if="meStore.showEdit" class="position-absolute end-0 top-0" style="min-width:3rem;">
+                        <button @click="editAttachments" type="button" class="btn btn-outline-secondary btn-sm ">
+                            <LazyIcon name="edit" style="margin-top: .2rem;" :size="2"/>
+                        </button>
+                    </div>
+                    <NuxtLink v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  :to="localePath(pageStore?.image?.url)">
+                        <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid w-100"/>
+                    </NuxtLink>
+                </div>
 
                 <LazyPageMediaFileDetails v-if="isImageOrVideo || isDocument" :vertical="true" />
             </div>
