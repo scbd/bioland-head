@@ -16,9 +16,16 @@
 
                 <h2 :style="pageTypeStyle" class="page-type">{{pageStore?.typeName}}</h2>
 
-                <NuxtLink v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  :to="localePath(pageStore?.image?.url)">
-                    <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-5 w-100"/>
-                </NuxtLink>
+                <div v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  class="mt-3 position-relative">
+                    <div v-if="meStore.showEdit" class="position-absolute end-0 top-0" style="min-width:3rem;">
+                        <button @click="editAttachments" type="button" class="btn btn-light btn-sm ">
+                            <LazyIcon name="edit" style="margin-top: .2rem;" :size="2"/>
+                        </button>
+                    </div>
+                    <NuxtLink v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  :to="localePath(pageStore?.image?.url)">
+                        <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid w-100"/>
+                    </NuxtLink>
+                </div>
 
                 <LazyPageMediaFileDetails v-if="isImageOrVideo || isDocument" :vertical="true" />
             </div>
@@ -49,14 +56,11 @@
                             <LazyPageBodyTagsDate /> 
                         </div>
                         <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="htmlSanitize(pageStore?.body)"></div>
-
-                    </div>
-
-
-                        <LazyPageBodyTagsDate /> 
                     </div>
 
                 </div>
+
+            </div>
 
                 <div class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
                     <LazyPageMediaFileDetails />
@@ -70,27 +74,28 @@
                 </div>
             </div>
             
-        </div>
-    
-        <div v-if="pageStore?.media?.length"  class="row mt-3">
-            <div class="col-12 col-md-3">
-                <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{pageStore?.media.length}})</span></h2>
+            <div v-if="pageStore?.media?.length"  class="row mt-3">
+                <div class="col-12 col-md-3">
+                    <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{pageStore?.media.length}})</span></h2>
 
+                </div>
+                <div class="col-12 col-md-9">
+                    <LazySwiperMedia :slides="pageStore?.media" type="media"/>
+                </div>
             </div>
-            <div class="col-12 col-md-9">
-                <LazySwiperMedia :slides="pageStore?.media" type="media"/>
-            </div>
-        </div>
 
-        <div v-if="pageStore?.tags?.gbfTargets?.length" class="row mt-3">
-            <div class="col-12 col-md-3">
-                <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.gbfTargets.length}})</span></h2>
+            <div v-if="pageStore?.tags?.gbfTargets?.length" class="row mt-3">
+                <div class="col-12 col-md-3">
+                    <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.gbfTargets.length}})</span></h2>
+                </div>
+                <div class="col-12 col-md-9">
+                    <LazySwiperGbf :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
+                </div>
             </div>
-            <div class="col-12 col-md-9">
-                <LazySwiperGbf :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
-            </div>
-        </div>
+
     </div>
+    
+
 </template>
 <script setup>
     const { t }        = useI18n();
