@@ -4,7 +4,7 @@
         
         <div v-if="hasHeroImage"  class="container text-white">
             <div class="row pb-1 position-relative ">
-                <div v-if="meStore.showEdit" class="position-absolute text-end bottom-50" style="min-width:3rem;">
+                <div v-if="meStore.showEdit && meStore.isContentManager" class="position-absolute text-end bottom-50" style="min-width:3rem;">
                     <NuxtLink :to="editUrl()" type="button" class="btn btn btn-light btn-sm mt-1">
                         <LazyIcon name="edit" style="margin-top: .2rem;" :size="2"/>
                     </NuxtLink>
