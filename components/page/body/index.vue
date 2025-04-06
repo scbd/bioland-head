@@ -80,7 +80,9 @@
 
                 </div>
                 <div class="col-12 col-md-9">
-                    <LazySwiperMedia :slides="pageStore?.media" type="media"/>
+                    <ClientOnly>
+                        <LazySwiperMedia :slides="pageStore?.media" type="media"/>
+                    </ClientOnly>
                 </div>
             </div>
 
@@ -89,7 +91,9 @@
                     <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.gbfTargets.length}})</span></h2>
                 </div>
                 <div class="col-12 col-md-9">
-                    <LazySwiperGbf :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
+                    <ClientOnly>
+                        <LazySwiperGbf :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
+                    </ClientOnly>
                 </div>
             </div>
 
