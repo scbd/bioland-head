@@ -72,6 +72,8 @@
     function getContentTypeId(){
         if(pageStore?.page?.type === 'taxonomy_term--system_pages') return ''
 
+        if(pageStore?.isSearch) return pageStore?.isSearch;
+        
         const contentType = r?.params[0];
 
         if(!contentType) return '';
@@ -94,9 +96,9 @@
             return `/api/list/chm`;
 
         if(typeId.value )
-            return `/api/list/content/${encodeURIComponent(typeId.value)}`;
+            return `/api/list/drupal/${encodeURIComponent(typeId.value)}`;
 
-        return `/api/list/content`;
+        return `/api/list/drupal`;
     }
 
     function isNumberString(string) {
