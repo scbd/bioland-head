@@ -1,9 +1,32 @@
 <template>
-    <NuxtLink style="text-decoration: none;" :to="goTo(href)" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" :target="target" :external="external">
+    <NuxtLink style="text-decoration: none;" :to="goTo(href)" prefetch-on="visibility" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" :target="target" :external="external">
         <div :style="cardStyle" class="card p-1 mb-3" >
             <div  class="row g-0">
-                <LazyIcon v-if="aLine.sticky" name="pushpin" class="position-absolute start-50"/>
-                <div :class="{ 'col-9': aLine.mediaImage, 'col-12': !aLine.mediaImage }">
+                <div v-if="aLine.sticky || aLine.promote" class="text-center position-absolute top-0">
+                    <ClientOnly>
+                        <Popper v-if="aLine.sticky" class="dark" :hover="true" :arrow="true" placement="bottom">
+                            <LazyIcon  name="pushpin" :size="1.5"  />
+                                <template #content>
+                                    <div >
+                                        <h5>{{t('Sticky')}}</h5>
+                                        <p >{{t('stickyNote')}}</p>
+                                    </div>
+                                </template>
+                        </Popper>
+                    </ClientOnly>
+                    <ClientOnly>
+                        <Popper v-if="aLine.promote" class="dark" :hover="true" :arrow="true" placement="bottom">
+                            <LazyIcon name="promote" :size="2" class="ms-3"/>
+                                <template #content>
+                                    <div >
+                                        <h5>{{t('Promote')}}</h5>
+                                        <p >{{t('promoteNote')}}</p>
+                                    </div>
+                                </template>
+                        </Popper>
+                    </ClientOnly>               
+                </div>
+                <div :class="{ 'col-9': aLine.mediaImage, 'col-12': !aLine.mediaImage, 'mt-2':aLine.sticky || aLine.promote }">
                     <div class="card-body pe-1">
                         <h5 class="card-title">{{aLine.title || aLine.name}}</h5>
                         <p v-if="aLine.summary" class="card-text">{{aLine.summary}}...</p>
@@ -39,6 +62,8 @@
     </NuxtLink>
 </template>
 <script setup>
+    import   Popper         from 'vue3-popper';
+
     const   siteStore                   = useSiteStore();
     const   localePath                  = useLocalePath();
     const   route                       = useRoute();
