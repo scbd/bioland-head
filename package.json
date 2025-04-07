@@ -48,6 +48,7 @@
     "luxon": "3.5.0",
     "mitt": "3.0.1",
     "mrmime": "2.0.0",
+    "native-url": "^0.3.4",
     "nuxt-emoji-picker": "1.1.0",
     "nuxt-gravatar": "1.1.0",
     "nuxt-swiper": "1.2.2",
