@@ -2,17 +2,17 @@
     <div class="container position-relative mega d-none d-md-block">
         <div class="cont-x">
             <nav  class="navbar nav bg-dark w-100 pt-0">
-                <ul class="nav">
-                    <li @click.stop="toggle(index)" v-for="(aMenu,index) in menus" :key="index" :style="loginStyle(aMenu)" class="nav-item text-nowrap"  >
-                        <NuxtLink  v-if="!aMenu.class?.includes('login')" :class="aMenu.class" class="nav-link" :to="aMenu.href" :title="aMenu.title"  >
+                <ul class="nav ">
+                    <li @click.stop="toggle(index, aMenu)" v-for="(aMenu,index) in menus" :ref="el => refElements.push(el)" :key="index" :style="loginStyle(aMenu)" class="nav-item text-nowrap"  >
+                        <NuxtLink  v-if="!aMenu.class?.includes('login')" :class="menuClass(aMenu)" class="nav-link" :to="aMenu.href" :title="aMenu.title"  >
                             {{aMenu.title}}
                         </NuxtLink>
 
                         <span v-if="!aMenu.class?.includes('login')" ref="spacers" :class="{ 'opacity-0': isLastSpacer(index) }" class="spacer"></span>
                         
-                        <PageHeaderMegaMenuLogin v-if="aMenu.class?.includes('login')" :aMenu="aMenu"/>
+                        <PageHeaderMegaMenuLogin v-if="aMenu.class?.includes('login')" :aMenu="aMenu" :show="toggles[index]" v-click-outside="unToggle"/>
 
-                        <LazyPageHeaderMegaMenuDropDown v-if="aMenu.children && toggles[index]" :menus="aMenu.children"  v-click-outside="unToggle"/>
+                        <LazyPageHeaderMegaMenuDropDown v-if="toggles[index]" :menus="aMenu.children"  v-click-outside="unToggle"/>
                     </li>
                 </ul>
             </nav>
@@ -27,18 +27,24 @@
         const toggles   = ref([]);
         const menuStore = useMenusStore();
         const siteStore = useSiteStore();
-
-        
+        const me        = useMeStore();
+        const refElements = ref([]);
         const { main: menus } = storeToRefs(menuStore);
         const router = useRouter()
 
         const eventBus   = useEventBus();
 
+        function menuClass(aMenu){
+          const menusClasses = aMenu.class?.length? aMenu.class : [];
 
-        router.beforeEach(() => {
+            return me.isAuthenticated? [...menusClasses, 'larger-line'] : menusClasses;
+        }
+
+        router.beforeEach((to, from) => {
           for (let index = 0; index < unref(toggles).length; index++)
               toggles.value[index] = false;
         })
+
         const stop = watch(spacers, async (newSpacers) => {
                                                             if(!newSpacers) return;
                                                             for (let i = 0; i < newSpacers.length; i++) {
@@ -50,7 +56,11 @@
 
 
         onMounted(() => { 
-            eventBus.on('openMenu', (index) => toggles.value[index] = true );
+            eventBus.on('openMenu', (index) => {
+                toggles.value[index] = true ;
+                triggerRef(toggles);
+                setTimeout(() => refElements.value[index]? refElements.value[index].click() : null, 100);
+              });
             
         });
 
@@ -65,7 +75,11 @@
         'background-color': siteStore.primaryColor
       });
     }
-    function toggle(index){
+    
+    function toggle(index, aMenu ={}){
+      if(index===0) return;
+      if(isLogin(aMenu) && !me.isAuthenticated ) return;
+
       unToggle();
       toggles.value[index] = !toggles.value[index];
     }
@@ -154,6 +168,9 @@ nav {
 //   @media (max-width: 1247.98px) {
 //       margin-right: 1rem;
 //   }
+}
+.larger-line{
+    line-height: 2rem;
 }
 .navbar .nav-item:hover > .nav-link {
     opacity: 1;

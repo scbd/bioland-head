@@ -35,7 +35,7 @@
 
     function getDefaultFinalLink(){
         const   contentTypeName         = getContentType();
-        const { count, slug } = menuStore.getContentType(contentTypeName,locale)
+        const { count, slug } = menuStore.getContentType(contentTypeName,unref(locale))
 
         return {
             title: t(`View more`),
@@ -67,7 +67,7 @@
         aMenu.dataMap = {};
 
         if(!aMenu.href || aMenu.href === '#'){
-            const contentType = menuStore.getContentTypeByName(getContentType());
+            const contentType = menuStore.getContentType(getContentType(), unref(locale));
 
             if(!contentType) throw new Error(`No content type found in menu item: ${getContentType()}`);
 
@@ -104,6 +104,7 @@
 
         return name 
     }
+
     function getMaxRowsPerColumn(){
         const [max] = (unref(passedMenu)?.class?.filter(aClass => aClass.startsWith('bl2-ct-max-row-per-column-')) || []).map((aClass)=> aClass.replace('bl2-ct-max-row-per-column-',''));
 
