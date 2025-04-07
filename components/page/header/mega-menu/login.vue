@@ -25,7 +25,7 @@
                                         <LazyIcon name="drupal-structure":size="1.5" class="me-1"/> {{t('Structure')}}
                                     </NuxtLink>
 
-                                    <NuxtLink  v-if="meStore.isContributor" class="btn btn-outline-dark icon-hover" :to="configureUrl" external >
+                                    <NuxtLink  v-if="meStore.isSiteManager" class="btn btn-outline-dark icon-hover" :to="configureUrl" external >
                                         <LazyIcon name="drupal-configure"  :size="1.5" class="me-1"/> {{t('Configuration')}}
                                     </NuxtLink>
 
@@ -33,7 +33,7 @@
                                         <LazyIcon name="drupal-people"  :size="1.5" class="me-1"/> {{t('People')}}
                                     </NuxtLink>
 
-                                    <NuxtLink  v-if="meStore.isContentManager" class="btn btn-outline-dark icon-hover" :to="reportsUrl" external >
+                                    <NuxtLink  v-if="meStore.isSiteManager" class="btn btn-outline-dark icon-hover" :to="reportsUrl" external >
                                         <LazyIcon name="drupal-reports" color="#000000" :size="1.5" class="me-1"/> {{t('Reports')}}
                                     </NuxtLink>
                                 </div>
@@ -50,7 +50,7 @@
                                     <span>{{meStore.user?.displayName}}</span>
                                 </div>
                                 <div  class="w-100 d-flex  justify-content-around align-items-center ">
-                                    
+                                    <!-- @click="doLogOut()" -->
                                     <a class="nav-link text-black" :href="logOutUrl" >
                                         <LazyIcon name="lock" color="#000000" :size="1.5" class="me-1"/> {{t('Logout')}}
                                     </a>
