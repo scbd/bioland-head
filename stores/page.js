@@ -28,8 +28,6 @@ export const usePageStore = defineStore('page', {
             this.page.hasHeroImage     = hasHeroImage;
         } ,
         mapImage({  name,fieldMediaImage, drupalInternalMid, path, filename, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage }){
-           // if(!name || !fieldMediaImage ) throw new Error('usePageStore.mapImage -> name or fieldMediaImage is undefined');
-
             const siteStore = useSiteStore();
             const alt       = fieldMediaImage?.meta?.alt|| name || filename || '';
             const src       = `${siteStore.host}${fieldMediaImage?.uri?.url}`;
@@ -52,7 +50,8 @@ export const usePageStore = defineStore('page', {
         isTopicsList(){ return this?.page?.type==="taxonomy_term--forums"},
         isForumsList(){ return this?.page?.drupalInternalTid === 24 },
         isSystemPage(){ return this.page?.type === 'taxonomy_term--system_pages'; },
-        isTaxonomyTerm(){ return this.page?.type === 'taxonomy_term--tags'; },
+        isTaxonomyTermTag(){ return this.page?.type === 'taxonomy_term--tags'; },
+        isChmNetwork(){ return systemPageTidConstants.CHM_NETWORK === this.page?.drupalInternalTid; },
         isSearch(){
             if(this?.page?.type === 'taxonomy_term--tags') return this?.page?.drupalInternalTid;
 
@@ -62,16 +61,14 @@ export const usePageStore = defineStore('page', {
 
         },
         isPage(){
-            if(this.isSearch || this.isForumsList ||  this.isMediaPage || this.isForumsList || this.isNcpsList) return false;
+            if(this.isSearch || this.isForumsList ||  this.isMediaPage || this.isForumsList || this.isNcpsList || this.isChmNetwork) return false;
 
-            const pageTypes = ['node--content','taxonomy_term--system_pages', 'media--hero', 'media--image', 'media--document', 'media--remote_video' ];//, 'taxonomy_term--system_pages', 'media--hero', 'media--image', 'media--document', 'media--remote_video'
-            
+            const pageTypes = ['node--content','taxonomy_term--system_pages', 'media--hero', 'media--image', 'media--document', 'media--remote_video' ];
             if(pageTypes.includes(this?.page?.type)) return true;
 
             return false;
         },
         isMediaPage(){
-           // if(this.isSearch || this.isForumsList ||  this.isMediaPage) return false;
             return ['media--hero', 'media--image', 'media--document', 'media--remote_video'].includes(this?.page?.type);
 
         },
@@ -94,7 +91,7 @@ export const usePageStore = defineStore('page', {
             return heroImages[picIndex];
         },
         typeName(){ 
-            if(this.isTaxonomyTerm || this.isSystemPage) return this.page?.name || '';
+            if(this.isTaxonomyTermTag || this.isSystemPage) return this.page?.name || '';
 
             if(this.isMediaPage) return  this.mediaTypeName
             const menusStore = useMenusStore();
@@ -103,7 +100,7 @@ export const usePageStore = defineStore('page', {
         },
         typeNamePlural(){ 
             if(this.isSystemPage) return this.page?.name || '';
-            if(this.isTaxonomyTerm) return this.page?.fieldPlural || '';
+            if(this.isTaxonomyTermTag) return this.page?.fieldPlural || '';
 
             return  this.page?.fieldTypePlacement?.field_plural || ''; 
         },
@@ -163,6 +160,7 @@ export const usePageStore = defineStore('page', {
         
             return { alt, src }
         },
+
         isImageOrVideo(){ return this.typeId === 16; },
         isImage(){ return this.isImageOrVideo && !this.videos.length; },
         isVideo(){ return this.isImageOrVideo && !!this.videos.length; },
@@ -192,11 +190,6 @@ export const usePageStore = defineStore('page', {
         publishedOn(){
             return this.page?.fieldPublished || this.page?.created || this.page?.revisionCreated
         },
-        // editedOn(){
-        //     if(this.page?.created === this.page?.changed) return ''
-
-        //     return this.page?.changed
-        // },
         url(){
             if(!this.page?.fieldUrl?.uri) return ''
 
@@ -208,12 +201,6 @@ export const usePageStore = defineStore('page', {
         media(){
             return this?.page?.fieldAttachments
         },
-        // drupalEntityTypePath(){
-        //     if (this.isSystemPage || this.isContentType ) return '/taxonomy/term';
-        //     if (this.isMediaPage) return '/media';  
-
-        //     return '/node';
-        // },
         migratedFromLink(){
             const { siteCode } = useSiteStore();
 
