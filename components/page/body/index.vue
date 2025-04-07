@@ -35,7 +35,7 @@
                 <h2  class="data-body mb-0" :class="{'has-hero': pageStore?.heroImage}" >{{ pageStore?.title}}</h2>
 
                 <div v-if="pageStore?.page?.fieldUrl?.length" v-for="url in pageStore?.page?.fieldUrl"  >
-                    <NuxtLink :style="pageTypeStyle" :to="url?.uri" target="_blank" class="fs-5" external :alt="url?.title">{{url.uri}} <span v-if="false">- {{url?.title}}</span> </NuxtLink>
+                    <ExternalUrl v-bind="url"/>
                 </div>
 
                 <hr class="mt-1">
