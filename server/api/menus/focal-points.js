@@ -100,7 +100,7 @@ async function getBchContacts(ctx, country){
     context.countries = [country]
     const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(context || {}))};` };
 
-    return await $fetch('/api/list/chm', { query, method:'get', headers });
+    return await $fetch('/api/list/chm', $fetchBaseOptions({ query, method:'get', headers}) );
 }
 
 async function getAbsContacts(ctx, country){
@@ -110,7 +110,7 @@ async function getAbsContacts(ctx, country){
     context.countries = [country]
     const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(context || {}))};` };
 
-    return $fetch('/api/list/chm', { query, method:'get', headers });
+    return $fetch('/api/list/chm', $fetchBaseOptions({ query, method:'get', headers }));
 }
 
 function getAbsLinks({ facetCounts }, countryList, country){

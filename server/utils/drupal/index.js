@@ -30,7 +30,7 @@ export async function getSiteDefinedName (ctx) {
     const query          = { jsonapi_include: 1 };
     const uri            = `${localizedHost}/${encodeURIComponent(ctx.locale)}/jsonapi/site/site?api-key=${encodeURIComponent(apiKey)}`
 
-    const resp = await $fetch(uri,{query})
+    const resp = await $fetch(uri,$fetchBaseOptions({query}))
     const name = resp?.data?.name
 
     return name === '_'? '' : name;
@@ -42,7 +42,7 @@ export async function getSiteDefinedHome (ctx) {
     const query          = { jsonapi_include: 1 };
     const uri            = `${localizedHost}/jsonapi/site/site?api-key=${encodeURIComponent(apiKey)}`
 
-    const resp = await $fetch(uri,{query})
+    const resp = await $fetch(uri,$fetchBaseOptions({query}))
 
     return resp?.data?.page_front
 }

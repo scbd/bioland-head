@@ -44,7 +44,7 @@ async function getChildren(ctx, data){
     const   query                 =`?jsonapi_include=1&include=parent&filter[a-label][condition][path]=parent.id&filter[a-label][condition][operator]=%3D&filter[a-label][condition][value]=${encodeURIComponent(data.id)}`;
     const   uri                   = `${localizedHost}/jsonapi/taxonomy_term/system_pages${query}`;
 
-    const { data:children } = await $fetch(uri);
+    const { data:children } = await $fetch(uri, $fetchBaseOptions());
 
 
 
@@ -75,7 +75,7 @@ export async function getPageDates(ctx){
     const query    = getSearchParams(ctx, type, bundle, );
     const uri      = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
-    const { data } = await $fetch(uri, { query });
+    const { data } = await $fetch(uri, $fetchBaseOptions({ query }));
 
     const { changed, created, field_start_date } = data;
 
@@ -90,7 +90,7 @@ export async function getPageThumb(ctx){
     const query    = getSearchParams(ctx, type, bundle, 'field_attachments');
     const uri      = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}/field_attachments`;
 
-    const { data } = await $fetch(uri, { query });
+    const { data } = await $fetch(uri, $fetchBaseOptions({ query }));
 
     return getThumbFiles(data,  ctx)
 }
@@ -119,7 +119,7 @@ async function getPageIdentifiers(ctx,  headers){
         const cleanPath  = removeLocalizationFromPath(ctx, path);
         const uri        = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanPath||'/')}`;
 
-        const data       = await $fetch(uri, { headers});
+        const data       = await $fetch(uri, $fetchBaseOptions({ headers}));
 
         const { uuid, id, type, bundle } = data?.entity || {};
 
@@ -150,7 +150,7 @@ async function getThumbFiles(data,  {localizedHost, host }){
         const { type, thumbnail } = attachment;
         
         if(thumbnail?.id){
-            const thumb = (await $fetch(`${localizedHost}/jsonapi/file/file/${encodeURIComponent(thumbnail.id)}`, { query: {jsonapi_include: 1}, mode: 'cors' }) )?.data?.uri?.url
+            const thumb = (await $fetch(`${localizedHost}/jsonapi/file/file/${encodeURIComponent(thumbnail.id)}`, $fetchBaseOptions({ query: {jsonapi_include: 1}, mode: 'cors' })) )?.data?.uri?.url
 
             if(thumb) return host+thumb
         }
@@ -206,6 +206,7 @@ function getSearchParams(ctx, type, bundle, prop){
     const search = {jsonapi_include: 1};
 
     if(type === 'taxonomy_term' && bundle === 'system_pages') search['include'] = 'field_attachments,field_attachments.field_media_image,field_search,parent';
+    if(type === 'node' && bundle === 'forum')setNodeForumSearchParams(search);
     if(type === 'node' && bundle === 'content' && !prop)  setContentSearchParams(search);
     if(type === 'media' &&  ['image', 'document'].includes(bundle))  setMediaImageSearchParams(search);
     if(type === 'media' &&  ['document'].includes(bundle))  setMediaDocumentSearchParams(search);
@@ -213,7 +214,9 @@ function getSearchParams(ctx, type, bundle, prop){
     
     return search;
 }
-
+function setNodeForumSearchParams(search){
+    search['include'] = 'taxonomy_forums';
+}
 function setContentSearchParams(search){
     search['include'] = 'field_attachments,field_type_placement,field_attachments.field_media_image,field_attachments.thumbnail,field_attachments.field_media_document';
 }

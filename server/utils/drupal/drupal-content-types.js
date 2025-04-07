@@ -1,4 +1,3 @@
-import limax from 'limax';
 
 export const useContentTypeMenus = async (ctx) => {
     await useDrupalLogin(ctx.siteCode);
@@ -7,17 +6,58 @@ export const useContentTypeMenus = async (ctx) => {
 }
 
 async function getContentMenus (ctx, drupalInternalId) {
+    const   lengthMap               = { 2:3, 3:3, 4:6, 5:3, 8:7, 9:7, 10:6, 11:7, 12:3, 16:6 };
+    const { localizedHost, locale } = ctx;
 
-    const { localizedHost } = ctx;
-
-    const uri            = `${localizedHost}/jsonapi/node/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image&filter[taxonomy_term--tags][condition][path]=field_type_placement.drupal_internal__tid&filter[taxonomy_term--tags][condition][operator]=IN&filter[taxonomy_term--tags][condition][value][]=${encodeURIComponent(drupalInternalId)}&page[limit]=14&sort[sticky][path]=sticky&sort[sticky][direction]=DESC&sort[sort-changed][path]=created&sort[sort-changed][direction]=DESC`;
+    const length         = lengthMap[drupalInternalId] || 3;
+    const filters        = `&filter[language]=${mapLocaleToDrupal(locale)}${getTypeFilterParams({ drupalInternalId })}${getSortParams()}${getPaginationParams({rowsPerPage:length})}`;
+    const uri            = `${localizedHost}/jsonapi/index/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image${filters}`
+    //`${localizedHost}/jsonapi/node/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image&filter[taxonomy_term--tags][condition][path]=field_type_placement.drupal_internal__tid&filter[taxonomy_term--tags][condition][operator]=IN&filter[taxonomy_term--tags][condition][value][]=${encodeURIComponent(drupalInternalId)}&page[limit]=14&sort[sticky][path]=sticky&sort[sticky][direction]=DESC&sort[sort-changed][path]=created&sort[sort-changed][direction]=DESC`;
     const method         = 'get';
     const headers        = { 'Content-Type': 'application/json' };
-    const { data, meta } = await $fetch(uri, { method, headers });
+
+    // consola.error(uri)
+    const { data, meta } = await $fetch(uri, $fetchBaseOptions({ method, headers }));
 
     return { data: data?.map(mapThumbNails(ctx)), count: meta?.count }
 };
+function getSortParams(){
 
+    const direction  = 'DESC' ;
+
+    let sortQueryString = '';
+
+    sortQueryString += `&sort[sticky][path]=sticky`
+    sortQueryString += `&sort[sticky][direction]=${encodeURIComponent(direction)}`
+
+    sortQueryString += `&sort[promoted][path]=promote`
+    sortQueryString += `&sort[promoted][direction]=${encodeURIComponent(direction)}`
+    sortQueryString += `&sort[sort-published][path]=field_published`
+    sortQueryString += `&sort[sort-published][direction]=${encodeURIComponent(direction)}`
+    sortQueryString += `&sort[sort-start][path]=field_start_date`
+    sortQueryString += `&sort[sort-start][direction]=${encodeURIComponent(direction)}`
+    sortQueryString += `&sort[sort-created][path]=${encodeURIComponent('changed')}`
+    sortQueryString += `&sort[sort-created][direction]=${encodeURIComponent(direction)}`
+
+    return sortQueryString;
+}
+
+function getTypeFilterParams({ drupalInternalId, drupalInternalIds }){
+    if((!drupalInternalIds || !drupalInternalIds?.length) && !drupalInternalId) return '';
+
+    const filters =  Array.isArray(drupalInternalIds)? [...drupalInternalIds, drupalInternalId] : [drupalInternalId];
+
+    let filterQueryString = '';
+
+    filterQueryString += `&filter[tid][condition][path]=tid`
+    filterQueryString += `&filter[tid][condition][operator]=IN`
+
+    for(const filter of filters.filter(Boolean))
+        filterQueryString += `&filter[tid][condition][value][]=${encodeURIComponent(filter)}`;
+
+
+    return  filterQueryString;
+}
 function makeTypeMap(data, ctx){
     const countries = Array.from(new Set(!ctx?.country? [ ...(ctx?.countries || [])] : [ ctx.country, ...(ctx?.countries || []) ]));
     const map       = {};
@@ -72,36 +112,42 @@ function mapThumbNails(ctx){
 
         document.thumb  = '/images/no-image.png';
 
-        const {  drupal_internal__nid, langcode, thumb, title, path, created, changed, field_start_date, field_published, field_tags } = document;
+        const {  drupal_internal__nid, langcode, thumb, title, path, created, changed, field_start_date, field_published, field_tags, field_type_placement } = document;
 
         const startDate  = field_start_date || '';
         const published  = field_published || '';
         const tags       = field_tags? field_tags.split(',') : [];
-        const hasAlias   = path?.alias && path.langcode === ctx.locale;
+        const hasAlias   = path?.alias && mapLocaleFromDrupal(path.langcode) === ctx.locale;
         const localePath = ctx.locale === ctx.defaultLocale? '' : `/${ctx.locale}`;
 
         const href       = hasAlias? `${localePath}${path.alias}` : `${localePath}/node/${drupal_internal__nid}`;
 
-        if(!hasAttachments) return { langcode, thumb, title, href, created, changed, startDate, published, tags };
+        if(!hasAttachments) return { langcode, thumb, title, href, created, changed, startDate, published, tags, contentTypeId:field_type_placement?.drupal_internal__tid, nid:drupal_internal__nid  };
 
         const { uri } = attachments[0]?.field_media_image || {};
 
-        if(!uri) return { langcode, thumb, title, href, created, changed, startDate, published, tags  };
+        if(!uri) return { langcode, thumb, title, href, created, changed, startDate, published, tags , nid:drupal_internal__nid , contentTypeId:field_type_placement?.drupal_internal__tid };
 
         document.thumb  = `${ctx.host}${uri.url}`
 
-        return { thumb:document.thumb, title, href, created, changed, startDate, published, tags };
+        return { thumb:document.thumb, title, href, created, changed, startDate, published, tags, nid:drupal_internal__nid, contentTypeId:field_type_placement?.drupal_internal__tid  };
     }
 }
 
 async function getAllContentTypeMenus(ctx){
+
+    // consola.info('getAllContentTypeMenus', ctx);
+
     const isEnglish = ctx.locale === 'en';
     const terms     = isEnglish? await getTerms(ctx) : await Promise.all([getEnglishTerms(ctx), getTerms(ctx)]).then(([en, xx])=> [...en, ...xx]);
     const requests  = [];
 
+    // const terms = await addAllAliases(ctx, termsRaw);
+
     for(const term of terms){
         if(!isEnglish && term.langcode === 'en') {
-            requests.push((async () => term)())
+            requests.push((async () => term)());
+
             continue;
         }
         const aRequest = getContentMenus(ctx, term.drupalInternalId).then(( { data, count })=> ({ ...term, data, count }));
@@ -109,7 +155,10 @@ async function getAllContentTypeMenus(ctx){
         requests.push(aRequest);
     }
 
-    return Promise.all(requests);
+    const result = await Promise.all(requests);
+
+    // consola.warn(result)
+    return result
 }
 
 function getEnglishTerms ({ host }) {
@@ -121,7 +170,7 @@ async function getTerms ({ localizedHost}) {
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
-    const { data } = await $fetch(uri, { method, headers });
+    const { data } = await $fetch(uri, $fetchBaseOptions({ method, headers }));
 
     return data.filter(({ status })=> status)
                 .map(({ drupal_internal__tid:drupalInternalId, name, uuid, path, field_plural, langcode })=> ({ drupalInternalTid:drupalInternalId,drupalInternalId, langcode:mapLocaleFromDrupal(langcode), name, slug:field_plural? `/${slugify(field_plural)}`: path?.alias, plural: field_plural, uuid, hrefs:[name?`/${slugify(name)}`:'', field_plural?`/${slugify(field_plural)}`:''].filter(x=>x)  }))

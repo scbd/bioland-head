@@ -44,7 +44,9 @@ export const getLanguage = (locale) => {
 }
 
 export function mapDrupalLocaleToLocale({ drupalInternalId }){
+    return mapLocaleFromDrupal(drupalInternalId)
     if(drupalInternalId === 'zh-hans') return 'zh'
+    if(drupalInternalId === 'fil') return 'tl'
      if(drupalInternalId === 'xx-lolspeak') return 'xx'
 
     return drupalInternalId

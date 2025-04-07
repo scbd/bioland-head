@@ -10,7 +10,7 @@ export default cachedEventHandler(async (event) => {
             body.append('country', country);
 
             const headers =  { "Accept": "application/json" }
-            const data    =( await $fetch(`https://portal.geobon.org/bioland/fetch-data.php`, {  method: 'POST', body,headers,  mode: 'cors' })).replaceAll(/\n/g,'');
+            const data    =( await $fetch(`https://portal.geobon.org/bioland/fetch-data.php`, $fetchBaseOptions({  method: 'POST', body,headers,  mode: 'cors' }))).replaceAll(/\n/g,'');
 
             const dataObject = parseJson(data);
 
@@ -25,6 +25,6 @@ export default cachedEventHandler(async (event) => {
             passError(event, e);
         }
     },
-    externalCache
+    // externalCache
 )
 

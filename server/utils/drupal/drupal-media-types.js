@@ -1,4 +1,3 @@
-import  paramCase  from 'limax';
 
 export const useMediaTypeCounts = async (ctx) => {
     await useDrupalLogin(ctx.siteCode)
@@ -19,7 +18,7 @@ async function getMediaMenus (ctx, drupalInternalId) {
     const method            = 'get';
     const headers           = { 'Content-Type': 'application/json' };
 
-    const { data }          = await $fetch(uri, { method, headers });
+    const { data }          = await $fetch(uri, $fetchBaseOptions({ method, headers }));
 
     return mapData(ctx, drupalInternalId)(data)
 };
@@ -118,7 +117,7 @@ async function getMediaCounts ({ localizedHost }, mediaType) {
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
-    const { meta } = await $fetch(uri, { method, headers });
+    const { meta } = await $fetch(uri, $fetchBaseOptions({ method, headers }));
 
     return meta
 };

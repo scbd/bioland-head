@@ -15,8 +15,8 @@ export default cachedEventHandler(async (event) => {
             const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(context || query || {}))};` }
 
             const [ drupalContent, chmContent ] = await Promise.all([
-                        $fetch('/api/list/content',      { query, method:'get', headers }),
-                        $fetch('/api/list/chm',  { query, method:'get', headers }).then((resp)=>resp.data.map(cleanIndexDataMap))
+                        $fetch('/api/list/drupal',  $fetchBaseOptions({ query, method:'get', headers })    ),
+                        $fetch('/api/list/chm',  $fetchBaseOptions({ query, method:'get', headers })).then((resp)=>resp.data.map(cleanIndexDataMap))
                     ]);
 
             return sortData([ ...drupalContent.data, ...chmContent]); //

@@ -12,7 +12,7 @@ export default cachedEventHandler(async (event) => {
             const uri2 = `https://api.gbif.org/v1/dataset?${countryQueryString}`;
 
 
-            const data = await Promise.all([$fetch(uri, { mode: 'cors' }).then(mapOccurrence),$fetch(uri2, { mode: 'cors' }).then(mapDataSets)])
+            const data = await Promise.all([$fetch(uri, $fetchBaseOptions({ mode: 'cors' })).then(mapOccurrence),$fetch(uri2, $fetchBaseOptions({ mode: 'cors' })).then(mapDataSets)])
 
             return { ...data[0], ...data[1] }
         }

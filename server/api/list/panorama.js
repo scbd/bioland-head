@@ -14,7 +14,7 @@ export default cachedEventHandler(async (event) => {
             const countryQueryString = Array.isArray(countries) && countries.length? countries.filter(x=>x).map((s)=>`country_iso_2[]=${s.toUpperCase()}`).join('&') : '';
             const uri = `https://panorama.solutions/${panoLocale}/api/v1/solutions?api_key=${panoramaKey}${countryQueryString? `&${countryQueryString}` : ''}`
 
-            const data = (await $fetch(uri, { mode: 'cors' }).then(({ solutions }) => solutions)).map(({ solution }) => solution).map(mapPanoData);
+            const data = (await $fetch(uri,$fetchBaseOptions({ mode: 'cors' }) ).then(({ solutions }) => solutions)).map(({ solution }) => solution).map(mapPanoData);
 
             return data.slice(0, 5)
         }

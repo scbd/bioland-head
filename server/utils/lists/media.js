@@ -43,7 +43,7 @@ async function getAllMediaPager (ctx, type, next){
         const   headers         = { 'Content-Type': 'application/json' };
         const   include         = `&include=field_media_image,thumbnail${type==='document'? ',field_media_document': ''}`;
         const   uri             = next || `${localizedHost}/jsonapi/media/${encodeURIComponent(type)}?jsonapi_include=1${include}`;
-        const { links, data, meta }         = await $fetch(uri, { method, headers })
+        const { links, data, meta }         = await $fetch(uri, $fetchBaseOptions({ method, headers }))
 
         if(nextUri(links)) return { data: [ ...data, ...await getAllMediaPager(ctx, type, nextUri(links)) ], meta: { ...meta, type } };
 
@@ -66,7 +66,7 @@ async function getList(ctx, type, isMultiple = false ) {
     const method         = 'get';
     const headers        = { 'Content-Type': 'application/json' };
 
-    const { data, meta } = await $fetch(uri+getQuestString(ctx), { method, headers });
+    const { data, meta } = await $fetch(uri+getQuestString(ctx), $fetchBaseOptions({ method, headers }));
 
 
     return { data, count: meta?.count }

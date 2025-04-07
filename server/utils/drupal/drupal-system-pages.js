@@ -39,7 +39,7 @@ async function getSystemPageTerms (ctx) {
     const   method          = 'get';
     const   headers         = { 'Content-Type': 'application/json' };
 
-    const { data } = await $fetch(uri, { method, headers });
+    const { data } = await $fetch(uri, $fetchBaseOptions({ method, headers }));
 
     return data.filter(({ status })=> status)
 };

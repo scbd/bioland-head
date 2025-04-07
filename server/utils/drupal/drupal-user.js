@@ -61,7 +61,7 @@ export async function getToken(event) {
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json', Cookie: getHeader(event, 'Cookie')};//getHeader(event, 'Cookie')
 
-    const resp = await $fetch(uri, { method, headers });
+    const resp = await $fetch(uri, $fetchBaseOptions({ method, headers }));
 
     return resp
 };

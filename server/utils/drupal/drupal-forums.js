@@ -54,7 +54,8 @@ async function getForums(ctx, all=false) {
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
-    const { data:d }    = await $fetch(uri, { method, headers });
+
+    const { data:d }    = await $fetch(uri, $fetchBaseOptions({ method, headers }));
 
     const data = d.map(cleanForumData)
 

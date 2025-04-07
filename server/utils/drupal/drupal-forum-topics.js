@@ -1,4 +1,4 @@
-import   paramCase   from 'limax';
+
 import { stripHtml } from 'string-strip-html'; 
 export const useDrupalTopicMenus = async (ctx) => {
 
@@ -56,7 +56,9 @@ async function getTopics (ctx) {
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
-    const { data } = await $fetch(uri, { method, headers });
+
+
+    const { data } = await $fetch(uri, $fetchBaseOptions({ method, headers }));
 
     if(topicId) return mapTopics(ctx)(data)
     const forums = data.sort(sort).map(mapTopics(ctx));
@@ -83,7 +85,7 @@ function mapTopics(ctx){
 
     return (aForum)=> {
                     const {  body, id, tags, path, taxonomy_forums, comment_forum, title, drupal_internal__nid: nodeId  } = aForum;
-                    const { name, id:tid, path: taxForumsPath } = taxonomy_forums;
+                    const { name, id:uuid, path: taxForumsPath, drupal_internal__tid:tid } = taxonomy_forums;
                     const { alias } = taxForumsPath;
                     const forum = { name, id:uuid, slug: slugify(name), href:alias, tid };
                     const { comment_count: count, last_comment_timestamp:timeStamp, last_comment_uid: lastCommentUid    } = comment_forum;

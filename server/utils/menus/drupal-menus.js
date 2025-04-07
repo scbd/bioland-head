@@ -35,7 +35,7 @@ async function hasNewMenuStructure(ctx){
         const { host } = ctx;
         const   uri    = `${host}/system/menu/${encodeURIComponent('cooperation')}/linkset`;
 
-        const data = await $fetch(uri, { mode: 'cors', ignoreResponseError: true }).catch((e)=>  false);
+        const data = await $fetch(uri, $fetchBaseOptions({ mode: 'cors', ignoreResponseError: true })).catch((e)=>  false);
 
         return data?.linkset && data?.linkset?.length ? true : false;
     }
@@ -168,7 +168,7 @@ async function getMenuData(menuName, ctx){
     const uri = `${localizedHost}/system/menu/${encodeURIComponent(menuName)}/linkset`;
 
 
-    const data = await $fetch(uri, { mode: 'cors' });
+    const data = await $fetch(uri, $fetchBaseOptions({ mode: 'cors' }));
 
     return data?.linkset && data?.linkset?.length ? formatMenus(data.linkset[0].item) : [];
 }
