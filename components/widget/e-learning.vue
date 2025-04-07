@@ -6,11 +6,11 @@
 
     const { t  }         = useI18n();
     const   siteStore    = useSiteStore();
-    const   query        = clone({ ...siteStore.params });
+    const   query        = clone({ ...siteStore.params, promoted: true,});
     const   localePath   = useLocalePath();
     const   getCachedData  = useGetCachedData();
     const   showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.eLearning);
-    const { data: record, status, error  }= await useLazyFetch(`/api/list/content/4`, {  method: 'GET', query, onResponse,key: 'e-learning-widget', getCachedData });
+    const { data: record, status, error  }= await useLazyFetch(`/api/list/drupal/4`, {  method: 'GET', query, onResponse,key: 'e-learning-widget', getCachedData });
 
     const loading = computed(()=> status.value === 'pending'); 
 
@@ -21,6 +21,6 @@
         response._data = !length? null :data[Math.floor(Math.random() * length)];
     }
     
-    const links = [ { name: t('Browse Courses'),  to: { path:localePath('/search'),query:{ schemas:[4,4]}}}, ];
+    const links = [ { name: t('Browse Courses'),  to: { path:localePath('/search'),query:{ promoted: true, schemas:[4]}}}, ];
 </script>
 
