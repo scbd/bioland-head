@@ -103,19 +103,23 @@ function getTypeFilterParams({ drupalInternalId, drupalInternalIds }){
     return  filterQueryString;
 }
 
-function getSortParams({ sortBy, sortDirection, freeText, noSticky }){
+function getSortParams({ sortBy, sortDirection, freeText, noSticky, promoted }){
 
     const direction = !sortDirection? 'DESC' : 'ASC';
 
     let sortQueryString = '';
 
+    if(promoted){
+        sortQueryString += `&sort[promoted][path]=promote`
+        sortQueryString += `&sort[promoted][direction]=${encodeURIComponent(direction)}`
+    }
+    
     if(!freeText || !noSticky){
         sortQueryString += `&sort[sticky][path]=sticky`
         sortQueryString += `&sort[sticky][direction]=${encodeURIComponent(direction)}`
     }
 
-    // sortQueryString += `&sort[promoted][path]=promote`
-    // sortQueryString += `&sort[promoted][direction]=${encodeURIComponent(direction)}`
+
     sortQueryString += `&sort[sort-published][path]=field_published`
     sortQueryString += `&sort[sort-published][direction]=${encodeURIComponent(direction)}`
     sortQueryString += `&sort[sort-start][path]=field_start_date`
