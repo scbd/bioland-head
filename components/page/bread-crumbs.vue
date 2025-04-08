@@ -23,6 +23,7 @@
                 {{t('Bioland 1')}}  <LazyIcon name="external-link" :size="1.5"/>
             </NuxtLink>
         </span>
+
     </div>
 </template>
 <script setup>
@@ -55,10 +56,63 @@
     function makeCrumb(){
         if(!inMenu.value) return [];
 
+<<<<<<<
         for (const aCrumb of inMenu.value?.crumbs ) 
             if(aCrumb?.contentTypeId && aCrumb?.href === '') aCrumb.href = menusStore.getContentTypeById(aCrumb.contentTypeId).slug;
         
         return inMenu.value?.crumbs;
+=======
+        if(pageStore?.isSystemPage || pageStore?.isContentType ) return [];
+
+        if(pageStore.isTopicsList || pageStore.isTopicsCommentsList){
+            const crumbs = [
+                {
+                    title: t('Forums'),
+                    href: `/taxonomy/term/${systemPageTidConstants.FORUMS}`,
+                }
+            ]   
+
+            const forum = pageStore?.page?.taxonomyForums 
+
+            if(pageStore?.isSystemPage || !forum) return crumbs
+
+
+
+            const name = forum?.name;
+            // const { name, drupalInternalTid } = forum
+            crumbs.push({
+                title: name,
+                href: `/taxonomy/term/${ forum?.tid || forum.drupal_internal__tid}`,
+            });
+            return crumbs
+        }
+        if(!isInDynamicMenu.value && pageStore.isNodePage){
+            
+            const contentType = menusStore.getContentTypeById(contentTypeId.value, locale.value);
+
+            const crumbs = [
+                {
+                    title: contentType?.plural,
+                    href: contentType?.slug,
+                }
+            ]   
+            return crumbs
+        } 
+        else{
+
+            return  menusStore.isInMainMenuByContentTypeId(contentTypeId.value)?.crumbs || [];
+
+            for (const aCrumb of inMenu.value?.crumbs ) {
+            
+                if(!aCrumb ) continue;
+                if(!(aCrumb?.contentTypeId && aCrumb?.href === '') ) continue;
+
+                aCrumb.href = menusStore.getContentTypeById(aCrumb.contentTypeId).slug;
+            }
+
+            return inMenu.value?.crumbs;
+        }
+>>>>>>>
     }
     
     const { style, badgePrimaryStyle } = useTheme();

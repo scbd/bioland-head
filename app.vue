@@ -1,36 +1,28 @@
 <template>
-
     <LazyIconSymbols v-once/>
     <ClientOnly>
       <NuxtLoadingIndicator :height="6"/>
     </ClientOnly>    
     <LazyPageHeader/>
 
-    <main class="">
+    <main >
 
-      <!-- <Spinner v-if="pageStore.loading" /> -->
-      <NuxtPage />
-
+      <NuxtPage :page-key="route => route.fullPath"/>
     </main>
 
     <LazyPageFooter/>
-  <ModalsContainer/>
-  <LazyUserAlerts/>
+    <ModalsContainer/>
+    <LazyUserAlerts/>
 </template> 
 <script setup >
 import { ModalsContainer } from 'vue-final-modal'
 
-const route = useRouter();
-const viewport        = useViewport();
-const pageStore = usePageStore();
-const { env } =useRuntimeConfig().public;
-const isProd = env === 'production';
 const { locale } = useI18n();
+
 const localHead  = useLocaleHead({
   addDirAttribute: true,
   addSeoAttributes: true
 })
-
 
 useHead({
   htmlAttrs: {
@@ -43,10 +35,6 @@ useHead({
 export default { name      : 'BL2App', };
 </script>
 <style lang="css">
-/* main{
-  margin-bottom: 700px;
-} */
-
 .debug{
   border: 1px dashed red;
 }
