@@ -76,7 +76,7 @@
             
             <div v-if="pageStore?.media?.length"  class="row mt-3">
                 <div class="col-12 col-md-3">
-                    <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{pageStore?.media.length}})</span></h2>
+                    <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{pageStore?.media?.length}})</span></h2>
 
                 </div>
                 <div class="col-12 col-md-9">
