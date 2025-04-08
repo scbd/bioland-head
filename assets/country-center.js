@@ -155,7 +155,7 @@ export const zoomLevels = new Set([
     { id: 'SS', zoomLevel: 8 },
     { id: 'TG', zoomLevel: 3 },
     { id: 'TL', zoomLevel: 5 },
-    { id: 'TH', zoomLevel: 8 },
+    { id: 'TH', zoomLevel: 12 },
     { id: 'TJ', zoomLevel: 3 },
     { id: 'TN', zoomLevel: 3 },
     { id: 'TT', zoomLevel: 12 },
