@@ -31,6 +31,9 @@
             </li>
         </ul>
     </div>
+    <div v-if="!showSelf && meStore.isContributor" class="alert alert-warning" role="alert">
+        A simple warning alert—check it out!
+    </div>
 </template>
 
 <script setup>
