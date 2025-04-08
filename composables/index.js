@@ -55,34 +55,30 @@ export const userTextSearch = () => {
 }
 
 
-export const useGetPage = (locale) => {
-    const requestUrl = useRequestURL();
-    // const fetch = useRequestFetch();
-    const rHeader =  useRequestHeader('cookie')
-    const router = useRouter();
+export const useGetPage = () => {
+    const { multiSiteCode }  = useRuntimeConfig().public;
+    const rHeader            = useRequestHeader('cookie');
     const nuxtApp            = useNuxtApp();
     const siteStore          = useSiteStore(nuxtApp.$pinia);
-    const meStore            = useSiteStore(nuxtApp.$pinia);
-    const { multiSiteCode }  = useRuntimeConfig().public;
 
     return   async (passedPath, clearCache = false) =>{ 
-    
-        const   path                  = ref(passedPath); //ref(passedPath.endsWith('/topics')? passedPath.replace('/topics', '') : passedPath);
+
+        const   path         = ref(passedPath); //ref(passedPath.endsWith('/topics')? passedPath.replace('/topics', '') : passedPath);
         const { identifier } = siteStore;
-    
-        const cookie = useCookie(hasSessionCookieClient())
-        const headers = rHeader?.cookie?.includes('SSESS')? rHeader: ({ cookie: {[hasSessionCookieClient()]:cookie.value}})
-        const key = ref(`${multiSiteCode}-${identifier}-${locale}-${encodeURIComponent(path.value)}`);
-    
+
+        const headers = { cookie:rHeader };//process.server? { cookie:rHeader }: { cookie: document.cookie};
+        const key     = ref(`${multiSiteCode}-${identifier}-${encodeURIComponent(path.value)}`);
 
         try{
-            if(key.value?.includes('undefined'))  throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}` }) 
+
+            if(key.value?.includes('undefined'))  throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value} ${key.value}` }) 
 
                 const options =  process.server? {  method: 'GET', headers, query: clone({ ...siteStore.params, path:path.value }) } : {  method: 'GET', query: clone({ ...siteStore.params, path:path.value }) };
                 const  data   = await $fetch(`/api/page/${encodeURIComponent(key.value)}/${encodeURIComponent(path.value)}`,options)//.then(({ data }) => data);
 
             return data;
         }catch(e){
+            consola.error(e, key.value)
             consola.error(e)
             if(e.statusCode === 404 || e.statusCode === 403)
                 throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}`, fatal:true })
