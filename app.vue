@@ -35,6 +35,38 @@ useHead({
 export default { name      : 'BL2App', };
 </script>
 <style lang="css">
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.4s;
+}
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+  filter: blur(1rem);
+}
+/* main{
+  margin-bottom: 700px;
+} */
+.pointer{
+    cursor: pointer;
+}
+.dark {
+    --popper-theme-background-color: #333333;
+    --popper-theme-background-color-hover: #333333;
+    --popper-theme-text-color: white;
+    --popper-theme-border-width: 0px;
+    --popper-theme-border-radius: 6px;
+    --popper-theme-padding: 32px;
+    --popper-theme-box-shadow: 0 6px 30px -6px rgba(0, 0, 0, 0.25);
+}
+.popper{
+    max-width: 50% !important;
+}
+
+.not-allowed {
+        pointer-events: auto! important;
+        cursor: not-allowed! important;
+    }
 .debug{
   border: 1px dashed red;
 }
