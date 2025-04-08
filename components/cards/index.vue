@@ -9,7 +9,7 @@
             </div>
         </ClientOnly>
         <div class="card-body mb-1" style="max-height: 300px; overflow:hidden;">
-            <h6 class="card-subtitle text-muted mb-2">{{type}} {{record.schema? `- ${record.schema}`: ''}}</h6>
+            <h6 class="card-subtitle text-muted mb-2">{{type}} {{schema}}</h6>
             <h5 class="card-title  mb-3">
                 <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''">{{record.title}}</NuxtLink>
             </h5>
@@ -55,7 +55,9 @@
             return t('from the secretariat');
     });
 
-
+    const schema = computed(()=> { 
+        return record.value?.schema? `- ${t(record?.value?.schema)}`: ''
+    });
 </script>
 
 <style lang="scss" scoped>
