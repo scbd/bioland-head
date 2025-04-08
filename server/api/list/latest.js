@@ -4,11 +4,11 @@ import { kebabCase } from 'change-case';
 export default cachedEventHandler(async (event) => {
         try{
             const drupalInternalIds = [ 2, 3 ];
-            const rowsPerPage = 20;
+            const rowsPerPage = 5;
             const from        = DateTime.now().minus({months: 1}).toFormat('yyyy-MM-dd');
             const schemas     = [ 'news', 'notification', 'statement', 'meeting', 'pressRelease' ];
 
-            const query             = { ...getQuery(event), drupalInternalIds, rowsPerPage, from, schemas };
+            const query             = { ...getQuery(event), drupalInternalIds, rowsPerPage, from, schemas, promote:true };
             const context           = getContext (event);
 
 

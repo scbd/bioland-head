@@ -9,7 +9,7 @@
         <div class="row">
             
             <div v-if="hasNews" class="col-12 pe-0 me-0 mb-4" >
-                <LazySwiperNewsUpdates  />
+                <LazySwiperNewsUpdates  :pagination="true"/>
             </div>
 
             <div  v-for="(column,i) in columnsOfWidgetComponents" :key="i" class="col-md-4 col-12 border-col">
