@@ -73,9 +73,23 @@
             <div class="col-12 col-md-3">
                 <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{pageStore?.media.length}})</span></h2>
 
+                </div>
+                <div class="col-12 col-md-9">
+                    <ClientOnly>
+                        <LazySwiperMedia :slides="pageStore?.media" type="media"/>
+                    </ClientOnly>
+                </div>
             </div>
-            <div class="col-12 col-md-9">
-                <LazySwiperMedia :slides="pageStore?.media" type="media"/>
+
+            <div v-if="pageStore?.tags?.gbfTargets?.length" class="row mt-3">
+                <div class="col-12 col-md-3">
+                    <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.gbfTargets.length}})</span></h2>
+                </div>
+                <div class="col-12 col-md-9">
+                    <ClientOnly>
+                        <LazySwiperGbf :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
+                    </ClientOnly>
+                </div>
             </div>
         </div>
 
