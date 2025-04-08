@@ -1,5 +1,14 @@
 <template >
     <div :style="style" class="cont" style="float: right; width: 200px; ">
+        <div v-if="meStore.isContributor && meStore.editMode" class="mb-2">
+            <h5 class="mb-0 text-nowrap">{{t('Drupal Status')}}</h5>
+            <span v-if="isDrupalPublished" class="badge bg-success text-dark">{{t('Published')}}</span>
+            <span v-if="!isDrupalPublished"  class="badge bg-danger text-dark">{{t('Unpublished')}}</span>
+        </div>
+        <div v-if="isMissingTranslation" class="mb-2">
+            <h5 class="mb-0 text-nowrap">{{t('Translation')}}</h5>
+            <span class="badge bg-warning text-dark">{{t('No translation available')}}</span>
+        </div>
         <div v-if="pageStore?.startDate" class="mb-2">
             <h5 class="mb-0 text-nowrap">{{t('Start Date')}}</h5>
             {{ formatDate(pageStore?.startDate)}}
@@ -71,11 +80,17 @@
 <script setup>
     import   Popper         from 'vue3-popper'  ;
 
-    const { t          }    = useI18n      ();
+    const { t, locale          }    = useI18n      ();
     const   formatDate      = useDateFormat();
+    const   meStore         = useMeStore();
     const   pageStore       = usePageStore ();
     const { bgStyle, style} = useTheme();
 
+    const isDrupalPublished = computed(() => pageStore?.page?.status);
+
+    const isMissingTranslation = computed(() => {
+        return pageStore?.page?.langcode !== locale.value;
+    });
 
     const {  getGbfUrl, tags }   = useDocumentHelpers(pageStore.page);
 </script>
