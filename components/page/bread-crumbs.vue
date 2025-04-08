@@ -24,7 +24,7 @@
                 {{t('Bioland 1')}}  <LazyIcon name="external-link" :size="1.5"/>
             </NuxtLink>
         </span>
-        {{!!isInDynamicMenu}}
+
     </div>
 </template>
 <script setup>
@@ -99,7 +99,6 @@
         else{
 
             return  menusStore.isInMainMenuByContentTypeId(contentTypeId.value)?.crumbs || [];
-            // if(!inMenu.value) return [];
 
             for (const aCrumb of inMenu.value?.crumbs ) {
             
