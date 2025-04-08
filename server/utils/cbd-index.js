@@ -10,7 +10,7 @@ export const $indexFetch = async (queryString) => {
     const { gaiaApi }   = useRuntimeConfig().public;
     const   method      = 'get';
     const   headers     = { 'Content-Type': 'application/json' };
-    const { response }  = await $fetch(gaiaApi+indexUri+queryString, { method, headers });
+    const { response }  = await $fetch(gaiaApi+indexUri+queryString, $fetchBaseOptions({ method, headers }));
 
     response.docs       = response.docs.map(normalizeIndexKeys);
 

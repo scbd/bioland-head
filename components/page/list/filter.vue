@@ -1,13 +1,14 @@
 <template >
-    <div v-if="!isSecretariat">
-        <label class="form-label mt-3"><strong>{{ t('Filter by Type:') }}</strong></label>
+    <div v-if="!isSecretariat" class="mb-3">
+        <label class="form-label"><strong>{{ t('Filter by Type:') }}</strong></label>
         <div  class="input-group ">
             
-            <select v-model="selected" multiple class="form-select" style="min-height: 225px;">
+            <select v-model="selected" multiple class="form-select" style="min-height: 225px;" :disabled="disabled" :class="{ 'not-allowed': disabled }">
                 <option v-for="t in types" :key="t.value" :value="t.value" :selected="selected.includes(t.value)">{{t.name}}</option>
             </select>
 
         </div>
+   
     </div>
 </template>
 <script setup>
@@ -17,6 +18,7 @@
     const   eventBus   = useEventBus();
     const   menuStore  = useMenusStore();
     const   pageStore  = usePageStore();
+    const   disabled   = ref(false);
 
     const isSecretariat  = computed(()=> ((pageStore?.page?.parent?.length && pageStore?.page?.parent[0].id !== 'virtual')));
 
@@ -41,13 +43,19 @@
 
         return 0;
     }
-
-    watch(selected, debounce(async (value) => {
+    watch(() => route.query, (value) => {
+        if(value?.schemas?.length) 
+            selected.value = Array.isArray(value.schemas)? value.schemas.map((x)=>Number(x)) : [Number(value.schemas)];
+        else 
+            selected.value = [];
+    })
+    watch(selected, debounce(async (value, newV) => {
         const query = { ...route.query, schemas: value } ;
-        
+
         if(!value.length) delete(query.schemas);
-        
-        delete(query.page);
+
+        if(value.length && value.length !== newV.length)
+            delete(query.page);
 
         await router.push({ query });
 
@@ -56,6 +64,7 @@
 </script>
 
 <style lang="scss" scoped>
+
     .input-group {
         border: 1px solid var(--bs-gray-300);
         border-radius: .5rem;
