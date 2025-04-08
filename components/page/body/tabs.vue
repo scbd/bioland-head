@@ -1,38 +1,36 @@
 <template>
-    <ClientOnly>
-        <div  class="tabs">
-            <ul  class="nav nav-tabs" >
-                <li   class="nav-item " id="page-view">
-                    <span :style="getStyle()"  class="nav-link  text-capitalize" >{{t('View')}}</span> 
-                </li>
-                <li   class="nav-item ">
-                    <NuxtLink :style="getStyleActive()" :to="baseUrl+'/edit'+returnUrl " class="nav-link  text-capitalize"  >
-                        {{t('Edit')}}
-                    </NuxtLink>
-                </li>
-                <li   class="nav-item ">
-                    <NuxtLink :style="getStyleActive()" :to="baseUrl+'/delete'+returnHomeUrl " class="nav-link  text-capitalize"  >
-                        {{t('Delete')}}
-                    </NuxtLink>
-                </li>
-                <li   class="nav-item ">
-                    <NuxtLink :style="getStyleActive()" :to="baseUrl+'/revisions'+returnUrl " class="nav-link  text-capitalize"  >
-                        {{t('Revisions')}}
-                    </NuxtLink>
-                </li>
-                <li   class="nav-item ">
-                    <NuxtLink :style="getStyleActive()" :to="baseHost+`/clone/${did}/quick_clone`+returnUrl " class="nav-link  text-capitalize"  >
-                        {{t('Clone')}}
-                    </NuxtLink>
-                </li>
-                <li   class="nav-item ">
-                    <NuxtLink :style="getStyleActive()" :to="baseUrl+'/translations'+returnUrl " class="nav-link  text-capitalize"  >
-                        {{t('Translate')}}
-                    </NuxtLink>
-                </li>
-            </ul>
-        </div>
-    </ClientOnly>
+    <div  v-if="showSelf" class="tabs">
+        <ul  class="nav nav-tabs" >
+            <li   class="nav-item " id="page-view">
+                <span :style="getStyle()"  class="nav-link  text-capitalize" >{{t('View')}}</span> 
+            </li>
+            <li  v-if="meStore.isContentManager || isContributorCanEdit"  class="nav-item ">
+                <NuxtLink :style="getStyleActive()" :to="editUrl" class="nav-link  text-capitalize"  external>
+                    {{t('Edit')}}
+                </NuxtLink>
+            </li>
+            <li  v-if="meStore.isContentManager" class="nav-item ">
+                <NuxtLink :style="getStyleActive()" :to="baseUrl+'/delete' " class="nav-link  text-capitalize"  external>
+                    {{t('Delete')}}
+                </NuxtLink>
+            </li>
+            <li  v-if="meStore.isContentManager" class="nav-item">
+                <NuxtLink :style="getStyleActive()" :to="baseUrl+'/revisions'+returnUrl " class="nav-link  text-capitalize"  external>
+                    {{t('Revisions')}}
+                </NuxtLink>
+            </li>
+            <li  v-if="meStore.isContributor && pageStore?.isNodePage" class="nav-item">
+                <NuxtLink :style="getStyleActive()" :to="cloneUrl" class="nav-link  text-capitalize"  external>
+                    {{t('Clone')}}
+                </NuxtLink>
+            </li>
+            <li  v-if="meStore.isContentManager" class="nav-item ">
+                <NuxtLink :style="getStyleActive()" :to="baseUrl+'/translations'+returnUrl " class="nav-link  text-capitalize" external  >
+                    {{t('Translate')}}
+                </NuxtLink>
+            </li>
+        </ul>
+    </div>
 </template>
 
 <script setup>
@@ -48,6 +46,16 @@
     const did           = computed(()=> pageStore?.page?.drupalInternalNid);
 
 
+    const baseUrl   = computed(()=>siteStore.localizedHost+getUrlComponent());
+
+    const showSelf = computed(() => pageStore?.isSystemPage? meStore?.showEditSystemPages : meStore?.showEdit)
+
+    const isContributor = computed(() => meStore?.roles?.includes('contributor') && meStore?.roles?.length == 1);
+
+    const isContributorCanEdit = computed(() => isContributor.value && pageStore?.page?.uid?.meta?.drupal_internal__target_id === meStore?.diuid && !pageStore?.page?.status);
+
+    const cloneUrl = computed(()=>siteStore.localizedHost+`/clone/${pageStore?.page?.drupalInternalNid}/quick_clone`+returnUrl.value);
+
     function getUrlComponent(){
         if(pageStore?.isMediaPage)    return `/media/${pageStore?.page?.drupalInternalMid}`;
         if(pageStore?.isTaxonomyPage) return `/taxonomy/term/${pageStore?.page?.drupalInternalTid}`;
@@ -55,6 +63,15 @@
         return `/node/${pageStore?.page?.drupalInternalNid}`;
     }
     
+    const  editUrl = computed(()=>{
+        if(isContributor.value &&  !isContributorCanEdit.value) 
+            return siteStore.localizedHost+'/admin/content/unpublished'+returnUrl.value;
+        
+        return baseUrl.value+'/edit'+returnUrl.value; 
+
+    })
+
+
     function getStyleActive(){
         return reactive({
                             'z-index'        : 2,
