@@ -3,7 +3,7 @@
         <LazySpinner v-if="loading" :is-modal="true" />
         <div v-if="!error && showWidget">
             <div class="text-capitalize">
-                <h4 :style="style" class="bm-3">{{t('GEO BON')}} </h4>
+                <h4 :style="style" class="bm-3">{{t('GEO BON')}}</h4>
             </div>
 
 
