@@ -1,56 +1,50 @@
 <template>
-    <ClientOnly>
-        <div  class="tabs">
-            <ul  class="nav nav-tabs" >
-                <li   class="nav-item " id="page-view">
-                    <span :style="getStyle()"  class="nav-link  text-capitalize" >{{t('View')}}</span> 
-                </li>
-                <li   class="nav-item ">
-                    <NuxtLink :style="getStyleActive()" :to="baseUrl+'/edit'+returnUrl " class="nav-link  text-capitalize"  >
-                        {{t('Edit')}}
-                    </NuxtLink>
-                </li>
-                <li   class="nav-item ">
-                    <NuxtLink :style="getStyleActive()" :to="baseUrl+'/delete'+returnHomeUrl " class="nav-link  text-capitalize"  >
-                        {{t('Delete')}}
-                    </NuxtLink>
-                </li>
-                <li   class="nav-item ">
-                    <NuxtLink :style="getStyleActive()" :to="baseUrl+'/revisions'+returnUrl " class="nav-link  text-capitalize"  >
-                        {{t('Revisions')}}
-                    </NuxtLink>
-                </li>
-                <li   class="nav-item ">
-                    <NuxtLink :style="getStyleActive()" :to="baseHost+`/clone/${did}/quick_clone`+returnUrl " class="nav-link  text-capitalize"  >
-                        {{t('Clone')}}
-                    </NuxtLink>
-                </li>
-                <li   class="nav-item ">
-                    <NuxtLink :style="getStyleActive()" :to="baseUrl+'/translations'+returnUrl " class="nav-link  text-capitalize"  >
-                        {{t('Translate')}}
-                    </NuxtLink>
-                </li>
-            </ul>
-        </div>
-    </ClientOnly>
+    <div  v-if="showSelf" class="tabs">
+        <ul  class="nav nav-tabs" >
+            <li   class="nav-item " id="page-view">
+                <span :style="getStyle()"  class="nav-link  text-capitalize" >{{t('View')}}</span> 
+            </li>
+            <li   class="nav-item ">
+                <NuxtLink :style="getStyleActive()" :to="baseUrl+'/edit'+returnUrl " class="nav-link  text-capitalize"  external>
+                    {{t('Edit')}}
+                </NuxtLink>
+            </li>
+            <li   class="nav-item ">
+                <NuxtLink :style="getStyleActive()" :to="baseUrl+'/delete' " class="nav-link  text-capitalize"  external>
+                    {{t('Delete')}}
+                </NuxtLink>
+            </li>
+            <li   class="nav-item ">
+                <NuxtLink :style="getStyleActive()" :to="baseUrl+'/revisions'+returnUrl " class="nav-link  text-capitalize"  external>
+                    {{t('Revisions')}}
+                </NuxtLink>
+            </li>
+            <li   class="nav-item ">
+                <NuxtLink :style="getStyleActive()" :to="baseUrl+'/translations'+returnUrl " class="nav-link  text-capitalize" external  >
+                    {{t('Translate')}}
+                </NuxtLink>
+            </li>
+        </ul>
+    </div>
 </template>
 
 <script setup>
 
-    const { t  }        = useI18n();
-    const route         = useRoute();
-    const pageStore     = usePageStore();
-    const siteStore     = useSiteStore();
-    const baseHost      = computed(()=> siteStore.host);
-    const baseUrl       = computed(()=> `${siteStore.host}${getUrlComponent()}`);
-    const returnUrl     = computed(()=> `?destination=${encodeURIComponent(route.path)}`);//?clear-page-cache=${encodeURIComponent(route.path)
-    const returnHomeUrl = computed(()=> `?destination=${encodeURIComponent('/')}`);
-    const did           = computed(()=> pageStore?.page?.drupalInternalNid);
+    const { t  }    = useI18n();
+    const route     = useRoute();
+    const   meStore    = useMeStore();
+    const   pageStore  = usePageStore();
+    const siteStore = useSiteStore();
 
+    const returnUrl = computed(()=>`?returnUrl=${encodeURIComponent(route.path)}`);
+
+    const baseUrl   = computed(()=>siteStore.localizedHost+getUrlComponent());
+
+    const showSelf = computed(() => pageStore?.isSystemPage? meStore?.showEditSystemPages : meStore?.showEdit)
 
     function getUrlComponent(){
         if(pageStore?.isMediaPage)    return `/media/${pageStore?.page?.drupalInternalMid}`;
-        if(pageStore?.isTaxonomyPage) return `/taxonomy/term/${pageStore?.page?.drupalInternalTid}`;
+        if(pageStore?.isTaxonomyPage || pageStore.isSystemPage) return `/taxonomy/term/${pageStore?.page?.drupalInternalTid}`;
 
         return `/node/${pageStore?.page?.drupalInternalNid}`;
     }

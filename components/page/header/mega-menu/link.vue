@@ -65,7 +65,7 @@
     function dateFormat({ startDate, created, changed }){
         const date = startDate || created || changed;
 
-        return DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy');
+        return date? DateTime.fromISO(date).setLocale(locale.value).toFormat('dd LLL yyyy') : '';
     }
 </script>
 

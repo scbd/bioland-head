@@ -1,12 +1,12 @@
 <template>
     <NuxtLink :to="getHref(aLine)" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" >
 
-        <div  class="card p-1 mb-3" :style="`border-left: 7px solid ${aLine.fieldColor};`" >
+        <div  class="card p-1 m-1 " :class="{'ms-3': isChild}"  :style="`border-left: 7px solid ${aLine.fieldColor};`" >
             <div  class="row g-0">
-                <div class="col-7 fw-bold"> {{t('Forum')}} </div>
+                <div class="col-7 fw-bold"> {{isContainer? t('Forum Container') : t('Forum')}}</div>
                 <div class="col-1 fw-bold"> {{t('Topics')}}</div>
-                <div class="col-1 fw-bold"> {{t('Posts')}} </div>
-                <div class="col-3 fw-bold"> {{t('Last Post')}}</div>
+                <div class="col-1 fw-bold"> {{t('Comments')}} </div>
+                <div class="col-3 fw-bold"> {{t('Last Comment')}}</div>
 
                 <div class="col-12">
                     <div class="card-header">
@@ -37,24 +37,43 @@
                         <p>{{aLine?.meta?.lastTimeString}}</p>
                     </div>
                 </div>
+
+                <div v-if="hasChildren" class="col-12 card-footer" >
+
+                        <LazyPageListForumsRow  :a-line="aChild" :is-child="true" v-for="(aChild,index) in children" :key="index" />
+
+                
+                </div>
             </div>
         </div>
     </NuxtLink>
 </template>
 <script setup>
     const { t, locale  } = useI18n();
-    const   props        = defineProps({  aLine: { type: Object  } });
-    const { aLine }      = toRefs(props);
+    const   props        = defineProps({  aLine: { type: Object  }, isChild: { type: Boolean, default: false } });
+    const { aLine, isChild }      = toRefs(props);
     const   localePath   = useLocalePath();
+    const   isContainer  = computed(() => !!aLine.value?.forumContainer);
+    const   hasChildren = computed(() => aLine.value?.children?.length);
+    const   children    = computed(() => aLine.value?.children);
 
     function getHref(aLine){
         const   topic    = unref(aLine);
-        const { nodeId } = topic;
+        const { drupalInternalTid } = topic;
 
-        return locale.value === 'en'? localePath(topic.href) : localePath(`/node/${nodeId}`);
+
+        return  localePath(`/taxonomy/term/${drupalInternalTid}`);
     }
 </script>
 <style scoped>
+.card-footer{
+    background-color: #424040;
+    border-top: 1px solid var(--bs-blue);
+
+}
+.pointer{
+    cursor: pointer !important;
+}
 .card{
     background-color: #eee;
     border-left: 7px solid var(--bs-blue);

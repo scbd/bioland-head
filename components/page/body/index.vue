@@ -35,6 +35,10 @@
                 <h2  class="data-body mb-0" :class="{'has-hero': pageStore?.heroImage}" >{{ pageStore?.title}}</h2>
                 <NuxtLink :style="pageTypeStyle" v-if="pageStore?.url" :to="pageStore?.url" target="_blank" class="fs-5" external>{{pageStore?.url}}</NuxtLink>
 
+                <div v-if="pageStore?.page?.fieldUrl?.length" v-for="url in pageStore?.page?.fieldUrl"  >
+                    <ExternalUrl v-bind="url"/>
+                </div>
+
                 <hr class="mt-1">
 
                 <div v-if="isImageOrVideo" class="d-flex flex-row justify-content-end" >
@@ -80,9 +84,23 @@
             <div class="col-12 col-md-3">
                 <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{pageStore?.media.length}})</span></h2>
 
+                </div>
+                <div class="col-12 col-md-9">
+                    <ClientOnly>
+                        <LazySwiperMedia :slides="pageStore?.media" type="media"/>
+                    </ClientOnly>
+                </div>
             </div>
-            <div class="col-12 col-md-9">
-                <LazySwiperMedia :slides="pageStore?.media" type="media"/>
+
+            <div v-if="pageStore?.tags?.gbfTargets?.length" class="row mt-3">
+                <div class="col-12 col-md-3">
+                    <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.gbfTargets.length}})</span></h2>
+                </div>
+                <div class="col-12 col-md-9">
+                    <ClientOnly>
+                        <LazySwiperGbf :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
+                    </ClientOnly>
+                </div>
             </div>
         </div>
 
