@@ -46,7 +46,8 @@
 
     const { t }     = useI18n();
     const siteStore = useSiteStore();
-    const config    = computed(getCountry)
+    const config    = computed(getCountry);
+    const center    = ref(config.value?.coordinates.reverse());
     const zoom      = ref(config.value?.zoomLevel);
     const showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.gbif);
     const getCachedData  = useGetCachedData();
@@ -55,7 +56,14 @@
 
     const url = computed(()=> `https://api.gbif.org/v2/map/occurrence/adhoc/{z}/{x}/{y}@2x.png?style=classic-noborder.poly&bin=hex&country=${config?.value?.identifier}&hasCoordinate=true&hasGeospatialIssue=false&advanced=false&srs=EPSG%3A3857`);
 
-
+    onMounted(() => {
+        center.value = config.value?.coordinates.reverse();
+        zoom.value   = config.value?.zoomLevel;
+        setTimeout(() => {
+            center.value = config.value?.coordinates.reverse();
+            zoom.value   = config.value?.zoomLevel;
+        }, 100);
+    });
     function getCountry(){
         const { countries, country:c } = siteStore.params;
         const   countryIndex           = randomArrayIndexTimeBased(countries.length);
