@@ -4,10 +4,12 @@
         
         <div v-if="hasHeroImage"  class="container text-white">
             <div class="row pb-1 position-relative ">
+
                 <div v-if="meStore.showEdit && meStore.isContentManager" class="position-absolute text-end bottom-50" style="min-width:3rem;">
+
                     <NuxtLink :to="editUrl()" type="button" class="btn btn btn-light btn-sm mt-1">
                         <LazyIcon name="edit" style="margin-top: .2rem;" :size="2"/>
-                    </button>
+                    </NuxtLink>
                 </div>
                 <div v-if="hi?.fieldDescription?.value" v-html="htmlSanitize(hi?.fieldDescription?.value)">
                 </div>
@@ -28,6 +30,7 @@
     const meStore          = useMeStore();
     const siteStore        = useSiteStore();
     const pageStore        = usePageStore();
+    const route            = useRoute();
     const hasHeroImage     = computed(() => pageStore?.page?.hasHeroImage || pageStore?.heroImage?.fieldMediaImage?.uri?.url);
     const img              = useImage();
     const isDevSite        = computed(()=> !siteStore?.config?.published || siteStore?.config?.hasBl1);
@@ -49,6 +52,11 @@
 
         return getBackgroundStyles(imgSrc);
     })
+    function editUrl () {
+        const menuName =  hi.value?.drupalInternalMid;
+
+        return  `${siteStore.host}/media/${menuName}/edit?destination=${encodeURIComponent(route.path)}`;
+    }
 
     function editHero () {
         const menuName =  hi.value?.drupalInternalMid;
