@@ -33,13 +33,26 @@ export const useMeStore = defineStore('me', {
         }
     },
     getters:{
+        isSiteManagerAndStaff(){
+            if(this.isAdmin) return true;
+
+            const isStaff = this.email?.includes('@cbd.int') || this.email?.includes('@un.org');
+            const roles = [ "administrator", "site_manager"]
+
+            return this.isAuthenticated && intersect(this.roles, roles).length && isStaff;
+        },
+        isAdmin(){
+            const roles = [ "administrator"]
+
+            return this.isAuthenticated && intersect(this.roles, roles).length;
+        },
         isSiteManager(){
             const roles = [ "administrator", "site_manager"]
 
             return this.isAuthenticated && intersect(this.roles, roles).length;
         },
         isContentManager(){
-            const roles = [ "administrator", "content_manager"]
+            const roles = [ "administrator", "site_manager", "content_manager"]
 
             return this.isAuthenticated && intersect(this.roles, roles).length;
         },
