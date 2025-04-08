@@ -13,7 +13,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   const context     = useCookie('context');
 
   const requestCookieHeader = useRequestHeaders(['cookie']);
-  const clientCookie        =  useCookie(hasSessionCookieClient())
+  const clientCookie        = useCookie(hasSessionCookieClient())
   const path                = to.path;
 
   updateAppConfig({ path });

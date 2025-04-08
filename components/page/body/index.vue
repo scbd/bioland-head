@@ -16,9 +16,18 @@
 
                 <h2 :style="pageTypeStyle" class="page-type">{{pageStore?.typeName}}</h2>
 
-                <NuxtLink v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  :to="localePath(pageStore?.image?.url)">
-                    <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-5 w-100"/>
-                </NuxtLink>
+                <div v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  class="mt-3 position-relative">
+                    <ClientOnly v-if="meStore.showEdit">
+                        <div  class="position-absolute end-0 top-0" style="min-width:3rem;">
+                            <button @click="editAttachments" type="button" class="btn btn-light btn-sm ">
+                                <LazyIcon name="edit" style="margin-top: .2rem;" :size="2"/>
+                            </button>
+                        </div>
+                    </ClientOnly>
+                    <NuxtLink v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  :to="localePath(pageStore?.image?.url)">
+                        <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid w-100"/>
+                    </NuxtLink>
+                </div>
 
                 <LazyPageMediaFileDetails v-if="isImageOrVideo || isDocument" :vertical="true" />
             </div>
@@ -53,19 +62,17 @@
                         <LazyPageBodyTagsDate /> 
                     </div>
 
-                </div>
-
-                <div class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
-                    <LazyPageMediaFileDetails />
-                </div>
-
-                <div v-if="pageStore?.image?.url" class="col-12 d-md-none px-0">
-
-                    <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
-
-                    <LazyPageBodyTagsDate />
-                </div>
+            <div class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
+                <LazyPageMediaFileDetails />
             </div>
+
+            <div v-if="pageStore?.image?.url" class="col-12 d-md-none px-0">
+
+                <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
+
+                <LazyPageBodyTagsDate />
+            </div>
+        </div>
             
         </div>
     
@@ -90,6 +97,8 @@
     </div>
 </template>
 <script setup>
+
+
     const { t }        = useI18n();
     const   localePath = useLocalePath();
     const   meStore    = useMeStore();
