@@ -46,7 +46,7 @@
 
                       <ul class="nav">
                           <li v-for="(aChildMenu,index) in creditsMenus" :key="index" class="nav-item">
-                              <LazyPageMenuLink v-bind="aChildMenu" />
+                              <LazyPageMenuLink v-bind="{...aChildMenu}" :localize="true"/>
                           </li>
                       </ul>
                       <div v-if="meStore.showEditMenu" class="position-relative" style="min-width:3rem;">
