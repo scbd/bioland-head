@@ -17,8 +17,12 @@
     function onResponse({ request, response, options}){
         const { data }   = response._data;
         const { length } = data || [];
+        
+        if(!length) return response._data = {};
 
-        response._data = !length? null :data[Math.floor(Math.random() * length)];
+        const index = computed(()=> randomArrayIndexTimeBased(Number(length)));
+
+        response._data = data[index.value];
     }
     
     const links = [ { name: t('Browse Courses'),  to: { path:localePath('/search'),query:{ promoted: true, schemas:[4]}}}, ];

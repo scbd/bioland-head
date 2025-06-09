@@ -11,6 +11,7 @@ export const getInstalledLanguages = async ({ localizedHost, host, siteCode }) =
 
     const { body: { data } } = await $http.get(uri).query({ 'jsonapi_include': 1 });
 
+
     return normalizeLanguageData(data);
 }
 
@@ -43,11 +44,11 @@ export const getLanguage = (locale) => {
     });
 }
 
-export function mapDrupalLocaleToLocale({ drupalInternalId }){
-    return mapLocaleFromDrupal(drupalInternalId)
-    if(drupalInternalId === 'zh-hans') return 'zh'
-    if(drupalInternalId === 'fil') return 'tl'
-     if(drupalInternalId === 'xx-lolspeak') return 'xx'
+// export function mapDrupalLocaleToLocale({ drupalInternalId }){
+//     return mapLocaleFromDrupal(drupalInternalId)
+//     if(drupalInternalId === 'zh-hans') return 'zh'
+//     if(drupalInternalId === 'fil') return 'tl'
+//     if(drupalInternalId === 'xx-lolspeak') return 'xx'
 
-    return drupalInternalId
-}
+//     return drupalInternalId
+// }

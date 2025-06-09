@@ -85,7 +85,7 @@ export async function mapAliasByLocale(ctx, type, id){
     const isHomePath = homePath === `/${type}/${id}`; 
   
     const languages = await getById(ctx)(type, id, true)
-    const locales = (await getInstalledLanguages(ctx)).map(mapDrupalLocaleToLocale);
+    const locales = (await getInstalledLanguages(ctx)).map(mapLocaleFromDrupal);
 
 
     const map = {};

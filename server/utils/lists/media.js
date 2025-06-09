@@ -94,7 +94,8 @@ function mapData(ctx){
         const promises = [];
 
         for (const aDoc of results.data){
-            promises.push(getThesaurusByKey(aDoc.field_tags || aDoc.fieldTags).then((p)=>{aDoc.tags =mapTagsByType(p) ;}));
+            if(aDoc.field_tags || aDoc.fieldTags)
+                promises.push(getThesaurusByKey(aDoc.field_tags || aDoc.fieldTags).then((p)=>{aDoc.tags =mapTagsByType(p) ;}));
             promises.push(pathAlias.getByMediaId(aDoc.drupal_internal__mid).then((p)=>{ 
                 aDoc.path = p;
             }))

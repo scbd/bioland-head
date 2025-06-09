@@ -14,7 +14,7 @@
 
         <div class="d-flex justify-content-between  align-items-center px-5 fs-4">
 
-            <button @click.prevent.stop="focusOnCommentField" type="button" class="btn btn-outline-dark nb"> <LazyIcon name="comment" :size="1.25" /> &nbsp;<span v-if="!isReply" class="text-capitalize">{{t('comment')}}</span><span v-if="isReply">{{t('Reply')}}</span></button>
+            <button  :disabled="disabled" @click.prevent.stop="focusOnCommentField" type="button" class="btn btn-outline-dark nb"> <LazyIcon name="comment" :size="1.25" /> &nbsp;<span v-if="!isReply" class="text-capitalize">{{t('comment')}}</span><span v-if="isReply">{{t('Reply')}}</span></button>
 
         </div>
         <hr class="my-0" />
@@ -72,10 +72,11 @@
                                     replyType       : { type:  String, default: 'comment--comment_forum' },
                                     count           : { type: Number, default: 0 },
                                     likes           : { type: Number, default: 0 },
-                                    replies         : { type: Array, default: [] }
+                                    replies         : { type: Array, default: [] },
+                                    disabled        : { type: Boolean, default: false }, 
                                 });
 
-    const {  type: passedType, identifier: passedIdentifier, replyIdentifier, count, likes, replyType} = toRefs(props);
+    const {  type: passedType, identifier: passedIdentifier, replyIdentifier, count, likes, replyType, disabled } = toRefs(props);
 
     const type       = ref(unref(passedType) || pageStore?.page?.type);
     const identifier = ref(unref(passedIdentifier) || pageStore?.page?.id);      
@@ -191,6 +192,7 @@
 
 
     function focusOnCommentField($event){
+        if(disabled.value) return;
         showInput.value = true;
 
         setTimeout(() => {

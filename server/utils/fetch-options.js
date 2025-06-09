@@ -6,8 +6,8 @@ export const $fetchBaseOptions = (options = {}) => ({onRequest, onRequestError,o
 async function onRequest({ request, options }) {
   const { logAll, logServerOutRequests }  = useRuntimeConfig().public;
 
-  if(logAll || logServerOutRequests)
-    consola.info(`${colors.magentaBright('[fetch request]')}`, request);
+  // if(logAll || logServerOutRequests)
+  //   consola.info(`${colors.magentaBright('[fetch request]')}`, request);
 
 }
 async function onRequestError({ request, options, error }) {
@@ -18,8 +18,8 @@ async function onRequestError({ request, options, error }) {
 async function onResponse({ request, response, options }) {
   const { logAll, logServerOutRequests }  = useRuntimeConfig().public;
 
-  if(logAll || logServerOutRequests)
-    consola.info(`${colors.cyan('[fetch response]')}`, request, `${colors.green(response.status)}`);
+  // if(logAll || logServerOutRequests)
+  //   consola.info(`${colors.cyan('[fetch response]')}`, request, `${colors.green(response.status)}`);
 }
 
 async function onResponseError({ request, response, options }) {

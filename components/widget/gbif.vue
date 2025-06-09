@@ -102,7 +102,7 @@
     
     const { data, status, error } =  await useLazyFetch(`/api/list/gbif`, {  method: 'GET', query, key: 'gbif-widget', getCachedData });
 
-    const loading = computed(()=> status.value === 'pending'); 
+    const loading = computed(()=> status.value === 'pending' && data?.value?.length); 
 </script>
 <style scoped>
     .hide{ color:white; }

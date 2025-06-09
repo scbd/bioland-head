@@ -156,3 +156,38 @@ export async function $fetchRetry(url, options) {
 function sleep(delay=200){
     return new Promise((resolve) => setTimeout(resolve, delay));
 }
+
+// // ssr safe
+export const randomizedArray = (yourArray) => seededShuffle(yourArray, getCurrentHourSeed());
+
+function seededShuffle(array, seed) {
+    // Simple seeded PRNG (Mulberry32)
+    function mulberry32(a) {
+        return function() {
+            var t = a += 0x6D2B79F5;
+            t = Math.imul(t ^ t >>> 15, t | 1);
+            t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        }
+    }
+    const rng = mulberry32(seed);
+    const arr = array.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function getCurrentHourSeed() {
+    const now = new Date();
+    // YYYYMMDDHH as integer
+    return parseInt(
+        now.getFullYear().toString() +
+        String(now.getMonth() + 1).padStart(2, '0') +
+        String(now.getDate()).padStart(2, '0') +
+        String(now.getHours()).padStart(2, '0')
+    );
+}
+
+// Usage:

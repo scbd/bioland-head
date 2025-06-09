@@ -87,7 +87,16 @@
                     </ClientOnly>
                 </div>
             </div>
-
+            <div v-if="pageStore?.tags?.nt7?.length" class="row mt-3">
+                <div class="col-12 col-md-3">
+                    <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('National Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.nt7.length}})</span></h2>
+                </div>
+                <div class="col-12 col-md-9">
+                    <ClientOnly>
+                        <LazySwiperGbf :slides="pageStore?.tags?.nt7" type="nt7"/>
+                    </ClientOnly>
+                </div>
+            </div>
             <div v-if="pageStore?.tags?.gbfTargets?.length" class="row mt-3">
                 <div class="col-12 col-md-3">
                     <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.gbfTargets.length}})</span></h2>

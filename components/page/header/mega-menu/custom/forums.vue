@@ -2,13 +2,11 @@
     <div class="col-12 text-wrap px-0">
         <LazyPageHeaderMegaMenuHeader  :menu="menu" />
 
-        <div v-for="(aChild,j) in children" :key="j" class="row mb-2">
-            <div class="col-6">
+        <div v-for="(aChild,j) in children" :key="j" class="row mb-1 overflow-hidden">
+            <div class="col-5 text-nowrap">
                 <NuxtLink  class="child-link"   :to="getHref(aChild)" :title="aChild.title" >
                     {{aChild.title}}
-                </NuxtLink>
-            </div>
-            <div class="col-3 ps-0 align-self-center">
+                </NuxtLink><br/>
                 <NuxtLink  class="child-link"   :to="localePath(aChild.forum.href)" :title="aChild.forum.name" >
                     <span :style="bgStyle" class="badge">{{aChild.forum.name}}</span>
                 </NuxtLink>
@@ -18,6 +16,9 @@
             </div>
             <div class="col-1 text-nowrap px-0 align-self-center">
                 {{aChild.count}} {{t('comments')}}
+            </div>
+            <div class="col-12"> 
+            <hr v-if="j<children.length-1" class="mt-2 mb-1"/>
             </div>
         </div>
 

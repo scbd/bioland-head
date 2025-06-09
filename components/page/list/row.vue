@@ -54,8 +54,8 @@
                             <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
                         </span>
                         <p class="float-end card-text pe-1"><small class="text-muted">{{getDateFormated()}}</small></p>
+                        
                     </div>
-                    
                 </div>
             </div>
         </div>
@@ -117,12 +117,16 @@
         const hasChm = realms.includes('CHM');
         const hasAbs = realms.includes('ABS');
         const hasBch = realms.includes('BCH');
+        const hasOrt = realms.includes('ORT');
 
         if(hasChm && hasAbs && hasBch) return t('Secretariat');
 
         if(hasChm && hasAbs) return t('Access and Benefit-sharing Clearing-House');
 
         if(hasChm && hasBch) return t('Biosafety Clearing-House');
+
+        if(hasOrt) return t('Online Report Tool');
+
 
         if(hasChm && realms.length == 1) return t('Secretariat');
 

@@ -2,7 +2,7 @@ import { noCase } from 'change-case';
 const typeMapIds  = { news:2, event:3, 'learning-resource':4, project:5, 'basic-page':6, 'government-ministry-or-institute':8, ecosystem:9, 'protected-area':10, 'biodiversity-data':11, document:12, 'related-website':13, other:15, 'image-or-video':16 };
 
 export const useMenusStore = defineStore('menus', { 
-    state: () => ({ footer: [], main: [], footerCredits: [], languages: [], nrSix:[], nr:[], nbsap:{}, bch:[], absch:[], nfps:[], contentTypes:{}, forums: [], systemPages:[]}),
+    state: () => ({ footer: [], main: [], footerCredits: [], languages: [], nrSix:[], nr:[], nbsap:{}, bch:[], absch:[], nfps:[], contentTypes:{}, forums: [], systemPages:[], nt7:[]}),
     actions:{
         set(name, value){
 
@@ -28,6 +28,7 @@ export const useMenusStore = defineStore('menus', {
             this.set('contentTypes', menus?.contentTypes);
             this.set('forums', menus?.forums);
             this.set('systemPages', menus?.systemPages);
+            this.set('nt7', menus?.nt7);
         },
         isInMenu(menu, href){
             const hrefMatch = menu?.href === href && menu?.href && href

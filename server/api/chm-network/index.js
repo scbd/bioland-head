@@ -38,6 +38,16 @@ export default defineEventHandler(async (event) => {
                     prePublished.sites.push(site);
                 
             }
+
+            if(prePublished?.sites)
+                prePublished.sites = prePublished.sites.filter(Boolean).sort((a,b)=> sortArrayOfObjectsByProp(b,a,'siteCode'));
+            
+            if(scbd?.sites)
+                scbd.sites = scbd.sites.filter(Boolean).sort((a,b)=> sortArrayOfObjectsByProp(b,a,'siteCode'));
+
+            if(published?.sites)
+                published.sites = published.sites.filter(Boolean).sort((a,b)=> sortArrayOfObjectsByProp(b,a,'siteCode'));
+
             sections.push( { published, scbd,  prePublished});
         }
 

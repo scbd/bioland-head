@@ -8,6 +8,7 @@
         <LazyPageListTopicComments v-if="pageStore.isTopicsCommentsList" /> 
         <LazyPageListNcps          v-if="pageStore.isNcpsList" />
         <LazyPageCustomChmNetwork  v-if="pageStore.isChmNetwork" />
+        <LazyPageCustomDevelopment v-if="pageStore.isSystemPageDev" />
     </section>
 </template>
 

@@ -11,10 +11,12 @@ export default defineEventHandler(async (event) => {
     event.context.me.isSiteManager    = event.context?.me?.isAdmin          || event.context?.me?.roles?.includes('site_manager');
     event.context.me.isContentManager = event.context?.me?.isSiteManager    || event.context?.me?.isAdmin || event.context?.me?.roles?.includes('content_manager');
     event.context.me.isContributor    = event.context?.me?.isContentManager || event.context?.me?.roles?.includes('contributor');
+    event.context.me.isAuthenticated  = !event.context?.me?.isContentManager && event.context?.me?.isAuthenticated
 
     const token             = event?.context?.me?.isAuthenticated? await getToken(event) : undefined; 
 
     const Cookie            =   getHeader(event, 'Cookie');
+
     const baseHeaders       = { 'Content-Type': 'application/vnd.api+json', Cookie};
 
     event.context.headers   = token ? { 'Content-Type': 'application/vnd.api+json', 'X-CSRF-Token':token, Cookie } : baseHeaders;

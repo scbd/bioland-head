@@ -2,12 +2,13 @@
     <div  class="col-12 text-wrap px-0">
         <LazyPageHeaderMegaMenuHeader  :menu="menu" />
 
+        <LazyPageHeaderMegaMenuLink v-for="(aChild,j) in menu.children" :key="j" :menu="aChild" />
+
         <section v-for="(aChild,j) in drupalMenus" :key="j">
             <p >
                 <LazyPageHeaderMegaMenuLink :title="aChild.title"  :menu="aChild" />
             </p>
         </section>
-        <LazyPageHeaderMegaMenuLink v-for="(aChild,j) in menu.children" :key="j" :menu="aChild" />
 
         <LazyPageHeaderMegaMenuLink :menu="finalLink" />
     </div>
@@ -34,9 +35,9 @@
 
         const  finalLink = ref({ 
                                     title: t('View all NBSAPs'), 
-                                    href : `https://chm.cbd.int/database?schema_s=nationalReport&keywords=NBSAP&hostGovernments_ss=${hasCountry.value}`, 
+                                    href : `/taxonomy/term/23?schemas=nationalReport&freeText=NBSAP`, 
                                     class: ['mm-main-nav-final-link', 'mm-arrow'],
-                                    target: '_blank'
+                                    // target: '_blank'
                                 });
         
         function makeChildren(menu, t){
@@ -54,9 +55,9 @@
                 
             }
             menu.value?.children.push({
-                                    title : t(`View more`),
-                                    href  : menu.value?.href,
-                                    target: '_blank'
+                                    title : t(`View all National Reports`),
+                                    href  : '/taxonomy/term/23?schemas=cpbNationalReport2&schemas=cpbNationalReport3&schemas=cpbNationalReport4&schemas=absNationalReport&schemas=nationalReport&schemas=nationalReport6',
+                                    // target: '_blank'
                                 });
         }
 </script>

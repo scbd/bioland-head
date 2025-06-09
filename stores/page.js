@@ -52,6 +52,7 @@ export const usePageStore = defineStore('page', {
         isSystemPage(){ return this.page?.type === 'taxonomy_term--system_pages'; },
         isTaxonomyTermTag(){ return this.page?.type === 'taxonomy_term--tags'; },
         isChmNetwork(){ return systemPageTidConstants.CHM_NETWORK === this.page?.drupalInternalTid; },
+        isSystemPageDev(){ return systemPageTidConstants.DEV === this.page?.drupalInternalTid; },
         isSearch(){
             if(this?.page?.type === 'taxonomy_term--tags') return this?.page?.drupalInternalTid;
 
@@ -61,7 +62,7 @@ export const usePageStore = defineStore('page', {
 
         },
         isPage(){
-            if(this.isSearch || this.isForumsList ||  this.isMediaPage || this.isForumsList || this.isNcpsList || this.isChmNetwork) return false;
+            if(this.isSystemPageDev || this.isSearch || this.isForumsList ||  this.isMediaPage || this.isForumsList || this.isNcpsList || this.isChmNetwork) return false;
 
             const pageTypes = ['node--content','taxonomy_term--system_pages', 'media--hero', 'media--image', 'media--document', 'media--remote_video' ];
             if(pageTypes.includes(this?.page?.type)) return true;

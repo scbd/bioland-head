@@ -23,15 +23,16 @@ export default defineEventHandler(async (event) => {
                 $fetch('/api/menus/topics',        $fetchBaseOptions({ query, method:'get', headers })),
                 $fetch('/api/menus/languages',     $fetchBaseOptions({ query, method:'get', headers })),
                 $fetch('/api/menus/system-pages',  $fetchBaseOptions({ query, method:'get', headers })),
+                $fetch('/api/menus/nt7',           $fetchBaseOptions({ query, method:'get', headers }))
             ]))
             const rejected = allRequests.filter(({ status }) => status === 'rejected');
 
             for (const a of rejected)
                 consola.error('menus/index.js index - ', a);
 
-            const [ absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes,  forums , languages, systemPages ] = allRequests.map(({ value }) => value || []);
+            const [ absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes,  forums , languages, systemPages, nt7 ] = allRequests.map(({ value }) => value || []);
 
-            return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, forums, languages, menus, systemPages  }
+            return { ...menus, absch, bch, nr, nrSix, nbsap, nfps, contentTypes, forums, languages, menus, systemPages, nt7  }
         }
         catch (e) {
 

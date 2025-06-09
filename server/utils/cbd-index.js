@@ -108,8 +108,22 @@ export const normalizeIndexKeys = (obj) => {
                 newObj.realms = Array.from(new Set(newObj.realms.map((realm)=>realm.toLocaleUpperCase())))
     }
 
-    return newObj;
+    const tags = {}
+    if(obj?.government_s) tags.countries = [{identifier :obj.government_s}];
+    if(obj?.countryRegions_ss) tags.countries = obj.countryRegions_ss.map((country)=>({ identifier :country}));
+
+    if(obj?.globalTargetAlignment_ss?.length) tags.gbfTargets = obj.globalTargetAlignment_ss.map((target)=>({ identifier :target}));
+    if(obj?.globalTargetAlignment_REL_ss?.length) tags.sdgs = obj.globalTargetAlignment_REL_ss.filter((x)=>x.includes('-GOAL-')).map((target)=>sdgsData.find(({identifier})=>(identifier===target.replace('SUSTAINABLE-DEVELOPMENT-', 'SDG-'))))
+        // { identifier :target.replace('SUSTAINABLE-DEVELOPMENT-', 'SDG-')}));
+    
+    return {...newObj, ...obj, tags};
 }
+
+export const getAllBySchemas = defineCachedFunction((ctx, schemas, countries=[]) => queryScbdIndex ({ ...ctx, schemas, countries,rowsPerPage: 5000 }),{
+    maxAge: 60 * 60 * 60 * 24 * 30,
+    getKey:(ctx, schemas, countries=[]) => `${ctx.env}-${ctx.multiSiteCode}-${ctx.siteCode}-${ctx.locale}-${JSON.stringify(schemas||[])}-${JSON.stringify(countries||[])}`,
+    base:'external'
+});
 
 export const queryScbdIndex = async (ctx, queryBody) => {
     const { gaiaApi }   = useRuntimeConfig().public;
@@ -117,7 +131,9 @@ export const queryScbdIndex = async (ctx, queryBody) => {
 
     const body = queryBody? JSON.stringify(queryBody) : getAllQuery(ctx);
 
-    const { response, facet_counts: facetCounts } = await $fetch(uri,  { method:'post', body, headers: {'Content-Type': 'application/json'}});
+
+    const { response, facet_counts: facetCounts } = await $fetch(uri,  $fetchBaseOptions({ mode: 'cors' , method:'post', body, headers: {'Content-Type': 'application/json'}}));
+
 
     response.data  = response.docs.map(normalizeIndexKeys)//.filter(({ title, summary })=> (title && summary));
     response.count = response.numFound;
@@ -138,7 +154,7 @@ const filterSchemas = (schemas) => (s)=> schemas.includes(s);
 
 function getAllQuery(ctx){
     const cbdSchemas   = [ 'news', 'notification', 'statement', 'meeting', 'pressRelease']
-    const chmSchemas   = [ 'focalPoint','resource', 'organization', 'capacityBuildingInitiative', 'contact', 'database'];
+    const chmSchemas   = [ 'nationalTarget7Mapping','nationalTarget7','focalPoint','resource', 'organization', 'capacityBuildingInitiative', 'contact', 'database'];
     const abschSchemas = [ 'modelContractualClause', 'communityProtocol', 'absNationalReport', 'absCheckpointCommunique', 'absCheckpoint', 'database', 'absPermit', 'absNationalModelContractualClause', 'absProcedure', 'measure', 'authority', 'focalPoint' ];
     const bchSchemas   = [ 'biosafetyLaw', 'biosafetyDecision', 'nationalRiskAssessment', 'database', 'nationalReport', 'biosafetyExpert','authority', 'supplementaryAuthority',   'cpbNationalReport4', 'cpbNationalReport3', 'cpbNationalReport2',  'biosafetyNews', 'independentRiskAssessment', 'organism', 'dnaSequence', 'modifiedOrganism', 'laboratoryDetection' ];
     const allSchemas   = Array.from(new Set([ ...chmSchemas, ...abschSchemas, ...bchSchemas ]));
@@ -153,12 +169,12 @@ function getAllQuery(ctx){
     const cbdSchemaQueryText      = hasCbdSchemas? `(schema_s:(${cbdSchemas.filter(filterSchemas(schemas)).join(' ')}))` : '';
     const hasOtherSchemas         = schemas?.length? schemas.some((s)=>allSchemas.includes(s)): false;
     const hasBothSchemaQueryTypes = hasCbdSchemas && hasOtherSchemas;
-    const otherSchemaQueryText    = hasOtherSchemas? `((schema_s:(${allSchemas.filter(filterSchemas(schemas)).join(' ')})) AND ((hostGovernments_ss:(${countryString})) OR (countryRegions_ss:(${countryString}) OR countryRegions_REL_ss:(${countryString}))))` : '';
+    const otherSchemaQueryText    = hasOtherSchemas? `((schema_s:(${allSchemas.filter(filterSchemas(schemas)).join(' ')})) AND ((hostGovernments_ss:(${countryString}) OR government_s:(${countryString}) ) OR (countryRegions_ss:(${countryString}) OR countryRegions_REL_ss:(${countryString}))))` : '';
 
 
     const schemaQuery  = schemas?.length?  `{!tag=government}${cbdSchemaQueryText}${hasBothSchemaQueryTypes? ' OR ': ''} ${otherSchemaQueryText}` : `{!tag=government}(schema_s:(${cbdSchemas.join(' ')})) OR ((schema_s:(${allSchemas.join(' ')})) AND (countryRegions_ss:(${countryString}) OR countryRegions_REL_ss:(${countryString})))`;
     const filtersQuery = filters?.length? `{!tag=keywords}all_terms_ss:(${filters.join(' ')})` : '';
-    const realmText    = realms?.length? `realm_ss:(${realms.join(' ')})` : 'realm_ss:abs OR realm_ss:chm OR realm_ss:bch';
+    const realmText    = realms?.length? `realm_ss:(${realms.join(' ')})` : 'realm_ss:abs OR realm_ss:chm OR realm_ss:bch OR realm_ss:ort';
     const rows         = rowsPerPage? rowsPerPage : 10;
     const page         = passedPage? passedPage : 1;
     const start        = page <=1? 0 : ((page -1) * rows);
@@ -178,8 +194,8 @@ function getAllQuery(ctx){
                 //"realm_ss:abs OR realm_ss:chm OR realm_ss:bch"
             ].filter(x=>x),
             q,
-            "sort": "startDate_dt desc, updatedDate_dt desc",
-            "fl": "id, realm_ss, updatedDate_dt, createdDate_dt, identifier_s, uniqueIdentifier_s, url_ss, government_s, schema_s, government_EN_s, schemaSort_i, sort1_i, sort2_i, sort3_i, sort4_i, _revision_i,government_EN_s, title_EN_s, summary_s, type_EN_s, meta1_EN_txt, meta2_EN_txt, meta3_EN_txt,meta4_EN_txt,meta5_EN_txt,symbol_s,startDate_dt,endDate_dt,eventCountry_CEN_s,eventCity_s",
+            "sort": "updatedDate_dt desc",
+           // "fl": "id, realm_ss, updatedDate_dt, createdDate_dt, identifier_s, uniqueIdentifier_s, url_ss, government_s, schema_s, schemaSort_i, sort1_i, sort2_i, sort3_i, sort4_i, _revision_i, summary_s,symbol_s,startDate_dt,endDate_dt,eventCity_s,government_EN_s,government_EN_s,title_EN_s,type_EN_s,meta1_EN_txt,meta2_EN_txt,meta3_EN_txt,meta4_EN_txt,meta5_EN_txt,eventCountry_CEN_s",
             "wt": "json",
             start, rows,
             "facet": true,

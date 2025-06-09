@@ -7,8 +7,8 @@
             <div  class="col-12 col-md-9 ps-0">
                 <LazyPageBreadCrumbs/>
             </div>
-            <div v-if="meStore.showEditSystemPages" class="col-9 offset-3 b-line">
-                <LazyPageBodyTabs/>
+            <div  class="col-12 b-line">
+                <LazyPageBodyTabs :can-edit="meStore.showEditSystemPages"/>
             </div>
             <div  class="col-9 offset-3 b-line ps-0">
                 <h1  class="d-flex align-items-center mt-2" >{{ pageStore?.title}}</h1>

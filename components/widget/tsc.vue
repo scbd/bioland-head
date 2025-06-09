@@ -14,13 +14,23 @@
 
     const loading = computed(()=> status.value === 'pending');
 
+    // function onResponse({ response}){
+    //     const   data     = response._data;
+    //     const { length } = data || [];
+
+    //     response._data = data[Math.floor(Math.random() * length)];
+    // }
+    
     function onResponse({ response}){
         const   data     = response._data;
         const { length } = data || [];
 
-        response._data = data[Math.floor(Math.random() * length)];
+        if(!length) return response._data = {};
+
+        const index = computed(()=> randomArrayIndexTimeBased(Number(length)));
+
+        response._data = data[index.value];
     }
-    
     const links = [
         { name: t('Browse TSC Opportunities'),             to: 'https://www.cbd.int/biobridge/platform/search?schema_s=bbiOpportunity' },
         { name: t('Browse TSC Assistance and Providers'),  to: 'https://www.cbd.int/biobridge/platform/search?schema_s=bbiProfile&schema_s=bbiRequest' },

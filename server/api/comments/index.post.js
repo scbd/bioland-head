@@ -38,6 +38,7 @@ export default defineEventHandler(async (event) => {
         }
     }
     catch (e) {
+        consola.error(e.data.errors[0])
         passError(event, e);
     }
 })

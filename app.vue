@@ -1,18 +1,18 @@
 <template>
-    <LazyIconSymbols v-once/>
+    <IconSymbols v-once/>
     <ClientOnly>
       <NuxtLoadingIndicator :height="6"/>
     </ClientOnly>    
-    <LazyPageHeader/>
+    <PageHeader/>
 
     <main >
-
       <NuxtPage :page-key="route => route.fullPath"/>
     </main>
 
-    <LazyPageFooter/>
+    <PageFooter/>
     <ModalsContainer/>
     <LazyUserAlerts/>
+    <CookieControl :locale="locale" />
 </template> 
 <script setup >
 import { ModalsContainer } from 'vue-final-modal'

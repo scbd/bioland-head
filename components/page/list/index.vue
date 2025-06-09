@@ -1,20 +1,21 @@
 <template>
     <div class="container page-body">
         <div class="row">
-            <div class="col-md-3">
+            <div v-if="!schemaOnly" class="col-md-3">
                 &nbsp;
             </div>
-            <div class="col-12 col-md-9 px-0">
+            <div class="col-12 col-md-9 px-0" :class="{ 'col-md-12': schemaOnly }">
                 <LazyPageBreadCrumbs :count="results?.count"/>
             </div>
-            <div class="col-12 col-md-3" :class="{ 'ps-0': !isMobile }">
+            <div v-if="!schemaOnly" class="col-12 col-md-3" :class="{ 'ps-0': !isMobile }">
                 <h2  :style="primaryColorStyle" v-if="contentTypeName && !title" class="page-type">{{contentTypeName}}</h2>
                 <h2  :style="primaryColorStyle" v-if="title" class="page-type">{{t(title,2)}}</h2>
                 <LazyPageListTextSearch/>
                 <LazyPageListFilter v-if="!typeId"/>
             </div>
-            <div name="list" tag="div" class="col-12 col-md-9 data-body" :class="{ 'px-0': !isMobile, 'mt-3': isMobile}">
-                <LazyPageListTabs  :types="types" :key="JSON.stringify(types)"/>
+            <div name="list" tag="div" class="col-12 col-md-9 data-body" :class="{ 'col-md-12': schemaOnly, 'px-0': !isMobile, 'mt-3': isMobile}">
+                <LazyPageBodyTabs :can-edit="meStore.showEditSystemPages"/>
+                <LazyPageListTabs  v-if="!schemaOnly" :types="types" :key="JSON.stringify(types)"/>
                 <LazyPageListPager v-if="showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results?.count}`"/>
 
                 <LazySpinner v-if="loading" :size="75"/>
@@ -30,11 +31,12 @@
 </template>
 <script setup>
     import   clone           from 'lodash.clonedeep';
-
+    const   meStore   = useMeStore();
     const { primaryColorStyle } = useTheme();
     const   isMobile    = isMobileFn   ();
     const { t         } = useI18n      ();
     const   r           = useRoute     ();
+    const   { schemaOnly } = r?.query || {};
     const   siteStore   = useSiteStore ();
     const   pageStore   = usePageStore ();
     const   eventBus    = useEventBus  ();
@@ -42,13 +44,13 @@
                                         title: { type: String,  default: '' },
                                         types: { type: Array, default: () => [] }
                                     });
-
+consola.error(r?.query)
     const showTopPager   = computed(()=>pageStore.isSearchAll);
 
     const { title  }     = toRefs(props);
     const isSecretariat  = computed(()=> ((pageStore?.page?.parent?.length && pageStore?.page?.parent[0].id !== 'virtual'))); 
-    const isContent      = computed(()=> pageStore?.page?.drupalInternalNid === 25 || pageStore?.page?.drupalInternalNid === 88 && r.query?.schemas?.length === 2);  
-    const type           = computed(()=> isSecretariat.value? 'secretariat' : isContent.value? 'content' : undefined);
+    // const isContent      = computed(()=> pageStore?.page?.drupalInternalNid === 25 || pageStore?.page?.drupalInternalNid === 88 && r.query?.schemas?.length === 2);  
+    const type           = computed(()=> isSecretariat.value? 'secretariat' :  undefined); //isContent.value? 'content' : undefined
 
     const { isContentTypeId, getContentType }  = useMenusStore();
 
@@ -65,7 +67,7 @@
     const loading = computed(()=> pageStore.loading || status.value === 'pending');
 
     onMounted(() => { eventBus.on('changePage', () => {
-        results.value = [];
+        // results.value = [];
         setTimeout(refresh, 250);
     }); });
  

@@ -1,6 +1,6 @@
 <template>
     <div class="position-relative">
-        <LazySpinner v-if="loading" :is-modal="true" />
+        <!-- <LazySpinner v-if="loading" :is-modal="true" /> -->
         <div v-if="!error && showWidget">
             <div class="text-capitalize">
                 <h4 :style="style" class="bm-3">{{t('GEO BON')}}</h4>
@@ -70,7 +70,7 @@
     links.value.push( { name: t('EBV Data Portal'),       to: { path: `https://portal.geobon.org/home?country=${countryCode}` }, external: true  });
 
     const query      = clone({ ...siteStore.params });
-    const { data:count, status:countStatus, error:countError } =  await useLazyFetch(`/api/list/geobon/count`, {  method: 'GET',query, getCachedData });
+    const { data:count, status:countStatus, error:countError } =  await useLazyFetch(`/api/list/geobon/count`, {  method: 'GET',query,key: 'geobon-count', getCachedData });
 
     const index = computed(()=> randomArrayIndexTimeBased(Number(count.value)));
 

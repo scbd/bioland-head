@@ -50,11 +50,12 @@ function sortDates(a,b){
 function cleanIndexDataMap(record){
     record.href =record.urls[0];
 
-    if(record.eventCountry)
-        record.eventCountry = JSON.parse(record.eventCountry);
 
-    if(record.eventCountry_CEN)
-        record.eventCountry = JSON.parse(record.eventCountry_CEN);
+    // if(record.eventCountry)
+    //     record.eventCountry = JSON.parse(record.eventCountry);
+
+    if(record?.eventCountry_CEN_ss?.length)
+        record.eventCountry = JSON.parse(record.eventCountry_CEN_ss);
 
 
     return record

@@ -26,7 +26,6 @@ export const getUser = async (event, repo) => {
         const { body:user}  = await $http.get(userUri);
         const   token       = await getToken(event);
 
-
         return  mapUserFromDrupal(user, token, event);
     }catch(e){
         console.error(e);
@@ -78,6 +77,7 @@ function mapUserFromDrupal({ data, included }, token, event){
         preferredLang  : attributes?.preferred_langcode,
         displayName    : attributes?.display_name,
         name           : attributes?.name,
+        timezone       : attributes?.timezone,
         email          : attributes?.mail,
         isAuthenticated: true,
         roles          : mapRolesFromDrupal(included),

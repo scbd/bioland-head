@@ -1,7 +1,7 @@
-
 export const getThesaurusByKey = defineCachedFunction(async (keysRaw) => {
-    if(!keysRaw) return;
 
+    if(!keysRaw) return [false];
+try{
     const { gaiaApi }  = useRuntimeConfig().public;
     const   keys       = Array.isArray(keysRaw)? keysRaw : keysRaw?.includes(',')? keysRaw.split(',') : [keysRaw];
     const   promises   = [];
@@ -9,25 +9,31 @@ export const getThesaurusByKey = defineCachedFunction(async (keysRaw) => {
     for (const key of keys) {
         if(key.includes('keywords:634')) continue;
         const uri = `${gaiaApi}/v2013/thesaurus/terms/${encodeURIComponent(key)}`;
-
+        const uriNr7 = `${gaiaApi}/v2013/documents/${encodeURIComponent(extractNumberFromKey(key))}?info=true&body=true`;
         if(key.includes('SDG-GOAL-'))  promises.push(getSdg(key ) )
+        else if(key.includes('ort-nt7')) promises.push($fetch(uriNr7, $fetchBaseOptions({ mode: 'cors' })));
         else promises.push($fetch(uri, $fetchBaseOptions({ mode: 'cors' })));
     }
 
     return Promise.all(promises);
+}catch(e){
+    consola.error('getThesaurusByKey', e)
+    return [false];
+}
 },{
-    maxAge: 60 * 60 * 60 * 24 * 30 * 6,
-    getKey:(keysRaw) => Array.isArray(keysRaw)? keysRaw : keysRaw?.includes(',')? keysRaw.split(',') : [keysRaw],
+    maxAge: 60 * 60 * 60 * 24 * 30,
+    // getKey:(keysRaw) => !keysRaw && Array.isArray(keysRaw)? keysRaw : [keysRaw],
     base:'external'
 })
 
 export const getCountryName = defineCachedFunction(async (identifier) => {
+
     const { gaiaApi }  = useRuntimeConfig().public;
     const   data        = await $fetch(`${gaiaApi}/v2013/thesaurus/terms/${encodeURIComponent(identifier)}`,$fetchBaseOptions())
 
     return data.name;
 },{
-    maxAge: 60 * 60 * 60 * 24 * 30 * 6,
+    maxAge: 60 * 60 * 60 * 24 * 30,
     getKey:(identifier) => identifier,
     base:'external'
 })
@@ -189,3 +195,8 @@ export const sdgsData = [
 ]
 
 export const getSdg = (identifier) => sdgsData.find((anSdg) => identifier === anSdg.identifier);
+
+export const extractNumberFromKey = (key) => {
+    const match = key.match(/-(\d+)-/);
+    return match ? match[1] : null;
+};

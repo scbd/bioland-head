@@ -1,15 +1,17 @@
 import locales from './i18n/locales'        ;
 import en      from './i18n/locales/en.json';
 import domains from './configs/domains'     ;
+import cookieControl from './configs/cookie-control';
 
 const css   =   [ '@/assets/custom.scss', 'vue-final-modal/style.css' ]
 
-
+  
 export default defineNuxtConfig({
 
   devtools: { enabled: false},
   debug: false,
   sourcemap: { server: true, client: true },
+  logLevel: 'verbose',
   css,
     app:{
     pageTransition: { name: 'page', mode: 'out-in'  }
@@ -19,6 +21,7 @@ export default defineNuxtConfig({
     apiUserPass : process.env.API_USER_PASS,
     apiKey      : process.env.API_KEY,
     panoramaKey : process.env.PANORAMA_KEY,
+    jiraToken    : process.env.JIRA_TOKEN,
     public: {
       isLocalHost:process.env.NUXT_PUBLIC_IS_LOCAL_HOST==='true'?true:false,
       showBl1Link:process.env.NUXT_PUBLIC_SHOW_BL1_LINK==='true'?true:false,
@@ -53,8 +56,10 @@ export default defineNuxtConfig({
     'nuxt-swiper',
     'nuxt-gravatar',
     'nuxt-emoji-picker',
-    '@nuxtjs/google-fonts'
+    '@nuxtjs/google-fonts',
+    '@dargmuesli/nuxt-cookie-control'
   ],
+  cookieControl,
   piniaPersistedstate: {
     cookieOptions: { sameSite: 'strict', },
     storage: 'cookies'
@@ -90,13 +95,14 @@ export default defineNuxtConfig({
   delayHydration: { mode: 'init' },
 
   image: {
-    domains: ['portal.geobon.org','chm-cbd.net','be.bl2.chm-cbd.net','lk.bl2.cbddev.xyz','acb.bl2.cbddev.xyz','be.bl2.cbddev.xyz', 'cbd.int', 'www.cbd.int', 'https://panorama.solutions/', ...domains ],
+    domains: ['portal.geobon.org','chm-cbd.net','be.bl2.chm-cbd.net','lk.bl2.cbddev.xyz','acb.bl2.cbddev.xyz','be.bl2.cbddev.xyz', 'cbd.int', 'www.cbd.int', 'https://panorama.solutions/', 'https://scbd.atlassian.net',...domains ],
     format: ['webp', 'avif', 'jpeg', 'jpg', 'png','gif'],
     quality: 50,
     screens: { xs: 320, sm: 552, md: 992, lg: 1330, xl: 1600 },
   },
   nitro: {
     logLevel: 3,
+    experimental: { tasks: true },
     devStorage: { 
       db       : { driver: 'fs', base: './.nuxt/data/db' },
       comments : { driver: 'fs', base: './.nuxt/data/comments' },
@@ -106,6 +112,7 @@ export default defineNuxtConfig({
       forums   : { driver: 'fs', base: './.nuxt/data/forums' },
       external : { driver: 'fs', base: './.nuxt/data/external' },
       menus : { driver: 'fs', base: './.nuxt/data/menus' },
+      gbfTargets: { driver: 'fs', base: './.nuxt/data/gbf-targets' },
     },
     storage: { 
       db       : { driver: 'fs', base: './cache/db' },
@@ -116,6 +123,7 @@ export default defineNuxtConfig({
       forums   : { driver: 'fs', base: './cache/forums' },
       external : { driver: 'fs', base: './cache/external' },
       menus : { driver: 'fs', base: './cache/menus' },
+      gbfTargets: { driver: 'fs', base: './cache/gbf-targets' },
     }
   },
   experimental: {
@@ -130,5 +138,12 @@ export default defineNuxtConfig({
       Roboto: [300,400,500,700,900]
     }
   },
+  //  build: {
+  //   transpile: ['@atlaskit/adf-schema','@atlaskit/editor-prosemirror']
+  // },
+ 
   compatibilityDate: '2024-09-08',
+    alias: {
+    'typesense-instantsearch-adapter': 'typesense-instantsearch-adapter/src/TypesenseInstantsearchAdapter.js',
+  },
 })

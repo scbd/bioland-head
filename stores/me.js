@@ -2,11 +2,11 @@ import   intersect   from 'lodash.intersection';
 import { DateTime  } from "luxon"              ;
 
 export const useMeStore = defineStore('me', { 
-    state: () => ({ userID: '', duuid: '', diuid: '', preferredLang: '', displayName: '', name: '', email: '', img:'', isAuthenticated: false, roles: [], editMode: true, token: '', expire: new Date() }),
+    state: () => ({ userID: '', duuid: '', diuid: '',timezone:'', preferredLang: '', displayName: '', name: '', email: '', img:'', isAuthenticated: false, roles: [], editMode: true, token: '', expire: new Date() }),
 
     actions:{
         initialize( user){
-            this.expire = DateTime.now().plus({ minutes: 1 }).toJSDate();
+           // this.expire = DateTime.now().plus({ minutes: 1 }).toJSDate();
             this.userID = user.value.userID;
             this.duuid = user.value.duuid;
             this.diuid = user.value.diuid;
@@ -18,6 +18,7 @@ export const useMeStore = defineStore('me', {
             this.roles = user.value.roles;
             this.token = user.value.token;
             this.img = user.value.img;
+            this.timezone = user.value.timezone || 'UTC';
 
         },
         toggleEditMode(){

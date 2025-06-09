@@ -1,5 +1,7 @@
 <template>
-    <div  v-if="showSelf" class="tabs">
+    <hr>
+
+    <div   class="tabs">
         <ul  class="nav nav-tabs" >
             <li   class="nav-item " id="page-view">
                 <span :style="getStyle()"  class="nav-link  text-capitalize" >{{t('View')}}</span> 
@@ -30,25 +32,28 @@
                 </NuxtLink>
             </li>
         </ul>
+        <div  v-if="!canEdit" class="alert alert-warning" role="alert">
+            A simple warning alert—check it out!
+        </div>
     </div>
-    <div v-if="!showSelf && meStore.isContributor" class="alert alert-warning" role="alert">
-        A simple warning alert—check it out!
-    </div>
+
 </template>
 
 <script setup>
 
-    const { t  }    = useI18n();
-    const route     = useRoute();
+    const { t  }       = useI18n();
+    const   route      = useRoute();
     const   meStore    = useMeStore();
     const   pageStore  = usePageStore();
-    const siteStore = useSiteStore();
+    const   siteStore  = useSiteStore();
+    const   props      = defineProps({ canEdit: { type: Boolean, default: false } });
+    const { canEdit }  = toRefs(props);
 
     const returnUrl = computed(()=>`?returnUrl=${encodeURIComponent(route.path)}`);
 
     const baseUrl   = computed(()=>siteStore.localizedHost+getUrlComponent());
 
-    const showSelf = computed(() => pageStore?.isSystemPage? meStore?.showEditSystemPages : meStore?.showEdit)
+    // const showSelf = computed(() => pageStore?.isSystemPage? meStore?.showEditSystemPages : meStore?.showEdit)
 
     const isContributor = computed(() => meStore?.roles?.includes('contributor') && meStore?.roles?.length == 1);
 

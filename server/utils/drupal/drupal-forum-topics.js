@@ -107,6 +107,7 @@ function mapTopics(ctx){
 async function getLatestCommentsUsersFromForum(ctx, topicId){
     const $http = await useDrupalLogin(ctx.siteCode);
 
+   
     const queryString = getCommentByTopicFilterQueryString(topicId);
     
     const { host,  localizedHost,rowsPerPage=20, } = ctx;

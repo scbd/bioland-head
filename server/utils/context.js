@@ -25,6 +25,7 @@ export const parseQuery = (event) => {
 }
 
 export const getContext = (event, key) => {
+   
     const { context:cookieContext } = parseCookies(event);
 
     const   context = cookieContext? parseJson(decodeURIComponent(cookieContext)) || {} : {};

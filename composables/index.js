@@ -70,6 +70,8 @@ export const useGetPage = () => {
         const key     = ref(`${multiSiteCode}-${identifier}-${encodeURIComponent(path.value)}`);
 
         try{
+            if(passedPath.endsWith('.well-known/appspecific/com.chrome.devtools.json')) return null;
+
 
             if(key.value?.includes('undefined'))  throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value} ${key.value}` }) 
 

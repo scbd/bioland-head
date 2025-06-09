@@ -4,7 +4,7 @@
         <div class="reply-text ms-1 mb-0 d-flex align-items-center">
             <span class="ps-2 me-1 small text-muted text-capitalize">{{reply.dateString}}</span> 
 
-            <button @click.prevent.stop="focusOnCommentField" type="button" class="btn btn-outline-dark nb mx-1  text-capitalize btn-sm "><span class="text-small" style="font-weight: bold; letter-spacing: 0.075em;">{{ t('reply') }}</span></button>
+            <button :disabled="disabled" @click.prevent.stop="focusOnCommentField" type="button" class="btn btn-outline-dark nb mx-1  text-capitalize btn-sm "><span class="text-small" style="font-weight: bold; letter-spacing: 0.075em;">{{ t('reply') }}</span></button>
         </div>
         <div v-if="count && !repliesVisible" class="ms-1 mt-1 mb-0">
             <button  @click="showReplies" type="button" class="btn btn-outline-dark nb  fs-5 font-weight-bold btn-sm"><span style="font-weight: bold; letter-spacing: 0.05em; "><span class="text-capitalize">{{ t('view') }}</span> <span v-if="count">{{ t('all') }}</span> <span>{{ count }}</span> <span>{{ t('reply', count) }}</span> </span></button>
@@ -58,8 +58,8 @@
     const   showEmojiPicker    = ref          (false);
 
 
-    const   props    = defineProps({ reply: { type: Object } });
-    const { reply:passedReply }  = toRefs(props);
+    const   props    = defineProps({ reply: { type: Object }, disabled: { type: Boolean, default: false }, topRepliesVisible: { type: Boolean, default: false } });
+    const { reply:passedReply, disabled }  = toRefs(props);
 
 
     const showInput         = ref(false);
@@ -74,17 +74,17 @@
     const query         = computed(() =>clone ({ ...route.query || {}, ...siteStore.params,  }))
 
 
-    const { data, status, refresh } = await useLazyFetch(()=>`/api/comments/${encodeURIComponent(entityId.type)}/${encodeURIComponent(entityId.id)}/${encodeURIComponent(id)}`, {  method: 'GET', query,  onResponse,onRequest });
+    const { data, status, refresh } = await useLazyFetch(()=>`/api/comments/${encodeURIComponent(entityId.type)}/${encodeURIComponent(entityId.id)}/${encodeURIComponent(id)}`, {  method: 'GET', query,  onResponse });
 
     const reply = computed(()=> data.value || passedReply.value);
-    const count = computed(()=> reply?.value?.comments?.length || 0);
+    const count = computed(()=> reply?.value?.comments.filter(({status})=>status)?.length || 0);
 
     const key     = computed(()=> unref(reply?.value?.id));
     const inProgress = ref(false);
     const replies = computed(()=> reply?.value?.comments || []);
     const loading = computed(()=>  inProgress.value);
 
-    function onRequest({ request, options }) { options.headers = headers.value; }
+    // function onRequest({ request, options }) { options.headers = headers.value; }
 
     function onResponse({ response }){
         const key = response.headers.get('c-key');
@@ -170,7 +170,7 @@
     function refreshReplies(){
         noCacheKey.value = data.value?.cacheKey;
 
-        if(noCacheKey.value )headers.value = { 'No-Cache': noCacheKey.value};
+        // if(noCacheKey.value )headers.value = { 'No-Cache': noCacheKey.value};
 
         setTimeout(()=>{
             refresh().then(()=>inProgress.value = false);
@@ -211,6 +211,8 @@
 
 
     function focusOnCommentField($event){
+        if(disabled.value) return;
+        
         showInput.value = true;
 
         setTimeout(() => {

@@ -5,7 +5,7 @@
                 <!-- <LazyPageListTextSearch class="mb-1"/> -->
             </div>
             <div class="col-12 col-md-9 px-0">
-                <LazyPageBreadCrumbs :count="results?.comments?.length"/>
+                <LazyPageBreadCrumbs :count="results?.comments.filter(({status})=>status)?.length"/>
             </div>
         </div>
         <div class="row ">
@@ -20,7 +20,7 @@
                     <div>
                         <div v-html="htmlSanitize(results?.body?.value)"></div>
 
-                        <LazyFormCommentInput :likes="likes" :count="results?.comments?.length"/>
+                        <LazyFormCommentInput :likes="likes" :count="results?.comments.filter(({status})=>status)?.length"/>
                     </div>
                     <LazySpinner v-if="loading" :size="75"/>
                     <transition-group name="list">
@@ -43,8 +43,7 @@
 
 
             <div class="col-12 col-md-9 offset-md-3 ">
-                
-                <LazyPageListPager :count="results?.comments?.count"/>
+                <LazyPageListPager :count="results?.comments.filter(({status})=>status)?.count"/>
             </div>
         </div>
     </div>
@@ -100,7 +99,7 @@
         noCacheKey.value = results.value[route.name];
 
         eventBus.on('changePage', ({ noCache } = {})=>{
-        results.value = {};
+        // results.value = {};
 
         if(noCache) headers.value = { 'No-Cache': noCacheKey.value};
 

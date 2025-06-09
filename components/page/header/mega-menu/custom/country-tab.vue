@@ -6,7 +6,11 @@
 
                 <div class="flag-box">
                     <Transition :name="fadeName">
-                        <NuxtImg  v-if="!hide" :src="logo" class="flag"/>
+                        <div class="  text-center">
+
+                            <h5 class="my-1 text-muted">{{t(selectedCountry)}}</h5>
+                            <NuxtImg  v-if="!hide" :alt="`Flag of ${t(selectedCountry)}`" :title="`Flag of ${t(selectedCountry)}`" :src="logo" class="flag"/>
+                        </div>
                     </Transition>
                     &nbsp;
                 </div>
@@ -21,6 +25,7 @@
 </template>
 
 <script setup>
+    const {t} = useI18n();
     const   eventBus           = useEventBus();
     const props = defineProps({ menu: Object });
     const menu  = ref(props.menu);
@@ -34,6 +39,7 @@
     const fadeName = ref('slide-fade-left')
     const logo     = computed(() =>  `https://www.cbd.int/images/flags/96/flag-${selectedCountry.value}-96.png`);
 
+    consola.warn(selectedCountry)
     onMounted(() => eventBus.on('clickRight', slideRight) );
     onMounted(() => eventBus.on('clickLeft', slideLeft) );
     

@@ -13,6 +13,7 @@
                 <LazySwiperSlide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
                     <LazyCardsGbf :record="slide" v-if="type==='gbf'"/>
                     <LazyCardsMedia :record="slide" v-if="type==='media'"/>
+                    <LazyCardsNt7 :record="slide" v-if="type==='nt7'"/>
                 </LazySwiperSlide>
 
             </LazySwiper>

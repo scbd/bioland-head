@@ -1,41 +1,36 @@
-import SA      from 'superagent' ;
-
+import SA  from 'superagent';
 
 const $http   = {}//SA.agent()
 
+export const useDrupalLogin = async (siteCode, forceNew = false) => {
+  if(!siteCode) throw new Error('useDrupalLogin: siteCode is required');
+    
+  const { apiUser:name, apiUserPass:pass }   = useRuntimeConfig()
+  const { baseHost, multiSiteCode }          = useRuntimeConfig().public;
 
-
-
-export const useDrupalLogin = async (siteCode) => {
+  const cacheId = `${multiSiteCode}-${siteCode}`;
   try{
+    if($http[cacheId] && !forceNew) return $http[cacheId]
 
-    if(!siteCode) throw new Error('useDrupalLogin: siteCode is required');
-    
-    const { apiUser:name, apiUserPass:pass }   = useRuntimeConfig()
-    const { baseHost, multiSiteCode }          = useRuntimeConfig().public;
-
-    const cacheId = `${multiSiteCode}-${siteCode}`;
-
-    if($http[cacheId]) return $http[cacheId]
-
-    const saAgent = SA.agent()
-    
+    const saAgent = SA.agent();
 
     const uri  = `https://${siteCode}.${baseHost}/user/login?_format=json`
 
     await saAgent.post(uri)
             .set('Content-Type', 'application/json')
             .send(JSON.stringify({ name, pass }))
-            .redirects(3)
+            .redirects(3);
 
-    $http[cacheId] = saAgent
-    return $http[cacheId]
+    $http[cacheId] = saAgent;
+
+    return $http[cacheId];
   }
   catch(e){
-    console.error('DrupalAuth.login: ', e)
-
+    console.error('DrupalAuth.login: ', e);
     // throw e
     // return { get: (x)=>x }
-  }
+  }finally{
+    setTimeout(() => $http[cacheId]? delete $http[cacheId]: '', 1000 * 60 * 3);
+  } 
 }
 

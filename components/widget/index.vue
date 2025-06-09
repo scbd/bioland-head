@@ -1,6 +1,6 @@
 <template>
 <div class="position-relative">
-    <LazySpinner v-if="loading" :is-modal="true"/>
+    <!-- <LazySpinner v-if="loading" :is-modal="true"/> -->
     <div >
         <div class="text-capitalize">
             <h4 :style="style"  >{{name}} </h4>

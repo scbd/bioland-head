@@ -185,12 +185,13 @@
 
             let contentTypesHasDocuments = false;
 
-            for (const aType of getContentTypes(menu)) {
- 
-                const hasRecords = menuStore?.getContentType(aType,locale)?.data?.length;
+            if( getContentTypes(menu)?.length) 
+                for (const aType of getContentTypes(menu)) {
+    
+                    const hasRecords = menuStore?.getContentType(aType,locale)?.data?.length;
 
-                if(hasRecords) contentTypesHasDocuments = true;
-            }
+                    if(hasRecords) contentTypesHasDocuments = true;
+                }
 
             if(!contentTypesHasDocuments) return true;
         }

@@ -4,7 +4,7 @@ export default defineEventHandler(async (event) => {
             const query             = getQuery      (event);
             const ctx               = getContext    (event);
 
-            return useDrupalForums({...ctx,...query});
+            return useDrupalForums({...ctx,...query, event});
         }
         catch (e) {
             passError(event, e);

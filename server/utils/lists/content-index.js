@@ -19,9 +19,11 @@ function mapData(ctx){
 
         const promises = [];
 
-        for (const aDoc of results.data)
-            promises.push(getThesaurusByKey(aDoc.field_tags || aDoc.fieldTags).then((p)=>{aDoc.tags =mapTagsByType(p) ;}));
-
+        for (const aDoc of results.data){
+            const keys = aDoc?.field_tags ||  aDoc?.fieldTags;
+            if(keys)
+                promises.push(getThesaurusByKey(keys).then((p)=>{aDoc.tags =mapTagsByType(p) ;}));
+        }
         await Promise.all(promises);
 
         for (const key in results.data) {

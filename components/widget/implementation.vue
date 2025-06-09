@@ -17,17 +17,28 @@
 
     const loading = computed(()=> status.value === 'pending'); 
 
+    // function onResponse({ request, response, options}){
+    //     const { data } = response._data;
+
+    //     const { length } = data || []
+
+    //     if(!length) return response._data = {}
+    //     response._data = length? data[Math.floor(Math.random() * length)] : undefined;
+    // }
+
+
     function onResponse({ request, response, options}){
-        const { data } = response._data;
-
+        const { data }   = response._data;
         const { length } = data || []
+        
+        if(!length) return response._data = {};
 
-        if(!length) return response._data = {}
-        response._data = length? data[Math.floor(Math.random() * length)] : undefined;
+        const index = computed(()=> randomArrayIndexTimeBased(Number(length)));
+
+        response._data = data[index.value];
     }
-
-    const searchPath            = computed(()=>menuStore.getSystemPagePath({ alias:'/search', locale:unref(locale)}));
-    const searchSecretariatPath = computed(()=>menuStore.getSystemPagePath({ alias:'/search-secretariat', locale:unref(locale)}));
+    const searchPath            = computed(()=>`/taxonomy/term/${systemPageTidConstants.SEARCH}`);
+    const searchSecretariatPath = computed(()=>`/taxonomy/term/${systemPageTidConstants.SEARCH_SEC}`);
 
     const links = [
         { name: t('View National Reports'),    to: { path:localePath(searchSecretariatPath.value), query:{ schemas:['cpbNationalReport2','cpbNationalReport3','cpbNationalReport4','absNationalReport','nationalReport','nationalReport6']}} },

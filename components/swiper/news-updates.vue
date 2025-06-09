@@ -4,8 +4,8 @@
         <NuxtLink :to="newsLink" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more news and updates')}} <LazyIcon  name="arrow-right" class="arrow" /></NuxtLink>
     </div>
     <div  class="position-relative mt-1" style="min-height:250px;">
-        <LazySpinner v-if="loading" :is-modal="true"/>
-        <ClientOnly>
+        <!-- <LazySpinner v-if="loading" :is-modal="true"/> -->
+        <!-- <ClientOnly> -->
             <LazySwiperButton  direction="left" :swiper-ref="swiperRef"/>
             <LazySwiper
                 :loop="true"
@@ -23,7 +23,7 @@
 
             </LazySwiper>
             <LazySwiperButton  direction="right" :swiper-ref="swiperRef"/> 
-        </ClientOnly>
+        <!-- </ClientOnly> -->
     </div>
 </template>
 <script setup>
@@ -86,8 +86,7 @@ const query = clone({ ...siteStore.params });
 
 const { data:slides, status } = await useLazyFetch(`/api/list/latest`, {  method: 'GET', query, getCachedData });
 
-const loading = computed(()=> status.value === 'pending');
-
+const loading = computed(()=> status.value === 'pending' && !slides?.value?.length);
 
 const headerStyle = reactive({
     display: 'inline-block',

@@ -1,7 +1,7 @@
 import clone     from 'lodash.clonedeep'   ;
 import intersect from 'lodash.intersection';
 
-const mainChildren = [ 'convention-protocols','biodiversity-facts','cooperation', 'implementation','news-updates', 'resources'  ];
+const mainChildren = [ 'convention-protocols','biodiversity-facts', 'our-targets', 'cooperation', 'implementation','news-updates', 'resources'  ];
 const menuNames    = [ 'main', 'footer', 'footer-credits' ];
 
 export async function getDrupalMenus(ctx){
@@ -28,7 +28,7 @@ export async function getDrupalMenus(ctx){
     await getThumbNails(cleanMenus, ctx);
 
     return { ...cleanMenus};
-}
+}   
 
 async function hasNewMenuStructure(ctx){
     try{
@@ -47,9 +47,16 @@ async function hasNewMenuStructure(ctx){
 
 function buildMainChildren(allMenus){
     for (const aMenu of allMenus.main) {
+        // if(aMenu.title === 'Our Targets') 
+        //     consola.error(mainMenuHasChild(aMenu))
         if(!mainMenuHasChild(aMenu)) continue;
 
+
+        
         aMenu.children = allMenus[mainMenuHasChild(aMenu)]
+
+if(aMenu.title === 'Our Targets') 
+    // consola.error(aMenu)
         for (const aChild of aMenu.children) {
             aChild.hierarchy?.unshift(aMenu.hierarchy[0])
             aChild.crumbs?.unshift(aMenu.crumbs[0])
@@ -163,14 +170,19 @@ async function getMenusFromApiPager ({ siteCode,identifier, pathPreFix, pathAlia
 }
 
 async function getMenuData(menuName, ctx){
+    try {
     const { host, pathPreFix, localizedHost } = ctx;
 
     const uri = `${localizedHost}/system/menu/${encodeURIComponent(menuName)}/linkset`;
 
-
+ 
     const data = await $fetch(uri, $fetchBaseOptions({ mode: 'cors' }));
 
     return data?.linkset && data?.linkset?.length ? formatMenus(data.linkset[0].item) : [];
+    }catch(e){
+        consola.error('Menus.getMenuDatae', e)
+        return []
+    }
 }
 
 function formatMenus(menuData){
@@ -196,9 +208,14 @@ function formatMenus(menuData){
 function splitClasses(menus){
 
     for (const aMenu of menus){
-        if(Array.isArray(aMenu.class))              aMenu.class = aMenu.class[0].split(' ').filter(Boolean);
+
+        if(Array.isArray(aMenu.class) && aMenu?.class?.length === 1 &&  aMenu.class[0].includes(' '))              aMenu.class = aMenu.class[0].split(' ').filter(Boolean);
+        if(Array.isArray(aMenu.class) && aMenu?.class?.length >1) aMenu.class =aMenu.class.filter(Boolean);
         if(Array.isArray(aMenu['machine-name']))    aMenu.machineName = aMenu['machine-name'][0];
         if(Array.isArray(aMenu.target))             aMenu.target = aMenu.target[0];
+
+        // if(aMenu.class)
+        //     consola.warn('aMenu', aMenu.class)
 
         delete(aMenu['machine-name']) ;
         addContentTypeId(aMenu);

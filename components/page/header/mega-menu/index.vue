@@ -4,11 +4,11 @@
             <nav  class="navbar nav bg-dark w-100 pt-0">
                 <ul class="nav ">
                     <li @click.stop="toggle(index, aMenu)" v-for="(aMenu,index) in menus" :ref="el => refElements.push(el)" :key="index" :style="loginStyle(aMenu)" class="nav-item text-nowrap"  >
-                        <NuxtLink  v-if="!aMenu.class?.includes('login')" :class="menuClass(aMenu)" class="nav-link" :to="aMenu.href" :title="aMenu.title"  >
+                        <NuxtLink  v-if="showMenu(aMenu)" :class="menuClass(aMenu)" class="nav-link" :to="aMenu.href" :title="aMenu.title"  >
                             {{aMenu.title}}
                         </NuxtLink>
 
-                        <span v-if="!aMenu.class?.includes('login')" ref="spacers" :class="{ 'opacity-0': isLastSpacer(index) }" class="spacer"></span>
+                        <span v-if="showMenu(aMenu)" ref="spacers" :class="{ 'opacity-0': isLastSpacer(index) }" class="spacer"></span>
                         
                         <PageHeaderMegaMenuLogin v-if="aMenu.class?.includes('login')" :aMenu="aMenu" :show="toggles[index]" v-click-outside="unToggle"/>
 
@@ -29,10 +29,19 @@
         const siteStore = useSiteStore();
         const me        = useMeStore();
         const refElements = ref([]);
-        const { main: menus } = storeToRefs(menuStore);
+        const { main: menus, nt7 } = storeToRefs(menuStore);
         const router = useRouter()
 
         const eventBus   = useEventBus();
+        const hasNationalTargets7 = computed(()=> Object.keys(nt7.value).length)
+
+
+        function showMenu(menu){
+          if(menu.class?.includes('login')) return false
+          if(menu.class?.includes('our-targets') && !hasNationalTargets7.value) return false
+          return true;
+        }
+// our-targets
 
         function menuClass(aMenu){
           const menusClasses = aMenu.class?.length? aMenu.class : [];
@@ -98,8 +107,8 @@
 
         if(!i || !spacersY.value?.length) return false;
 
-        const selfY = spacersY.value[i].value
-        const nextY = spacersY.value[i+1].value
+        const selfY = spacersY?.value[i]?.value
+        const nextY = spacersY?.value[i+1]?.value
 
         if(selfY !== nextY) return true
 

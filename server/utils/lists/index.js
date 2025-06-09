@@ -30,7 +30,10 @@ export function mapTagsByType(tags){
     const map = { };
 
     for (const tag of tags) {
-        const type = thesaurusSourceMap[tag.identifier];
+        if(!tag?.identifier) continue;
+        
+        const isNr7 = tag?.identifier?.includes('ort-nr7')
+        const type = isNr7? 'nr7' : thesaurusSourceMap[tag.identifier];
 
         if(!map[type]) map[type] = [];
 

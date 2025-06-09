@@ -1,10 +1,9 @@
 export default defineEventHandler(async (event) => {
     const   ctx                 = getContext(event);
-    const { logAll, logApi }            = useRuntimeConfig().public;
+    const { logAll, logApi }    = useRuntimeConfig().public;
     const { pathname, search }  = new URL(getRequestURL(event));
 
-    consola.error(pathname.startsWith('/api/' ), pathname)
-    logRequest();
+return 
     if(!logAll || !logApi) return;
 
     if(logAll) {

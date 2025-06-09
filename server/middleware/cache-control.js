@@ -9,17 +9,18 @@ export default defineEventHandler((event) => {
     const isMenusApi   = pathname.match(/\/api\/menus\//);
     const isCommentsApi= pathname.match(/\/api\/comments\//);
     const isMeApi      = !isMenusApi && pathname.match(/\/api\/me/)
-    const isNoCache    = isMeApi || isCommentsApi
+    const isForumsApi  = pathname.match(/\/api\/forums\/[a-f0-9\-]+\/[a-f0-9\-]+/);
+    const isNoCache    = isMeApi || isCommentsApi || isForumsApi
 
     const isIpx        = pathname.match(/\/_ipx\//)
     const isAsset      = isIpx || pathname.match(/(.+)\.(avif|webp|jpg|jpeg|gif|css|png|js|ico|svg|mjs)/)
     const isNuxt       = pathname.match(/\/_nuxt\//);
 
-
-    if(isNoCache)
+    if(isNoCache || isForumsApi )
         res.setHeader('Cache-Control', `no-store, max-age=0`);
     else if(isAsset || isNuxt)
         res.setHeader('Cache-Control', `max-age=${year}, stale-if-error=${week}`);
+
     else
         res.setHeader('Cache-Control', `max-age=15, stale-if-error=${week}, stale-while-revalidate=${day}`);
 })

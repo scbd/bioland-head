@@ -44,6 +44,7 @@
     const   eventBus      = useEventBus();
     const   crumbs        = computed(makeCrumb);
     const { showBl1Link } = useRuntimeConfig().public;
+    const { schemaOnly } = route?.query || {};
 
     function isSelf(href){ return href === route.path; };
 
@@ -60,6 +61,14 @@
 
     function makeCrumb(){
 
+        if(pageStore?.isSystemPage && systemPageTidConstants.SEARCH_SEC && schemaOnly) {
+            return [
+                {
+                    title: t('Search Secretariat'),
+                    href: `/taxonomy/term/${systemPageTidConstants.SEARCH_SEC}`,
+                }
+            ];
+        }
         if(pageStore?.isSystemPage || pageStore?.isContentType ) return [];
 
         if(pageStore.isTopicsList || pageStore.isTopicsCommentsList){
