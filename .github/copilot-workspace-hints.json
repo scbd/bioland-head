@@ -1,0 +1,8 @@
+{
+  "references": [
+    {
+      "path": ".github/instructions/instructions.md",
+      "description": "Coding standards and preferences for this project"
+    }
+  ]
+}
