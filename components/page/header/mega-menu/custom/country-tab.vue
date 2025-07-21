@@ -39,7 +39,6 @@
     const fadeName = ref('slide-fade-left')
     const logo     = computed(() =>  `https://www.cbd.int/images/flags/96/flag-${selectedCountry.value}-96.png`);
 
-    consola.warn(selectedCountry)
     onMounted(() => eventBus.on('clickRight', slideRight) );
     onMounted(() => eventBus.on('clickLeft', slideLeft) );
     

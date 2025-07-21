@@ -5,7 +5,7 @@
                 <ul class="nav ">
                     <li @click.stop="toggle(index, aMenu)" v-for="(aMenu,index) in menus" :ref="el => refElements.push(el)" :key="index" :style="loginStyle(aMenu)" class="nav-item text-nowrap"  >
                         <NuxtLink  v-if="showMenu(aMenu)" :class="menuClass(aMenu)" class="nav-link" :to="aMenu.href" :title="aMenu.title"  >
-                            {{aMenu.title}}
+                            {{aMenu.title}} 
                         </NuxtLink>
 
                         <span v-if="showMenu(aMenu)" ref="spacers" :class="{ 'opacity-0': isLastSpacer(index) }" class="spacer"></span>
@@ -86,6 +86,7 @@
     }
     
     function toggle(index, aMenu ={}){
+
       if(index===0) return;
       if(isLogin(aMenu) && !me.isAuthenticated ) return;
 

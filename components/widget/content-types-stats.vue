@@ -1,44 +1,34 @@
 <template >
-    <div class="position-relative">
-
-            <div v-for="t in types">
-                <pre>{{t}}</pre>
-            </div>
-            <!-- <select v-model="selected" multiple class="form-select" style="min-height: 225px;" :disabled="disabled" :class="{ 'not-allowed': disabled }">
-                <option v-for="t in types" :key="t.value" :value="t.value" :selected="selected.includes(t.value)">{{t.name}}</option>
-            </select> -->
-
-    </div>
+    <section>
+        <hr v-if="types.length">
+        <div v-for="t in types">
+            <NuxtLink :to="localePath({path: t.slug})">
+                <div class="d-flex align-items-center fs-5 text-nowrap my-2">
+                    <span class="fs-4 mx-2">{{t.icon}}</span>
+                    
+                        <span class="fw-bold text-nowrap">{{t.name}}</span>
+                    
+                    <span class="ms-auto badge bg-success text-dark mx-2">{{t.count}}</span>
+                </div>
+            </NuxtLink>
+            <hr >
+        </div>
+    </section>
 </template>
 <script setup>
     const { t        } = useI18n    ();
-    const   route      = useRoute   ();
     const   menuStore  = useMenusStore();
-
-
-
+    const localePath     = useLocalePath();
 
     const types = computed(()=> Object.entries(menuStore.contentTypes)
                                 .filter(([name, data])=> data.count)
                                 .sort(sortObj)
                                 .map(([name, data])=>{
-                                    return { name: `${data.name} (${data.count})`, value: data.drupalInternalId }
+                                    return { name: data.plural, slug: data.slug, count:data.count ,value: data.drupalInternalId , icon: contentTypeIcons[data.drupalInternalId]}
                                 })
                             );
 
-    const initValue = route?.query?.schemas? Array.isArray(route?.query?.schemas)? route.query.schemas : [route?.query?.schemas] : [];
-    const selected  = ref(initValue.map((x)=>Number(x)));
 
-    function sortObj([x,a],[y,b]){
-        const nameA = a.name.toUpperCase(); 
-        const nameB = b.name.toUpperCase();
-
-        if (nameA < nameB)  return -1;
-        
-        if (nameA > nameB)  return 1;
-
-        return 0;
-    }
 
 </script>
 

@@ -14,7 +14,7 @@
                 <LazyPageListFilter v-if="!typeId"/>
             </div>
             <div name="list" tag="div" class="col-12 col-md-9 data-body" :class="{ 'col-md-12': schemaOnly, 'px-0': !isMobile, 'mt-3': isMobile}">
-                <LazyPageBodyTabs :can-edit="meStore.showEditSystemPages"/>
+                <LazyPageBodyTabs v-if="meStore.showEditSystemPages"/>
                 <LazyPageListTabs  v-if="!schemaOnly" :types="types" :key="JSON.stringify(types)"/>
                 <LazyPageListPager v-if="showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results?.count}`"/>
 
@@ -44,7 +44,7 @@
                                         title: { type: String,  default: '' },
                                         types: { type: Array, default: () => [] }
                                     });
-consola.error(r?.query)
+
     const showTopPager   = computed(()=>pageStore.isSearchAll);
 
     const { title  }     = toRefs(props);

@@ -80,10 +80,10 @@ function getSearchParamsByAlias(alias){
     return search 
 }
 export async function mapAliasByLocale(ctx, type, id){
- 
+
     const homePath = await getSiteDefinedHome(ctx);
     const isHomePath = homePath === `/${type}/${id}`; 
-  
+
     const languages = await getById(ctx)(type, id, true)
     const locales = (await getInstalledLanguages(ctx)).map(mapLocaleFromDrupal);
 
@@ -91,22 +91,17 @@ export async function mapAliasByLocale(ctx, type, id){
     const map = {};
     const thePath = isHomePath? '' : `/${type}/${id}`;
     const englishLang = languages?.find(({langcode})=> langcode === 'en') || { path: thePath};
-    
-    // consola.warn(locales)
-    for (const locale of locales) {
-        const aLang           = languages?.find(({langcode}) => langcode.startsWith(locale));
+
+    for (const { drupalInternalId, code} of locales) {
+
+        const aLang           = languages?.find(({langcode}) => langcode.startsWith(code));
         const { alias, path } = aLang || englishLang;
 
 
-        // if(ctx.defaultLocale === locale){
-        //     map[locale] = aLang? `${alias}` : `${path}`;
-        //     continue;
-        // }
-
         if(ctx.isLocalizationException){
-            map[locale] = `/${locale}${removeLocalizationFromPath(ctx,ctx.path)}`
+            map[code] = `/${code}${removeLocalizationFromPath(ctx,ctx.path)}`
         }else
-            map[locale] = aLang? `/${locale}${alias}` : `/${locale}${path}`;
+            map[code] = aLang? `/${code}${alias}` : `/${code}${path}`;
     }
 
     return map;

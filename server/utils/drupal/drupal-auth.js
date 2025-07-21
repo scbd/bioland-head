@@ -27,6 +27,7 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
   }
   catch(e){
     console.error('DrupalAuth.login: ', e);
+    consola.error('DrupalAuth.login: ', `https://${siteCode}.${baseHost}/user/login?_format=json`,{ name } );
     // throw e
     // return { get: (x)=>x }
   }finally{

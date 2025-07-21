@@ -25,7 +25,7 @@ export const useDateFormat = () => (date, format = 'dd LLL yyyy')=>{
 
     const { locale } = useI18n();
 
-    if(!date)   return '';
+    if(!date) return '';
 
     const dateTime = DateTime.fromISO(date);
 
@@ -70,9 +70,7 @@ export const useGetPage = () => {
         const key     = ref(`${multiSiteCode}-${identifier}-${encodeURIComponent(path.value)}`);
 
         try{
-            if(passedPath.endsWith('.well-known/appspecific/com.chrome.devtools.json')) return null;
-
-
+        
             if(key.value?.includes('undefined'))  throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value} ${key.value}` }) 
 
                 const options =  process.server? {  method: 'GET', headers, query: clone({ ...siteStore.params, path:path.value }) } : {  method: 'GET', query: clone({ ...siteStore.params, path:path.value }) };

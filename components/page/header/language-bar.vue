@@ -3,7 +3,8 @@
         <div class="container py-0 pl-sm-3 pr-sm-3">
             <div class="row">
                 <div class="col-sm-5 d-flex align-items-center">
-                    <NuxtLink class="navbar-brand" to="https://www.cbd.int" external target="_blank">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</NuxtLink>
+                    <NuxtLink v-if="!isBiosafetySite" class="navbar-brand" to="https://www.cbd.int" external target="_blank">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</NuxtLink>
+                    <NuxtLink v-if="isBiosafetySite" class="navbar-brand" to="https://www.cbd.int" external target="_blank">{{t('Welcome to the Cartagena Protocol on Biosafety Network')}}</NuxtLink>
                 </div>
 
                 <div v-if="!(limitedMenus.length > 1) && pageLoaded" class="col-sm-7 d-flex justify-content-end">
@@ -48,7 +49,7 @@
     const viewport        = useViewport();
     const limit           = ref(siteStore.maxLangBeforeWrap);
     const query           = computed(()=> route.query);
-
+    const isBiosafetySite = computed(()=> siteStore?.isBiosafetySite);
 
     const isDevSite = computed(()=> !siteStore?.config?.published || siteStore?.config?.hasBl1);
     const menus     = computed(()=> menuStore.languages.filter(aMenu => aMenu.code !== 'xx'));

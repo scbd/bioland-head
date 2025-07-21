@@ -1,7 +1,5 @@
 <template>
-    <hr>
-
-    <div   class="tabs">
+    <div   class="tabs mb-3">
         <ul  class="nav nav-tabs" >
             <li   class="nav-item " id="page-view">
                 <span :style="getStyle()"  class="nav-link  text-capitalize" >{{t('View')}}</span> 
@@ -32,9 +30,9 @@
                 </NuxtLink>
             </li>
         </ul>
-        <div  v-if="!canEdit" class="alert alert-warning" role="alert">
+        <!-- <div  v-if="!canEdit" class="alert alert-warning" role="alert">
             A simple warning alert—check it out!
-        </div>
+        </div> -->
     </div>
 
 </template>
@@ -46,8 +44,8 @@
     const   meStore    = useMeStore();
     const   pageStore  = usePageStore();
     const   siteStore  = useSiteStore();
-    const   props      = defineProps({ canEdit: { type: Boolean, default: false } });
-    const { canEdit }  = toRefs(props);
+    // const   props      = defineProps({ canEdit: { type: Boolean, default: false } });
+    // const { canEdit }  = toRefs(props);
 
     const returnUrl = computed(()=>`?returnUrl=${encodeURIComponent(route.path)}`);
 

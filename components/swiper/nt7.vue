@@ -7,7 +7,7 @@
         <!-- <LazySpinner v-if="loading" :is-modal="true"/> -->
         <!-- <ClientOnly> -->
             <LazySwiperButton  direction="left" :swiper-ref="swiperRef"/>
-            <LazySwiper
+            <swiper-container
                 :loop="true"
                 :slidesPerView="slidePerView"
                 :spaceBetween="spaceBetween"
@@ -16,12 +16,12 @@
                 @swiper="onSwiper"
                 >
 
-                <LazySwiperSlide :class="{ 'mb-4': pagination }" v-for="slide in slides" :key="slide">
+                <swiper-slide :class="{ 'mb-4': pagination }" v-for="slide in slides" :key="slide">
 
                     <LazyCardsNt7 :record="slide" />
-                </LazySwiperSlide>
+                </swiper-slide>
 
-            </LazySwiper>
+            </swiper-container>
             <LazySwiperButton  direction="right" :swiper-ref="swiperRef"/> 
         <!-- </ClientOnly> -->
     </div>

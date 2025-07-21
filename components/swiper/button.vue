@@ -7,13 +7,15 @@
 
 </template>
 <script setup>
-    const   props       = defineProps({ direction: { type: String }, swiperRef: {type: Object } });
-    const { direction, swiperRef:sw } = toRefs(props);
+    const   props = defineProps({ direction: { type: String }, swiperRef: {type: Object } });
+    const { direction, swiperRef } = toRefs(props);
 
+    const sw = useSwiper(swiperRef);
 
     function onClick(){
-        if(direction.value === 'right') sw.value.slideNext();
-        else sw.value.slidePrev();
+
+        if(direction.value === 'right') sw.next();
+        else sw.prev();
     }
 
 </script>

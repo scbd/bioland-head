@@ -1,6 +1,6 @@
 <template>
-    <div v-if="sections.length" class="overflow-scroll mm">
-        <div class="container px-0 cont">
+    <div v-if="sections.length" class="debug overflow-scroll mm">
+        <div class="container px-0 cont ">
             <div class="row  m-0">
                 <div   v-if="meStore.showEditMenu"  class="alert alert-warning p-0 text-center" role="alert">
                     <NuxtLink :to="editUrl" role="button" type="button" class="btn btn-dark btn-sm pointer">
@@ -136,25 +136,41 @@
         
         const   componentNameStart          = 'LazyPageHeaderMegaMenuCustom';
         const { drupalMultisiteIdentifier } = siteStore;
-        const   componentClasses            = aMenu?.class?.filter(aClass => aClass.startsWith(`${drupalMultisiteIdentifier}-component`));
+        const   componentClasses            = aMenu?.class?.filter(aClass => aClass.startsWith(`${drupalMultisiteIdentifier}-component`) || aClass.startsWith(`bl2-component`) || aClass.startsWith(`mm-component`));
+
 
         if(!componentClasses?.length) return '';
 
-        const [ componentClass ] = componentClasses.map((aName)=> (short? '' : componentNameStart)+pascalCase(aName.replace(`${drupalMultisiteIdentifier}-component-`,'')));
+        const [ componentClass ] = componentClasses.map((aName)=> (short? '' : componentNameStart)+pascalCase(getComponentVueName(aName, drupalMultisiteIdentifier)));
 
         if(!componentClass) return '';
 
         return componentClass;
     }
 
+    function getComponentVueName(aName, drupalMultisiteIdentifier){
+        if(aName.startsWith(`${drupalMultisiteIdentifier}-component-`)) return aName.replace(`${drupalMultisiteIdentifier}-component-`,'');
+        if(aName.startsWith(`bl2-component-`)) return aName.replace(`bl2-component-`,'');
+        if(aName.startsWith(`mm-component-`)) return aName.replace(`mm-component-`,'');
+
+        return aName;
+    }
+
+    function getContentTypeFromClass(aName, drupalMultisiteIdentifier){
+        if(aName.startsWith(`${drupalMultisiteIdentifier}-content-type-`)) return aName.replace(`${drupalMultisiteIdentifier}-content-type-`,'');
+        if(aName.startsWith(`bl2-content-type-`)) return aName.replace(`bl2-content-type-`,'');
+        if(aName.startsWith(`mm-content-type-`)) return aName.replace(`mm-content-type-`,'');
+        return aName;
+    }
+    
     function getContentTypes(aMenu){
         const   siteStore                   = useSiteStore();
         const { drupalMultisiteIdentifier } = siteStore;
-        const   contentTypeClasses          = aMenu?.class?.filter(aClass => aClass.startsWith(`${drupalMultisiteIdentifier}-content-type-`));
+        const   contentTypeClasses          = aMenu?.class?.filter(aClass => aClass.startsWith(`${drupalMultisiteIdentifier}-content-type-`) || aClass.startsWith(`bl2-content-type-`) || aClass.startsWith(`mm-content-type-`));
 
         if(!contentTypeClasses?.length) return undefined;
 
-        return contentTypeClasses.map((aType)=> aType.replace(`${drupalMultisiteIdentifier}-content-type-`,''));
+        return contentTypeClasses.map((aType)=> getContentTypeFromClass(aType, drupalMultisiteIdentifier));
     }
 
     function isComponent(aMenu){
@@ -173,21 +189,22 @@
 
     function isEmptySection(menu){
 
-        if(!isComponent(menu) || isPublishedSite.value) return false;
+        if(!isComponent(menu) || !isPublishedSite.value) return false;
 
         const cName = componentName(menu, true);
+
 
         if(cName === 'ContentType') {
 
             if(menu?.children?.length) return false;
 
-            
-
             let contentTypesHasDocuments = false;
+
+
 
             if( getContentTypes(menu)?.length) 
                 for (const aType of getContentTypes(menu)) {
-    
+
                     const hasRecords = menuStore?.getContentType(aType,locale)?.data?.length;
 
                     if(hasRecords) contentTypesHasDocuments = true;

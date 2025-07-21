@@ -66,8 +66,8 @@ async function addPageAliases(ctx,data){
     const isMedia = !!data.drupal_internal__mid 
     const isTax   = !!data.drupal_internal__tid
     const isNode  = !!data.drupal_internal__nid
-    const type = isNode? 'node' : isTax? 'taxonomy/term' : 'media';
-    const id  = isNode? data.drupal_internal__nid : isTax? data.drupal_internal__tid : data.drupal_internal__mid;
+    const type    = isNode? 'node' : isTax? 'taxonomy/term' : 'media';
+    const id   = isNode? data.drupal_internal__nid : isTax? data.drupal_internal__tid : data.drupal_internal__mid;
 
     return mapAliasByLocale(ctx, type, id)
 }

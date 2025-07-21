@@ -1,6 +1,6 @@
 export default defineNuxtPlugin({
     name: 'page-transition',
-    dependsOn: ['site'],
+    // dependsOn: ['site'],
     async setup (nuxtApp) {
         const pageStore = usePageStore(nuxtApp.$pinia);
         const siteStore = useSiteStore(nuxtApp.$pinia);

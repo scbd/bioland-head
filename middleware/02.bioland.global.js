@@ -100,6 +100,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     if(!context.value || !isPlainObject(context.value)) context.value = {};
 
     for(const key in updateCtx)
-        context.value[key] = updateCtx[key];
+      if(context.value[key] !== updateCtx[key])
+            context.value[key] = updateCtx[key];
   }
 })

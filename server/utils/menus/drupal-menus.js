@@ -1,15 +1,18 @@
 import clone     from 'lodash.clonedeep'   ;
 import intersect from 'lodash.intersection';
 
-const mainChildren = [ 'convention-protocols','biodiversity-facts', 'our-targets', 'cooperation', 'implementation','news-updates', 'resources'  ];
+const chm          = [ 'convention-protocols','biodiversity-facts', 'our-targets', 'cooperation', 'implementation','news-updates', 'resources'   ];
+const bch          = [ 'national-biosafety-framework', 'resources', 'news-updates', 'useful-links' ];
+const mainChildren = [ ...chm, ...bch ];
 const menuNames    = [ 'main', 'footer', 'footer-credits' ];
 
 export async function getDrupalMenus(ctx){
+    const { multiSiteCode } = useRuntimeConfig().public;
+    const   isBchSite       = [ 'bch', 'bsl' ].includes(multiSiteCode) || ctx?.isBchSite || false;
 
-    const newStructure = await hasNewMenuStructure(ctx);
-    const allMenuNames = newStructure? [ ...menuNames, ...mainChildren ] : menuNames;
+    const allMenuNames =  [ ...menuNames, ...(isBchSite ? bch : chm) ]
     const menuPromises = [];
-    const menus = {};
+    const menus        = {};
 
     for (const menuName of allMenuNames) {
         const menuPromise = getMenuData(menuName,ctx )
@@ -22,8 +25,7 @@ export async function getDrupalMenus(ctx){
 
     const cleanMenus  = await addMissingData(menus, ctx )
 
-    if(newStructure)
-        buildMainChildren(cleanMenus);
+    buildMainChildren(cleanMenus);
 
     await getThumbNails(cleanMenus, ctx);
 
@@ -47,6 +49,7 @@ async function hasNewMenuStructure(ctx){
 
 function buildMainChildren(allMenus){
     for (const aMenu of allMenus.main) {
+
         // if(aMenu.title === 'Our Targets') 
         //     consola.error(mainMenuHasChild(aMenu))
         if(!mainMenuHasChild(aMenu)) continue;
@@ -56,7 +59,6 @@ function buildMainChildren(allMenus){
         aMenu.children = allMenus[mainMenuHasChild(aMenu)]
 
 if(aMenu.title === 'Our Targets') 
-    // consola.error(aMenu)
         for (const aChild of aMenu.children) {
             aChild.hierarchy?.unshift(aMenu.hierarchy[0])
             aChild.crumbs?.unshift(aMenu.crumbs[0])
@@ -213,9 +215,6 @@ function splitClasses(menus){
         if(Array.isArray(aMenu.class) && aMenu?.class?.length >1) aMenu.class =aMenu.class.filter(Boolean);
         if(Array.isArray(aMenu['machine-name']))    aMenu.machineName = aMenu['machine-name'][0];
         if(Array.isArray(aMenu.target))             aMenu.target = aMenu.target[0];
-
-        // if(aMenu.class)
-        //     consola.warn('aMenu', aMenu.class)
 
         delete(aMenu['machine-name']) ;
         addContentTypeId(aMenu);

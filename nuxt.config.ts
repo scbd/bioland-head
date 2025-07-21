@@ -50,14 +50,16 @@ export default defineNuxtConfig({
     'nuxt-viewport',
     '@nuxtjs/i18n',
     '@pinia/nuxt',
-    '@pinia-plugin-persistedstate/nuxt',
+    // '@pinia-plugin-persistedstate/nuxt',
     '@nuxt/image',
     'nuxt-delay-hydration',
     'nuxt-swiper',
     'nuxt-gravatar',
     'nuxt-emoji-picker',
     '@nuxtjs/google-fonts',
-    '@dargmuesli/nuxt-cookie-control'
+    '@dargmuesli/nuxt-cookie-control',
+    // '@nuxt/test-utils/module',
+    // '@nuxt/scripts',
   ],
   cookieControl,
   piniaPersistedstate: {
@@ -86,6 +88,9 @@ export default defineNuxtConfig({
     lazy                 : true,
     langDir              : '',
     strategy             : "prefix",
+        bundle: {
+      optimizeTranslationDirective: false,
+    }
   },
   vite: {
     server: {
@@ -141,7 +146,6 @@ export default defineNuxtConfig({
   //  build: {
   //   transpile: ['@atlaskit/adf-schema','@atlaskit/editor-prosemirror']
   // },
- 
   compatibilityDate: '2024-09-08',
     alias: {
     'typesense-instantsearch-adapter': 'typesense-instantsearch-adapter/src/TypesenseInstantsearchAdapter.js',

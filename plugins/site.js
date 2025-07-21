@@ -14,42 +14,30 @@ export default defineNuxtPlugin({
         nuxtApp.vueApp.use(vfm);
 
         const runTime   = useRuntimeConfig().public;
-        const siteStore = useSiteStore(nuxtApp.$pinia);
-        const menuStore = useMenusStore(nuxtApp.$pinia);
-
         const context   = useCookie('context');
         const locale    = nuxtApp.$i18n.locale;
-        const rtPublic  = useRuntimeConfig().public;
+        const hostName = useRequestURL().hostname;
+
 
         await getSiteContext();
 
-        nuxtApp.hook('i18n:beforeLocaleSwitch', async ({ oldLocale, newLocale }) => {
-            siteStore.set('locale', newLocale);
-
-            updateAppConfig(siteStore.params);
-
-            const ctx = await getSiteContext(newLocale);
-
-            updateAppConfig(ctx);
-
-            useFetch(`/api/menus`,{ params: clone(siteStore.params) })
-            .then(({data})=>menuStore.loadAllMenus(data.value));
-
-        })
 
         async function getSiteContext(paddedLocale = locale){
             try{
+                const siteStore     = useSiteStore(nuxtApp.$pinia);
                 const locale        = sanitizeLocale(unref(paddedLocale))
                 const id            = getBiolandSiteIdentifier();
                 const uri           = `/api/context/${id}/${unref(locale)}`;
-                const { data }      = await useFetch(uri);
+
+                const data       = await $fetch(uri);
+
                 const i18nStrategy  = runTime?.i18n?.strategy || 'prefix';
-                const runTimePublic = clone(rtPublic);
+                const runTimePublic = clone(runTime);
 
                 delete(runTimePublic.locales);
                 delete(runTimePublic.i18n);
 
-                siteStore.initialize({ ...runTimePublic,i18nStrategy,...(data?.value|| {}), locale}) ;
+                siteStore.initialize({ ...runTimePublic,i18nStrategy,...(data|| {}), locale}) ;
 
                 ensureContext(siteStore.params);
 
@@ -74,7 +62,7 @@ export default defineNuxtPlugin({
         function sanitizeLocale(locale, defaultLocale = 'en'){
 
         
-            const { locales } = useRuntimeConfig().public;
+            const { locales } = runTime;
             const   preFixes  = locales.map(({ code })=> code);
         
             const isValid     = preFixes.includes(locale);
@@ -85,7 +73,7 @@ export default defineNuxtPlugin({
         }
 
         function getBiolandSiteIdentifier () {
-            const hostName = useRequestURL().hostname;
+            
 
             if(!hostName)
                     throw createError({ 
@@ -106,8 +94,30 @@ export default defineNuxtPlugin({
             if(!context.value || !isPlainObject(context.value)) context.value = {};
         
             for(const key in updateCtx)
-                context.value[key] = updateCtx[key];
+                if(isPlainObject(context.value))
+                    context.value[key] = updateCtx[key];
+                else if(context.value[key] && context.value[key] !== updateCtx[key])
+                    context.value[key] = updateCtx[key];
         }
+
+        nuxtApp.hook('i18n:beforeLocaleSwitch', async ({ oldLocale, newLocale }) => {
+            if(oldLocale === newLocale) return;
+
+            const menuStore = useMenusStore(nuxtApp.$pinia);
+            const siteStore = useSiteStore(nuxtApp.$pinia);
+
+            siteStore.set('locale', newLocale);
+
+            updateAppConfig(siteStore.params);
+
+            const ctx = await getSiteContext(newLocale);
+
+            updateAppConfig(ctx);
+
+            $fetch(`/api/menus`,{ params: clone(siteStore.params) })
+            .then((data)=>menuStore.loadAllMenus(data));
+
+        })
     }
 });
 

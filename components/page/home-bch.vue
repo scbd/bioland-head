@@ -1,0 +1,70 @@
+<template>
+
+    <div class="container">
+        <div v-if="body?.value" class="row">
+            <div class="col-12 my-2" >
+                <div  v-html="htmlSanitize(body?.value)"></div>
+            </div>
+        </div>
+        <div class="row my-4">
+            <div   class="col-md-9 col-12 border-col">
+
+                    <SwiperContentType
+                        :pagination="true"
+                        :arrows="true"
+                        :leftArrow="true"
+                        :hideArrowsCount="3"
+                        :schemas="[44]"
+                        :title="$t('National Biosafety Framework')"
+                    />
+
+                    <SwiperContentType
+                        :pagination="true"
+                        :arrows="true"
+                        :leftArrow="true"
+                        :hideArrowsCount="3"
+                        :schemas="[15,48,43,16,6]"
+                        :title="$t('Resources')"
+                    />
+
+                    <SwiperContentType
+                        :pagination="true"
+                        :arrows="true"
+                        :leftArrow="true"
+                        :hideArrowsCount="3"
+                        :schemas="[2,3, 49]"
+                        :title="$t('Latest News & Updates')"
+                    />
+
+            </div>
+
+            <div   class="col-md-3 col-12 border-col">
+                <WidgetContentTypesStats/>
+            </div>
+        </div>
+    </div>
+
+</template>
+<script setup>
+const siteStore = useSiteStore();
+const pageStore = usePageStore();
+const body      = computed(()=>pageStore?.page?.body);
+
+const columnsOfWidgetComponents = computed(() => siteStore?.theme?.homePageWidgets?.columns);
+
+const hasNews = computed(() => siteStore?.theme?.homePageWidgets?.news);
+
+</script>
+<style scoped>
+.border-col{
+    border-right: 1px solid rgba(0,0,0,0.2) !important;
+}
+.border-col:last-child {
+        border-right: none !important;
+    }
+@media (max-width: 991.98px) {
+    .border-col{
+        border-right: none !important;
+    }
+}
+</style>

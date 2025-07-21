@@ -1,3 +1,135 @@
+import { kebabCase } from 'change-case';
+/**
+ * An array of objects representing the different content types in the system.
+ *
+ * @type {Array<Object>}
+ * @property {number} drupalInternalTid - The internal Drupal Term ID (tid).
+ * @property {string} name - The singular name of the content type.
+ * @property {string} field_plural - The plural name of the content type.
+ */
+
+export const contentTypes = [
+    { drupalInternalTid: 2, name: 'News', field_plural: 'News', icon: '📰' },
+    { drupalInternalTid: 3, name: 'Event', field_plural: 'Events', icon: '📅' },
+    { drupalInternalTid: 3, name: 'Meeting or Event', field_plural: 'Meetings & Events', icon: '📅' },
+    { drupalInternalTid: 4, name: 'Learning Resource', field_plural: 'Learning Resources', icon: '🎓' },
+    { drupalInternalTid: 5, name: 'Project', field_plural: 'Projects', icon: '📊' },
+    { drupalInternalTid: 6, name: 'Article', field_plural: 'Articles', icon: '📄' },
+    { drupalInternalTid: 8, name: 'Government Ministry or Institute', field_plural: 'Government Ministries or Institutes', icon: '🏛️' },
+    { drupalInternalTid: 9, name: 'Ecosystem', field_plural: 'Ecosystems', icon: '🌍' },
+    { drupalInternalTid: 10, name: 'Protected Area', field_plural: 'Protected Areas', icon: '🏞️' },
+    { drupalInternalTid: 11, name: 'Biodiversity Data', field_plural: 'Biodiversity Data', icon: '📈' },
+    { drupalInternalTid: 12, name: 'Document', field_plural: 'Documents', icon: '📋' },
+    { drupalInternalTid: 13, name: 'Related Website', field_plural: 'Related Websites', icon: '🔗' },
+    { drupalInternalTid: 15, name: 'Other', field_plural: 'Others', icon: '⚙️' },
+    { drupalInternalTid: 16, name: 'Image or Video', field_plural: 'Images or Videos', icon: '🎬' },
+    { drupalInternalTid: 43, name: 'FAQ', field_plural: 'faqs', icon: '❓' },
+    { drupalInternalTid: 44, name: 'National Information', field_plural: 'National Information', icon: '🏴' },
+    { drupalInternalTid: 45, name: 'Status of LMOS', field_plural: 'Status of LMOs', icon: '🧬' },
+    { drupalInternalTid: 46, name: 'Field Trial', field_plural: 'Field Trials', icon: '🌱' },
+    { drupalInternalTid: 47, name: 'National Mainstreaming Strategy', field_plural: 'National Mainstreaming Strategies', icon: '🗂️' },
+    { drupalInternalTid: 48, name: 'Capacity-Building', field_plural: 'Capacity-Building', icon: '🔧' },
+    { drupalInternalTid: 49, name: 'Announcement', field_plural: 'Announcements', icon: '📢' }
+];
+
+export const typeMapIds = createContentTypeMapping(contentTypes);
+export const contentTypeIcons = {
+    2: '📰',   // News
+    3: '📅',   // Meeting or Event
+    4: '🎓',   // Learning Resource
+    5: '📊',   // Project
+    6: '📄',   // Article
+    8: '🏛️',   // Government Ministry or Institute
+    9: '🌍',   // Ecosystem
+    10: '🛡️',  // Protected Area
+    11: '📈',  // Biodiversity Data
+    12: '📋',  // Document
+    13: '🔗',  // Related Website
+    15: '⚙️',  // Other
+    16: '🎬',  // Image or Video
+    43: '❓',  // FAQ
+    44: '🏴',  // National Information
+    45: '🧬',  // Status of LMOs
+    46: '🌱',  // Field Trial
+    47: '🗂️',  // National Mainstreaming Strategy
+    48: '🔧',  // Capacity-Building
+    49: '📢'   // Announcement
+};
+
+/**
+ * An object containing constants for content type Drupal internal Term IDs (tids).
+ * These are generated from the contentTypes array for easy access.
+ * Keys are the constant-cased version of the content type name and its plural form.
+ *
+ * @type {Object<string, number>}
+ */
+export const contentTypeTidConstants = {
+    NEWS: 2,
+    MEETING_OR_EVENT: 3,
+    MEETINGS_EVENTS: 3,
+    LEARNING_RESOURCE: 4,
+    LEARNING_RESOURCES: 4,
+    PROJECT: 5,
+    PROJECTS: 5,
+    ARTICLE: 6,
+    ARTICLES    : 6,
+    GOVERNMENT_MINISTRY_OR_INSTITUTE: 8,
+    GOVERNMENT_MINISTRIES_OR_INSTITUTES: 8,
+    ECOSYSTEM: 9,
+    ECOSYSTEMS: 9,
+    PROTECTED_AREA: 10,
+    PROTECTED_AREAS: 10,
+    BIODIVERSITY_DATA: 11,
+    DOCUMENT: 12,
+    DOCUMENTS: 12,
+    RELATED_WEBSITE: 13,
+    RELATED_WEBSITES: 13,
+    OTHER: 15,
+    OTHERS: 15,
+    IMAGE_OR_VIDEO: 16,
+    IMAGES_OR_VIDEOS: 16,
+    FAQ: 43,
+    FAQS: 43,
+    NATIONAL_INFORMATION: 44,
+    STATUS_OF_LMOS: 45,
+    NATIONAL_TARGET: 46,
+    NATIONAL_TARGETS: 46,
+    NATIONAL_MAINSTREAMING_STRATEGY: 47,
+    NATIONAL_MAINSTREAMING_STRATEGIES: 47,
+    NATIONAL_INDICATOR: 48,
+    NATIONAL_INDICATORS: 48,
+    ANNOUNCEMENT: 49,
+    ANNOUNCEMENTS: 49
+};
+
+/**
+ * An object mapping content type Drupal internal Term IDs (tids) to their singular names.
+ * Generated from the contentTypes array.
+ *
+ * @type {Object<number, string>}
+ */
+export const contentTypeNameConstants = contentTypes.reduce((acc, { drupalInternalTid, name }) => {
+    acc[drupalInternalTid] = name;
+    return acc;
+}, {});
+
+/**
+ * An object mapping content type Drupal internal Term IDs (tids) to their plural names.
+ * Generated from the contentTypes array.
+ *
+ * @type {Object<number, string>}
+ */
+export const contentTypePluralConstants = contentTypes.reduce((acc, { drupalInternalTid, field_plural }) => {
+    acc[drupalInternalTid] = field_plural;
+    return acc;
+}, {});
+
+/**
+ * An object containing constants for system page Drupal internal Term IDs (tids).
+ * These are used to identify specific system pages.
+ *
+ * @type {Object<string, number>}
+ */
 export const systemPageTidConstants = {
     HOME: 20,
     SEARCH: 21,  
@@ -14,4 +146,19 @@ export const systemPageTidConstants = {
     NT7:31,
     DEV:42,
     ASSISTANCE: 41
+}
+
+
+/**
+ * Creates a mapping object from content type names to their Drupal internal Term IDs.
+ * Uses kebab-case formatting for the keys.
+ *
+ * @param {Array<Object>} contentTypesArray - Array of content type objects
+ * @returns {Object<string, number>} Object with kebab-case names as keys and drupalInternalTid as values
+ */
+function createContentTypeMapping(contentTypesArray) {
+    return contentTypesArray.reduce((acc, { name, drupalInternalTid }) => {
+        acc[kebabCase(name)] = drupalInternalTid;
+        return acc;
+    }, {});
 }

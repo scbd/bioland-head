@@ -1,5 +1,6 @@
 <template>
     <IconSymbols v-once/>
+    <NuxtRouteAnnouncer />
     <ClientOnly>
       <NuxtLoadingIndicator :height="6"/>
     </ClientOnly>    
@@ -12,7 +13,7 @@
     <PageFooter/>
     <ModalsContainer/>
     <LazyUserAlerts/>
-    <CookieControl :locale="locale" />
+    <CookieControl :locale="locale" /> 
 </template> 
 <script setup >
 import { ModalsContainer } from 'vue-final-modal'

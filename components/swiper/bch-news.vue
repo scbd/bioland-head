@@ -14,6 +14,7 @@
                 :pagination="{ clickable: true }"
                 :modules="modules"
                 @swiper="onSwiper"
+                ref="containerRef"
                 >
 
                 <swiper-slide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">

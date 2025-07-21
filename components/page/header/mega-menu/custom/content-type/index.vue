@@ -1,5 +1,5 @@
 <template>
-        <LazyPageHeaderMegaMenuHeader  :menu="menu" />
+        <LazyPageHeaderMegaMenuHeader  :menu="menu" /> 
 
         <LazyPageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menu.dataMap" >
             <Transition :name="slotProps.fadeName">
@@ -11,7 +11,7 @@
                             <LazyPageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
 
                             <LazyPageHeaderMegaMenuLink v-if="isFinalLink(aChild)"  :menu="aChild" />
-                      
+
                         </section>
                     </div>
                 </section>
@@ -93,6 +93,7 @@
     }
 
     function getContentType(){
+   
         const classes = (unref(passedMenu)?.class?.filter(aClass => aClass.startsWith('bl2-content-type-')) || []).map((aClass)=> aClass.replace('bl2-content-type-',''));
 
         if(!Array.isArray(classes)) return '';

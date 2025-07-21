@@ -1,11 +1,11 @@
 <template>
-    <NuxtLink  class="main-nav-sub-heading"  :to="menu.href" :title="menu.title" :external="isExternal" :target="target">
+    <NuxtLink  v-if="!noHeader" class="main-nav-sub-heading"  :to="menu.href" :title="menu.title" :external="isExternal" :target="target">
         <h4 class="text-wrap position-relative d-inline-block mb-2" :style="lineStyle">
             {{menu.title}}
             <LazyIcon v-if="hasArrow" name="arrow-right" class="arrow" :style="arrowStyle"/>
         </h4>
     </NuxtLink>
-    <p v-if="menu.description" :class="{'mm-special-description': hasSpecialDescription}" class="small" :style="descriptionStyle">{{menu.description}}</p>
+    <p v-if="description" :class="{'mm-special-description': hasSpecialDescription}" class="small" :style="descriptionStyle">{{description}}</p>
 </template>
 
 <script setup>
@@ -19,10 +19,13 @@
         const   siteStore               = useSiteStore();
         const   primaryColor            = computed(()=> siteStore.primaryColor);
 
+        const  description = computed(()=> Array.isArray(menu?.value?.description)? menu?.value?.description[0] : menu?.value?.description || '');
+
         //TODO put in theme composable
         const lineStyle        = reactive({ 'border-bottom': `.25rem solid ${primaryColor.value}` })
         const arrowStyle       = reactive({ 'fill': primaryColor.value })
         const descriptionStyle = reactive({ 'color': primaryColor.value })
+        const noHeader         = computed(()=> menu?.value?.title?.startsWith('<noheader'));
 </script>
 
 <style lang="scss" scoped>

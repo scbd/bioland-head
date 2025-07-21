@@ -182,6 +182,13 @@ export const usePageStore = defineStore('page', {
         body(){
             return this.page?.body?.processed || this.page?.body?.value || this.page?.description?.processed || this.page?.description?.value;
         },
+        hasChmEmbed(){
+            const bodyHas        = this.page?.body?.value.includes('<script')        && this.page?.body?.value.includes('/widgets.js')        && this.page?.body?.value.includes('scbd-chm-embed');
+            const descriptionHas = this.page?.description?.value.includes('<script') && this.page?.description?.value.includes('/widgets.js') && this.page?.description?.value.includes('scbd-chm-embed');
+
+            return bodyHas || descriptionHas;
+        },
+
         startDate(){
             return this.page?.fieldStartDate
         },

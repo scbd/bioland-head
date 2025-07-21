@@ -18,7 +18,7 @@
                 <NuxtLink class="me-0 pe-0 navbar-brand-small fw-bold" :to="localePath(`/`)" :alt="t('Home')" >
                     {{name}}
                 </NuxtLink><br/>
-                <NuxtLink class="navbar-subbrand-small" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int/" :alt="t('Clearing House Mechanism')" >
+                <NuxtLink v-if="!isBiosafetySite"  class="navbar-subbrand-small" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int/" :alt="t('Clearing House Mechanism')" >
                     <span >{{t('Biodiversity CHM')}}</span>
                 </NuxtLink>
             </div>
@@ -38,7 +38,7 @@
                 </NuxtLink>
                 <NuxtLink class="navbar-brand line align-self-stretch" :class="{ hero: hasHeroImage }" :to="localePath(`/`)" :alt="t('Home')" > &nbsp; </NuxtLink>
 
-                <NuxtLink class="sublogo ms-1" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')" >
+                <NuxtLink v-if="!isBiosafetySite" class="sublogo ms-1" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')" >
                     <svg class="scbd-logo" :class="{ hero: hasHeroImage }" width="34" height="42" viewBox="0 0 34 42"  fill="none" xmlns="http://www.w3.org/2000/svg">
                         <g opacity="0.8">
                             <path d="M27.3342 6.08834C30.7265 6.08834 32.611 2.60188 32.988 1V9.90459C32.988 14.0035 30.1611 15.9823 27.3342 15.9823H23.094C19.1364 15.9823 17.4874 19.9399 16.8749 21.9187V14.0035C16.8749 8.68905 20.6911 6.08834 22.8584 6.08834H27.3342Z"  stroke-width="1.5" stroke-miterlimit="4.62023"/>
@@ -47,7 +47,7 @@
                         </g>
                     </svg>
                 </NuxtLink>
-                <span class="navbar-subbrand ps-2">
+                <span v-if="!isBiosafetySite" class="navbar-subbrand ps-2">
                     <NuxtLink class="navbar-subbrand text-nowrap" :class="{ hero: hasHeroImage }" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')"  >
                         <span class="w-500">{{t('Convention on Biological Diversity')}}</span><br/>
                     </NuxtLink>
@@ -55,7 +55,14 @@
                         <span class="fw-lighter">{{t('Clearing House Mechanism')}}</span>
                     </NuxtLink>
                 </span>
-                
+                <span v-if="isBiosafetySite" class="navbar-subbrand ps-2">
+                    <NuxtLink class="navbar-subbrand text-nowrap" :class="{ hero: hasHeroImage }" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')"  >
+                        <span class="w-500">{{t('Cartagena Protocol on Biosafety')}}</span><br/>
+                    </NuxtLink>
+                    <NuxtLink class="navbar-subbrand" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int/" :alt="t('Clearing House Mechanism')" >
+                        <span class="fw-lighter">{{t('National Clearing House Portal')}}</span>
+                    </NuxtLink>
+                </span>
             </div>
 
             <div class=" col-md-3 col-lg-3 d-flex justify-content-end align-items-center" >
@@ -78,7 +85,7 @@
 
                 <NuxtLink class="line-left align-self-stretch pe-1 " :class="{ hero: hasHeroImage }" :to="localePath(`/`)" :alt="t('Home')" > &nbsp; </NuxtLink>
 
-                <NuxtLink class="sublogo ms-1 me-2" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')" >
+                <NuxtLink v-if="!isBiosafetySite" class="sublogo ms-1 me-2" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')" >
                     <svg class="scbd-logo" :class="{ hero: hasHeroImage }" width="49" height="57" viewBox="0 0 34 42"  fill="none" xmlns="http://www.w3.org/2000/svg">
                         <g opacity="0.8">
                             <path d="M27.3342 6.08834C30.7265 6.08834 32.611 2.60188 32.988 1V9.90459C32.988 14.0035 30.1611 15.9823 27.3342 15.9823H23.094C19.1364 15.9823 17.4874 19.9399 16.8749 21.9187V14.0035C16.8749 8.68905 20.6911 6.08834 22.8584 6.08834H27.3342Z"  stroke-width="1.5" stroke-miterlimit="4.62023"/>
@@ -92,12 +99,18 @@
                     <NuxtLink class=" me-0 pe-0 navbar-brand "  :class="{ hero: hasHeroImage, 'fs-3':  name.length > 32 && name.length < 40  , 'fs-4':  name.length > 39}" :to="localePath(`/`)" :alt="t('Home')" >
                     {{name}}
                     </NuxtLink><br/>
-                    
-                    <NuxtLink class="navbar-subbrand text-nowrap" :class="{ hero: hasHeroImage }" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')"  >
+
+                    <NuxtLink v-if="!isBiosafetySite" class="navbar-subbrand text-nowrap" :class="{ hero: hasHeroImage }" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')"  >
                         <span class="fs-5 fw-lighter">{{t('Convention on Biological Diversity')}} &nbsp;</span>
                     </NuxtLink>
-                    <NuxtLink class="navbar-subbrand" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int/" :alt="t('Clearing House Mechanism')" >
+                    <NuxtLink v-if="!isBiosafetySite" class="navbar-subbrand" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int/" :alt="t('Clearing House Mechanism')" >
                         <span class="fs-5 fw-lighter text-nowrap">{{t('Clearing House Mechanism')}}</span>
+                    </NuxtLink>
+                     <NuxtLink v-if="isBiosafetySite" class="navbar-subbrand text-nowrap" :class="{ hero: hasHeroImage }" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')"  >
+                        <span class="fs-5 fw-lighter">{{t('Cartagena Protocol on Biosafety')}} &nbsp;</span>
+                    </NuxtLink>
+                    <NuxtLink v-if="isBiosafetySite" class="navbar-subbrand" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int/" :alt="t('Clearing House Mechanism')" >
+                        <span class="fs-5 fw-lighter text-nowrap">{{t('National Clearing House Portal')}}</span>
                     </NuxtLink>
                 </span>
                 
@@ -105,7 +118,7 @@
 
             <div class=" col-md-3 col-lg-3 d-flex justify-content-end align-items-center" >
                 <div  class="input-group" :class="{ hero: hasHeroImage }" style="margin-left:2rem;margin-right:-2rem;">
-                    <input @keyup.enter="()=>{onClick(queryText);}" type="text" v-model="queryText" class="form-control" :class="{ hero: hasHeroImage }" placeholder="Search this site" aria-label="search" >
+                    <input @keyup.enter="()=>{onClick(queryText);}" type="text" v-model="queryText" class="form-control" :class="{ hero: hasHeroImage }" :placeholder="t('Search this site')" aria-label="search" >
 
                     <a  v-on:click="onClick(queryText)" class="input-group-text"  :class="{ hero: hasHeroImage }"  :alt="t('Search this site')"  >
                         <LazyIcon name="search" class="white-icon" :class="{ hero: hasHeroImage }"/>&nbsp;
@@ -137,7 +150,7 @@
 
     const rowElWidth = computed(()=> rowElWidthL.value? rowElWidthL.value : width.value);   
 
-    const { name: siteName, logo } = storeToRefs(siteStore);
+    const { name: siteName, logo, isBiosafetySite  } = storeToRefs(siteStore);
 
     const name = siteName.value?  siteName : ref(t('Bioland Biodiversity'));
 

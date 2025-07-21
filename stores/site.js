@@ -77,6 +77,9 @@ export const useSiteStore = defineStore('site', {
         },
         maxLangBeforeWrap(){
             return this.config?.theme?.i18n?.maxLangBeforeWrap || this.config?.runTime?.theme?.i18n?.maxLangBeforeWrap  ;
+        },
+        isBiosafetySite(){
+            return this.baseHost.includes('bsl') || this.baseHost.includes('biosafety') || this.baseHost.includes('bch');
         }
     }
 });

@@ -1,7 +1,7 @@
 <template>
     <div class="position-relative" >
             <LazySwiperButton  v-if="arrows && leftArrow && hideArrows" direction="left" :swiper-ref="swiperRef"/>
-            <LazySwiper
+            <swiper-container
                 :loop="true"
                 :slidesPerView="slidePerView"
                 :spaceBetween="350"
@@ -10,13 +10,13 @@
                 @swiper="onSwiper"
             >
 
-                <LazySwiperSlide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
+                <swiper-slide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
                     <LazyCardsGbf :record="slide" v-if="type==='gbf'"/>
                     <LazyCardsMedia :record="slide" v-if="type==='media'"/>
                     <LazyCardsNt7 :record="slide" v-if="type==='nt7'"/>
-                </LazySwiperSlide>
+                </swiper-slide>
 
-            </LazySwiper>
+            </swiper-container>
             <LazySwiperButton  v-if="arrows && hideArrows"  direction="right" :swiper-ref="swiperRef"/> 
     </div>
 </template>

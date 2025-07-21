@@ -50,9 +50,10 @@ export function parseContext (context) {
     const   host            = hasRedirect? `https://${redirect}` : `https://${siteCode}.${baseHost}`;
     const   localizedHost   = lh? lh : `${host}${pathPreFix}`;
     const   indexLocale     = getIndexLocale(localeClean );
-    const   key             = `context-${env}-${multiSiteCode}-${siteCode}-${localeClean }`;
+    const   key             = `context-${env}-${multiSiteCode}-${siteCode}-${localeClean}`;
+    const   isBchSite       = baseHost.includes('bch') || host.includes('biosafety') || host.includes('bsl');
 
-    const ctxClean = removeNullPropsFromPlainObject({ key, env, multiSiteCode, locales, host, localizedHost, country, countries, siteCode, identifier, locale:localeClean,   defaultLocale, indexLocal:indexLocale, indexLocale, path });
+    const ctxClean = removeNullPropsFromPlainObject({ key, isBchSite, env, multiSiteCode, locales, host, localizedHost, country, countries, siteCode, identifier, locale:localeClean,   defaultLocale, indexLocal:indexLocale, indexLocale, path });
 
     if(!ctxClean.siteCode) return {};
 
@@ -67,7 +68,7 @@ export async function getSiteConfig({  siteCode }){
         const { multiSiteCode, env, dmsm } = useRuntimeConfig().public;
 
         const uri = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}/${encodeURIComponent(siteCode)}`;
-
+consola.info('--------------------',uri)
         return $fetch(uri);
     }catch(e){
         const { multiSiteCode, env, dmsm } = useRuntimeConfig().public;
@@ -87,7 +88,7 @@ export function getCountryCode({ country, countries }={ country, countries:[] })
 
     if(country) return country;
 
-
+    if(!countries?.length) throw createError('Server.utils.context.getCountryCode: no country or countries provided by context');
     const index = Math.floor(Math.random() * countries.length);
 
     return countries[index];

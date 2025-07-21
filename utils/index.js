@@ -160,6 +160,16 @@ function sleep(delay=200){
 // // ssr safe
 export const randomizedArray = (yourArray) => seededShuffle(yourArray, getCurrentHourSeed());
 
+export     function sortObj([x,a],[y,b]){
+    const nameA = a.name.toUpperCase(); 
+    const nameB = b.name.toUpperCase();
+
+    if (nameA < nameB)  return -1;
+    
+    if (nameA > nameB)  return 1;
+
+    return 0;
+}
 function seededShuffle(array, seed) {
     // Simple seeded PRNG (Mulberry32)
     function mulberry32(a) {
