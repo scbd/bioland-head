@@ -711,3 +711,16 @@ Based on user preferences, maintain clear separation:
 ---
 
 *This secondary technical memory system enhances Randy's development workflow while maintaining clear separation from personal context managed by Memory-MCP.*
+
+## Additional Prompt Files
+
+This project includes specialized prompt files in `.github/prompts/` for different contexts:
+
+- **Default Efficiency Protocol**: `.github/prompts/default.md` - Maximum efficiency communication patterns
+- **Memory System**: `.github/prompts/memory.md` - Primary memory system configuration
+- **Technical Memory**: `.github/prompts/chroma-memory.md` - Secondary technical memory system
+- **Voice Communication**: `.github/prompts/speak-instructions-osx.md` - Apple TTS integration instructions
+- **Quality Assurance**: `.github/prompts/qa.md` - Review and validation procedures
+- **Project Instructions**: `.github/prompts/instructions.md` - Comprehensive coding standards and project guidelines
+
+These files work together to provide context-aware assistance optimized for Randy's workflow and the Bioland Head project requirements.

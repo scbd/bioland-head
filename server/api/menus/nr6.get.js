@@ -1,4 +1,4 @@
-import { menusCache } from "~/server/utils/cache";
+import { menusCache } from "../../../server/utils/cache";
 
 
 export default cachedEventHandler(async (event) => {

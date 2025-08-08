@@ -3,14 +3,14 @@
     <LazyModalAlert />
 </template>
 <script setup>
-    import   ModalError   from '~/components/modal/alert.vue';
+   // import   ModalError   from '~/components/modal/alert.vue';
     import { useModal   } from 'vue-final-modal';    
 
     const alertStore = useAlertStore();
 
 
     const { open, close } = useModal({ 
-        component: ModalError ,
+        component: defineAsyncComponent('~/components/modal/alert.vue') ,
         attrs: {
             escToClose: true,
             onConfirm: () => close(),

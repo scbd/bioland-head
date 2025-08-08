@@ -13,7 +13,7 @@
                             :spaceBetween="spaceBetween"
                             :pagination="{ clickable: true }"
                             :modules="modules"
-                ref="swiperRef"
+                            ref="swiperRef"
                             >
 
                     <swiper-slide :class="{ 'mb-4': pagination }" v-for="slide in slides" :key="slide">
@@ -32,18 +32,14 @@ import { useWindowSize } from '@vueuse/core';
 
 import clone from 'lodash.clonedeep';
 
-
-
-const swiperRef = ref(null);
-
+const swiperRef      = ref(null);
 const { locale }     = useI18n();
 const menusStore     = useMenusStore();
 const getCachedData  = useGetCachedData();
 const localePath     = useLocalePath();
 const siteStore      = useSiteStore();
 const { t }          = useI18n();
-
-const swiper = useSwiper(swiperRef)
+const swiper         = useSwiper(swiperRef);
 
 
 const isStartIndex = computed(() => swiper?.activeIndex === 0);

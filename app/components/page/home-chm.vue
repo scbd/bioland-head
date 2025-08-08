@@ -9,7 +9,7 @@
         <div class="row">
             
             <div v-if="hasNews" class="col-12 pe-0 me-0 mb-4" >
-                <SwiperNewsUpdates  :pagination="true"/>
+                <LazySwiperNewsUpdates  :pagination="true"/>
             </div>
             <div class="col-12 pe-0 me-0 mb-4" >
                 <SwiperNt7  :pagination="true"/>

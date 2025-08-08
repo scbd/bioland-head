@@ -3,7 +3,7 @@ import en      from './i18n/locales/en.json';
 import domains from './configs/domains'     ;
 import cookieControl from './configs/cookie-control';
 
-const css   =   [ '@/assets/custom.scss', 'vue-final-modal/style.css' ]
+const css   =   [ '~/assets/custom.scss', 'vue-final-modal/style.css' ]
 
   
 export default defineNuxtConfig({
@@ -38,29 +38,15 @@ export default defineNuxtConfig({
     }
   },
   imports: {
-    dirs: ['stores'],
     presets: [ 
       { from: 'consola', imports: ['consola'] },
       { from: 'vue-final-modal', imports: ['useModal'] }
     ]
   },
-  modules: [
-    '@nuxtjs/leaflet',
-    '@nuxt/devtools',
-    'nuxt-viewport',
-    '@nuxtjs/i18n',
-    '@pinia/nuxt',
-    // '@pinia-plugin-persistedstate/nuxt',
-    '@nuxt/image',
-    'nuxt-delay-hydration',
-    'nuxt-swiper',
-    'nuxt-gravatar',
-    'nuxt-emoji-picker',
-    '@nuxtjs/google-fonts',
-    '@dargmuesli/nuxt-cookie-control',
-    // '@nuxt/test-utils/module',
-    // '@nuxt/scripts',
-  ],
+  modules: ['@nuxtjs/leaflet', '@nuxt/devtools', 'nuxt-viewport', '@nuxtjs/i18n', '@pinia/nuxt', // '@pinia-plugin-persistedstate/nuxt',
+  '@nuxt/image', 'nuxt-delay-hydration', 'nuxt-swiper', 'nuxt-gravatar', 'nuxt-emoji-picker', '@nuxtjs/google-fonts', // '@nuxt/test-utils/module',
+  // '@nuxt/scripts',
+  '@dargmuesli/nuxt-cookie-control', '@nuxt/scripts'],
   cookieControl,
   piniaPersistedstate: {
     cookieOptions: { sameSite: 'strict', },

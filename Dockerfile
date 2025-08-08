@@ -1,17 +1,20 @@
-FROM node:20
+FROM node:24.4.0
 
-RUN apt update && \
-    apt install yarn curl -y
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends yarn curl python3 build-essential && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
 COPY package.json ./
 
-RUN yarn clean-reinstall
+RUN yarn install --force
 
 COPY . ./
 
-RUN yarn build
+# RUN yarn build
 
 ENV PORT=8000
 

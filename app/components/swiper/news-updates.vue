@@ -1,12 +1,12 @@
 <template>
-    <div v-if="slides?.length" class="col-12 mt-3 mb-0">
-        <h3 :style="headerStyle">{{t('National Targets')}}</h3>
-        <NuxtLink :to="newsLink" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more national targets')}} <LazyIcon  name="arrow-right" class="arrow" /></NuxtLink>
-    </div>
-    <div v-if="slides?.length" class="position-relative mt-0" style="min-height:250px;">
-        <!-- <LazySpinner v-if="loading" :is-modal="true"/> -->
-        <!-- <ClientOnly> -->
-            <LazySwiperButton  direction="left" :swiper-ref="swiperRef"/>
+     <ClientOnly  v-if="slides?.length">
+        <div  v-if="slides?.length" class="col-12 mt-3 mb-0">
+            <h3 :style="headerStyle">{{t('Latest News and Updates')}}</h3>
+            <NuxtLink :to="newsLink" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more news and updates')}} <LazyIcon  name="arrow-right" class="arrow" /></NuxtLink>
+        </div>
+        <div   v-if="slides?.length" class="position-relative mt-1" style="min-height:250px;">
+
+            <LazySwiperButton  direction="left" :swiper-ref="swiperRef" />
             <swiper-container
                 :loop="true"
                 :slidesPerView="slidePerView"
@@ -14,24 +14,25 @@
                 :pagination="{ clickable: true }"
                 :modules="modules"
                 @swiper="onSwiper"
+                ref="swiperRef"
                 >
 
-                <swiper-slide :class="{ 'mb-4': pagination }" v-for="slide in slides" :key="slide">
+                <swiper-slide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
 
-                    <LazyCardsNt7 :record="slide" />
+                    <LazyCards :record="slide" />
                 </swiper-slide>
 
             </swiper-container>
             <LazySwiperButton  direction="right" :swiper-ref="swiperRef"/> 
-        <!-- </ClientOnly> -->
-    </div>
+
+        </div>
+    </ClientOnly>
 </template>
 <script setup>
 import { Pagination  }   from 'swiper/modules';
 import { useWindowSize } from '@vueuse/core';
 import 'swiper/css';
 import clone from 'lodash.clonedeep';
-
 
 const swiperRef = ref(null);
 
@@ -41,7 +42,7 @@ const getCachedData  = useGetCachedData();
 const localePath     = useLocalePath();
 const siteStore      = useSiteStore();
 const { t }          = useI18n();
-
+const swiper         = useSwiper(swiperRef);
 
 const props = defineProps({ 
                             pagination: { type: Boolean, default: false },
@@ -81,23 +82,13 @@ const spaceBetween = computed(()=> {
     return 5
 });
 
-const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ id:systemPageTidConstants.SEARCH_SEC, locale:unref(locale)}), query:{ schemas:['nationalTarget7']}}));
+const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ id:systemPageTidConstants.SEARCH, locale:unref(locale)}), query:{ schemas:[2,3]}}));
 
-const query = clone({ ...siteStore.params, schemas:['nationalTarget7'], rowsPerPage:100 });
+const query = clone({ ...siteStore.params });
 
-const { data, status } = await useLazyFetch(`/api/list/widget/nt7`, {  method: 'GET', query, getCachedData, onResponse });
+const { data:slides, status } = await useLazyFetch(`/api/list/latest`, {  method: 'GET', query, getCachedData });
 
-// consola.error(data.value)
 const loading = computed(()=> status.value === 'pending' && !slides?.value?.length);
-
-const slides = computed(()=> data.value?.data);
-
-function onResponse({ response }){
-//    consola.warn('onResponse', response._data)
- //  response._data.data =  limitArrayToX(shuffleArrayHourly(response._data.data))
-}
-
-
 
 const headerStyle = reactive({
     display: 'inline-block',

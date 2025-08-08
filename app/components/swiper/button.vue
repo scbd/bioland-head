@@ -45,5 +45,6 @@
     left: 0;
     background-image: linear-gradient(to left, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
     cursor: pointer;
+    margin-left: -2rem;
 }
 </style>

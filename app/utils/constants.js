@@ -21,15 +21,16 @@ export const contentTypes = [
     { drupalInternalTid: 11, name: 'Biodiversity Data', field_plural: 'Biodiversity Data', icon: '📈' },
     { drupalInternalTid: 12, name: 'Document', field_plural: 'Documents', icon: '📋' },
     { drupalInternalTid: 13, name: 'Related Website', field_plural: 'Related Websites', icon: '🔗' },
-    { drupalInternalTid: 15, name: 'Other', field_plural: 'Others', icon: '⚙️' },
+    { drupalInternalTid: 15, name: 'Other Resources', field_plural: 'Other Resources', icon: '⚙️' },
     { drupalInternalTid: 16, name: 'Image or Video', field_plural: 'Images or Videos', icon: '🎬' },
-    { drupalInternalTid: 43, name: 'FAQ', field_plural: 'faqs', icon: '❓' },
+    { drupalInternalTid: 43, name: 'FAQ', field_plural: 'FAQs', icon: '❓' },
     { drupalInternalTid: 44, name: 'National Information', field_plural: 'National Information', icon: '🏴' },
     { drupalInternalTid: 45, name: 'Status of LMOS', field_plural: 'Status of LMOs', icon: '🧬' },
     { drupalInternalTid: 46, name: 'Field Trial', field_plural: 'Field Trials', icon: '🌱' },
     { drupalInternalTid: 47, name: 'National Mainstreaming Strategy', field_plural: 'National Mainstreaming Strategies', icon: '🗂️' },
     { drupalInternalTid: 48, name: 'Capacity-Building', field_plural: 'Capacity-Building', icon: '🔧' },
-    { drupalInternalTid: 49, name: 'Announcement', field_plural: 'Announcements', icon: '📢' }
+    { drupalInternalTid: 49, name: 'Announcement', field_plural: 'Announcements', icon: '📢' },
+    { drupalInternalTid: 50, name: 'Contact', field_plural: 'Contacts', icon: '📞' }
 ];
 
 export const typeMapIds = createContentTypeMapping(contentTypes);
@@ -45,7 +46,7 @@ export const contentTypeIcons = {
     11: '📈',  // Biodiversity Data
     12: '📋',  // Document
     13: '🔗',  // Related Website
-    15: '⚙️',  // Other
+    15: '⚙️',  // Other Resource
     16: '🎬',  // Image or Video
     43: '❓',  // FAQ
     44: '🏴',  // National Information
@@ -53,7 +54,8 @@ export const contentTypeIcons = {
     46: '🌱',  // Field Trial
     47: '🗂️',  // National Mainstreaming Strategy
     48: '🔧',  // Capacity-Building
-    49: '📢'   // Announcement
+    49: '📢',     // Announcement
+    50: '📞'   // Contact
 };
 
 /**
@@ -99,7 +101,9 @@ export const contentTypeTidConstants = {
     NATIONAL_INDICATOR: 48,
     NATIONAL_INDICATORS: 48,
     ANNOUNCEMENT: 49,
-    ANNOUNCEMENTS: 49
+    ANNOUNCEMENTS: 49,
+    CONTACT: 50,
+    CONTACTS: 50
 };
 
 /**
