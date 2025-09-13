@@ -53,17 +53,12 @@
                         <LazyPageBodyTagsDate /> 
                     </div>
                     <div class="align-self-start w-100">
-                        <div v-if="!isImageOrVideo"class="d-none d-md-block" > 
+                        <div v-if="!isImageOrVideo" class="d-none d-md-block" > 
                             <LazyPageBodyTagsDate /> 
                         </div>
                         <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="htmlSanitize(pageStore?.body)"></div>
 
                     </div>
-
-
-                        <LazyPageBodyTagsDate /> 
-                    </div>
-
                 </div>
 
                 <div class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
@@ -83,14 +78,13 @@
         <div v-if="pageStore?.media?.length"  class="row mt-3">
             <div class="col-12 col-md-3">
                 <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{pageStore?.media.length}})</span></h2>
-
-                </div>
-                <div class="col-12 col-md-9">
-                    <ClientOnly>
-                        <LazySwiperMedia :slides="pageStore?.media" type="media"/>
-                    </ClientOnly>
-                </div>
             </div>
+            <div class="col-12 col-md-9">
+                <ClientOnly>
+                    <LazySwiperMedia :slides="pageStore?.media" type="media"/>
+                </ClientOnly>
+            </div>
+        </div>
 
             <div v-if="pageStore?.tags?.gbfTargets?.length" class="row mt-3">
                 <div class="col-12 col-md-3">
@@ -103,23 +97,14 @@
                 </div>
             </div>
         </div>
-
-        <div v-if="pageStore?.tags?.gbfTargets?.length" class="row mt-3">
-            <div class="col-12 col-md-3">
-                <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.gbfTargets.length}})</span></h2>
-            </div>
-            <div class="col-12 col-md-9">
-                <LazySwiperGbf :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
-            </div>
-        </div>
-    </div>
 </template>
 <script setup>
+    import { htmlSanitize } from '~/utils/html.js';
+    
     const { t }        = useI18n();
     const   localePath = useLocalePath();
     const   meStore    = useMeStore();
     const   pageStore  = usePageStore();
-    const pageStore  = usePageStore();
 
     const isImageOrVideo = computed(()=> pageStore?.isImageOrVideo);
     const isDocument     = computed(()=> pageStore?.isDocument );
