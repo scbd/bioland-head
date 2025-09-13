@@ -1,6 +1,8 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
     const { isLocalHost } = useRuntimeConfig().public;
 
+    //if(to.path.startsWith('/_nuxt/')) return abortNavigation();
+
     if(!isLocalHost) return ;
 
     if(!to.path.startsWith('/sites/')) return;

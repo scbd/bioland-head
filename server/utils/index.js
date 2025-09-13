@@ -1,8 +1,4 @@
-import { createConsola } from "consola";
-
-import limax from 'limax';
-import anyAscii from 'any-ascii';
-
+import c from 'consola';
 
 export { nextUri, removeLocalizationFromPath, drupalizeLocale, getSiteDefinedName, getSiteDefinedHome } from '~/server/utils/drupal/index';
 
@@ -23,7 +19,7 @@ export { getPageData         , getPageDates               , getPageThumb        
 export { drupalLangs, rtl, getInstalledLanguages, getDefaultLocale, normalizeDrupalJsonApiData, normalizeLanguageData, getLanguage, mapDrupalLocaleToLocale } from '~/server/utils/drupal/drupal-langs';
 
 export { getTagFilterParams, getPaginationParams, mapTagsByType } from '~/server/utils/lists/index';
-export { useContentTypeIndex } from '~/server/utils/lists/content-index';
+export { useAllContent     , useContentTypeList                 } from '~/server/utils/lists/content';
 export { useAllMedia       , useMediaTypeList                   } from '~/server/utils/lists/media';
 
 export { getDrupalMenus } from '~/server/utils/menus/drupal-menus' ;
@@ -33,9 +29,9 @@ export { getBchMenus    } from '~/server/utils/menus/bch-menus'    ;
 export { thesaurusSourceMap } from '~/server/utils/thesaurus/source-map';
 export { getThesaurusByKey, thesaurusApisUrls, getCountryName, dataSources, getSdg, sdgsData } from '~/server/utils/thesaurus/index';
 
-export { unLocales, mapLocaleToDrupal, mapLocaleFromDrupal } from '~/utils/index';
+export { unLocales } from '~/utils/index';
 export { htmlSanitize } from '~/utils/html';
-export const consola = createConsola({ level: 5, fancy: true });
+export const consola = c;
 
 export function isOddNumber(num) { return num % 2;}
 
@@ -53,10 +49,4 @@ export function passError(event, error){
         message       : `${host}${pathname}.js`,
         data          : { siteCode, locale, host, baseHost, env, pathname, requestUrl, errorData:error.data }
     }); 
-}
-
-export const slugify = (str) => {
-    if(!str) return '';
-
-    return limax(anyAscii(str));
 }

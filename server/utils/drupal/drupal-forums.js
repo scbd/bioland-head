@@ -1,20 +1,13 @@
-import { stripHtml }                from 'string-strip-html' ;
-import { camelCase }                from 'change-case/keys'  ;
+import { stripHtml                } from 'string-strip-html' ;
+import { camelCase                } from 'change-case/keys'  ;
 import { validate  as validateUuid} from 'uuid'              ;
-import   clone                      from 'lodash.clonedeep'  ;
-
 
 export const useDrupalForums = async (ctx) => {
-
     return getForums(ctx)
 }
 
 export async function addForumIdentifierToContext(ctx){
 
-    if(Number(ctx.forumAlias)) { 
-        ctx.tid = Number(ctx.forumAlias);
-        return ctx
-    }
     if(validateUuid(ctx.forumAlias)){
         ctx.uuid = ctx.forumAlias;
         return ctx
@@ -43,13 +36,12 @@ export async function getForumTidFromAlias(ctx){
     return parseInt(path.replace('/taxonomy/term/',''))
 }
 
-async function getForums(ctx, all=false) {
+async function getForums(ctx) {
 
     const { host, uuid, localizedHost  } = ctx;
-    const id            = uuid && !all? `/${uuid}` : '';
+    const id            = uuid? `/${uuid}` : '';
 
-    const params        = getQuestString(ctx, all);
-
+    const params        = getQuestString(ctx);
     const uri           = `${localizedHost}/jsonapi/taxonomy_term/forums${encodeURIComponent(id)}?jsonapi_include=1${params}`;//&include=taxonomy_forums&page[limit]=${rowsPerPage}&sort=-sticky
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
@@ -61,24 +53,13 @@ async function getForums(ctx, all=false) {
     const isOneForum    = data.length === 1;
 
 
-    if(!isOneForum) return all? await mapForumMeta(ctx, data) : embedChildren(await mapForumMeta(ctx, data));
+    if(!isOneForum) return await mapForumMeta(ctx, data);
 
-    const allForums = await getAllForums(ctx);
-
-    data[0]        = (await embedChildren(data, allForums))[0];
     data[0].topics = await useDrupalTopics({ ...ctx, tfid: data[0].id });
     data[0].meta   = await getDrupalTopicMetaByForumIdentifier(ctx, data[0].topics);
 
-
-    
     return data;
 };
-
-async function getAllForums(ctx) {
-
-    return getForums(ctx, true)
-};
-
 
 async function mapForumMeta(ctx, forums){
     const promises = []
@@ -95,17 +76,15 @@ async function mapForumMeta(ctx, forums){
 }
 
 function cleanForumData(forum){
-    const { id, drupalInternalTid, status, description, name, weight, path, fieldColor, parent, topics, forumContainer } = camelCase (forum, { deep: true });
+    const { id, drupalInternalTid, status, description, name, weight, path, fieldColor } = camelCase (forum, { deep: true });
 
     const summary = description?.value? stripHtml(description.value).result.substring(0, 400): '';
 
 
-    return { description, id, drupalInternalTid, status, summary, name, weight, path, fieldColor, parent, topics , forumContainer} 
+    return { description, id, drupalInternalTid, status, summary, name, weight, path, fieldColor } 
 }
 
-function getQuestString(ctx, all=false){
-    if(all) return getSortParams(ctx);
-
+function getQuestString(ctx){
     return getTypeFilterParams(ctx)+getFreeTextFilterParams(ctx)+getPaginationParams(ctx)+getSortParams(ctx);
 }
 
@@ -127,8 +106,6 @@ function getSortParams({ sortBy, sortDirection, tid, uuid }){
     const direction = !sortDirection? 'DESC' : 'ASC';
 
     let sortQueryString = '';
-    sortQueryString += `&sort[sort-weight][path]=weight`
-    sortQueryString += `&sort[sort-weight][direction]=${encodeURIComponent(direction)}`
     sortQueryString += `&sort[sort-created][path]=${encodeURIComponent(sortBy || 'changed')}`
     sortQueryString += `&sort[sort-created][direction]=${encodeURIComponent(direction)}`
 
@@ -151,31 +128,4 @@ function getFreeTextFilterParams({ freeText, tid, uuid }){
     sortQueryString += `&filter[free-text-body][condition][memberOf]=or-group`;
 
     return sortQueryString;
-}
-
-function embedChildren(forums, allForums){
-    const forumsClone = clone(allForums || forums)//.filter()
-
-    for (const aForum of forumsClone) {
-        const parentId = aForum?.drupalInternalTid
-
-        aForum.children = forumsClone.filter(filterByParent(forumsClone, parentId)).sort((a,b)=> a.weight - b.weight);
-    }
-
-    const allIds = forums.map(f=> f.drupalInternalTid);
-
-    return allForums?.length? forumsClone.filter((x)=> allIds.includes(x.drupalInternalTid)) :forumsClone.filter(filterByParent(forumsClone, 'virtual'))
-}
-
-function filterByParent(forums, parentId='virtual'){
-    const isTopLevel = parentId === 'virtual';
-
-    return(aForum)=>{
-        if(!aForum?.parent?.length) return false
-
-        if(isTopLevel && aForum.parent[0].id === parentId) return true;
-        else if(aForum?.parent[0].meta?.drupalInternalTargetId            === parentId) return true;
-
-        return false;
-    }
 }

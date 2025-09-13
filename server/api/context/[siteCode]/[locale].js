@@ -8,22 +8,23 @@ export default defineEventHandler(async (event) => {
             const host       = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
             
             if(!siteCode) throw createError({ statusCode: 404, message: `Site code not found in request`, statusMessage:'Not Found' });
-
             if(!config?.locales?.includes(locale) && locale !== config?.defaultLocale)
                 throw createError({ statusCode: 404, message: `Locale [${locale}] not found in site [${siteCode}] config`, statusMessage:'Not Found' });
 
             const siteName = await getSiteDefinedName({ ...ctx, locale, config });
 
-            const respCtx = { ...ctx, locale, config, siteName, defaultLocale: config.defaultLocale, host };
+            await cleanStorage();
+            const respCtx = { ...ctx, locale, config, siteName, defaultLocale: config.defaultLocale };
 
-
+            await useStorage('context').setItem(host, respCtx);
             return  respCtx;
 
-            function isValidLocale(locale){
-                const { locales } = useRuntimeConfig().public;
-                const   languages = locales.map(l => l.language);
-            
-                return languages.includes(locale);
+            async function cleanStorage(){
+                const keys = await useStorage('db').getKeys();
+
+                for(let key of keys)
+                    if(key.includes('nitro:handlers:_:undefined'))
+                        await useStorage('db').removeItem(key);
             }
         }
         catch (e) {
@@ -31,3 +32,10 @@ export default defineEventHandler(async (event) => {
         }
     }
 );
+
+function isValidLocale(locale){
+    const { locales } = useRuntimeConfig().public;
+    const   languages = locales.map(l => l.language);
+
+    return languages.includes(locale);
+}

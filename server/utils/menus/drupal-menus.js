@@ -196,10 +196,9 @@ function formatMenus(menuData){
 function splitClasses(menus){
 
     for (const aMenu of menus){
-        if(Array.isArray(aMenu.class))              aMenu.class = aMenu.class[0].split(' ').filter(Boolean);
+        if(Array.isArray(aMenu.class)) aMenu.class = aMenu.class[0].split(' ');
         if(Array.isArray(aMenu['machine-name']))    aMenu.machineName = aMenu['machine-name'][0];
-        if(Array.isArray(aMenu.target))             aMenu.target = aMenu.target[0];
-
+        if(Array.isArray(aMenu.target))          aMenu.target = aMenu.target[0];
         delete(aMenu['machine-name']) ;
         addContentTypeId(aMenu);
     }
@@ -209,8 +208,7 @@ function splitClasses(menus){
 const typeMapIds = { news:2, event:3, 'learning-resource':4, project:5, 'basic-page':6, 'government-ministry-or-institute':8, ecosystem:9, 'protected-area':10, 'biodiversity-data':11, document:12, 'related-website':13, other:15, 'image-or-video':16 };
 
 function addContentTypeId(aMenu){
-    const contentType = aMenu?.class?.find((c)=> c.startsWith('bl2-content-type-') || c.startsWith('mm-content-type-'));
-    
+    const contentType = aMenu?.class?.find((c)=> c.startsWith('bl2-content-type-') || c.startsWith('mm-content-type-'))
     if(!contentType) return aMenu;
 
     const contentTypeName = contentType.replace('bl2-content-type-', '').replace('mm-content-type-', '');
@@ -226,11 +224,10 @@ function embedChildren(menus, menusClone){
         index++
         const children = [];
 
-        const { title, href, contentTypeId, machineName } = aMenu;
-        if(!Array.isArray(aMenu.crumbs)) aMenu.crumbs = [];
-
-        aMenu.crumbs.push({ title, href, contentTypeId, machineName,index })
-
+        if(Array.isArray(aMenu.crumbs))
+            aMenu.crumbs.push({ title: aMenu.title, href: aMenu.href, index, contentTypeId: aMenu.contentTypeId})
+        else aMenu.crumbs = [{ title: aMenu.title, href: aMenu.href, index, contentTypeId: aMenu.contentTypeId}]
+        
         for (const aMenuClone of menusClone) {
 
             if((aMenuClone.hierarchy.length - aMenu.hierarchy.length) != 1) continue;
@@ -251,7 +248,7 @@ function embedChildren(menus, menusClone){
         children.sort(sortMenus);
 
         aMenu.children = children;
-   
+        
         embedChildren(aMenu.children, menusClone);
     }
 }

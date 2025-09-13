@@ -1,13 +1,14 @@
 <template>
-    <div v-if="sections.length" class="overflow-scroll mm">
+    <div class="overflow-scroll mm">
         <div class="container px-0 cont">
             <div class="row  m-0">
-                <div   v-if="meStore.showEditMenu"  class="alert alert-warning p-0 text-center" role="alert">
-                    <NuxtLink :to="editUrl" role="button" type="button" class="btn btn-dark btn-sm pointer">
+                <div v-if="meStore.showEditMenu" class="position-absolute top-0 end-0 text-end p-1">
+                    <button @click="editMenu" type="button" class="btn btn-outline-secondary btn-sm ">
                         <LazyIcon name="edit" style="margin-top: .3rem;" :size="2"/>
-                    </NuxtLink>
+                    </button>
                 </div>
                 <div  class="menu-section text-wrap position-relative pb-5"  :class="[getGridValue(aMenu)]" v-for="(aMenu,index) in sections" :key="index">
+
                     <section v-if="!isComponent(aMenu)">
                         <LazyPageHeaderMegaMenuHeader :menu="aMenu" />
                         <section v-for="(aChild,j) in aMenu.children" :key="j">
@@ -30,7 +31,6 @@
     import { pascalCase   } from 'change-case';
 
         const {t, locale} = useI18n();
-        const   route    = useRoute();
         const props      = defineProps({ menus: Array });
         const siteStore  = useSiteStore();
         const menuStore  = useMenusStore();
@@ -40,7 +40,6 @@
         const viewport   = useViewport();
         const isMobile   = computed(() => !['lg','xl', 'xxl'].includes(viewport.breakpoint.value));
 
-    
         const sections = computed(() => {
 
                                     if(!props?.menus?.length) return []
@@ -59,15 +58,6 @@
                                     if(totalColumns > maxColumns.value) return menusFiltered.slice(0, maxColumns.value);
 
                                     return menusFiltered;
-        });
-
-
-        const editUrl = computed(()=> {
-            const menuName = sections.value[0].machineName || '';
-
-            if(!menuName) return;
-
-            return `${siteStore.host}/admin/structure/menu/manage/${encodeURIComponent(sections.value[0]?.machineName)}?destination=${encodeURIComponent(route.path)}`
         });
 
         const editMenu = () => {
@@ -158,6 +148,7 @@
     }
 
     function isComponent(aMenu){
+
         return componentName(aMenu);
     }
 
@@ -181,13 +172,13 @@
 
             if(menu?.children?.length) return false;
 
-            
+            const menuStore = useMenusStore();
 
             let contentTypesHasDocuments = false;
 
             for (const aType of getContentTypes(menu)) {
  
-                const hasRecords = menuStore?.getContentType(aType,locale)?.data?.length;
+                const hasRecords = menuStore?.getContentType(aType,undefined,locale)?.data?.length;
 
                 if(hasRecords) contentTypesHasDocuments = true;
             }
@@ -265,21 +256,13 @@
         return true;
     }
     function Forums(){
-
-        return siteStore?.theme?.megaMenu?.forums? !menuStore?.forums?.length  : 3;
+        return !menuStore?.forums?.length
     }
     function hasCountry(){
         const   siteStore   = useSiteStore();
 
         return siteStore?.countries?.length || siteStore?.country;
     }
-
-    // const comps=[]
-    //     for (const aMenu of sections.value) {
-    //         if(isComponent(aMenu)) comps.push(componentName(aMenu));
-    //     }
-
-    //     consola.error(comps)
 </script>
 
 <style lang="scss" scoped>

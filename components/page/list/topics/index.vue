@@ -1,25 +1,22 @@
 <template>
     <div class="container mt-1">
         <div class="row">
-            <div class="col-md-3 ps-0">
-                <!-- <LazyPageListTextSearch class="mb-1"/> -->
+            <div class="col-md-3">
+                <LazyPageListTextSearch class="mb-1"/>
             </div>
             <div class="col-12 col-md-9 px-0">
-                <LazyPageBreadCrumbs :count="results?.topics?.length+results?.children?.length"/>
+                <LazyPageBreadCrumbs :count="results?.topics?.length"/>
             </div>
             <div class="col-12 col-md-3 ps-0" >
                 <h2 :style="primaryColorStyle" class="page-type mb-1">{{results?.name}}</h2>
             </div>
-            
+            <LazySpinner v-if="loading" :size="75"/>
             <ClientOnly >
                 <div name="list" tag="div" class="col-12 col-md-9 data-body">
-                    <LazySpinner v-if="loading" :size="75"/>
                     <div>
                         <div v-html="htmlSanitize(results?.description?.value)"></div>
                     </div>
                     <transition-group name="list">
-                        <LazyPageListForumsRow  :a-line="aChild" v-for="(aChild,i) in results?.children" :key="i" />
-                        <hr v-if="results?.children?.length">
                         <LazyPageListTopicsRow  :a-line="aLine" v-for="(aLine,index) in results?.topics" :key="index" />
                         <span :key="`showTopPage${showTopPager}${results?.topics?.count}-span`">&nbsp;</span>
                     </transition-group>
@@ -29,13 +26,11 @@
                         <div v-html="htmlSanitize(results?.description?.value)"></div>
                     </div>
                     <div name="list" tag="div" class="col-12 col-md-9 data-body">
-                        <LazyPageListForumsRow  :a-line="aChild" v-for="(aChild,i) in results?.children" :key="i" />
-                        <hr v-if="results?.children?.length">
                         <LazyPageListTopicsRow  :a-line="aLine" v-for="(aLine,index) in results?.topics" :key="index" />
                     </div>
                 </template>
             </ClientOnly>
- 
+
 
             <div class="col-12 col-md-9 offset-md-3 ">
                 <LazyPageListPager :count="results?.count"/>
@@ -47,7 +42,6 @@
 <script setup>
     import clone from 'lodash.clonedeep';
 
-    const   getCachedData               = useGetCachedData();
     const   pageStore                   = usePageStore();
     const   route                       = useRoute();
     const   siteStore                   = useSiteStore();
@@ -66,11 +60,9 @@
     const rowsPerPage   = computed(() => route?.query?.rowsPerPage? route?.query?.rowsPerPage : 10);
     const query         = clone({ ...route.query, ...siteStore.params, freeText, page, rowsPerPage });
 
-
-    const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query, onResponse, key: 'topics-list', getCachedData });
+    const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query, onResponse });
 
     function onResponse({ request, response }){
-
         response._data =response._data[0] || {}
     }
 
@@ -78,7 +70,7 @@
 
     onMounted(() => { eventBus.on('changePage', refresh); });
 
-    function getApiUri(){ return `/api/forums/${encodeURIComponent(pageStore.page?.drupalInternalTid)}`; }
+    function getApiUri(){ return `/api/forums/${encodeURIComponent(route.params[1])}`; }
 </script>
 
 <style scoped>

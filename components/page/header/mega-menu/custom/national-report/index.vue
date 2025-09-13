@@ -1,20 +1,14 @@
 <template>
     <div class="col-12 text-wrap px-0">
-        <LazyPageHeaderMegaMenuCustomNationalReportList v-if="!showNrSix" :menu="passedMenu"/>
-        <LazyPageHeaderMegaMenuCustomNationalReportSix v-if="showNrSix" :menu="passedMenu"/>
+        <LazyPageHeaderMegaMenuCustomNationalReportList v-if="!showNrSix"/>
+        <LazyPageHeaderMegaMenuCustomNationalReportSix v-if="showNrSix"/>
 
     </div>
 </template>
 
 <script setup >
-
-
     const menusStore   = useMenusStore();
     const siteStore    = useSiteStore();
-    const   props              = defineProps({ menu: Object });
-    const { menu: passedMenu } = toRefs(props);
-
-
     const menus        = computed(() => menusStore.nrSix);
     const countries    = computed(() => Object.keys(menus.value));
     const nrSixData    = computed(() => unref(menus)[siteStore.config.country] || []);
