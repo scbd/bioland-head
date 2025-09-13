@@ -91,7 +91,6 @@
                 <div class="col-12 col-md-9">
                     <LazySwiperGbf :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
                 </div>
-            </div>
 
     </div>
     
