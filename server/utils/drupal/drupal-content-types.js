@@ -16,7 +16,7 @@ async function getContentMenus (ctx, drupalInternalId) {
     const method         = 'get';
     const headers        = { 'Content-Type': 'application/json' };
 
-    consola.error(uri)
+    // consola.error(uri)
     const { data, meta } = await $fetch(uri, $fetchBaseOptions({ method, headers }));
 
     return { data: data?.map(mapThumbNails(ctx)), count: meta?.count }

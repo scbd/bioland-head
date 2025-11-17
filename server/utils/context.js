@@ -68,7 +68,7 @@ export async function getSiteConfig({  siteCode }){
         const { multiSiteCode, env, dmsm } = useRuntimeConfig().public;
 
         const uri = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}/${encodeURIComponent(siteCode)}`;
-consola.info('--------------------',uri)
+
         return $fetch(uri);
     }catch(e){
         const { multiSiteCode, env, dmsm } = useRuntimeConfig().public;
