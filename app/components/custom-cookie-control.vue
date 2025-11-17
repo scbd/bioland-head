@@ -31,7 +31,7 @@ const {
         moduleOptions,
     } = useCookieControl();
 
-consola.error(moduleOptions)
+
 </script>
 <style scoped>
 
