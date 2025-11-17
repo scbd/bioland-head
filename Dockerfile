@@ -20,7 +20,7 @@ ENV NODE_ENV=production
 
 COPY package.json yarn.lock* .yarnrc.yml ./
 
-RUN yarn install --immutable --mode=skip-build && \
+RUN yarn install --immutable && \
     yarn plugin import workspace-tools || true && \
     (yarn workspaces focus --production nuxt-app || yarn workspaces focus --production || true)
 
@@ -28,6 +28,7 @@ RUN yarn install --immutable --mode=skip-build && \
 FROM base AS build
 
 ENV NODE_ENV=development
+ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends build-essential python3 && \
@@ -35,7 +36,7 @@ RUN apt-get update && \
 
 COPY package.json yarn.lock* .yarnrc.yml ./
 
-RUN yarn install --immutable --mode=skip-build
+RUN yarn install --immutable
 
 COPY . ./
 
@@ -45,6 +46,7 @@ RUN yarn build
 FROM node:24-bookworm-slim AS runner
 
 ENV NODE_ENV=production
+ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 
 WORKDIR /usr/src/app
 
@@ -54,15 +56,15 @@ RUN groupadd --system nodejs && useradd --system --gid nodejs nuxt
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     ca-certificates \
+    build-essential \
+    python3 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=base /usr/bin/dumb-init /usr/bin/dumb-init
 
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/.output ./.output
-
-# Rebuild sharp for the correct platform in the runner stage
-RUN npm rebuild sharp --platform=linux --arch=x64
+COPY --from=build /usr/src/app/node_modules/sharp ./.output/server/node_modules/sharp
 
 ENV PORT=8000
 ENV NUXT_HOST=0.0.0.0
