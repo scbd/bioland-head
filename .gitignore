@@ -30,3 +30,7 @@ cypress*
 .unlighthouse
 outputDir
 .vscode
+.yarn
+.github/*
+!.github/workflows
+!.github/copilot-instructions.md
