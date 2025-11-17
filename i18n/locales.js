@@ -404,7 +404,7 @@ export default[
 ].map((l)=> {
     const { code, name, nativeName } = l;
     const rtlLangs = [ "am","ar","az", "he", "fa", "ur", 'mv', 'ku' ];
-    const file = `locales/${code}.json`;
+    const file = `${code}.json`;
 
     return { nativeName, file, name, code,  language:code, dir: rtlLangs.includes(code)? 'rtl' : 'ltr'}
 })

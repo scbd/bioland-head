@@ -43,7 +43,7 @@ export default defineNuxtConfig({
       { from: 'vue-final-modal', imports: ['useModal'] }
     ]
   },
-  modules: ['@nuxtjs/leaflet', '@nuxt/devtools', 'nuxt-viewport', '@nuxtjs/i18n', '@pinia/nuxt', // '@pinia-plugin-persistedstate/nuxt',
+  modules: ['@nuxtjs/i18n', '@nuxtjs/leaflet', '@nuxt/devtools', 'nuxt-viewport', '@pinia/nuxt', // '@pinia-plugin-persistedstate/nuxt',
   '@nuxt/image', 'nuxt-delay-hydration', 'nuxt-swiper', 'nuxt-gravatar', 'nuxt-emoji-picker', '@nuxtjs/google-fonts', // '@nuxt/test-utils/module',
   // '@nuxt/scripts',
   '@dargmuesli/nuxt-cookie-control', '@nuxt/scripts'],
@@ -65,17 +65,19 @@ export default defineNuxtConfig({
     locales              ,
     debug                : false,
     baseUrl              : '/en',
-    messages             :{ en },
     defaultLocale        : 'en',
     fallbackLocale       : 'en',
     locale               : 'en',
-    // detectBrowserLanguage : { alwaysRedirect: true, },
+    detectBrowserLanguage: false,
     precompile           : { strictMessage: false, },
     lazy                 : true,
-    langDir              : '',
+    langDir              : 'locales',
     strategy             : "prefix",
-        bundle: {
+    bundle: {
       optimizeTranslationDirective: false,
+    },
+    compilation: {
+      strictMessage: false,
     }
   },
   vite: {

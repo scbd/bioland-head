@@ -3,15 +3,19 @@ export const getThesaurusByKey = defineCachedFunction(async (keysRaw) => {
     if(!keysRaw) return [false];
 try{
     const { gaiaApi }  = useRuntimeConfig().public;
-    const   keys       = Array.isArray(keysRaw)? keysRaw : keysRaw?.includes(',')? keysRaw.split(',') : [keysRaw];
+    const   keys       = Array.isArray(keysRaw)? keysRaw : (typeof keysRaw === 'string' && keysRaw.includes(','))? keysRaw.split(',') : [keysRaw];
     const   promises   = [];
 
     for (const key of keys) {
-        if(key.includes('keywords:634')) continue;
-        const uri = `${gaiaApi}/v2013/thesaurus/terms/${encodeURIComponent(key)}`;
-        const uriNr7 = `${gaiaApi}/v2013/documents/${encodeURIComponent(extractNumberFromKey(key))}?info=true&body=true`;
-        if(key.includes('SDG-GOAL-'))  promises.push(getSdg(key ) )
-        else if(key.includes('ort-nt7')) promises.push($fetch(uriNr7, $fetchBaseOptions({ mode: 'cors' })));
+        // Skip invalid entries (objects, null, undefined, empty strings)
+        if (!key || typeof key === 'object') continue;
+        
+        const keyStr = String(key);
+        if(keyStr.includes('keywords:634')) continue;
+        const uri = `${gaiaApi}/v2013/thesaurus/terms/${encodeURIComponent(keyStr)}`;
+        const uriNr7 = `${gaiaApi}/v2013/documents/${encodeURIComponent(extractNumberFromKey(keyStr))}?info=true&body=true`;
+        if(keyStr.includes('SDG-GOAL-'))  promises.push(getSdg(keyStr ) )
+        else if(keyStr.includes('ort-nt7')) promises.push($fetch(uriNr7, $fetchBaseOptions({ mode: 'cors' })));
         else promises.push($fetch(uri, $fetchBaseOptions({ mode: 'cors' })));
     }
 

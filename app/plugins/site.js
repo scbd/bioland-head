@@ -7,6 +7,7 @@ import clone from 'lodash.clonedeep';
 
 export default defineNuxtPlugin({
     name: 'site',
+    dependsOn: ['i18n:plugin'],
     async setup (nuxtApp){
         const vfm = createVfm();
         
@@ -15,7 +16,17 @@ export default defineNuxtPlugin({
 
         const runTime   = useRuntimeConfig().public;
         const context   = useCookie('context');
-        const locale    = nuxtApp.$i18n.locale;
+        
+        // Safely get locale with fallback
+        let locale;
+        try {
+            const i18n = useI18n();
+            locale = i18n.locale;
+        } catch (e) {
+            // Fallback if i18n is not ready
+            locale = ref('en');
+        }
+        
         const hostName = useRequestURL().hostname;
 
 

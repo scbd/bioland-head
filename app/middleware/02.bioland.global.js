@@ -24,7 +24,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   
   await getMe();
 
-  const   getPage          = useGetPage(nuxtApp.$i18n.locale.value);
+  const locale = nuxtApp.$i18n?.locale?.value || siteStore.locale || 'en';
+  const   getPage          = useGetPage(locale);
   const [ pData, fetch ]   = await Promise.all([getPage(path), getMenus()]);
   const { data: menuData } = fetch || { data: undefined};
 
@@ -55,6 +56,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 }
 
   function isLocaleChange(){
+    if(!nuxtApp.$i18n) return false;
+    
     const { locale } = nuxtApp.$i18n;
 
     if(to.path.startsWith(`/${locale.value}`)) return false;
@@ -67,9 +70,10 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
     if(!isChange) return;
 
-    nuxtApp.$i18n.setLocale(isChange)
-
-    await nuxtApp.$i18n.waitForPendingLocaleChange()
+    if(nuxtApp.$i18n) {
+      nuxtApp.$i18n.setLocale(isChange)
+      await nuxtApp.$i18n.waitForPendingLocaleChange()
+    }
   }
   
   async function getMenus(){
