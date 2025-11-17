@@ -105,32 +105,87 @@ function isInCountry(countries, country, doc){
 
 function mapThumbNails(ctx){
     return (document)=>{
+      const isArray = Array.isArray(document?.field_attachments);
+      const attachments = isArray
+        ? document?.field_attachments?.filter(
+            ({ type }) => type === "media--image"
+          )
+        : [];
+      const hasAttachments = attachments?.length > 0;
 
-        const isArray        = Array.isArray(document?.field_attachments)
-        const attachments    = isArray? document?.field_attachments?.filter(({ type })=> type === 'media--image') : []
-        const hasAttachments = attachments?.length > 0;
+      document.thumb = "/images/no-image.png";
 
-        document.thumb  = '/images/no-image.png';
+      const {
+        drupal_internal__nid,
+        langcode,
+        thumb,
+        title,
+        path,
+        created,
+        changed,
+        field_start_date,
+        field_published,
+        field_tags,
+        field_type_placement,
+      } = document;
 
-        const {  drupal_internal__nid, langcode, thumb, title, path, created, changed, field_start_date, field_published, field_tags, field_type_placement } = document;
+      const startDate = field_start_date || "";
+      const published = field_published || "";
+      // Example in your code context:
+      const tags       = field_tags && typeof field_tags === 'string' ? field_tags.split(',') : [];
+      const hasAlias   = path?.alias && mapLocaleFromDrupal(path.langcode) === ctx.locale;
+      const localePath = ctx.locale === ctx.defaultLocale ? "" : `/${ctx.locale}`;
 
-        const startDate  = field_start_date || '';
-        const published  = field_published || '';
-        const tags       = field_tags? field_tags.split(',') : [];
-        const hasAlias   = path?.alias && mapLocaleFromDrupal(path.langcode) === ctx.locale;
-        const localePath = ctx.locale === ctx.defaultLocale? '' : `/${ctx.locale}`;
+      const href = hasAlias
+        ? `${localePath}${path.alias}`
+        : `${localePath}/node/${drupal_internal__nid}`;
 
-        const href       = hasAlias? `${localePath}${path.alias}` : `${localePath}/node/${drupal_internal__nid}`;
+      if (!hasAttachments)
+        return {
+          langcode,
+          thumb,
+          title,
+          href,
+          created,
+          changed,
+          startDate,
+          published,
+          tags,
+          contentTypeId: field_type_placement?.drupal_internal__tid,
+          nid: drupal_internal__nid,
+        };
 
-        if(!hasAttachments) return { langcode, thumb, title, href, created, changed, startDate, published, tags, contentTypeId:field_type_placement?.drupal_internal__tid, nid:drupal_internal__nid  };
+      const { uri } = attachments[0]?.field_media_image || {};
 
-        const { uri } = attachments[0]?.field_media_image || {};
+      if (!uri)
+        return {
+          langcode,
+          thumb,
+          title,
+          href,
+          created,
+          changed,
+          startDate,
+          published,
+          tags,
+          nid: drupal_internal__nid,
+          contentTypeId: field_type_placement?.drupal_internal__tid,
+        };
 
-        if(!uri) return { langcode, thumb, title, href, created, changed, startDate, published, tags , nid:drupal_internal__nid , contentTypeId:field_type_placement?.drupal_internal__tid };
+      document.thumb = `${ctx.host}${uri.url}`;
 
-        document.thumb  = `${ctx.host}${uri.url}`
-
-        return { thumb:document.thumb, title, href, created, changed, startDate, published, tags, nid:drupal_internal__nid, contentTypeId:field_type_placement?.drupal_internal__tid  };
+      return {
+        thumb: document.thumb,
+        title,
+        href,
+        created,
+        changed,
+        startDate,
+        published,
+        tags,
+        nid: drupal_internal__nid,
+        contentTypeId: field_type_placement?.drupal_internal__tid,
+      };
     }
 }
 
