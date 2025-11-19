@@ -23,8 +23,8 @@
                         :arrows="true"
                         :leftArrow="true"
                         :hideArrowsCount="3"
-                        :schemas="[15,48,43,16,6]" 
-                        :title="$t('Resources')"
+                        :schemas="[2,3, 49]"
+                        :title="$t('Latest News & Updates')"
                     />
 
                     <SwiperContentType
@@ -32,9 +32,11 @@
                         :arrows="true"
                         :leftArrow="true"
                         :hideArrowsCount="3"
-                        :schemas="[2,3, 49]"
-                        :title="$t('Latest News & Updates')"
+                        :schemas="[15,48,43,16,6]" 
+                        :title="$t('Resources')"
                     />
+
+
 
             </div>
 
