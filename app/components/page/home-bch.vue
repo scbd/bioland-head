@@ -7,7 +7,7 @@
             </div>
         </div>
         <div class="row my-4">
-            <div   class="col-md-9 col-12 border-col">
+            <div   class="col-12 border-col">
 
                     <SwiperContentType
                         :pagination="true"
@@ -38,9 +38,6 @@
 
             </div>
 
-            <div   class="col-md-3 col-12 border-col">
-                <WidgetContentTypesStats/>
-            </div>
         </div>
     </div>
 
