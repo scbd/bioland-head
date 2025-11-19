@@ -179,11 +179,11 @@ function mapData(ctx){
                     media.path = p;
             }))
             if(media.field_tags || media.fieldTags)
-                promises.push(getThesaurusByKey(media.field_tags || media.fieldTags).then((p)=>{ media.tags =mapTagsByType(p) ;}));
+                promises.push(getThesaurusByKey(media?.field_tags?.value || media?.fieldTags?.value).then((p)=>{ media.tags =mapTagsByType(p) ;}));
         }
 
-        if(document.field_tags || document.fieldTags)
-            promises.push(getThesaurusByKey(document.field_tags || document.fieldTags).then((p)=>{ document.tags =mapTagsByType(p) ;}));
+        if(document.field_tags?.value || document.fieldTags?.value)
+            promises.push(getThesaurusByKey(document.field_tags?.value || document.fieldTags?.value).then((p)=>{ document.tags =mapTagsByType(p) ;}));
 
         await Promise.all(promises);
 
