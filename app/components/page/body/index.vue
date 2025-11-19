@@ -24,6 +24,7 @@
                             </button>
                         </div>
                     </ClientOnly>
+
                     <NuxtLink v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  :to="localePath(pageStore?.image?.url)">
                         <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid w-100"/>
                     </NuxtLink>
@@ -49,6 +50,7 @@
                     </div>
                     <LazyPageBodyTagsDate class="mt-2" />
                 </div>
+
                 <div class="d-md-flex"  >
                     <div v-if="!isImageOrVideo" class="d-md-none align-self-start" > 
                         <LazyPageBodyTagsDate /> 
@@ -57,11 +59,9 @@
                         <div v-if="!isImageOrVideo"class="d-none d-md-block" > 
                             <LazyPageBodyTagsDate /> 
                         </div>
-                        <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="htmlSanitize(pageStore?.body)"></div>
+                        <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="sanitizedBody"></div>
                     </div>
-
                 </div>
-
             </div>
 
             <div class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
@@ -109,20 +109,19 @@
             </div>
 
     </div>
-    
 
 </template>
 <script setup>
-
-
-    const { t }        = useI18n();
+    const { t, locale }        = useI18n();
     const   localePath = useLocalePath();
     const   meStore    = useMeStore();
     const   pageStore  = usePageStore();
     const   siteStore  = useSiteStore();
 
-    const isImageOrVideo = computed(()=> pageStore?.isImageOrVideo);
-    const isDocument     = computed(()=> pageStore?.isDocument );
+    const   sanitizedBody  = ref(htmlSanitize(pageStore?.body));
+    const   hasBchEmbedEl  = computed(()=> hasBchEmbed(sanitizedBody.value));
+    const   isImageOrVideo = computed(()=> pageStore?.isImageOrVideo);
+    const   isDocument     = computed(()=> pageStore?.isDocument );
 
     const { pageTypeStyle } = useTheme();
 
@@ -136,6 +135,12 @@
 
         navigateTo(`${siteStore.host}/node/${pageStore?.page?.drupalInternalNid}/edit#edit-field-attachments-wrapper`,{ external: true });
     }
+
+    onMounted( async () => {
+        if(!hasBchEmbedEl.value) return;
+
+        sanitizedBody.value = parseBchEmbeds(sanitizedBody.value, locale.value  );
+    })
 
 </script>
 <style>
