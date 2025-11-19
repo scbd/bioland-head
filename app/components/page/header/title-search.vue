@@ -60,7 +60,7 @@
                         <span class="w-500">{{t('Cartagena Protocol on Biosafety')}}</span><br/>
                     </NuxtLink>
                     <NuxtLink class="navbar-subbrand" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int/" :alt="t('Clearing House Mechanism')" >
-                        <span class="fw-lighter">{{t('National Clearing House Portal')}}</span>
+                        <span class="fw-lighter">{{t('National Biosafety Clearing-House')}}</span>
                     </NuxtLink>
                 </span>
             </div>
@@ -110,7 +110,7 @@
                         <span class="fs-5 fw-lighter">{{t('Cartagena Protocol on Biosafety')}} &nbsp;</span>
                     </NuxtLink>
                     <NuxtLink v-if="isBiosafetySite" class="navbar-subbrand" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int/" :alt="t('Clearing House Mechanism')" >
-                        <span class="fs-5 fw-lighter text-nowrap">{{t('National Clearing House Portal')}}</span>
+                        <span class="fs-5 fw-lighter text-nowrap">{{t('National Biosafety Clearing-House')}}</span>
                     </NuxtLink>
                 </span>
                 
