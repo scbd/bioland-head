@@ -55,8 +55,8 @@
                                         <LazyIcon name="lock" color="#000000" :size="1.5" class="me-1"/> {{t('Logout')}}
                                     </a>
 
-                                    <button v-if="meStore.showEditMenu" class="nav-link text-black" @click="meStore.toggleEditMode()">
-                                            <LazyIcon name="edit" color="#000000" :size="1" class="me-1"/> {{t('Edit Mode')}}
+                                    <button v-if="meStore.canEditMenu" class="nav-link text-black" @click="meStore.toggleEditMode()">
+                                            <LazyIcon :name="meStore.editMode? 'toggle-on' : 'toggle-off'" color="#000000" :size="1" class="me-1"/> {{t('Edit Mode')}}
                                     </button>
 
                                 </div>
