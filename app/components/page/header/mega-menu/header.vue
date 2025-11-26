@@ -32,7 +32,7 @@
 .mm-arrow, .arrow{
     position: absolute;
     transition: 0.3s;
-    right: -2em;
+    right: -1.75rem;
     bottom: 0.1rem;
     width       : 1em;
     height      : 1em;
@@ -45,5 +45,7 @@
 .mm-main-nav-sub-heading > h4,
 .main-nav-sub-heading > h4{
     margin-right: 2rem;
+    
+    font-size: 1.35rem;
 }
 </style>

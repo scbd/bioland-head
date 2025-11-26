@@ -4,15 +4,23 @@
         <LazyPageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menu.dataMap" >
             <Transition :name="slotProps.fadeName">
                 <section v-if="slotProps.hide">
-                    <div :class="{ 'd-flex justify-content-between':isCardView}">
-                        <section v-for="(aChild,j) in menu.dataMap[slotProps.country]" :key="j">
+                    <div :class="cardContainerClasses" class="align-self-stretch">
+                        <section v-for="(aChild,j) in menu.dataMap[slotProps.country]" :key="j" :style="cardSectionStyle">
 
                             <LazyPageHeaderMegaMenuLink v-if="!isHeader(aChild)" :type="getContentType()" :show-thumbs="menu.class?.includes('bl2-show-thumbs')" :show-cards="isCardView"  :menu="aChild" />
                             <LazyPageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
 
-                            <LazyPageHeaderMegaMenuLink v-if="isFinalLink(aChild)"  :menu="aChild" />
-
                         </section>
+                    </div>
+
+                    <div v-if="menu.finalLink" class="content-type__final-link">
+                        <LazyPageHeaderMegaMenuLink
+                            :menu="menu.finalLink"
+                            :type="getContentType()"
+                            :show-thumbs="false"
+                            :show-cards="false"
+                            :hide-final="menu.finalLink.hide"
+                        />
                     </div>
                 </section>
             </Transition>
@@ -20,7 +28,7 @@
 </template>
 
 <script setup>
-    import   clone           from 'lodash.clonedeep';
+    import clone from 'lodash.clonedeep';
     
     const  { t, locale }       = useI18n();
     const   localePath         = useLocalePath();
@@ -29,32 +37,73 @@
     const   menuStore          = useMenusStore();
     const   isFinalLink        = (aMenu)=> unref(aMenu)?.class?.includes('main-nav-final-link') || unref(aMenu)?.class?.includes('mm-main-nav-final-link');
     const   hasFinalLink       = computed(()=> unref(passedMenu)?.children?.find(aMenu => isFinalLink(aMenu)));
+    const   finalLink          = computed(()=> {
+        const existing = unref(hasFinalLink);
+
+        if(existing)
+            return clone(existing);
+
+        return getDefaultFinalLink();
+    });
     const   viewport           = useViewport();
     const   siteStore          = useSiteStore();
 
 
     function getDefaultFinalLink(){
         const   contentTypeName         = getContentType();
-        const { count, slug } = menuStore.getContentType(contentTypeName,unref(locale))
+        const   contentType             = menuStore.getContentType(contentTypeName,unref(locale));
+
+        if(!contentType) return null;
+
+        const { count, slug } = contentType;
+        const hide = count === contentType?.data?.length;
 
         return {
             title: t(`View more`),
             href:  `${slug}`,
             class: ['main-nav-final-link'],
             target: ['_self'],
-            count
+            count, hide
         }
     }
 
     const isCardView = computed(()=> {
         const isXl         = ['xl', 'xxl'].includes(viewport.breakpoint.value);
         const isShowThumbs = unref(passedMenu).class.includes('bl2-show-thumbs')
-        
-        if(unref(passedMenu).class.includes('bl2-2x') && isShowThumbs) return true;
+        const isCardGeneral = unref(passedMenu).class.includes('bl2-2x') || unref(passedMenu).class.includes('bl2-3x') || unref(passedMenu).class.includes('bl2-4x') || unref(passedMenu).class.includes('bl2-5x');
+        const isXlCard       = unref(passedMenu).class.includes('bl2-2x-xl') || unref(passedMenu).class.includes('bl2-3x-xl') || unref(passedMenu).class.includes('bl2-4x-xl') || unref(passedMenu).class.includes('bl2-5x-xl');    
+        if(isCardGeneral  && isShowThumbs) return true;
 
-        if(unref(passedMenu).class.includes('bl2-2x-xl') && isXl && isShowThumbs) return true;
+        if(isXlCard  && isXl && isShowThumbs) return true;
 
         return false
+    });
+
+    const horizontalCardLimit = computed(()=> {
+        const configuredLimit = Number(siteStore?.config?.runTime?.theme?.megaMenu?.horizontalCardMax);
+
+        if(Number.isFinite(configuredLimit) && configuredLimit > 0)
+            return configuredLimit;
+
+        return 4;
+    });
+
+    const cardContainerClasses = computed(()=> {
+        if(!isCardView.value) return null;
+
+        return ['d-flex','justify-content-between','flex-wrap'];
+    });
+
+    const cardSectionStyle = computed(()=> {
+        if(!isCardView.value) return undefined;
+
+        const width = `${(100 / horizontalCardLimit.value).toFixed(4)}%`;
+
+        return {
+            flex: `0 0 ${width}`,
+            maxWidth: width,
+            padding: '0 .5rem 0 .5rem'
+        };
     });
 
     const menu = computed(()=> {
@@ -65,6 +114,7 @@
 
         aMenu.children  = [ ...children ];
         aMenu.dataMap = {};
+        aMenu.finalLink = finalLink.value;
 
         if(!aMenu.href || aMenu.href === '#'){
             const contentType = menuStore.getContentType(getContentType(), unref(locale));
@@ -73,9 +123,6 @@
 
             aMenu.href = localePath(`${contentType.slug}`);
         }
-
-        const horizontalCardMax = siteStore?.config?.runTime?.theme?.megaMenu?.horizontalCardMax
-
         for (const country of countries)
             aMenu.dataMap[country] = getContentTypeData(country)
             // if(!isCardView.value)
@@ -117,17 +164,17 @@
         const contentTypeName = getContentType();
 
         const children    = unref(passedMenu)?.children || [];
+       
         const data        = menuStore.getContentTypeData(contentTypeName,country, locale) || [];
+
         const menuPaths   = unref(passedMenu)?.children?.map(aMenu => aMenu.href) || [];
 
-        const returnData  = [...children, ...data.filter(aMenu => !menuPaths.includes(aMenu.href))]
-        const showDefault = returnData.length > 5;
-        const last        = unref(hasFinalLink)? [unref(hasFinalLink)] : showDefault? [getDefaultFinalLink(country)] : [];
-        const horizontalCardMax = siteStore?.config?.runTime?.theme?.megaMenu?.horizontalCardMax
+        const returnData        = [...children, ...data.filter(aMenu => !menuPaths.includes(aMenu.href))]
 
-        if(!isCardView.value)
-            return [...returnData.slice(0,getMaxRowsPerColumn() || 6), ...last]
+        if(!isCardView.value && getMaxRowsPerColumn())
+            return returnData.slice(0,getMaxRowsPerColumn());
 
-        return [...returnData.slice(0,horizontalCardMax), ...last]
+        return returnData;
     }
+
 </script>

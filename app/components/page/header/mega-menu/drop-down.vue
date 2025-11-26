@@ -1,27 +1,43 @@
 <template>
-    <div v-if="sections.length" class="debug overflow-scroll mm">
-        <div class="container px-0 cont ">
-            <div class="row  m-0">
+    <div v-if="sectionRows.length" class="overflow-scroll mm">
+        <div class="container px-0 cont">
+            <div class="row  m-0 ">
                 <div   v-if="meStore.showEditMenu"  class="alert alert-warning p-0 text-center" role="alert">
                     <NuxtLink :to="editUrl" role="button" type="button" class="btn btn-dark btn-sm pointer">
                         <LazyIcon name="edit" style="margin-top: .3rem;" :size="2"/>
                     </NuxtLink>
                 </div>
-                <div  class="menu-section text-wrap position-relative pb-5"  :class="[getGridValue(aMenu)]" v-for="(aMenu,index) in sections" :key="index">
-                    <section v-if="!isComponent(aMenu)">
-                        <LazyPageHeaderMegaMenuHeader :menu="aMenu" />
-                        <section v-for="(aChild,j) in aMenu.children" :key="j">
-                            <LazyPageHeaderMegaMenuLink v-if="!isHeader(aChild)"  :show-thumbs="showThumbs(aMenu)" :menu="aChild" />
-                            <LazyPageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
-                        </section>
-                    </section>
+                <div class="w-100 d-flex flex-column">
+                    <div
+                        v-for="(row, rowIndex) in sectionRows"
+                        :key="`row-${rowIndex}`"
+                        class="d-flex w-100 px-0 align-items-stretch mm-row"
+                    >
+                        <div
+                            class="menu-section text-wrap d-flex flex-column"
+                            v-for="(aMenu,index) in row"
+                            :key="`row-${rowIndex}-menu-${index}`"
+                            :class="getSectionScaleClasses(aMenu)"
+                        >
+                            <div class="position-relative flex-fill d-flex flex-column">
+                                <section v-if="!isComponent(aMenu)" class="d-flex flex-column flex-fill">
+                                    <LazyPageHeaderMegaMenuHeader :menu="aMenu" />
 
-                    <section v-if="isComponent(aMenu)" >
-                        <LazyPageHeaderMegaMenuCustom :is="componentName(aMenu)" :menu="aMenu" />
-                    </section>
+                                    <div class="flex-fill d-flex flex-column">
+                                        <section v-for="(aChild,j) in aMenu.children" :key="j">
+                                            <LazyPageHeaderMegaMenuLink v-if="!isHeader(aChild)"  :show-thumbs="showThumbs(aMenu)" :menu="aChild" :hide-final="aChild.count===aMenu.children.length"/>
+                                            <LazyPageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
+                                        </section>
+                                    </div>
+                                </section>
 
+                                <div v-if="isComponent(aMenu)" class="h-100 position-relative d-flex flex-column">
+                                    <LazyPageHeaderMegaMenuCustom :is="componentName(aMenu)" :menu="aMenu" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
             </div>
         </div>
     </div>
@@ -45,25 +61,45 @@
 
                                     if(!props?.menus?.length) return []
 
-                                    const menusFiltered = [];
-                                    let   totalColumns = 0;
-                                    for (let index = 0; index < props?.menus?.length; index++) {
-                                        if(hasMaxColumns(totalColumns, props?.menus[index+1])) continue;
-                                        if(isEmptySection(props?.menus[index])) continue;
+                                    return props.menus.filter((menu) => !isEmptySection(menu));
+        });
 
-                                        menusFiltered.push(props?.menus[index]);
+        const sectionRows = computed(() => {
 
-                                        isDoubleCol(props?.menus[index])? totalColumns += 2 : totalColumns += 1;
+                                    if(!sections.value.length) return [];
+
+                                    const rows = [];
+                                    const columnCap = Math.max(1, Number(maxColumns.value) || 1);
+                                    let currentRow = [];
+                                    let currentColumns = 0;
+
+                                    for (const aMenu of sections.value) {
+                                        const span = Math.min(getMenuColumnSpan(aMenu), columnCap);
+
+                                        if(currentRow.length && currentColumns + span > columnCap) {
+                                            rows.push(currentRow);
+                                            currentRow = [];
+                                            currentColumns = 0;
+                                        }
+
+                                        currentRow.push(aMenu);
+                                        currentColumns += span;
+
+                                        if(currentColumns >= columnCap) {
+                                            rows.push(currentRow);
+                                            currentRow = [];
+                                            currentColumns = 0;
+                                        }
                                     }
 
-                                    if(totalColumns > maxColumns.value) return menusFiltered.slice(0, maxColumns.value);
+                                    if(currentRow.length) rows.push(currentRow);
 
-                                    return menusFiltered;
+                                    return rows;
         });
 
 
         const editUrl = computed(()=> {
-            const menuName = sections.value[0].machineName || '';
+            const menuName = sections.value[0]?.machineName || '';
 
             if(!menuName) return;
 
@@ -71,23 +107,12 @@
         });
 
         const editMenu = () => {
-            const menuName = sections.value[0].machineName || '';
+            const menuName = sections.value[0]?.machineName || '';
 
             if(!menuName) return;
 
             navigateTo(`${siteStore.host}/admin/structure/menu/manage/${encodeURIComponent(menuName)}`,{ external: true });
 
-        }
-
-        function hasMaxColumns(totalColumns, nextMenu = {}){
-
-            if(totalColumns > maxColumns.value) return true;
-
-            const nextTotalColumns = totalColumns + (isDoubleCol(nextMenu)? 2 : 1);
-
-            if(nextTotalColumns > maxColumns.value) return true;
-
-            return false
         }
 
         function hasDoubleCol(){
@@ -106,29 +131,17 @@
         }
 
         function isDoubleCol(aMenu){
-            const isXl = ['xl', 'xxl'].includes(viewport?.breakpoint?.value);
-
-            if(aMenu?.class?.includes('bl2-2x')) return true;
-
-            if(aMenu?.class?.includes('bl2-2x-xl') && isXl) return true;
-
-            return false;
+            return getMenuColumnSpan(aMenu) >= 2;
         }
 
-        const lengthColSizeMap = { 1: 12, 2: 6, 3: 4, 4: 3, 5: 2 }
+        function getMenuColumnSpan(aMenu){
+            const scaleClasses = getSectionScaleClasses(aMenu);
 
-        function getGridValue(aMenu){
-            if(unref(isMobile)) return 'col-12';
+            if(scaleClasses.includes('bl2-4x')) return 4;
+            if(scaleClasses.includes('bl2-3x')) return 3;
+            if(scaleClasses.includes('bl2-2x')) return 2;
 
-            const numberOfCols  =  hasDoubleCol()? unref(sections).length +1 : unref(sections).length;
-
-            const isDouble      = isDoubleCol(aMenu);
-            const multiplier    =  numberOfCols == 5? 3 : 2
-            const colSize       =  isDouble? lengthColSizeMap[numberOfCols] * multiplier : lengthColSizeMap[numberOfCols];
-
-            if(hasTwoDoubleCol()) return isDouble?  'col-5' : 'col';
-
-            return `col-${colSize}`;
+            return 1;
         }
 
 
@@ -173,6 +186,28 @@
         return contentTypeClasses.map((aType)=> getContentTypeFromClass(aType, drupalMultisiteIdentifier));
     }
 
+    function getSectionScaleClasses(aMenu){
+        if(!Array.isArray(aMenu?.class)) return [];
+
+        const baseClasses = ['bl2-2x', 'bl2-3x', 'bl2-4x'];
+        const xlOnlyClassesMap = {
+            'bl2-2x-xl': 'bl2-2x',
+            'bl2-3x-xl': 'bl2-3x',
+            'bl2-4x-xl': 'bl2-4x'
+        };
+        const isXlViewport = ['xl', 'xxl'].includes(viewport?.breakpoint?.value);
+
+        const classes = new Set();
+
+        for (const className of aMenu.class) {
+            if(baseClasses.includes(className)) classes.add(className);
+
+            if(isXlViewport && xlOnlyClassesMap[className]) classes.add(xlOnlyClassesMap[className]);
+        }
+
+        return Array.from(classes);
+    }
+
     function isComponent(aMenu){
         return componentName(aMenu);
     }
@@ -199,8 +234,6 @@
             if(menu?.children?.length) return false;
 
             let contentTypesHasDocuments = false;
-
-
 
             if( getContentTypes(menu)?.length) 
                 for (const aType of getContentTypes(menu)) {
@@ -301,15 +334,28 @@
 </script>
 
 <style lang="scss" scoped>
+
 @import "@/assets/scss/variables.scss";
 
+.debug{
+    border: 1px solid red;
+}
 .menu-section{
+    padding: 0 1.5rem 3rem 1rem;
     border-right: 2px solid rgb(0, 0, 0, .2);
     margin-bottom: 1rem;
+    flex: 1 1 0; // same width everywhere
+    min-width: 0;
+    overflow: hidden;
 }
+.menu-section.bl2-2x { flex: 2 1 0; }
+.menu-section.bl2-3x { flex: 3 1 0; }
+.menu-section.bl2-4x { flex: 4 1 0; }
+
 .menu-section:last-child{
     border-right: none;
 }
+
 .mm{
     position: absolute;
     padding: 1rem 0 1rem 0;
@@ -321,7 +367,7 @@
     --fadeDown-distance: -1rem;
     animation: fadeDown .25s;
     z-index:10000;
-
+    min-height: 400px;
 }
 
 :root {
@@ -356,6 +402,9 @@
         transition: all 0.4s cubic-bezier(1, 0.5, 0.8, 1);
         width: 100%;
         height:100%;
+    }
+    .mm-row{
+        flex-direction: column;
     }
     .menu-section{
         border-right: none;
