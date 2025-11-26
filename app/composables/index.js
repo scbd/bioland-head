@@ -73,7 +73,8 @@ export const useGetPage = () => {
         
             if(key.value?.includes('undefined'))  throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value} ${key.value}` }) 
 
-                const options =  process.server? {  method: 'GET', headers, query: clone({ ...siteStore.params, path:path.value }) } : {  method: 'GET', query: clone({ ...siteStore.params, path:path.value }) };
+                const queryParams = clone({ ...siteStore.params, path:path.value });
+                const options =  process.server? {  method: 'GET', headers, query: queryParams } : {  method: 'GET', query: queryParams };
                 const  data   = await $fetch(`/api/page/${encodeURIComponent(key.value)}/${encodeURIComponent(path.value)}`,options)//.then(({ data }) => data);
 
             return data;

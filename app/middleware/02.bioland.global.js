@@ -79,8 +79,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   async function getMenus(){
     if(menuStore.isLoaded || !context.value) return undefined;
 
-    
-    return useFetch(`/api/menus`, { query: clone({...siteStore.params, path:to.path})})
+    return useFetch(`/api/menus`, { query: clone({ ...siteStore.params, path:to.path })});
   }
 
   async function getMe(){
