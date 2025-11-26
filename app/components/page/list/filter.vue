@@ -33,16 +33,16 @@
     const initValue = route?.query?.schemas? Array.isArray(route?.query?.schemas)? route.query.schemas : [route?.query?.schemas] : [];
     const selected  = ref(initValue.map((x)=>Number(x)));
 
-    function sortObj([x,a],[y,b]){
-        const nameA = a.name.toUpperCase(); 
-        const nameB = b.name.toUpperCase();
+    // function sortObj([x,a],[y,b]){
+    //     const nameA = a.name.toUpperCase(); 
+    //     const nameB = b.name.toUpperCase();
 
-        if (nameA < nameB)  return -1;
+    //     if (nameA < nameB)  return -1;
         
-        if (nameA > nameB)  return 1;
+    //     if (nameA > nameB)  return 1;
 
-        return 0;
-    }
+    //     return 0;
+    // }
     watch(() => route.query, (value) => {
         if(value?.schemas?.length) 
             selected.value = Array.isArray(value.schemas)? value.schemas.map((x)=>Number(x)) : [Number(value.schemas)];

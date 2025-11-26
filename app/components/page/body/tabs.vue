@@ -26,13 +26,15 @@
             </li>
             <li  v-if="meStore.isContentManager" class="nav-item ">
                 <NuxtLink :style="getStyleActive()" :to="baseUrl+'/translations'+returnUrl " class="nav-link  text-capitalize" external  >
-                    {{t('Translate')}}
+                    {{t('Translate')}} 
+                </NuxtLink>
+            </li>
+            <li  v-if="(meStore.isSiteManager || meStore.isScbdStaff) && canAutoTranslate " class="nav-item ">
+                <NuxtLink :style="getStyleActive()" :to="baseUrl+'/auto-translate-form'+returnUrl " class="nav-link  text-capitalize" external  >
+                    {{t('Auto Translate')}}
                 </NuxtLink>
             </li>
         </ul>
-        <!-- <div  v-if="!canEdit" class="alert alert-warning" role="alert">
-            A simple warning alert—check it out!
-        </div> -->
     </div>
 
 </template>
@@ -44,20 +46,18 @@
     const   meStore    = useMeStore();
     const   pageStore  = usePageStore();
     const   siteStore  = useSiteStore();
-    // const   props      = defineProps({ canEdit: { type: Boolean, default: false } });
-    // const { canEdit }  = toRefs(props);
+    const   canAutoTranslate = computed(()=> siteStore?.config?.runTime?.theme?.canAutoTranslate);
+
 
     const returnUrl = computed(()=>`?returnUrl=${encodeURIComponent(route.path)}`);
 
     const baseUrl   = computed(()=>siteStore.localizedHost+getUrlComponent());
 
-    // const showSelf = computed(() => pageStore?.isSystemPage? meStore?.showEditSystemPages : meStore?.showEdit)
-
     const isContributor = computed(() => meStore?.roles?.includes('contributor') && meStore?.roles?.length == 1);
 
     const isContributorCanEdit = computed(() => isContributor.value && pageStore?.page?.uid?.meta?.drupal_internal__target_id === meStore?.diuid && !pageStore?.page?.status);
 
-    const cloneUrl = computed(()=>siteStore.localizedHost+`/clone/${pageStore?.page?.drupalInternalNid}/quick_clone`+returnUrl.value);
+    const cloneUrl = computed(()=>siteStore.localizedHost+`/clone/${pageStore?.page?.drupalInternalNid}/quick_clone`);
 
     function getUrlComponent(){
         if(pageStore?.isMediaPage)    return `/media/${pageStore?.page?.drupalInternalMid}`;
@@ -68,10 +68,9 @@
     
     const  editUrl = computed(()=>{
         if(isContributor.value &&  !isContributorCanEdit.value) 
-            return siteStore.localizedHost+'/admin/content/unpublished'+returnUrl.value;
+            return siteStore.localizedHost+'/admin/content/unpublished';
         
-        return baseUrl.value+'/edit'+returnUrl.value; 
-
+        return baseUrl.value+'/edit'; 
     })
 
 

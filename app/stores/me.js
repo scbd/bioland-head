@@ -38,9 +38,14 @@ export const useMeStore = defineStore('me', {
             if(this.isAdmin) return true;
 
             const isStaff = this.email?.includes('@cbd.int') || this.email?.includes('@un.org');
-            const roles = [ "administrator", "site_manager"]
+            const roles = [ "administrator", "site_manager", "scbd_staff"]
 
             return this.isAuthenticated && intersect(this.roles, roles).length && isStaff;
+        },
+        isScbdStaff(){
+            const roles = [ "administrator", "scbd_staff"]
+
+            return this.isAuthenticated && intersect(this.roles, roles).length;
         },
         isAdmin(){
             const roles = [ "administrator"]
@@ -48,22 +53,22 @@ export const useMeStore = defineStore('me', {
             return this.isAuthenticated && intersect(this.roles, roles).length;
         },
         isSiteManager(){
-            const roles = [ "administrator", "site_manager"]
+            const roles = [ "administrator", "site_manager", "scbd_staff"]
 
             return this.isAuthenticated && intersect(this.roles, roles).length;
         },
         isContentManager(){
-            const roles = [ "administrator", "site_manager", "content_manager"]
+            const roles = [ "administrator", "site_manager", "scbd_staff", "content_manager"]
 
             return this.isAuthenticated && intersect(this.roles, roles).length;
         },
         isContributor(){
-            const roles = [ "administrator", "site_manager", "content_manager", "contributor" ]
+            const roles = [ "administrator", "site_manager", "scbd_staff", "content_manager", "contributor" ]
 
             return this.isAuthenticated && intersect(this.roles, roles).length;
         },
         isUser(){
-            const roles = [ "administrator", "site_manager", "content_manager", "contributor", "user" ]
+            const roles = [ "administrator", "site_manager", "scbd_staff", "content_manager", "contributor", "user" ]
 
             return this.isAuthenticated && intersect(this.roles, roles).length;
         },
@@ -82,12 +87,12 @@ export const useMeStore = defineStore('me', {
             return this.isAuthenticated && intersect(this.roles, roles).length;
         },
         canEditMenu(){
-            const roles = [ "administrator", "site_manager", "content_manager"]
+            const roles = [ "administrator", "site_manager", "scbd_staff", "content_manager"]
 
             return this.isAuthenticated && intersect(this.roles, roles).length;
         },
         canEdit(){
-            const roles = [ "administrator", "site_manager", "content_manager", "contributor" ]
+            const roles = [ "administrator", "site_manager", "scbd_staff", "content_manager", "contributor" ]
 
             return this.isAuthenticated && intersect(this.roles,roles).length;
         },
