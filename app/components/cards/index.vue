@@ -1,11 +1,11 @@
 <template>
     <div class="card " >
-        <div v-if="hasOwnImage" :style="backgroundStyles" class="cit bg-light">
-            <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
+        <div v-if="hasOwnImage" :style="backgroundStyles" class="cit ">
+            <NuxtLink :to="goTo"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
         </div>
         <ClientOnly v-if="!hasOwnImage" >
-            <div :style="backgroundStyles" class="cit bg-light">
-                <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
+            <div :style="backgroundStyles" class="cit ">
+                <NuxtLink :to="goTo"   :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
             </div>
         </ClientOnly>
         <div class="card-body mb-1" style="max-height: 300px; overflow:hidden;">
@@ -61,7 +61,11 @@
 </script>
 
 <style lang="scss" scoped>
-.cit{ height: 232px !important; }
+.cit{ 
+    height: 232px !important; 
+    background-color: white;
+
+}
 
 .card {
     width: 350px;

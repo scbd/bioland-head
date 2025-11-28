@@ -26,11 +26,12 @@ export function useTheme(record){
 }
 
 export const defaultImageOptions = { 
-    height : 257     ,
-    width  : 400      ,
-    fit    : 'contain',
-    quality: 60       ,
-    format : [ 'webp', 'avif', 'jpeg', 'jpg', 'png','gif' ]
+    height     : 257     ,
+    width      : 400      ,
+    fit        : 'contain',
+    quality    : 60       ,
+    format     : [ 'webp', 'avif', 'jpeg', 'jpg', 'png','gif' ],
+    background : 'transparent'
 };
 
 export function useImageBackground(record, options = defaultImageOptions){
@@ -46,9 +47,14 @@ export function useImageBackground(record, options = defaultImageOptions){
         const imageOptions = { ...defaultImageOptions, ...options };
 
         const imgSrc = img(imgUri, imageOptions);
-        const bgColor = siteStore.secondaryColor || '#f8f9fa';
 
-        return { 'background':`${bgColor} url('${imgSrc}') no-repeat center`,  'background-size': 'contain' };
+        return { 
+            'background-image': `url('${imgSrc}')`,
+            'background-repeat': 'no-repeat',
+            'background-position': 'center',
+            'background-size': 'contain',
+            'background-color': 'white'
+        };
         })
 
     return { backgroundStyles, imgUri, hasImg }
