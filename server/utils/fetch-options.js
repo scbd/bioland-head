@@ -23,5 +23,5 @@ async function onResponse({ request, response, options }) {
 }
 
 async function onResponseError({ request, response, options }) {
-    consola.error( `${colors.red('[fetch response error]')}`, request, response.status, response.body );
+    consola.error( `${colors.red('[fetch response error]')}`, request, response.status, response.statusText );
 }

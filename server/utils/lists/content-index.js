@@ -27,7 +27,7 @@ function mapData(ctx){
         await Promise.all(promises);
 
         for (const key in results.data) {
-            const { drupal_internal__nid:dnid, type, title, tags, path, field_type_placement,field_attachments, field_start_date, changed, sticky, promote, id, body } = results.data[key];
+            const { drupal_internal__nid:dnid, type, title, tags, path, field_type_placement,field_attachments, field_start_date, changed, sticky, promote, id, body, field_migrated } = results.data[key];
 
             if(body?.value) body.summary = stripHtml(body?.value).result.substring(0, 400);
 
@@ -39,7 +39,9 @@ function mapData(ctx){
             const hasAlias   = path?.alias && mapLocaleFromDrupal(path.langcode) === ctx.locale;
             const href       = hasAlias? path?.alias : `${localePath}/node/${dnid}`;
 
-            results.data[key] = camelCase({dnid, href, type, mediaImage, title, tags, path, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary, index }, {deep: true}  );
+            const fieldMigrated = hasFieldMigratedValue(field_migrated);
+
+            results.data[key] = camelCase({dnid, href, type, mediaImage, title, tags, path, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary, index, fieldMigrated }, {deep: true}  );
 
             if(tags?.subjects)
                 for (const subject of tags.subjects) 
@@ -80,7 +82,12 @@ async function getListIndex(ctx ) {
     const { data, meta } = await $fetch(uri+getQuestString(ctx), $fetchBaseOptions({ method, headers }));
 
 
-    return  mapData(ctx)({ data, count: meta?.count })
+    const { count, facets } = meta || {};
+
+    const mappedResults = await mapData(ctx)({ data, count });
+    mappedResults.facets = facets || {};
+
+    return mappedResults;
 };
 
 function getQuestString(ctx){
@@ -141,3 +148,14 @@ function getFreeTextFilterParams({ freeText }){
     return sortQueryString;
 }
 
+function hasFieldMigratedValue(fieldMigratedField){
+    if(!fieldMigratedField) return false;
+
+    const value = fieldMigratedField?.value ?? fieldMigratedField;
+
+    if(typeof value === 'string') return value.trim().length > 0;
+    if(Array.isArray(value)) return value.length > 0;
+    if(typeof value === 'object') return Object.keys(value).length > 0;
+
+    return Boolean(value);
+}

@@ -11,7 +11,7 @@
                 <h2  :style="primaryColorStyle" v-if="contentTypeName && !title" class="page-type">{{contentTypeName}}</h2>
                 <h2  :style="primaryColorStyle" v-if="title" class="page-type">{{t(title,2)}}</h2>
                 <LazyPageListTextSearch/>
-                <LazyPageListFilter v-if="!typeId"/>
+                <LazyPageListFilter v-if="!typeId" :facets="results?.facets"/>
             </div>
             <div name="list" tag="div" class="col-12 col-md-9 data-body" :class="{ 'col-md-12': schemaOnly, 'px-0': !isMobile, 'mt-3': isMobile}">
                 <LazyPageBodyTabs v-if="meStore.showEditSystemPages"/>
