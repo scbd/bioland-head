@@ -26,9 +26,9 @@ export function useTheme(record){
 }
 
 export const defaultImageOptions = { 
-    height : 150     ,
+    height : 257     ,
     width  : 400      ,
-    fit    : 'cover',
+    fit    : 'contain',
     quality: 60       ,
     format : [ 'webp', 'avif', 'jpeg', 'jpg', 'png','gif' ]
 };
@@ -36,6 +36,7 @@ export const defaultImageOptions = {
 export function useImageBackground(record, options = defaultImageOptions){
     const nuxtApp       = useNuxtApp();
     const imageGenStore = useImageGenStore(nuxtApp.$pinia);
+    const siteStore     = useSiteStore(nuxtApp.$pinia);
     const img           = useImage();
     const imgUri        = unref(record)? (unref(record)?.mediaImage?.src || imageGenStore.getImage(unref(record))?.src) : undefined;
     const hasImg        = unref(record)?.mediaImage?.src
@@ -45,8 +46,9 @@ export function useImageBackground(record, options = defaultImageOptions){
         const imageOptions = { ...defaultImageOptions, ...options };
 
         const imgSrc = img(imgUri, imageOptions);
+        const bgColor = siteStore.secondaryColor || '#f8f9fa';
 
-        return { 'background':`url('${imgSrc}') no-repeat center`,  'background-size': 'cover' };
+        return { 'background':`${bgColor} url('${imgSrc}') no-repeat center`,  'background-size': 'contain' };
         })
 
     return { backgroundStyles, imgUri, hasImg }
