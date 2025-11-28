@@ -32,7 +32,7 @@
                         :arrows="true"
                         :leftArrow="true"
                         :hideArrowsCount="3"
-                        :schemas="[15,48,43,16,6]" 
+                        :schemas="[15,48,43,16,6, 12]" 
                         :title="$t('Resources')"
                     />
 
