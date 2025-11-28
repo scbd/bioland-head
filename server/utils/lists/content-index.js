@@ -27,7 +27,7 @@ function mapData(ctx){
         await Promise.all(promises);
 
         for (const key in results.data) {
-            const { drupal_internal__nid:dnid, type, title, tags, path, field_type_placement,field_attachments, field_start_date, changed, sticky, promote, id, body, field_migrated } = results.data[key];
+            const { drupal_internal__nid:dnid, type, title, tags, path, field_type_placement,field_attachments, field_start_date, changed, sticky, promote, id, body, field_migrated, field_order} = results.data[key];
 
             if(body?.value) body.summary = stripHtml(body?.value).result.substring(0, 400);
 
@@ -38,10 +38,10 @@ function mapData(ctx){
             const localePath = ctx.locale === ctx.defaultLocale? '' : `/${ctx.locale}`;
             const hasAlias   = path?.alias && mapLocaleFromDrupal(path.langcode) === ctx.locale;
             const href       = hasAlias? path?.alias : `${localePath}/node/${dnid}`;
-
+            const fieldOrder = (field_order !== null && field_order !== '' && field_order !== undefined) ? field_order : 10000;
             const fieldMigrated = hasFieldMigratedValue(field_migrated);
 
-            results.data[key] = camelCase({dnid, href, type, mediaImage, title, tags, path, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary, index, fieldMigrated }, {deep: true}  );
+            results.data[key] = camelCase({dnid, href, type, mediaImage, title, tags, path, fieldOrder, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary, index, fieldMigrated }, {deep: true}  );
 
             if(tags?.subjects)
                 for (const subject of tags.subjects) 
@@ -78,7 +78,7 @@ async function getListIndex(ctx ) {
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
-    // consola.debug(uri)
+
     const { data, meta } = await $fetch(uri+getQuestString(ctx), $fetchBaseOptions({ method, headers }));
 
 
@@ -128,7 +128,8 @@ function getSortParams({ sortBy, sortDirection, freeText, noSticky, promoted }){
         sortQueryString += `&sort[sticky][direction]=${encodeURIComponent(direction)}`
     }
 
-
+    sortQueryString += `&sort[sort-order][path]=field_order`;
+    sortQueryString += `&sort[sort-order][direction]=ASC`;
     sortQueryString += `&sort[sort-published][path]=field_published`
     sortQueryString += `&sort[sort-published][direction]=${encodeURIComponent(direction)}`
     sortQueryString += `&sort[sort-start][path]=field_start_date`

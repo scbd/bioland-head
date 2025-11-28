@@ -105,7 +105,17 @@ const { data, status } = await useLazyFetch(`/api/list/drupal`, {  method: 'GET'
 // consola.error(data.value)
 const loading = computed(()=> status.value === 'pending' && !slides?.value?.length);
 
-const slides = computed(()=> data.value?.data);
+const slides = computed(()=> {
+    if (!data.value?.data) return [];
+    
+    // Sort by fieldOrder (ascending - lower order = higher priority)
+    return [...data.value.data].sort((a, b) => {
+        consola.warn(a)
+        const orderA = a?.fieldOrder ?? Infinity;
+        const orderB = b?.fieldOrder ?? Infinity;
+        return orderA - orderB;
+    });
+});
 
 function onResponse({ response }){
 //    consola.warn('onResponse', response._data)
