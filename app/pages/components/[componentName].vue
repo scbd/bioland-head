@@ -1,7 +1,9 @@
 <template>
-  <Suspense>
-    <component :is="DynamicComponent" v-bind="mergedProps" />
-  </Suspense>
+  <div>
+    <Suspense>
+      <component :is="DynamicComponent" v-bind="mergedProps" />
+    </Suspense>
+  </div>
 </template>
 
 <script setup lang="ts">
