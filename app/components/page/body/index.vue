@@ -26,7 +26,7 @@
                     </ClientOnly>
 
                     <NuxtLink v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  :to="localePath(pageStore?.image?.url)">
-                        <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid w-100"/>
+                        <NuxtImg v-bind="getImageDefaults().value" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid w-100"/>
                     </NuxtLink>
                 </div>
 
@@ -122,7 +122,7 @@
     const   hasBchEmbedEl  = computed(()=> hasBchEmbed(sanitizedBody.value));
     const   isImageOrVideo = computed(()=> pageStore?.isImageOrVideo);
     const   isDocument     = computed(()=> pageStore?.isDocument );
-
+    const   getImageDefaults  = useWidgetCardImageDefaults({height: pageStore?.image?.fieldHeight, width: pageStore?.image?.fieldWidth});
     const { pageTypeStyle } = useTheme();
 
     function showEdit(){
