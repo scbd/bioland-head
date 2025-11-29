@@ -45,7 +45,9 @@
 
     const { getGbfUrl, goTo }                        = useDocumentHelpers(record);
     const { badgePrimaryStyle, badgeSecondaryStyle } = useTheme();
-    const { backgroundStyles }                       = useImageBackground(record);
+    const getImageDefaults                           = useWidgetCardImageDefaults();
+    const { backgroundStyles }                       = useImageBackground(record, getImageDefaults().value);
+
 
     const type = computed(()=> { 
         if(record?.value?.fieldTypePlacement?.name) 
@@ -61,7 +63,7 @@
 </script>
 
 <style lang="scss" scoped>
-.cit{ height: 232px !important; }
+// .cit{ height: 232px !important; }
 
 .card {
     width: 350px;

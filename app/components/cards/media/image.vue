@@ -1,7 +1,7 @@
 <template>
     <div :style="style" class="card p-2 text-center" >
         <div class="d-flex justify-content-center text-center">
-            <NuxtImg  v-if="imageSrc" quality="35" :alt="imageAlt" :src="imageSrc" :width="imgWidth" :height="imgHeight"  format="webp" class="card-img-top image-top i-top"/>
+            <NuxtImg  v-if="imageSrc" v-bind="imageDefaults" :alt="imageAlt" :src="imageSrc" class="card-img-top image-top i-top"/>
             <LazyIcon v-if="!imageSrc" :name="'file-image-o'"  :size="8" />
         </div>
         <div class="card-body">
@@ -45,8 +45,10 @@
     const { record    } = toRefs(props);
     const { t, locale } = useI18n();
 
-    const dateFormat       = useDateFormat(locale);
-    const { style, arrowFill      } = useTheme();
+    const   dateFormat         = useDateFormat(locale);
+    const { style, arrowFill } = useTheme();
+    const   imageDefaults      = useMediaCardImageDefaults()();
+
 
     const { getGbfUrl, descriptionTruncated, imageAlt, tags, imageSrc, linkTo,  imgHeight, imgWidth, iconName, iconColor} = useMediaRecord(record);
 </script>
