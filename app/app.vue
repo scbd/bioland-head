@@ -1,22 +1,11 @@
 <template>
-    <IconSymbols v-once/>
-    <NuxtRouteAnnouncer />
-    <ClientOnly>
-      <NuxtLoadingIndicator :height="6"/>
-    </ClientOnly>    
-    <PageHeader/>
-
-    <main >
-      <NuxtPage :page-key="route => route.fullPath"/>
-    </main>
-
-    <PageFooter/>
-    <ModalsContainer/>
-    <LazyUserAlerts/>
-    <CookieControl :locale="locale" /> 
+  <div>
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
+  </div>
 </template> 
 <script setup >
-import { ModalsContainer } from 'vue-final-modal'
 
 const { locale } = useI18n();
 
