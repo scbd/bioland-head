@@ -27,7 +27,7 @@
     <section v-if="showCards && !isFinalLink">
         <NuxtLink  class="child-link" :class="menu.class"   :to="localePath(menu.href)" :title="menu.title" :external="isExternal" :target="target">
             <div class="card" style="max-width: 160px;">
-                <NuxtImg :src="menu.thumb" class="img-fluid" :alt="menu.title" width="160" height="100"/>
+                <NuxtImg :src="menu.thumb" class="img-fluid" :alt="menu.title" width="102" height="64" fit="cover" format="webp"/>
                 <div class="card-body">
                     <p class="card-text" :class="{ 'card-text--long-word': hasLongWord }">{{menu.title}}</p>
                     <p class="card-text"><small class="text-muted">{{dateFormat(menu)}}</small></p>
