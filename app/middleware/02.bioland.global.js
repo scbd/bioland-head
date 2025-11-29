@@ -3,6 +3,14 @@ import isPlainObject from 'lodash.isplainobject';
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
   const nuxtApp     = useNuxtApp();
+  const path        = to.path;
+
+  // Check for component viewer routes early - before any other processing
+  const isComponentRoute = path.match(/^\/[a-z]{2}\/components\//);
+  
+  if (isComponentRoute) {
+    return; // Exit middleware entirely for component routes
+  }
 
   await changeLocale();
 
@@ -14,12 +22,11 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   const requestCookieHeader = useRequestHeaders(['cookie']);
   const clientCookie        = useCookie(hasSessionCookieClient())
-  const path                = to.path;
 
   updateAppConfig({ path });
 
   isValidLocalePrefix();
-
+  
   if(!context.value || !siteStore.siteCode) return reloadNuxtApp();
   
   await getMe();
