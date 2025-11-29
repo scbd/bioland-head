@@ -24,11 +24,21 @@ export function useTheme(record){
     }
 
 }
+const quality =  60;
+const fit     = 'outside';
+const format  = 'webp';
 
+const widgetCards = {
+    xs: { height: 217, width: 200, fit, quality, format },
+    sm: { height: 313, width: 200, fit, quality, format },
+    md: { height: 350, width: 200, fit, quality, format },
+    lg: { height: 350, width: 200, fit, quality, format },
+    xl: { height: 350, width: 200, fit, quality, format },
+};
 export const defaultImageOptions = { 
-    height : 150     ,
-    width  : 400      ,
-    fit    : 'cover',
+    height : 350     ,
+    width  : 232     ,
+    fit    : 'outside',
     quality: 60       ,
     format : [ 'webp', 'avif', 'jpeg', 'jpg', 'png','gif' ]
 };
@@ -42,7 +52,7 @@ export function useImageBackground(record, options = defaultImageOptions){
 
     const backgroundStyles = computed(() => {
 
-        const imageOptions = { ...defaultImageOptions, ...options };
+        const imageOptions = { ...unref(defaultImageOptions), ...unref(options) };
 
         const imgSrc = img(imgUri, imageOptions);
 
@@ -51,3 +61,72 @@ export function useImageBackground(record, options = defaultImageOptions){
 
     return { backgroundStyles, imgUri, hasImg }
 }
+export function calculateResizedHeight(originalWidth, originalHeight, newWidth) {
+  const aspectRatio = originalHeight / originalWidth;
+  const newHeight = newWidth * aspectRatio;
+  return newHeight;
+}
+
+export function usePageSideImageDefaults({height, width} = {height: 600, width: 400}, original=false) {
+    const viewport = useViewport();
+
+    if(original) return { height, width, fit, quality, format };
+
+    const sizeMap = {
+      xs: {
+        height: calculateResizedHeight(width, height, 540),
+        width: 540,
+      },
+      sm: {
+        height: calculateResizedHeight(width, height, 700),
+        width: 700,
+      },
+      md: {
+        height: calculateResizedHeight(width, height, 192),
+        width: 192,
+      },
+      lg: {
+        height: calculateResizedHeight(width, height, 273),
+        width: 273,
+      },
+      xl: {
+        height: calculateResizedHeight(width, height, 339),
+        width: 336,
+      },
+      xxl: {
+        height: calculateResizedHeight(width, height, 339),
+        width: 336,
+      },
+    };
+
+    return computed(() => ({...{ fit, quality, format }, ...sizeMap[viewport.breakpoint.value]}));
+}
+
+export function useWidgetCardImageDefaults() {
+    const viewport = useViewport();
+
+    const sizeMap = {
+        xs:  { height: 217, width: 200, fit, quality, format },
+        sm:  { height: 313, width: 200, fit, quality, format },
+        md:  { height: 350, width: 200, fit, quality, format },
+        lg:  { height: 350, width: 200, fit, quality, format },
+        xl:  { height: 350, width: 200, fit, quality, format },
+        xxl: { height: 350, width: 200, fit, quality, format },
+    };
+    return () => computed(() => sizeMap[viewport.breakpoint.value]);
+}
+
+export function useMediaCardImageDefaults() {
+  const viewport = useViewport();
+
+  const sizeMap = {
+    xs: { height: 405, width: 250, fit, quality, format },
+    sm: { height: 601, width: 250, fit, quality, format },
+    md: { height: 319, width: 250, fit, quality, format },
+    lg: { height: 315, width: 250, fit, quality, format },
+    xl: { height: 315, width: 250, fit, quality, format },
+    xxl: { height: 315, width: 250, fit, quality, format },
+  };
+  return () => computed(() => sizeMap[viewport.breakpoint.value]);
+}
+
