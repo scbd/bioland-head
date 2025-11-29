@@ -37,6 +37,8 @@
 
                 <span  :style="bgStyle" v-if="tags?.subjects?.length" v-for="(subject,i) in tags.subjects" :key="i" class="badge  me-1"><span v-if="subject.identifier">{{t(subject.identifier)}}</span></span>
 
+                <span  :style="bgStyle" v-if="tags?.bchSubjects?.length" v-for="(subject,i) in tags.bchSubjects" :key="i" class="badge  me-1"><span v-if="subject.identifier">{{t(subject.identifier)}}</span></span>
+
                 <span v-if="record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate" class="float-end card-subtitle text-nowrap text-muted text-small mt-1 mb-2">{{dateFormat(record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate)}}</span>
 
             </div>

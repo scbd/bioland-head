@@ -75,6 +75,11 @@
             
             <span  v-for="(subject,i) in tags.subjects" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ t(subject.identifier) }}</span>
         </div>
+        <div v-if="tags?.bchSubjects?.length" class="mb-2">
+            <h5 >{{t("Biosafety Thematic Areas")}}</h5>
+            
+            <span  v-for="(subject,i) in tags.bchSubjects" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ t(subject.identifier) }}</span>
+        </div>
     </div>
 </template>
 <script setup>
