@@ -1,5 +1,9 @@
 # Bioland Head - AI Coding Agent Instructions
 
+## Important!
+- if this exists follow these memory rules every questions `.github/instructions/memory.md`
+- if it exists the default guidance at `.github/instructions/default.instructions.md` is the canonical source of instructions.
+
 ## Overview
 Multi-site headless Drupal 11 + Nuxt.js 4 system serving hundreds of CBD-related websites from a single codebase. Every request is context-driven by site code, locale, and environment.
 
