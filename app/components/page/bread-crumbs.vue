@@ -69,7 +69,11 @@
                 }
             ];
         }
-        if(pageStore?.isSystemPage || pageStore?.isContentType ) return [];
+        // For generic system pages, we do not show extra crumbs beyond
+        // the root "National CHM". Content-type listing pages are
+        // handled below via the contentTypeId, so we must NOT early
+        // return for taxonomy_term--tags here.
+        if(pageStore?.isSystemPage) return [];
 
         if(pageStore.isTopicsList || pageStore.isTopicsCommentsList){
             const crumbs = [
@@ -94,7 +98,8 @@
             return crumbs
         }
 
-        // Content type based breadcrumbs
+        // Content type based breadcrumbs (for both node pages and
+        // content-type listing pages like /en/images-or-videos or /en/faqs).
         const contentType = menusStore.getContentTypeById(contentTypeId.value, locale.value);
 
         if(!contentType) return [];
@@ -104,7 +109,45 @@
 
         // 1. If content type is not in any main menu, just show
         //    "National CHM > <ContentType>" and link to the listing.
-        if(!menuEntry || !Array.isArray(menuEntry.crumbs) || !menuEntry.crumbs.length){
+        if(!menuEntry){
+            return [
+                {
+                    title: contentType?.plural,
+                    href: contentType?.slug,
+                }
+            ];
+        }
+
+        // Use the stored crumbs, but if the menu entry only has a
+        // single crumb (e.g. just "FAQs"), synthesize the parent
+        // main menu item (like "Resources") from the hierarchy so
+        // breadcrumbs can render "National CHM > Resources > FAQs".
+        let entryCrumbs = Array.isArray(menuEntry.crumbs)
+            ? [ ...menuEntry.crumbs ]
+            : [];
+
+        if(entryCrumbs.length <= 1 && Array.isArray(menuEntry.hierarchy) && menuEntry.hierarchy.length){
+            const topIndex = menuEntry.hierarchy[0];
+            const parentMain = menusStore.main?.[topIndex];
+
+            if(parentMain){
+                const baseParentCrumb = Array.isArray(parentMain.crumbs) && parentMain.crumbs.length
+                    ? parentMain.crumbs[0]
+                    : null;
+
+                const parentCrumb = baseParentCrumb || {
+                    title: parentMain.title,
+                    href: parentMain.href || '',
+                    index: topIndex,
+                    contentTypeId: parentMain.contentTypeId,
+                    machineName: parentMain.machineName,
+                };
+
+                entryCrumbs.unshift(parentCrumb);
+            }
+        }
+
+        if(!entryCrumbs.length){
             return [
                 {
                     title: contentType?.plural,
@@ -118,9 +161,9 @@
         //
         //    - The first crumb (Resources) should only open the
         //      mega-menu (no navigation), so we force href to ''.
-        //    - The content type crumb (Photos & Videos) should
-        //      navigate to /<locale>/<contentTypeSlug>.
-        const normalizedCrumbs = menuEntry.crumbs.map((crumb, index) => {
+        //    - The content type crumb (Photos & Videos, FAQs, etc.)
+        //      should navigate to /<locale>/<contentTypeSlug>.
+        const normalizedCrumbs = entryCrumbs.map((crumb, index) => {
             const newCrumb = { ...crumb };
 
             if(index === 0){
