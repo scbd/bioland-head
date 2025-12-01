@@ -3,6 +3,7 @@
 ## Important!
 - if this exists follow these memory rules every questions `.github/instructions/memory.md`
 - if it exists the default guidance at `.github/instructions/default.instructions.md` is the canonical source of instructions.
+- **CRITICAL**: Follow the Jira and Git workflow at `.github/instructions/workflow.md` for ALL code generation tasks.
 
 ## Overview
 Multi-site headless Drupal 11 + Nuxt.js 4 system serving hundreds of CBD-related websites from a single codebase. Every request is context-driven by site code, locale, and environment.
@@ -188,4 +189,13 @@ When adding tests (see `.github/old.md` for full TDD guide):
 - `server/utils/drupal/drupal-auth.js` - Drupal authentication
 - `nuxt.config.ts` - Full app configuration
  
- 
+ ## Jira Issue Management
+- **CRITICAL**: Every Jira issue MUST be linked to an epic
+- When creating issues, use `jira_link_to_epic` command immediately after creation
+- The `parent` field in `additional_fields` does NOT work for epic linking
+- Default epic for infrastructure/development tasks: **BL-460**
+- Example workflow:
+  1. Create issue: `jira_create_issue` → returns BL-XXX
+  2. Link to epic: `jira_link_to_epic` with `epic_key: "BL-460"` and `issue_key: "BL-XXX"`
+  3. Verify linkage in response
+

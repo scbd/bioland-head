@@ -33,5 +33,6 @@ outputDir
 .yarn
 .github/*
 !.github/workflows
+!.github/instructions
 .github/copilot-instructions.md
 .github/planning*
