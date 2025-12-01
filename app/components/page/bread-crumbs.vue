@@ -98,18 +98,31 @@
             return crumbs
         }
 
-        // Content type based breadcrumbs (for both node pages and
-        // content-type listing pages like /en/images-or-videos or /en/faqs).
-        const contentType = menusStore.getContentTypeById(contentTypeId.value, locale.value);
+        // Content type based breadcrumbs. These behave slightly
+        // differently for:
+        //  - node pages (e.g. an individual FAQ): we DO show the
+        //    content type crumb (FAQs) so users can jump to the
+        //    listing page.
+        //  - listing pages (taxonomy_term--tags such as /en/faqs,
+        //    /en/contacts, /en/projects): we DO NOT show a crumb for
+        //    the listing itself; we only show its parent main menu
+        //    item (e.g. Resources) when available.
+        const isListingPage = pageStore.isContentType;
+        const contentType   = menusStore.getContentTypeById(contentTypeId.value, locale.value);
 
         if(!contentType) return [];
 
         // Find the menu entry for this content type in the main menu
         const menuEntry = menusStore.isInMainMenuByContentTypeId(contentTypeId.value);
 
-        // 1. If content type is not in any main menu, just show
-        //    "National CHM > <ContentType>" and link to the listing.
+        // If the content type is not in any main menu:
+        //  - on listing pages we show no extra crumb (only
+        //    "National CHM").
+        //  - on node pages we keep a single crumb that links back to
+        //    the listing.
         if(!menuEntry){
+            if(isListingPage) return [];
+
             return [
                 {
                     title: contentType?.plural,
@@ -148,6 +161,13 @@
         }
 
         if(!entryCrumbs.length){
+            // If, for some reason, we end up without any crumbs from
+            // the menu entry:
+            //  - on listing pages we again show no extra crumb.
+            //  - on node pages we fall back to a single crumb that
+            //    links back to the listing.
+            if(isListingPage) return [];
+
             return [
                 {
                     title: contentType?.plural,
@@ -157,13 +177,28 @@
         }
 
         // 2. If it is under a main menu child (e.g. Resources), build
-        //    full path: National CHM > Resources > Photos & Videos.
+        //    the path from the menu crumbs, but:
         //
-        //    - The first crumb (Resources) should only open the
-        //      mega-menu (no navigation), so we force href to ''.
-        //    - The content type crumb (Photos & Videos, FAQs, etc.)
-        //      should navigate to /<locale>/<contentTypeSlug>.
-        const normalizedCrumbs = entryCrumbs.map((crumb, index) => {
+        //    - On listing pages (/en/faqs, /en/contacts, /en/projects
+        //      etc.), we DO NOT include the content type crumb
+        //      itself. We only keep the parent main menu crumb (e.g.
+        //      Resources), so breadcrumbs look like:
+        //        National CHM > Resources
+        //
+        //    - On node pages, we keep the content type crumb so users
+        //      can jump back to the listing:
+        //        National CHM > Resources > FAQs
+        //
+        //    In both cases, the first crumb (Resources) should only
+        //    open the mega-menu (no navigation), so we force
+        //    href = ''.
+        const filteredCrumbs = isListingPage
+            ? entryCrumbs.filter((crumb) => crumb.contentTypeId !== contentTypeId.value)
+            : entryCrumbs;
+
+        if(!filteredCrumbs.length) return [];
+
+        const normalizedCrumbs = filteredCrumbs.map((crumb, index) => {
             const newCrumb = { ...crumb };
 
             if(index === 0){
@@ -171,7 +206,7 @@
                 newCrumb.href = '';
             }
 
-            if(newCrumb.contentTypeId === contentTypeId.value){
+            if(!isListingPage && newCrumb.contentTypeId === contentTypeId.value){
                 // Ensure CT crumb links to the listing path
                 newCrumb.href = contentType?.slug || newCrumb.href || '';
             }
