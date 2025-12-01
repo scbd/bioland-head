@@ -50,20 +50,21 @@ async function hasNewMenuStructure(ctx){
 function buildMainChildren(allMenus){
     for (const aMenu of allMenus.main) {
 
-        // if(aMenu.title === 'Our Targets') 
-        //     consola.error(mainMenuHasChild(aMenu))
-        if(!mainMenuHasChild(aMenu)) continue;
+        const childMenuName = mainMenuHasChild(aMenu);
 
+        if(!childMenuName) continue;
 
-        
-        aMenu.children = allMenus[mainMenuHasChild(aMenu)]
+        aMenu.children = allMenus[childMenuName];
 
-if(aMenu.title === 'Our Targets') 
+        // Ensure all child menu items inherit the top level menu
+        // hierarchy and crumbs so breadcrumbs can correctly
+        // reconstruct the full path (e.g. Resources > Photos & Videos).
         for (const aChild of aMenu.children) {
-            aChild.hierarchy?.unshift(aMenu.hierarchy[0])
-            aChild.crumbs?.unshift(aMenu.crumbs[0])
+            aChild.hierarchy?.unshift(aMenu.hierarchy[0]);
+            aChild.crumbs?.unshift(aMenu.crumbs[0]);
         }
-        delete allMenus[mainMenuHasChild(aMenu)]
+
+        delete allMenus[childMenuName];
     }
 
     return allMenus;

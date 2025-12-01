@@ -93,32 +93,50 @@
             });
             return crumbs
         }
-        if(!isInDynamicMenu.value && pageStore.isNodePage){
-            
-            const contentType = menusStore.getContentTypeById(contentTypeId.value, locale.value);
 
-            const crumbs = [
+        // Content type based breadcrumbs
+        const contentType = menusStore.getContentTypeById(contentTypeId.value, locale.value);
+
+        if(!contentType) return [];
+
+        // Find the menu entry for this content type in the main menu
+        const menuEntry = menusStore.isInMainMenuByContentTypeId(contentTypeId.value);
+
+        // 1. If content type is not in any main menu, just show
+        //    "National CHM > <ContentType>" and link to the listing.
+        if(!menuEntry || !Array.isArray(menuEntry.crumbs) || !menuEntry.crumbs.length){
+            return [
                 {
                     title: contentType?.plural,
                     href: contentType?.slug,
                 }
-            ]   
-            return crumbs
-        } 
-        else{
+            ];
+        }
 
-            return  menusStore.isInMainMenuByContentTypeId(contentTypeId.value)?.crumbs || [];
+        // 2. If it is under a main menu child (e.g. Resources), build
+        //    full path: National CHM > Resources > Photos & Videos.
+        //
+        //    - The first crumb (Resources) should only open the
+        //      mega-menu (no navigation), so we force href to ''.
+        //    - The content type crumb (Photos & Videos) should
+        //      navigate to /<locale>/<contentTypeSlug>.
+        const normalizedCrumbs = menuEntry.crumbs.map((crumb, index) => {
+            const newCrumb = { ...crumb };
 
-            for (const aCrumb of inMenu.value?.crumbs ) {
-            
-                if(!aCrumb ) continue;
-                if(!(aCrumb?.contentTypeId && aCrumb?.href === '') ) continue;
-
-                aCrumb.href = menusStore.getContentTypeById(aCrumb.contentTypeId).slug;
+            if(index === 0){
+                // Root menu item: open mega-menu only
+                newCrumb.href = '';
             }
 
-            return inMenu.value?.crumbs;
-        }
+            if(newCrumb.contentTypeId === contentTypeId.value){
+                // Ensure CT crumb links to the listing path
+                newCrumb.href = contentType?.slug || newCrumb.href || '';
+            }
+
+            return newCrumb;
+        });
+
+        return normalizedCrumbs;
     }
     
 
