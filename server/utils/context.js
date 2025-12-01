@@ -73,8 +73,8 @@ export async function getSiteConfig({  siteCode }){
     }catch(e){
         const { multiSiteCode, env, dmsm } = useRuntimeConfig().public;
         const uri = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}/${encodeURIComponent(siteCode)}`;
-        
-        console.error(e);
+        consola.error(uri);
+        consola.error(e);
         throw createError({ 
             statusCode: 404, 
             statusMessage: 'Not Found',

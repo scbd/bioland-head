@@ -131,16 +131,23 @@ export const queryScbdIndex = async (ctx, queryBody) => {
 
     const body = queryBody? JSON.stringify(queryBody) : getAllQuery(ctx);
 
+    try {
+        const { response, facet_counts: facetCounts } = await $fetch(uri,  $fetchBaseOptions({ mode: 'cors' , method:'post', body, headers: {'Content-Type': 'application/json'}}));
 
-    const { response, facet_counts: facetCounts } = await $fetch(uri,  $fetchBaseOptions({ mode: 'cors' , method:'post', body, headers: {'Content-Type': 'application/json'}}));
+        response.data  = response.docs.map(normalizeIndexKeys)//.filter(({ title, summary })=> (title && summary));
+        response.count = response.numFound;
 
+        delete response.docs;
 
-    response.data  = response.docs.map(normalizeIndexKeys)//.filter(({ title, summary })=> (title && summary));
-    response.count = response.numFound;
-
-    delete response.docs;
-
-    return { ...response, facetCounts, facet_counts:facetCounts };
+        return { ...response, facetCounts, facet_counts:facetCounts };
+    } catch (error) {
+        console.error('=== SCBD Index Request Failed ===');
+        console.error('URI:', uri);
+        console.error('Body:', body);
+        console.error('Error:', error.message);
+        console.error('================================');
+        throw error;
+    }
 }
 
 function cleanCountries({countries, country}){
