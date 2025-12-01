@@ -29,7 +29,7 @@ function mapData(ctx){
         for (const key in results.data) {
             const { drupal_internal__nid:dnid, type, title, tags, path, field_type_placement,field_attachments, field_start_date, changed, sticky, promote, id, body, field_migrated, field_order} = results.data[key];
 
-            if(body?.value) body.summary = stripHtml(body?.value).result.substring(0, 400);
+            if(body?.value) body.summary = body.summary || stripHtml(body?.value).result.substring(0, 400);
 
             const mediaImage = getMediaImage(ctx, field_attachments);
             const page       = ctx.page? Number(ctx.page) : 1;
@@ -78,8 +78,10 @@ async function getListIndex(ctx ) {
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
+    const fullUrl = uri+getQuestString(ctx);
+    consola.warn('CMS List Index URL:', fullUrl);
 
-    const { data, meta } = await $fetch(uri+getQuestString(ctx), $fetchBaseOptions({ method, headers }));
+    const { data, meta } = await $fetch(fullUrl, $fetchBaseOptions({ method, headers }));
 
 
     const { count, facets } = meta || {};
