@@ -56,13 +56,22 @@ function buildMainChildren(allMenus){
 
         aMenu.children = allMenus[childMenuName];
 
-        // Ensure all child menu items inherit the top level menu
-        // hierarchy and crumbs so breadcrumbs can correctly
-        // reconstruct the full path (e.g. Resources > Photos & Videos).
-        for (const aChild of aMenu.children) {
-            aChild.hierarchy?.unshift(aMenu.hierarchy[0]);
-            aChild.crumbs?.unshift(aMenu.crumbs[0]);
-        }
+        // Original static hack for BL2: ensure "Our Targets" children
+        // inherit the top level menu hierarchy and crumbs.
+        if(aMenu.title === 'Our Targets')
+            for (const aChild of aMenu.children) {
+                aChild.hierarchy?.unshift(aMenu.hierarchy[0]);
+                aChild.crumbs?.unshift(aMenu.crumbs[0]);
+            }
+
+        // Generic behavior for all other main children (including
+        // Resources, News & Updates, etc.) so that breadcrumbs use
+        // the correct main menu index when opening the mega-menu.
+        if(aMenu.title !== 'Our Targets')
+            for (const aChild of aMenu.children) {
+                aChild.hierarchy?.unshift(aMenu.hierarchy[0]);
+                aChild.crumbs?.unshift(aMenu.crumbs[0]);
+            }
 
         delete allMenus[childMenuName];
     }
@@ -223,7 +232,35 @@ function splitClasses(menus){
     return menus;
 }
 
-const typeMapIds = { news:2, event:3, 'learning-resource':4, project:5, 'basic-page':6, 'government-ministry-or-institute':8, ecosystem:9, 'protected-area':10, 'biodiversity-data':11, document:12, 'related-website':13, other:15, 'image-or-video':16 };
+// Map CSS content-type classes (bl2-content-type-*, mm-content-type-*)
+// to Drupal term IDs so that menu entries can be linked to their
+// corresponding content types in the frontend. This list must stay in
+// sync with app/utils/constants.js:contentTypeTidConstants.
+const typeMapIds = {
+    news: 2,
+    event: 3,
+    'meeting-or-event': 3,
+    'learning-resource': 4,
+    project: 5,
+    'basic-page': 6,
+    'government-ministry-or-institute': 8,
+    ecosystem: 9,
+    'protected-area': 10,
+    'biodiversity-data': 11,
+    document: 12,
+    'related-website': 13,
+    other: 15,
+    'other-resource': 15,
+    'image-or-video': 16,
+    faq: 43,
+    'national-information': 44,
+    'status-of-lmos': 45,
+    'field-trial': 46,
+    'national-mainstreaming-strategy': 47,
+    'capacity-building': 48,
+    announcement: 49,
+    contact: 50,
+};
 
 function addContentTypeId(aMenu){
     const contentType = aMenu?.class?.find((c)=> c.startsWith('bl2-content-type-') || c.startsWith('mm-content-type-'));
