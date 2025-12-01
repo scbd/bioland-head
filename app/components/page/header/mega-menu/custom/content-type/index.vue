@@ -125,10 +125,6 @@
         }
         for (const country of countries)
             aMenu.dataMap[country] = getContentTypeData(country)
-            // if(!isCardView.value)
-            //     aMenu.dataMap[country] = getContentTypeData(country).slice(0,getMaxRowsPerColumn() || 6);
-            // else
-            //     aMenu.dataMap[country] = getContentTypeData(country).slice(0,horizontalCardMax);
 
         return aMenu;
     })

@@ -79,7 +79,6 @@ async function getListIndex(ctx ) {
     const headers       = { 'Content-Type': 'application/json' };
 
     const fullUrl = uri+getQuestString(ctx);
-    consola.warn('CMS List Index URL:', fullUrl);
 
     const { data, meta } = await $fetch(fullUrl, $fetchBaseOptions({ method, headers }));
 
