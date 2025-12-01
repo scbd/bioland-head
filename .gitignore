@@ -36,3 +36,4 @@ outputDir
 !.github/instructions
 .github/copilot-instructions.md
 .github/planning*
+.github/instructions/memory.md
