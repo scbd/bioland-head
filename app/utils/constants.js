@@ -10,7 +10,6 @@ import { kebabCase } from 'change-case';
 
 export const contentTypes = [
     { drupalInternalTid: 2, name: 'News', field_plural: 'News', icon: '📰' },
-    { drupalInternalTid: 3, name: 'Event', field_plural: 'Events', icon: '📅' },
     { drupalInternalTid: 3, name: 'Meeting or Event', field_plural: 'Meetings & Events', icon: '📅' },
     { drupalInternalTid: 4, name: 'Learning Resource', field_plural: 'Learning Resources', icon: '🎓' },
     { drupalInternalTid: 5, name: 'Project', field_plural: 'Projects', icon: '📊' },
@@ -21,11 +20,11 @@ export const contentTypes = [
     { drupalInternalTid: 11, name: 'Biodiversity Data', field_plural: 'Biodiversity Data', icon: '📈' },
     { drupalInternalTid: 12, name: 'Document', field_plural: 'Documents', icon: '📋' },
     { drupalInternalTid: 13, name: 'Related Website', field_plural: 'Related Websites', icon: '🔗' },
-    { drupalInternalTid: 15, name: 'Other Resources', field_plural: 'Other Resources', icon: '⚙️' },
+    { drupalInternalTid: 15, name: 'Other Resource', field_plural: 'Others Resources', icon: '⚙️' },
     { drupalInternalTid: 16, name: 'Image or Video', field_plural: 'Images or Videos', icon: '🎬' },
-    { drupalInternalTid: 43, name: 'FAQ', field_plural: 'FAQs', icon: '❓' },
-    { drupalInternalTid: 44, name: 'National Information', field_plural: 'National Information', icon: '🏴' },
-    { drupalInternalTid: 45, name: 'Status of LMOS', field_plural: 'Status of LMOs', icon: '🧬' },
+    { drupalInternalTid: 43, name: 'FAQ', field_plural: 'faqs', icon: '❓' },
+    { drupalInternalTid: 44, name: 'National Information', field_plural: 'National Informations', icon: '🏴' },
+    { drupalInternalTid: 45, name: 'Status of LMOs', field_plural: 'Status of LMOs', icon: '🧬' },
     { drupalInternalTid: 46, name: 'Field Trial', field_plural: 'Field Trials', icon: '🌱' },
     { drupalInternalTid: 47, name: 'National Mainstreaming Strategy', field_plural: 'National Mainstreaming Strategies', icon: '🗂️' },
     { drupalInternalTid: 48, name: 'Capacity-Building', field_plural: 'Capacity-Building', icon: '🔧' },
@@ -42,7 +41,7 @@ export const contentTypeIcons = {
     6: '📄',   // Article
     8: '🏛️',   // Government Ministry or Institute
     9: '🌍',   // Ecosystem
-    10: '🛡️',  // Protected Area
+    10: '🏞️',  // Protected Area
     11: '📈',  // Biodiversity Data
     12: '📋',  // Document
     13: '🔗',  // Related Website
@@ -86,13 +85,15 @@ export const contentTypeTidConstants = {
     DOCUMENTS: 12,
     RELATED_WEBSITE: 13,
     RELATED_WEBSITES: 13,
+    OTHER_RESOURCE: 15,
     OTHER: 15,
-    OTHERS: 15,
+    OTHERS_RESOURCES: 15,
     IMAGE_OR_VIDEO: 16,
     IMAGES_OR_VIDEOS: 16,
     FAQ: 43,
     FAQS: 43,
     NATIONAL_INFORMATION: 44,
+    NATIONAL_INFORMATIONS: 44,
     STATUS_OF_LMOS: 45,
     NATIONAL_TARGET: 46,
     NATIONAL_TARGETS: 46,
