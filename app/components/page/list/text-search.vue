@@ -1,5 +1,5 @@
 <template >
-    <div class="input-group">
+    <div class="input-group mb-3">
         <input type="text" v-model="queryText" class="form-control"  :class="{ 'not-allowed': disabled }" :placeholder="t('Free text search')" aria-label="search" :disabled="disabled">
 
         <a class="input-group-text"    :alt="t('Free text search')"  >

@@ -51,8 +51,9 @@
         const options = Object.entries(menuStore.contentTypes)
             .map(([name, data]) => {
                 const facetCount = facetMap.get(data.drupalInternalId) ?? 0;
+                const labelBase = facetCount === 1 ? data.name : (data.plural || data.name);
                 return {
-                    name: `${data.name} (${facetCount})`,
+                    name: `${labelBase} (${facetCount})`,
                     value: data.drupalInternalId,
                     count: facetCount
                 };
