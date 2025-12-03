@@ -1,9 +1,14 @@
 # Bioland Head - AI Coding Agent Instructions
 
 ## Important!
-- if this exists follow these memory rules every questions `.github/instructions/memory.md`
-- if it exists the default guidance at `.github/instructions/default.instructions.md` is the canonical source of instructions.
-- **CRITICAL**: Follow the Jira and Git workflow at `.github/instructions/workflow.md` for ALL code generation tasks.
+- if this exists follow these memory rules every questions for every response`.github/instructions/personal.md`
+- if it exists the default guidance at `.github/instructions/default.instructions.md` is the canonical source of instructions for every response.
+- **CRITICAL**:if this exists, Follow the Jira and Git workflow at `.github/instructions/workflow.md` for ALL code generation tasks for every response.
+
+## Speed and Accuracy
+- Prioritize speed and accuracy in code generation.
+- Use sub agents tool when every you can to save time or verify accuracy.
+- same use claude, gemini and codex mcp's as subagent as well.'
 
 ## Overview
 Multi-site headless Drupal 11 + Nuxt.js 4 system serving hundreds of CBD-related websites from a single codebase. Every request is context-driven by site code, locale, and environment.
