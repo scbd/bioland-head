@@ -54,7 +54,12 @@
                             <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
                         </span>
                         <p class="float-end card-text pe-1"><small class="text-muted">{{getDateFormated()}}</small></p>
-                        
+            
+                        <span  v-for="(subject,i) in aLine.tags?.subjects" :key="i" :style="bgStyle" class="badge text-bg-primary">{{ t(subject.identifier) }}</span>
+                
+
+                        <span  v-for="(bchSubject,i) in aLine.tags?.bchSubjects" :key="i" :style="bgStyle" class="badge text-bg-primary text-white me-1">{{ t(bchSubject.identifier) }}</span>
+
                     </div>
                 </div>
             </div>
@@ -90,6 +95,7 @@
         return getRealmHost()+uri;
     });
 
+
     const target   = computed(()=> isChm.value? '_blank' : '_self');
     const external = computed(()=> isChm.value? true : false);
 
@@ -108,7 +114,7 @@
         if(aLine?.type?.includes('media--'))
             return t(aLine.type.replace('media--',''),1);
 
-        if(isChm.value) return t(aLine.schema) + ' - ' + getRealmText(aLine);
+        return t(aLine.schema) + ' - ' + getRealmText(aLine);
     }
 
     function getRealmText({ realms }){

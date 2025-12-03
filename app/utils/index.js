@@ -170,6 +170,47 @@ export     function sortObj([x,a],[y,b]){
 
     return 0;
 }
+
+export function makeDrupalPathFromENtity(entity){
+    if(!entity || typeof entity !== 'object') return undefined;
+
+    const alias = getEntityAlias(entity);
+
+    if(alias) return alias;
+
+    const type = entity?.type || '';
+
+    const taxonomyId = entity?.drupalInternalTid ?? entity?.drupal_internal__tid;
+    if(type.startsWith('taxonomy_term--') || taxonomyId)
+        return taxonomyId ? `/taxonomy/term/${taxonomyId}` : undefined;
+
+    const nodeId = entity?.drupalInternalNid ?? entity?.drupal_internal__nid;
+    if(type.startsWith('node--') || nodeId)
+        return nodeId ? `/node/${nodeId}` : undefined;
+
+    const mediaId = entity?.drupalInternalMid ?? entity?.drupal_internal__mid;
+    if(type.startsWith('media--') || mediaId)
+        return mediaId ? `/media/${mediaId}` : undefined;
+
+    return undefined;
+}
+
+function getEntityAlias(entity){
+    if(entity?.path?.alias) return entity.path.alias;
+
+    if(entity?.aliases){
+        const preferredLocales = uniqueArray([entity?.langcode, 'en', ...Object.keys(entity.aliases || {})].filter(Boolean));
+
+        for(const locale of preferredLocales)
+            if(entity.aliases[locale]) return entity.aliases[locale];
+
+        const firstAlias = Object.values(entity.aliases).find(Boolean);
+        if(firstAlias) return firstAlias;
+    }
+
+    return undefined;
+}
+
 function seededShuffle(array, seed) {
     // Simple seeded PRNG (Mulberry32)
     function mulberry32(a) {
@@ -200,4 +241,3 @@ function getCurrentHourSeed() {
     );
 }
 
-// Usage:

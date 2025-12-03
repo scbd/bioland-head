@@ -1,25 +1,20 @@
+/**
+ * Retrieves Clearing-House Mechanism listings by merging the incoming request
+ * query parameters with the contextual site metadata and forwarding the payload
+ * to the SCBD search index.
+ *
+ * @param {H3Event} event - Nitro event containing request context and query parameters.
+ * @returns {Promise<unknown>} Resolves with the aggregated search results returned by SCBD.
+ * @throws {Error} Rethrows any error encountered so the caller receives a consistent response via passError.
+ */
 export default defineEventHandler(async (event) => {
-        try{
+    try{
             const query            = getQuery   (event);
             const ctx              = getContext (event);
-
-            const sdgList = {};
-
-            // let index =1
-            // for (const key in sdgsData) {
-            //     const name    = `sdg${index}Name`;
-            //     const altName = `sdg${index}AltName`;
-            //     sdgList[sdgsData[key].identifier] = sdgsData[key].name;
-            //     sdgList[sdgsData[key].identifier+'Alt'] = sdgsData[key].alternateName;
-
-            //     index++
-            // }
 
             return queryScbdIndex ({ ...ctx, ...query });
         }
         catch (e) {
             passError(event, e);
         }
-    },
-    // externalCache
-)
+})

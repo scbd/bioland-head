@@ -20,14 +20,16 @@ function mapData(ctx){
         const promises = [];
 
         for (const aDoc of results.data){
-            const keys = aDoc?.field_tags ||  aDoc?.fieldTags;
+            const { value, value2 } = (aDoc?.field_tags ||  aDoc?.fieldTags) || {};
+            const keys = ((value || '') + (value2 ? ','+value2 : '')).split(',').map(k=>k.trim()).filter(Boolean);
+      
             if(keys)
                 promises.push(getThesaurusByKey(keys).then((p)=>{aDoc.tags =mapTagsByType(p) ;}));
         }
         await Promise.all(promises);
 
         for (const key in results.data) {
-            const { drupal_internal__nid:dnid, type, title, tags, path, field_type_placement,field_attachments, field_start_date, changed, sticky, promote, id, body, field_migrated, field_order} = results.data[key];
+            const { drupal_internal__nid:dnid, type, title, tags, path, field_type_placement,field_attachments, field_start_date, changed, sticky, promote, id, body, field_migrated, field_order, } = results.data[key];
 
             if(body?.value) body.summary = body.summary || stripHtml(body?.value).result.substring(0, 400);
 

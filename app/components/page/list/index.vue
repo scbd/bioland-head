@@ -21,6 +21,7 @@
                 <LazySpinner v-if="loading" :size="75"/>
                 <ClientOnly>
                     <transition-group  name="list">
+
                         <LazyPageListRow  :a-line="aLine" v-for="(aLine,index) in results?.data" :key="index" />
                     </transition-group>
                 </ClientOnly>
@@ -36,7 +37,7 @@
     const   isMobile    = isMobileFn   ();
     const { t         } = useI18n      ();
     const   r           = useRoute     ();
-    const   { schemaOnly } = r?.query || {};
+    const { schemaOnly } = r?.query || {};
     const   siteStore   = useSiteStore ();
     const   pageStore   = usePageStore ();
     const   eventBus    = useEventBus  ();
@@ -48,33 +49,39 @@
     const showTopPager   = computed(()=>pageStore.isSearchAll);
 
     const { title  }     = toRefs(props);
-    const isSecretariat  = computed(()=> ((pageStore?.page?.parent?.length && pageStore?.page?.parent[0].id !== 'virtual'))); 
+    const isSecretariat  = computed(()=> pageStore?.isSearchSecretariat); 
+    const isSearchBch    = computed(()=> pageStore?.isSearchBch);
+    const isSearchAbs     = computed(()=> pageStore?.isSearchAbs);
     // const isContent      = computed(()=> pageStore?.page?.drupalInternalNid === 25 || pageStore?.page?.drupalInternalNid === 88 && r.query?.schemas?.length === 2);  
     const type           = computed(()=> isSecretariat.value? 'secretariat' :  undefined); //isContent.value? 'content' : undefined
 
     const { isContentTypeId, getContentType }  = useMenusStore();
-
+    const realm         =    isSearchBch.value || siteStore.isBiosafetySite? 'BCH' : isSearchAbs.value ? 'ABS' : 'CHM';
+    const realms=[realm];                
     const schemas           = computed(() => r?.query?.schemas? r?.query?.schemas : undefined);
     const freeText          = computed(() => r?.query?.freeText? r?.query?.freeText : '');
     const page              = computed(() => r?.query?.page? r?.query?.page : 1);
     const rowsPerPage       = computed(() => r?.query?.rowsPerPage? r?.query?.rowsPerPage : 10);
-    const query             = clone({ ...r.query, ...siteStore.params, freeText, page, rowsPerPage, schemas });
+    const query             = clone({ ...r.query, ...siteStore.params, freeText, page, rowsPerPage, schemas, realm, realms});
     const typeId            = computed(getContentTypeId);
     const contentTypeName   = computed(getContentTypeName);
 
-    const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query});
+    const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query });
 
+  
     const loading = computed(()=> pageStore.loading || status.value === 'pending');
 
-    onMounted(() => { eventBus.on('changePage', () => {
-        // results.value = [];
+    onMounted(() => { 
+        eventBus.on('changePage', () => {
         setTimeout(refresh, 250);
+        
     }); });
  
     function getContentTypeId(){
-        if(pageStore?.page?.type === 'taxonomy_term--system_pages') return ''
-
-        if(pageStore?.isSearch) return pageStore?.isSearch;
+    
+        if(pageStore?.isSystemPage) return ''
+        if(pageStore?.isContentType) return pageStore?.page?.drupalInternalTid;
+        if(pageStore?.isSearchDrupalContentType && pageStore?.searchContentTypeIds) return pageStore?.searchContentTypeIds;
         
         const contentType = r?.params[0];
 
@@ -94,10 +101,15 @@
 
     function getApiUri(){
 
-        if(type.value == 'secretariat')
-            return `/api/list/chm`;
 
-        if(typeId.value )
+            if(isSearchBch.value) 
+                return `/api/list/bch`;
+            if(isSearchAbs.value) 
+                return `/api/list/abs`;
+            if(isSecretariat.value)
+                return `/api/list/chm`;
+
+        if(typeId.value)
             return `/api/list/drupal/${encodeURIComponent(typeId.value)}`;
 
         return `/api/list/drupal`;

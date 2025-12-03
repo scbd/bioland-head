@@ -1,6 +1,5 @@
 
 import { camelCase } from 'change-case/keys';
-
 export const usePageStore = defineStore('page', {
     state: ()=>({ page: {}, loading: true, cancelLoading: true, isInitialized: false, cacheKeys:{} }), 
     actions:{
@@ -54,12 +53,61 @@ export const usePageStore = defineStore('page', {
         isChmNetwork(){ return systemPageTidConstants.CHM_NETWORK === this.page?.drupalInternalTid; },
         isSystemPageDev(){ return systemPageTidConstants.DEV === this.page?.drupalInternalTid; },
         isSearch(){
-            if(this?.page?.type === 'taxonomy_term--tags') return this?.page?.drupalInternalTid;
+            const { SEARCH, SEARCH_SEC, SEARCH_BCH, SEARCH_ABS } = systemPageTidConstants;
 
-            if(this?.page?.type?.startsWith('node--') || this?.page?.type?.startsWith('media--')) return false;
+            if (this.isContentType) return this?.page?.drupalInternalTid;
 
-            if(this?.page?.type === 'taxonomy_term--system_pages') return getTids(this?.page?.fieldSearch);
+            if (!this.isSystemPage || this?.isNodePage || this?.isMediaPage)
+                return false;
 
+            if([ SEARCH, SEARCH_SEC,SEARCH_BCH, SEARCH_ABS ].includes(this.page?.drupalInternalTid))
+                return  true;
+
+            return false;
+        },
+        isSearchDrupalContentType(){
+            const { SEARCH } = systemPageTidConstants;
+
+            if (!this.isSearch) return false;
+
+            if(SEARCH === this.page?.drupalInternalTid)
+                return  SEARCH;
+
+            return false;
+        },
+        isSearchSecretariat(){
+            const { SEARCH_SEC } = systemPageTidConstants;
+
+            if (!this.isSearch) return false;
+
+            if(SEARCH_SEC === this.page?.drupalInternalTid)
+                return SEARCH_SEC;
+
+            return false;
+        },
+        isSearchBch(){
+            const { SEARCH_BCH } = systemPageTidConstants;
+
+            if (!this.isSearch) return false;
+
+            if(SEARCH_BCH === this.page?.drupalInternalTid)
+                return SEARCH_BCH;
+
+            return false;
+        },
+        
+        isSearchAbs(){
+            const { SEARCH_ABS } = systemPageTidConstants;
+
+            if (!this.isSearch) return false;
+
+            if(SEARCH_ABS === this.page?.drupalInternalTid)
+                return SEARCH_ABS;
+
+            return false;
+        },
+        searchContentTypeIds(){
+            return getTids(this?.page?.fieldSearch);
         },
         isPage(){
             if(this.isSystemPageDev || this.isSearch || this.isForumsList ||  this.isMediaPage || this.isForumsList || this.isNcpsList || this.isChmNetwork) return false;

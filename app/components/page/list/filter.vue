@@ -45,7 +45,6 @@
             });
         }
         
-        console.log('Facet map:', facetMap);
 
         // Build options from menuStore with facet counts
         const options = Object.entries(menuStore.contentTypes)

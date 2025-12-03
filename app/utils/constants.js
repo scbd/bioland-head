@@ -146,7 +146,9 @@ export const contentTypePluralConstants = contentTypes.reduce((acc, { drupalInte
 export const systemPageTidConstants = {
     HOME: 20,
     SEARCH: 21,  
-    SEARCH_SEC: 23,  
+    SEARCH_SEC: 23,
+    SEARCH_BCH:52,
+    SEARCH_ABS:53,  
     NEWS: 22,
     NATIONAL_CONTACT_POINTS: 30,
     FORUMS: 24,

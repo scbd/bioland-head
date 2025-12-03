@@ -2570,6 +2570,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/lodash.isempty@npm:^4":
+  version: 4.4.9
+  resolution: "@types/lodash.isempty@npm:4.4.9"
+  dependencies:
+    "@types/lodash": "npm:*"
+  checksum: 10c0/581b3b1e896524b00cb32dc08f1aea328cec0ab95720f24e0f6d9e8a2c9be5b65e4ad030ec45f58f656ab8dcf555f039863862e04c91051a24ee27cac8a994ab
+  languageName: node
+  linkType: hard
+
 "@types/lodash@npm:*":
   version: 4.17.20
   resolution: "@types/lodash@npm:4.17.20"
@@ -6182,6 +6191,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lodash.isempty@npm:^4.4.0":
+  version: 4.4.0
+  resolution: "lodash.isempty@npm:4.4.0"
+  checksum: 10c0/6c7eaa0802398736809b9e8aed8b8ac1abca9be71788fd719ba9d7f5b4c23e8dc63b7f049df4131713dda30a2fdedc2f655268e9deb8cd5a985dfc934afca194
+  languageName: node
+  linkType: hard
+
 "lodash.isnil@npm:4.0.0":
   version: 4.0.0
   resolution: "lodash.isnil@npm:4.0.0"
@@ -6949,6 +6965,7 @@ __metadata:
     "@nuxtjs/i18n": "npm:10.2.1"
     "@nuxtjs/leaflet": "npm:1.3.1"
     "@pinia/nuxt": "npm:0.11.2"
+    "@types/lodash.isempty": "npm:^4"
     "@unhead/vue": "npm:2.0.19"
     "@vue-final-modal/nuxt": "npm:1.0.3"
     "@vue/devtools-api": "npm:8.0.5"
@@ -6964,6 +6981,7 @@ __metadata:
     limax: "npm:4.1.0"
     lodash.clonedeep: "npm:4.5.0"
     lodash.intersection: "npm:4.4.0"
+    lodash.isempty: "npm:^4.4.0"
     lodash.isnil: "npm:4.0.0"
     lodash.isplainobject: "npm:4.0.6"
     lodash.isstring: "npm:4.0.1"
