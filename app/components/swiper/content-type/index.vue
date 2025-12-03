@@ -96,7 +96,7 @@ const spaceBetween = computed(()=> {
     return 5
 });
 
-const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ id:systemPageTidConstants.SEARCH_SEC, locale:unref(locale)}), query:{ schemas: schemas.value }}));
+const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ id:systemPageTidConstants.SEARCH, locale:unref(locale)}), query:{ schemas: schemas.value }}));
 
 const query = clone({ ...siteStore.params, rowsPerPage:limit.value, schemas }); //schemas:['nationalTarget7'], 
 
