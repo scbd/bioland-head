@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon';
 import { kebabCase } from 'change-case';
 
+
 export default defineEventHandler(async (event) => {
         try{
           const rowsPerPage = 10;
@@ -74,14 +75,14 @@ export default defineEventHandler(async (event) => {
             ).then((resp) => resp.data.map(cleanIndexDataMap)),
           ]);
 
-          console.log('newsContent:', newsContent?.data?.length || 0, 'items');
-          console.log('meetingsContent:', meetingsContent?.data?.length || 0, 'items');
-          console.log('bchContent:', bchContent?.length || 0, 'items');
+
+          const top3Articles = await getTop3BchArticles();
 
           return sortData([
             ...(newsContent?.data || []), 
             ...(meetingsContent?.data || []), 
-            ...(bchContent || [])
+            ...(bchContent || []),
+            ...(top3Articles || [])
           ]);
         }
         catch (e) {

@@ -1,7 +1,7 @@
 <template>
      <ClientOnly  v-if="slides?.length">
         <div  v-if="slides?.length" class="col-12 mt-3 mb-0">
-            <h3 :style="headerStyle">{{t('Latest News and Updates')}} </h3>
+            <h3 :style="headerStyle">{{t('Latest Announcements, News and Updates')}} </h3>
             <NuxtLink :to="newsLink" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more news and updates')}} <LazyIcon  name="arrow-right" class="arrow" /></NuxtLink>
         </div>
         <div   v-if="slides?.length" class="position-relative mt-1" style="min-height:250px;">
