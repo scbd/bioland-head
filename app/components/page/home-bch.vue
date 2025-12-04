@@ -18,14 +18,8 @@
                         :title="$t('National Biosafety Framework')"
                     />
 
-                    <SwiperContentType
-                        :pagination="true"
-                        :arrows="true"
-                        :leftArrow="true"
-                        :hideArrowsCount="3"
-                        :schemas="[2,3, 49]"
-                        :title="$t('Latest News & Updates')"
-                    />
+                    <LazySwiperBchNews :pagination="true"/>
+
 
                     <SwiperContentType
                         :pagination="true"
@@ -36,7 +30,6 @@
                         :title="$t('Resources')"
                     />
                 </ClientOnly>
-
 
             </div>
 

@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon';
 import { kebabCase } from 'change-case';
 
-export default cachedEventHandler(async (event) => {
+export default defineEventHandler(async (event) => {
         try{
             const drupalInternalIds = [ 2, 3 ];
             const rowsPerPage = 5;
@@ -24,8 +24,7 @@ export default cachedEventHandler(async (event) => {
         catch (e) {
             passError(event, e);
         }
-    },
-    // listCache
+    }
 )
 
 

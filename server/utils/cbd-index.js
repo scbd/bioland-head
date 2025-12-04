@@ -246,22 +246,43 @@ function getAllQuery(ctx){
 
 export function getAllBchQuery(ctx = {}){
     const textLocale = ctx.indexLocal || getIndexLocale(ctx.locale);
-    const { page: passedPage, rowsPerPage } = ctx;
+    const { page: passedPage, rowsPerPage, to, schemaTypes: passedSchemaTypes } = ctx;
     const rows  = rowsPerPage ?? 25;
     const page  = passedPage ?? 1;
     const start = page <= 1 ? 0 : ((page - 1) * rows);
     const q     = getQ(ctx);
 
-    const query = {
-      df: `text_${textLocale}_txt`,
-      fq: [
+    // Normalize schemaTypes to always be an array
+    const schemaTypes = Array.isArray(passedSchemaTypes) ? passedSchemaTypes : passedSchemaTypes ? [passedSchemaTypes] : [];
+
+    // Build schemaType filter based on provided types (default: both scbd and reference)
+    let schemaTypeFilter;
+    if (schemaTypes.length > 0) {
+        const types = schemaTypes.map(type => `schemaType_s:${type}`).join(' OR ');
+        schemaTypeFilter = `{!tag=schemaType}(${types})`;
+    } else {
+        schemaTypeFilter = "{!tag=schemaType}(schemaType_s:scbd OR schemaType_s:reference)";
+    }
+
+    // Build filter queries
+    const fqBase = [
         "_state_s:public",
         "{!tag=version}(*:* NOT version_s:*)",
-        "{!tag=schemaType}(schemaType_s:scbd OR schemaType_s:reference)",
+        schemaTypeFilter,
         "{!tag=contact}((*:* NOT schema_s:contact) OR (schema_s:contact AND (refReferenceRecords_ss:* OR refNationalRecords_ss:*)))",
         "{!tag=excludeSchemas}(*:* NOT schema_s : (submission))",
         "realm_ss:bch",
-      ],
+    ];
+
+    // Only add event date filter if 'to' is provided (e.g., from latest-bch endpoint)
+    if (to) {
+        const toTime = cleanTime(to);
+        fqBase.push(`{!tag=eventDate}((*:* NOT startDate_dt:*) OR startDate_dt:[* TO ${toTime}T23:59:59.999Z])`);
+    }
+
+    const query = {
+      df: `text_${textLocale}_txt`,
+      fq: fqBase,
       q,
       sort: "updatedDate_dt desc",
       fl: `id,realm_ss, rec_date:updatedDate_dt, rec_creationDate:createdDate_dt, identifier_s, uniqueIdentifier_s, url_ss, government_${textLocale}_s, schema_${textLocale}_s, government_${textLocale}_t, schemaSort_i, sort1_i, sort2_i, sort3_i, sort4_i, _revision_i,rec_countryName:government_${textLocale}_t, rec_title:title_${textLocale}_t, rec_summary:summary_t, rec_type:type_${textLocale}_t, rec_meta1:meta1_${textLocale}_txt, rec_meta2:meta2_${textLocale}_txt, rec_meta3:meta3_${textLocale}_txt,rec_meta4:meta4_${textLocale}_txt,rec_meta5:meta5_${textLocale}_txt,symbol_s,startDate_dt,endDate_dt,eventCountry_CEN_s,title_${textLocale}_s,eventCity_s,covers_ss,traitsDiseasesResistance_b,traitsHerbicidesResistance_b,traitsPhysiologyChanges_b,traitsQualityChanges_b,traitsMedicalProduction_b,traitsOther_b,scopeRelease_b,scopeFood_b,scopeFeed_b,scopeProcessing_b,scopeConfined_b,scopeContainedUse_b,scopeOther_b,scopePharmaceutical_b,scopeTransit_b,animals_b,bacteria_b,fungi_b,plants_b,viruses_b`,

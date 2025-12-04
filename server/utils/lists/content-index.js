@@ -95,7 +95,7 @@ async function getListIndex(ctx ) {
 
 function getQuestString(ctx){
 
-    return getFreeTextFilterParams(ctx)+ getTypeFilterParams(ctx)+getPaginationParams(ctx)+getSortParams(ctx);
+    return getFreeTextFilterParams(ctx)+ getTypeFilterParams(ctx)+getDateFilterParams(ctx)+getPaginationParams(ctx)+getSortParams(ctx);
 }
 
 function getTypeFilterParams({ drupalInternalId, drupalInternalIds }){
@@ -150,6 +150,26 @@ function getFreeTextFilterParams({ freeText }){
 
 
     return sortQueryString;
+}
+
+function getDateFilterParams({ from, to }){
+    if(!from && !to) return '';
+
+    let filterQueryString = '';
+
+    if(from){
+        filterQueryString += `&filter[date-from][condition][path]=field_start_date`;
+        filterQueryString += `&filter[date-from][condition][operator]=>=`;
+        filterQueryString += `&filter[date-from][condition][value]=${encodeURIComponent(from)}`;
+    }
+
+    if(to){
+        filterQueryString += `&filter[date-to][condition][path]=field_start_date`;
+        filterQueryString += `&filter[date-to][condition][operator]=<=`;
+        filterQueryString += `&filter[date-to][condition][value]=${encodeURIComponent(to)}`;
+    }
+
+    return filterQueryString;
 }
 
 function hasFieldMigratedValue(fieldMigratedField){
