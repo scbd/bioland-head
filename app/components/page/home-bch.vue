@@ -8,7 +8,7 @@
         </div>
         <div class="row my-4">
             <div   class="col-12 border-col">
-
+                <ClientOnly>
                     <SwiperContentType
                         :pagination="true"
                         :arrows="true"
@@ -35,7 +35,7 @@
                         :schemas="[15,48,43,16,6, 12]" 
                         :title="$t('Resources')"
                     />
-
+                </ClientOnly>
 
 
             </div>
