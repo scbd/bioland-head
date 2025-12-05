@@ -12,20 +12,50 @@ export default defineNitroPlugin((nitro) => {
         await isValidLocalePrefix();
 
 
-        function isValidLocalePrefix(){
+        async function isValidLocalePrefix(){
             try {
                 const host           = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
-                const ctx            = getContext(event);
+                let ctx              = getContext(event);
                 
-                // Early return if context is not available yet
-                if(!ctx || !ctx.defaultLocale || !ctx.locales) return;
+                // If no context cookie, we need to fetch from DMSM to get defaultLocale
+                if(!ctx || !ctx.defaultLocale || !ctx.locales) {
+                    // Extract siteCode from hostname (e.g., seed.localhost -> seed)
+                    const siteCode = host?.split('.')[0];
+                    if (!siteCode) return;
+                    
+                    // Fetch DMSM config to get defaultLocale
+                    const { baseHost, dmsm, env, multiSiteCode } = useRuntimeConfig().public;
+                    const configUrl = `${dmsm}/config/${env}/${multiSiteCode}/${siteCode}`;
+                    
+                    try {
+                        const config = await $fetch(configUrl);
+                        if (config?.defaultLocale && config?.locales) {
+                            ctx = {
+                                defaultLocale: config.defaultLocale,
+                                locales: config.locales,
+                                siteCode
+                            };
+                        } else {
+                            return; // Can't proceed without config
+                        }
+                    } catch (err) {
+                        return; // DMSM not available yet
+                    }
+                }
                 
                 const defaultLocale  = ctx.defaultLocale;
-                const isValid        = ctx.locales.includes(event.path.split('/')[1]);
+                const pathLocale     = event.path.split('/')[1];
+                const isValid        = ctx.locales.includes(pathLocale);
 
-                if(isValid || event.path==='/' || !ctx.locales.length) return;
+                // Redirect root path to defaultLocale
+                if(event.path === '/') {
+                    return sendRedirect(event, `/${defaultLocale}`, 301);
+                }
 
-                return sendRedirect(event, `/${defaultLocale}${event.path}`, 301);
+                // Redirect invalid locale paths
+                if(!isValid && ctx.locales.length) {
+                    return sendRedirect(event, `/${defaultLocale}${event.path}`, 301);
+                }
             } catch (error) {
                 // Silently fail - context not ready yet
                 return;

@@ -5,8 +5,9 @@
 2. [Technology Stack](#technology-stack)
 3. [Naming Conventions](#naming-conventions)
 4. [Code Standards](#code-standards)
-5. [Version Control](#version-control)
-6. [Code Review Process](#code-review-process)
+5. [Error Handling](#error-handling)
+6. [Version Control](#version-control)
+7. [Code Review Process](#code-review-process)
 
 **Related Documents:**
 - [AI Agent Instructions](./agents.md)
@@ -659,6 +660,311 @@ Every project must include:
 #### Inline Documentation
 - Prefer inline documentation over external markdown files
 - Keep documentation close to the code it describes
+
+---
+
+## Error Handling
+
+Proper error handling ensures application stability, provides meaningful feedback to users, and simplifies debugging. This section defines patterns for both expected errors (validation, not found, etc.) and uncaught exceptions.
+
+### Error Categories
+
+#### Expected Errors
+Errors that can occur during normal application operation:
+- Validation failures (invalid input, missing required fields)
+- Resource not found (404)
+- Authentication/authorization failures (401, 403)
+- Business logic violations (e.g., insufficient balance)
+- External service unavailable
+
+#### Uncaught Exceptions
+Unexpected errors indicating bugs or system failures:
+- Null pointer exceptions
+- Database connection failures
+- Unhandled promise rejections
+- Runtime errors
+
+### Server-Side Error Handling (Nitro/Nuxt)
+
+#### Standard Pattern for API Routes
+
+Use the `passError` utility for consistent error handling across all server routes:
+
+```typescript
+import { passError } from '~/server/utils'
+
+export default defineEventHandler(async (event) => {
+  try {
+    const result = await performOperation()
+    return result
+  } catch (e) {
+    passError(event, e)
+  }
+})
+```
+
+#### Typed Error Handling with Custom Error Classes
+
+For more granular control, handle specific error types:
+
+```typescript
+export default defineEventHandler(async (event) => {
+  try {
+    const result = await operation()
+    return result
+  } catch (error) {
+    // Handle validation errors with 400 status
+    if (error instanceof ValidationError) {
+      throw createError({ 
+        statusCode: 400, 
+        statusMessage: 'Validation Failed',
+        message: error.message,
+        data: { field: error.field, value: error.value }
+      })
+    }
+    
+    // Handle not found errors with 404 status
+    if (error instanceof NotFoundError) {
+      throw createError({ 
+        statusCode: 404, 
+        statusMessage: 'Not Found',
+        message: error.message 
+      })
+    }
+    
+    // Handle authentication errors with 401 status
+    if (error instanceof AuthenticationError) {
+      throw createError({ 
+        statusCode: 401, 
+        statusMessage: 'Unauthorized',
+        message: 'Authentication required' 
+      })
+    }
+    
+    // Log unexpected errors and return generic 500
+    consola.error('Unexpected error', { error, path: event.path })
+    throw createError({ 
+      statusCode: 500, 
+      statusMessage: 'Internal Server Error',
+      message: 'An unexpected error occurred' 
+    })
+  }
+})
+```
+
+#### Using H3 Error Utilities
+
+Leverage H3's built-in error handling utilities:
+
+```typescript
+import { createError, isError, sendError } from 'h3'
+
+export default defineEventHandler(async (event) => {
+  // Create and throw errors with full context
+  throw createError({
+    statusCode: 400,
+    statusMessage: 'Bad Request',
+    message: 'Invalid email format',
+    data: { field: 'email', received: 'not-an-email' }
+  })
+})
+```
+
+### Global Error Capturing with Nitro Plugins
+
+Create a plugin to capture and log all application errors:
+
+```typescript
+// server/plugins/error-capture.ts
+export default defineNitroPlugin((nitro) => {
+  nitro.hooks.hook('error', async (error, { event }) => {
+    // Log error with context
+    consola.error(`[${event?.path}] Application error:`, {
+      error: error.message,
+      stack: error.stack,
+      statusCode: error.statusCode,
+      context: event?.context
+    })
+    
+    // Optional: Send to error tracking service (Sentry, etc.)
+    // await errorTracker.capture(error, { event })
+  })
+})
+```
+
+### Custom Error Handler Configuration
+
+Configure a custom error handler in `nitro.config.ts` or `nuxt.config.ts`:
+
+```typescript
+// nitro.config.ts
+export default defineNitroConfig({
+  errorHandler: '~/server/error-handler'
+})
+
+// server/error-handler.ts
+import type { H3Event, H3Error } from 'h3'
+
+export default async function errorHandler(error: H3Error, event: H3Event) {
+  const isDev = process.dev
+  const isApiRoute = event.path.startsWith('/api/')
+  
+  // Return JSON for API routes
+  if (isApiRoute) {
+    setResponseStatus(event, error.statusCode || 500)
+    setResponseHeader(event, 'Content-Type', 'application/json')
+    return send(event, JSON.stringify({
+      error: true,
+      statusCode: error.statusCode,
+      message: error.message,
+      data: error.data,
+      // Include stack trace only in development
+      ...(isDev && { stack: error.stack })
+    }))
+  }
+  
+  // Return HTML for other routes
+  setResponseStatus(event, error.statusCode || 500)
+  
+  // Show stack trace in development mode for easier debugging
+  if (isDev) {
+    return send(event, `
+      <div style="font-family: monospace; padding: 20px;">
+        <h1 style="color: #e53e3e;">Error ${error.statusCode || 500}</h1>
+        <p><strong>${error.message}</strong></p>
+        <pre style="background: #1a202c; color: #e2e8f0; padding: 16px; border-radius: 8px; overflow-x: auto; white-space: pre-wrap;">${error.stack}</pre>
+      </div>
+    `)
+  }
+  
+  return send(event, `<h1>Error ${error.statusCode}</h1><p>${error.message}</p>`)
+}
+```
+
+### Client-Side Error Handling (Vue/Nuxt)
+
+#### Vue Error Boundaries with error.vue
+
+Create an `app/error.vue` file to handle uncaught errors:
+
+```vue
+<script setup>
+const props = defineProps({
+  error: Object
+})
+
+const handleError = () => clearError({ redirect: '/' })
+</script>
+
+<template>
+  <div class="error-page">
+    <h1>{{ error.statusCode }}</h1>
+    <p>{{ error.message }}</p>
+    <button @click="handleError">Go Home</button>
+  </div>
+</template>
+```
+
+#### Composable Error Handling
+
+Handle async errors in composables and components:
+
+```typescript
+// composables/use-async-data-safe.ts
+export function useAsyncDataSafe<T>(key: string, handler: () => Promise<T>) {
+  return useAsyncData(key, async () => {
+    try {
+      return await handler()
+    } catch (error) {
+      // Log error using consola (never use console.* directly)
+      consola.error(`[${key}] Data fetch failed:`, error)
+      
+      // Show user notification
+      const { addAlert } = useAlertsStore()
+      addAlert({
+        type: 'error',
+        message: 'Failed to load data. Please try again.'
+      })
+      
+      // Return null or default value
+      return null
+    }
+  })
+}
+```
+
+#### Event Handler Error Handling
+
+For client-side event handlers, catch errors manually:
+
+```typescript
+const handleSubmit = async () => {
+  try {
+    isLoading.value = true
+    await submitForm(formData.value)
+    showSuccess('Form submitted successfully')
+  } catch (error) {
+    if (error.statusCode === 400) {
+      validationErrors.value = error.data?.errors || []
+    } else {
+      showError('An error occurred. Please try again.')
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+```
+
+### Error Handling Best Practices
+
+#### Do's
+- **Use specific error types** - Create custom error classes for different error categories
+- **Include context** - Add relevant data to errors (user ID, request path, timestamp)
+- **Log server-side errors** - Use `consola` for consistent logging with levels
+- **Return user-friendly messages** - Never expose stack traces or internal details to clients
+- **Handle errors at boundaries** - Catch errors at API route level, not deep in utilities
+- **Use passError consistently** - Leverage the existing `passError` utility for API routes
+- **Set appropriate status codes** - Use correct HTTP status codes (400, 401, 403, 404, 500)
+
+#### Don'ts
+- **Don't swallow errors** - Always log or rethrow, never use empty catch blocks
+- **Don't expose sensitive data** - Remove stack traces and internal paths from production client responses (dev mode may show stacks for debugging)
+- **Don't use generic messages** - Provide actionable error messages when possible
+- **Don't mix error handling styles** - Use consistent patterns across the codebase
+- **Don't forget async errors** - Always handle promise rejections with try/catch or .catch()
+- **Don't use console.*** - Always use `consola` for logging (provides levels, formatting, and consistency)
+
+### Standard Error Response Format
+
+All API errors should follow this consistent structure:
+
+```typescript
+interface ErrorResponse {
+  statusCode: number        // HTTP status code
+  statusMessage: string     // HTTP status message (e.g., "Bad Request")
+  message: string           // Human-readable error description
+  data?: {                  // Optional additional context
+    field?: string          // For validation errors
+    code?: string           // Application-specific error code
+    details?: unknown       // Any additional error details
+  }
+}
+```
+
+### HTTP Status Code Reference
+
+| Code | Name | Use Case |
+|------|------|----------|
+| 400 | Bad Request | Invalid input, validation errors |
+| 401 | Unauthorized | Missing or invalid authentication |
+| 403 | Forbidden | Valid auth but insufficient permissions |
+| 404 | Not Found | Resource doesn't exist |
+| 409 | Conflict | Resource state conflict (duplicate, etc.) |
+| 422 | Unprocessable Entity | Semantic validation errors |
+| 429 | Too Many Requests | Rate limiting |
+| 500 | Internal Server Error | Unexpected server errors |
+| 502 | Bad Gateway | Upstream service error |
+| 503 | Service Unavailable | Temporary unavailability |
 
 ---
 

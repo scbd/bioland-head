@@ -1,4 +1,3 @@
-import { createConsola } from "consola";
 
 import limax from 'limax';
 import anyAscii from 'any-ascii';
@@ -6,7 +5,7 @@ import anyAscii from 'any-ascii';
 
 export { unLocales, mapLocaleToDrupal, mapLocaleFromDrupal } from '~/utils/index';
 export { htmlSanitize } from '~/utils/html';
-export const consola = createConsola({ level: 5, fancy: true });
+
 
 export function isOddNumber(num) { return num % 2;}
 

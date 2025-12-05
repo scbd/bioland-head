@@ -43,7 +43,7 @@ export default defineNuxtConfig({
   },
   imports: {
     presets: [
-      { from: "consola", imports: ["consola"] },
+      // { from: "consola", imports: ["consola"] },
       { from: "vue-final-modal", imports: ["useModal"] },
     ],
   },
@@ -89,11 +89,11 @@ export default defineNuxtConfig({
     fallbackLocale: "en",
     baseUrl: "/",
     locale: "en",
-    detectBrowserLanguage: true,
+    detectBrowserLanguage: false, // CRITICAL: Disabled to let DMSM control default locale
     precompile: { strictMessage: false },
     lazy: true,
     langDir: "locales",
-    strategy: "prefix_and_default",
+    strategy: "prefix",
     bundle: {
       optimizeTranslationDirective: false,
     },
@@ -105,6 +105,12 @@ export default defineNuxtConfig({
     server: {
       hmr: { protocol: "ws", host: "localhost", clientPort: 3000 },
     },
+    optimizeDeps: {
+      include: [
+        'string-strip-html',
+        '@unhead/schema-org/vue'
+      ]
+    }
   },
   delayHydration: { mode: "init" },
 
