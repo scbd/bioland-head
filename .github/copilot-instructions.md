@@ -204,3 +204,7 @@ When adding tests (see `.github/old.md` for full TDD guide):
   2. Link to epic: `jira_link_to_epic` with `epic_key: "BL-460"` and `issue_key: "BL-XXX"`
   3. Verify linkage in response
 
+Bulding docker 
+
+
+docker build --platform linux/amd64 -t scbd/bioland-head:${env}-${date}-v${numberAtThisTag}.
