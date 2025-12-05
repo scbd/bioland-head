@@ -387,11 +387,6 @@ export default[
         "nativeName": "Українська"
     },
     {
-        "code": "ur",
-        "name": "Urdu",
-        "nativeName": "اردو"
-    },
-    {
         "code": "vi",
         "name": "Vietnamese",
         "nativeName": "Tiếng Việt"

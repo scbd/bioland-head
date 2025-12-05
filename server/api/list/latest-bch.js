@@ -43,7 +43,6 @@ export default defineEventHandler(async (event) => {
             )};`,
           };
 
-          console.log('Base query:', JSON.stringify(baseQuery, null, 2));
 
           // Schema 2 = news, Schema 49 = announcements, Schema 3 = meetings
           // News & announcements: no future date (use changed/published dates)

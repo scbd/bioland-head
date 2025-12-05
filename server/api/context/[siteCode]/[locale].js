@@ -3,7 +3,7 @@ export default defineEventHandler(async (event) => {
             const siteCode   = getRouterParam(event, 'siteCode');
             const l          = getRouterParam(event, 'locale');
             const ctx        = { siteCode };
-            const config     = await getSiteConfig(ctx);
+            const config     = await fetchSiteConfig(ctx);
             const locale     = isValidLocale(l)? l : config?.defaultLocale;
             const host       = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
             

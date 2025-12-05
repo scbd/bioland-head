@@ -62,7 +62,7 @@ export function parseContext (context) {
     return ctxClean;
 }
 
-export async function getSiteConfig({  siteCode }){
+export async function fetchSiteConfig({ siteCode }) {
 
     try{
         const { multiSiteCode, env, dmsm } = useRuntimeConfig().public;
@@ -78,7 +78,7 @@ export async function getSiteConfig({  siteCode }){
         throw createError({ 
             statusCode: 404, 
             statusMessage: 'Not Found',
-            message: `Server.utils.context.getSiteConfig: no context derived ${uri}`,
+            message: `Server.utils.context.fetchSiteConfig: no context derived ${uri}`,
             data:e
         });
     }
