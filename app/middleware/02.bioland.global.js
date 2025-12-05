@@ -31,7 +31,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   
   await getMe();
 
-  const locale = nuxtApp.$i18n?.locale?.value || siteStore.locale || 'en';
+  // Use siteStore.locale which is guaranteed to be set by the site plugin
+  const locale = nuxtApp.$i18n?.locale?.value || siteStore.locale || siteStore.defaultLocale;
   const   getPage          = useGetPage(locale);
   const [ pData, fetch ]   = await Promise.all([getPage(path), getMenus()]);
   const { data: menuData } = fetch || { data: undefined};
@@ -50,14 +51,21 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
 
   function isValidLocalePrefix(){
-
-    
     const { locales} = useRuntimeConfig().public;
     const   preFixes = locales.map(({ code })=> code);
 
-    const defaultLocale = siteStore.defaultLocale || 'en';
-    const isValid = preFixes.includes(to.path.split('/')[1]);
-
+    // siteStore.defaultLocale is guaranteed to be set by site.js plugin
+    // which runs before this middleware
+    const defaultLocale = siteStore.defaultLocale;
+    const pathLocale = to.path.split('/')[1];
+    
+    if(!defaultLocale) {
+      // This should never happen - plugin ensures defaultLocale is set
+      console.error('defaultLocale not set in siteStore - plugin may have failed');
+      return;
+    }
+    
+    const isValid = preFixes.includes(pathLocale);
 
     if(!isValid) return navigateTo(`/${defaultLocale}${to.path}`);
 }

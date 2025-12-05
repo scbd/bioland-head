@@ -4,7 +4,10 @@ export default defineEventHandler(async (event) => {
             const l          = getRouterParam(event, 'locale');
             const ctx        = { siteCode };
             const config     = await fetchSiteConfig(ctx);
-            const locale     = isValidLocale(l)? l : config?.defaultLocale;
+            
+            // If locale is 'und' (undefined), use DMSM defaultLocale
+            // Otherwise, validate the requested locale
+            const locale     = (l === 'und' || !isValidLocale(l)) ? config?.defaultLocale : l;
             const host       = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
             
             if(!siteCode) throw createError({ statusCode: 404, message: `Site code not found in request`, statusMessage:'Not Found' });

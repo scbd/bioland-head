@@ -69,12 +69,12 @@ export async function fetchSiteConfig({ siteCode }) {
 
         const uri = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}/${encodeURIComponent(siteCode)}`;
 
-        return $fetch(uri);
+        const result = await $fetch(uri);
+
+        return result;
     }catch(e){
         const { multiSiteCode, env, dmsm } = useRuntimeConfig().public;
         const uri = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}/${encodeURIComponent(siteCode)}`;
-        consola.error(uri);
-        consola.error(e);
         throw createError({ 
             statusCode: 404, 
             statusMessage: 'Not Found',

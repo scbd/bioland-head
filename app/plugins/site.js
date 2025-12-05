@@ -16,49 +16,101 @@ export default defineNuxtPlugin({
 
         const runTime   = useRuntimeConfig().public;
         const context   = useCookie('context');
-        
-        // Safely get locale with fallback
-        let locale;
+
+        // Safely get locale with fallback and keep a setter on hand
+        let i18nLocale = ref('en');
+        let setLocale  = async (value) => { i18nLocale.value = value; };
+
         try {
-            const i18n = useI18n();
-            locale = i18n.locale;
+            ({ locale: i18nLocale, setLocale } = useI18n());
         } catch (e) {
             // Fallback if i18n is not ready
-            locale = ref('en');
+            i18nLocale = ref('en');
         }
+
+        const locale = ref(i18nLocale.value);
+        const requestUrl = useRequestURL();
+        const hostName   = requestUrl.hostname;
+        const pathLocaleOverride = getLocaleFromPath(requestUrl.pathname);
         
-        const hostName = useRequestURL().hostname;
+        // ALWAYS fetch with 'und' first to get DMSM's authoritative defaultLocale
+        // This ensures we never initialize with the wrong default, regardless of path or cookie
+        const initialContext = await getSiteContext(undefined);
+        
+        // If user is on a specific locale path (e.g., /en, /ru), use that locale
+        // Otherwise use DMSM's defaultLocale (e.g., 'es' for seed site)
+        const currentLocale = pathLocaleOverride && 
+                              initialContext.config?.locales?.includes(pathLocaleOverride)
+                              ? pathLocaleOverride 
+                              : initialContext.defaultLocale;
+        
+        // Update the store's locale to match the current path
+        if (currentLocale !== initialContext.locale) {
+            initialContext.locale = currentLocale;
+        }
 
+        await syncInitialLocale(initialContext, currentLocale);
 
-        await getSiteContext();
+        // Setup reactive html attributes based on locale
+        const rtlLangs = ['ar', 'he', 'fa', 'ur', 'ku', 'am', 'az'];
+        useHead(() => ({
+            htmlAttrs: {
+                lang: locale.value,
+                dir: rtlLangs.includes(locale.value) ? 'rtl' : 'ltr'
+            }
+        }));
 
-
-        async function getSiteContext(paddedLocale = locale){
+        async function getSiteContext(paddedLocale){
             try{
-                const siteStore     = useSiteStore(nuxtApp.$pinia);
-                const locale        = sanitizeLocale(unref(paddedLocale))
-                const id            = getBiolandSiteIdentifier();
-                const uri           = `/api/context/${id}/${unref(locale)}`;
+              const siteStore = useSiteStore(nuxtApp.$pinia);
+              const requestedLocale = unref(paddedLocale);
+              const id = getBiolandSiteIdentifier();
+              
+              // CRITICAL: Don't pass 'en' fallback - let server use DMSM defaultLocale
+              // If no locale requested, use 'und' (undefined) to signal server to use default
+              const fetchLocale = requestedLocale || 'und';
+              const uri = `/api/context/${id}/${fetchLocale}`;
+              
+              const data = await $fetch(uri);
+              
+              if(!data?.defaultLocale) {
+                throw new Error(`DMSM API did not return defaultLocale for site ${id}`);
+              }
+              
+              // Use the locale from server response (which correctly uses DMSM default)
+              const localeForFetch = data.locale;
 
-                const data       = await $fetch(uri);
+              const i18nStrategy = runTime?.i18n?.strategy || "prefix";
+              const runTimePublic = clone(runTime);
 
-                const i18nStrategy  = runTime?.i18n?.strategy || 'prefix';
-                const runTimePublic = clone(runTime);
+              delete runTimePublic.locales;
+              delete runTimePublic.i18n;
 
-                delete(runTimePublic.locales);
-                delete(runTimePublic.i18n);
+              // Use DMSM values directly from server response
+              const derivedDefaultLocale = data.defaultLocale;
+              const resolvedLocale = data.locale; // Server already resolved this correctly
 
-                siteStore.initialize({ ...runTimePublic,i18nStrategy,...(data|| {}), locale}) ;
+              siteStore.initialize({
+                ...runTimePublic,
+                i18nStrategy,
+                ...(data || {}),
+                locale: resolvedLocale,
+                defaultLocale: derivedDefaultLocale,
+              });
 
-                ensureContext(siteStore.params);
+              ensureContext(siteStore.params);
 
-                updateAppConfig(siteStore.params);
+              updateAppConfig(siteStore.params);
 
-                return { ...runTimePublic, i18nStrategy, ...data.value, locale};
+              return {
+                ...runTimePublic,
+                i18nStrategy,
+                ...(data || {}),
+                locale: resolvedLocale,
+                defaultLocale: derivedDefaultLocale,
+              };
             }catch(e){
                 const id = getBiolandSiteIdentifier ();
-
-                consola.error(e);
 
                 throw createError({ 
                     statusCode    : e.statusCode || 404, 
@@ -70,8 +122,25 @@ export default defineNuxtPlugin({
             }
         }
 
-        function sanitizeLocale(locale, defaultLocale = 'en'){
+        async function syncInitialLocale(siteContext, overrideLocale){
+            if(!siteContext) return;
 
+            const targetLocale = overrideLocale
+                ? sanitizeLocale(overrideLocale, siteContext.defaultLocale)
+                : siteContext.defaultLocale || siteContext.locale;
+
+            if(targetLocale && targetLocale !== i18nLocale.value)
+                await setLocale(targetLocale);
+
+            locale.value = targetLocale || locale.value;
+        }
+
+        function sanitizeLocale(locale, defaultLocale){
+            if(!defaultLocale) {
+                // If no defaultLocale is provided, we can't sanitize - return locale as-is
+                // This should only happen during initial load before DMSM fetch
+                return locale;
+            }
         
             const { locales } = runTime;
             const   preFixes  = locales.map(({ code })=> code);
@@ -107,8 +176,8 @@ export default defineNuxtPlugin({
             for(const key in updateCtx)
                 if(isPlainObject(context.value))
                     context.value[key] = updateCtx[key];
-                else if(context.value[key] && context.value[key] !== updateCtx[key])
-                    context.value[key] = updateCtx[key];
+            else if(context.value[key] && context.value[key] !== updateCtx[key])
+                context.value[key] = updateCtx[key];
         }
 
         nuxtApp.hook('i18n:beforeLocaleSwitch', async ({ oldLocale, newLocale }) => {
@@ -125,10 +194,22 @@ export default defineNuxtPlugin({
 
             updateAppConfig(ctx);
 
+            locale.value = newLocale;
+
             $fetch(`/api/menus`,{ params: clone(siteStore.params) })
             .then((data)=>menuStore.loadAllMenus(data));
 
         })
+
+        function getLocaleFromPath(path = ''){
+            const { locales } = runTime;
+            const preFixes    = locales.map(({ code })=> code);
+            const pathLocale  = path.split('/')[1];
+
+            if(!pathLocale) return undefined;
+
+            return preFixes.includes(pathLocale)? pathLocale : undefined;
+        }
     }
 });
 
@@ -141,5 +222,4 @@ function ensureContext(ctx = {}){
             throw new Error('plugins/site: Context not derived');
     
 }
-
 
