@@ -49,12 +49,12 @@
         else 
             selected.value = [];
     });
-    watch(selected, debounce(async (value, newV) => {
+    watch(selected, debounce(async (value, oldValue) => {
         const query = { ...route.query, schemas: value } ;
 
         if(!value.length) delete(query.schemas);
 
-        if(value.length && value.length !== newV.length)
+        if(value.length && value.length !== oldValue.length)
             delete(query.page);
 
         await router.push({ query });

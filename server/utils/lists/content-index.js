@@ -30,8 +30,8 @@ function mapData(ctx){
             if(body?.value) body.summary = stripHtml(body?.value).result.substring(0, 400);
 
             const mediaImage = getMediaImage(ctx, field_attachments);
-            const page       = ctx.page? Number(ctx.page) : 1;
-            const perPage    = ctx.rowsPerPage? Number(ctx.rowsPerPage) : 10;
+            const page       = ctx.page && !isNaN(Number(ctx.page)) ? Number(ctx.page) : 1;
+            const perPage    = ctx.rowsPerPage && !isNaN(Number(ctx.rowsPerPage)) ? Number(ctx.rowsPerPage) : 10;
             const index      = page > 1? (page-1)*perPage + Number(key) : Number(key);
             const localePath = ctx.locale === ctx.defaultLocale? '' : `/${ctx.locale}`;
             const hasAlias   = path?.alias && mapLocaleFromDrupal(path.langcode) === ctx.locale;

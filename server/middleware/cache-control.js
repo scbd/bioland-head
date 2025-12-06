@@ -1,10 +1,8 @@
 export default defineEventHandler((event) => {
     const { pathname } = new URL(getRequestURL(event))
 
-    const res   = event.node.res
-    const year  = 31536000;
-    const day   = 60 * 60 * 24;
-    const week  = 60 * 60 * 24 * 7;
+    const res  = event.node.res
+    const { YEAR, WEEK, DAY, MINUTE } = timeInSecondsConstants
 
     const isMenusApi   = pathname.match(/\/api\/menus\//);
     const isCommentsApi= pathname.match(/\/api\/comments\//);
@@ -19,7 +17,7 @@ export default defineEventHandler((event) => {
     if(isNoCache)
         res.setHeader('Cache-Control', `no-store, max-age=0`);
     else if(isAsset || isNuxt)
-        res.setHeader('Cache-Control', `max-age=${year}, stale-if-error=${week}`);
+        res.setHeader('Cache-Control', `max-age=${YEAR}, stale-if-error=${WEEK}`);
     else
-        res.setHeader('Cache-Control', `max-age=15, stale-if-error=${week}, stale-while-revalidate=${day}`);
+        res.setHeader('Cache-Control', `max-age=${MINUTE/4}, stale-if-error=${WEEK}, stale-while-revalidate=${DAY}`);
 })
