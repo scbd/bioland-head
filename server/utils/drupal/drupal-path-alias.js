@@ -61,7 +61,7 @@ function getSearchParams(type, nodeId, locale = 'en'){
 
     search['filter[node-id][condition][path]']     = 'path';
     search['filter[node-id][condition][operator]'] = '=';
-    search['filter[node-id][condition][value]']    = `/${encodeURIComponent(type)}/${encodeURIComponent(nodeId)}`;
+    search['filter[node-id][condition][value]']    = `/${type}/${nodeId}`;
     
     return search 
 }
@@ -75,7 +75,7 @@ function getSearchParamsByAlias(alias){
 
     search['filter[node-id][condition][path]']     = 'alias';
     search['filter[node-id][condition][operator]'] = 'ENDS_WITH';
-    search['filter[node-id][condition][value]']    = encodeURIComponent(alias);
+    search['filter[node-id][condition][value]']    = alias;
     
     return search 
 }
@@ -92,6 +92,7 @@ export async function mapAliasByLocale(ctx, type, id){
     const thePath = isHomePath? '' : `/${type}/${id}`;
     const englishLang = languages?.find(({langcode})=> langcode === 'en') || { path: thePath};
     
+    // consola.warn(locales)
     for (const locale of locales) {
         const aLang           = languages?.find(({langcode}) => langcode.startsWith(locale));
         const { alias, path } = aLang || englishLang;

@@ -85,7 +85,7 @@ function mapTopics(ctx){
                     const {  body, id, tags, path, taxonomy_forums, comment_forum, title, drupal_internal__nid: nodeId  } = aForum;
                     const { name, id:tid, path: taxForumsPath } = taxonomy_forums;
                     const { alias } = taxForumsPath;
-                    const forum = { name, id:tid, slug: paramCase(name), href:alias };
+                    const forum = { name, id:uuid, slug: slugify(name), href:alias, tid };
                     const { comment_count: count, last_comment_timestamp:timeStamp, last_comment_uid: lastCommentUid    } = comment_forum;
                     const dateString = getTimeStringFromSeconds(timeStamp);
 

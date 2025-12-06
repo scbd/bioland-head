@@ -24,7 +24,7 @@
                 {{t('Bioland 1')}}  <LazyIcon name="external-link" :size="1.5"/>
             </NuxtLink>
         </span>
-        {{!!isInDynamicMenu}}
+
     </div>
 </template>
 <script setup>
@@ -60,6 +60,10 @@
 
     function makeCrumb(){
 
+        for (const aCrumb of inMenu.value?.crumbs ) 
+            if(aCrumb?.contentTypeId && aCrumb?.href === '') aCrumb.href = menusStore.getContentTypeById(aCrumb.contentTypeId).slug;
+        
+        return inMenu.value?.crumbs;
         if(pageStore?.isSystemPage || pageStore?.isContentType ) return [];
 
         if(pageStore.isTopicsList || pageStore.isTopicsCommentsList){
@@ -111,6 +115,7 @@
 
             return inMenu.value?.crumbs;
         }
+
     }
     
 

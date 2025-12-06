@@ -1,13 +1,25 @@
 <template>
     <div class="col-12 text-wrap px-0">
         <LazyPageHeaderMegaMenuHeader  :menu="menu" />
+        <section v-for="(aChild,j) in drupalMenus" :key="j">
+            <p >
+                <LazyPageHeaderMegaMenuLink :title="aChild.title" :menu="aChild" />
+            </p>
+        </section>
         <LazyPageHeaderMegaMenuLink v-for="(aMenu,j) in menu.children" :key="j" :menu="aMenu" />
     </div>
 </template>
 <script setup>
+    import clone from 'lodash.clonedeep';
+
     const { t , locale } = useI18n();
     const   siteStore    = useSiteStore();
     const   menuStore    = useMenusStore();
+
+    const   props              = defineProps({ menu: Object });
+    const { menu: passedMenu } = toRefs(props);
+    const aMenu        = computed(() => clone(unref(passedMenu)));
+    const drupalMenus  = computed(()=>aMenu.value?.children || []); 
 
     const country = siteStore.config?.countries?.length? [...siteStore.config.countries, siteStore.config?.country] : siteStore.config?.country;
 

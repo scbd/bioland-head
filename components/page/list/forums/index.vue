@@ -9,7 +9,7 @@
             </div>
             <div class="col-12 col-md-3 ps-0" >
                 <h2  :style="primaryColorStyle"  class="page-type text-capitalize">{{t('Forums',2)}}</h2>
-                <LazyPageListTextSearch/>
+                <!-- <LazyPageListTextSearch/> -->
             </div>
 
             <ClientOnly >
@@ -24,6 +24,7 @@
                     <div name="list" tag="div" class="col-12 col-md-9 data-body">
 
                         <LazyPageListForumsRow  :a-line="aLine" v-for="(aLine,index) in results" :key="index" />
+                        <span :key="`showTopPage${showTopPager}${results?.count}-span`">&nbsp;</span>
                     </div>
                 </template>
             </ClientOnly>
@@ -38,6 +39,7 @@
 <script setup>
     import clone from 'lodash.clonedeep';
 
+    const   getCachedData               = useGetCachedData();
     const { t  }                        = useI18n();
     const   r                           = useRoute();
     const   siteStore                   = useSiteStore();
@@ -57,9 +59,10 @@
     const rowsPerPage   = computed(() => r?.query?.rowsPerPage? r?.query?.rowsPerPage : 10);
     const query         = clone({ ...r.query, ...siteStore.params, freeText, page, rowsPerPage });
 
-    const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query });
+    const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  method: 'GET', query, key: 'forums-list', getCachedData});
 
     onMounted(() => { eventBus.on('changePage', refresh); });
+
 
     function getApiUri(){
         return `/api/forums`;

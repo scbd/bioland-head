@@ -1,5 +1,6 @@
 import json5         from 'json5'                ;
 import isPlainObject from 'lodash.isplainobject' ;
+import { parse as parseUrl, format as formatUrl } from 'native-url'
 
 export function uniqueArrayOfObjects(passedArray){
     const setOfStrings = new Set(passedArray.map(e => json5.stringify(e)));
@@ -79,4 +80,79 @@ export function sortArrayOfObjectsByProp(a,b, prop, direction = 'asc'){
     if(a[prop] > b[prop]) return isAsc? -1 : 1; 
 
     return 0;
+}
+
+export const mapLocaleToDrupal = (locale) => {
+    if (locale === 'zh') return 'zh-hans';
+    if (locale === 'tl') return 'fil';
+
+    return locale
+}
+  
+export const mapLocaleFromDrupal = (locale) => {
+    if (locale === 'zh-hans') return 'zh';
+    if (locale === 'fil') return 'tl';
+
+    return locale
+}
+
+
+export function truncateUrl(urlString, length) {
+	if (typeof urlString !== 'string') {
+		throw new TypeError('Expected input to be a string');
+	}
+
+	if (typeof length !== 'number') {
+		throw new TypeError('Expected length to be a number');
+	}
+
+	if (urlString.length <= length) {
+		return urlString;
+	}
+
+	const TRUNCATE_SYMBOL_LENGTH = 2;
+	const parsed = parseUrl(urlString);
+	let remainingLength = length - (urlString.length - parsed.path.length) - TRUNCATE_SYMBOL_LENGTH;
+	const pathParts = parsed.path.split('/');
+	const pathPartsReturnValue = [];
+	let index = pathParts.length;
+
+	while (index--) {
+		const x = pathParts[index];
+
+		if (remainingLength < x.length + 1) {
+			pathPartsReturnValue.push('…');
+			break;
+		}
+
+		pathPartsReturnValue.push(x);
+		remainingLength -= x.length + 1;
+	}
+
+	parsed.pathname = pathPartsReturnValue.reverse().join('/');
+
+	return formatUrl(parsed);
+}
+
+export async function $fetchRetry(url, options) {
+    const MAX_NB_RETRY = 10;
+    const RETRY_DELAY_MS = 2000;
+
+    let retryLeft = MAX_NB_RETRY;
+    while (retryLeft > 0){
+        try {
+            return await $fetch(url, options);
+        }
+        catch (err) { 
+            await sleep(RETRY_DELAY_MS)
+        }
+        finally {
+            retryLeft -= 1;
+        }
+    }
+    throw new Error(`Too many retries`);
+}
+
+function sleep(delay=200){
+    return new Promise((resolve) => setTimeout(resolve, delay));
 }
