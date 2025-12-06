@@ -48,7 +48,7 @@
             selected.value = Array.isArray(value.schemas)? value.schemas.map((x)=>Number(x)) : [Number(value.schemas)];
         else 
             selected.value = [];
-    })
+    });
     watch(selected, debounce(async (value, newV) => {
         const query = { ...route.query, schemas: value } ;
 
