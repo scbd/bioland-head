@@ -35,12 +35,12 @@ export const useMenusStore = defineStore('menus', {
             if(hrefMatch) return menu;
         
             if(menu?.children?.length)
-                for(let i = 0; i < menu.children.length; i++){
-                    if(this.isInMenu(menu.children[i], href)) return this.isInMenu(menu.children[i], href);
+                for(const child of menu.children){
+                    if(this.isInMenu(child, href)) return this.isInMenu(child, href);
 
-                    if( menu.children[i].children?.length)
-                        for(let j = 0; j < menu.children[i].children.length; j++)
-                            if(this.isInMenu(menu.children[i].children[j], href)) return this.isInMenu(menu.children[i].children[j], href); 
+                    if(child.children?.length)
+                        for(const grandChild of child.children)
+                            if(this.isInMenu(grandChild, href)) return this.isInMenu(grandChild, href); 
                 }      
             return false;
         },
@@ -50,16 +50,16 @@ export const useMenusStore = defineStore('menus', {
             if(hrefMatch) return menu;
         
             if(menu?.children?.length)
-                for(let i = 0; i < menu.children.length; i++)
-                    if(this.isInMenu(menu.children[i], href)) return this.isInMenu(menu.children[i], href);
+                for(const child of menu.children)
+                    if(this.isInMenu(child, href)) return this.isInMenu(child, href);
         
             return false;
         },
         isInMainMenu(href){
             if(!this.main?.length) return false;
 
-            for(let i = 0; i < this.main.length; i++)
-                if(this.isInMenu(this.main[i], href)) return this.isInMenu(this.main[i], href)
+            for(const menuItem of this.main)
+                if(this.isInMenu(menuItem, href)) return this.isInMenu(menuItem, href)
         
             return false;
         },
@@ -68,7 +68,7 @@ export const useMenusStore = defineStore('menus', {
 
             if(!contentType?.data?.length) return false
             for (const pageRef of contentType.data) {
-                if(pageRef.nid=== did) return pageRef
+                if(pageRef.nid === did) return pageRef
             }
             return false
         },
@@ -105,8 +105,8 @@ export const useMenusStore = defineStore('menus', {
         isInMainMenuByContentTypeId(id){
             if(!id || !this?.main?.length) return false;
     
-            for(let i = 0; i < this.main.length; i++)
-                if(this.isInMenuByContentTypeId(this.main[i], id)) return this.isInMenuByContentTypeId(this.main[i], id)
+            for(const menuItem of this.main)
+                if(this.isInMenuByContentTypeId(menuItem, id)) return this.isInMenuByContentTypeId(menuItem, id)
         
             return false;
         },
@@ -114,21 +114,21 @@ export const useMenusStore = defineStore('menus', {
             if(!id) return false;
             if(!this?.main?.length) return false;
 
-for(let entry of this.main.length || [])
-    for(let child of entry.children || [])
-        if(this.isInMenuByContentTypeId(child, id)) 
-            return this.isInMenuByContentTypeId(child, id)
-            
-            return false;
+        for(let entry of this.main.length || [])
+            for(let child of entry.children || [])
+                if(this.isInMenuByContentTypeId(child, id)) 
+                    return this.isInMenuByContentTypeId(child, id)
+        
+        return false;
         },
         isInMenuByContentTypeId(menu, id){
 
             if(menu.contentTypeId === id && menu.contentTypeId && id) return menu;
         
             if(menu?.children?.length)
-                for(let i = 0; i < menu.children.length; i++)
-                    if(this.isInMenuByContentTypeId(menu.children[i], id)) 
-                        return this.isInMenuByContentTypeId(menu.children[i], id);
+                for(const child of menu.children)
+                    if(this.isInMenuByContentTypeId(child, id)) 
+                        return this.isInMenuByContentTypeId(child, id);
         
             return false;
         },
