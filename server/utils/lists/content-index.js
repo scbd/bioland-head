@@ -41,8 +41,8 @@ function mapData(ctx){
 
             if(tags?.subjects)
                 for (const subject of tags.subjects) 
-                    if(subject?.title[ctx.locale])
-                        subject.name=subject?.title[ctx.locale];
+                    if(subject?.title?.[ctx.locale])
+                        subject.name=subject.title[ctx.locale];
         }
 
         return results
