@@ -19,7 +19,7 @@
                     {{t('Revisions')}}
                 </NuxtLink>
             </li>
-            <li  v-if="meStore.isContributor && pageStore?.isNodePage" class="nav-item">
+            <li  v-if="meStore.isContributor && pageStore.isNodePage" class="nav-item">
                 <NuxtLink :style="getStyleActive()" :to="cloneUrl" class="nav-link  text-capitalize"  external>
                     {{t('Clone')}}
                 </NuxtLink>
@@ -37,39 +37,39 @@
 
     const { t  }    = useI18n();
     const route     = useRoute();
-    const   meStore    = useMeStore();
-    const   pageStore  = usePageStore();
+    const meStore    = useMeStore();
+    const pageStore  = usePageStore();
     const siteStore = useSiteStore();
 
-    const returnUrl = computed(()=>`?returnUrl=${encodeURIComponent(route.path)}`);
+    const page      = computed(() => pageStore.page);
+    const returnUrl = computed(() => encodeURIComponent(route.path) );
 
-    const baseUrl   = computed(()=>siteStore.localizedHost+getUrlComponent());
+    const drupalInternalNid = computed(() => page.value?.drupalInternalNid);
+    const drupalInternalMid = computed(() => page.value?.drupalInternalMid);
+    const drupalInternalTid = computed(() => page.value?.drupalInternalTid);
 
-    const showSelf = computed(() => pageStore?.isSystemPage? meStore?.showEditSystemPages : meStore?.showEdit)
+    const baseUrl   = computed(() => siteStore.localizedHost + getUrlComponent());
 
-    const baseUrl   = computed(()=>siteStore.localizedHost+getUrlComponent());
+    const showSelf = computed(() => pageStore.isSystemPage ? meStore.showEditSystemPages : meStore.showEdit);
 
-    const showSelf = computed(() => pageStore?.isSystemPage? meStore?.showEditSystemPages : meStore?.showEdit)
+    const isContributor = computed(() => meStore.roles?.includes('contributor') && meStore.roles?.length === 1);
 
-    const isContributor = computed(() => meStore?.roles?.includes('contributor') && meStore?.roles?.length == 1);
+    const isContributorCanEdit = computed(() => isContributor.value && page.value?.uid?.meta?.drupal_internal__target_id === meStore.diuid && !page.value?.status);
 
-    const isContributorCanEdit = computed(() => isContributor.value && pageStore?.page?.uid?.meta?.drupal_internal__target_id === meStore?.diuid && !pageStore?.page?.status);
-
-    const cloneUrl = computed(()=>siteStore.localizedHost+`/clone/${pageStore?.page?.drupalInternalNid}/quick_clone`+returnUrl.value);
+    const cloneUrl = computed(() => siteStore.localizedHost + `/clone/${encodeURIComponent(drupalInternalNid.value)}/quick_clone?returnUrl=` + returnUrl.value);
 
     function getUrlComponent(){
-        if(pageStore?.isMediaPage)    return `/media/${pageStore?.page?.drupalInternalMid}`;
-        if(pageStore?.isTaxonomyPage || pageStore.isSystemPage) return `/taxonomy/term/${pageStore?.page?.drupalInternalTid}`;
+        if(pageStore.isMediaPage)                              return `/media/${encodeURIComponent(drupalInternalMid.value)}`;
+        if(pageStore.isTaxonomyPage || pageStore.isSystemPage) return `/taxonomy/term/${encodeURIComponent(drupalInternalTid.value)}`;
 
-        return `/node/${pageStore?.page?.drupalInternalNid}`;
+        return `/node/${encodeURIComponent(drupalInternalNid.value)}`;
     }
     
-    const  editUrl = computed(()=>{
-        if(isContributor.value &&  !isContributorCanEdit.value) 
-            return siteStore.localizedHost+'/admin/content/unpublished'+returnUrl.value;
+    const editUrl = computed(() => {
+        if(isContributor.value && !isContributorCanEdit.value) 
+            return siteStore.localizedHost+'/admin/content/unpublished?returnUrl='+returnUrl.value;
         
-        return baseUrl.value+'/edit'+returnUrl.value; 
-
+        return baseUrl.value+'/edit?returnUrl='+returnUrl.value; 
     })
 
 
