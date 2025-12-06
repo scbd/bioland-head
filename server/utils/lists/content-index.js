@@ -75,13 +75,13 @@ async function getListIndex(ctx ) {
     const headers       = { 'Content-Type': 'application/json' };
 
     // consola.debug(uri)
-    const { data, meta } = await $fetch(uri+getQuestString(ctx), $fetchBaseOptions({ method, headers }));
+    const { data, meta } = await $fetch(uri+getQueryString(ctx), $fetchBaseOptions({ method, headers }));
 
 
     return  mapData(ctx)({ data, count: meta?.count })
 };
 
-function getQuestString(ctx){
+function getQueryString(ctx){
 
     return getFreeTextFilterParams(ctx)+ getTypeFilterParams(ctx)+getPaginationParams(ctx)+getSortParams(ctx);
 }
