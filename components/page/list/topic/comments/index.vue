@@ -2,7 +2,7 @@
     <div class="container mt-0">
         <div class="row align-items-end">
             <div class="col-md-3 ps-0 ">
-                <LazyPageListTextSearch class="mb-1"/>
+                <!-- <LazyPageListTextSearch class="mb-1"/> -->
             </div>
             <div class="col-12 col-md-9 px-0">
                 <LazyPageBreadCrumbs :count="results?.comments?.length"/>

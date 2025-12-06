@@ -16,9 +16,18 @@
 
                 <h2 :style="pageTypeStyle" class="page-type">{{pageStore?.typeName}}</h2>
 
-                <NuxtLink v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  :to="localePath(pageStore?.image?.url)">
-                    <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-5 w-100"/>
-                </NuxtLink>
+                <div v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  class="mt-3 position-relative">
+                    <ClientOnly v-if="meStore.showEdit">
+                        <div  class="position-absolute end-0 top-0" style="min-width:3rem;">
+                            <button @click="editAttachments" type="button" class="btn btn-light btn-sm ">
+                                <LazyIcon name="edit" style="margin-top: .2rem;" :size="2"/>
+                            </button>
+                        </div>
+                    </ClientOnly>
+                    <NuxtLink v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  :to="localePath(pageStore?.image?.url)">
+                        <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid w-100"/>
+                    </NuxtLink>
+                </div>
 
                 <LazyPageMediaFileDetails v-if="isImageOrVideo || isDocument" :vertical="true" />
             </div>
@@ -26,7 +35,14 @@
             <div  class="col-12 col-md-9">
                 <LazyPageBodyTabs v-if="showEdit()"/>
                 <h2  class="data-body mb-0" :class="{'has-hero': pageStore?.heroImage}" >{{ pageStore?.title}}</h2>
-                <NuxtLink :style="pageTypeStyle" v-if="pageStore?.url" :to="pageStore?.url" target="_blank" class="fs-5" external>{{pageStore?.url}}</NuxtLink>
+
+                <div v-if="pageStore?.page?.fieldUrl?.length" v-for="url in pageStore?.page?.fieldUrl"  >
+                    <NuxtLink :style="pageTypeStyle" :to="url?.uri" target="_blank" class="fs-5" external :alt="url?.title">{{url.uri}} <span v-if="false">- {{url?.title}}</span> </NuxtLink>
+                </div>
+
+                <div v-if="pageStore?.page?.fieldUrl?.length" v-for="url in pageStore?.page?.fieldUrl"  >
+                    <ExternalUrl v-bind="url"/>
+                </div>
 
                 <hr class="mt-1">
 
@@ -46,55 +62,64 @@
                             <LazyPageBodyTagsDate /> 
                         </div>
                         <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="htmlSanitize(pageStore?.body)"></div>
-
                     </div>
 
-
-                        <LazyPageBodyTagsDate /> 
-                    </div>
-
-                </div>
-
-                <div class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
-                    <LazyPageMediaFileDetails />
-                </div>
-
-                <div v-if="pageStore?.image?.url" class="col-12 d-md-none px-0">
-
-                    <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
-
-                    <LazyPageBodyTagsDate />
-                </div>
+            <div class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
+                <LazyPageMediaFileDetails />
             </div>
+
+            <div v-if="pageStore?.image?.url" class="col-12 d-md-none px-0">
+
+                <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
+
+                <LazyPageBodyTagsDate />
+            </div>
+        </div>
             
-        </div>
-    
-        <div v-if="pageStore?.media?.length"  class="row mt-3">
-            <div class="col-12 col-md-3">
-                <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{pageStore?.media.length}})</span></h2>
+            <div v-if="pageStore?.media?.length"  class="row mt-3">
+                <div class="col-12 col-md-3">
+                    <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{pageStore?.media?.length}})</span></h2>
 
+                </div>
+                <div class="col-12 col-md-9">
+                    <ClientOnly>
+                        <LazySwiperMedia :slides="pageStore?.media" type="media"/>
+                    </ClientOnly>
+                </div>
             </div>
-            <div class="col-12 col-md-9">
-                <LazySwiperMedia :slides="pageStore?.media" type="media"/>
+
+            <div v-if="pageStore?.tags?.gbfTargets?.length" class="row mt-3">
+                <div class="col-12 col-md-3">
+                    <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.gbfTargets.length}})</span></h2>
+                </div>
+                <div class="col-12 col-md-9">
+                    <ClientOnly>
+                        <LazySwiperGbf :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
+                    </ClientOnly>
+                </div>
             </div>
         </div>
 
-        <div v-if="pageStore?.tags?.gbfTargets?.length" class="row mt-3">
-            <div class="col-12 col-md-3">
-                <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.gbfTargets.length}})</span></h2>
-            </div>
-            <div class="col-12 col-md-9">
-                <LazySwiperGbf :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
-            </div>
-        </div>
+            <div v-if="pageStore?.tags?.gbfTargets?.length" class="row mt-3">
+                <div class="col-12 col-md-3">
+                    <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags?.gbfTargets?.length}})</span></h2>
+                </div>
+                <div class="col-12 col-md-9">
+                    <LazySwiperGbf :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
+                </div>
+
     </div>
+    
+
 </template>
 <script setup>
+
+
     const { t }        = useI18n();
     const   localePath = useLocalePath();
     const   meStore    = useMeStore();
     const   pageStore  = usePageStore();
-    const pageStore  = usePageStore();
+    const   siteStore  = useSiteStore();
 
     const isImageOrVideo = computed(()=> pageStore?.isImageOrVideo);
     const isDocument     = computed(()=> pageStore?.isDocument );
@@ -105,6 +130,11 @@
             if(pageStore?.isTaxonomyPage) return meStore?.showEditSystemPages;
 
             return meStore?.showEdit;
+    }
+
+    function editAttachments () {
+
+        navigateTo(`${siteStore.host}/node/${pageStore?.page?.drupalInternalNid}/edit#edit-field-attachments-wrapper`,{ external: true });
     }
 
 </script>

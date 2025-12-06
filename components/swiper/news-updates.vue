@@ -14,16 +14,13 @@
                 :pagination="{ clickable: true }"
                 :modules="modules"
                 @swiper="onSwiper"
-            >
-
-                <!--   -->
+                >
 
                 <LazySwiperSlide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
 
                     <LazyCards :record="slide" />
                 </LazySwiperSlide>
 
-               
             </LazySwiper>
             <LazySwiperButton  direction="right" :swiper-ref="swiperRef"/> 
         </ClientOnly>
@@ -46,7 +43,6 @@ const { t }          = useI18n();
 
 
 const props = defineProps({ 
-                         
                             pagination: { type: Boolean, default: false },
                             arrows:     { type: Boolean, default: true },
                             leftArrow:  { type: Boolean, default: true },
@@ -88,7 +84,7 @@ const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ 
 
 const query = clone({ ...siteStore.params });
 
-const { data:slides, status } = await useFetch(`/api/list/latest`, {  method: 'GET', query, getCachedData });
+const { data:slides, status } = await useLazyFetch(`/api/list/latest`, {  method: 'GET', query, getCachedData });
 
 const loading = computed(()=> status.value === 'pending');
 

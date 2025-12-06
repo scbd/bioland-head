@@ -5,6 +5,11 @@
         <LazyPageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menus" >
             <Transition :name="slotProps.fadeName">
                 <section v-if="slotProps.hide">
+                    <section v-for="(aChild,j) in drupalMenus" :key="j">
+                        <p >
+                            <LazyPageHeaderMegaMenuLink :title="aChild.title"  :menu="aChild" />
+                        </p>
+                    </section>
                     <LazyPageHeaderMegaMenuLink v-for="(aChild,i) in menus[slotProps.country]" :key="i" :menu="aChild" />
 
                     <LazyPageHeaderMegaMenuLink :menu="finalLink(slotProps.country)" />
@@ -14,9 +19,17 @@
     </div>
 </template>
 <script setup >
+    import clone from 'lodash.clonedeep';
 
     const { t }      = useI18n();
     const menusStore = useMenusStore();
+
+    const   props              = defineProps({ menu: Object });
+    const { menu: passedMenu } = toRefs(props);
+
+    const aMenu        = computed(() => clone(unref(passedMenu)));
+    const drupalMenus  = computed(()=>aMenu.value?.children || []); 
+
     const menus      = computed(() => menusStore.nr);
 
     const countries      = computed(()=>Object.keys(menus.value));
