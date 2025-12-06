@@ -8,12 +8,12 @@
     const { t, locale  } = useI18n();
     const siteStore      = useSiteStore();
     const menuStore      = useMenusStore();
-    const query          = clone({ ...siteStore.params });
+    const query          = clone({ ...siteStore.params, promoted: true, });
     const localePath     = useLocalePath();
     const getCachedData  = useGetCachedData();
     const showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.implementation);
 
-    const { data: record , status, error }= await useLazyFetch(`/api/list/content/5`, {  method: 'GET', query, onResponse, key: 'implimentation', getCachedData });
+    const { data: record , status, error }= await useLazyFetch(`/api/list/drupal/5`, {  method: 'GET', query, onResponse, key: 'implimentation', getCachedData });
 
     const loading = computed(()=> status.value === 'pending'); 
 
@@ -33,8 +33,8 @@
         { name: t('View National Reports'),    to: { path:localePath(searchSecretariatPath.value), query:{ schemas:['cpbNationalReport2','cpbNationalReport3','cpbNationalReport4','absNationalReport','nationalReport','nationalReport6']}} },
         { name: t('View Laws & Regulations'),  to: { path:localePath(searchSecretariatPath.value), query:{ schemas:['measure','absProcedure','biosafetyLaw', 'biosafetyDecision']}} },
         { name: t('View NBSAP(s)'),            to: { path:localePath(searchSecretariatPath.value),query:{ schemas:['nationalReport'], freeText:'nbsap'}}},
-        { name: t('View Projects'),            to: { path:localePath(searchPath.value),query:{ schemas:[5,5]}}},
-        { name: t('View Documents'),           to: { path:localePath(searchPath.value),query:{ schemas:[12,12]}}},
+        { name: t('View Projects'),            to: { path:localePath(searchPath.value),query:{ schemas:[5]}}},
+        { name: t('View Documents'),           to: { path:localePath(searchPath.value),query:{ schemas:[12]}}},
     ];
 </script>
 
