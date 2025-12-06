@@ -35,16 +35,17 @@
 
 <script setup>
 
-    const { t  }        = useI18n();
-    const route         = useRoute();
-    const pageStore     = usePageStore();
-    const siteStore     = useSiteStore();
-    const baseHost      = computed(()=> siteStore.host);
-    const baseUrl       = computed(()=> `${siteStore.host}${getUrlComponent()}`);
-    const returnUrl     = computed(()=> `?destination=${encodeURIComponent(route.path)}`);//?clear-page-cache=${encodeURIComponent(route.path)
-    const returnHomeUrl = computed(()=> `?destination=${encodeURIComponent('/')}`);
-    const did           = computed(()=> pageStore?.page?.drupalInternalNid);
+    const { t  }    = useI18n();
+    const route     = useRoute();
+    const   meStore    = useMeStore();
+    const   pageStore  = usePageStore();
+    const siteStore = useSiteStore();
 
+    const returnUrl = computed(()=>`?returnUrl=${encodeURIComponent(route.path)}`);
+
+    const baseUrl   = computed(()=>siteStore.localizedHost+getUrlComponent());
+
+    const showSelf = computed(() => pageStore?.isSystemPage? meStore?.showEditSystemPages : meStore?.showEdit)
 
     const baseUrl   = computed(()=>siteStore.localizedHost+getUrlComponent());
 
@@ -58,7 +59,7 @@
 
     function getUrlComponent(){
         if(pageStore?.isMediaPage)    return `/media/${pageStore?.page?.drupalInternalMid}`;
-        if(pageStore?.isTaxonomyPage) return `/taxonomy/term/${pageStore?.page?.drupalInternalTid}`;
+        if(pageStore?.isTaxonomyPage || pageStore.isSystemPage) return `/taxonomy/term/${pageStore?.page?.drupalInternalTid}`;
 
         return `/node/${pageStore?.page?.drupalInternalNid}`;
     }
