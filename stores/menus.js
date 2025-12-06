@@ -141,7 +141,7 @@ for(let entry of this.main.length || [])
         getSystemPagePath({alias,id, locale}){
             const term = alias? this.getSystemPageByAlias(alias, locale) : this.getSystemPageById(id);
 
-            if(!term || !term?.aliases?.length) return id? `/taxonomy/term/${id}`:`/taxonomy/term/${systemPageTidConstants.SEARCH}`;
+            if(!term || !term?.aliases?.length) return id? `/taxonomy/term/${encodeURIComponent(id)}`:`/taxonomy/term/${encodeURIComponent(systemPageTidConstants.SEARCH)}`;
 
             return term.aliases[locale]
         },
