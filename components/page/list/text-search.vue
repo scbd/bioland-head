@@ -31,10 +31,7 @@
     }, 500))
 
     watch(() => route.query, (value) => {
-        if(value.freeText) 
-            queryText.value = value.freeText;
-        else 
-            queryText.value = '';
+        queryText.value = value.freeText || '';
     })
 
     function clear(){
