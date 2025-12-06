@@ -1,6 +1,6 @@
 <template >
     <div class="input-group">
-        <input type="text" v-model="queryText" class="form-control"  :class="{ 'not-allowed': disabled }" :placeholder="t('Free text search')" aria-label="search" :disabled="disabled">
+        <input type="text" v-model="queryText" class="form-control" :placeholder="t('Free text search')" aria-label="search">
 
         <a class="input-group-text"    :alt="t('Free text search')"  >
             <LazyIcon v-if="!queryText" name="search" class="white-icon" />
@@ -14,8 +14,6 @@
     const   route      = useRoute   ();
     const   eventBus   = useEventBus();
     const   queryText  = ref(route.query.freeText || '')
-
-    const disabled = ref(false);
 
     watch(queryText, debounce(async (value) => {
         const query = { ...route.query, freeText: value } ;
