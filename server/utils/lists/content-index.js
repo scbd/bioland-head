@@ -45,7 +45,7 @@ function mapData(ctx){
                         subject.name=subject.title[ctx.locale];
         }
 
-        return results
+        return results;
     }
 }
 
