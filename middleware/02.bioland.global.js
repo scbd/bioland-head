@@ -21,6 +21,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   isValidLocalePrefix();
 
   if(!context.value || !siteStore.siteCode) return reloadNuxtApp();
+  
   await getMe();
 
   const   getPage          = useGetPage(nuxtApp.$i18n.locale.value);
@@ -28,6 +29,11 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   const { data: menuData } = fetch || { data: undefined};
 
   if(!pData) return;
+  if(pData?.redirect) {
+    await abortNavigation();
+    
+    return navigateTo({ path: pData.redirect, query: to.query  }, { redirectCode: 301 });
+  }
 
   pStore.initialize(pData);
 

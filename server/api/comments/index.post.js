@@ -19,12 +19,12 @@ export default defineEventHandler(async (event) => {
         const { entityIdentifier, entityType, replyIdentifier, replyType, comment, localeChosen } = await readBody(event);
 
         const context = await getContext (event);
-        const resp    = await postComment();
+        const resp    = await postComment(event);
 
         return resp;
 
-        async function postComment(){
-            const { locale: localeCtx } = context;
+        async function postComment(event){
+            const { locale: localeCtx } = await getContext (event);
             const   locale              = localeChosen || localeCtx;
             const   uri                 = `${context.host}/${locale}${typeMap[entityType]}`;
             const   method              = 'post';
@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
             const body          = getCommentTemplate({ entityIdentifier, entityType, replyIdentifier, replyType, comment });
 
 
-            return  $fetch(uri, { method, headers, body });
+            return  $fetch(uri,$fetchBaseOptions({ method, headers, body }) );
         }
     }
     catch (e) {

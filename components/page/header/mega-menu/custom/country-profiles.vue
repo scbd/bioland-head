@@ -5,6 +5,11 @@
         <LazyPageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menus" >
             <Transition :name="slotProps.fadeName">
                 <section v-if="slotProps.hide">
+                    <section v-for="(aChild,j) in children" :key="j">
+                        <p >
+                            <LazyPageHeaderMegaMenuLink :title="aChild.title"  :menu="aChild" />
+                        </p>
+                    </section>
                     <section v-for="(aChild,j) in menus[slotProps.country]" :key="j">
                         <p >
                             <NuxtLink  class="child-link" :class="aChild.class"   :to="aChild.href" :title="aChild.title"  external target="_blank">
@@ -18,7 +23,8 @@
     </div>
 </template>
 <script setup>
-
+    import clone from 'lodash.clonedeep';
+    
     const { t } = useI18n();
     const menu  = ref({ 
                         title: t('Country Profiles'), 
@@ -26,9 +32,12 @@
                         class: ['main-nav-sub-heading'] 
                     });
     const siteStore = useSiteStore();
- 
+    const   props              = defineProps({ menu: Object });
+    const { menu: passedMenu } = toRefs(props);
     
     const menus      = computed(() => generateMenus());
+    const aMenu     = computed(() => clone(unref(passedMenu)));
+    const children  = computed(()=>aMenu.value?.children || []); 
 
     function generateMenus(){
         const countries = siteStore.countries;

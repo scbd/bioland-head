@@ -17,7 +17,7 @@
                 {{aChild.count? aChild.dateString: '&nbsp;'}}
             </div>
             <div class="col-1 text-nowrap px-0 align-self-center">
-                {{aChild.count}} {{t('replies')}}
+                {{aChild.count}} {{t('comments')}}
             </div>
         </div>
 

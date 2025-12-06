@@ -1,9 +1,9 @@
 
-export const getThesaurusByKey = async (keysRaw) => {
+export const getThesaurusByKey = defineCachedFunction(async (keysRaw) => {
     if(!keysRaw) return;
 
     const { gaiaApi }  = useRuntimeConfig().public;
-    const   keys       = Array.isArray(keysRaw)? keysRaw : keysRaw.includes(',')? keysRaw.split(',') : [keysRaw];
+    const   keys       = Array.isArray(keysRaw)? keysRaw : keysRaw?.includes(',')? keysRaw.split(',') : [keysRaw];
     const   promises   = [];
 
     for (const key of keys) {
@@ -11,15 +11,19 @@ export const getThesaurusByKey = async (keysRaw) => {
         const uri = `${gaiaApi}/v2013/thesaurus/terms/${encodeURIComponent(key)}`;
 
         if(key.includes('SDG-GOAL-'))  promises.push(getSdg(key ) )
-        else promises.push($fetch(uri, { mode: 'cors' }));
+        else promises.push($fetch(uri, $fetchBaseOptions({ mode: 'cors' })));
     }
 
     return Promise.all(promises);
-}
+},{
+    maxAge: 60 * 60 * 60 * 24 * 30 * 6,
+    getKey:(keysRaw) => Array.isArray(keysRaw)? keysRaw : keysRaw?.includes(',')? keysRaw.split(',') : [keysRaw],
+    base:'external'
+})
 
 export const getCountryName = defineCachedFunction(async (identifier) => {
     const { gaiaApi }  = useRuntimeConfig().public;
-    const   data        = await $fetch(`${gaiaApi}/v2013/thesaurus/terms/${encodeURIComponent(identifier)}`)
+    const   data        = await $fetch(`${gaiaApi}/v2013/thesaurus/terms/${encodeURIComponent(identifier)}`,$fetchBaseOptions())
 
     return data.name;
 },{

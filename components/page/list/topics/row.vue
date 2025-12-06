@@ -1,10 +1,10 @@
 <template>
     <NuxtLink :to="getHref(aLine)" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" >
-        <div   class="card p-1 mb-3"  >
+        <div   class="card p-1 m-1 mb-3"  >
             <div  class="row g-0">
                 <div class="col-8 fw-bold"> {{t('Topic')}} </div>
-                <div class="col-1 fw-bold"> {{t('Replies')}} </div>
-                <div class="col-3 fw-bold"> {{t('Last Reply')}}</div>
+                <div class="col-1 fw-bold"> {{t('Comments')}} </div>
+                <div class="col-3 fw-bold"> {{t('Last Comment')}}</div>
 
                 <div class="col-12">
                     <div class="card-header">
