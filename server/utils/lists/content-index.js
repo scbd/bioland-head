@@ -81,57 +81,120 @@ async function getListIndex(ctx ) {
     return  mapData(ctx)({ data, count: meta?.count })
 };
 
+/**
+ * Builds a query string from context parameters for the Drupal JSON:API.
+ * Merges free text, type filter, pagination, and sort parameters into a single query string.
+ * @param {Object} ctx - The context object containing query parameters.
+ * @param {string} [ctx.freeText] - Free text search term.
+ * @param {string} [ctx.drupalInternalId] - Single Drupal internal ID for filtering.
+ * @param {string[]} [ctx.drupalInternalIds] - Array of Drupal internal IDs for filtering.
+ * @param {number} [ctx.page=1] - Current page number.
+ * @param {number} [ctx.rowsPerPage=10] - Number of rows per page.
+ * @param {string} [ctx.sortBy] - Field to sort by.
+ * @param {string} [ctx.sortDirection] - Sort direction ('ASC' or 'DESC').
+ * @returns {string} The encoded query string prefixed with '&', or empty string if no params.
+ */
 function getQueryString(ctx){
+    const params = {
+        ...getFreeTextFilterParams(ctx),
+        ...getTypeFilterParams(ctx),
+        ...getPaginationParams(ctx),
+        ...getSortParams(ctx)
+    };
 
-    return getFreeTextFilterParams(ctx)+ getTypeFilterParams(ctx)+getPaginationParams(ctx)+getSortParams(ctx);
+    const searchParams = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(params))
+        searchParams.append(key, value);
+
+    const queryString = searchParams.toString();
+
+    return queryString ? `&${queryString}` : '';
 }
 
+/**
+ * Generates filter parameters for filtering by Drupal taxonomy term IDs.
+ * @param {Object} ctx - The context object.
+ * @param {string} [ctx.drupalInternalId] - Single Drupal internal taxonomy term ID.
+ * @param {string[]} [ctx.drupalInternalIds] - Array of Drupal internal taxonomy term IDs.
+ * @returns {Object} Key-value pairs for the tid filter, or empty object if no IDs provided.
+ */
 function getTypeFilterParams({ drupalInternalId, drupalInternalIds }){
-    if((!drupalInternalIds || !drupalInternalIds?.length) && !drupalInternalId) return '';
+    if((!drupalInternalIds || !drupalInternalIds?.length) && !drupalInternalId) return {};
 
     const filters =  Array.isArray(drupalInternalIds)? [...drupalInternalIds, drupalInternalId] : [drupalInternalId];
 
-    let filterQueryString = '';
+    const params = {
+        'filter[tid][condition][path]': 'tid',
+        'filter[tid][condition][operator]': 'IN'
+    };
 
-    filterQueryString += `&filter[tid][condition][path]=tid`
-    filterQueryString += `&filter[tid][condition][operator]=IN`
+    filters.filter(Boolean).forEach((filter, index) => {
+        params[`filter[tid][condition][value][${index}]`] = filter;
+    });
 
-    for(const filter of filters.filter(Boolean))
-        filterQueryString += `&filter[tid][condition][value][]=${encodeURIComponent(filter)}`;
-
-
-    return  filterQueryString;
+    return params;
 }
 
+/**
+ * Generates sort parameters for ordering content results.
+ * Sorts by sticky, published date, start date, and created/changed date.
+ * @param {Object} ctx - The context object.
+ * @param {string} [ctx.sortBy='changed'] - Field to sort by (defaults to 'changed').
+ * @param {string} [ctx.sortDirection] - Sort direction; falsy for 'DESC', truthy for 'ASC'.
+ * @param {string} [ctx.freeText] - If present with noSticky, skips sticky sorting.
+ * @param {boolean} [ctx.noSticky] - If true with freeText, skips sticky sorting.
+ * @returns {Object} Key-value pairs for sort parameters.
+ */
 function getSortParams({ sortBy, sortDirection, freeText, noSticky }){
 
     const direction = !sortDirection? 'DESC' : 'ASC';
 
-    let sortQueryString = '';
+    const params = {};
 
     if(!freeText || !noSticky){
-        sortQueryString += `&sort[sticky][path]=sticky`
-        sortQueryString += `&sort[sticky][direction]=${encodeURIComponent(direction)}`
+        params['sort[sticky][path]'] = 'sticky';
+        params['sort[sticky][direction]'] = direction;
     }
 
-    // sortQueryString += `&sort[promoted][path]=promote`
-    // sortQueryString += `&sort[promoted][direction]=${encodeURIComponent(direction)}`
-    sortQueryString += `&sort[sort-published][path]=field_published`
-    sortQueryString += `&sort[sort-published][direction]=${encodeURIComponent(direction)}`
-    sortQueryString += `&sort[sort-start][path]=field_start_date`
-    sortQueryString += `&sort[sort-start][direction]=${encodeURIComponent(direction)}`
-    sortQueryString += `&sort[sort-created][path]=${encodeURIComponent(sortBy || 'changed')}`
-    sortQueryString += `&sort[sort-created][direction]=${encodeURIComponent(direction)}`
+    // params['sort[promoted][path]'] = 'promote';
+    // params['sort[promoted][direction]'] = direction;
+    params['sort[sort-published][path]'] = 'field_published';
+    params['sort[sort-published][direction]'] = direction;
+    params['sort[sort-start][path]'] = 'field_start_date';
+    params['sort[sort-start][direction]'] = direction;
+    params['sort[sort-created][path]'] = sortBy || 'changed';
+    params['sort[sort-created][direction]'] = direction;
 
-    return sortQueryString;
+    return params;
 }
 
+/**
+ * Generates filter parameters for full-text search.
+ * @param {Object} ctx - The context object.
+ * @param {string} [ctx.freeText] - The free text search term.
+ * @returns {Object} Key-value pair for fulltext filter, or empty object if no search term.
+ */
 function getFreeTextFilterParams({ freeText }){
-    if(!freeText) return '';
+    if(!freeText) return {};
 
-    let sortQueryString =`&filter[fulltext]=${encodeURIComponent(freeText)}`;
+    return { 'filter[fulltext]': freeText };
+}
 
+/**
+ * Generates pagination parameters for limiting and offsetting results.
+ * @param {Object} ctx - The context object.
+ * @param {number} [ctx.page=1] - The current page number (1-indexed).
+ * @param {number} [ctx.rowsPerPage=10] - Number of items per page.
+ * @returns {Object} Key-value pairs for page limit and offset.
+ */
+function getPaginationParams({ page = 1, rowsPerPage = 10 }){
+    const limit  = Number(rowsPerPage) ? Number(rowsPerPage) : 10;
+    const offset = Number(page) > 1 ? (Number(page) - 1) * limit : 0;
 
-    return sortQueryString;
+    return {
+        'page[limit]': limit,
+        'page[offset]': offset
+    };
 }
 
