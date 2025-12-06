@@ -114,12 +114,10 @@ export const useMenusStore = defineStore('menus', {
             if(!id) return false;
             if(!this?.main?.length) return false;
 
-            for(let i = 0; i < this.main.length; i++)
-                if(this.main[i].children?.length)
-                    for(let j = 0; j < this.main[i].children.length; j++)
-                        if(this.main[i].children[j].length)
-                            if(this.isInMenuByContentTypeId(this.main[i].children[j], id)) 
-                                return this.isInMenuByContentTypeId(this.main[i].children[j], id)
+for(let entry of this.main.length || [])
+    for(let child of entry.children || [])
+        if(this.isInMenuByContentTypeId(child, id)) 
+            return this.isInMenuByContentTypeId(child, id)
             
             return false;
         },
