@@ -14,7 +14,7 @@
                         :arrows="true"
                         :leftArrow="true"
                         :hideArrowsCount="3"
-                        :schemas="[44]"
+                        :schemas="[44, 5, 45, 46, 47]"
                         :title="$t('National Biosafety Framework')"
                     />
 

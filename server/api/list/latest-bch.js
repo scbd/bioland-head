@@ -5,9 +5,9 @@ import { kebabCase } from 'change-case';
 export default defineEventHandler(async (event) => {
         try{
           const rowsPerPage = 10;
-          const bchRowsPerPage = 10;
+          const bchRowsPerPage = 1;
           const from = DateTime.now()
-            .minus({ months: 12 })
+            .minus({ months: 24 })
             .toFormat("yyyy-MM-dd");
           const to = DateTime.now().plus({ months: 1 }).toFormat("yyyy-MM-dd");
           const schemas = [
@@ -51,19 +51,19 @@ export default defineEventHandler(async (event) => {
             $fetch(
               "/api/list/drupal",
               $fetchBaseOptions({
-                query: { ...baseQuery, drupalInternalIds: [2, 49] },
+                query: { ...baseQuery, drupalInternalIds: [2, 49, 3] },
                 method: "get",
                 headers,
               })
             ),
-            $fetch(
-              "/api/list/drupal",
-              $fetchBaseOptions({
-                query: { ...baseQuery, drupalInternalIds: [3], from, to },
-                method: "get",
-                headers,
-              })
-            ),
+            // $fetch(
+            //   "/api/list/drupal",
+            //   $fetchBaseOptions({
+            //     query: { ...baseQuery, drupalInternalIds: [3], from, to },
+            //     method: "get",
+            //     headers,
+            //   })
+            // ),
             $fetch(
               "/api/list/bch",
               $fetchBaseOptions({
@@ -75,7 +75,7 @@ export default defineEventHandler(async (event) => {
           ]);
 
 
-          const top3Articles = await getTop3BchArticles();
+          const top3Articles = await getTop3BchArticles(context?.locale || 'en');
 
           return sortData([
             ...(newsContent?.data || []), 
