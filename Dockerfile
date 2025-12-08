@@ -66,6 +66,10 @@ COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/.output ./.output
 COPY --from=build /usr/src/app/node_modules/sharp ./.output/server/node_modules/sharp
 
+# Create cache directories with correct ownership for nuxt user
+RUN mkdir -p /usr/src/app/cache/db /usr/src/app/cache/external /usr/src/app/cache/lists && \
+    chown -R nuxt:nodejs /usr/src/app/cache
+
 ENV PORT=8000
 ENV NUXT_HOST=0.0.0.0
 ENV NUXT_PORT=8000
