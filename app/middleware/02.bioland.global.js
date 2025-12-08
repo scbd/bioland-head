@@ -104,7 +104,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
       const { data, error } = await useFetch(`/api/me`, {  method: 'GET',headers,  query: clone({...siteStore.params, path:to.path})})//.then(({ data }) => data);
 
-      if(!error.value) meStore.initialize(data)
+      if(!error.value && data.value) meStore.initialize(data)
     }catch(e){
       console.error(e)
 
