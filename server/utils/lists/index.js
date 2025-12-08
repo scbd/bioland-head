@@ -18,9 +18,23 @@ export function getTagFilterParams(filters){
 export function getPaginationParams({ page=1, rowsPerPage=10 }){
     
     const limit  = Number(rowsPerPage)? Number(rowsPerPage) : 10;
-    const offSet = Number(page)>1? (Number(page)-1)*limit : 0 ;
+    const pageNum = Number(page) || 1;
+    
+    // IMPORTANT: Drupal JSON:API access checks may remove items after the limit is applied.
+    // To ensure we get enough accessible items, we over-fetch by a multiplier.
+    // See: https://www.drupal.org/docs/core-modules-and-themes/core-modules/jsonapi-module/pagination
+    // The documentation explains: "page[limit] is a maximum, not a guarantee"
+    // 
+    // Access filtering happens AFTER the database query limit, so if many items are
+    // inaccessible (unpublished, access-controlled), we need to request more than we want.
+    const overFetchMultiplier = 5;
+    const drupalLimit = limit * overFetchMultiplier;
+    
+    // For pages beyond 1, we need to skip items. Since access filtering is unpredictable,
+    // we use the drupal limit as the offset unit.
+    const offSet = pageNum > 1 ? (pageNum - 1) * drupalLimit : 0;
 
-    return `&page[limit]=${encodeURIComponent(limit)}&page[offset]=${encodeURIComponent(offSet)}`;
+    return `&page[limit]=${encodeURIComponent(drupalLimit)}&page[offset]=${encodeURIComponent(offSet)}`;
 }
 
 

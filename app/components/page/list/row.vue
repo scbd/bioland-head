@@ -80,6 +80,7 @@
     const   dateFormat   = useDateFormat(locale);
     const   props        = defineProps({  aLine: { type: Object  }, });
     const { aLine }      = toRefs(props);
+    const { bgStyle }    = useTheme();
 
     const isChm         = computed(()=> aLine.value?.realms?.length);
     const isContentType = computed(()=>!!contentTypes[type]);

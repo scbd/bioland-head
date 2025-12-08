@@ -31,7 +31,6 @@
     </div>
 </template>
 <script setup>
-    import   clone           from 'lodash.clonedeep';
     const   meStore   = useMeStore();
     const { primaryColorStyle } = useTheme();
     const   isMobile    = isMobileFn   ();
@@ -58,11 +57,19 @@
     const { isContentTypeId, getContentType }  = useMenusStore();
     const realm         =    isSearchBch.value || siteStore.isBiosafetySite? 'BCH' : isSearchAbs.value ? 'ABS' : 'CHM';
     const realms=[realm];                
-    const schemas           = computed(() => r?.query?.schemas? r?.query?.schemas : undefined);
-    const freeText          = computed(() => r?.query?.freeText? r?.query?.freeText : '');
-    const page              = computed(() => r?.query?.page? r?.query?.page : 1);
-    const rowsPerPage       = computed(() => r?.query?.rowsPerPage? r?.query?.rowsPerPage : 10);
-    const query             = clone({ ...r.query, ...siteStore.params, freeText, page, rowsPerPage, schemas, realm, realms});
+    
+    // Use computed for query to ensure reactivity when route changes
+    const query = computed(() => ({
+        ...r.query,
+        ...siteStore.params,
+        freeText: r?.query?.freeText || '',
+        page: r?.query?.page || 1,
+        rowsPerPage: r?.query?.rowsPerPage || 10,
+        schemas: r?.query?.schemas || undefined,
+        realm,
+        realms
+    }));
+    
     const typeId            = computed(getContentTypeId);
     const contentTypeName   = computed(getContentTypeName);
 

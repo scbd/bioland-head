@@ -75,27 +75,88 @@ function getMediaImage(ctx, fieldAttachments){
 
 
 async function getListIndex(ctx ) {
-    const { localizedHost, locale } = ctx;
-    const uri           = `${localizedHost}/jsonapi/index/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image&filter[language]=${mapLocaleToDrupal(locale)}`;
+    const { localizedHost, locale, host, defaultLocale, page, rowsPerPage } = ctx;
+    // Use localizedHost which includes the user's current locale (e.g., /es/)
+    // Drupal content IS localized - titles, descriptions, and tags are stored per-language
+    // We need to fetch content in the user's current locale to get translated content
+    const uri           = `${localizedHost}/jsonapi/index/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image`;
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
     const fullUrl = uri+getQuestString(ctx);
+    
+    // Calculate the requested page size for slicing (getPaginationParams over-fetches)
+    const requestedLimit = Number(rowsPerPage) || 10;
+    const requestedPage = Number(page) || 1;
+    
+    // consola.debug('[content-index] Query URL:', fullUrl);
+    // consola.debug('[content-index] Context:', { host, localizedHost, locale, defaultLocale, page, rowsPerPage, requestedLimit });
 
     const { data, meta } = await $fetch(fullUrl, $fetchBaseOptions({ method, headers }));
 
+  //  consola.debug('[content-index] Results from Drupal:', { dataLength: data?.length, count: meta?.count });
 
     const { count, facets } = meta || {};
 
+    // Map all fetched data first
     const mappedResults = await mapData(ctx)({ data, count });
-    mappedResults.facets = facets || {};
+    
+    // Slice to requested page size since getPaginationParams over-fetches to compensate for access filtering
+    // See: https://www.drupal.org/docs/core-modules-and-themes/core-modules/jsonapi-module/pagination
+    if (mappedResults.data && mappedResults.data.length > requestedLimit) {
+       // consola.debug('[content-index] Slicing results from', mappedResults.data.length, 'to', requestedLimit);
+        mappedResults.data = mappedResults.data.slice(0, requestedLimit);
+    }
+    
+    // Check if content_type facet is missing (Drupal may not return it for non-default locales)
+    // If missing, fetch facets separately using default locale endpoint which reliably returns facets
+    let enrichedFacets = facets || [];
+    const hasContentTypeFacet = Array.isArray(facets) && facets.some(f => f.id === 'content_type');
+    
+    if (!hasContentTypeFacet && host && locale) {
+        try {
+            // Fetch content_type facet using default locale endpoint which reliably returns facets
+            // but still filter by current locale so counts reflect the current language
+            const defaultLocalePrefix = defaultLocale ? `/${defaultLocale}` : '/en';
+            const defaultUri = `${host}${defaultLocalePrefix}/jsonapi/index/content?jsonapi_include=1`;
+            // Use getQuestString which now includes the current locale's language filter
+            const defaultFullUrl = defaultUri + getQuestString(ctx);
+            const { meta: defaultMeta } = await $fetch(defaultFullUrl, $fetchBaseOptions({ method, headers }));
+            
+            if (defaultMeta?.facets) {
+                // Find content_type facet from default locale response
+                const contentTypeFacet = defaultMeta.facets.find(f => f.id === 'content_type');
+                if (contentTypeFacet) {
+                    enrichedFacets = [...(facets || []), contentTypeFacet];
+                }
+            }
+        } catch (e) {
+            // Silently fail - facets are optional
+            console.warn('Failed to fetch content_type facets from default locale:', e.message);
+        }
+    }
+    
+    mappedResults.facets = enrichedFacets;
 
     return mappedResults;
 };
 
 function getQuestString(ctx){
+  return (
+    getLanguageFilterParams(ctx) +
+    getFreeTextFilterParams(ctx) +
+    getTypeFilterParams(ctx) +
+    getDateFilterParams(ctx) +
+    getSortParams(ctx)+getPaginationParams(ctx)
+  ); //
+}
 
-    return getFreeTextFilterParams(ctx)+ getTypeFilterParams(ctx)+getDateFilterParams(ctx)+getPaginationParams(ctx)+getSortParams(ctx);
+function getLanguageFilterParams({ locale }){
+    if(!locale) return '';
+
+    const drupalLocale = mapLocaleToDrupal(locale);
+    
+    return `&filter[language]=${encodeURIComponent(drupalLocale)}`;
 }
 
 function getTypeFilterParams({ drupalInternalId, drupalInternalIds }){
