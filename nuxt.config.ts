@@ -2,9 +2,20 @@ import locales from './i18n/locales'        ;
 import en      from './i18n/locales/en.json';
 import domains from './configs/domains'     ;
 import cookieControl from './configs/cookie-control';
+import { LOG_LEVEL } from './shared/utils/constants.js';
 
 const css   =   [ '~/assets/custom.scss', 'vue-final-modal/style.css' ]
 
+const resolveLogLevel = () => {
+  const envValue = process.env.NUXT_PUBLIC_LOG_LEVEL?.trim().toUpperCase();
+  if (envValue && Object.prototype.hasOwnProperty.call(LOG_LEVEL, envValue)) {
+    return LOG_LEVEL[envValue];
+  }
+
+  return LOG_LEVEL.TRACE;
+};
+
+const resolvedLogLevel = resolveLogLevel();
   
 export default defineNuxtConfig({
   devtools: { enabled: false },
@@ -14,6 +25,11 @@ export default defineNuxtConfig({
   css,
   app: {
     pageTransition: { name: "page", mode: "out-in" },
+    head: {
+      meta: [
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' }
+      ]
+    }
   },
   runtimeConfig: {
     apiUser: process.env.API_USER,
@@ -39,6 +55,7 @@ export default defineNuxtConfig({
           ? true
           : false,
       logApi: process.env.NUXT_LOG_API === "true" ? true : false,
+      logLevel: resolvedLogLevel,
     },
   },
   imports: {
@@ -87,7 +104,7 @@ export default defineNuxtConfig({
     debug: false,
     defaultLocale: "en",
     fallbackLocale: "en",
-    baseUrl: "/",
+    baseUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://www.cbd.int', // Set dynamically via plugin (app/plugins/i18n-base-url.js)
     locale: "en",
     detectBrowserLanguage: false, // CRITICAL: Disabled to let DMSM control default locale
     precompile: { strictMessage: false },
@@ -133,7 +150,7 @@ export default defineNuxtConfig({
     screens: { xs: 320, sm: 552, md: 992, lg: 1330, xl: 1600 },
   },
   nitro: {
-    logLevel: 3,
+    logLevel: resolvedLogLevel,
     experimental: { tasks: true },
     devStorage: {
       db: { driver: "fs", base: "./.nuxt/data/db" },

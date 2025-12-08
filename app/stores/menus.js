@@ -1,5 +1,5 @@
 import { noCase, kebabCase } from "change-case";
-import { contentTypeTidConstants } from "../utils/constants";
+import { contentTypeTidConstants } from "#shared/utils/constants";
 
 const typeMapIds = Object.fromEntries(Object.entries(contentTypeTidConstants).map(([key, value]) => [kebabCase(key), value]));
 

@@ -1,19 +1,23 @@
-import { createConsola } from "consola";
-import { colorize } from "consola/utils";
+import consola from 'consola';
+import { colorize } from 'consola/utils';
+import { LOG_LEVEL } from './constants.js';
 
-export const consola = createConsola({
-  level: 4, // Enable debug level
-  reporters: [
-    {
-      log: (logObj) => {
-        if (logObj.type === "debug") {
-          // Use ANSI purple/magenta (code 35)
-          console.log(`\x1b[35m[DEBUG]\x1b[0m`, ...logObj.args);
-        } else {
-          // Let the default handle other types
-          console.log(`[${logObj.type.toUpperCase()}]`, ...logObj.args);
-        }
-      },
-    },
-  ],
-});
+const DEFAULT_LEVEL = LOG_LEVEL.TRACE;
+
+export const configureLogger = (level = DEFAULT_LEVEL) => {
+  const resolvedLevel =
+    typeof level === 'number' && level >= 0 ? level : DEFAULT_LEVEL;
+
+  // console.log('[configureLogger] Setting log level:', {
+  //   received: level,
+  //   resolved: resolvedLevel,
+  //   DEFAULT_LEVEL,
+  //   LOG_LEVEL
+  // });
+
+  consola.level = resolvedLevel;
+
+  return consola;
+};
+
+export { consola, colorize };

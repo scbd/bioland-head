@@ -1,4 +1,4 @@
-import { kebabCase } from 'change-case';
+// import { kebabCase } from 'change-case';
 /**
  * An array of objects representing the different content types in the system.
  *
@@ -164,6 +164,31 @@ export const systemPageTidConstants = {
     ASSISTANCE: 41
 }
 
+/**
+ * Logging level constants shared between server and client utilities.
+ * Each level matches the Consola numeric level.
+ */
+export const LOG_LEVEL = {
+    FATAL: 0,
+    WARN: 1,
+    LOG: 2,
+    INFO: 3,
+    DEBUG: 4,
+    TRACE: 5,
+};
+
+/**
+ * Maps logging levels to the Consola message types they should enable.
+ * Used when deciding which named logger helpers can emit output.
+ */
+export const LOG_TYPES = {
+    [LOG_LEVEL.FATAL]: ['fatal', 'error'],
+    [LOG_LEVEL.WARN]: ['warn'],
+    [LOG_LEVEL.LOG]: ['log'],
+    [LOG_LEVEL.INFO]: ['info', 'success', 'fail', 'ready', 'start'],
+    [LOG_LEVEL.DEBUG]: ['debug'],
+    [LOG_LEVEL.TRACE]: ['trace'],
+};
 
 /**
  * Creates a mapping object from content type names to their Drupal internal Term IDs.
@@ -173,8 +198,11 @@ export const systemPageTidConstants = {
  * @returns {Object<string, number>} Object with kebab-case names as keys and drupalInternalTid as values
  */
 function createContentTypeMapping(contentTypesArray) {
+    // Simplified version without kebab-case dependency
     return contentTypesArray.reduce((acc, { name, drupalInternalTid }) => {
-        acc[kebabCase(name)] = drupalInternalTid;
+        // Convert to lowercase and replace spaces with hyphens
+        const key = name.toLowerCase().replace(/\s+/g, '-');
+        acc[key] = drupalInternalTid;
         return acc;
     }, {});
 }
