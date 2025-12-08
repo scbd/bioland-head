@@ -2,7 +2,7 @@
 export default defineNitroPlugin((nitro) => {
     nitro.hooks.hook("request", async (event) => {
 
-        const skipPaths = ['/_ipx','/api','/__nuxt_error','/_nuxt','/sites','/images','/favicon.ico','/.well-known','/fonts.googleapis.com','/.well-known/appspecific'];
+        const skipPaths = ['_i18n','/_ipx','/api','/__nuxt_error','/_nuxt','/sites','/images','/favicon.ico','/.well-known','/fonts.googleapis.com','/.well-known/appspecific'];
 
         // Check if path should be skipped
         for(let path of skipPaths) {
