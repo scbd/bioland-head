@@ -40,3 +40,5 @@ outputDir
 .github/instructions/*
 !.github/instructions/default.instructions.md
 
+
+.claude
