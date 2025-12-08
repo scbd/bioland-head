@@ -119,7 +119,7 @@
         if(!aMenu.href || aMenu.href === '#'){
             const contentType = menuStore.getContentType(getContentType(), unref(locale));
 
-            if(!contentType) throw new Error(`No content type found in menu item: ${getContentType()}`);
+            if(!contentType) return aMenu; // Content type not loaded yet for this locale
 
             aMenu.href = localePath(`${contentType.slug}`);
         }
@@ -161,7 +161,7 @@
 
         const children    = unref(passedMenu)?.children || [];
        
-        const data        = menuStore.getContentTypeData(contentTypeName,country, locale) || [];
+        const data        = menuStore.getContentTypeData(contentTypeName, country, unref(locale)) || [];
 
         const menuPaths   = unref(passedMenu)?.children?.map(aMenu => aMenu.href) || [];
 

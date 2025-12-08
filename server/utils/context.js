@@ -27,28 +27,41 @@ export const parseQuery = (event) => {
 export const getContext = (event, key) => {
    
     const { context:cookieContext } = parseCookies(event);
-
+    const   queryParams = getQuery(event);
+    
     const   context = cookieContext? parseJson(decodeURIComponent(cookieContext)) || {} : {};
 
     if(!context?.siteCode ) return { ...parseQuery(event), event };
 
-    return context? { ...parseContext(context), event } : undefined;
+    // Use path from query params if available (more current than cookie path)
+    // This ensures locale is derived from the actual request path, not stale cookie
+    const pathFromQuery = queryParams?.path;
+    const contextWithPath = pathFromQuery ? { ...context, path: pathFromQuery } : context;
+
+    return contextWithPath? { ...parseContext(contextWithPath), event } : undefined;
 }
 
 export function parseContext (context) {
     const ctx = isString(context)? JSON.parse(context) : context;
 
-    const { locales, country, localizedHost:lh,siteCode, identifier, locale, defaultLocale, countries: countriesArray, redirect , path} = ctx;
+    const { locales, country, localizedHost:lh, siteCode, identifier, locale, defaultLocale, countries: countriesArray, redirect, path } = ctx;
     
     const   countries       = (Array.isArray(countriesArray) && countriesArray?.length? [country,...countriesArray] : country? [country] : []).filter(x=>x && x !== 'undefined');
-    const   localeClean     = sanitizeLocale(locale, defaultLocale);
+    
+    // If path contains a locale prefix, use that locale instead of the cookie's cached locale
+    // This fixes the 404 issue when reloading a page with a different locale in the URL
+    const   pathLocale      = path ? extractLocaleFromPath(path, locales) : null;
+    const   effectiveLocale = pathLocale || locale;
+    const   localeClean     = sanitizeLocale(effectiveLocale, defaultLocale);
 
     const { baseHost, env, multiSiteCode }  = useRuntimeConfig().public;
 
     const   pathPreFix      = getPathPrefix(localeClean , defaultLocale);
     const   hasRedirect     = env === 'production' && redirect;
     const   host            = hasRedirect? `https://${redirect}` : `https://${siteCode}.${baseHost}`;
-    const   localizedHost   = lh? lh : `${host}${pathPreFix}`;
+    // Always recalculate localizedHost based on the current locale
+    // Don't trust the cached lh as it may have been set with a different locale
+    const   localizedHost   = `${host}${pathPreFix}`;
     const   indexLocale     = getIndexLocale(localeClean );
     const   key             = `context-${env}-${multiSiteCode}-${siteCode}-${localeClean}`;
     const   isBchSite       = baseHost.includes('bch') || host.includes('biosafety') || host.includes('bsl');
@@ -62,6 +75,32 @@ export function parseContext (context) {
     return ctxClean;
 }
 
+/**
+ * Extract locale from path if it starts with a valid locale prefix
+ * @param {string} path - The URL path (e.g., "/es/buscar")
+ * @param {string[]} locales - Array of valid locale codes from site config
+ * @returns {string|null} The locale code or null if not found
+ */
+function extractLocaleFromPath(path, locales) {
+    if (!path || !locales) return null;
+    
+    const pathParts = path.split('/');
+    const potentialLocale = pathParts[1];
+    
+    if (!potentialLocale) return null;
+    
+    // Check against site locales if available
+    if (Array.isArray(locales) && locales.includes(potentialLocale)) {
+        return potentialLocale;
+    }
+    
+    // Fallback: check against runtime config locales
+    const { locales: runtimeLocales } = useRuntimeConfig().public;
+    const validCodes = runtimeLocales?.map(({ code }) => code) || [];
+    
+    return validCodes.includes(potentialLocale) ? potentialLocale : null;
+}
+
 export async function fetchSiteConfig({ siteCode }) {
 
     try{
@@ -69,8 +108,9 @@ export async function fetchSiteConfig({ siteCode }) {
 
         const uri = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}/${encodeURIComponent(siteCode)}`;
 
+        // consola.debug(`Server.utils.context.fetchSiteConfig: fetching site config from ${uri}`);   
         const result = await $fetch(uri);
-
+        // consola.debug(`Server.utils.context.fetchSiteConfig:`, result);
         return result;
     }catch(e){
         const { multiSiteCode, env, dmsm } = useRuntimeConfig().public;

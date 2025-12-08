@@ -108,7 +108,7 @@ function getLocalizationFromPath(ctx, path){
 
 async function getPageIdentifiers(ctx,  headers){
     try{
-        const { localizedHost, path, host } = ctx;
+        const { localizedHost, path, host, locale, locales } = ctx;
 
         if(!localizedHost || localizedHost?.includes('undefined')) 
             throw createError({ 
@@ -126,8 +126,21 @@ async function getPageIdentifiers(ctx,  headers){
 
         const { uuid, id, type, bundle,  canonical } = data?.entity || {};
         const aUrl = new URL(canonical);
-
-        const redirect = data?.isHomePath || canonical.endsWith(path)? '' : `${aUrl.pathname}`;
+        const canonicalPathname = aUrl.pathname;
+        
+        // Extract locale from canonical path (e.g., '/en/some-alias' -> 'en')
+        const canonicalPathParts = canonicalPathname.split('/');
+        const canonicalLocale = locales?.includes(canonicalPathParts[1]) ? canonicalPathParts[1] : null;
+        
+        // Only redirect if:
+        // 1. Not the home path
+        // 2. Canonical doesn't already match current path
+        // 3. Canonical locale matches requested locale (don't redirect to different locale)
+        const shouldRedirect = !data?.isHomePath && 
+                               !canonical.endsWith(path) && 
+                               canonicalLocale === locale;
+        
+        const redirect = shouldRedirect ? canonicalPathname : '';
 
         const returnValues = { uuid, id, type, bundle, pagePath:path, path,  label:data.label };
 

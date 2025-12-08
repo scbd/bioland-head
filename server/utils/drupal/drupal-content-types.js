@@ -7,11 +7,14 @@ export const useContentTypeMenus = async (ctx) => {
 
 async function getContentMenus (ctx, drupalInternalId) {
     const   lengthMap               = { 2:3, 3:3, 4:6, 5:3, 8:7, 9:7, 10:6, 11:7, 12:3, 16:6 };
-    const { localizedHost, locale } = ctx;
+    const { localizedHost } = ctx;
 
     const length         = lengthMap[drupalInternalId] || 20;
-    const filters        = `&filter[language]=${mapLocaleToDrupal(locale)}${getTypeFilterParams({ drupalInternalId })}${getSortParams()}${getPaginationParams({rowsPerPage:length})}`;
+    const filters        = `${getTypeFilterParams({ drupalInternalId })}${getSortParams()}${getPaginationParams({rowsPerPage:length})}`;
     const uri            = `${localizedHost}/jsonapi/index/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image${filters}`
+    
+    // consola.info('getContentMenus - URI:', uri);
+    
     //`${localizedHost}/jsonapi/node/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image&filter[taxonomy_term--tags][condition][path]=field_type_placement.drupal_internal__tid&filter[taxonomy_term--tags][condition][operator]=IN&filter[taxonomy_term--tags][condition][value][]=${encodeURIComponent(drupalInternalId)}&page[limit]=14&sort[sticky][path]=sticky&sort[sticky][direction]=DESC&sort[sort-changed][path]=created&sort[sort-changed][direction]=DESC`;
     const method         = 'get';
     const headers        = { 'Content-Type': 'application/json' };
@@ -191,29 +194,49 @@ function mapThumbNails(ctx){
 
 async function getAllContentTypeMenus(ctx){
 
-    // consola.info('getAllContentTypeMenus', ctx);
+    // consola.info('getAllContentTypeMenus - locale:', ctx.locale, 'localizedHost:', ctx.localizedHost);
 
     const isEnglish = ctx.locale === 'en';
     const terms     = isEnglish? await getTerms(ctx) : await Promise.all([getEnglishTerms(ctx), getTerms(ctx)]).then(([en, xx])=> [...en, ...xx]);
+    
+    // consola.info('getAllContentTypeMenus - raw terms count:', terms.length, 'terms:', terms.map(t => ({ id: t.drupalInternalId, lang: t.langcode, name: t.name })));
+
+    // For non-English: deduplicate terms by drupalInternalId, preferring localized terms over English
+    const dedupedTerms = isEnglish ? terms : deduplicateTerms(terms, ctx.locale);
+    
+    // consola.info('getAllContentTypeMenus - dedupedTerms count:', dedupedTerms.length);
+
     const requests  = [];
 
-    // const terms = await addAllAliases(ctx, termsRaw);
-
-    for(const term of terms){
-        if(!isEnglish && term.langcode === 'en') {
-            requests.push((async () => term)());
-
-            continue;
-        }
-        const aRequest = getContentMenus(ctx, term.drupalInternalId).then(( { data, count })=> ({ ...term, data, count }));
+    for(const term of dedupedTerms){
+        // Always fetch content for all terms - localizedHost handles locale filtering
+        const aRequest = getContentMenus(ctx, term.drupalInternalId).then(({ data, count }) => {
+            return { ...term, data, count };
+        });
 
         requests.push(aRequest);
     }
 
     const result = await Promise.all(requests);
 
-    // consola.warn(result)
+  //  consola.warn('getAllContentTypeMenus - final result count:', result.length, 'with data:', result.filter(r => r.data?.length > 0).length);
     return result
+}
+
+function deduplicateTerms(terms, locale) {
+    const termMap = new Map();
+    
+    for (const term of terms) {
+        const id = term.drupalInternalId;
+        const existing = termMap.get(id);
+        
+        // Prefer localized term over English term
+        if (!existing || (existing.langcode === 'en' && term.langcode === locale)) {
+            termMap.set(id, term);
+        }
+    }
+    
+    return Array.from(termMap.values());
 }
 
 function getEnglishTerms ({ host }) {

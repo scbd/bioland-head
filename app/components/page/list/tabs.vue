@@ -38,11 +38,11 @@
 
     const showTabs  = computed(()=>  (pageStore?.page?.children?.length || (pageStore?.page?.parent?.length && pageStore?.page?.parent[0].id !== 'virtual')));
 
-    const siteContentTo        = computed(()=> localePath(tabObjects.value.searchTab?.path?.alias|| localePath(makeDrupalPathFromENtity(tabObjects.value.searchTab))));
+    const siteContentTo        = computed(()=> getLocalizedPath(tabObjects.value.searchTab) || localePath(makeDrupalPathFromENtity(tabObjects.value.searchTab)));
 
-    const secretariatContentTo = computed(()=> localePath(tabObjects.value.searchSecTab?.path?.alias)|| localePath( makeDrupalPathFromENtity(tabObjects.value.searchSecTab)));
-    const biosafetyContentTo   = computed(()=> localePath(tabObjects.value.searchBchTab?.path?.alias) || localePath( makeDrupalPathFromENtity(tabObjects.value.searchBchTab)));
-    const accessBenefitContentTo   = computed(()=> localePath(tabObjects.value.searchAbsTab?.path?.alias) || localePath( makeDrupalPathFromENtity(tabObjects.value.searchAbsTab)));
+    const secretariatContentTo = computed(()=> getLocalizedPath(tabObjects.value.searchSecTab) || localePath( makeDrupalPathFromENtity(tabObjects.value.searchSecTab)));
+    const biosafetyContentTo   = computed(()=> getLocalizedPath(tabObjects.value.searchBchTab) || localePath( makeDrupalPathFromENtity(tabObjects.value.searchBchTab)));
+    const accessBenefitContentTo   = computed(()=> getLocalizedPath(tabObjects.value.searchAbsTab) || localePath( makeDrupalPathFromENtity(tabObjects.value.searchAbsTab)));
     
     const isActive = (to) => localePath(pageStore?.path?.alias) === to || localePath(makeDrupalPathFromENtity(pageStore?.page)) === to;
 
@@ -148,7 +148,16 @@
 
         return tabObjects;
     }
-    
+
+    function getLocalizedPath(taxonomyObject) {
+        const { path, drupalInternalTid } = taxonomyObject || {};
+        const currentLocale = locale?.value || 'en';
+        
+        if (!path?.alias || path?.langcode !== currentLocale)
+            return localePath(`/taxonomy/term/${drupalInternalTid}`);
+        
+        return localePath(path.alias);
+    }
 
 //TODO put in theme composable
     function getStyle(link){

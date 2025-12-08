@@ -24,6 +24,9 @@
                 <LazySwiperButton  v-if="hasMore && leftArrow" direction="right" :swiper-ref="swiperRef"/> 
 
         </div>
+        <div v-else-if="loading" class="col-12 mt-3 mb-0">
+            <LazySpinner />
+        </div>
     </ClientOnly>
 </template>
 <script setup>
@@ -35,7 +38,6 @@ import clone from 'lodash.clonedeep';
 const swiperRef      = ref(null);
 const { locale }     = useI18n();
 const menusStore     = useMenusStore();
-const getCachedData  = useGetCachedData();
 const localePath     = useLocalePath();
 const siteStore      = useSiteStore();
 const { t }          = useI18n();
@@ -98,9 +100,20 @@ const spaceBetween = computed(()=> {
 
 const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ id:systemPageTidConstants.SEARCH, locale:unref(locale)}), query:{ schemas: schemas.value }}));
 
-const query = clone({ ...siteStore.params, rowsPerPage:limit.value, schemas }); //schemas:['nationalTarget7'], 
+// Override locale with current i18n locale to ensure correct locale is sent to API
+const query = computed(() => clone({ 
+    ...siteStore.params, 
+    locale: locale.value,
+    localizedHost: `${siteStore.host}/${locale.value}`,
+    rowsPerPage: limit.value, 
+    schemas: schemas.value 
+}));
 
-const { data, status } = await useLazyFetch(`/api/list/drupal`, {  method: 'GET', query, getCachedData, onResponse });
+const { data, status } = await useLazyFetch(() => `/api/list/drupal`, {  
+    method: 'GET', 
+    query, 
+    watch: [locale]
+});
 
 // consola.error(data.value)
 const loading = computed(()=> status.value === 'pending' && !slides?.value?.length);

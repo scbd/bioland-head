@@ -133,6 +133,14 @@ export default defineNuxtPlugin({
                 await setLocale(targetLocale);
 
             locale.value = targetLocale || locale.value;
+            
+            // CRITICAL: Update siteStore locale to match the path locale
+            // This ensures siteStore.params returns correct locale for API calls
+            const siteStore = useSiteStore(nuxtApp.$pinia);
+            if (targetLocale && siteStore.locale !== targetLocale) {
+                siteStore.set('locale', targetLocale);
+                updateAppConfig(siteStore.params);
+            }
         }
 
         function sanitizeLocale(locale, defaultLocale){

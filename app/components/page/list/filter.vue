@@ -19,14 +19,14 @@
     </div>
 </template>
 <script setup>
-    const { t        } = useI18n    ();
-    const   router     = useRouter  ();
-    const   route      = useRoute   ();
-    const   eventBus   = useEventBus();
-    const   menuStore  = useMenusStore();
-    const   pageStore  = usePageStore();
-    const   siteStore  = useSiteStore();
-    const   disabled   = ref(false);
+    const { t, locale } = useI18n    ();
+    const   router      = useRouter  ();
+    const   route       = useRoute   ();
+    const   eventBus    = useEventBus();
+    const   menuStore   = useMenusStore();
+    const   pageStore   = usePageStore();
+    const   siteStore   = useSiteStore();
+    const   disabled    = ref(false);
 
     const props = defineProps({
         facets: { type: Array, default: () => [] }
@@ -44,10 +44,14 @@
                 facetMap.set(Number(term.values.value), term.values.count || 0);
             });
         }
-        
+
+        // Get current locale for filtering content types
+        const currentLocale = locale.value || siteStore.locale || 'en';
 
         // Build options from menuStore with facet counts
+        // Filter by current locale to avoid duplicate drupalInternalId keys across locales
         const options = Object.entries(menuStore.contentTypes)
+            .filter(([name, data]) => data.langcode === currentLocale || (!data.langcode && currentLocale === 'en'))
             .map(([name, data]) => {
                 const facetCount = facetMap.get(data.drupalInternalId) ?? 0;
                 const labelBase = facetCount === 1 ? data.name : (data.plural || data.name);

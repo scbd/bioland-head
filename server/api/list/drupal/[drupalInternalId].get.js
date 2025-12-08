@@ -4,6 +4,8 @@ export default defineEventHandler(async (event) => {
             const drupalInternalId = getRouterParam(event, 'drupalInternalId');
             const ctx              = getContext    (event);
 
+            // Merge context and query, with query taking precedence for locale-related params
+            // This ensures client-provided locale (from i18n) is used when available
             return useContentTypeIndex ({ ...ctx, ...query, drupalInternalId });
         }
         catch (e) {

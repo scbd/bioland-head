@@ -3,7 +3,7 @@
         <span class="align-self-center" id="breadCrumbLinks">
             <span class="text-nowrap">
                 <NuxtLink :style="style" class="fw-bold" :to="localePath('/')">
-                    {{t('National CHM')}}
+                    {{t('National CHM')}} {{locale}}
                 </NuxtLink>
                 <span>&nbsp; <LazyIcon name="triangle-right"/> &nbsp;</span>
             </span>
@@ -110,10 +110,21 @@
         const isListingPage = pageStore.isContentType;
         const contentType   = menusStore.getContentTypeById(contentTypeId.value, locale.value);
 
+        if (import.meta.dev) {
+            console.log('[breadcrumbs] locale:', locale.value, 'contentTypeId:', contentTypeId.value);
+            console.log('[breadcrumbs] contentType found:', contentType);
+            console.log('[breadcrumbs] contentTypes available:', Object.keys(menusStore.contentTypes).length, 
+                        'langs:', [...new Set(Object.values(menusStore.contentTypes).map(ct => ct.langcode))]);
+        }
+
         if(!contentType) return [];
 
         // Find the menu entry for this content type in the main menu
         const menuEntry = menusStore.isInMainMenuByContentTypeId(contentTypeId.value);
+
+        if (import.meta.dev) {
+            console.log('[breadcrumbs] menuEntry:', menuEntry, 'main menu length:', menusStore.main?.length);
+        }
 
         // If the content type is not in any main menu:
         //  - on listing pages we show no extra crumb (only
@@ -123,9 +134,16 @@
         if(!menuEntry){
             if(isListingPage) return [];
 
+            if (import.meta.dev) {
+                console.log('[breadcrumbs] no menuEntry, contentType:', contentType, 'plural:', contentType?.plural, 'slug:', contentType?.slug);
+            }
+
+            // Use plural name, fallback to singular name if plural is not available
+            const title = contentType?.plural || contentType?.name;
+            
             return [
                 {
-                    title: contentType?.plural,
+                    title,
                     href: contentType?.slug,
                 }
             ];
