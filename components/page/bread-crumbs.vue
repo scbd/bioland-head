@@ -8,9 +8,10 @@
                 <span>&nbsp; <LazyIcon name="triangle-right"/> &nbsp;</span>
             </span>
             <span class="text-nowrap" v-for="(aCrumb,index) in crumbs" :key="index">
-                <NuxtLink :style="style" @click="openMenu(aCrumb)" v-if="!isSelf(aCrumb.href)" :to="localePath(aCrumb.href)"  >
+                <NuxtLink :style="style" @click="(event)=>openMenu(aCrumb, event)" v-if="!isSelf(aCrumb.href)" :to="aCrumb.href? localePath(aCrumb.href) : '#'"  >
                     {{aCrumb.title}}
                 </NuxtLink>
+
                 <span v-if="!isSelf(aCrumb.href)">&nbsp; <LazyIcon name="triangle-right"/> &nbsp;</span>
             </span>
         </span>
@@ -27,25 +28,29 @@
     </div>
 </template>
 <script setup>
-    const { t }           = useI18n();
-    const   props         = defineProps({ count: { type: Number } });
-    const { count }       = toRefs(props);
-    const   isMobile      = isMobileFn();
-    const   route         = useRoute();
-    const   localePath    = useLocalePath();
-    const   pageStore     = usePageStore();
-    const   contentTypeId = computed(()=> pageStore?.typeId);
-    const   menusStore    = useMenusStore();
-    const   inMenu        = ref(menusStore.isInMainMenu(route.path) || menusStore.isInMainMenu(parentPath()) || menusStore.isInMainMenuByContentTypeId(contentTypeId.value));
+    const { style, badgePrimaryStyle } = useTheme();
+    const { t, locale }    = useI18n();
+    const   props          = defineProps({ count: { type: Number } });
+    const { count }        = toRefs(props);
+    const   isMobile       = isMobileFn();
+    const   route          = useRoute();
+    const   localePath     = useLocalePath();
+    const   pageStore      = usePageStore();
+    const   contentTypeId  = computed(()=> pageStore?.typeId);
+    const   menusStore     = useMenusStore();
+    const   isInDynamicMenu = computed(()=> menusStore.isInDynamicContentMenu(pageStore.page.drupalInternalNid,contentTypeId.value, locale));
+
+    const   inMenu        = ref(menusStore.isInMainMenu(route.path) || menusStore.isInMainMenu(parentPath()) );//|| menusStore.isInMainMenuByContentTypeId(contentTypeId.value)
     const   eventBus      = useEventBus();
     const   crumbs        = computed(makeCrumb);
     const { showBl1Link } = useRuntimeConfig().public;
 
     function isSelf(href){ return href === route.path; };
 
-    function openMenu({ href, index }){
+    function openMenu({ href, index }, event){
         if(href !== '') return;
 
+        event.preventDefault();
         eventBus.emit('openMenu', index);
     }
 
@@ -54,14 +59,11 @@
     }
 
     function makeCrumb(){
-        if(!inMenu.value) return [];
 
-<<<<<<<
         for (const aCrumb of inMenu.value?.crumbs ) 
             if(aCrumb?.contentTypeId && aCrumb?.href === '') aCrumb.href = menusStore.getContentTypeById(aCrumb.contentTypeId).slug;
         
         return inMenu.value?.crumbs;
-=======
         if(pageStore?.isSystemPage || pageStore?.isContentType ) return [];
 
         if(pageStore.isTopicsList || pageStore.isTopicsCommentsList){
@@ -101,6 +103,7 @@
         else{
 
             return  menusStore.isInMainMenuByContentTypeId(contentTypeId.value)?.crumbs || [];
+            // if(!inMenu.value) return [];
 
             for (const aCrumb of inMenu.value?.crumbs ) {
             
@@ -112,10 +115,10 @@
 
             return inMenu.value?.crumbs;
         }
->>>>>>>
+
     }
     
-    const { style, badgePrimaryStyle } = useTheme();
+
 
     const showMigratedLInk  = computed(()=> pageStore?.page?.fieldMigrated && showBl1Link );
 </script>
