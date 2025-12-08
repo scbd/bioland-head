@@ -2,7 +2,7 @@
     <div class="position-relative" >
             <LazySwiperButton  v-if="arrows && leftArrow && hideArrows" direction="left" :swiper-ref="swiperRef"/>
             <swiper-container
-                :loop="true"
+                :loop="slides?.length > 3"
                 :slidesPerView="slidePerView"
                 :spaceBetween="350"
                 :pagination="{ clickable: true }"
