@@ -12,7 +12,7 @@
  */
 
 import { stripHtml } from 'string-strip-html';
-import { isRtl }     from '../../shared/utils/rtl-languages';
+import { isRtl }     from '#shared/utils/rtl-languages';
 
 /**
  * Get text direction for a locale using shared RTL languages utility

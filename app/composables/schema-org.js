@@ -9,7 +9,7 @@
  * - https://schema.org/
  */
 
-import { contentTypes, contentTypeTidConstants } from '~/utils/constants';
+import { contentTypes, contentTypeTidConstants } from '#shared/utils/constants';
 
 /**
  * Map of content type TIDs to Schema.org types
