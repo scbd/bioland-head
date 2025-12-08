@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
           const from = DateTime.now()
             .minus({ months: 24 })
             .toFormat("yyyy-MM-dd");
-          const to = DateTime.now().plus({ months: 1 }).toFormat("yyyy-MM-dd");
+          const to = DateTime.now().plus({ months: 3 }).toFormat("yyyy-MM-dd");
           const schemas = [
             "news",
             "notification",
@@ -22,17 +22,17 @@ export default defineEventHandler(async (event) => {
           // Base query (no date filters, no schemaTypes)
           const baseQuery = {
             ...getQuery(event),
-            rowsPerPage,
+            // 'page[limit]': rowsPerPage,
+            // 'page[offset]': 0,
             schemas,
             promote: true,
           };
           
           // Query for BCH endpoint (includes schemaTypes and date filters)
           const bchQuery = {
-            ...baseQuery,
+            schemas,
             schemaTypes,
-            rowsPerPage: bchRowsPerPage,
-            from,
+            rowsPerPage: bchRowsPerPage
           };
           
           const context = getContext(event);
@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
           // Schema 2 = news, Schema 49 = announcements, Schema 3 = meetings
           // News & announcements: no future date (use changed/published dates)
           // Meetings: include future dates (use field_start_date)
-          const [newsContent, meetingsContent, bchContent] = await Promise.all([
+          const [newsContent, bchContent] = await Promise.all([
             $fetch(
               "/api/list/drupal",
               $fetchBaseOptions({
@@ -79,7 +79,6 @@ export default defineEventHandler(async (event) => {
 
           return sortData([
             ...(newsContent?.data || []), 
-            ...(meetingsContent?.data || []), 
             ...(bchContent || []),
             ...(top3Articles || [])
           ]);

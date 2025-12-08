@@ -38,7 +38,6 @@ const swiperRef = ref(null);
 
 const { locale }     = useI18n();
 const menusStore     = useMenusStore();
-const getCachedData  = useGetCachedData();
 const localePath     = useLocalePath();
 const siteStore      = useSiteStore();
 const { t }          = useI18n();
@@ -84,9 +83,18 @@ const spaceBetween = computed(()=> {
 
 const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ id:systemPageTidConstants.SEARCH, locale:unref(locale)}), query:{ schemas:[2,3, 49]}}));
 
-const query = clone({ ...siteStore.params });
+// Override locale with current i18n locale to ensure correct locale is sent to API
+const query = computed(() => clone({ 
+    ...siteStore.params, 
+    locale: locale.value,
+    localizedHost: `${siteStore.host}/${locale.value}`
+}));
 
-const { data:slides, status } = await useLazyFetch(`/api/list/latest-bch`, {  method: 'GET', query, getCachedData });
+const { data:slides, status } = await useLazyFetch(() => `/api/list/latest-bch`, {  
+    method: 'GET', 
+    query, 
+    watch: [locale]
+});
 
 const loading = computed(()=> status.value === 'pending' && !slides?.value?.length);
 

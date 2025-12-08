@@ -14,7 +14,7 @@ export async function fetchArticles(ag) {
   const response = await $fetch(url, {
     query: { ag }
   });
-  
+
   return response || [];
 }
 
@@ -109,42 +109,44 @@ function normalizeImage(coverImage) {
  * Map Gaia BCH article to card component format
  * @param {object} article - Gaia article object
  * @param {number} index - Array index
+ * @param {string} locale - Language code (default 'en')
  * @returns {object} Card-compatible article object
  */
-export function mapGaiaBchArticleToCard(article, index = 0) {
-  const title = pickLocalizedValue(article.title) || 'Untitled announcement';
-  const summary = pickLocalizedValue(article.summary) || htmlToText(pickLocalizedValue(article.content)) || '';
+export function mapGaiaBchArticleToCard(article, index = 0, locale = 'en') {
+  const title = pickLocalizedValue(article.title, locale) || 'Untitled announcement';
+  const summary = pickLocalizedValue(article.summary, locale) || htmlToText(pickLocalizedValue(article.content, locale)) || '';
 
-  const slugBase = slugify(title) || slugify(article._id) || `article-${index + 1}`;
-  const alias = `/announcements/${slugBase}`;
-  const changed = normalizeDate(article.meta?.modifiedOn || article.meta?.createdOn) ?? DateTime.now().toISO();
+  const slugBase = slugify(title) + `/${article._id}`;
+  const alias = article?.customProperties?.bchUrl?.trim() || `https://bch.cbd.int/en/kb/tags/bch-announcement/${slugBase}`;
+  const changed = normalizeDate(article?.customProperties?.date ||article.meta?.modifiedOn || article.meta?.createdOn) ?? DateTime.now().toISO();
 
   return {
-    dnid: Number.isFinite(article.meta?.createdBy) ? Number(article.meta.createdBy) : 0,
+
     href: alias,
-    type: 'node--content',
+    type: "bch",
     mediaImage: normalizeImage(article.coverImage),
     title,
-    tags: { bchSubjects: [], gbfTargets: [], countries: [] },
-    path: { alias, pid: 706, langcode: 'en' },
+    tags: {
+      bchSubjects: [],
+      gbfTargets: [{ identifier: "GBF-TARGET-17" }],
+      countries: [],
+    },
     fieldOrder: 10000,
-    fieldTypePlacement: { name: 'Announcement' },
-    fieldStartDate: null,
+    schema: "announcement",
+    fieldStartDate: article?.customProperties?.date ?? normalizeDate(article?.customProperties?.date),
     changed,
     sticky: article?.customProperties?.sticky,
-    promote: true,
-    id: article._id || `announcement-${slugBase || Date.now()}`,
     summary,
     index,
-    fieldMigrated: false,
   };
 }
 
 /**
  * Get top 3 BCH announcement articles (non-pinned, sorted by creation date)
+ * @param {string} locale - Language code (default 'en')
  * @returns {Promise<Array>} Array of top 3 BCH articles mapped to card format
  */
-export async function getTop3BchArticles() {
+export async function getTop3BchArticles(locale = 'en') {
   const aggregationQuery = JSON.stringify([
     {
       "$match": {
@@ -179,5 +181,5 @@ export async function getTop3BchArticles() {
   ]);
   
   const articles = await fetchArticles(aggregationQuery);
-  return articles.map((article, index) => mapGaiaBchArticleToCard(article, index));
+  return articles.map((article, index) => mapGaiaBchArticleToCard(article, index, locale));
 }
