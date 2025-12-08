@@ -9,9 +9,6 @@
 6. [Version Control](#version-control)
 7. [Code Review Process](#code-review-process)
 
-**Related Documents:**
-- [AI Agent Instructions](./agents.md)
-- [Future Considerations & Suggestions](./suggestions.md)
 
 ---
 ## AI Agent Guidelines
