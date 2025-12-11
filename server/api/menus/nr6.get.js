@@ -3,13 +3,13 @@ import { menusCache } from "../../../server/utils/cache";
 
 export default cachedEventHandler(async (event) => {
         try{
-            const context = getContext(event);
+            const ctx = await useRequestContext(event);
 
-            const queryString = getIndexQuery('nationalReport6', context) + '&' +getIndexNrFields(context.locale);
+            const queryString = getIndexQuery('nationalReport6', ctx) + '&' +getIndexNrFields(ctx.locale);
 
-            const resp = await $indexFetch (queryString, context);
+            const resp = await $indexFetch (queryString, ctx);
 
-            return mapByCountry(resp, context);
+            return mapByCountry(resp, ctx);
 
         }
         catch (e) {

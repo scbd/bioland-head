@@ -5,13 +5,13 @@ const focalPointAll = [ 'CBD-FP1',  'CBD-FP2', 'CPB-FP1', 'ABS-FP', 'CHM-FP', 'B
 
 export default cachedEventHandler(async (event) => {
         try{
-            const context    = getContext(event);
-            const query      = getQueryString(context);
+            const ctx        = await useRequestContext(event);
+            const query      = getQueryString(ctx);
             const response   = await $indexFetch(query);
-            const countryMap = mapByCountry(response, context);
+            const countryMap = mapByCountry(response, ctx);
             const links      = getLinks(countryMap);
 
-            await getProtocolContacts(context, links);
+            await getProtocolContacts(ctx, links);
 
             return links;
         }

@@ -1,13 +1,13 @@
 export default defineEventHandler(async (event) => {
         try{
 
-            const   query         = getQuery(event)
-            const   context       = getContext(event);
+            const   query   = getQuery(event)
+            const   ctx     = await useRequestContext(event);
 
 
             const headers = { Cookie: getHeader(event, 'Cookie')};
 
-            const { siteCode, localizedHost } = { ...context, ...query };
+            const { siteCode, localizedHost } = { ...ctx, ...query };
 
             if(!siteCode || localizedHost.includes('undefined')) return createError({ statusCode: 404, statusMessage: 'Server.drupal.menus.index-chm: no context derived' });
             

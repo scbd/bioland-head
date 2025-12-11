@@ -2,7 +2,7 @@ export default defineEventHandler(async (event) => {
         try{
             const { multiSiteCode } = useRuntimeConfig().public;
             const   query           = getQuery(event);
-            const   ctx             = getContext(event);
+            const   ctx             = await useRequestContext(event);
             const   context         = { ...ctx, ...query };
             const   isBchSite       = [ 'bch', 'bsl' ].includes(multiSiteCode) || context?.isBchSite || false;
 

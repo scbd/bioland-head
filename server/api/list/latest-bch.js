@@ -35,11 +35,11 @@ export default defineEventHandler(async (event) => {
             rowsPerPage: bchRowsPerPage
           };
           
-          const context = getContext(event);
+          const ctx = await useRequestContext(event);
 
           const headers = {
             Cookie: `context=${encodeURIComponent(
-              JSON.stringify(context || {})
+              JSON.stringify(ctx || {})
             )};`,
           };
 

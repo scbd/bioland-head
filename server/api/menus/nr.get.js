@@ -1,10 +1,10 @@
 export default cachedEventHandler(async (event) => {
         try{
-            const context  = getContext(event);
-            const query    = getQueryString(context);
+            const ctx      = await useRequestContext(event);
+            const query    = getQueryString(ctx);
             const response = await $indexFetch(query);
 
-            return mapByGov(response,context);
+            return mapByGov(response, ctx);
         }
         catch (e) {
 

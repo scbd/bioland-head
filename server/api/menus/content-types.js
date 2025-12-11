@@ -1,8 +1,8 @@
 export default defineEventHandler(async (event) => {
         try{
-            const context = getContext(event);
+            const ctx = await useRequestContext(event);
 
-            return useContentTypeMenus(parseContext(context));
+            return useContentTypeMenus(ctx);
         }
         catch (e) {
             passError(event, e);

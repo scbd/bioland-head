@@ -1,4 +1,4 @@
-import { getContext, passError } from '~/server/utils';
+import { useRequestContext } from '~/server/utils/context';
 import { getThesaurusData, isValidDomain } from '~/server/utils/thesaurus';
 
 export default defineEventHandler(async (event) => {
@@ -13,8 +13,8 @@ export default defineEventHandler(async (event) => {
     }
     
     // Get locale from context, default to 'en'
-    const context = getContext(event);
-    const locale = context?.locale || 'en';
+    const ctx = await useRequestContext(event);
+    const locale = ctx?.locale || 'en';
     
     const data = await getThesaurusData(domain, locale);
     

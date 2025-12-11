@@ -1,7 +1,7 @@
 
 export default defineEventHandler(async (event) => {
         try{
-            const ctx = getContext(event);
+            const ctx = await useRequestContext(event);
 
             
             return getComments({...ctx, event });

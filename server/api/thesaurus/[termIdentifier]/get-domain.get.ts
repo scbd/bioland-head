@@ -1,4 +1,4 @@
-import { getContext, passError } from '~/server/utils';
+import { useRequestContext } from '~/server/utils/context';
 import { findDomainForTerm } from '~/server/utils/thesaurus';
 
 export default defineEventHandler(async (event) => {
@@ -12,8 +12,8 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const context = getContext(event);
-    const locale = context?.locale || 'en';
+    const ctx = await useRequestContext(event);
+    const locale = ctx?.locale || 'en';
     
     // Search all domains to find the term
     const domain = await findDomainForTerm(termIdentifier, locale);

@@ -1,9 +1,9 @@
 
 export default defineEventHandler(async (event) => {
         try{
-            const context = getContext(event);
+            const ctx = await useRequestContext(event);
 
-            return getDrupalMenus ({...context});
+            return getDrupalMenus({...ctx});
         }
         catch (e) {
 

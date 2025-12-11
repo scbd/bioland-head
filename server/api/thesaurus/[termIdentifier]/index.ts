@@ -1,4 +1,4 @@
-import { getContext, passError } from '~/server/utils';
+import { useRequestContext, passError } from '~/server/utils/context';
 import { getLocalizedName } from '~/server/utils/thesaurus/sanitizers';
 
 export default defineEventHandler(async (event) => {
@@ -12,8 +12,8 @@ export default defineEventHandler(async (event) => {
       });
     }
     
-    const context = getContext(event);
-    const locale = context?.locale || 'en';
+    const ctx = await useRequestContext(event);
+    const locale = ctx?.locale || 'en';
     
     const { gaiaApi } = useRuntimeConfig().public;
     const uri = `${gaiaApi}/v2013/thesaurus/terms/${encodeURIComponent(termIdentifier)}`;

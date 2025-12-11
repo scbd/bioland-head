@@ -17,10 +17,10 @@ export default defineEventHandler(async (event) => {
 
         const { jiraToken }   = useRuntimeConfig();
         try{
-            const context = getContext(event);
+            const ctx = await useRequestContext(event);
             const headers = { Cookie: getHeader(event, 'Cookie')};
 
-            const issues = await getIssues(context);
+            const issues = await getIssues(ctx);
 
             
 

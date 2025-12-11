@@ -2,8 +2,8 @@ import clone from 'lodash.clonedeep';
 
 export default defineEventHandler(async (event) => {
     try{
-        const query            = getQuery   (event);
-        const ctx              = getContext (event);
+        const query            = getQuery(event);
+        const ctx              = await useRequestContext(event);
 
         const promises      = [];
         const   schemas     = ['nationalTarget7'];

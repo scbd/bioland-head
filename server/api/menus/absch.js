@@ -1,8 +1,8 @@
 export default cachedEventHandler(async (event) => {
         try{
-            const context = getContext(event);
+            const ctx = await useRequestContext(event);
 
-            return getAbschMenus(context);
+            return getAbschMenus(ctx);
         }
         catch (e) {
 

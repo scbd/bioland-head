@@ -1,9 +1,9 @@
 
 export default cachedEventHandler(async (event) => {
         try{
-            const context = getContext(event);
+            const ctx = await useRequestContext(event);
 
-            return useDrupalTopicMenus(parseContext(context));
+            return useDrupalTopicMenus(ctx);
         }
         catch (e) {
             passError(event, e);
