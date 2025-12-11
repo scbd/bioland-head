@@ -7,10 +7,11 @@ export const useContentTypeMenus = async (ctx) => {
 
 async function getContentMenus (ctx, drupalInternalId) {
     const   lengthMap               = { 2:3, 3:3, 4:6, 5:3, 8:7, 9:7, 10:6, 11:7, 12:3, 16:6 };
-    const { localizedHost } = ctx;
+    const { localizedHost, locale } = ctx;
 
     const length         = lengthMap[drupalInternalId] || 20
-    const filters        = `${getTypeFilterParams({ drupalInternalId })}${getSortParams()}${getPaginationParams({rowsPerPage:length})}`
+    const langcodeFilter = getLangcodeFilterParams(locale)
+    const filters        = `${getTypeFilterParams({ drupalInternalId })}${langcodeFilter}${getSortParams()}${getPaginationParams({rowsPerPage:length})}`
     const uri            = `${localizedHost}/jsonapi/index/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image${filters}`
     const method         = 'get';
     const headers        = { 'Content-Type': 'application/json' }
@@ -46,18 +47,14 @@ function getSortParams(){
     sortQueryString += `&sort[sticky][path]=sticky`
     sortQueryString += `&sort[sticky][direction]=${encodeURIComponent(direction)}`
 
-    // sortQueryString += `&sort[promoted][path]=promote`
-    // sortQueryString += `&sort[promoted][direction]=${encodeURIComponent(direction)}`
-    
-
-    sortQueryString += `&sort[sort-order][path]=field_order`;
-    sortQueryString += `&sort[sort-order][direction]=ASC`;
+    sortQueryString += `&sort[sort-order][path]=field_order`
+    sortQueryString += `&sort[sort-order][direction]=ASC`
     sortQueryString += `&sort[sort-published][path]=field_published`
     sortQueryString += `&sort[sort-published][direction]=${encodeURIComponent(direction)}`
     sortQueryString += `&sort[sort-start][path]=field_start_date`
     sortQueryString += `&sort[sort-start][direction]=${encodeURIComponent(direction)}`
-    sortQueryString += `&sort[sort-changed][path]=${encodeURIComponent('changed')}`
-    sortQueryString += `&sort[sort-created][direction]=${encodeURIComponent(direction)}`
+    sortQueryString += `&sort[sort-changed][path]=changed`
+    sortQueryString += `&sort[sort-changed][direction]=${encodeURIComponent(direction)}`
 
     return sortQueryString;
 }
@@ -78,6 +75,20 @@ function getTypeFilterParams({ drupalInternalId, drupalInternalIds }){
 
     return  filterQueryString;
 }
+
+/**
+ * Builds the langcode filter query string parameters for Drupal JSON:API content requests.
+ * Filters content to only return items matching the specified locale.
+ * 
+ * @param {string} locale - The locale to filter by (e.g., 'en', 'fr', 'es')
+ * @returns {string} URL-encoded query string for langcode filter (prefixed with `&`)
+ */
+function getLangcodeFilterParams(locale) {
+    if (!locale) return '';
+    
+    return `&filter[langcode][value]=${encodeURIComponent(locale)}`;
+}
+
 function makeTypeMap(data, ctx){
     const countries = Array.from(new Set(!ctx?.country? [ ...(ctx?.countries || [])] : [ ctx.country, ...(ctx?.countries || []) ]));
     const map       = {};
