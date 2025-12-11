@@ -1,6 +1,12 @@
 import isString from 'lodash.isstring'
 
+/**
+ * @deprecated Use useRequestContext from context-unified.ts instead
+ * This file is kept for backwards compatibility during migration
+ */
+
 export const parseQuery = (event) => {
+    console.warn('[DEPRECATED] parseQuery is deprecated. Use useRequestContext() instead.')
     const { locales:localesArray, country, siteCode, identifier, locale, defaultLocale, countries: countriesArray } = getQuery(event);
 
     const countries      = (Array.isArray(countriesArray) && countriesArray?.length? countriesArray : country? [country] : []).filter(x=>x && x !== 'undefined');
@@ -25,6 +31,7 @@ export const parseQuery = (event) => {
 }
 
 export const getContext = (event, key) => {
+    console.warn('[DEPRECATED] getContext is deprecated. Use useRequestContext() instead.')
    
     const { context:cookieContext } = parseCookies(event);
     const   queryParams = getQuery(event);
@@ -42,6 +49,7 @@ export const getContext = (event, key) => {
 }
 
 export function parseContext (context) {
+    console.warn('[DEPRECATED] parseContext is deprecated. Use useRequestContext() instead.')
     const ctx = isString(context)? JSON.parse(context) : context;
 
     const { locales, country, localizedHost:lh, siteCode, identifier, locale, defaultLocale, countries: countriesArray, redirect, path } = ctx;
@@ -66,7 +74,8 @@ export function parseContext (context) {
     const   key             = `context-${env}-${multiSiteCode}-${siteCode}-${localeClean}`;
     const   isBchSite       = baseHost.includes('bch') || host.includes('biosafety') || host.includes('bsl');
 
-    const ctxClean = removeNullPropsFromPlainObject({ key, isBchSite, env, multiSiteCode, locales, host, localizedHost, country, countries, siteCode, identifier, locale:localeClean,   defaultLocale, indexLocal:indexLocale, indexLocale, path });
+    // Note: path is NOT included in context - it should be passed explicitly to functions that need it
+    const ctxClean = removeNullPropsFromPlainObject({ key, isBchSite, env, multiSiteCode, locales, host, localizedHost, country, countries, siteCode, identifier, locale:localeClean, defaultLocale, indexLocal:indexLocale, indexLocale });
 
     if(!ctxClean.siteCode) return {};
 

@@ -1,5 +1,4 @@
-import clone         from 'lodash.clonedeep';
-import isPlainObject from 'lodash.isplainobject';
+import clone from 'lodash.clonedeep';
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
   const nuxtApp     = useNuxtApp();
@@ -23,7 +22,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   const requestCookieHeader = useRequestHeaders(['cookie']);
   const clientCookie        = useCookie(hasSessionCookieClient())
 
-  updateAppConfig({ path });
+  // Path is NOT stored in cookie - it's passed directly to API calls
+  // Context cookie only stores: siteCode, locale, defaultLocale, locales
 
   isValidLocalePrefix();
   
@@ -112,13 +112,5 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     }
   
 
-  }
-
-  function updateAppConfig(updateCtx){
-    if(!context.value || !isPlainObject(context.value)) context.value = {};
-
-    for(const key in updateCtx)
-      if(context.value[key] !== updateCtx[key])
-            context.value[key] = updateCtx[key];
   }
 })

@@ -46,8 +46,12 @@ function getSortParams(){
     sortQueryString += `&sort[sticky][path]=sticky`
     sortQueryString += `&sort[sticky][direction]=${encodeURIComponent(direction)}`
 
-    sortQueryString += `&sort[sort-order][path]=field_order`
-    sortQueryString += `&sort[sort-order][direction]=ASC`
+    // sortQueryString += `&sort[promoted][path]=promote`
+    // sortQueryString += `&sort[promoted][direction]=${encodeURIComponent(direction)}`
+    
+
+    sortQueryString += `&sort[sort-order][path]=field_order`;
+    sortQueryString += `&sort[sort-order][direction]=ASC`;
     sortQueryString += `&sort[sort-published][path]=field_published`
     sortQueryString += `&sort[sort-published][direction]=${encodeURIComponent(direction)}`
     sortQueryString += `&sort[sort-start][path]=field_start_date`

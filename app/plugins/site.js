@@ -15,6 +15,8 @@ export default defineNuxtPlugin({
         nuxtApp.vueApp.use(vfm);
 
         const runTime   = useRuntimeConfig().public;
+        
+        // Context cookie - now stores minimal data: { siteCode, locale, defaultLocale }
         const context   = useCookie('context');
 
         // Safely get locale with fallback and keep a setter on hand
@@ -33,8 +35,7 @@ export default defineNuxtPlugin({
         const hostName   = requestUrl.hostname;
         const pathLocaleOverride = getLocaleFromPath(requestUrl.pathname);
         
-        // ALWAYS fetch with 'und' first to get DMSM's authoritative defaultLocale
-        // This ensures we never initialize with the wrong default, regardless of path or cookie
+        // Fetch context from server (DMSM is cached server-side)
         const initialContext = await getSiteContext(undefined);
         
         // If user is on a specific locale path (e.g., /en, /ru), use that locale
@@ -178,14 +179,26 @@ export default defineNuxtPlugin({
             return hostName.split('.')[0];
         }
 
+        /**
+         * Update context cookie with minimal data
+         * Only stores: siteCode, locale, defaultLocale, locales
+         * Server derives everything else from cached DMSM config
+         */
+        function updateContextCookie(updateCtx){
+            const { siteCode, locale, defaultLocale, locales } = updateCtx;
+            
+            // Only store minimal data in cookie
+            context.value = {
+                siteCode,
+                locale,
+                defaultLocale,
+                locales: locales || context.value?.locales
+            };
+        }
+
+        // Keep old function name for backwards compatibility during migration
         function updateAppConfig(updateCtx){
-            if(!context.value || !isPlainObject(context.value)) context.value = {};
-        
-            for(const key in updateCtx)
-                if(isPlainObject(context.value))
-                    context.value[key] = updateCtx[key];
-            else if(context.value[key] && context.value[key] !== updateCtx[key])
-                context.value[key] = updateCtx[key];
+            updateContextCookie(updateCtx);
         }
 
         nuxtApp.hook('i18n:beforeLocaleSwitch', async ({ oldLocale, newLocale }) => {

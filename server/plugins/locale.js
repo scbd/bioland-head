@@ -1,3 +1,13 @@
+/**
+ * Locale Redirect Plugin
+ * 
+ * Handles locale prefix redirects:
+ * - Root path "/" redirects to "/{defaultLocale}"
+ * - Invalid locale paths redirect to "/{defaultLocale}/{path}"
+ * 
+ * Uses the unified context system (DMSM config is cached)
+ */
+import { useRequestContext } from '~/server/utils/context-unified'
 
 export default defineNitroPlugin((nitro) => {
     nitro.hooks.hook("request", async (event) => {
@@ -9,39 +19,13 @@ export default defineNitroPlugin((nitro) => {
             if(event.path.includes(path)) return;
         }
 
-        await isValidLocalePrefix();
+        await handleLocaleRedirect();
 
 
-        async function isValidLocalePrefix(){
+        async function handleLocaleRedirect(){
             try {
-                const host           = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host');
-                let ctx              = getContext(event);
-                
-                // If no context cookie, we need to fetch from DMSM to get defaultLocale
-                if(!ctx || !ctx.defaultLocale || !ctx.locales) {
-                    // Extract siteCode from hostname (e.g., seed.localhost -> seed)
-                    const siteCode = host?.split('.')[0];
-                    if (!siteCode) return;
-                    
-                    // Fetch DMSM config to get defaultLocale
-                    const { baseHost, dmsm, env, multiSiteCode } = useRuntimeConfig().public;
-                    const configUrl = `${dmsm}/config/${env}/${multiSiteCode}/${siteCode}`;
-                    
-                    try {
-                        const config = await $fetch(configUrl);
-                        if (config?.defaultLocale && config?.locales) {
-                            ctx = {
-                                defaultLocale: config.defaultLocale,
-                                locales: config.locales,
-                                siteCode
-                            };
-                        } else {
-                            return; // Can't proceed without config
-                        }
-                    } catch (err) {
-                        return; // DMSM not available yet
-                    }
-                }
+                // Use unified context (DMSM config is cached)
+                const ctx = await useRequestContext(event);
                 
                 const defaultLocale  = ctx.defaultLocale;
                 const pathLocale     = event.path.split('/')[1];
@@ -57,7 +41,8 @@ export default defineNitroPlugin((nitro) => {
                     return sendRedirect(event, `/${defaultLocale}${event.path}`, 301);
                 }
             } catch (error) {
-                // Silently fail - context not ready yet
+                // Context resolution failed - let request continue
+                // The actual page handler can decide what to do
                 return;
             }
         }
