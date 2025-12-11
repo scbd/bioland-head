@@ -7,10 +7,28 @@
   "Meetings": "Reuniões",
   "Announcement": "Anúncio",
   "Announcements": "Anúncios",
+  "announcement": "Anúncio",
+  "meeting or event": "Reunião ou evento",
+  "learning resource": "Recurso de aprendizagem",
+  "article": "objeto",
+  "basic page": "Página Básica",
+  "government ministry or institute": "Ministério ou Instituto do Governo",
+  "protected area": "Área protegida",
+  "biodiversity data": "Dados de Biodiversidade",
+  "related website": "Site relacionado",
+  "other resource": "Outro recurso",
+  "image or video": "Imagem ou Vídeo",
+  "faq": "PERGUNTAS FREQUENTES",
+  "national information": "Informações nacionais",
+  "status of lmo": "Status do LMO",
+  "field trial": "Teste de campo",
+  "national mainstreaming strategy": "Estratégia Nacional de Integração",
+  "capacity building": "Desenvolvimento de capacidades",
   "Basic Page": "Página Básica",
   "Basic Pages": "Páginas básicas",
   "Capacity-Building": "Capacitação",
   "Capacity-Buildings": "Edifícios de capacidades",
+  "Capacity Development Initiative": "Iniciativa de desenvolvimento de capacidades",
   "Field Trial": "Teste de campo",
   "Field Trials": "Testes de campo",
   "National Information": "Informações nacionais",
@@ -66,8 +84,10 @@
   "content": "conteúdo do site",
   "secretariate": "secretariado",
   "notification": "Notificações",
+  "Statement": "Declaração",
   "statement": "Declarações",
   "meeting": "Reuniões",
+  "Press Release": "Comunicado de imprensa",
   "pressRelease": "Comunicados de imprensa",
   "focalPoint": "ponto focal",
   "resource": "Recursos da biblioteca virtual",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Biolândia Biodiversidade",
   "Home": "Lar",
   "Biodiversity CHM": "Biodiversidade CHM",
+  "Biosafety Clearing-House Search": "Pesquisa na Câmara de Compensação de Biossegurança",
   "National Reports": "Relatórios Nacionais",
   "View all National Reports": "Ver todos os relatórios nacionais",
   "section1": "Seção I. Informações sobre as metas que estão sendo perseguidas em nível nacional",
@@ -228,7 +249,10 @@
   "Updated Date": "Data atualizada",
   "Download": "Download",
   "Latest News and Updates": "Últimas notícias e atualizações",
+  "Latest Announcements, News and Updates": "Últimos anúncios, notícias e atualizações",
+  "Latest Records": "Últimos registros",
   "View more news and updates": "Veja mais notícias e atualizações",
+  "from the Biosafety Clearing-House": "da Câmara de Compensação de Biossegurança",
   "implementation": "implementação",
   "Browse TSC Opportunities": "Procure oportunidades de TSC",
   "Browse TSC Assistance and Providers": "Procure assistência e provedores de TSC",
@@ -268,9 +292,18 @@
   "Revisions": "Revisões",
   "Clone": "Clone",
   "Translate": "Traduzir",
+  "Translation": "Tradução",
+  "No translation available": "Nenhuma tradução disponível",
+  "Auto Translate": "Tradução automática",
   "BBI Contacts": "Contatos do BBI",
   "Bioland 1": "Polônia 1",
-  "Write a public comment ...": "Escreva um comentário público...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Escreva um comentário público..."
+      }
+    }
+  },
   "Login or sign up": "Faça login ou cadastre-se",
   "Post": "Publicar",
   "Login": "Conecte-se",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Entidade não processável",
   "Failed to POST comment": "Falha ao POSTAR comentário",
   "all": "tudo",
-  "for an account in order to comment or interact.": "para uma conta para comentar ou interagir.",
+  "for an account in order to comment or interact": {
+    "": "para uma conta para comentar ou interagir."
+  },
   "Sign Up": "Cadastre-se",
   "CBD-type": "Convenção sobre Diversidade Biológica",
   "CPB-FP1-type": "Protocolo de Cartagena sobre Biossegurança",
@@ -888,6 +923,7 @@
   "Progress": "Progresso",
   "Created": "Criado",
   "Unassigned": "Não atribuído",
+  "No description available": "Nenhuma descrição disponível",
   "Work Overview": "Visão geral do trabalho",
   "Bug": "Bug",
   "Task": "Tarefa",
@@ -906,7 +942,13 @@
   "Low": "Baixo",
   "Lowest": "Mais baixo",
   "Selected For Development": "Selecionado para desenvolvimento",
-  "View More ...": "Exibir mais...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Exibir mais..."
+      }
+    }
+  },
   "bioland-context-description": "Esses cookies armazenam o contexto da ferramenta Bioland. Uma instância de código atende a muitos sites. O contexto ajuda a diferenciar os diferentes sites. Outros cookies para quando você faz login para manter sua sessão. Por fim, traduza e visualize o tamanho da porta para auxiliar a ferramenta no servidor. Esses cookies são necessários para a funcionalidade do site.",
   "bioland-context-cookies": "Cookies de contexto da Bioland",
   "cookie-control-description": "Usamos nossos próprios cookies e cookies de terceiros para que possamos exibir este site corretamente e entender melhor como ele é usado, com o objetivo de melhorar os serviços que oferecemos. Uma decisão sobre as permissões de uso de cookies pode ser alterada a qualquer momento usando o botão de cookie que aparecerá depois que uma seleção for feita neste banner.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Coexistência",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Direitos de propriedade intelectual",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Avaliações sociais e/ou econômicas",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Regras e padrões comerciais"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Regras e padrões comerciais",
+  "Competent National Authority": "Autoridade nacional competente",
+  "Contact": "Entre em contato",
+  "Biosafety Virtual Library Resources": "Recursos da Biblioteca Virtual de Biossegurança",
+  "BCH News": "Notícias do BCH",
+  "National Focal Point": "Ponto Focal Nacional",
+  "Risk Assessment generated by an independent or non-regulatory process": "Avaliação de risco gerada por um processo independente ou não regulatório",
+  "Genetic element": "Elemento genético",
+  "Organism": "Organismo",
+  "Living Modified Organism": "Organismo vivo modificado",
+  "Biosafety Organization": "Organização de biossegurança",
+  "Laboratory for detection and identification of LMOs": "Laboratório para detecção e identificação de LMOs",
+  "What's New": "O que há de novo"
 }

@@ -7,10 +7,28 @@
   "Meetings": "Vergaderings",
   "Announcement": "Aankondiging",
   "Announcements": "Aankondigings",
+  "announcement": "Aankondiging",
+  "meeting or event": "Vergadering of geleentheid",
+  "learning resource": "Leerhulpbron",
+  "article": "Artikel",
+  "basic page": "Basiese bladsy",
+  "government ministry or institute": "Regeringsministerie of -instituut",
+  "protected area": "Beskermde Gebied",
+  "biodiversity data": "Biodiversiteitsdata",
+  "related website": "Verwante webwerf",
+  "other resource": "Ander hulpbronne",
+  "image or video": "Beeld of video",
+  "faq": "FAQ",
+  "national information": "Nasionale inligting",
+  "status of lmo": "Status van LMO",
+  "field trial": "Veldproef",
+  "national mainstreaming strategy": "Nasionale Mainstreaming-strategie",
+  "capacity building": "Kapasiteitsbou",
   "Basic Page": "Basiese bladsy",
   "Basic Pages": "Basiese bladsye",
   "Capacity-Building": "Kapasiteitsbou",
   "Capacity-Buildings": "Kapasiteitsgeboue",
+  "Capacity Development Initiative": "Kapasiteitsontwikkelingsini",
   "Field Trial": "Veldproef",
   "Field Trials": "Veldproewe",
   "National Information": "Nasionale inligting",
@@ -66,8 +84,10 @@
   "content": "webwerfinhoud",
   "secretariate": "sekretariaat",
   "notification": "Kennisgewings",
+  "Statement": "Verklaring",
   "statement": "Verklarings",
   "meeting": "Vergaderings",
+  "Press Release": "Persverklaring",
   "pressRelease": "Persverklarings",
   "focalPoint": "fokuspunt",
   "resource": "Virtuele biblioteekhulpbronne",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Bioland Biodiversiteit",
   "Home": "Tuis",
   "Biodiversity CHM": "Biodiversiteit CHM",
+  "Biosafety Clearing-House Search": "Bio-veilighuis-opruimsoektog",
   "National Reports": "Nasionale Verslae",
   "View all National Reports": "Sien alle nasionale verslae",
   "section1": "Afdeling I. Inligting oor die doelwitte wat op nasionale vlak streef word",
@@ -228,7 +249,10 @@
   "Updated Date": "Opgedateerde datum",
   "Download": "Laai af",
   "Latest News and Updates": "Jongste nuus en opdaterings",
+  "Latest Announcements, News and Updates": "Nuutste aankondigings, nuus en opdaterings",
+  "Latest Records": "Nuutste rekords",
   "View more news and updates": "Bekyk meer nuus en opdaterings",
+  "from the Biosafety Clearing-House": "van die Biosafety Clearing-House",
   "implementation": "implementering",
   "Browse TSC Opportunities": "Blaai deur TSC-geleenthede",
   "Browse TSC Assistance and Providers": "Blaai deur TSC-bystand en verskaffers",
@@ -268,9 +292,18 @@
   "Revisions": "Hersienings",
   "Clone": "Kloon",
   "Translate": "Vertaal",
+  "Translation": "Vertaling",
+  "No translation available": "Geen vertaling beskikbaar",
+  "Auto Translate": "Auto Vertaal",
   "BBI Contacts": "BBI Kontakte",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Skryf 'n openbare kommentaar...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Skryf 'n openbare kommentaar..."
+      }
+    }
+  },
   "Login or sign up": "Teken aan of teken aan",
   "Post": "Pos",
   "Login": "Teken aan",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Onverwerkbare entiteit",
   "Failed to POST comment": "Misluk om kommentaar te plaas",
   "all": "alle",
-  "for an account in order to comment or interact.": "vir 'n rekening om kommentaar te lewer of interaksie.",
+  "for an account in order to comment or interact": {
+    "": "vir 'n rekening om kommentaar te lewer of interaksie."
+  },
   "Sign Up": "Teken aan",
   "CBD-type": "Konvensie oor Biologiese Diversiteit",
   "CPB-FP1-type": "Cartagena-protokol oor bioveiligheid",
@@ -888,6 +923,7 @@
   "Progress": "Vooruitgang",
   "Created": "Geskep",
   "Unassigned": "Ontoegewys",
+  "No description available": "Geen beskrywing beskikbaar nie",
   "Work Overview": "Werk Oorsig",
   "Bug": "Bug",
   "Task": "Taak",
@@ -906,7 +942,13 @@
   "Low": "Laag",
   "Lowest": "Laagste",
   "Selected For Development": "Gekies vir ontwikkeling",
-  "View More ...": "Bekyk meer...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Bekyk meer..."
+      }
+    }
+  },
   "bioland-context-description": "Hierdie koekies stoor die konteks vir die Bioland-instrument. Een kode-instansie verskaf vir baie webwerwe. Die konteks help om tussen die verskillende webwerwe te onderskei. Verder 'n koekies vir wanneer jy aanmeld om jou sessie te behou. Laastens vertaal en besigtig poortgrootte om die instrument op die bediener te help. Hierdie koekies is nodig vir die funksionaliteit van die webwerf.",
   "bioland-context-cookies": "Bioland Kontekskoekies",
   "cookie-control-description": "Ons gebruik ons eie koekies en derdeparty-koekies sodat ons hierdie webwerf korrek kan vertoon en beter kan verstaan hoe hierdie webwerf gebruik word, met die oog om die dienste wat ons aanbied te verbeter. 'N Besluit oor koekiegebruikstoestemmings kan enige tyd verander word met behulp van die koekie-knoppie wat sal verskyn nadat 'n keuse op hierdie banier gemaak is.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Samewensbestaan",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Intellektuele eiendomsreg",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Sosiale en/of ekonomiese assesserings",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Handelsreëls en standaarde"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Handelsreëls en standaarde",
+  "Competent National Authority": "Bekwame nasionale owerheid",
+  "Contact": "Kontak",
+  "Biosafety Virtual Library Resources": "Virtuele biblioteekbronne vir bioveiligheid",
+  "BCH News": "BCH Nuus",
+  "National Focal Point": "Nasionale fokuspunt",
+  "Risk Assessment generated by an independent or non-regulatory process": "Risikobeoordeling gegenereer deur 'n onafhanklike of nie-regulerende proses",
+  "Genetic element": "Genetiese element",
+  "Organism": "Organisme",
+  "Living Modified Organism": "Lewende gemodifiseerde organisme",
+  "Biosafety Organization": "Bioveiligheidsorganisasie",
+  "Laboratory for detection and identification of LMOs": "Laboratorium vir opsporing en identifikasie van LMO's",
+  "What's New": "Wat is nuut"
 }

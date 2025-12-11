@@ -7,10 +7,28 @@
   "Meetings": "Toplantılar",
   "Announcement": "Duyuru",
   "Announcements": "Duyurular",
+  "announcement": "Duyuru",
+  "meeting or event": "Toplantı veya Etkinlik",
+  "learning resource": "Öğrenme Kaynağı",
+  "article": "makale",
+  "basic page": "Temel Sayfa",
+  "government ministry or institute": "Hükümet Bakanlığı veya Enstitüsü",
+  "protected area": "Korunmuş bölge",
+  "biodiversity data": "Biyoçeşitlilik Verileri",
+  "related website": "İlgili Web Sitesi",
+  "other resource": "Diğer Kaynak",
+  "image or video": "Resim veya Video",
+  "faq": "SSS",
+  "national information": "Ulusal Bilgi",
+  "status of lmo": "LMO'nun Durumu",
+  "field trial": "Saha Denemesi",
+  "national mainstreaming strategy": "Ulusal Yayıncılık Stratejisi",
+  "capacity building": "Kapasite Geliştirme",
   "Basic Page": "Temel Sayfa",
   "Basic Pages": "Temel Sayfalar",
   "Capacity-Building": "Kapasite geliştirme",
   "Capacity-Buildings": "Kapasite Binaları",
+  "Capacity Development Initiative": "Kapasite Geliştirme Girişimi",
   "Field Trial": "Saha Denemesi",
   "Field Trials": "Saha Denemeleri",
   "National Information": "Ulusal Bilgi",
@@ -66,8 +84,10 @@
   "content": "site içeriği",
   "secretariate": "müdüriyet",
   "notification": "Bildirimler",
+  "Statement": "Açıklama",
   "statement": "Açıklamalar",
   "meeting": "Toplantılar",
+  "Press Release": "Basın Bülteni",
   "pressRelease": "Basın Bültenleri",
   "focalPoint": "odak noktası",
   "resource": "Sanal Kütüphane Kaynakları",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Biyoland Biyoçeşitlilik",
   "Home": "Ev",
   "Biodiversity CHM": "Biyoçeşitlilik CHM",
+  "Biosafety Clearing-House Search": "Biyogüvenlik Takas Merkezi Araması",
   "National Reports": "Ulusal Raporlar",
   "View all National Reports": "Tüm Ulusal Raporları Görüntüle",
   "section1": "Bölüm I. Ulusal düzeyde takip edilen hedefler hakkında bilgi",
@@ -228,7 +249,10 @@
   "Updated Date": "Güncellenme Tarihi",
   "Download": "İndirmek",
   "Latest News and Updates": "Son Haberler ve Güncellemeler",
+  "Latest Announcements, News and Updates": "Son Duyurular, Haberler ve Güncellemeler",
+  "Latest Records": "Son Kayıtlar",
   "View more news and updates": "Daha fazla haber ve güncelleme görüntüle",
+  "from the Biosafety Clearing-House": "Biyogüvenlik Takas Merkezi'nden",
   "implementation": "uygulama",
   "Browse TSC Opportunities": "TSC Fırsatlarına Göz Atın",
   "Browse TSC Assistance and Providers": "TSC Yardım ve Sağlayıcılarına Göz Atın",
@@ -268,9 +292,18 @@
   "Revisions": "Revizyonlar",
   "Clone": "Klon",
   "Translate": "Çevir",
+  "Translation": "Tercüme",
+  "No translation available": "Çeviri mevcut değil",
+  "Auto Translate": "Otomatik Çeviri",
   "BBI Contacts": "BBI İletişim",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Herkese açık bir yorum yazın...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Herkese açık bir yorum yazın..."
+      }
+    }
+  },
   "Login or sign up": "Giriş yapın veya kaydolun",
   "Post": "Mesaj",
   "Login": "Giriş yapmak",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "İşlenemeyen Varlık",
   "Failed to POST comment": "Yorum gönderilemedi",
   "all": "bütün",
-  "for an account in order to comment or interact.": "yorum yapmak veya etkileşim kurmak için bir hesap için.",
+  "for an account in order to comment or interact": {
+    "": "yorum yapmak veya etkileşim kurmak için bir hesap için."
+  },
   "Sign Up": "Üye Ol",
   "CBD-type": "Biyolojik Çeşitlilik Sözleşmesi",
   "CPB-FP1-type": "Cartagena Biyogüvenlik Protokolü",
@@ -888,6 +923,7 @@
   "Progress": "İlerleme",
   "Created": "Oluşturuldu",
   "Unassigned": "Atanmamış",
+  "No description available": "Açıklama mevcut değil",
   "Work Overview": "İşe Genel Bakış",
   "Bug": "Böcek",
   "Task": "Görev",
@@ -906,7 +942,13 @@
   "Low": "Düşük",
   "Lowest": "En düşük",
   "Selected For Development": "Geliştirme İçin Seçildi",
-  "View More ...": "Daha Fazlasını Görüntüle...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Daha Fazlasını Görüntüle..."
+      }
+    }
+  },
   "bioland-context-description": "Bu çerezler, Bioland aracının bağlamını depolar. Bir kod örneği birçok web sitesine hitap eder. Bağlam, farklı web siteleri arasında ayrım yapmaya yardımcı olur. Ayrıca oturumunuzu sürdürmek için giriş yaptığınız zaman için bir çerez. Son olarak sunucudaki araca yardımcı olmak için çeviri ve bağlantı noktası boyutunu görüntüleyin. Bu çerezler web sitesinin işlevselliği için gereklidir.",
   "bioland-context-cookies": "Bioland Bağlam Çerezleri",
   "cookie-control-description": "Sunduğumuz hizmetleri geliştirmek amacıyla bu web sitesini doğru bir şekilde görüntüleyebilmemiz ve bu web sitesinin nasıl kullanıldığını daha iyi anlayabilmemiz için kendi çerezlerimizi ve üçüncü taraf çerezlerimizi kullanıyoruz. Çerez kullanım izinlerine ilişkin bir karar, bu başlıkta bir seçim yapıldıktan sonra görünecek çerez düğmesi kullanılarak herhangi bir zamanda değiştirilebilir..",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Birlikte yaşama",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Fikri mülkiyet hakları",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Sosyal ve/veya ekonomik değerlendirmeler",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Ticaret kuralları ve standartları"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Ticaret kuralları ve standartları",
+  "Competent National Authority": "Yetkili Ulusal Otorite",
+  "Contact": "İletişim",
+  "Biosafety Virtual Library Resources": "Biyogüvenlik Sanal Kütüphane Kaynakları",
+  "BCH News": "BCH Haberleri",
+  "National Focal Point": "Ulusal Odak Noktası",
+  "Risk Assessment generated by an independent or non-regulatory process": "Bağımsız veya düzenleyici olmayan bir süreç tarafından oluşturulan Risk Değerlendirmesi",
+  "Genetic element": "Genetik element",
+  "Organism": "Organizma",
+  "Living Modified Organism": "Canlı Modifiye Organizma",
+  "Biosafety Organization": "Biyogüvenlik Organizasyonu",
+  "Laboratory for detection and identification of LMOs": "LMO'ların tespiti ve tanımlanması için laboratuvar",
+  "What's New": "Yenilikler"
 }

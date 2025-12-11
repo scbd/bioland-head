@@ -7,10 +7,28 @@
   "Meetings": "Уулзалтууд",
   "Announcement": "Зарлал",
   "Announcements": "Зарлал",
+  "announcement": "Зарлал",
+  "meeting or event": "Уулзалт эсвэл үйл явдал",
+  "learning resource": "Сургалтын нөөц",
+  "article": "Нийтлэл",
+  "basic page": "Үндсэн хуудас",
+  "government ministry or institute": "Засгийн газрын яам эсвэл хүрээлэн",
+  "protected area": "Тусгай хамгаалалттай газар нутаг",
+  "biodiversity data": "Биологийн олон янз байдлын мэдээлэл",
+  "related website": "Холбоотой вэбсайт",
+  "other resource": "Бусад нөөц",
+  "image or video": "Зураг эсвэл видео",
+  "faq": "FAQ",
+  "national information": "Үндэсний мэдээлэл",
+  "status of lmo": "LMO-ийн байдал",
+  "field trial": "Талбайн туршилт",
+  "national mainstreaming strategy": "Үндэсний нийтийг хамарсан стратеги",
+  "capacity building": "Хүчин чадавхийг бий болгох",
   "Basic Page": "Үндсэн хуудас",
   "Basic Pages": "Үндсэн хуудаснууд",
   "Capacity-Building": "Чадавхийг бэхжүүлэх",
   "Capacity-Buildings": "Хүчин чадавхи-барилга",
+  "Capacity Development Initiative": "Чадавхийг хөгжүүлэх санаачилга",
   "Field Trial": "Талбайн туршилт",
   "Field Trials": "Талбайн туршилт",
   "National Information": "Үндэсний мэдээлэл",
@@ -66,8 +84,10 @@
   "content": "сайтын агуулга",
   "secretariate": "нарийн бичгийн дарга",
   "notification": "Мэдэгдэл",
+  "Statement": "Мэдэгдэл",
   "statement": "Мэдэгдэл",
   "meeting": "Уулзалтууд",
+  "Press Release": "Хэвлэлийн мэдээ",
   "pressRelease": "Хэвлэлийн мэдээ",
   "focalPoint": "фокус цэг",
   "resource": "Номын сангийн виртуаль нөөц",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Биологийн олон янз байдал",
   "Home": "Гэр",
   "Biodiversity CHM": "Биологийн олон янз байдлын CHM",
+  "Biosafety Clearing-House Search": "Биоаюулгүй байдлын цэвэрлэгээний байшингийн хайлт",
   "National Reports": "Үндэсний тайлангууд",
   "View all National Reports": "Үндэсний бүх тайланг үзэх",
   "section1": "I хэсэг Үндэсний хэмжээнд мөрдөгдөж буй зорилтын талаарх мэдээлэл",
@@ -228,7 +249,10 @@
   "Updated Date": "Шинэчлэгдсэн огноо",
   "Download": "Татаж авах",
   "Latest News and Updates": "Хамгийн сүүлийн үеийн мэдээ, шинэчлэлтүүд",
+  "Latest Announcements, News and Updates": "Хамгийн сүүлийн үеийн зарлууд, мэдээ, шинэчлэлтүүд",
+  "Latest Records": "Хамгийн сүүлийн үеийн бичлэгүүд",
   "View more news and updates": "Бусад мэдээ, шинэчлэлтүүдийг үзэх",
+  "from the Biosafety Clearing-House": "Биоаюулгүй байдлын цэвэрлэгээний ордноос",
   "implementation": "хэрэгжилт",
   "Browse TSC Opportunities": "TSC боломжуудыг үзэх",
   "Browse TSC Assistance and Providers": "TSC тусламж болон үйлчилгээ үзүүлэгчдийг үзэх",
@@ -268,9 +292,18 @@
   "Revisions": "Шинэчлэлтүүд",
   "Clone": "Клон",
   "Translate": "Орчуулах",
+  "Translation": "Орчуулга",
+  "No translation available": "Орчуулга байхгүй",
+  "Auto Translate": "Автомат орчуулга",
   "BBI Contacts": "BBI Холбоо барих",
   "Bioland 1": "Биоланд 1",
-  "Write a public comment ...": "Олон нийтийн сэтгэгдэл бичнэ үү...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Олон нийтийн сэтгэгдэл бичнэ үү..."
+      }
+    }
+  },
   "Login or sign up": "Нэвтрэх эсвэл бүртгүүлэх",
   "Post": "Шуудан",
   "Login": "Нэвтрэх",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Боловсруулахгүй аж ахуйн нэгж",
   "Failed to POST comment": "Сэтгэгдэл бичиж чадаагүй",
   "all": "бүгд",
-  "for an account in order to comment or interact.": "сэтгэгдэл бичих эсвэл харилцан үйлчлэх зорилгоор дансны хувьд.",
+  "for an account in order to comment or interact": {
+    "": "сэтгэгдэл бичих эсвэл харилцан үйлчлэх зорилгоор дансны хувьд."
+  },
   "Sign Up": "Бүртгүүлэх",
   "CBD-type": "Биологийн олон янз байдлын тухай конвенц",
   "CPB-FP1-type": "Биоаюулгүй байдлын тухай Картагенагийн протокол",
@@ -888,6 +923,7 @@
   "Progress": "Ахиц дэвшил",
   "Created": "Бүтээсэн",
   "Unassigned": "Товлогдоогүй",
+  "No description available": "Тодорхойлолт байхгүй",
   "Work Overview": "Ажлын тойм",
   "Bug": "Алдаа",
   "Task": "Даалгавар",
@@ -906,7 +942,13 @@
   "Low": "Бага",
   "Lowest": "Хамгийн бага",
   "Selected For Development": "Хөгжлийн зориулалтаар сонгогдсон",
-  "View More ...": "Дэлгэрэнгүй үзэх...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Дэлгэрэнгүй үзэх..."
+      }
+    }
+  },
   "bioland-context-description": "Эдгээр күүки нь Bioland хэрэгслийн контекстийг хадгалдаг. Нэг кодын жишээ нь олон вэбсайтад нийцдэг. Контекст нь өөр өөр вэбсайтуудыг ялгахад тусалдаг. Цаашилбал, хуралдаанаа хадгалахын тулд нэвтрэх үедээ зориулсан күүки. Эцэст нь орчуулга болон харах порт хэмжээ сервер дээр хэрэгсэл туслах. Эдгээр күүки нь вэбсайтын ажиллагаанд зайлшгүй шаардлагатай.",
   "bioland-context-cookies": "Биоланд контекст күүки",
   "cookie-control-description": "Бид өөрсдийн күүки болон гуравдагч этгээдийн күүкийг ашигладаг бөгөөд ингэснээр бид энэ вэбсайтыг зөв харуулж, энэ вэбсайтыг хэрхэн ашиглаж байгааг илүү сайн ойлгох боломжтой бөгөөд бидний санал болгож буй үйлчилгээг сайжруулах үүднээс. Күүки ашиглах зөвшөөрлийн талаархи шийдвэрийг энэ баннер дээр сонгон шалгаруулалт хийсний дараа гарч ирэх күүки товчийг ашиглан хэдийд ч өөрчилж болно.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Хамтран ажиллах",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Оюуны өмчийн эрх",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Нийгэм болон/эсвэл эдийн засгийн үнэлгээ",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Худалдааны дүрэм, стандарт"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Худалдааны дүрэм, стандарт",
+  "Competent National Authority": "Эрх бүхий үндэсний газар",
+  "Contact": "Холбоо барих",
+  "Biosafety Virtual Library Resources": "Биоаюулгүй байдлын виртуаль номын сангийн нөөц",
+  "BCH News": "BCH Мэдээ мэдээлэл",
+  "National Focal Point": "Үндэсний төв цэг",
+  "Risk Assessment generated by an independent or non-regulatory process": "Бие даасан эсвэл зохицуулалтын бус үйл явцаар үүссэн эрсдэлийн үнэлгээ",
+  "Genetic element": "Генетикийн элемент",
+  "Organism": "Организм",
+  "Living Modified Organism": "Амьд өөрчлөгдсөн организм",
+  "Biosafety Organization": "Биоаюулгүй байдлын байгууллага",
+  "Laboratory for detection and identification of LMOs": "LMO-г илрүүлэх, тодорхойлох лаборатори",
+  "What's New": "Шинэ зүйл юу вэ"
 }

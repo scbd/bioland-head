@@ -7,10 +7,28 @@
   "Meetings": "Mga pagpupulong",
   "Announcement": "Anunsyo",
   "Announcements": "Mga Anunsyo",
+  "announcement": "Anunsyo",
+  "meeting or event": "Pagpupulong o Kaganapan",
+  "learning resource": "Learning Resource",
+  "article": "Artikulo",
+  "basic page": "Pangunahing Pahina",
+  "government ministry or institute": "Ministri o Institusyon ng Pamahalaan",
+  "protected area": "Protektadong Lugar",
+  "biodiversity data": "Data ng Biodiversidad",
+  "related website": "Kaugnay na Website",
+  "other resource": "Ibang Mapagkukunan",
+  "image or video": "Larawan o Video",
+  "faq": "FAQ",
+  "national information": "Pambansang Impormasyon",
+  "status of lmo": "Katayuan ng LMO",
+  "field trial": "Pagsubok sa Patlang",
+  "national mainstreaming strategy": "Pambansang Diskarte sa Mainstreaming",
+  "capacity building": "Pagbuo ng Kapasidad",
   "Basic Page": "Pangunahing Pahina",
   "Basic Pages": "Mga Pangunahing Pahina",
   "Capacity-Building": "Pagbuo ng Kapasidad",
   "Capacity-Buildings": "Mga Gusali ng Kapasidad",
+  "Capacity Development Initiative": "Inisyatiba sa Pag-unlad",
   "Field Trial": "Pagsubok sa Patlang",
   "Field Trials": "Mga Pagsubok sa Patlang",
   "National Information": "Pambansang Impormasyon",
@@ -66,8 +84,10 @@
   "content": "nilalaman ng site",
   "secretariate": "sekretaryo",
   "notification": "Mga Abiso",
+  "Statement": "Pahayag",
   "statement": "Mga pahayag",
   "meeting": "Mga pagpupulong",
+  "Press Release": "Press Release",
   "pressRelease": "Mga pahayag",
   "focalPoint": "focus point",
   "resource": "Mga Mapagkukunan ng Virtual na",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Biodiversidad ng Bioland",
   "Home": "Bahay",
   "Biodiversity CHM": "Biodiversidad CHM",
+  "Biosafety Clearing-House Search": "Paghahanap ng Biosafety Clearing-House",
   "National Reports": "Mga Pambansang Ulat",
   "View all National Reports": "Tingnan ang lahat ng Pambansang Ulat",
   "section1": "Seksyon I. Impormasyon tungkol sa mga target na hinahabol sa pambansang antas",
@@ -228,7 +249,10 @@
   "Updated Date": "Nai-update na Petsa",
   "Download": "I-download",
   "Latest News and Updates": "Pinakabagong Balita at Mga Update",
+  "Latest Announcements, News and Updates": "Pinakabagong Mga Anunsyo, Balita at Update",
+  "Latest Records": "Pinakabagong Rekord",
   "View more news and updates": "Tingnan ang higit pang mga balita at update",
+  "from the Biosafety Clearing-House": "mula sa Biosafety Clearing-House",
   "implementation": "pagpapatupad",
   "Browse TSC Opportunities": "Tingnan ang Mga Pagkakataon sa TSC",
   "Browse TSC Assistance and Providers": "Tingnan ang Tulong at Tagabigay ng TSC",
@@ -268,9 +292,18 @@
   "Revisions": "Mga pagbabago",
   "Clone": "Clone",
   "Translate": "Isalin",
+  "Translation": "Pagsasalin",
+  "No translation available": "Walang magagamit na pagsasalin",
+  "Auto Translate": "Auto Translate",
   "BBI Contacts": "Mga Kontak sa BBI",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Magsulat ng isang pampublikong komento...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Magsulat ng isang pampublikong komento..."
+      }
+    }
+  },
   "Login or sign up": "Mag-login o mag-sign up",
   "Post": "Mag-post",
   "Login": "Mag-login",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Hindi maprosesong Entidad",
   "Failed to POST comment": "Nabigo sa MAG-POST ng komento",
   "all": "lahat",
-  "for an account in order to comment or interact.": "para sa isang account upang magkomento o makipag-ugnay.",
+  "for an account in order to comment or interact": {
+    "": "para sa isang account upang magkomento o makipag-ugnay."
+  },
   "Sign Up": "Mag-sign up",
   "CBD-type": "Kumbensyon sa Pagkakaiba-iba ng Bi",
   "CPB-FP1-type": "Protocol ng Cartagena sa Biosafety",
@@ -888,6 +923,7 @@
   "Progress": "Pag-unlad",
   "Created": "Nilikha",
   "Unassigned": "Hindi itinalaga",
+  "No description available": "Walang magagamit na paglalarawan",
   "Work Overview": "Pangkalahatang-ideya",
   "Bug": "Bug",
   "Task": "Gawain",
@@ -906,7 +942,13 @@
   "Low": "Mababang",
   "Lowest": "Pinakamababang",
   "Selected For Development": "Napili Para sa Pag-unlad",
-  "View More ...": "Tingnan ang Higit Pa...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Tingnan ang Higit Pa..."
+      }
+    }
+  },
   "bioland-context-description": "Ang mga cookies na ito ay nag-iimbak ng konteksto para sa tool ng Bioland. Ang isang halimbawa ng code ay tumutugon sa maraming mga website. Tumutulong ang konteksto upang makilala sa pagitan ng iba't ibang mga website. Dagdag pa ang isang cookies para kapag nag-login ka upang mapanatili ang iyong session. Panghuli ang pagsasalin at tingnan ang laki ng port upang matulungan ang tool sa server. Ang mga cookies na ito ay kinakailangan para sa pag-andar ng website.",
   "bioland-context-cookies": "Mga Cookie sa Konteksto ng Bioland",
   "cookie-control-description": "Ginagamit namin ang aming sariling cookies at mga third party cookies upang maipakita namin nang tama ang website na ito at mas maunawaan kung paano ginagamit ang website na ito, para mapabuti ang mga serbisyong inaalok namin. Ang isang desisyon sa mga pahintulot sa paggamit ng cookie ay maaaring mabago anumang oras gamit ang pindutan ng cookie na lilitaw pagkatapos gumawa ng isang pagpili sa banner na ito.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Pagkakasama",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Mga karapatan sa intelektuwal na pag-aari",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Mga pagsusuri sa lipunan at/o pang",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Mga patakaran at pamantayan sa kalakalan"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Mga patakaran at pamantayan sa kalakalan",
+  "Competent National Authority": "Karapatang Pambansang Awtoridad",
+  "Contact": "Makipag-ugnay",
+  "Biosafety Virtual Library Resources": "Mga Mapagkukunan ng Biosafety Virtual Library",
+  "BCH News": "Balita ng BCH",
+  "National Focal Point": "Pambansang Focal Point",
+  "Risk Assessment generated by an independent or non-regulatory process": "Pagtatasa ng Panganib na nabuo ng isang independiyenteng o hindi regulasyon na proseso",
+  "Genetic element": "Elemento ng henetiko",
+  "Organism": "Organismo",
+  "Living Modified Organism": "Buhay na Binagong Organismo",
+  "Biosafety Organization": "Organisasyon ng Biosafety",
+  "Laboratory for detection and identification of LMOs": "Laboratoryo para sa pagtuklas at pagkakakilanlan ng mga LMO",
+  "What's New": "Ano ang Bago"
 }

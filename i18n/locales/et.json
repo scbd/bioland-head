@@ -7,10 +7,28 @@
   "Meetings": "Koosolekud",
   "Announcement": "Teade",
   "Announcements": "Teated",
+  "announcement": "Teade",
+  "meeting or event": "Koosolek või sündmus",
+  "learning resource": "Õppematerjal",
+  "article": "Artikkel",
+  "basic page": "Põhileht",
+  "government ministry or institute": "Valitsuse ministeerium või instituut",
+  "protected area": "Kaitseala",
+  "biodiversity data": "Bioloogilise mitmekesisuse andmed",
+  "related website": "Seotud veebisait",
+  "other resource": "Muu ressurss",
+  "image or video": "Pilt või video",
+  "faq": "FAQ",
+  "national information": "Riiklik teave",
+  "status of lmo": "LMO staatus",
+  "field trial": "Välikatse",
+  "national mainstreaming strategy": "Riiklik süvalaiendamise strateegia",
+  "capacity building": "Suutlikkuse suurendamine",
   "Basic Page": "Põhileht",
   "Basic Pages": "Põhilehed",
   "Capacity-Building": "Suutlikkuse suurendamise",
   "Capacity-Buildings": "Suutlikkuse suurendamine",
+  "Capacity Development Initiative": "Suutlikkuse arendamise algatus",
   "Field Trial": "Välikatse",
   "Field Trials": "Välikatsed",
   "National Information": "Riiklik teave",
@@ -66,8 +84,10 @@
   "content": "saidi sisu",
   "secretariate": "sekretariaat",
   "notification": "Teatised",
+  "Statement": "Avaldus",
   "statement": "Avaldused",
   "meeting": "Koosolekud",
+  "Press Release": "Pressiteade",
   "pressRelease": "Pressiteated",
   "focalPoint": "fookuspunkt",
   "resource": "Virtuaalse raamatukogu ressursid",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Biolandi bioloogiline mitmekesisus",
   "Home": "Kodu",
   "Biodiversity CHM": "Bioloogiline mitmekesisus CHM",
+  "Biosafety Clearing-House Search": "Bioloogilise ohutuse puhastusmaja otsing",
   "National Reports": "Riiklikud aruanded",
   "View all National Reports": "Vaadake kõiki rahvuslikke aruandeid",
   "section1": "I jagu Teave riiklikul tasandil taotletavate eesmärkide kohta",
@@ -228,7 +249,10 @@
   "Updated Date": "Värskendatud kuupäev",
   "Download": "Laadi alla",
   "Latest News and Updates": "Viimased uudised ja uuendused",
+  "Latest Announcements, News and Updates": "Viimased teadaanded, uudised ja värskendused",
+  "Latest Records": "Viimased rekordid",
   "View more news and updates": "Vaadake rohkem uudiseid ja uuendusi",
+  "from the Biosafety Clearing-House": "bioloogilise ohutuse läbivaatusmajast",
   "implementation": "rakendamine",
   "Browse TSC Opportunities": "Sirvige TSC võimalusi",
   "Browse TSC Assistance and Providers": "Sirvige TSC abi ja teenusepakkujaid",
@@ -268,9 +292,18 @@
   "Revisions": "Revisjonid",
   "Clone": "Klooni",
   "Translate": "Tõlgi",
+  "Translation": "Tõlge",
+  "No translation available": "Tõlge pole saadaval",
+  "Auto Translate": "Automaatne tõlge",
   "BBI Contacts": "BBI Kontaktid",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Kirjutage avalik kommentaar...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Kirjutage avalik kommentaar..."
+      }
+    }
+  },
   "Login or sign up": "Logi sisse või registreeru",
   "Post": "Postitus",
   "Login": "Logi sisse",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Töötlemata üksus",
   "Failed to POST comment": "Kommentaari postitamine ebaõnnestus",
   "all": "kõik",
-  "for an account in order to comment or interact.": "konto jaoks kommenteerimiseks või suhtlemiseks.",
+  "for an account in order to comment or interact": {
+    "": "konto jaoks kommenteerimiseks või suhtlemiseks."
+  },
   "Sign Up": "Registreeru",
   "CBD-type": "Bioloogilise mitmekesisuse konventsioon",
   "CPB-FP1-type": "Cartagena bioohutuse protokoll",
@@ -888,6 +923,7 @@
   "Progress": "Edusammud",
   "Created": "Loodud",
   "Unassigned": "Määratud",
+  "No description available": "Kirjeldus puudub",
   "Work Overview": "Töö ülevaade",
   "Bug": "Viga",
   "Task": "Ülesanne",
@@ -906,7 +942,13 @@
   "Low": "Madal",
   "Lowest": "Madalaim",
   "Selected For Development": "Valitud arendamiseks",
-  "View More ...": "Vaata rohkem...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Vaata rohkem..."
+      }
+    }
+  },
   "bioland-context-description": "Need küpsised salvestavad Biolandi tööriista konteksti. Üks koodieksemplar sobib paljudele veebisaitidele. Kontekst aitab eristada erinevaid veebisaite. Lisaks küpsised, kui logite sisse oma seansi säilitamiseks. Lõpuks tõlkige ja vaadake pordi suurust, et aidata tööriista serveris. Need küpsised on vajalikud veebisaidi toimimiseks.",
   "bioland-context-cookies": "Biolandi kontekstiküpsised",
   "cookie-control-description": "Kasutame oma küpsiseid ja kolmandate osapoolte küpsiseid, et saaksime seda veebisaiti õigesti kuvada ja paremini mõista, kuidas seda veebisaiti kasutatakse, et parandada pakutavaid teenuseid. Küpsiste kasutamise õiguste otsust saab igal ajal muuta, kasutades küpsiste nuppu, mis ilmub pärast sellel bänneril valiku tegemist.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Koossisteerimine",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Intellektuaalomandi õigused",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Sotsiaalsed ja/või majanduslikud hinnangud",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Kaubanduseeskirjad ja -standardid"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Kaubanduseeskirjad ja -standardid",
+  "Competent National Authority": "Pädev riiklik asutus",
+  "Contact": "Kontakt",
+  "Biosafety Virtual Library Resources": "Bioohutuse virtuaalse raamatukogu ressursid",
+  "BCH News": "BCH uudised",
+  "National Focal Point": "Riiklik keskpunkt",
+  "Risk Assessment generated by an independent or non-regulatory process": "Sõltumatu või mitteregulatiivse protsessi käigus loodud riskihindamine",
+  "Genetic element": "Geneetiline element",
+  "Organism": "Organism",
+  "Living Modified Organism": "Elav modifitseeritud organism",
+  "Biosafety Organization": "Bioloogilise ohutuse organisatsioon",
+  "Laboratory for detection and identification of LMOs": "LMOde tuvastamise ja tuvastamise labor",
+  "What's New": "Mis on uus"
 }

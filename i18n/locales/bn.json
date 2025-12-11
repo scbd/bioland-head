@@ -7,10 +7,28 @@
   "Meetings": "সভা",
   "Announcement": "ঘোষণা",
   "Announcements": "ঘোষণা",
+  "announcement": "ঘোষণা",
+  "meeting or event": "সভা বা ইভেন্ট",
+  "learning resource": "শেখার সম্পদ",
+  "article": "প্রবন্ধ",
+  "basic page": "মৌলিক পৃষ্ঠা",
+  "government ministry or institute": "সরকারী মন্ত্রণালয় বা প্রতিষ্ঠান",
+  "protected area": "সুরক্ষিত এলাকা",
+  "biodiversity data": "জীববৈচিত্র্য ডেটা",
+  "related website": "সম্পর্কিত ওয়েবসাইট",
+  "other resource": "অন্যান্য সম্পদ",
+  "image or video": "ছবি বা ভিডিও",
+  "faq": "প্রায়শই জিজ্ঞাসিত প্রশ্নাবলী",
+  "national information": "জাতীয় তথ্য",
+  "status of lmo": "এলএমওর অবস্থা",
+  "field trial": "ফিল্ড ট্রায়াল",
+  "national mainstreaming strategy": "জাতীয় মেইনস্ট্রিমিং কৌশল",
+  "capacity building": "ক্ষমতা বিল্ডিং",
   "Basic Page": "মৌলিক পৃষ্ঠা",
   "Basic Pages": "বেসিক পেজ",
   "Capacity-Building": "প্রাসাদের ধারন ক্ষমতা",
   "Capacity-Buildings": "ক্যাপাসিটি-বিল্ডিং",
+  "Capacity Development Initiative": "ক্যাপাসিটি ডেভেলপমে",
   "Field Trial": "ফিল্ড ট্রায়াল",
   "Field Trials": "ফিল্ড ট্রায়াল",
   "National Information": "জাতীয় তথ্য",
@@ -66,8 +84,10 @@
   "content": "সাইট সামগ্রী",
   "secretariate": "সচিবালয়",
   "notification": "বিজ্ঞপ্তি",
+  "Statement": "বিবৃতি",
   "statement": "বিবৃতি",
   "meeting": "সভা",
+  "Press Release": "প্রেস রিলিজ",
   "pressRelease": "প্রেস রিলিজ",
   "focalPoint": "ফোকাল পয়েন্ট",
   "resource": "ভার্চুয়াল গ্রন্থাগার",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "বায়োল্যান্ড জীববৈচিত্র্য",
   "Home": "বাড়ি",
   "Biodiversity CHM": "জীববৈচিত্র্য CHM",
+  "Biosafety Clearing-House Search": "বায়োসেফটি ক্লিয়ারিং-হাউস অনুসন্ধান",
   "National Reports": "জাতীয় প্রতিবেদন",
   "View all National Reports": "সমস্ত জাতীয় প্রতিবেদন দেখুন",
   "section1": "বিভাগ I জাতীয় পর্যায়ে অনুসরণ করা লক্ষ্যগুলি সম্পর্কিত তথ্য",
@@ -228,7 +249,10 @@
   "Updated Date": "আপডেটের তারিখ",
   "Download": "ডাউনলোড করুন",
   "Latest News and Updates": "সর্বশেষ খবর এবং আপডেট",
+  "Latest Announcements, News and Updates": "সর্বশেষ ঘোষণা, খবর এবং আপডে",
+  "Latest Records": "সর্বশেষ রেকর্ড",
   "View more news and updates": "আরো খবর এবং আপডেট দেখুন",
+  "from the Biosafety Clearing-House": "বায়োসেফটি ক্লিয়ারিং-হাউস থেকে",
   "implementation": "বাস্তবায়ন",
   "Browse TSC Opportunities": "TSC সুযোগ ব্রাউজ করুন",
   "Browse TSC Assistance and Providers": "TSC সহায়তা এবং প্রদানকারী ব্রাউজ করুন",
@@ -268,9 +292,18 @@
   "Revisions": "রিভিশন",
   "Clone": "ক্লোন",
   "Translate": "অনুবাদ করুন",
+  "Translation": "অনুবাদ",
+  "No translation available": "কোন অনুবাদ উপলব্ধ নেই",
+  "Auto Translate": "অটো অনুবাদ",
   "BBI Contacts": "বিবিআই যোগাযোগ",
   "Bioland 1": "বায়োল্যান্ড ১",
-  "Write a public comment ...": "একটি পাবলিক মন্তব্য লিখুন...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "একটি পাবলিক মন্তব্য লিখুন..."
+      }
+    }
+  },
   "Login or sign up": "লগইন করুন বা সাইন আপ করুন",
   "Post": "পোস্ট",
   "Login": "প্রবেশ করুন",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "অপ্রক্রিয়াযোগ্য সত্তা",
   "Failed to POST comment": "মন্তব্য পোস্ট করতে ব্যর্থ",
   "all": "সব",
-  "for an account in order to comment or interact.": "মন্তব্য বা ইন্টারঅ্যাক্ট করার জন্য একটি অ্যাকাউন্টের জন্য।",
+  "for an account in order to comment or interact": {
+    "": "মন্তব্য বা ইন্টারঅ্যাক্ট করার জন্য একটি অ্যাকাউন্টের জন্য।"
+  },
   "Sign Up": "সাইন আপ করুন",
   "CBD-type": "জৈবিক বৈচিত্র্য সম্পর্কিত",
   "CPB-FP1-type": "বায়োসেফটি সম্পর্কিত কার্টেজেনা প্রোটোকল",
@@ -888,6 +923,7 @@
   "Progress": "অগ্রগতি",
   "Created": "তৈরি করা হয়েছে",
   "Unassigned": "অনির্ধারিত",
+  "No description available": "কোন বিবরণ উপলব্ধ নেই",
   "Work Overview": "কাজের ওভারভিউ",
   "Bug": "বাগ",
   "Task": "টাস্ক",
@@ -906,7 +942,13 @@
   "Low": "নিম্ন",
   "Lowest": "সর্বনিম্ন",
   "Selected For Development": "উন্নয়নের জন্য নির্বাচিত",
-  "View More ...": "আরো দেখুন...",
+  "View More ": {
+    "": {
+      "": {
+        "": "আরো দেখুন..."
+      }
+    }
+  },
   "bioland-context-description": "এই কুকিজ বায়োল্যান্ড সরঞ্জামের প্রসঙ্গ সংরক্ষণ করে। একটি কোড উদাহরণ অনেক ওয়েবসাইট সরবরাহ করে। প্রসঙ্গ বিভিন্ন ওয়েবসাইটের মধ্যে পার্থক্য করতে সহায়তা করে। আপনি যখন আপনার সেশন রাখতে লগইন করেন তখন আরও একটি কুকিজ। সর্বশেষে সার্ভারে সরঞ্জামটি সহায়তা করার জন্য পোর্টের আকার অনুবাদ এবং দেখুন। এই কুকিজ ওয়েবসাইটের কার্যকারিতার জন্য প্রয়োজনীয়।",
   "bioland-context-cookies": "বায়োল্যান্ড কনটেক্সট কুকিজ",
   "cookie-control-description": "আমরা আমাদের নিজস্ব কুকিজ এবং তৃতীয় পক্ষের কুকিজ ব্যবহার করি যাতে আমরা এই ওয়েবসাইটটি সঠিকভাবে প্রদর্শন করতে পারি এবং আমরা যে পরিষেবাগুলি সরবরাহ করি তা উন্নত করার লক্ষ্যে এই ওয়েবসাইটটি কীভাবে ব্যবহার করা হয় তা আরও ভালভাবে কুকি ব্যবহারের অনুমতিগুলির একটি সিদ্ধান্ত যে কোনও সময় কুকি বোতামটি ব্যবহার করে পরিবর্তন করা যেতে পারে যা এই ব্যানারে একটি নির্বাচন করার পরে প্রদর্শিত হবে।",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "সহাবস্থান",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "বুদ্ধিজীবী সম্পত্তি",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "সামাজিক এবং/অথবা অর্",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "বাণিজ্য নিয়ম এবং মান"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "বাণিজ্য নিয়ম এবং মান",
+  "Competent National Authority": "উপযুক্ত জাতীয় কর্তৃপক্",
+  "Contact": "যোগাযোগ",
+  "Biosafety Virtual Library Resources": "বায়োসেফটি ভার্চুয়াল লাইব্রেরি সংস্থা",
+  "BCH News": "বিসিএইচ নিউজ",
+  "National Focal Point": "জাতীয় ফোকাল পয়েন্ট",
+  "Risk Assessment generated by an independent or non-regulatory process": "স্বাধীন বা অ-নিয়ন্ত্রক প্রক্রিয়া দ্বারা উত্পন্ন ঝুঁকি মূল্যায়ন",
+  "Genetic element": "জেনেটিক উপাদান",
+  "Organism": "জীব",
+  "Living Modified Organism": "জীবন্ত সংশোধিত জীব",
+  "Biosafety Organization": "বায়োসেফটি অর্গানাইজেশন",
+  "Laboratory for detection and identification of LMOs": "LMO সনাক্তকরণ এবং সনাক্তকরণের জন্য পরীক্ষাগ",
+  "What's New": "নতুন কি"
 }

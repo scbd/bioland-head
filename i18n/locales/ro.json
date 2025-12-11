@@ -7,10 +7,28 @@
   "Meetings": "Întâlniri",
   "Announcement": "Anunț",
   "Announcements": "Anunțuri",
+  "announcement": "Anunț",
+  "meeting or event": "Întâlnire sau eveniment",
+  "learning resource": "Resursa de invatare",
+  "article": "Articol",
+  "basic page": "Pagina de bază",
+  "government ministry or institute": "Ministerul sau Institutul Guvernului",
+  "protected area": "Zonă protejată",
+  "biodiversity data": "Date despre biodiversitate",
+  "related website": "Site conex",
+  "other resource": "Alte resurse",
+  "image or video": "Imagine sau Video",
+  "faq": "ÎNTREBĂRI FRECVENTE",
+  "national information": "Informaţii naţionale",
+  "status of lmo": "Statutul LMO",
+  "field trial": "Încercare pe teren",
+  "national mainstreaming strategy": "Strategia națională de integrare",
+  "capacity building": "Consolidarea capacităților",
   "Basic Page": "Pagina de bază",
   "Basic Pages": "Pagini de bază",
   "Capacity-Building": "Consolidarea capacităților",
   "Capacity-Buildings": "Capacitate-clădiri",
+  "Capacity Development Initiative": "Inițiativa de dezvoltare a capacităților",
   "Field Trial": "Încercare pe teren",
   "Field Trials": "Încercări pe teren",
   "National Information": "Informaţii naţionale",
@@ -66,8 +84,10 @@
   "content": "conținutul site-ului",
   "secretariate": "secretariat",
   "notification": "Notificări",
+  "Statement": "Declarație",
   "statement": "Declarații",
   "meeting": "Întâlniri",
+  "Press Release": "Comunicat de presă",
   "pressRelease": "Comunicate de presă",
   "focalPoint": "punct focal",
   "resource": "Resurse de bibliotecă virtuală",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Biodiversitatea Bioland",
   "Home": "Acasă",
   "Biodiversity CHM": "Biodiversitate CHM",
+  "Biosafety Clearing-House Search": "Căutare în casa de informare privind biosiguranța",
   "National Reports": "Rapoarte naționale",
   "View all National Reports": "Vezi toate rapoartele naționale",
   "section1": "Secțiunea I. Informații privind obiectivele urmărite la nivel național",
@@ -228,7 +249,10 @@
   "Updated Date": "Data actualizată",
   "Download": "Descărcați",
   "Latest News and Updates": "Ultimele știri și actualizări",
+  "Latest Announcements, News and Updates": "Ultimele anunțuri, știri și actualizări",
+  "Latest Records": "Ultimele înregistrări",
   "View more news and updates": "Vezi mai multe știri și actualizări",
+  "from the Biosafety Clearing-House": "de la Casa de informare pentru biosecuritate",
   "implementation": "implementare",
   "Browse TSC Opportunities": "Răsfoiți Oportunitățile TSC",
   "Browse TSC Assistance and Providers": "Răsfoiți asistență și furnizori TSC",
@@ -268,9 +292,18 @@
   "Revisions": "Revizuirile",
   "Clone": "Clonează",
   "Translate": "Traduce",
+  "Translation": "Traducere",
+  "No translation available": "Nu există traducere disponibilă",
+  "Auto Translate": "Traducere automată",
   "BBI Contacts": "Contacte BBI",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Scrie un comentariu public...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Scrie un comentariu public..."
+      }
+    }
+  },
   "Login or sign up": "Conectați-vă sau înscrieți-vă",
   "Post": "Postare",
   "Login": "Log in",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Entitate neprocesabilă",
   "Failed to POST comment": "Nu a reușit să posteze un comentariu",
   "all": "toate",
-  "for an account in order to comment or interact.": "pentru un cont pentru a comenta sau a interacționa.",
+  "for an account in order to comment or interact": {
+    "": "pentru un cont pentru a comenta sau a interacționa."
+  },
   "Sign Up": "Înscrie-te",
   "CBD-type": "Convenția privind diversitatea biologică",
   "CPB-FP1-type": "Protocolul de la Cartagena privind biosecuritatea",
@@ -888,6 +923,7 @@
   "Progress": "Progresul",
   "Created": "Creat",
   "Unassigned": "Neatribuit",
+  "No description available": "Nu există descriere disponibilă",
   "Work Overview": "Prezentare generală a lucrărilor",
   "Bug": "Bug",
   "Task": "Sarcină",
@@ -906,7 +942,13 @@
   "Low": "Scăzut",
   "Lowest": "Cel mai mic",
   "Selected For Development": "Selectat pentru dezvoltare",
-  "View More ...": "Vezi mai multe...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Vezi mai multe..."
+      }
+    }
+  },
   "bioland-context-description": "Aceste cookie-uri stochează contextul instrumentului Bioland. O instanță de cod se adresează multor site-uri web. Contextul ajută la diferențierea între diferitele site-uri web. Mai mult, un cookie pentru momentul în care vă conectați pentru a vă păstra sesiunea. În cele din urmă traducerea și vizualizarea dimensiunii portului pentru a ajuta instrumentul pe server. Aceste cookie-uri sunt necesare pentru funcționalitatea site-ului web.",
   "bioland-context-cookies": "Cookie-uri de context Bioland",
   "cookie-control-description": "Folosim propriile noastre cookie-uri și cookie-uri terțe, astfel încât să putem afișa corect acest site web și să înțelegem mai bine modul în care este utilizat acest site web, în vederea îmbunătățirii serviciilor pe care le oferim. O decizie privind permisiunile de utilizare a cookie-urilor poate fi modificată oricând folosind butonul cookie care va apărea după ce a fost făcută o selecție pe acest banner.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Coexistența",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Drepturi de proprietate intelectuală",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Evaluări sociale și/sau economice",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Norme și standarde comerciale"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Norme și standarde comerciale",
+  "Competent National Authority": "Autoritatea națională competentă",
+  "Contact": "Contact",
+  "Biosafety Virtual Library Resources": "Resurse ale bibliotecii virtuale de biosecuritate",
+  "BCH News": "Știri BCH",
+  "National Focal Point": "Punct focal național",
+  "Risk Assessment generated by an independent or non-regulatory process": "Evaluarea riscurilor generată de un proces independent sau fără reglementare",
+  "Genetic element": "Element genetic",
+  "Organism": "Organism",
+  "Living Modified Organism": "Organism viu modificat",
+  "Biosafety Organization": "Organizația de biosecuritate",
+  "Laboratory for detection and identification of LMOs": "Laborator pentru detectarea și identificarea OMG-urilor",
+  "What's New": "Ce este nou"
 }

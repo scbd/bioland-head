@@ -7,10 +7,28 @@
   "Meetings": "Görüşlər",
   "Announcement": "Elanlar",
   "Announcements": "Elanlar",
+  "announcement": "Elanlar",
+  "meeting or event": "Görüş və ya Tədbir",
+  "learning resource": "Öyrənmə Resursu",
+  "article": "Məqalə",
+  "basic page": "Əsas səhifə",
+  "government ministry or institute": "Hökumət Nazirliyi və ya İnstitutu",
+  "protected area": "Mühafizə olunan ərazi",
+  "biodiversity data": "Biomüxtəliflik məlumatları",
+  "related website": "Əlaqədar Veb sayt",
+  "other resource": "Digər Resurs",
+  "image or video": "Şəkil və ya Video",
+  "faq": "SUALLAR",
+  "national information": "Milli Məlumat",
+  "status of lmo": "LMO-nun vəziyyəti",
+  "field trial": "Sahə sınağı",
+  "national mainstreaming strategy": "Milli Mainstream Strategiyası",
+  "capacity building": "Bacarıqların artırılması",
   "Basic Page": "Əsas səhifə",
   "Basic Pages": "Əsas səhifələr",
   "Capacity-Building": "Potensialın gücləndirilməsi",
   "Capacity-Buildings": "Kapasitələrin qurulması",
+  "Capacity Development Initiative": "Kapacitələrin İnkişafı",
   "Field Trial": "Sahə sınağı",
   "Field Trials": "Sahə sınaqları",
   "National Information": "Milli Məlumat",
@@ -66,8 +84,10 @@
   "content": "sayt məzmunu",
   "secretariate": "katiblik",
   "notification": "Bildirişlər",
+  "Statement": "Bəyanat",
   "statement": "Bəyanatlar",
   "meeting": "Görüşlər",
+  "Press Release": "Mətbuat şərhi",
   "pressRelease": "Mətbuat şərhləri",
   "focalPoint": "fokus nöqtəsi",
   "resource": "Virtual Kitabxana Resursları",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Bioland Biomüxtəlifliyi",
   "Home": "Ev",
   "Biodiversity CHM": "Biomüxtəliflik CHM",
+  "Biosafety Clearing-House Search": "Bioloji Təhlükəsizlik Təmizləmə Evi Axtarışı",
   "National Reports": "Milli Hesabatlar",
   "View all National Reports": "Bütün Milli Hesabatlara baxın",
   "section1": "Bölmə I Milli səviyyədə yerinə yetirilən hədəflər haqqında məlumat",
@@ -228,7 +249,10 @@
   "Updated Date": "Yenilənmiş Tarix",
   "Download": "Yüklə",
   "Latest News and Updates": "Ən Son Xəbərlər və Yeniliklər",
+  "Latest Announcements, News and Updates": "Son Elanlar, Xəbərlər və Yeniləmələr",
+  "Latest Records": "Ən son qeydlər",
   "View more news and updates": "Daha çox xəbər və yeniləmələrə baxın",
+  "from the Biosafety Clearing-House": "Bioloji Təhlükəsizlik Təmizləmə Evindən",
   "implementation": "həyata keçirilməsi",
   "Browse TSC Opportunities": "TSC İmkanlarına baxın",
   "Browse TSC Assistance and Providers": "TSC Yardımı və Təchizatçılarına baxın",
@@ -268,9 +292,18 @@
   "Revisions": "Reviziyalar",
   "Clone": "Klon",
   "Translate": "Tərcümə et",
+  "Translation": "Tərcümə",
+  "No translation available": "Tərcümə yoxdur",
+  "Auto Translate": "Avtomatik Tərcümə",
   "BBI Contacts": "BBI Əlaqə",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "İctimai şərh yazın...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "İctimai şərh yazın..."
+      }
+    }
+  },
   "Login or sign up": "Giriş və ya qeydiyyatdan keçin",
   "Post": "Göndərmə",
   "Login": "Daxil ol",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "İşlənməyən müəssisə",
   "Failed to POST comment": "Şərh göndərmək mümkün olmadı",
   "all": "hamısı",
-  "for an account in order to comment or interact.": "şərh və ya qarşılıqlı əlaqə qurmaq üçün hesab üçün.",
+  "for an account in order to comment or interact": {
+    "": "şərh və ya qarşılıqlı əlaqə qurmaq üçün hesab üçün."
+  },
   "Sign Up": "Qeydiyyatdan keçin",
   "CBD-type": "Bioloji müxtəliflik haqqında Konvensiya",
   "CPB-FP1-type": "Bioloji təhlükəsizlik üzrə Kartagena Protokolu",
@@ -888,6 +923,7 @@
   "Progress": "Tərəqqi",
   "Created": "Yaradılıb",
   "Unassigned": "Təyin olunmamışdır",
+  "No description available": "Təsvir yoxdur",
   "Work Overview": "İşə ümumi baxış",
   "Bug": "Səhv",
   "Task": "Tapşırıq",
@@ -906,7 +942,13 @@
   "Low": "Aşağı",
   "Lowest": "Ən aşağı",
   "Selected For Development": "İnkişaf üçün seçilmişdir",
-  "View More ...": "Daha çox baxın...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Daha çox baxın..."
+      }
+    }
+  },
   "bioland-context-description": "Bu kukilər Bioland alətinin kontekstini saxlayır. Bir kod nümunəsi bir çox veb saytlara xidmət edir. Kontekst müxtəlif veb saytları fərqləndirməyə kömək edir. Sessiyanızı davam etdirmək üçün daxil olduğunuz zaman əlavə kukilər. Nəhayət, serverdəki alətə kömək etmək üçün port ölçüsünü tərcümə edin və baxın. Bu kukilər veb saytın funksionallığı üçün zəruridir.",
   "bioland-context-cookies": "Bioland Kontekst kukiləri",
   "cookie-control-description": "Biz öz kukilərimizdən və üçüncü tərəf kukilərimizdən istifadə edirik ki, bu veb saytı düzgün göstərə bilərik və təklif etdiyimiz xidmətləri təkmilləşdirmək məqsədi ilə bu veb saytın necə istifadə olunduğunu daha yaxşı başa düşə bilərik. Kuki istifadəsi icazələri ilə bağlı qərar, bu bannerdə seçim edildikdən sonra görünəcək kuki düyməsindən istifadə edərək istənilən vaxt dəyişdirilə bilər.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Birlikdə yaşamaq",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Əqli mülkiyyət hüququ",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Sosial və/və ya iqtisadi qiymət",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Ticarət qaydaları və standartları"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Ticarət qaydaları və standartları",
+  "Competent National Authority": "Səlahiyyətli Milli İdarə",
+  "Contact": "Əlaqə",
+  "Biosafety Virtual Library Resources": "Bioloji Təhlükəsizlik Virtual Kitabxana Resursları",
+  "BCH News": "BCH Xəbərləri",
+  "National Focal Point": "Milli Fokus Nöqtəsi",
+  "Risk Assessment generated by an independent or non-regulatory process": "Müstəqil və ya qeyri-tənzimləyici proses nəticəsində yaranan risklərin qiymətləndirilməsi",
+  "Genetic element": "Genetik element",
+  "Organism": "Orqanizm",
+  "Living Modified Organism": "Canlı dəyişdirilmiş orqanizm",
+  "Biosafety Organization": "Bioloji Təhlükəsizlik Təşkilatı",
+  "Laboratory for detection and identification of LMOs": "LMO-ların aşkarlanması və identifikasiyası laboratoriyası",
+  "What's New": "Yeni nədir"
 }

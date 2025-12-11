@@ -7,10 +7,28 @@
   "Meetings": "מפגשים",
   "Announcement": "הכרזה",
   "Announcements": "הכרזות",
+  "announcement": "הכרזה",
+  "meeting or event": "מפגש או אירוע",
+  "learning resource": "משאב למידה",
+  "article": "פריט",
+  "basic page": "עמוד בסיסי",
+  "government ministry or institute": "משרד ממשלתי או מכון",
+  "protected area": "אזור מוגן",
+  "biodiversity data": "נתוני המגוון הביולוגי",
+  "related website": "אתר קשור",
+  "other resource": "משאב אחר",
+  "image or video": "תמונה או וידאו",
+  "faq": "שאלות נפוצות",
+  "national information": "מידע לאומי",
+  "status of lmo": "סטטוס של LMO",
+  "field trial": "ניסוי שדה",
+  "national mainstreaming strategy": "אסטרטגיית המיינסטריימינג הלאומית",
+  "capacity building": "בניית יכולות",
   "Basic Page": "עמוד בסיסי",
   "Basic Pages": "דפים בסיסיים",
   "Capacity-Building": "קיבולת בנייה",
   "Capacity-Buildings": "מבני קיבולת",
+  "Capacity Development Initiative": "יוזמת פיתוח יכולת",
   "Field Trial": "ניסוי שדה",
   "Field Trials": "ניסויי שדה",
   "National Information": "מידע לאומי",
@@ -66,8 +84,10 @@
   "content": "תוכן האתר",
   "secretariate": "מזכירות",
   "notification": "התראות",
+  "Statement": "הצהרה",
   "statement": "הצהרות",
   "meeting": "מפגשים",
+  "Press Release": "הודעה לעיתונות",
   "pressRelease": "הודעות לעיתונות",
   "focalPoint": "נקודת מוקד",
   "resource": "משאבי ספרייה וירטואלית",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Bioland המגוון הביולוגי",
   "Home": "בית",
   "Biodiversity CHM": "המגוון הביולוגי CHM",
+  "Biosafety Clearing-House Search": "חיפוש בית סליקה לבטיחות ביולוגית",
   "National Reports": "דוחות לאומיים",
   "View all National Reports": "הצג את כל הדוחות הלאומיים",
   "section1": "סעיף I מידע על היעדים הנרשמים ברמה הלאומית",
@@ -228,7 +249,10 @@
   "Updated Date": "תאריך מעודכן",
   "Download": "הורד",
   "Latest News and Updates": "חדשות ועדכונים אחרונים",
+  "Latest Announcements, News and Updates": "הודעות אחרונות, חדשות ועדכונים",
+  "Latest Records": "הרשומות האחרונות",
   "View more news and updates": "הצג עוד חדשות ועדכונים",
+  "from the Biosafety Clearing-House": "מבית הסליקה לבטיחות ביולוגית",
   "implementation": "יישום",
   "Browse TSC Opportunities": "עיין בהזדמנויות TSC",
   "Browse TSC Assistance and Providers": "עיין בסיוע ובספקים של TSC",
@@ -268,9 +292,18 @@
   "Revisions": "תיקונים",
   "Clone": "שיבוט",
   "Translate": "לְתַרְגֵם",
+  "Translation": "תרגום",
+  "No translation available": "אין תרגום זמין",
+  "Auto Translate": "תרגום אוטומטי",
   "BBI Contacts": "אנשי קשר של BBI",
   "Bioland 1": "ביולנד 1",
-  "Write a public comment ...": "כתוב תגובה ציבורית...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "כתוב תגובה ציבורית..."
+      }
+    }
+  },
   "Login or sign up": "התחבר או הירשם",
   "Post": "פוסט",
   "Login": "התחברות",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "ישות בלתי ניתנת לעיבוד",
   "Failed to POST comment": "נכשל בפוסט תגובה",
   "all": "כל",
-  "for an account in order to comment or interact.": "עבור חשבון על מנת להגיב או לקיים אינטראקציה.",
+  "for an account in order to comment or interact": {
+    "": "עבור חשבון על מנת להגיב או לקיים אינטראקציה."
+  },
   "Sign Up": "להירשם",
   "CBD-type": "אמנת המגוון הביולוגי",
   "CPB-FP1-type": "פרוטוקול קרטחנה בנושא בטיחות ביולוגית",
@@ -888,6 +923,7 @@
   "Progress": "התקדמות",
   "Created": "נוצר",
   "Unassigned": "לא מוקצה",
+  "No description available": "אין תיאור זמין",
   "Work Overview": "סקירת עבודה",
   "Bug": "באג",
   "Task": "משימה",
@@ -906,7 +942,13 @@
   "Low": "נמוך",
   "Lowest": "הנמוך ביותר",
   "Selected For Development": "נבחר לפיתוח",
-  "View More ...": "הצג עוד...",
+  "View More ": {
+    "": {
+      "": {
+        "": "הצג עוד..."
+      }
+    }
+  },
   "bioland-context-description": "עוגיות אלה מאחסנות את ההקשר לכלי Bioland. מופע קוד אחד פונה לאתרים רבים. ההקשר מסייע להבדיל בין האתרים השונים. יתר על כן עוגיות עבור כאשר אתה מתחבר כדי לשמור על הפגישה שלך. לבסוף תרגום וצפייה בגודל היציאה כדי לסייע לכלי בשרת. קובצי Cookie אלה נחוצים לפונקציונליות של האתר.",
   "bioland-context-cookies": "עוגיות הקשר של ביולנד",
   "cookie-control-description": "אנו משתמשים בעוגיות משלנו ובעוגיות של צד שלישי כדי שנוכל להציג אתר זה בצורה נכונה ולהבין טוב יותר את אופן השימוש באתר זה, במטרה לשפר את השירותים שאנו מציעים. ניתן לשנות החלטה על הרשאות שימוש בקובצי Cookie בכל עת באמצעות כפתור העוגיות שיופיע לאחר שתבוצע בחירה באנר זה.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "דו קיום",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "זכויות קניין רוחני",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "הערכות חברתיות ו/או כלכליות",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "כללי סחר ותקנים"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "כללי סחר ותקנים",
+  "Competent National Authority": "רשות לאומית מוסמכת",
+  "Contact": "צור קשר",
+  "Biosafety Virtual Library Resources": "משאבי ספרייה וירטואלית לבטיחות ביולוגית",
+  "BCH News": "חדשות BCH",
+  "National Focal Point": "מוקד לאומי",
+  "Risk Assessment generated by an independent or non-regulatory process": "הערכת סיכונים הנוצרת על ידי תהליך עצמאי או לא רגולטורי",
+  "Genetic element": "אלמנט גנטי",
+  "Organism": "אורגניזם",
+  "Living Modified Organism": "אורגניזם חי שונה",
+  "Biosafety Organization": "ארגון בטיחות ביולוגית",
+  "Laboratory for detection and identification of LMOs": "מעבדה לאיתור וזיהוי של LMO",
+  "What's New": "מה חדש"
 }

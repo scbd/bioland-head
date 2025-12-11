@@ -7,10 +7,28 @@
   "Meetings": "Các cuộc họp",
   "Announcement": "Thông báo",
   "Announcements": "Thông báo",
+  "announcement": "Thông báo",
+  "meeting or event": "Cuộc họp hoặc sự kiện",
+  "learning resource": "Tài nguyên học tập",
+  "article": "Bài báo",
+  "basic page": "Trang cơ bản",
+  "government ministry or institute": "Bộ hoặc Viện Chính phủ",
+  "protected area": "Khu bảo tồn",
+  "biodiversity data": "Dữ liệu đa dạng sinh học",
+  "related website": "Trang web liên quan",
+  "other resource": "Tài nguyên khác",
+  "image or video": "Hình ảnh hoặc Video",
+  "faq": "CÂU HỎI THƯỜNG GẶP",
+  "national information": "Thông tin quốc gia",
+  "status of lmo": "Tình trạng của LMO",
+  "field trial": "Thử nghiệm thực địa",
+  "national mainstreaming strategy": "Chiến lược lồng ghép quốc gia",
+  "capacity building": "Nâng cao năng lực",
   "Basic Page": "Trang cơ bản",
   "Basic Pages": "Trang cơ bản",
   "Capacity-Building": "Xây dựng năng lực",
   "Capacity-Buildings": "Công suất-Tòa nhà",
+  "Capacity Development Initiative": "Sáng kiến phát triển năng lực",
   "Field Trial": "Thử nghiệm thực địa",
   "Field Trials": "Thử nghiệm thực địa",
   "National Information": "Thông tin quốc gia",
@@ -66,8 +84,10 @@
   "content": "nội dung trang web",
   "secretariate": "ban thư ký",
   "notification": "Thông báo",
+  "Statement": "Tuyên bố",
   "statement": "Tuyên bố",
   "meeting": "Các cuộc họp",
+  "Press Release": "Thông cáo báo chí",
   "pressRelease": "Thông cáo báo chí",
   "focalPoint": "tiêu điểm",
   "resource": "Tài nguyên Thư viện Ảo",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Đa dạng sinh học Bioland",
   "Home": "Trang chủ",
   "Biodiversity CHM": "Đa dạng sinh học CHM",
+  "Biosafety Clearing-House Search": "Tìm kiếm trung tâm thanh toán an toàn sinh học",
   "National Reports": "Báo cáo quốc gia",
   "View all National Reports": "Xem tất cả các báo cáo quốc gia",
   "section1": "Mục I. Thông tin về các mục tiêu đang được theo đuổi ở cấp quốc gia",
@@ -228,7 +249,10 @@
   "Updated Date": "ngày cập nhật",
   "Download": "Tải xuống",
   "Latest News and Updates": "Tin tức và cập nhật mới nhất",
+  "Latest Announcements, News and Updates": "Thông báo mới nhất, Tin tức và Cập nhật",
+  "Latest Records": "Hồ sơ mới nhất",
   "View more news and updates": "Xem thêm tin tức và cập nhật",
+  "from the Biosafety Clearing-House": "từ Phòng thông tin an toàn sinh học",
   "implementation": "thực hiện",
   "Browse TSC Opportunities": "Duyệt các cơ hội TSC",
   "Browse TSC Assistance and Providers": "Duyệt qua các nhà cung cấp và hỗ trợ TSC",
@@ -268,9 +292,18 @@
   "Revisions": "Sửa đổi",
   "Clone": "Dòng vô tính",
   "Translate": "Dịch",
+  "Translation": "Dịch thuật",
+  "No translation available": "Không có bản dịch",
+  "Auto Translate": "Tự động dịch",
   "BBI Contacts": "Liên hệ BBI",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Viết bình luận công khai...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Viết bình luận công khai..."
+      }
+    }
+  },
   "Login or sign up": "Đăng nhập hoặc đăng ký",
   "Post": "Bài đăng",
   "Login": "Đăng nhập",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Thực thể không thể xử lý",
   "Failed to POST comment": "Không thể đăng bình luận",
   "all": "tất cả",
-  "for an account in order to comment or interact.": "cho một tài khoản để bình luận hoặc tương tác.",
+  "for an account in order to comment or interact": {
+    "": "cho một tài khoản để bình luận hoặc tương tác."
+  },
   "Sign Up": "Đăng Ký",
   "CBD-type": "Công ước về đa dạng sinh học",
   "CPB-FP1-type": "Nghị định thư Cartagena về an toàn sinh học",
@@ -888,6 +923,7 @@
   "Progress": "Tiến độ",
   "Created": "Đã tạo",
   "Unassigned": "Chưa được gán",
+  "No description available": "Không có mô tả",
   "Work Overview": "Tổng quan về công việc",
   "Bug": "Lỗi",
   "Task": "Nhiệm vụ",
@@ -906,7 +942,13 @@
   "Low": "Thấp",
   "Lowest": "Thấp nhất",
   "Selected For Development": "Được chọn để phát triển",
-  "View More ...": "Xem thêm...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Xem thêm..."
+      }
+    }
+  },
   "bioland-context-description": "Những cookie này lưu trữ ngữ cảnh cho công cụ Bioland. Một phiên bản mã phục vụ cho nhiều trang web. Bối cảnh giúp phân biệt giữa các trang web khác nhau. Ngoài ra, một cookie cho khi bạn đăng nhập để giữ phiên của bạn. Cuối cùng dịch và xem kích thước cổng để hỗ trợ công cụ trên máy chủ. Những cookie này cần thiết cho chức năng của trang web.",
   "bioland-context-cookies": "Cookie ngữ cảnh Bioland",
   "cookie-control-description": "Chúng tôi sử dụng cookie của riêng mình và cookie của bên thứ ba để chúng tôi có thể hiển thị trang web này một cách chính xác và hiểu rõ hơn về cách sử dụng trang web này, nhằm cải thiện các dịch vụ mà chúng tôi cung cấp. Quyết định về quyền sử dụng cookie có thể được thay đổi bất cứ lúc nào bằng cách sử dụng nút cookie sẽ xuất hiện sau khi lựa chọn được thực hiện trên biểu ngữ này.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Cùng tồn tại",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Quyền sở hữu trí tuệ",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Đánh giá xã hội và/hoặc kinh tế",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Quy tắc và tiêu chuẩn thương mại"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Quy tắc và tiêu chuẩn thương mại",
+  "Competent National Authority": "Cơ quan quốc gia có thẩm quyền",
+  "Contact": "Liên hệ",
+  "Biosafety Virtual Library Resources": "Tài nguyên thư viện ảo an toàn sinh học",
+  "BCH News": "Tin tức BCH",
+  "National Focal Point": "Đầu mối quốc gia",
+  "Risk Assessment generated by an independent or non-regulatory process": "Đánh giá rủi ro được tạo ra bởi một quy trình độc lập hoặc không theo quy định",
+  "Genetic element": "Yếu tố di truyền",
+  "Organism": "Sinh vật",
+  "Living Modified Organism": "Sinh vật biến đổi sống",
+  "Biosafety Organization": "Tổ chức an toàn sinh học",
+  "Laboratory for detection and identification of LMOs": "Phòng thí nghiệm phát hiện và xác định LMO",
+  "What's New": "Có gì mới"
 }

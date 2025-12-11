@@ -7,10 +7,28 @@
   "Meetings": "Cyfarfodydd",
   "Announcement": "Cyhoeddiad",
   "Announcements": "Cyhoeddiadau",
+  "announcement": "Cyhoeddiad",
+  "meeting or event": "Cyfarfod neu ddigwyddiad",
+  "learning resource": "Adnodd Dysgu",
+  "article": "Erthygl",
+  "basic page": "Tudalen Sylfaenol",
+  "government ministry or institute": "Gweinidogaeth neu Sefydliad y Llywodraeth",
+  "protected area": "Ardal Warchodedig",
+  "biodiversity data": "Data Bioamrywiaeth",
+  "related website": "Gwefan Gysylltiedig",
+  "other resource": "Adnoddau Eraill",
+  "image or video": "Delwedd neu Fideo",
+  "faq": "CWESTIYNAU CYFFREDIN",
+  "national information": "Gwybodaeth Genedlaethol",
+  "status of lmo": "Statws LMO",
+  "field trial": "Treial Maes",
+  "national mainstreaming strategy": "Strategaeth Brif Ffrydio Genedlaethol",
+  "capacity building": "Adeiladu Capasiti",
   "Basic Page": "Tudalen Sylfaenol",
   "Basic Pages": "Tudalennau Sylfaenol",
   "Capacity-Building": "Meithrin Gallu",
   "Capacity-Buildings": "Adeiladau Capasiti",
+  "Capacity Development Initiative": "Menter Datblygu Capasiti",
   "Field Trial": "Treial Maes",
   "Field Trials": "Treialon Maes",
   "National Information": "Gwybodaeth Genedlaethol",
@@ -66,8 +84,10 @@
   "content": "cynnwys y safle",
   "secretariate": "ysgrifenyddiaeth",
   "notification": "Hysbysiadau",
+  "Statement": "Datganiad",
   "statement": "Datganiadau",
   "meeting": "Cyfarfodydd",
+  "Press Release": "Datganiad i'r Wasg",
   "pressRelease": "Datganiadau i'r Wasg",
   "focalPoint": "canolbwynt",
   "resource": "Adnoddau Llyfrgell Rhithwir",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Bioamrywiaeth Bioland",
   "Home": "Cartref",
   "Biodiversity CHM": "Bioamrywiaeth CHM",
+  "Biosafety Clearing-House Search": "Chwilio Tŷ Clirio Bioddiogelwch",
   "National Reports": "Adroddiadau Cenedlaethol",
   "View all National Reports": "Gweld pob Adroddiad Cenedlaethol",
   "section1": "Adran I. Gwybodaeth am y targedau sy'n cael eu dilyn ar lefel genedlaethol",
@@ -228,7 +249,10 @@
   "Updated Date": "Dyddiad Diweddaru",
   "Download": "Lawrlwythwch",
   "Latest News and Updates": "Newyddion Diweddaraf a Diweddariadau",
+  "Latest Announcements, News and Updates": "Cyhoeddiadau Diweddaraf, Newyddion a Diweddariadau",
+  "Latest Records": "Cofnodion diweddaraf",
   "View more news and updates": "Gweld mwy o newyddion a diweddariadau",
+  "from the Biosafety Clearing-House": "o'r Tŷ Clirio Bioddiogelwch",
   "implementation": "gweithredu",
   "Browse TSC Opportunities": "Pori Cyfleoedd TSC",
   "Browse TSC Assistance and Providers": "Pori Cymorth a Darparwyr TSC",
@@ -268,9 +292,18 @@
   "Revisions": "Diwygiadau",
   "Clone": "Clôn",
   "Translate": "Cyfieithwch",
+  "Translation": "Cyfieithu",
+  "No translation available": "Dim cyfieithiad ar gael",
+  "Auto Translate": "Cyfieithu Auto",
   "BBI Contacts": "Cysylltiadau BBI",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Ysgrifennwch sylw cyhoeddus...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Ysgrifennwch sylw cyhoeddus..."
+      }
+    }
+  },
   "Login or sign up": "Mewngofnodi neu gofrestru",
   "Post": "Post",
   "Login": "Mewngofnodi",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Endid na ellir ei brosesu",
   "Failed to POST comment": "Methwyd â POST sylw",
   "all": "i gyd",
-  "for an account in order to comment or interact.": "ar gyfer cyfrif er mwyn rhoi sylwadau neu ryngweithio.",
+  "for an account in order to comment or interact": {
+    "": "ar gyfer cyfrif er mwyn rhoi sylwadau neu ryngweithio."
+  },
   "Sign Up": "Cofrestrwch",
   "CBD-type": "Confensiwn ar Amrywiaeth Biolegol",
   "CPB-FP1-type": "Protocol Cartagena ar Fioddiogelwch",
@@ -888,6 +923,7 @@
   "Progress": "Cynnydd",
   "Created": "Crëwyd",
   "Unassigned": "Heb ei neilltuo",
+  "No description available": "Dim disgrifiad ar gael",
   "Work Overview": "Trosolwg Gwaith",
   "Bug": "Bug",
   "Task": "Tasg",
@@ -906,7 +942,13 @@
   "Low": "Isel",
   "Lowest": "Isaf",
   "Selected For Development": "Dewiswyd ar gyfer Datblygu",
-  "View More ...": "Gweld Mwy...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Gweld Mwy..."
+      }
+    }
+  },
   "bioland-context-description": "Mae'r cwcis hyn yn storio'r cyd-destun ar gyfer yr offeryn Bioland. Mae un enghraifft cod yn darparu ar gyfer llawer o wefannau. Mae'r cyd-destun yn helpu i wahaniaethu rhwng y gwahanol wefannau. Ymhellach cwcis ar gyfer pan fyddwch chi'n mewngofnodi i gadw'ch sesiwn. Yn olaf cyfieithu a gweld maint porthladd i gynorthwyo'r offeryn ar y gweinydd. Mae'r cwcis hyn yn angenrheidiol ar gyfer ymarferoldeb y wefan.",
   "bioland-context-cookies": "Cwcis Cyd-destun Bioland",
   "cookie-control-description": "Rydym yn defnyddio ein cwcis ein hunain a chwcis trydydd parti er mwyn i ni allu arddangos y wefan hon yn gywir a deall yn well sut mae'r wefan hon yn cael ei defnyddio, gyda'r bwriad o wella'r gwasanaethau rydym yn eu cynnig. Gellir newid penderfyniad ar ganiatâd defnyddio cwcis unrhyw bryd gan ddefnyddio'r botwm cwci a fydd yn ymddangos ar ôl i ddetholiad gael ei wneud ar y faner hon.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Cydfodoli",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Hawliau eiddo deallusol",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Asesiadau cymdeithasol a/neu economaidd",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Rheolau a safonau masnach"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Rheolau a safonau masnach",
+  "Competent National Authority": "Awdurdod Cenedlaethol Cymwys",
+  "Contact": "Cysylltwch",
+  "Biosafety Virtual Library Resources": "Adnoddau Llyfrgell Rithwir Bioddiogelwch",
+  "BCH News": "Newyddion BCH",
+  "National Focal Point": "Canolbwynt Cenedlaethol",
+  "Risk Assessment generated by an independent or non-regulatory process": "Asesiad Risg a gynhyrchir gan broses annibynnol neu anreoleiddio",
+  "Genetic element": "Elfen genetig",
+  "Organism": "Organeb",
+  "Living Modified Organism": "Organeb wedi'i Addasu Byw",
+  "Biosafety Organization": "Sefydliad Bioddiogelwch",
+  "Laboratory for detection and identification of LMOs": "Labordy ar gyfer canfod ac adnabod LMOs",
+  "What's New": "Beth sy'n Newydd"
 }

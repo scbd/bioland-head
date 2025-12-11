@@ -7,10 +7,28 @@
   "Meetings": "Fundur",
   "Announcement": "Tilkynning",
   "Announcements": "Tilkynningar",
+  "announcement": "Tilkynning",
+  "meeting or event": "Fundur eða viðburður",
+  "learning resource": "Námsefni",
+  "article": "Grein",
+  "basic page": "Grunnsíða",
+  "government ministry or institute": "Ráðuneyti eða stofnun ríkisins",
+  "protected area": "Friðlýst svæði",
+  "biodiversity data": "Gögn um líffræðilegan fjölbreytileika",
+  "related website": "Tengd vefsíða",
+  "other resource": "Önnur auðlind",
+  "image or video": "Mynd eða myndband",
+  "faq": "ALGENGAR SPURNINGAR",
+  "national information": "Upplýsingar á landsvísu",
+  "status of lmo": "Staða LMO",
+  "field trial": "Vettvangspróf",
+  "national mainstreaming strategy": "Þjóðarstefna um máttarstólpa",
+  "capacity building": "Uppbygging getu",
   "Basic Page": "Grunnsíða",
   "Basic Pages": "Grunnsíður",
   "Capacity-Building": "Getuuppbygging",
   "Capacity-Buildings": "Afkastagetu byggingar",
+  "Capacity Development Initiative": "Framtak fyrir getuþróun",
   "Field Trial": "Vettvangspróf",
   "Field Trials": "Vettvangsrannsóknir",
   "National Information": "Upplýsingar á landsvísu",
@@ -66,8 +84,10 @@
   "content": "efni vefsvæðisins",
   "secretariate": "skrifstofu",
   "notification": "Tilkynningar",
+  "Statement": "Yfirlýsing",
   "statement": "Yfirlýsingar",
   "meeting": "Fundur",
+  "Press Release": "Fréttatilkynning",
   "pressRelease": "Fréttatilkynningar",
   "focalPoint": "þungamiðja",
   "resource": "Sýndarbókasafnsauðlindir",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Líffræðilegur fjölbreytileiki lífríkis",
   "Home": "Heim",
   "Biodiversity CHM": "Líffræðilegur fjölbreytileiki CHM",
+  "Biosafety Clearing-House Search": "Hreinsunarhúsleit í lífefniöryggi",
   "National Reports": "Landsskýrslur",
   "View all National Reports": "Skoða allar landsskýrslur",
   "section1": "I. kafli Upplýsingar um markmiðin sem stefnt er að á landsvísu",
@@ -228,7 +249,10 @@
   "Updated Date": "Uppfærð dagsetning",
   "Download": "Sækja",
   "Latest News and Updates": "Nýjustu fréttir og uppfærslur",
+  "Latest Announcements, News and Updates": "Nýjustu tilkynningar, fréttir og uppfærslur",
+  "Latest Records": "Nýjustu færslur",
   "View more news and updates": "Skoðaðu fleiri fréttir og uppfærslur",
+  "from the Biosafety Clearing-House": "frá Biosafety Clearing-House",
   "implementation": "framkvæmd",
   "Browse TSC Opportunities": "Skoðaðu TSC tækifæri",
   "Browse TSC Assistance and Providers": "Skoðaðu TSC aðstoð og veitendur",
@@ -268,9 +292,18 @@
   "Revisions": "Endurskoðun",
   "Clone": "Klóna",
   "Translate": "Þýða",
+  "Translation": "Þýðing",
+  "No translation available": "Engin þýðing í boði",
+  "Auto Translate": "Sjálfvirk þýða",
   "BBI Contacts": "BBI Tengiliðir",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Skrifaðu opinbera athugasemd...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Skrifaðu opinbera athugasemd..."
+      }
+    }
+  },
   "Login or sign up": "Skráðu þig inn eða skráðu þig",
   "Post": "Færsla",
   "Login": "Skrá inn",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Óvinnslulaus aðili",
   "Failed to POST comment": "Ekki tókst að senda athugasemd",
   "all": "allt",
-  "for an account in order to comment or interact.": "fyrir reikning í því skyni að tjá sig eða hafa samskipti.",
+  "for an account in order to comment or interact": {
+    "": "fyrir reikning í því skyni að tjá sig eða hafa samskipti."
+  },
   "Sign Up": "Skráðu þig",
   "CBD-type": "Samningur um líffræðilega fjölbreytni",
   "CPB-FP1-type": "Cartagena-bókun um lífeðnaöryggi",
@@ -888,6 +923,7 @@
   "Progress": "Framfarir",
   "Created": "Búið",
   "Unassigned": "Óúthlutað",
+  "No description available": "Engin lýsing í boði",
   "Work Overview": "Yfirlit yfir vinnu",
   "Bug": "Galla",
   "Task": "Verkefni",
@@ -906,7 +942,13 @@
   "Low": "Lágt",
   "Lowest": "Lægsta",
   "Selected For Development": "Valin til þróunar",
-  "View More ...": "Skoða meira...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Skoða meira..."
+      }
+    }
+  },
   "bioland-context-description": "Þessar kökur geyma samhengið fyrir Bioland tólið. Eitt kóðafordæmi kemur til móts við margar vefsíður. Samhengið hjálpar til við að greina á milli mismunandi vefsíðna. Ennfremur vafrakökur fyrir þegar þú skráir þig inn til að halda setunni þinni. Að lokum þýðing og skoða tengistærð til að aðstoða tólið á netþjóninum. Þessar vafrakökur eru nauðsynlegar fyrir virkni vefsíðunnar.",
   "bioland-context-cookies": "Bioland samhengiskökur",
   "cookie-control-description": "Við notum okkar eigin fótspor og fótspor þriðja aðila svo að við getum birt þessa vefsíðu rétt og skilið betur hvernig þessi vefsíða er notuð, með það fyrir augum að bæta þjónustuna sem við bjóðum upp á. Ákvörðun um heimild til notkunar á kökum er hægt að breyta hvenær sem er með því að nota smákökuhnappinn sem birtist eftir að val hefur verið tekið á þessum borða.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Sambúð",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Hugverkaréttindi",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Félagsleg og/eða efnahagsleg mat",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Viðskiptareglur og staðlar"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Viðskiptareglur og staðlar",
+  "Competent National Authority": "Lögbært landsyfirvald",
+  "Contact": "Hafðu samband",
+  "Biosafety Virtual Library Resources": "Sýndarbókasafnsauðlindir í lífsöryggi",
+  "BCH News": "BCH Fréttir",
+  "National Focal Point": "Þjóðarmiðstöð",
+  "Risk Assessment generated by an independent or non-regulatory process": "Áhættumat sem myndast með óháðu ferli eða ferli sem ekki er stjórnað",
+  "Genetic element": "Erfðaþáttur",
+  "Organism": "Lífverur",
+  "Living Modified Organism": "Lifandi breytt lífvera",
+  "Biosafety Organization": "Lífefnaöryggisstofnun",
+  "Laboratory for detection and identification of LMOs": "Rannsóknarstofa til að greina og bera kennsl á lífverulegum lífverum",
+  "What's New": "Hvað er nýtt"
 }

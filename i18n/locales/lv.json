@@ -7,10 +7,28 @@
   "Meetings": "Sanāksmes",
   "Announcement": "Paziņojums",
   "Announcements": "Paziņojumi",
+  "announcement": "Paziņojums",
+  "meeting or event": "Sanāksme vai pasākums",
+  "learning resource": "Mācību resurss",
+  "article": "Raksts",
+  "basic page": "Pamatlapa",
+  "government ministry or institute": "Valdības ministrija vai institūts",
+  "protected area": "Aizsargājamā teritorija",
+  "biodiversity data": "Dati par bioloģisko daudzveidību",
+  "related website": "Saistītā vietne",
+  "other resource": "Citi resursi",
+  "image or video": "Attēls vai video",
+  "faq": "BUJ",
+  "national information": "Valsts informācija",
+  "status of lmo": "LMO statuss",
+  "field trial": "Lauka izmēģinājums",
+  "national mainstreaming strategy": "Nacionālā integrācijas stratēģija",
+  "capacity building": "Spēju veidošana",
   "Basic Page": "Pamatlapa",
   "Basic Pages": "Pamatlapas",
   "Capacity-Building": "Kapacitātes palielināšana",
   "Capacity-Buildings": "Kapacitāšu veidošana",
+  "Capacity Development Initiative": "Spēju attīstības iniciatīva",
   "Field Trial": "Lauka izmēģinājums",
   "Field Trials": "Lauka izmēģinājumi",
   "National Information": "Valsts informācija",
@@ -66,8 +84,10 @@
   "content": "vietnes saturs",
   "secretariate": "sekretariāts",
   "notification": "Paziņojumi",
+  "Statement": "Paziņojums",
   "statement": "Paziņojumi",
   "meeting": "Sanāksmes",
+  "Press Release": "Paziņojums presei",
   "pressRelease": "Preses relīzes",
   "focalPoint": "fokusa punkts",
   "resource": "Virtuālās bibliotēkas resursi",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Bioland Bioloģiskā daudzveidība",
   "Home": "Mājas",
   "Biodiversity CHM": "Bioloģiskā daudzveidība CHM",
+  "Biosafety Clearing-House Search": "Bioloģiskās drošības iztīrīšanas mājas meklēšana",
   "National Reports": "Nacionālie ziņojumi",
   "View all National Reports": "Skatīt visus nacionālos ziņojumus",
   "section1": "I. iedaļa Informācija par mērķiem, kas tiek sasniegti valsts līmenī",
@@ -228,7 +249,10 @@
   "Updated Date": "Atjaunināts datums",
   "Download": "Lejupielādēt",
   "Latest News and Updates": "Jaunākās ziņas un atjauninājumi",
+  "Latest Announcements, News and Updates": "Jaunākie paziņojumi, jaunumi un atjauninājumi",
+  "Latest Records": "Jaunākie ieraksti",
   "View more news and updates": "Skatiet vairāk jaunumu un atjauninājumu",
+  "from the Biosafety Clearing-House": "no Bioloģiskās drošības izpratnes nama",
   "implementation": "īstenošana",
   "Browse TSC Opportunities": "Pārlūkojiet TSC iespējas",
   "Browse TSC Assistance and Providers": "Pārlūkojiet TSC palīdzību un pakalpojumu sniedzējus",
@@ -268,9 +292,18 @@
   "Revisions": "Pārskatījumi",
   "Clone": "Klonēt",
   "Translate": "Tulkot",
+  "Translation": "Tulkošana",
+  "No translation available": "Tulkojums nav pieejams",
+  "Auto Translate": "Automātiska tulkošana",
   "BBI Contacts": "BBI Kontakti",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Uzrakstiet publisku komentāru...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Uzrakstiet publisku komentāru..."
+      }
+    }
+  },
   "Login or sign up": "Pieslēdzieties vai reģistrējieties",
   "Post": "Ziņa",
   "Login": "Pieslēgties",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Neapstrādājama entītija",
   "Failed to POST comment": "Neizdevās ievietot komentāru",
   "all": "visiem",
-  "for an account in order to comment or interact.": "kontam, lai komentētu vai mijiedarbotos.",
+  "for an account in order to comment or interact": {
+    "": "kontam, lai komentētu vai mijiedarbotos."
+  },
   "Sign Up": "Reģistrēties",
   "CBD-type": "Konvencija par bioloģisko daudzveidību",
   "CPB-FP1-type": "Kartāgenas protokols par bioloģisko drošību",
@@ -888,6 +923,7 @@
   "Progress": "Progress",
   "Created": "Izveidots",
   "Unassigned": "Nepiešķirts",
+  "No description available": "Apraksts nav pieejams",
   "Work Overview": "Darba pārskats",
   "Bug": "Kļūda",
   "Task": "Uzdevums",
@@ -906,7 +942,13 @@
   "Low": "Zems",
   "Lowest": "Zemākā",
   "Selected For Development": "Izvēlēts attīstībai",
-  "View More ...": "Skatīt vairāk...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Skatīt vairāk..."
+      }
+    }
+  },
   "bioland-context-description": "Šīs sīkdatnes saglabā Bioland rīka kontekstu. Viena koda instancija ir piemērota daudzām vietnēm. Konteksts palīdz atšķirt dažādas vietnes. Turklāt sīkdatnes, kad piesakāties, lai saglabātu sesiju. Visbeidzot tulkojiet un skatiet porta lielumu, lai palīdzētu rīkam serverī. Šīs sīkdatnes ir nepieciešamas tīmekļa vietnes funkcionalitātei.",
   "bioland-context-cookies": "Bioland konteksta sīkdatnes",
   "cookie-control-description": "Mēs izmantojam savas sīkdatnes un trešo pušu sīkdatnes, lai mēs varētu pareizi parādīt šo vietni un labāk saprast, kā šī vietne tiek izmantota, lai uzlabotu mūsu piedāvātos pakalpojumus. Lēmumu par sīkdatņu izmantošanas atļaujām var mainīt jebkurā laikā, izmantojot sīkdatņu pogu, kas parādīsies pēc atlases veikšanas šajā reklāmkarogā.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "līdzāspastāvē",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Intelektuālā īpašuma tiesības",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Sociālie un/vai ekonomiski novērtējumi",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Tirdzniecības noteikumi un standarti"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Tirdzniecības noteikumi un standarti",
+  "Competent National Authority": "Kompetentā valsts iestāde",
+  "Contact": "Sazināties",
+  "Biosafety Virtual Library Resources": "Bioloģiskās drošības virtuālās bibliotēkas resursi",
+  "BCH News": "BCH ziņas",
+  "National Focal Point": "Nacionālais kontaktpunkts",
+  "Risk Assessment generated by an independent or non-regulatory process": "Riska novērtējums, ko rada neatkarīgs vai neregulatīvs process",
+  "Genetic element": "Ģenētiskais elements",
+  "Organism": "Organisms",
+  "Living Modified Organism": "Dzīvs modificēts organisms",
+  "Biosafety Organization": "Bioloģiskās drošības organizācija",
+  "Laboratory for detection and identification of LMOs": "Laboratorija LMO noteikšanai un identificēšanai",
+  "What's New": "Kas jauns"
 }

@@ -7,10 +7,28 @@
   "Meetings": "Möten",
   "Announcement": "Tillkännagivande",
   "Announcements": "Meddelanden",
+  "announcement": "Tillkännagivande",
+  "meeting or event": "Möte eller Event",
+  "learning resource": "Lärresurs",
+  "article": "Artikel",
+  "basic page": "Grundläggande sida",
+  "government ministry or institute": "Regeringsdepartement eller institut",
+  "protected area": "Skyddat område",
+  "biodiversity data": "Data om biologisk mångfald",
+  "related website": "Relaterad webbplats",
+  "other resource": "Annan resurs",
+  "image or video": "Bild eller video",
+  "faq": "FAQ",
+  "national information": "Nationell information",
+  "status of lmo": "Status för LMO",
+  "field trial": "Fältförsök",
+  "national mainstreaming strategy": "Nationell strategi för integrering",
+  "capacity building": "Kapacitetsuppbyggnad",
   "Basic Page": "Grundläggande sida",
   "Basic Pages": "Grundläggande sidor",
   "Capacity-Building": "Kapacitetsuppbyggnad",
   "Capacity-Buildings": "Kapacitetsbyggnader",
+  "Capacity Development Initiative": "Kapacitetsutvecklingsinitiativ",
   "Field Trial": "Fältförsök",
   "Field Trials": "Fältförsök",
   "National Information": "Nationell information",
@@ -66,8 +84,10 @@
   "content": "webbplatsinnehåll",
   "secretariate": "sekretariat",
   "notification": "Meddelanden",
+  "Statement": "Uttalande",
   "statement": "Uttalanden",
   "meeting": "Möten",
+  "Press Release": "Pressmeddelande",
   "pressRelease": "Pressmeddelanden",
   "focalPoint": "kontaktpunkt",
   "resource": "Virtuella biblioteksresurser",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Bioland Biodiversitet",
   "Home": "Hem",
   "Biodiversity CHM": "Biologisk mångfald CHM",
+  "Biosafety Clearing-House Search": "Sök efter clearinghus för biosäkerhet",
   "National Reports": "Nationella rapporter",
   "View all National Reports": "Se alla nationella rapporter",
   "section1": "Avsnitt I. Information om de mål som eftersträvas på nationell nivå",
@@ -228,7 +249,10 @@
   "Updated Date": "Uppdaterat datum",
   "Download": "Ladda ner",
   "Latest News and Updates": "Senaste nyheterna och uppdateringarna",
+  "Latest Announcements, News and Updates": "Senaste tillkännagivanden, nyheter och uppdateringar",
+  "Latest Records": "Senaste rekorden",
   "View more news and updates": "Se fler nyheter och uppdateringar",
+  "from the Biosafety Clearing-House": "Från Biosafety Clearing-House",
   "implementation": "genomförande",
   "Browse TSC Opportunities": "Bläddra i TSC-möjligheter",
   "Browse TSC Assistance and Providers": "Bläddra bland TSC-hjälp och leverantörer",
@@ -268,9 +292,18 @@
   "Revisions": "Revisioner",
   "Clone": "Klona",
   "Translate": "Översätta",
+  "Translation": "Översättning",
+  "No translation available": "Ingen översättning tillgänglig",
+  "Auto Translate": "Automatisk översättning",
   "BBI Contacts": "BBI Kontakter",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Skriv en offentlig kommentar...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Skriv en offentlig kommentar..."
+      }
+    }
+  },
   "Login or sign up": "Logga in eller registrera",
   "Post": "Inlägg",
   "Login": "Logga in",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Enhet som inte kan bearbetas",
   "Failed to POST comment": "Misslyckades med att skicka kommentar",
   "all": "allt",
-  "for an account in order to comment or interact.": "för ett konto för att kommentera eller interagera.",
+  "for an account in order to comment or interact": {
+    "": "för ett konto för att kommentera eller interagera."
+  },
   "Sign Up": "Anmäl dig",
   "CBD-type": "Konventionen om biologisk mångfald",
   "CPB-FP1-type": "Cartagenaprotokollet om biosäkerhet",
@@ -888,6 +923,7 @@
   "Progress": "Framsteg",
   "Created": "Skapat",
   "Unassigned": "Ej tilldelad",
+  "No description available": "Ingen beskrivning tillgänglig",
   "Work Overview": "Arbetsöversikt",
   "Bug": "Bugg",
   "Task": "Uppgift",
@@ -906,7 +942,13 @@
   "Low": "Låg",
   "Lowest": "Lägsta",
   "Selected For Development": "Vald för utveckling",
-  "View More ...": "Visa mer...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Visa mer..."
+      }
+    }
+  },
   "bioland-context-description": "Dessa cookies lagrar sammanhanget för Bioland-verktyget. En kodinstans riktar sig till många webbplatser. Sammanhanget hjälper till att skilja mellan de olika webbplatserna. Ytterligare cookies för när du loggar in för att behålla din session. Slutligen översättning och visa portstorlek för att hjälpa verktyget på servern. Dessa cookies är nödvändiga för webbplatsens funktionalitet.",
   "bioland-context-cookies": "Biolands sammanhangscookies",
   "cookie-control-description": "Vi använder våra egna cookies och tredjepartscookies för att vi ska kunna visa denna webbplats korrekt och bättre förstå hur denna webbplats används, i syfte att förbättra de tjänster vi erbjuder. Ett beslut om behörigheter för användning av cookies kan ändras när som helst med hjälp av cookiknappen som visas efter att ett val har gjorts på denna banner.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Samexistens",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Immateriella rättigheter",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Sociala och/eller ekonomiska bedömningar",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Handelsregler och standarder"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Handelsregler och standarder",
+  "Competent National Authority": "Behörig nationell myndighet",
+  "Contact": "Kontakt",
+  "Biosafety Virtual Library Resources": "Virtuella biblioteksresurser för biosäkerhet",
+  "BCH News": "BCH Nyheter",
+  "National Focal Point": "Nationell kontaktpunkt",
+  "Risk Assessment generated by an independent or non-regulatory process": "Riskbedömning som genereras genom en oberoende eller icke-reglerande process",
+  "Genetic element": "Genetiskt element",
+  "Organism": "Organism",
+  "Living Modified Organism": "Levande modifierad organism",
+  "Biosafety Organization": "Organisation för biosäkerhet",
+  "Laboratory for detection and identification of LMOs": "Laboratorium för detektion och identifiering av LMO",
+  "What's New": "Vad är nytt"
 }

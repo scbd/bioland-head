@@ -7,10 +7,28 @@
   "Meetings": "Зустрічі",
   "Announcement": "Оголошення",
   "Announcements": "Оголошення",
+  "announcement": "Оголошення",
+  "meeting or event": "Зустріч або подія",
+  "learning resource": "Навчальний ресурс",
+  "article": "Стаття",
+  "basic page": "Основна сторінка",
+  "government ministry or institute": "Урядове міністерство або інститут",
+  "protected area": "Заповідна зона",
+  "biodiversity data": "Дані про біорізноманіття",
+  "related website": "Схожий веб-сайт",
+  "other resource": "Інший ресурс",
+  "image or video": "Зображення або відео",
+  "faq": "FAQ",
+  "national information": "Національна інформація",
+  "status of lmo": "Статус LMO",
+  "field trial": "Польові випробування",
+  "national mainstreaming strategy": "Національна стратегія мейнстрімінгу",
+  "capacity building": "Розвиток потенціалу",
   "Basic Page": "Основна сторінка",
   "Basic Pages": "Основні сторінки",
   "Capacity-Building": "Нарощування потенціалу",
   "Capacity-Buildings": "Потужність-будівлі",
+  "Capacity Development Initiative": "Ініціатива з розвитку потенціалу",
   "Field Trial": "Польові випробування",
   "Field Trials": "Польові випробування",
   "National Information": "Національна інформація",
@@ -66,8 +84,10 @@
   "content": "контент сайту",
   "secretariate": "секретаріат",
   "notification": "Повідомлення",
+  "Statement": "Заява",
   "statement": "Заяви",
   "meeting": "Зустрічі",
+  "Press Release": "Прес-реліз",
   "pressRelease": "Прес-релізи",
   "focalPoint": "фокусна точка",
   "resource": "Ресурси віртуальної бібліотеки",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Біоленд Біорізноманіття",
   "Home": "додому",
   "Biodiversity CHM": "Біорізноманіття CHM",
+  "Biosafety Clearing-House Search": "Пошук інформаційних центрів біобезпеки",
   "National Reports": "Національні звіти",
   "View all National Reports": "Переглянути всі національні звіти",
   "section1": "Розділ I. Інформація про цілі, які переслідуються на національному рівні",
@@ -228,7 +249,10 @@
   "Updated Date": "Дата оновлення",
   "Download": "Завантажити",
   "Latest News and Updates": "Останні новини та оновлення",
+  "Latest Announcements, News and Updates": "Останні оголошення, новини та оновлення",
+  "Latest Records": "Останні рекорди",
   "View more news and updates": "Переглянути більше новин і оновлень",
+  "from the Biosafety Clearing-House": "від інформаційного центру з питань біобезпеки",
   "implementation": "впровадження",
   "Browse TSC Opportunities": "Перегляньте можливості TSC",
   "Browse TSC Assistance and Providers": "Перегляньте Допомога TSC і постачальників",
@@ -268,9 +292,18 @@
   "Revisions": "Ревізії",
   "Clone": "Клон",
   "Translate": "Перекласти",
+  "Translation": "Переклад",
+  "No translation available": "Переклад відсутній",
+  "Auto Translate": "Автоматичний переклад",
   "BBI Contacts": "Контакти BBI",
   "Bioland 1": "Біоланд 1",
-  "Write a public comment ...": "Напишіть публічний коментар...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Напишіть публічний коментар..."
+      }
+    }
+  },
   "Login or sign up": "Увійти або зареєструватися",
   "Post": "Пост",
   "Login": "Логін",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Необроблювана сутність",
   "Failed to POST comment": "Не вдалося опублікувати коментар",
   "all": "усі",
-  "for an account in order to comment or interact.": "для облікового запису з метою коментування або взаємодії.",
+  "for an account in order to comment or interact": {
+    "": "для облікового запису з метою коментування або взаємодії."
+  },
   "Sign Up": "Зареєструватися",
   "CBD-type": "Конвенція про біологічне різноманіття",
   "CPB-FP1-type": "Картахенський протокол про біобез",
@@ -888,6 +923,7 @@
   "Progress": "Прогрес",
   "Created": "Створено",
   "Unassigned": "Неприсвоєно",
+  "No description available": "Опис відсутній",
   "Work Overview": "Огляд роботи",
   "Bug": "Помилка",
   "Task": "Завдання",
@@ -906,7 +942,13 @@
   "Low": "Низький",
   "Lowest": "Найнижчий",
   "Selected For Development": "Відібрано для розвитку",
-  "View More ...": "Переглянути більше...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Переглянути більше..."
+      }
+    }
+  },
   "bioland-context-description": "Ці файли cookie зберігають контекст інструменту Bioland. Один екземпляр коду обслуговує багато веб-сайтів. Контекст допомагає розрізняти різні веб-сайти. Далі файли cookie для входу, щоб зберегти сеанс. Нарешті, переклад та перегляд розміру порту для допомоги інструменту на сервері. Ці файли cookie необхідні для функціональності веб-сайту.",
   "bioland-context-cookies": "Контекстні файли cookie Bioland",
   "cookie-control-description": "Ми використовуємо власні файли cookie та сторонні файли cookie, щоб ми могли правильно відображати цей веб-сайт та краще розуміти, як цей веб-сайт використовується, з метою покращення послуг, які ми пропонуємо. Рішення щодо дозволів на використання файлів cookie можна змінити в будь-який час за допомогою кнопки cookie, яка з'явиться після того, як буде зроблено вибір на цьому банері.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "співіснування",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Права інтелектуальної власності",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Соціальні та/або економічні оцінки",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Правила і стандарти торгівлі"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Правила і стандарти торгівлі",
+  "Competent National Authority": "Компетентний національний орган",
+  "Contact": "Контакт",
+  "Biosafety Virtual Library Resources": "Ресурси віртуальної бібліотеки біобезпеки",
+  "BCH News": "Новини BCH",
+  "National Focal Point": "Національний фокусний пункт",
+  "Risk Assessment generated by an independent or non-regulatory process": "Оцінка ризиків, створена незалежним або нерагуляторним процесом",
+  "Genetic element": "Генетичний елемент",
+  "Organism": "Організм",
+  "Living Modified Organism": "Живий модифікований організм",
+  "Biosafety Organization": "Організація біобезпеки",
+  "Laboratory for detection and identification of LMOs": "Лабораторія виявлення та ідентифікації ЛМО",
+  "What's New": "Що нового"
 }

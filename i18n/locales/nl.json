@@ -7,10 +7,28 @@
   "Meetings": "Bijeenkomsten",
   "Announcement": "Aankondiging",
   "Announcements": "Aankondigingen",
+  "announcement": "Aankondiging",
+  "meeting or event": "Bijeenkomst of evenement",
+  "learning resource": "Leerbron",
+  "article": "Artikel",
+  "basic page": "Basispagina",
+  "government ministry or institute": "Overheidsministerie of -instituut",
+  "protected area": "Beschermd gebied",
+  "biodiversity data": "Gegevens over biodiversiteit",
+  "related website": "Gerelateerde website",
+  "other resource": "Andere bron",
+  "image or video": "Afbeelding of video",
+  "faq": "FAQ",
+  "national information": "Nationale informatie",
+  "status of lmo": "Status van LMO",
+  "field trial": "Veldproef",
+  "national mainstreaming strategy": "Nationale strategie voor integratie",
+  "capacity building": "Capaciteitsopbouw",
   "Basic Page": "Basispagina",
   "Basic Pages": "Basispagina's",
   "Capacity-Building": "Capaciteit opbouwen",
   "Capacity-Buildings": "Capaciteitsgebouwen",
+  "Capacity Development Initiative": "Initiatief voor capaciteitsontwikkeling",
   "Field Trial": "Veldproef",
   "Field Trials": "Veldproeven",
   "National Information": "Nationale informatie",
@@ -66,8 +84,10 @@
   "content": "inhoud van de site",
   "secretariate": "secretariaat",
   "notification": "Meldingen",
+  "Statement": "Verklaring",
   "statement": "Verklaringen",
   "meeting": "Bijeenkomsten",
+  "Press Release": "Persbericht",
   "pressRelease": "Persberichten",
   "focalPoint": "brandpunt",
   "resource": "Hulpbronnen voor virtuele bibliotheken",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Bioland Biodiversiteit",
   "Home": "Thuis",
   "Biodiversity CHM": "Biodiversiteit CHM",
+  "Biosafety Clearing-House Search": "Zoeken in Clearing-House voor bioveiligheid",
   "National Reports": "Nationale rapporten",
   "View all National Reports": "Bekijk alle Nationale Rapporten",
   "section1": "Deel I. Informatie over de doelstellingen die op nationaal niveau worden nagestreefd",
@@ -228,7 +249,10 @@
   "Updated Date": "bijgewerkte datum",
   "Download": "Downloaden",
   "Latest News and Updates": "Laatste nieuws en updates",
+  "Latest Announcements, News and Updates": "Laatste aankondigingen, nieuws en updates",
+  "Latest Records": "Nieuwste records",
   "View more news and updates": "Bekijk meer nieuws en updates",
+  "from the Biosafety Clearing-House": "van het Biosafety Clearing-House",
   "implementation": "implementatie",
   "Browse TSC Opportunities": "Bekijk de mogelijkheden van TSC",
   "Browse TSC Assistance and Providers": "Blader door TSC-assistentie en -aanbieders",
@@ -268,9 +292,18 @@
   "Revisions": "Revisies",
   "Clone": "Kloon",
   "Translate": "Vertalen",
+  "Translation": "Vertaling",
+  "No translation available": "Geen vertaling beschikbaar",
+  "Auto Translate": "Automatisch vertalen",
   "BBI Contacts": "BBI contactpersonen",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Schrijf een openbare opmerking...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Schrijf een openbare opmerking..."
+      }
+    }
+  },
   "Login or sign up": "Inloggen of aanmelden",
   "Post": "Post",
   "Login": "Log in",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Onverwerkbare entiteit",
   "Failed to POST comment": "Het plaatsen van een reactie is mislukt",
   "all": "allemaal",
-  "for an account in order to comment or interact.": "voor een account om te reageren of te interageren.",
+  "for an account in order to comment or interact": {
+    "": "voor een account om te reageren of te interageren."
+  },
   "Sign Up": "Meld je aan",
   "CBD-type": "Verdrag inzake biologische diversiteit",
   "CPB-FP1-type": "Protocol van Cartagena inzake bioveiligheid",
@@ -888,6 +923,7 @@
   "Progress": "Vooruitgang",
   "Created": "Gemaakt",
   "Unassigned": "Niet toegewezen",
+  "No description available": "Geen beschrijving beschikbaar",
   "Work Overview": "Overzicht van het werk",
   "Bug": "Bug",
   "Task": "Taak",
@@ -906,7 +942,13 @@
   "Low": "Laag",
   "Lowest": "Laagste",
   "Selected For Development": "Geselecteerd voor ontwikkeling",
-  "View More ...": "Meer bekijken...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Meer bekijken..."
+      }
+    }
+  },
   "bioland-context-description": "Deze cookies slaan de context op voor de Bioland-tool. Eén code-instance is geschikt voor veel websites. De context helpt om onderscheid te maken tussen de verschillende websites. Verder een cookie voor wanneer u inlogt om uw sessie te behouden. Vertaal en bekijk ten slotte de poortgrootte om de tool op de server te ondersteunen. Deze cookies zijn noodzakelijk voor de functionaliteit van de website.",
   "bioland-context-cookies": "Context-cookies van Bioland",
   "cookie-control-description": "We gebruiken onze eigen cookies en cookies van derden om deze website correct weer te geven en beter te begrijpen hoe deze website wordt gebruikt, met het oog op het verbeteren van de diensten die we aanbieden. Een beslissing over de toestemmingen voor het gebruik van cookies kan op elk moment worden gewijzigd met behulp van de cookieknop die verschijnt nadat een selectie op deze banner is gemaakt.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Coëxistentie",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Intellectuele eigendomsrechten",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Sociale en/of economische beoordelingen",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Handelsregels en -normen"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Handelsregels en -normen",
+  "Competent National Authority": "Bevoegde nationale autoriteit",
+  "Contact": "Neem contact op",
+  "Biosafety Virtual Library Resources": "Hulpbronnen voor virtuele bibliotheken op het gebied van bioveiligheid",
+  "BCH News": "BCH-nieuws",
+  "National Focal Point": "Nationaal contactpunt",
+  "Risk Assessment generated by an independent or non-regulatory process": "Risicobeoordeling gegenereerd door een onafhankelijk of niet-regelgevend proces",
+  "Genetic element": "Genetisch element",
+  "Organism": "Organisme",
+  "Living Modified Organism": "Levend gemodificeerd organisme",
+  "Biosafety Organization": "Organisatie voor bioveiligheid",
+  "Laboratory for detection and identification of LMOs": "Laboratorium voor detectie en identificatie van LMO's",
+  "What's New": "Wat is er nieuw"
 }

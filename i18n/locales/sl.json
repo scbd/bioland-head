@@ -7,10 +7,28 @@
   "Meetings": "Srečanja",
   "Announcement": "Obvestilo",
   "Announcements": "Obvestila",
+  "announcement": "Obvestilo",
+  "meeting or event": "Srečanje ali dogodek",
+  "learning resource": "Učni vir",
+  "article": "Člen",
+  "basic page": "Osnovna stran",
+  "government ministry or institute": "Vladno ministrstvo ali inštitut",
+  "protected area": "Zaščiteno območje",
+  "biodiversity data": "Podatki o biotski raznovrstnosti",
+  "related website": "Sorodno spletno mesto",
+  "other resource": "Drugi viri",
+  "image or video": "Slika ali Video",
+  "faq": "POGOSTA VPRAŠANJA",
+  "national information": "Nacionalne informacije",
+  "status of lmo": "Status LMO",
+  "field trial": "Terensko preskušanje",
+  "national mainstreaming strategy": "Nacionalna strategija vključevanja",
+  "capacity building": "Krepitev zmogljivosti",
   "Basic Page": "Osnovna stran",
   "Basic Pages": "Osnovne strani",
   "Capacity-Building": "Krepitev zmogljivosti",
   "Capacity-Buildings": "Zgradba zmogljivosti",
+  "Capacity Development Initiative": "Pobuda za razvoj zmogljivosti",
   "Field Trial": "Terensko preskušanje",
   "Field Trials": "Terenski poskusi",
   "National Information": "Nacionalne informacije",
@@ -66,8 +84,10 @@
   "content": "vsebina spletnega mesta",
   "secretariate": "tajništvo",
   "notification": "Obvestila",
+  "Statement": "Izjava",
   "statement": "Izjave",
   "meeting": "Srečanja",
+  "Press Release": "Sporočilo za javnost",
   "pressRelease": "Sporočila za javnost",
   "focalPoint": "osrednja točka",
   "resource": "Viri virtualne knjižnice",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Bioland Biotska raznovrstnost",
   "Home": "domov",
   "Biodiversity CHM": "Biodiverziteta CHM",
+  "Biosafety Clearing-House Search": "Iskanje čistilne hiše za biološko varnost",
   "National Reports": "Nacionalna poročila",
   "View all National Reports": "Oglejte si vsa nacionalna poročila",
   "section1": "Oddelek I. Informacije o ciljih, ki se dosežejo na nacionalni ravni",
@@ -228,7 +249,10 @@
   "Updated Date": "Datum posodobitve",
   "Download": "Prenos",
   "Latest News and Updates": "Zadnje novice in posodobitve",
+  "Latest Announcements, News and Updates": "Najnovejše objave, novice in posodobitve",
+  "Latest Records": "Najnovejši zapisi",
   "View more news and updates": "Oglejte si več novic in posodobitev",
+  "from the Biosafety Clearing-House": "iz Hiša za čiščenje biološke varnosti",
   "implementation": "izvajanje",
   "Browse TSC Opportunities": "Prebrskajte po možnostih TSC",
   "Browse TSC Assistance and Providers": "Prebrskajte po pomoči in ponudnikih TSC",
@@ -268,9 +292,18 @@
   "Revisions": "Revizije",
   "Clone": "Kloniraj",
   "Translate": "Prevajaj",
+  "Translation": "Prevajanje",
+  "No translation available": "Prevod ni na voljo",
+  "Auto Translate": "Samodejni prevod",
   "BBI Contacts": "BBI Kontakti",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Napišite javni komentar...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Napišite javni komentar..."
+      }
+    }
+  },
   "Login or sign up": "Prijavite se ali prijavite",
   "Post": "Objava",
   "Login": "Vpiši se",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Neobdelava entiteta",
   "Failed to POST comment": "Ni uspelo objaviti komentarja",
   "all": "vsi",
-  "for an account in order to comment or interact.": "za račun za komentiranje ali interakcijo.",
+  "for an account in order to comment or interact": {
+    "": "za račun za komentiranje ali interakcijo."
+  },
   "Sign Up": "Prijavite se",
   "CBD-type": "Konvencija o biološki raznovrstnosti",
   "CPB-FP1-type": "Kartagenski protokol o biološki varnosti",
@@ -888,6 +923,7 @@
   "Progress": "Napredek",
   "Created": "Ustvarjeno",
   "Unassigned": "Nedodeljeno",
+  "No description available": "Opis ni na voljo",
   "Work Overview": "Pregled dela",
   "Bug": "Napaka",
   "Task": "Naloga",
@@ -906,7 +942,13 @@
   "Low": "Nizka",
   "Lowest": "Najnižja",
   "Selected For Development": "Izbrana za razvoj",
-  "View More ...": "Poglej več...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Poglej več..."
+      }
+    }
+  },
   "bioland-context-description": "Ti piškotki shranjujejo kontekst orodja Bioland. En primer kode je namenjen številnim spletnim mestom. Kontekst pomaga razlikovati med različnimi spletnimi mesti. Nadalje piškotki za prijavo, da ohranite svojo sejo. Nazadnje prevajanje in ogled velikosti vrat za pomoč orodju na strežniku. Ti piškotki so potrebni za delovanje spletne strani.",
   "bioland-context-cookies": "Bioland kontekstni piškotki",
   "cookie-control-description": "Uporabljamo lastne piškotke in piškotke tretjih oseb, da lahko to spletno mesto pravilno prikazujemo in bolje razumemo, kako se to spletno mesto uporablja, z namenom izboljšanja storitev, ki jih ponujamo. Odločitev o dovoljenjih za uporabo piškotkov lahko kadar koli spremenite z gumbom za piškotke, ki se prikaže po izbiri na tej pasici.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Sožitje",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Pravice intelektualne lastnine",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Socialne in/ali ekonomske ocene",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Trgovinska pravila in standardi"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Trgovinska pravila in standardi",
+  "Competent National Authority": "Pristojni nacionalni organ",
+  "Contact": "Kontakt",
+  "Biosafety Virtual Library Resources": "Viri virtualne knjižnice za biološko varnost",
+  "BCH News": "BCH Novice",
+  "National Focal Point": "Nacionalna osrednja točka",
+  "Risk Assessment generated by an independent or non-regulatory process": "Ocena tveganja, ustvarjena z neodvisnim ali neregulativnim postopkom",
+  "Genetic element": "Genetski element",
+  "Organism": "Organizem",
+  "Living Modified Organism": "Živi spremenjeni organizem",
+  "Biosafety Organization": "Organizacija za biološko varnost",
+  "Laboratory for detection and identification of LMOs": "Laboratorij za odkrivanje in identifikacijo LMO",
+  "What's New": "Kaj je novega"
 }

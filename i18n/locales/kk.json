@@ -7,10 +7,28 @@
   "Meetings": "Кездесулер",
   "Announcement": "Хабарландыру",
   "Announcements": "Хабарландырулар",
+  "announcement": "Хабарландыру",
+  "meeting or event": "Кездесу немесе оқиға",
+  "learning resource": "Оқу ресурсы",
+  "article": "Мақала",
+  "basic page": "Негізгі бет",
+  "government ministry or institute": "Үкімет министрлігі немесе институт",
+  "protected area": "Ерекше қорғалатын аумақ",
+  "biodiversity data": "Биоәртүрлілік деректері",
+  "related website": "Қатысты веб-сайт",
+  "other resource": "Басқа ресурс",
+  "image or video": "Сурет немесе бейне",
+  "faq": "ЖИІ ҚОЙЫЛАТЫН СҰРАҚТАР",
+  "national information": "Ұлттық ақпарат",
+  "status of lmo": "LMO мәртебесі",
+  "field trial": "Далалық сынақ",
+  "national mainstreaming strategy": "Ұлттық магистратура стратегиясы",
+  "capacity building": "Қуаттылықты арттыру",
   "Basic Page": "Негізгі бет",
   "Basic Pages": "Негізгі беттер",
   "Capacity-Building": "Әлеуетті арттыру",
   "Capacity-Buildings": "Сыйымдылық-құрылыстар",
+  "Capacity Development Initiative": "Қуаттылықты дамыту бастамасы",
   "Field Trial": "Далалық сынақ",
   "Field Trials": "Далалық сынақтар",
   "National Information": "Ұлттық ақпарат",
@@ -66,8 +84,10 @@
   "content": "сайт мазмұны",
   "secretariate": "хатшылық",
   "notification": "Хабарландырулар",
+  "Statement": "Мәлімдеме",
   "statement": "Мәлімдемелер",
   "meeting": "Кездесулер",
+  "Press Release": "Баспасөз релизі",
   "pressRelease": "Баспасөз хабарламалары",
   "focalPoint": "фокустық нүкте",
   "resource": "Виртуалды кітапхана ресурстары",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Биожердің биоәртүрлілігі",
   "Home": "Үй",
   "Biodiversity CHM": "Биоәртүрлілік CHM",
+  "Biosafety Clearing-House Search": "Биологиялық қауіпсіздікті тазарту үйін іздеу",
   "National Reports": "Ұлттық есептер",
   "View all National Reports": "Барлық ұлттық есептерді қараңыз",
   "section1": "І.Бөлім Ұлттық деңгейде көзделетін мақсаттар туралы ақпарат",
@@ -228,7 +249,10 @@
   "Updated Date": "Жаңартылған күні",
   "Download": "Жүктеп алу",
   "Latest News and Updates": "Соңғы жаңалықтар мен жаңартулар",
+  "Latest Announcements, News and Updates": "Соңғы хабарландырулар, жаңалықтар және жаңартулар",
+  "Latest Records": "Соңғы жазбалар",
   "View more news and updates": "Қосымша жаңалықтар мен жаңартуларды қараңыз",
+  "from the Biosafety Clearing-House": "Биологиялық қауіпсіздікті тазарту үйінен",
   "implementation": "жүзеге асыру",
   "Browse TSC Opportunities": "TSC мүмкіндіктерін шолыңыз",
   "Browse TSC Assistance and Providers": "TSC Assistance және Провайдерлерді шолыңыз",
@@ -268,9 +292,18 @@
   "Revisions": "Түзетулер",
   "Clone": "Клондау",
   "Translate": "Аудару",
+  "Translation": "Аударма",
+  "No translation available": "Аударма жоқ",
+  "Auto Translate": "Автоматты аудару",
   "BBI Contacts": "BBI контактілері",
   "Bioland 1": "Биоленд 1",
-  "Write a public comment ...": "Жалпыға ортақ пікір жазу...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Жалпыға ортақ пікір жазу..."
+      }
+    }
+  },
   "Login or sign up": "Кіру немесе тіркелу",
   "Post": "Хабарлама",
   "Login": "Кіру",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Өңделмейтін субъект",
   "Failed to POST comment": "Пікір жариялау сәтсіз аяқталды",
   "all": "барлық",
-  "for an account in order to comment or interact.": "түсініктеме беру немесе өзара әрекеттесу үшін тіркелгі үшін.",
+  "for an account in order to comment or interact": {
+    "": "түсініктеме беру немесе өзара әрекеттесу үшін тіркелгі үшін."
+  },
   "Sign Up": "Тіркелу",
   "CBD-type": "Биологиялық әртүрлілік туралы конвенция",
   "CPB-FP1-type": "Картахена биологиялық қауіпсіздік туралы хаттамасы",
@@ -888,6 +923,7 @@
   "Progress": "Прогресс",
   "Created": "Құрылған",
   "Unassigned": "Тағайындалмаған",
+  "No description available": "Сипаттама жоқ",
   "Work Overview": "Жұмысқа шолу",
   "Bug": "Қате",
   "Task": "Тапсырма",
@@ -906,7 +942,13 @@
   "Low": "Төмен",
   "Lowest": "Ең төменгі",
   "Selected For Development": "Даму үшін таңдалған",
-  "View More ...": "Толығырақ қарау...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Толығырақ қарау..."
+      }
+    }
+  },
   "bioland-context-description": "Бұл cookie файлдары Bioland құралының контекстін сақтайды. Бір код данасы көптеген веб-сайттарға қызмет етеді. Контекст әртүрлі веб-сайттарды ажыратуға көмектеседі. Әрі қарай сеансты сақтау үшін кірген кездегі cookie файлдары. Соңында аударма және сервердегі құралды көмектесу үшін порт өлшемін көру. Бұл cookie файлдары веб-сайттың функционалдығы үшін қажет.",
   "bioland-context-cookies": "Bioland контекстік cookie файлдары",
   "cookie-control-description": "Біз ұсынатын қызметтерді жақсарту мақсатында осы веб-сайтты дұрыс көрсете аламыз және осы веб-сайттың қалай пайдаланылатынын жақсы түсіну үшін өзіміздің cookie файлдарымызды және үшінші тарап cookie файлдарын қолданамыз. Cookie файлдарын пайдалану рұқсаттары туралы шешімді осы баннерде таңдау жасалғаннан кейін пайда болатын cookie түймесінің көмегімен кез келген уақытта өзгертуге болады.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Өмір сүру",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Зияткерлік меншік құқығы",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Әлеуметтік және/немесе экономикалық бағалау",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Сауда ережелері мен стандарттары"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Сауда ережелері мен стандарттары",
+  "Competent National Authority": "Құзыретті ұлттық орган",
+  "Contact": "Байланыс",
+  "Biosafety Virtual Library Resources": "Биологиялық қауіпсіздік виртуалды кітапхана ресурстары",
+  "BCH News": "BCH жаңалықтары",
+  "National Focal Point": "Ұлттық фокус нүктесі",
+  "Risk Assessment generated by an independent or non-regulatory process": "Тәуелсіз немесе реттеуге жатпайтын процесс нәтижесінде пайда болатын тәуекелдерді бағалау",
+  "Genetic element": "Генетикалық элемент",
+  "Organism": "Организм",
+  "Living Modified Organism": "Тірі модификацияланған организм",
+  "Biosafety Organization": "Биологиялық қауіпсіздік ұйымы",
+  "Laboratory for detection and identification of LMOs": "LMO-ларды анықтау және сәйкестендіру зертханасы",
+  "What's New": "Не жаңалық"
 }

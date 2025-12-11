@@ -7,10 +7,28 @@
   "Meetings": "การประชุม",
   "Announcement": "ประกาศ",
   "Announcements": "ประกาศ",
+  "announcement": "ประกาศ",
+  "meeting or event": "การประชุมหรือกิจกรรม",
+  "learning resource": "แหล่งเรียนรู้",
+  "article": "บทความ",
+  "basic page": "หน้าพื้นฐาน",
+  "government ministry or institute": "กระทรวงหรือสถาบัน",
+  "protected area": "พื้นที่คุ้มครอง",
+  "biodiversity data": "ข้อมูลความหลากหลายทางชีวภาพ",
+  "related website": "เว็บไซต์ที่เกี่ยวข้อง",
+  "other resource": "ทรัพยากรอื่น ๆ",
+  "image or video": "รูปภาพหรือวิดีโอ",
+  "faq": "คำถามที่พบบ่อย",
+  "national information": "ข้อมูลแห่งชาติ",
+  "status of lmo": "สถานะของ LMO",
+  "field trial": "การทดลองภาคสนาม",
+  "national mainstreaming strategy": "กลยุทธ์การแพร่กระจายหลักแห่งชาติ",
+  "capacity building": "การสร้างกำลังการผลิต",
   "Basic Page": "หน้าพื้นฐาน",
   "Basic Pages": "หน้าพื้นฐาน",
   "Capacity-Building": "สร้างขีดความสามารถ",
   "Capacity-Buildings": "การสร้างกำลังการผลิต",
+  "Capacity Development Initiative": "ความคิดริเริ่มการพัฒนากำลังการผลิต",
   "Field Trial": "การทดลองภาคสนาม",
   "Field Trials": "การทดลองภาคสนาม",
   "National Information": "ข้อมูลแห่งชาติ",
@@ -66,8 +84,10 @@
   "content": "เนื้อหาเว็บไซต์",
   "secretariate": "เลขานุการ",
   "notification": "การแจ้งเตือน",
+  "Statement": "คำชี้แจง",
   "statement": "คำชี้แจง",
   "meeting": "การประชุม",
+  "Press Release": "ข่าวประชาสัมพันธ์",
   "pressRelease": "ข่าวประชาสัมพันธ์",
   "focalPoint": "จุดโฟกัส",
   "resource": "แหล่งข้อมูลห้องสมุดเสมือน",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "ความหลากหลายทางชีวภาพของไบโอแลนด์",
   "Home": "บ้าน",
   "Biodiversity CHM": "ความหลากหลายทางชีวภาพ CHM",
+  "Biosafety Clearing-House Search": "ค้นหาบ้านล้างความปลอดภัยทางชีวภาพ",
   "National Reports": "รายงานระดับชาติ",
   "View all National Reports": "ดูรายงานระดับชาติทั้งหมด",
   "section1": "หมวดที่ 1 ข้อมูลเกี่ยวกับเป้าหมายที่กำลังดำเนินการในระดับประเทศ",
@@ -228,7 +249,10 @@
   "Updated Date": "อัปเดตวันที่",
   "Download": "ดาวน์โหลด",
   "Latest News and Updates": "ข่าวล่าสุดและการปรับปรุง",
+  "Latest Announcements, News and Updates": "ประกาศข่าวสารและอัพเดทล่าสุด",
+  "Latest Records": "บันทึกล่าสุด",
   "View more news and updates": "ดูข่าวสารและอัพเดทเพิ่มเติม",
+  "from the Biosafety Clearing-House": "จากศูนย์บริการด้านความปลอดภัยทางชีวภาพ",
   "implementation": "การดำเนินการ",
   "Browse TSC Opportunities": "เรียกดูโอกาสของ TSC",
   "Browse TSC Assistance and Providers": "เรียกดูความช่วยเหลือและผู้ให้บริการของ TSC",
@@ -268,9 +292,18 @@
   "Revisions": "การแก้ไข",
   "Clone": "โคลน",
   "Translate": "แปล",
+  "Translation": "การแปล",
+  "No translation available": "ไม่มีการแปล",
+  "Auto Translate": "แปลอัตโนมัติ",
   "BBI Contacts": "ผู้ติดต่อ BBI",
   "Bioland 1": "ไบโอแลนด์ 1",
-  "Write a public comment ...": "เขียนความคิดเห็นสาธารณะ...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "เขียนความคิดเห็นสาธารณะ..."
+      }
+    }
+  },
   "Login or sign up": "เข้าสู่ระบบหรือลงทะเบียน",
   "Post": "โพสต์",
   "Login": "เข้าสู่ระบบ",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "หน่วยงานที่ไม่สามารถประมวลผลได้",
   "Failed to POST comment": "ล้มเหลวในการโพสต์ความคิดเห็น",
   "all": "ทั้งหมด",
-  "for an account in order to comment or interact.": "สำหรับบัญชีเพื่อแสดงความคิดเห็นหรือโต้ตอบ",
+  "for an account in order to comment or interact": {
+    "": "สำหรับบัญชีเพื่อแสดงความคิดเห็นหรือโต้ตอบ"
+  },
   "Sign Up": "ลงทะเบียน",
   "CBD-type": "อนุสัญญาความหลากหลายทางชีวภาพ",
   "CPB-FP1-type": "โปรโตคอลคาร์ตาเฮนาเกี่ยวกับความปลอดภัยทางชีวภาพ",
@@ -888,6 +923,7 @@
   "Progress": "ความคืบหน้า",
   "Created": "สร้างขึ้น",
   "Unassigned": "ไม่ได้รับมอบหมาย",
+  "No description available": "ไม่มีคำอธิบาย",
   "Work Overview": "ภาพรวมการทำงาน",
   "Bug": "ข้อผิดพลาด",
   "Task": "งาน",
@@ -906,7 +942,13 @@
   "Low": "ต่ำ",
   "Lowest": "ต่ำสุด",
   "Selected For Development": "คัดเลือกสำหรับการพัฒนา",
-  "View More ...": "ดูเพิ่มเติม...",
+  "View More ": {
+    "": {
+      "": {
+        "": "ดูเพิ่มเติม..."
+      }
+    }
+  },
   "bioland-context-description": "คุกกี้เหล่านี้เก็บบริบทสำหรับเครื่องมือ Biolandอินสแตนซ์โค้ดเดียวรองรับเว็บไซต์หลายแห่งบริบทช่วยในการแยกความแตกต่างระหว่างเว็บไซต์ต่างๆคุกกี้เพิ่มเติมสำหรับเมื่อคุณเข้าสู่ระบบเพื่อรักษาเซสชันของคุณสุดท้ายแปลและดูขนาดพอร์ตเพื่อช่วยเครื่องมือบนเซิร์ฟเวอร์คุกกี้เหล่านี้จำเป็นสำหรับการทำงานของเว็บไซต์",
   "bioland-context-cookies": "คุกกี้บริบทของ Bioland",
   "cookie-control-description": "เราใช้คุกกี้ของเราเองและคุกกี้ของบุคคลที่สามเพื่อให้เราสามารถแสดงเว็บไซต์นี้ได้อย่างถูกต้องและเข้าใจวิธีการใช้งานเว็บไซต์นี้ได้ดีขึ้นเพื่อปรับปรุงบริการที่เรานำเสนอการตัดสินใจเกี่ยวกับสิทธิ์การใช้งานคุกกี้สามารถเปลี่ยนแปลงได้ตลอดเวลาโดยใช้ปุ่มคุกกี้ที่จะปรากฏขึ้นหลังจากทำการเลือกบนแบนเนอร์นี้",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "การอยู่ร่วมกัน",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "สิทธิในทรัพย์สินทางปัญญา",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "การประเมินทางสังคมและ/หรือเศรษ",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "กฎและมาตรฐานการค้า"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "กฎและมาตรฐานการค้า",
+  "Competent National Authority": "หน่วยงานแห่งชาติที่มีอำนาจ",
+  "Contact": "ติดต่อ",
+  "Biosafety Virtual Library Resources": "แหล่งข้อมูลห้องสมุดเสมือนความปลอดภัยทางชีวภาพ",
+  "BCH News": "ข่าว BCH",
+  "National Focal Point": "จุดโฟกัสแห่งชาติ",
+  "Risk Assessment generated by an independent or non-regulatory process": "การประเมินความเสี่ยงที่เกิดจากกระบวนการอิสระหรือไม่ใช่การกำกับดูแล",
+  "Genetic element": "องค์ประกอบทางพันธุกรรม",
+  "Organism": "สิ่งมีชีวิต",
+  "Living Modified Organism": "สิ่งมีชีวิตดัดแปลงที่มีชีวิต",
+  "Biosafety Organization": "องค์กรความปลอดภัยทางชีวภาพ",
+  "Laboratory for detection and identification of LMOs": "ห้องปฏิบัติการตรวจจับและระบุ LMO",
+  "What's New": "มีอะไรใหม่"
 }

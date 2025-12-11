@@ -7,6 +7,23 @@
   "Meetings": "会议",
   "Announcement": "公告",
   "Announcements": "公告",
+  "announcement": "公告",
+  "meeting or event": "会议或活动",
+  "learning resource": "学习资源",
+  "article": "文章",
+  "basic page": "基本页面",
+  "government ministry or institute": "政府部委或机构",
+  "protected area": "保护区",
+  "biodiversity data": "生物多样性数据",
+  "related website": "相关网站",
+  "other resource": "其他资源",
+  "image or video": "图片或视频",
+  "faq": "常见问题",
+  "national information": "国家信息",
+  "status of lmo": "LMO 的状态",
+  "field trial": "实地试验",
+  "national mainstreaming strategy": "国家主流化战略",
+  "capacity building": "能力建设",
   "Basic Page": "基本页面",
   "Basic Pages": "基本页面",
   "Capacity-Building": "能力建设",
@@ -280,7 +297,13 @@
   "Auto Translate": "自动翻译",
   "BBI Contacts": "BBI 联系人",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "写一篇公开评论...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "写一篇公开评论..."
+      }
+    }
+  },
   "Login or sign up": "登录或注册",
   "Post": "帖子",
   "Login": "登录",
@@ -292,7 +315,9 @@
   "Unprocessable Entity": "不可处理的实体",
   "Failed to POST comment": "发布评论失败",
   "all": "所有",
-  "for an account in order to comment or interact.": "注册一个账号以便发表评论或互动。",
+  "for an account in order to comment or interact": {
+    "": "注册一个账号以便发表评论或互动。"
+  },
   "Sign Up": "注册",
   "CBD-type": "《生物多样性公约》",
   "CPB-FP1-type": "卡塔赫纳生物安全议定书",
@@ -917,7 +942,13 @@
   "Low": "低",
   "Lowest": "最低",
   "Selected For Development": "入选开发",
-  "View More ...": "查看更多...",
+  "View More ": {
+    "": {
+      "": {
+        "": "查看更多..."
+      }
+    }
+  },
   "bioland-context-description": "这些 cookie 存储了 Bioland 工具的上下文。一个代码实例可以满足许多网站的需求。上下文有助于区分不同的网站。此外，还有一个用于在登录时保持会话的 cookie。最后是转换和查看端口大小以帮助服务器上的工具。这些 Cookie 是网站正常运行所必需的。",
   "bioland-context-cookies": "Bioland 上下文饼干",
   "cookie-control-description": "我们使用自己的 Cookie 和第三方 Cookie，以便我们可以正确显示本网站并更好地了解本网站的使用方式，从而改善我们提供的服务。使用 cookie 按钮可以随时更改有关 Cookie 使用权限的决定，该按钮将在此横幅上做出选择后出现。",

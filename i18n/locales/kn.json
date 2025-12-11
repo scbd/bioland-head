@@ -7,10 +7,28 @@
   "Meetings": "ಸಭೆಗಳು",
   "Announcement": "ಪ್ರಕಟಣೆ",
   "Announcements": "ಪ್ರಕಟಣೆಗಳು",
+  "announcement": "ಪ್ರಕಟಣೆ",
+  "meeting or event": "ಸಭೆ ಅಥವಾ ಈವೆಂಟ್",
+  "learning resource": "ಕಲಿಕೆಯ ಸಂಪನ್ಮೂಲ",
+  "article": "ಲೇಖನ",
+  "basic page": "ಮೂಲ ಪುಟ",
+  "government ministry or institute": "ಸರ್ಕಾರದ ಸಚಿವಾಲಯ ಅಥವಾ ಸಂಸ್ಥೆ",
+  "protected area": "ಸಂರಕ್ಷಿತ ಪ್ರದೇಶ",
+  "biodiversity data": "ಜೀವವೈವಿಧ್ಯ ಡೇಟಾ",
+  "related website": "ಸಂಬಂಧಿತ ವೆಬ್‌ಸೈಟ್",
+  "other resource": "ಇತರೆ ಸಂಪನ್ಮೂಲ",
+  "image or video": "ಚಿತ್ರ ಅಥವಾ ವೀಡಿಯೊ",
+  "faq": "FAQ",
+  "national information": "ರಾಷ್ಟ್ರೀಯ ಮಾಹಿತಿ",
+  "status of lmo": "ಎಲ್ಎಂಒ ಸ್ಥಿತಿ",
+  "field trial": "ಫೀಲ್ಡ್ ಟ್ರಯಲ್",
+  "national mainstreaming strategy": "ರಾಷ್ಟ್ರೀಯ ಮುಖ್ಯವಾಹಿನಿ ತಂತ್ರ",
+  "capacity building": "ಸಾಮರ್ಥ್ಯ ನಿರ್ಮಾಣ",
   "Basic Page": "ಮೂಲ ಪುಟ",
   "Basic Pages": "ಮೂಲ ಪುಟಗಳು",
   "Capacity-Building": "ಸಾಮರ್ಥ್ಯ-ಬಿಲ್ಡಿಂಗ್",
   "Capacity-Buildings": "ಸಾಮರ್ಥ್ಯ-ಕಟ್ಟಡಗಳು",
+  "Capacity Development Initiative": "ಸಾಮರ್ಥ್ಯ ಅಭಿವೃದ್ಧಿ ಉಪಕ್ರಮ",
   "Field Trial": "ಫೀಲ್ಡ್ ಟ್ರಯಲ್",
   "Field Trials": "ಕ್ಷೇತ್ರ ಪ್ರಯೋಗಗಳು",
   "National Information": "ರಾಷ್ಟ್ರೀಯ ಮಾಹಿತಿ",
@@ -66,8 +84,10 @@
   "content": "ಸೈಟ್ ವಿಷಯ",
   "secretariate": "ಕಾರ್ಯದರ್ಶಿ",
   "notification": "ಅಧಿಸೂಚನೆಗಳು",
+  "Statement": "ಹೇಳಿಕೆ",
   "statement": "ಹೇಳಿಕೆಗಳು",
   "meeting": "ಸಭೆಗಳು",
+  "Press Release": "ಪತ್ರಿಕಾ ಪ್ರಕಟಣೆ",
   "pressRelease": "ಪತ್ರಿಕಾ ಪ್ರಕಟಣೆಗಳು",
   "focalPoint": "ಫೋಕಲ್ ಪಾಯಿಂಟ್",
   "resource": "ವರ್ಚುವಲ್ ಗ್ರಂಥಾಲಯ",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "ಬಯೋಲ್ಯಾಂಡ್ ಜೀವವೈವಿಧ್ಯ",
   "Home": "ಮನೆ",
   "Biodiversity CHM": "ಜೀವವೈವಿಧ್ಯ CHM",
+  "Biosafety Clearing-House Search": "ಜೈವಿಕ ಸುರಕ್ಷತೆ ಕ್ಲಿಯರಿಂಗ್-ಹೌಸ್ ಹುಡುಕಾಟ",
   "National Reports": "ರಾಷ್ಟ್ರೀಯ ವರದಿಗಳು",
   "View all National Reports": "ಎಲ್ಲಾ ರಾಷ್ಟ್ರೀಯ ವರದಿಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
   "section1": "ಸೆಕ್ಷನ್ I ರಾಷ್ಟ್ರೀಯ ಮಟ್ಟದಲ್ಲಿ ಅನುಸರಿಸುತ್ತಿರುವ ಗುರಿಗಳ ಬಗ್ಗೆ ಮಾಹಿತಿ",
@@ -228,7 +249,10 @@
   "Updated Date": "ನವೀಕರಿಸಿದ ದಿನಾಂಕ",
   "Download": "ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
   "Latest News and Updates": "ಇತ್ತೀಚಿನ ಸುದ್ದಿ ಮತ್ತು ನವೀಕರಣಗಳು",
+  "Latest Announcements, News and Updates": "ಇತ್ತೀಚಿನ ಪ್ರಕಟಣೆಗಳು, ಸುದ್ದಿ ಮತ್ತು ನವೀಕರಣಗಳು",
+  "Latest Records": "ಇತ್ತೀಚಿನ ದಾಖಲೆಗಳು",
   "View more news and updates": "ಹೆಚ್ಚಿನ ಸುದ್ದಿ ಮತ್ತು ನವೀಕರಣಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
+  "from the Biosafety Clearing-House": "ಬಯೋಸೇಫ್ಟಿ ಕ್ಲಿಯರಿಂಗ್-ಹೌಸ್ನಿಂದ",
   "implementation": "ಅನುಷ್ಠಾನ",
   "Browse TSC Opportunities": "TSC ಅವಕಾಶಗಳನ್ನು ಬ್ರೌಸ್ ಮಾಡಿ",
   "Browse TSC Assistance and Providers": "TSC ಸಹಾಯ ಮತ್ತು ಪೂರೈಕೆದಾರರನ್ನು ಬ್ರೌಸ್ ಮಾಡಿ",
@@ -268,9 +292,18 @@
   "Revisions": "ಪರಿಷ್ಕರಣೆಗಳು",
   "Clone": "ಕ್ಲೋನ್",
   "Translate": "ಅನುವಾದಿಸಿ",
+  "Translation": "ಅನುವಾದ",
+  "No translation available": "ಅನುವಾದ ಲಭ್ಯವಿಲ್ಲ",
+  "Auto Translate": "ಸ್ವಯಂ ಅನುವಾದ",
   "BBI Contacts": "ಬಿಬಿಐ ಸಂಪರ್ಕಗಳು",
   "Bioland 1": "ಬಯೋಲ್ಯಾಂಡ್ 1",
-  "Write a public comment ...": "ಸಾರ್ವಜನಿಕ ಕಾಮೆಂಟ್ ಬರೆಯಿರಿ...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "ಸಾರ್ವಜನಿಕ ಕಾಮೆಂಟ್ ಬರೆಯಿರಿ..."
+      }
+    }
+  },
   "Login or sign up": "ಲಾಗಿನ್ ಮಾಡಿ ಅಥವಾ ಸೈನ್ ಅಪ್ ಮಾಡಿ",
   "Post": "ಪೋಸ್ಟ್",
   "Login": "ಲಾಗಿನ್ ಮಾಡಿ",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "ಸಂಸ್ಕರಿಸಲಾಗದ ಘಟಕ",
   "Failed to POST comment": "ಕಾಮೆಂಟ್ ಪೋಸ್ಟ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
   "all": "ಎಲ್ಲಾ",
-  "for an account in order to comment or interact.": "ಕಾಮೆಂಟ್ ಮಾಡಲು ಅಥವಾ ಸಂವಹನ ನಡೆಸುವ ಸಲುವಾಗಿ ಖಾತೆಗಾಗಿ.",
+  "for an account in order to comment or interact": {
+    "": "ಕಾಮೆಂಟ್ ಮಾಡಲು ಅಥವಾ ಸಂವಹನ ನಡೆಸುವ ಸಲುವಾಗಿ ಖಾತೆಗಾಗಿ."
+  },
   "Sign Up": "ಸೈನ್ ಅಪ್ ಮಾಡಿ",
   "CBD-type": "ಜೈವಿಕ ವೈವಿಧ್ಯತೆಯ ಸಮಾವೇಶ",
   "CPB-FP1-type": "ಜೈವಿಕ ಸುರಕ್ಷತೆಯ ಕುರಿತಾದ ಕಾರ್ಟಗೇನಾ ಪ್ರೋಟೋಕಾಲ್",
@@ -888,6 +923,7 @@
   "Progress": "ಪ್ರಗತಿ",
   "Created": "ರಚಿಸಲಾಗಿದೆ",
   "Unassigned": "ನಿಯೋಜಿಸದ",
+  "No description available": "ಯಾವುದೇ ವಿವರಣೆ ಲಭ್ಯವಿಲ್ಲ",
   "Work Overview": "ಕೆಲಸದ ಅವಲೋಕನ",
   "Bug": "ದೋಷ",
   "Task": "ಕಾರ್ಯ",
@@ -906,7 +942,13 @@
   "Low": "ಕಡಿಮೆ",
   "Lowest": "ಕಡಿಮೆ",
   "Selected For Development": "ಅಭಿವೃದ್ಧಿಗಾಗಿ ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ",
-  "View More ...": "ಇನ್ನಷ್ಟು ವೀಕ್ಷಿಸಿ...",
+  "View More ": {
+    "": {
+      "": {
+        "": "ಇನ್ನಷ್ಟು ವೀಕ್ಷಿಸಿ..."
+      }
+    }
+  },
   "bioland-context-description": "ಈ ಕುಕೀಗಳು ಬಯೋಲ್ಯಾಂಡ್ ಉಪಕರಣಕ್ಕಾಗಿ ಸಂದರ್ಭವನ್ನು ಸಂಗ್ರಹಿಸುತ್ತವೆ. ಒಂದು ಕೋಡ್ ನಿದರ್ಶನವು ಅನೇಕ ವೆಬ್ಸೈಟ್ಗಳನ್ನು ಪೂರೈಸುತ್ತದೆ. ಸಂದರ್ಭವು ವಿಭಿನ್ನ ವೆಬ್ಸೈಟ್ಗಳ ನಡುವೆ ವ್ಯತ್ಯಾಸ ಮಾಡಲು ಸಹಾಯ ಮಾಡುತ್ತದೆ. ನಿಮ್ಮ ಅಧಿವೇಶನವನ್ನು ಉಳಿಸಿಕೊಳ್ಳಲು ನೀವು ಲಾಗಿನ್ ಮಾಡಿದಾಗ ಇದಕ್ಕಾಗಿ ಮತ್ತಷ್ಟು ಕುಕೀಸ್. ಕೊನೆಯದಾಗಿ ಅನುವಾದ ಮತ್ತು ಸರ್ವರ್ನಲ್ಲಿ ಉಪಕರಣವನ್ನು ನೆರವಾಗಲು ಪೋರ್ಟ್ ಗಾತ್ರವನ್ನು ವೀಕ್ಷಿಸಿ. ವೆಬ್ಸೈಟ್ನ ಕಾರ್ಯಚಟುವಟಿಕೆಗೆ ಈ ಕುಕೀಗಳು ಅವಶ್ಯಕವಾಗಿವೆ.",
   "bioland-context-cookies": "ಬಯೋಲ್ಯಾಂಡ್ ಕಾಂಟೆಕ್ಸ್ಟ್ ಕುಕೀಸ್",
   "cookie-control-description": "ನಾವು ನಮ್ಮದೇ ಆದ ಕುಕೀಗಳನ್ನು ಮತ್ತು ಮೂರನೇ ವ್ಯಕ್ತಿಯ ಕುಕೀಗಳನ್ನು ಬಳಸುತ್ತೇವೆ ಇದರಿಂದ ನಾವು ಈ ವೆಬ್ಸೈಟ್ ಅನ್ನು ಸರಿಯಾಗಿ ಪ್ರದರ್ಶಿಸಬಹುದು ಮತ್ತು ನಾವು ನೀಡುವ ಸೇವೆಗಳನ್ನು ಸುಧಾರಿಸುವ ದೃಷ್ಟಿಯಿಂದ ಈ ವೆಬ್ಸೈಟ್ ಅನ್ನು ಹೇಗೆ ಬಳಸಲಾಗುತ್ತದೆ ಎಂಬುದನ್ನು ಚೆನ್ನಾಗಿ ಅರ್ಥಮಾಡಿಕೊಳ್ಳಬಹುದು. ಈ ಬ್ಯಾನರ್ನಲ್ಲಿ ಆಯ್ಕೆ ಮಾಡಿದ ನಂತರ ಕಾಣಿಸಿಕೊಳ್ಳುವ ಕುಕೀ ಬಟನ್ ಅನ್ನು ಬಳಸಿಕೊಂಡು ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ಕುಕಿ ಬಳಕೆಯ ಅನುಮತಿಗಳ ಕುರಿತಾದ ನಿರ್ಧಾರವನ್ನು ಬದಲಾಯಿಸಬಹುದು.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "ಸಹಬಾಳ್ವೆ",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "ಬೌದ್ಧಿಕ ಆಸ್ತಿ ಹಕ್ಕುಗಳು",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "ಸಾಮಾಜಿಕ ಮತ್ತು/ಅಥವಾ ಆರ್ಥಿಕ ಮೌಲ್ಯಮಾಪನಗಳು",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "ವ್ಯಾಪಾರ ನಿಯಮಗಳು ಮತ್ತು ಮಾನದಂಡಗಳು"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "ವ್ಯಾಪಾರ ನಿಯಮಗಳು ಮತ್ತು ಮಾನದಂಡಗಳು",
+  "Competent National Authority": "ಸಮರ್ಥ ರಾಷ್ಟ್ರೀಯ ಪ್ರಾಧಿಕಾರ",
+  "Contact": "ಸಂಪರ್ಕಿಸಿ",
+  "Biosafety Virtual Library Resources": "ಜೈವಿಕ ಸುರಕ್ಷತೆ ವರ್ಚುವಲ್ ಗ್ರಂಥಾಲಯ ಸಂ",
+  "BCH News": "ಬಿಸಿಎಚ್ ನ್ಯೂಸ್",
+  "National Focal Point": "ರಾಷ್ಟ್ರೀಯ ಫೋಕಲ್ ಪಾಯಿಂಟ್",
+  "Risk Assessment generated by an independent or non-regulatory process": "ಸ್ವತಂತ್ರ ಅಥವಾ ನಿಯಂತ್ರಣೇತರ ಪ್ರಕ್ರಿಯೆಯಿಂದ ಉತ್ಪತ್ತಿಯಾಗುವ ಅಪಾಯದ ಮೌಲ್ಯಮಾಪನ",
+  "Genetic element": "ಅನುವಂಶಿಕ ಅಂಶ",
+  "Organism": "ಜೀವಿ",
+  "Living Modified Organism": "ಜೀವಂತ ಮಾರ್ಪಡಿಸಿದ ಜೀವಿ",
+  "Biosafety Organization": "ಜೈವಿಕ ಸುರಕ್ಷತಾ ಸಂಸ್ಥೆ",
+  "Laboratory for detection and identification of LMOs": "ಎಲ್ಎಂಒಗಳ ಪತ್ತೆ ಮತ್ತು ಗುರುತಿಸುವ ಪ್ರಯೋಗಾಲಯ",
+  "What's New": "ಹೊಸದು ಏನು"
 }

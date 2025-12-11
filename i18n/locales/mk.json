@@ -7,10 +7,28 @@
   "Meetings": "Состаноци",
   "Announcement": "Соопштение",
   "Announcements": "Соопштенија",
+  "announcement": "Соопштение",
+  "meeting or event": "Состанок или настан",
+  "learning resource": "Ресурс за учење",
+  "article": "Член",
+  "basic page": "Основна страница",
+  "government ministry or institute": "Владино министерство или институт",
+  "protected area": "Заштитено подрачје",
+  "biodiversity data": "Податоци за биолошка разновидност",
+  "related website": "Поврзана веб-страница",
+  "other resource": "Друг ресурс",
+  "image or video": "Слика или видео",
+  "faq": "НАЈЧЕСТО ПОСТАВУВАНИ ПРАШАЊА",
+  "national information": "Национални информации",
+  "status of lmo": "Статус на LMO",
+  "field trial": "Теренско испитување",
+  "national mainstreaming strategy": "Национална стратегија за интегрирање",
+  "capacity building": "Градење на капацитети",
   "Basic Page": "Основна страница",
   "Basic Pages": "Основни страници",
   "Capacity-Building": "Градење на капацитети",
   "Capacity-Buildings": "Градење на капацитети",
+  "Capacity Development Initiative": "Иницијатива за развој на капацитети",
   "Field Trial": "Теренско испитување",
   "Field Trials": "Теренски испитувања",
   "National Information": "Национални информации",
@@ -66,8 +84,10 @@
   "content": "содржина на сајтот",
   "secretariate": "секретаријат",
   "notification": "Известувања",
+  "Statement": "Изјава",
   "statement": "Изјави",
   "meeting": "Состаноци",
+  "Press Release": "Соопштение за печатот",
   "pressRelease": "Соопштенија за печатот",
   "focalPoint": "фокусна точка",
   "resource": "Виртуелни библиотечни ресурси",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Биоландски биодиверзитет",
   "Home": "Дома",
   "Biodiversity CHM": "Биодиверзитет CHM",
+  "Biosafety Clearing-House Search": "Пребарување куќа за расчистување за биосигурност",
   "National Reports": "Национални извештаи",
   "View all National Reports": "Погледнете ги сите национални извештаи",
   "section1": "Дел I. Информации за целите што се следат на национално ниво",
@@ -228,7 +249,10 @@
   "Updated Date": "Датум на ажурирање",
   "Download": "Преземи",
   "Latest News and Updates": "Најнови вести и ажурирања",
+  "Latest Announcements, News and Updates": "Најнови соопштенија, новости и ажурирања",
+  "Latest Records": "Најнови записи",
   "View more news and updates": "Погледнете повеќе вести и ажурирања",
+  "from the Biosafety Clearing-House": "од Домот за расчистување на биосигурноста",
   "implementation": "имплементација",
   "Browse TSC Opportunities": "Прелистајте ги можностите за TSC",
   "Browse TSC Assistance and Providers": "Прелистајте ги TSC Assistance and Providers",
@@ -268,9 +292,18 @@
   "Revisions": "Ревизии",
   "Clone": "Клон",
   "Translate": "Преведи",
+  "Translation": "Превод",
+  "No translation available": "Нема достапен превод",
+  "Auto Translate": "Автоматско преведување",
   "BBI Contacts": "Контакти за ББИ",
   "Bioland 1": "Биоленд 1",
-  "Write a public comment ...": "Напиши јавен коментар...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Напиши јавен коментар..."
+      }
+    }
+  },
   "Login or sign up": "Најавете се или регистрирајте",
   "Post": "Пост",
   "Login": "Логирај Се",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Необработлив ентитет",
   "Failed to POST comment": "Не успеа да објавам коментар",
   "all": "сите",
-  "for an account in order to comment or interact.": "за сметка со цел да коментирате или комуницирате.",
+  "for an account in order to comment or interact": {
+    "": "за сметка со цел да коментирате или комуницирате."
+  },
   "Sign Up": "Пријавете се",
   "CBD-type": "Конвенција за биолошка разновидност",
   "CPB-FP1-type": "Картахенски протокол за биосигурност",
@@ -888,6 +923,7 @@
   "Progress": "Напредок",
   "Created": "Создадено",
   "Unassigned": "Недоделени",
+  "No description available": "Нема достапен опис",
   "Work Overview": "Преглед на работа",
   "Bug": "Бубачка",
   "Task": "Задача",
@@ -906,7 +942,13 @@
   "Low": "Ниско",
   "Lowest": "Најниско",
   "Selected For Development": "Избрани за развој",
-  "View More ...": "Погледнете повеќе...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Погледнете повеќе..."
+      }
+    }
+  },
   "bioland-context-description": "Овие колачиња го зачувуваат контекстот за алатката Bioland. Една инстанца на код одговара на многу веб-страници. Контекстот помага да се направи разлика помеѓу различните веб-страници. Понатаму, колачиња за кога се најавувате за да ја задржите вашата сесија. И на крај, преведување и преглед на големината на портата за да им помогне на алатката на серверот. Овие колачиња се неопходни за функционалноста на веб-страницата.",
   "bioland-context-cookies": "Колачиња за контекст на Биоленд",
   "cookie-control-description": "Ние користиме сопствени колачиња и колачиња од трети страни за да можеме правилно да ја прикажеме оваа веб-страница и подобро да разбереме како се користи оваа веб-страница, со цел да ги подобриме услугите што ги нудиме. Одлуката за дозволите за користење на колачиња може да се промени во секое време користејќи го копчето за колачиња што ќе се појави откако ќе се направи избор на овој банер.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Соживот",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Права на интелектуална сопственост",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Социјални и/или економски проценки",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Трговски правила и стандарди"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Трговски правила и стандарди",
+  "Competent National Authority": "Надлежен национален орган",
+  "Contact": "Контакт",
+  "Biosafety Virtual Library Resources": "Ресурси за виртуелна библиотека за биосигурност",
+  "BCH News": "Вести за BCH",
+  "National Focal Point": "Национална фокусна точка",
+  "Risk Assessment generated by an independent or non-regulatory process": "Проценка на ризикот генерирана од независен или нерегулаторен процес",
+  "Genetic element": "Генетски елемент",
+  "Organism": "Организмот",
+  "Living Modified Organism": "Жив модифициран организам",
+  "Biosafety Organization": "Организација за биосигурност",
+  "Laboratory for detection and identification of LMOs": "Лабораторија за откривање и идентификација на LMO",
+  "What's New": "Што е ново"
 }

@@ -7,10 +7,28 @@
   "Meetings": "Reunions",
   "Announcement": "Anunci",
   "Announcements": "Anuncis",
+  "announcement": "Anunci",
+  "meeting or event": "Reunió o esdeveniment",
+  "learning resource": "Recurs d'aprenentatge",
+  "article": "Article",
+  "basic page": "Pàgina bàsica",
+  "government ministry or institute": "Ministeri o Institut del Govern",
+  "protected area": "Àrea Protegida",
+  "biodiversity data": "Dades de biodiversitat",
+  "related website": "Lloc web relacionat",
+  "other resource": "Altres recursos",
+  "image or video": "Imatge o vídeo",
+  "faq": "PMF",
+  "national information": "Informació Nacional",
+  "status of lmo": "Estat de LMO",
+  "field trial": "Assaig de camp",
+  "national mainstreaming strategy": "Estratègia nacional d'integració",
+  "capacity building": "Creació de capacitats",
   "Basic Page": "Pàgina bàsica",
   "Basic Pages": "Pàgines bàsiques",
   "Capacity-Building": "Creació de capacitat",
   "Capacity-Buildings": "Capacitats-Construccions",
+  "Capacity Development Initiative": "Iniciativa de Desenvolupament de Capacitat",
   "Field Trial": "Assaig de camp",
   "Field Trials": "Assaigs de camp",
   "National Information": "Informació Nacional",
@@ -66,8 +84,10 @@
   "content": "contingut del lloc",
   "secretariate": "secretaria",
   "notification": "Notificacions",
+  "Statement": "Declaració",
   "statement": "Declaracions",
   "meeting": "Reunions",
+  "Press Release": "Nota de Premsa",
   "pressRelease": "Comunicats de premsa",
   "focalPoint": "punt focal",
   "resource": "Recursos de la biblioteca virtual",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Biodiversitat Bioland",
   "Home": "a casa",
   "Biodiversity CHM": "Biodiversitat CHM",
+  "Biosafety Clearing-House Search": "Cerca de cases de neteja de bioseguretat",
   "National Reports": "Informes Nacionals",
   "View all National Reports": "Veure tots els informes nacionals",
   "section1": "Secció I. Informació sobre els objectius que es persegueixen en l'àmbit nacional",
@@ -228,7 +249,10 @@
   "Updated Date": "Data actualitzada",
   "Download": "Descarregar",
   "Latest News and Updates": "Últimes notícies i actualitzacions",
+  "Latest Announcements, News and Updates": "Últims anuncis, notícies i actualitzacions",
+  "Latest Records": "Últims registres",
   "View more news and updates": "Veure més notícies i actualitzacions",
+  "from the Biosafety Clearing-House": "de la Clearing-House de Bioseguretat",
   "implementation": "implementació",
   "Browse TSC Opportunities": "Exploreu les oportunitats de TSC",
   "Browse TSC Assistance and Providers": "Exploreu l'assistència i els proveïdors de TSC",
@@ -268,9 +292,18 @@
   "Revisions": "Revisions",
   "Clone": "Clonar",
   "Translate": "Traduir",
+  "Translation": "Traducció",
+  "No translation available": "No hi ha traducció disponible",
+  "Auto Translate": "Traduir automàtic",
   "BBI Contacts": "Contactes de BBI",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Escriu un comentari públic...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Escriu un comentari públic..."
+      }
+    }
+  },
   "Login or sign up": "Inicieu sessió o registreu-vos",
   "Post": "Publicar",
   "Login": "iniciar Sessió",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Entitat no processable",
   "Failed to POST comment": "No s'ha aconseguit publicar un comentari",
   "all": "tots",
-  "for an account in order to comment or interact.": "per a un compte amb la finalitat de comentar o interactuar.",
+  "for an account in order to comment or interact": {
+    "": "per a un compte amb la finalitat de comentar o interactuar."
+  },
   "Sign Up": "Inscriu-te",
   "CBD-type": "Convenció sobre diversitat biològica",
   "CPB-FP1-type": "Protocol de Cartagena sobre Bioseguretat",
@@ -888,6 +923,7 @@
   "Progress": "Progrés",
   "Created": "Creat",
   "Unassigned": "No assignat",
+  "No description available": "No hi ha descripció disponible",
   "Work Overview": "Visió general del treball",
   "Bug": "Error",
   "Task": "Tasca",
@@ -906,7 +942,13 @@
   "Low": "Baixa",
   "Lowest": "Més baix",
   "Selected For Development": "Seleccionat per al desenvolupament",
-  "View More ...": "Veure més...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Veure més..."
+      }
+    }
+  },
   "bioland-context-description": "Aquestes cookies emmagatzemen el context de l'eina Bioland. Una instància de codi serveix per a molts llocs web. El context ajuda a diferenciar entre els diferents llocs web. A més, unes galetes per quan inicieu sessió per mantenir la vostra sessió. Finalment, traducció i visualització de la mida del port per ajudar l'eina al servidor. Aquestes cookies són necessàries per a la funcionalitat del lloc web.",
   "bioland-context-cookies": "Cookies de context de Bioland",
   "cookie-control-description": "Utilitzem cookies pròpies i cookies de tercers perquè puguem mostrar correctament aquest lloc web i comprendre millor com s'utilitza aquest lloc web, amb vista a millorar els serveis que oferim. Una decisió sobre els permisos d'ús de cookies es pot canviar en qualsevol moment mitjançant el botó de cookies que apareixerà després que s'hagi fet una selecció en aquest banner.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Convivència",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Drets de propietat intel·lectual",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Avaluacions socials i/o econòmiques",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Normes i normes comercials"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Normes i normes comercials",
+  "Competent National Authority": "Autoritat Nacional competent",
+  "Contact": "Contacte",
+  "Biosafety Virtual Library Resources": "Recursos de la biblioteca virtual de bioseguretat",
+  "BCH News": "Notícies BCH",
+  "National Focal Point": "Punt de Focal Nacional",
+  "Risk Assessment generated by an independent or non-regulatory process": "Avaluació de Riscos generada per un procés independent o no regulador",
+  "Genetic element": "Element genètic",
+  "Organism": "Organisme",
+  "Living Modified Organism": "Organisme modificat viu",
+  "Biosafety Organization": "Organització de la Bioseguretat",
+  "Laboratory for detection and identification of LMOs": "Laboratori de detecció i identificació de LMO",
+  "What's New": "Què hi ha de nou"
 }

@@ -7,10 +7,28 @@
   "Meetings": "கூட்டங்கள்",
   "Announcement": "அறிவிப்பு",
   "Announcements": "அறிவிப்புகள்",
+  "announcement": "அறிவிப்பு",
+  "meeting or event": "கூட்டம் அல்லது நிகழ்வு",
+  "learning resource": "கற்றல் வளம்",
+  "article": "கட்டுரை",
+  "basic page": "அடிப்படை பக்கம்",
+  "government ministry or institute": "அரசாங்க அமைச்சகம் அல்லது நிறுவனம்",
+  "protected area": "பாதுகாக்கப்பட்ட பகுதி",
+  "biodiversity data": "பல்லுயிர் தரவு",
+  "related website": "தொடர்புடைய இணையதளம்",
+  "other resource": "பிற வளங்கள்",
+  "image or video": "படம் அல்லது வீடியோ",
+  "faq": "அடிக்கடி கேட்கப்படும் கேள்விகள்",
+  "national information": "தேசிய தகவல்",
+  "status of lmo": "LMO இன் நிலை",
+  "field trial": "கள சோதனை",
+  "national mainstreaming strategy": "தேசிய மெயின்ஸ்ட்ரீமிங் உ",
+  "capacity building": "திறன் வளர்ப்பு",
   "Basic Page": "அடிப்படை பக்கம்",
   "Basic Pages": "அடிப்படை பக்கங்கள்",
   "Capacity-Building": "திறன்-கட்டிடம்",
   "Capacity-Buildings": "திறன்-கட்டிடங்கள்",
+  "Capacity Development Initiative": "திறன் மேம்பாட்டு முன்மு",
   "Field Trial": "கள சோதனை",
   "Field Trials": "கள சோதனைகள்",
   "National Information": "தேசிய தகவல்",
@@ -66,8 +84,10 @@
   "content": "தள உள்ளடக்கம்",
   "secretariate": "செயலகம்",
   "notification": "அறிவிப்புகள்",
+  "Statement": "அறிக்கை",
   "statement": "அறிக்கைகள்",
   "meeting": "கூட்டங்கள்",
+  "Press Release": "பத்திரிகை வெளியீடு",
   "pressRelease": "செய்தி வெளியீடுகள்",
   "focalPoint": "குவிப் புள்ளி",
   "resource": "மெய்நிகர் நூலக",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "உயிரியல் பல்லுயிர்",
   "Home": "வீடு",
   "Biodiversity CHM": "பல்லுயிர் CHM",
+  "Biosafety Clearing-House Search": "உயிரியல் பாதுகாப்பு கிளியரிங்-ஹவுஸ் தேடல்",
   "National Reports": "தேசிய அறிக்கைகள்",
   "View all National Reports": "அனைத்து தேசிய அறிக்கைகளையும் பார்க்கவும்",
   "section1": "பிரிவு I தேசிய மட்டத்தில் பின்பற்றப்படும் இலக்குகள் பற்றிய தகவல்கள்",
@@ -228,7 +249,10 @@
   "Updated Date": "புதுப்பிக்கப்பட்ட தேதி",
   "Download": "பதிவிறக்க Tamil",
   "Latest News and Updates": "சமீபத்திய செய்திகள் மற்றும் புதுப்பிப்புகள்",
+  "Latest Announcements, News and Updates": "சமீபத்திய அறிவிப்புகள், செய்திகள் மற்றும் புது",
+  "Latest Records": "புதிய பதிவுகள்",
   "View more news and updates": "மேலும் செய்திகள் மற்றும் புதுப்பிப்புகளைக் காண்க",
+  "from the Biosafety Clearing-House": "உயிரியல் பாதுகாப்பு கிளியரிங்-ஹவுஸிலிருந்து",
   "implementation": "செயல்படுத்தல்",
   "Browse TSC Opportunities": "TSC வாய்ப்புகளை உலாவுக",
   "Browse TSC Assistance and Providers": "TSC உதவி மற்றும் வழங்குநர்களை உலாவுக",
@@ -268,9 +292,18 @@
   "Revisions": "திருத்தங்கள்",
   "Clone": "குளோன்",
   "Translate": "மொழிபெயர்",
+  "Translation": "மொழிமாற்றம்",
+  "No translation available": "மொழிபெயர்ப்பு கிடைக்கவில்லை",
+  "Auto Translate": "தானாக மொழிபெய",
   "BBI Contacts": "பிபிஐ தொடர்புகள்",
   "Bioland 1": "பயோலேண்ட் 1",
-  "Write a public comment ...": "பொது கருத்தை எழுதுங்கள்...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "பொது கருத்தை எழுதுங்கள்..."
+      }
+    }
+  },
   "Login or sign up": "உள்நுழைக அல்லது பதிவு செய்ய",
   "Post": "இடுகை",
   "Login": "உள்நுழைய",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "செயலாக்க முடியாத நிறுவனம்",
   "Failed to POST comment": "கருத்தை இடுகையிடுவதில் தோல்வி",
   "all": "அனைத்து",
-  "for an account in order to comment or interact.": "கருத்து தெரிவிக்க அல்லது தொடர்புகொள்வதற்காக ஒரு கணக்கிற்கு.",
+  "for an account in order to comment or interact": {
+    "": "கருத்து தெரிவிக்க அல்லது தொடர்புகொள்வதற்காக ஒரு கணக்கிற்கு."
+  },
   "Sign Up": "பதிவு செய்யுங்கள்",
   "CBD-type": "உயிரியல் பன்முகத்தன்மை தொடர்பான",
   "CPB-FP1-type": "உயிரியல் பாதுகாப்பு குறித்த கார்டேஜினா நெறிமுறை",
@@ -888,6 +923,7 @@
   "Progress": "முன்னேற்றம்",
   "Created": "உருவாக்கப்பட்டது",
   "Unassigned": "ஒதுக்கப்படாத",
+  "No description available": "எந்த விளக்கமும் கிடைக்கவில்லை",
   "Work Overview": "வேலை கண்ணோட்டம்",
   "Bug": "பிழை",
   "Task": "பணி",
@@ -906,7 +942,13 @@
   "Low": "குறைந்த",
   "Lowest": "மிகக் குறைந்த",
   "Selected For Development": "வளர்ச்சிக்கு தேர்ந்தெடுக்க",
-  "View More ...": "மேலும் காண்க...",
+  "View More ": {
+    "": {
+      "": {
+        "": "மேலும் காண்க..."
+      }
+    }
+  },
   "bioland-context-description": "இந்த குக்கீகள் பயோலேண்ட் கருவிற்கான சூழலை சேமிக்கின்றன. ஒரு குறியீடு நிகழ்வு பல வலைத்தளங்களுக்கு ஏற்றது. வெவ்வேறு வலைத்தளங்களை வேறுபடுத்துவதற்கு சூழல் உதவுகிறது. மேலும் உங்கள் அமர்வை வைத்திருக்க நீங்கள் உள்நுழைவும்போது கூடிய குக்கீகள். சேவையகத்தில் உள்ள கருவிக்கு உதவ கடைசியாக மொழிபெயர்ப்பு மற்றும் போர்ட் அளவைக் காண்க. வலைத்தளத்தின் செயல்பாட்டிற்கு இந்த குக்கீகள் அவசியம்.",
   "bioland-context-cookies": "பயோலேண்ட் சூழல் குக்கீகள்",
   "cookie-control-description": "நாங்கள் வழங்கும் சேவைகளை மேம்படுத்துவதன் நோக்கில் இந்த வலைத்தளத்தை சரியாகக் காண்பிக்கவும், இந்த வலைத்தளம் எவ்வாறு பயன்படுத்தப்படுகிறது என்பதை நன்கு புரிந்துகொள்வதற்கும் எங்கள் சொந்த குக்கீகள் மற்றும் மூன்றாம் தரப்பு குக்கீகளைப் பயன்படுத்துகிறோம். இந்த பேனரில் தேர்வு செய்யப்பட்ட பிறகு தோன்றும் குக்கீ பொத்தானைப் பயன்படுத்தி குக்கீ பயன்பாட்டு அனுமதிகள் குறித்த முடிவை எப்போது வேண்டுமானாலும் மாற்றலாம்.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "சகவாழ்வு",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "அறிவுசார் சொத்து உரிமை",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "சமூக மற்றும்/அல்லது பொருளாதார",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "வர்த்தக விதிகள் மற்றும் தரநிலைகள்"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "வர்த்தக விதிகள் மற்றும் தரநிலைகள்",
+  "Competent National Authority": "திறமையான தேசிய அதிகாரம்",
+  "Contact": "தொடர்பு",
+  "Biosafety Virtual Library Resources": "உயிரியல் பாதுகாப்பு மெய்நிகர் நூலக வள",
+  "BCH News": "பிசிஎச் செய்திகள்",
+  "National Focal Point": "தேசிய மையப் புள்ளி",
+  "Risk Assessment generated by an independent or non-regulatory process": "ஒரு சுயாதீன அல்லது ஒழுங்குமுறை அல்லாத செயல்முறையால் உருவாக்கப்பட்ட",
+  "Genetic element": "மரபணு உறுப்பு",
+  "Organism": "உயிரினம்",
+  "Living Modified Organism": "வாழும் மாற்றப்பட்ட உயிரினம்",
+  "Biosafety Organization": "உயிரியல் பாதுகாப்பு அமைப்பு",
+  "Laboratory for detection and identification of LMOs": "LMO களைக் கண்டறிதல் மற்றும் அடையாளம் காண்பதற்கான ஆய்வகம்",
+  "What's New": "புதியது என்ன"
 }

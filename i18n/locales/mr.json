@@ -7,10 +7,28 @@
   "Meetings": "बैठक",
   "Announcement": "घोषणा",
   "Announcements": "घोषणा",
+  "announcement": "घोषणा",
+  "meeting or event": "बैठक किंवा कार्यक्रम",
+  "learning resource": "शिक्षण संसाधन",
+  "article": "लेख",
+  "basic page": "मूळ पृष्ठ",
+  "government ministry or institute": "सरकारी मंत्रालय किंवा संस्था",
+  "protected area": "संरक्षित क्षेत्र",
+  "biodiversity data": "जैवविविधता डेटा",
+  "related website": "संबंधित वेबसाइट",
+  "other resource": "इतर संसाधने",
+  "image or video": "प्रतिमा किंवा व्हिडिओ",
+  "faq": "प्रश्न",
+  "national information": "राष्ट्रिक माहिती",
+  "status of lmo": "एलएमओची स्थिती",
+  "field trial": "फील्ड ट्रायल",
+  "national mainstreaming strategy": "राष्ट्रीय मुख्य मुख्य",
+  "capacity building": "क्षमता बांधणे",
   "Basic Page": "मूळ पृष्ठ",
   "Basic Pages": "मूळ पृष्ठे",
   "Capacity-Building": "क्षमता-निर्मिती",
   "Capacity-Buildings": "क्षमते-इमारती",
+  "Capacity Development Initiative": "क्षमता विकास पुढा",
   "Field Trial": "फील्ड ट्रायल",
   "Field Trials": "फील्ड ट्रायल",
   "National Information": "राष्ट्रिक माहिती",
@@ -66,8 +84,10 @@
   "content": "साइट सामग्री",
   "secretariate": "सचिवालय",
   "notification": "सूचना",
+  "Statement": "विधान",
   "statement": "विधाने",
   "meeting": "बैठक",
+  "Press Release": "प्रेस रिलीज",
   "pressRelease": "प्रेस रिलीज",
   "focalPoint": "फोकल पॉई",
   "resource": "आभासी लायब्ररी",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "बायोलँड जैवविविधता",
   "Home": "मुख्यपृष्ठ",
   "Biodiversity CHM": "जैवविविधता CHM",
+  "Biosafety Clearing-House Search": "बायोसेफ्टी क्लीअरिंग-हाऊस श",
   "National Reports": "राष्ट्रीय अहवाल",
   "View all National Reports": "सर्व राष्ट्रीय अहवाल पहा",
   "section1": "विभाग I राष्ट्रीय स्तरावर अनुसरण केलेल्या लक्ष्यांची मा",
@@ -228,7 +249,10 @@
   "Updated Date": "अद्यतनित तारीख",
   "Download": "डाउनलोड करा",
   "Latest News and Updates": "ताज्या बातम्या आणि अपडेट्स",
+  "Latest Announcements, News and Updates": "नवीनतम घोषणा, बातमी",
+  "Latest Records": "नवीनतम रे",
   "View more news and updates": "अधिक बातम्या आणि अद्यतने पहा",
+  "from the Biosafety Clearing-House": "बायोसेफेटी क्लिअरिंग-हाऊस कडून",
   "implementation": "अंमलबजावणी",
   "Browse TSC Opportunities": "TSC संधी ब्राउझ करा",
   "Browse TSC Assistance and Providers": "TSC सहाय्य आणि प्रदाते ब्राउझ करा",
@@ -268,9 +292,18 @@
   "Revisions": "आवर्तने",
   "Clone": "क्लोन",
   "Translate": "भाषांतर करा",
+  "Translation": "भाषांतर",
+  "No translation available": "भाषांतर उपलब्ध",
+  "Auto Translate": "ऑटो भाषांतर",
   "BBI Contacts": "BBI संपर्क",
   "Bioland 1": "बायोलँड १",
-  "Write a public comment ...": "सार्वजनिक टीपणी लिहा...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "सार्वजनिक टीपणी लिहा..."
+      }
+    }
+  },
   "Login or sign up": "लॉगिन किंवा साइन अप",
   "Post": "पोस्ट",
   "Login": "लॉगिन करा",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "प्रक्रिया करण्यायोग्य संस्था",
   "Failed to POST comment": "टिप्पणी पोस्ट करण्या",
   "all": "सर्व",
-  "for an account in order to comment or interact.": "टिप्पणी करण्यासाठी किंवा संवाद साधण्यासाठी खात्यासाठी.",
+  "for an account in order to comment or interact": {
+    "": "टिप्पणी करण्यासाठी किंवा संवाद साधण्यासाठी खात्यासाठी."
+  },
   "Sign Up": "साइन अप करा",
   "CBD-type": "जैविक विविधतेवर सं",
   "CPB-FP1-type": "बायोसेफिटी वरील कार्टजेना प्रोटो",
@@ -888,6 +923,7 @@
   "Progress": "प्रगती",
   "Created": "तयार केले",
   "Unassigned": "नियुक्त",
+  "No description available": "वर्णन उपलब्ध नाही",
   "Work Overview": "कामाचे विहंगा",
   "Bug": "बग",
   "Task": "कार्य",
@@ -906,7 +942,13 @@
   "Low": "कमी",
   "Lowest": "सर्वात कमी",
   "Selected For Development": "विकासासाठी निवडले",
-  "View More ...": "अधिक पहा...",
+  "View More ": {
+    "": {
+      "": {
+        "": "अधिक पहा..."
+      }
+    }
+  },
   "bioland-context-description": "या कुकीज बायोलँड टूलसाठी संदर्भ संचयित करतात. एक कोड उदाहरण बर्याच वेबसाइट्स पूर्ण संदर्भ वेगवेगळ्या वेबसाइट्समध्ये फरक करण्यास पुढे तुम्ही तुमचे सत्र ठेवण्यासाठी लॉगिन करता तेव्हा सर्व्हरवरील साधनास मदत करण्यासाठी शेवटी भाषांतर आणि पोर्टचा आकार या कुकीज वेबसाइटच्या कार्यक्षमतेसाठी आवश्यक आहेत.",
   "bioland-context-cookies": "बायोलँड प्रसंग कुकीज",
   "cookie-control-description": "आम्ही आमच्या स्वतःच्या कुकीज आणि तृतीय-पक्ष कुकीज वापरतो जेणेकरून आम्ही ऑफर केलेल्या सेवा सुधारण्याच्या दृष्टीने ही वेबसाइट योग्य प्रदर्शित करू शक या बॅनरवर निवड केल्यानंतर दिसणार्या कुकी बटणाचा वापर करून कुकी वापर परवानगांवरील निर्णय कधीही बदलला",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "सहकार्य",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "बौद्धिक संपत्ती",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "सामाजिक अ/किंवा आर्थिक",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "व्यापार नियम आणि मानक"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "व्यापार नियम आणि मानक",
+  "Competent National Authority": "सक्षम राष्ट्रीय प्र",
+  "Contact": "संपर्क",
+  "Biosafety Virtual Library Resources": "बायोसेफ्टी व्हर्च्युअल ग्र",
+  "BCH News": "BCH बातम्या",
+  "National Focal Point": "राष्ट्रीय फोकल",
+  "Risk Assessment generated by an independent or non-regulatory process": "स्वतंत्र किंवा नॉन-नियमकीय प्रक्रियेद्वार",
+  "Genetic element": "अनुवांशीय",
+  "Organism": "जीव",
+  "Living Modified Organism": "जीवन सुधारित",
+  "Biosafety Organization": "जैविक सुरक्षा संस्था",
+  "Laboratory for detection and identification of LMOs": "एलएमओचे शोध आणि ओळखण्यासाठी प्रयोगश",
+  "What's New": "नवीन काय आहे"
 }

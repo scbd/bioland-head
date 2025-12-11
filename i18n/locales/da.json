@@ -7,10 +7,28 @@
   "Meetings": "Møder",
   "Announcement": "Bekendtgørelse",
   "Announcements": "Meddelelser",
+  "announcement": "Bekendtgørelse",
+  "meeting or event": "Møde eller begivenhed",
+  "learning resource": "Læringsressource",
+  "article": "Artikel",
+  "basic page": "Grundlæggende side",
+  "government ministry or institute": "Ministerium eller Institut",
+  "protected area": "Beskyttet område",
+  "biodiversity data": "Biodiversitetsdata",
+  "related website": "Relateret hjemmeside",
+  "other resource": "Anden ressource",
+  "image or video": "Billede eller video",
+  "faq": "OFTE STILLEDE SPØRGSMÅL",
+  "national information": "Nationale oplysninger",
+  "status of lmo": "Status for LMO",
+  "field trial": "Feltforsøg",
+  "national mainstreaming strategy": "National mainstreaming-strategi",
+  "capacity building": "Kapacitetsopbygning",
   "Basic Page": "Grundlæggende side",
   "Basic Pages": "Grundlæggende sider",
   "Capacity-Building": "Kapacitetsopbygning",
   "Capacity-Buildings": "Kapacitetsopbygning",
+  "Capacity Development Initiative": "Kapacitetsudviklingsinitiativ",
   "Field Trial": "Feltforsøg",
   "Field Trials": "Feltforsøg",
   "National Information": "Nationale oplysninger",
@@ -66,8 +84,10 @@
   "content": "webstedsindhold",
   "secretariate": "sekretariat",
   "notification": "Meddelelser",
+  "Statement": "Erklæring",
   "statement": "Erklæringer",
   "meeting": "Møder",
+  "Press Release": "Pressemeddelelse",
   "pressRelease": "Pressemeddelelser",
   "focalPoint": "omdrejningspunkt",
   "resource": "Virtuelle biblioteksressourcer",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Bioland Biodiversitet",
   "Home": "Hjem",
   "Biodiversity CHM": "Biodiversitet CHM",
+  "Biosafety Clearing-House Search": "Søg efter clearinghus for biosikkerhed",
   "National Reports": "Nationale rapporter",
   "View all National Reports": "Se alle nationale rapporter",
   "section1": "Afsnit I. Oplysninger om de mål, der forfølges på nationalt plan",
@@ -228,7 +249,10 @@
   "Updated Date": "Opdateret dato",
   "Download": "Download",
   "Latest News and Updates": "Seneste nyheder og opdateringer",
+  "Latest Announcements, News and Updates": "Seneste meddelelser, nyheder og opdateringer",
+  "Latest Records": "Seneste optegnelser",
   "View more news and updates": "Se flere nyheder og opdateringer",
+  "from the Biosafety Clearing-House": "fra Biosafety Clearing-House",
   "implementation": "implementering",
   "Browse TSC Opportunities": "Gennemse TSC-muligheder",
   "Browse TSC Assistance and Providers": "Gennemse TSC Assistance og udbydere",
@@ -268,9 +292,18 @@
   "Revisions": "Revisioner",
   "Clone": "Klon",
   "Translate": "Oversætte",
+  "Translation": "Oversættelse",
+  "No translation available": "Ingen oversættelse tilgængelig",
+  "Auto Translate": "Automatisk oversættelse",
   "BBI Contacts": "BBI Kontakter",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Skriv en offentlig kommentar...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Skriv en offentlig kommentar..."
+      }
+    }
+  },
   "Login or sign up": "Log ind eller tilmeld dig",
   "Post": "Indlæg",
   "Login": "Log på",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Enhed, der ikke kan behandles",
   "Failed to POST comment": "Kunne ikke skrive kommentar",
   "all": "alle",
-  "for an account in order to comment or interact.": "for en konto for at kommentere eller interagere.",
+  "for an account in order to comment or interact": {
+    "": "for en konto for at kommentere eller interagere."
+  },
   "Sign Up": "Tilmeld dig",
   "CBD-type": "Konventionen om biologisk mangfoldighed",
   "CPB-FP1-type": "Cartagena-protokollen om biosikkerhed",
@@ -888,6 +923,7 @@
   "Progress": "Fremskridt",
   "Created": "Oprettet",
   "Unassigned": "Ikke tildelt",
+  "No description available": "Ingen beskrivelse tilgængelig",
   "Work Overview": "Arbejdsoversigt",
   "Bug": "Bug",
   "Task": "Opgave",
@@ -906,7 +942,13 @@
   "Low": "Lav",
   "Lowest": "Laveste",
   "Selected For Development": "Udvalgt til udvikling",
-  "View More ...": "Se mere...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Se mere..."
+      }
+    }
+  },
   "bioland-context-description": "Disse cookies gemmer konteksten for Bioland-værktøjet. Én kodeforekomst henvender sig til mange websteder. Konteksten hjælper med at skelne mellem de forskellige websteder. Yderligere en cookie til, når du logger ind for at beholde din session. Endelig oversættelse og visning af portstørrelse for at hjælpe værktøjet på serveren. Disse cookies er nødvendige for webstedets funktionalitet.",
   "bioland-context-cookies": "Bioland Kontekstcookies",
   "cookie-control-description": "Vi bruger vores egne cookies og tredjepartscookies, så vi kan vise dette websted korrekt og bedre forstå, hvordan dette websted bruges, med henblik på at forbedre de tjenester, vi tilbyder. En beslutning om tilladelser til brug af cookies kan ændres når som helst ved hjælp af cookiknappen, der vises, når der er foretaget et valg på dette banner.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Sameksistens",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Intellektuelle ejendomsrettigheder",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Sociale og/eller økonomiske vurderinger",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Handelsregler og standarder"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Handelsregler og standarder",
+  "Competent National Authority": "Kompetent national myndighed",
+  "Contact": "Kontakt",
+  "Biosafety Virtual Library Resources": "Ressourcer til virtuelt bibliotek for biosikkerhed",
+  "BCH News": "BCH Nyheder",
+  "National Focal Point": "Nationalt kontaktpunkt",
+  "Risk Assessment generated by an independent or non-regulatory process": "Risikovurdering genereret af en uafhængig eller ikke-lovgivningsmæssig proces",
+  "Genetic element": "Genetisk element",
+  "Organism": "Organisme",
+  "Living Modified Organism": "Levende modificeret organisme",
+  "Biosafety Organization": "Biosikkerhedsorganisation",
+  "Laboratory for detection and identification of LMOs": "Laboratorium til påvisning og identifikation af LMO'er",
+  "What's New": "Hvad er nyt"
 }

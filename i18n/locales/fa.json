@@ -7,10 +7,28 @@
   "Meetings": "جلسات",
   "Announcement": "اعلامیه",
   "Announcements": "اطلاعیه ها",
+  "announcement": "اعلامیه",
+  "meeting or event": "جلسه یا رویداد",
+  "learning resource": "منبع یادگیری",
+  "article": "مقاله",
+  "basic page": "صفحه اصلی",
+  "government ministry or institute": "وزارت یا مؤسسه دولتی",
+  "protected area": "منطقه حفاظت شده",
+  "biodiversity data": "داده های تنوع زیستی",
+  "related website": "وب سایت مرتبط",
+  "other resource": "منابع دیگر",
+  "image or video": "تصویر یا ویدیو",
+  "faq": "سؤالات متداول",
+  "national information": "اطلاعات ملی",
+  "status of lmo": "وضعیت LMO",
+  "field trial": "محاکمه میدانی",
+  "national mainstreaming strategy": "استراتژی اصلی سازی ملی",
+  "capacity building": "ظرفیت سازی",
   "Basic Page": "صفحه اصلی",
   "Basic Pages": "صفحات پایه",
   "Capacity-Building": "ظرفیت سازی",
   "Capacity-Buildings": "ظرفیت-ساختمانها",
+  "Capacity Development Initiative": "ابتکار توسعه ظرفیت",
   "Field Trial": "محاکمه میدانی",
   "Field Trials": "آزمایشات میدانی",
   "National Information": "اطلاعات ملی",
@@ -66,8 +84,10 @@
   "content": "محتوای سایت",
   "secretariate": "دبیرخانه",
   "notification": "اطلاعیه ها",
+  "Statement": "بیانیه",
   "statement": "اظهارات",
   "meeting": "جلسات",
+  "Press Release": "اطلاعیه مطبوعاتی",
   "pressRelease": "انتشارات مطبوعاتی",
   "focalPoint": "نقطه کانونی",
   "resource": "منابع کتابخانه مجازی",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "تنوع زیستی Bioland",
   "Home": "صفحه اصلی",
   "Biodiversity CHM": "تنوع زیستی CHM",
+  "Biosafety Clearing-House Search": "جستجوی مرکز تخفیف ایمنی زیستی",
   "National Reports": "گزارش های ملی",
   "View all National Reports": "مشاهده تمام گزارش های ملی",
   "section1": "بخش اول- اطلاعات در مورد اهداف مورد پیگیری در سطح ملی",
@@ -228,7 +249,10 @@
   "Updated Date": "تاریخ به روز رسانی",
   "Download": "دانلود کنید",
   "Latest News and Updates": "آخرین اخبار و به روز رسانی",
+  "Latest Announcements, News and Updates": "آخرین اطلاعیه ها، اخبار و به روز رسانی ها",
+  "Latest Records": "آخرین سوابق",
   "View more news and updates": "مشاهده اخبار و به روز رسانی های بیشتر",
+  "from the Biosafety Clearing-House": "از مرکز تمیز کردن ایمنی زیستی",
   "implementation": "اجرا",
   "Browse TSC Opportunities": "فرصت های TSC را مرور کنید",
   "Browse TSC Assistance and Providers": "TSC Assistance and Providers را مرور کنید",
@@ -268,9 +292,18 @@
   "Revisions": "تجدید نظرها",
   "Clone": "کلون",
   "Translate": "ترجمه کنید",
+  "Translation": "ترجمه",
+  "No translation available": "ترجمه موجود نیست",
+  "Auto Translate": "ترجمه خودکار",
   "BBI Contacts": "مخاطبین BBI",
   "Bioland 1": "بیولند ۱",
-  "Write a public comment ...": "یک نظر عمومی بنویسید...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "یک نظر عمومی بنویسید..."
+      }
+    }
+  },
   "Login or sign up": "ورود یا ثبت نام",
   "Post": "پست",
   "Login": "وارد شدن",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "نهاد غیرقابل پردازش",
   "Failed to POST comment": "ارسال نظر ناموفق",
   "all": "همه",
-  "for an account in order to comment or interact.": "برای یک حساب کاربری به منظور اظهار نظر یا تعامل.",
+  "for an account in order to comment or interact": {
+    "": "برای یک حساب کاربری به منظور اظهار نظر یا تعامل."
+  },
   "Sign Up": "ثبت نام کنید",
   "CBD-type": "کنوانسیون تنوع زیستی",
   "CPB-FP1-type": "پروتکل کارتاگنا در مورد ایمنی زیستی",
@@ -888,6 +923,7 @@
   "Progress": "پیشرفت",
   "Created": "ایجاد شده",
   "Unassigned": "اختصاص داده نشده",
+  "No description available": "توضیحات موجود نیست",
   "Work Overview": "نمای کلی کار",
   "Bug": "اشکال",
   "Task": "وظیفه",
@@ -906,7 +942,13 @@
   "Low": "کم",
   "Lowest": "کمترین",
   "Selected For Development": "انتخاب شده برای توسعه",
-  "View More ...": "مشاهده بیشتر...",
+  "View More ": {
+    "": {
+      "": {
+        "": "مشاهده بیشتر..."
+      }
+    }
+  },
   "bioland-context-description": "این کوکی ها زمینه ابزار Bioland را ذخیره می کنند. یک نمونه کد برای بسیاری از وب سایت ها خدمت می کند. زمینه به تمایز بین وب سایت های مختلف کمک می کند. علاوه بر این، کوکی هایی برای هنگام ورود به سیستم برای حفظ جلسه خود. در آخر ترجمه و مشاهده اندازه پورت برای کمک به ابزار در سرور. این کوکی ها برای عملکرد وب سایت ضروری هستند.",
   "bioland-context-cookies": "کوکی های زمینه Bioland",
   "cookie-control-description": "ما از کوکی های خود و کوکی های شخص ثالث استفاده می کنیم تا بتوانیم این وب سایت را به درستی نمایش دهیم و نحوه استفاده از این وب سایت را بهتر درک کنیم، با هدف بهبود خدماتی که ارائه می دهیم. تصمیم در مورد مجوزهای استفاده از کوکی را می توان در هر زمان با استفاده از دکمه کوکی تغییر داد که پس از انتخاب در این بنر ظاهر می شود.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "همزیستی",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "حقوق مالکیت معنوی",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "ارزیابی های اجتماعی و/یا اقتصادی",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "قوانین و استانداردهای تجاری"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "قوانین و استانداردهای تجاری",
+  "Competent National Authority": "مقام ملی صالح",
+  "Contact": "تماس با ما",
+  "Biosafety Virtual Library Resources": "منابع کتابخانه مجازی ایمنی زیستی",
+  "BCH News": "اخبار بی‌سی",
+  "National Focal Point": "نقطه کانونی ملی",
+  "Risk Assessment generated by an independent or non-regulatory process": "ارزیابی ریسک ایجاد شده توسط یک فرآیند مستقل یا غیر نظارتی",
+  "Genetic element": "عنصر ژنتیکی",
+  "Organism": "ارگانیسم",
+  "Living Modified Organism": "ارگانیسم اصلاح شده زنده",
+  "Biosafety Organization": "سازمان ایمنی زیستی",
+  "Laboratory for detection and identification of LMOs": "آزمایشگاه تشخیص و شناسایی LMO",
+  "What's New": "چه چیز جدیدی است"
 }

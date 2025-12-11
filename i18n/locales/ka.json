@@ -7,10 +7,28 @@
   "Meetings": "შეხვედრა",
   "Announcement": "განცხადება",
   "Announcements": "განცხადებები",
+  "announcement": "განცხადება",
+  "meeting or event": "შეხვედრა ან მოვლენ",
+  "learning resource": "სასწავლო რესურსი",
+  "article": "მუხლი",
+  "basic page": "ძირითადი გვერდი",
+  "government ministry or institute": "მთავრობის სამინისტრო ან ინსტიტუტი",
+  "protected area": "დაცული ტერიტორია",
+  "biodiversity data": "ბიომრავალფეროვნების მონაცემები",
+  "related website": "დაკავშირებული საიტი",
+  "other resource": "სხვა რესურსი",
+  "image or video": "სურათი ან ვიდეო",
+  "faq": "კითხვები",
+  "national information": "ეროვნული ინფორმაცია",
+  "status of lmo": "LMO-ს სტატუსი",
+  "field trial": "საველე საცდელი",
+  "national mainstreaming strategy": "მაინსტრეიმინგის ეროვნული სტრატ",
+  "capacity building": "შესაძლებლობების განვითარება",
   "Basic Page": "ძირითადი გვერდი",
   "Basic Pages": "ძირითადი გვერდები",
   "Capacity-Building": "Შესაძლებლობების განვითარება",
   "Capacity-Buildings": "შესაძლებლობების მშენებლობა",
+  "Capacity Development Initiative": "შესაძლებლობების განვითარების ინი",
   "Field Trial": "საველე საცდელი",
   "Field Trials": "საველე ცდები",
   "National Information": "ეროვნული ინფორმაცია",
@@ -66,8 +84,10 @@
   "content": "საიტის კონტენტი",
   "secretariate": "სამდივნო",
   "notification": "შენიშვნები",
+  "Statement": "განცხადება",
   "statement": "განცხადებები",
   "meeting": "შეხვედრა",
+  "Press Release": "პრესრელიზი",
   "pressRelease": "პრესრელიზები",
   "focalPoint": "ფოკუსური წერტილი",
   "resource": "ვირტუალური ბიბლიოთე",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "ბიოლანდის ბიომრავალფეროვნება",
   "Home": "მთავარი",
   "Biodiversity CHM": "ბიომრავალფეროვნება CHM",
+  "Biosafety Clearing-House Search": "ბიოუსაფრთხოების გამწმენდი სახლის ძებნა",
   "National Reports": "ეროვნული მოხსენებები",
   "View all National Reports": "იხილეთ ყველა ეროვნული ანგარიში",
   "section1": "ნაწილი I ინფორმაცია ეროვნულ დონეზე მიზნების მიზნების შესახებ",
@@ -228,7 +249,10 @@
   "Updated Date": "განახლების თარიღი",
   "Download": "ჩამოტვირთვა",
   "Latest News and Updates": "უახლესი ამბები და განახლებები",
+  "Latest Announcements, News and Updates": "უახლესი განცხადებები, ახალი ამბები და განახ",
+  "Latest Records": "უახლესი ჩანაწერ",
   "View more news and updates": "იხილეთ მეტი სიახლეები და განახლებები",
+  "from the Biosafety Clearing-House": "ბიოუსაფრთხოების გაწმენდის სახლიდან",
   "implementation": "განხორციელება",
   "Browse TSC Opportunities": "დაათვალიერეთ TSC შესაძლებლობები",
   "Browse TSC Assistance and Providers": "დაათვალიერეთ TSC დახმარება და პროვაიდერები",
@@ -268,9 +292,18 @@
   "Revisions": "რევიზიები",
   "Clone": "კლონი",
   "Translate": "თარგმნეთ",
+  "Translation": "თარგმანი",
+  "No translation available": "თარგმანი არ არის შესაძლებელი",
+  "Auto Translate": "ავტომატური თარგ",
   "BBI Contacts": "BBI კონტაქტები",
   "Bioland 1": "ბიოლენდი 1",
-  "Write a public comment ...": "დაწერეთ საჯარო კომენტარი...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "დაწერეთ საჯარო კომენტარი..."
+      }
+    }
+  },
   "Login or sign up": "შესვლა ან დარეგისტრაცია",
   "Post": "პოსტი",
   "Login": "Შესვლა",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "გადაუმუშავებელი სუბიექტი",
   "Failed to POST comment": "კომენტარის განთავსება ვერ შეძლ",
   "all": "ყველა",
-  "for an account in order to comment or interact.": "ანგარიშისთვის კომენტარის ან ურთიერთქმედების მიზნით.",
+  "for an account in order to comment or interact": {
+    "": "ანგარიშისთვის კომენტარის ან ურთიერთქმედების მიზნით."
+  },
   "Sign Up": "დარეგისტრირება",
   "CBD-type": "კონვენცია ბიოლოგიური მრავალფეროვნ",
   "CPB-FP1-type": "კარტაგენას ოქმი ბიოუსაფრთხოების შესახებ",
@@ -888,6 +923,7 @@
   "Progress": "პროგრესი",
   "Created": "შექმნილია",
   "Unassigned": "დაუნიშნული",
+  "No description available": "აღწერა არ არსებობს",
   "Work Overview": "სამუშაოს მიმოხილ",
   "Bug": "შეცდომა",
   "Task": "ამოცანა",
@@ -906,7 +942,13 @@
   "Low": "დაბალი",
   "Lowest": "ყველაზე დაბალი",
   "Selected For Development": "შერჩეულია განვითარებისთვის",
-  "View More ...": "იხილეთ მეტი...",
+  "View More ": {
+    "": {
+      "": {
+        "": "იხილეთ მეტი..."
+      }
+    }
+  },
   "bioland-context-description": "ეს ქუქი-ფაილები ინახავს ბიოლენდის ინსტრუმენტის კონტექსტს. ერთი კოდის ინსტანცია ემსახურება ბევრ ვებსაიტს. კონტექსტი ხელს უწყობს სხვადასხვა ვებსაიტების განსხვავებას. შემდგომი ქუქიები თქვენი სესიის შესანარჩუნებლად შესვლისას. დაბოლოს თარგმნა და პორტის ზომის ნახვა სერვერზე ინსტრუმენტის დასახმარებლად. ეს ქუქიები აუცილებელია ვებსაიტის ფუნქციონირებისთვის.",
   "bioland-context-cookies": "ბიოლენდის კონტექსტური ქუქიები",
   "cookie-control-description": "ჩვენ ვიყენებთ ჩვენს საკუთარ ქუქიებს და მესამე მხარის ქუქი-ფაილებს, რათა სწორად ვაჩვენოთ ეს ვებსაიტი და უკეთ გავიგოთ, თუ როგორ გამოიყენება ეს ვებსაიტი, ჩვენს მიერ შემოთავაზებული სერვის ქუქიების გამოყენების ნებართვების შესახებ გადაწყვეტილება ნებისმიერ დროს შეიძლება შეიცვალოს ქუქიების ღილაკის გამოყენებით, რომელიც გამოჩნდება ამ ბანერზე შერჩევის გაკეთების შემდეგ",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "თანაარსებობა",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "ინტელექტუალური საკუთრების",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "სოციალური და/ან ეკონომი",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "სავაჭრო წესი და სტანდარტ"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "სავაჭრო წესი და სტანდარტ",
+  "Competent National Authority": "კომპეტენტური ეროვნული ორგანო",
+  "Contact": "კონტაქტი",
+  "Biosafety Virtual Library Resources": "ბიოუსაფრთხოების ვირტუალური ბიბლი",
+  "BCH News": "BCH სიახლეები",
+  "National Focal Point": "ეროვნული ფოკუსი",
+  "Risk Assessment generated by an independent or non-regulatory process": "დამოუკიდებელი ან არარეგულირებელი პროცესის შედეგად წარმოქმნილი",
+  "Genetic element": "გენეტური ელემენტი",
+  "Organism": "ორგანიზმი",
+  "Living Modified Organism": "ცოცხალი შეცვლილი ორგან",
+  "Biosafety Organization": "ბიოუსაფრთხოების ორგანიზაცია",
+  "Laboratory for detection and identification of LMOs": "LMO-ების გამოვლენისა და იდენტიფიკაციის ლაბორატორ",
+  "What's New": "რა არის ახალი"
 }

@@ -7,6 +7,23 @@
   "Meetings": "Reuniones",
   "Announcement": "Anuncio",
   "Announcements": "Anuncios",
+  "announcement": "Anuncio",
+  "meeting or event": "Reunión o evento",
+  "learning resource": "Recurso de aprendizaje",
+  "article": "Artículo",
+  "basic page": "Página básica",
+  "government ministry or institute": "Ministerio o Instituto de Gobierno",
+  "protected area": "Área protegida",
+  "biodiversity data": "Datos de biodiversidad",
+  "related website": "Sitio web relacionado",
+  "other resource": "Otro recurso",
+  "image or video": "Imagen o vídeo",
+  "faq": "PREGUNTAS MÁS FRECUENTES",
+  "national information": "Información nacional",
+  "status of lmo": "Estado de la LMO",
+  "field trial": "Prueba de campo",
+  "national mainstreaming strategy": "Estrategia nacional de integración",
+  "capacity building": "Creación de capacidades",
   "Basic Page": "Página básica",
   "Basic Pages": "Páginas básicas",
   "Capacity-Building": "Creación de capacidad",
@@ -280,7 +297,13 @@
   "Auto Translate": "Traducción automática",
   "BBI Contacts": "Contactos de BBI",
   "Bioland 1": "Biolandia 1",
-  "Write a public comment ...": "Escribe un comentario público...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Escribe un comentario público..."
+      }
+    }
+  },
   "Login or sign up": "Inicia sesión o regístrate",
   "Post": "Publicar",
   "Login": "Acceso",
@@ -292,7 +315,9 @@
   "Unprocessable Entity": "Entidad no procesable",
   "Failed to POST comment": "No se pudo PUBLICAR el comentario",
   "all": "todo",
-  "for an account in order to comment or interact.": "para una cuenta con el fin de comentar o interactuar.",
+  "for an account in order to comment or interact": {
+    "": "para una cuenta con el fin de comentar o interactuar."
+  },
   "Sign Up": "Inscríbase",
   "CBD-type": "Convenio sobre la Diversidad Biológica",
   "CPB-FP1-type": "Protocolo de Cartagena sobre Seguridad de la Biotecnología",
@@ -917,7 +942,13 @@
   "Low": "Bajo",
   "Lowest": "El más bajo",
   "Selected For Development": "Seleccionado para el desarrollo",
-  "View More ...": "Ver más...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Ver más..."
+      }
+    }
+  },
   "bioland-context-description": "Estas cookies almacenan el contexto de la herramienta Bioland. Una instancia de código se dirige a muchos sitios web. El contexto ayuda a diferenciar entre los diferentes sitios web. Además, una cookie para mantener la sesión cuando inicie sesión. Por último, traduzca y visualice el tamaño del puerto para ayudar a la herramienta en el servidor. Estas cookies son necesarias para el funcionamiento del sitio web.",
   "bioland-context-cookies": "Cookies contextuales de Bioland",
   "cookie-control-description": "Utilizamos cookies propias y de terceros para poder mostrar este sitio web correctamente y comprender mejor cómo se utiliza este sitio web, con el fin de mejorar los servicios que ofrecemos. La decisión sobre los permisos de uso de las cookies se puede cambiar en cualquier momento utilizando el botón de cookies que aparecerá después de realizar una selección en este banner.",

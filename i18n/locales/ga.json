@@ -7,10 +7,28 @@
   "Meetings": "Cruinnithe",
   "Announcement": "Fógra",
   "Announcements": "Fógraí",
+  "announcement": "Fógra",
+  "meeting or event": "Cruinniú nó Imeacht",
+  "learning resource": "Acmhainn Foghlama",
+  "article": "Airteagal",
+  "basic page": "Leathanach Bunúsach",
+  "government ministry or institute": "Aireacht nó Institiúid an Rialtais",
+  "protected area": "Limistéar faoi Chosaint",
+  "biodiversity data": "Sonraí Bithéagsúlachta",
+  "related website": "Láithreán Gréasáin Gaolmhar",
+  "other resource": "Acmhainn Eile",
+  "image or video": "Íomhá nó Físeán",
+  "faq": "COITIANTA",
+  "national information": "Faisnéis Náisiúnta",
+  "status of lmo": "Stádas LMO",
+  "field trial": "Triail Allamuigh",
+  "national mainstreaming strategy": "Straitéis Náisiúnta Príomhshruthú",
+  "capacity building": "Tógáil Cumas",
   "Basic Page": "Leathanach Bunúsach",
   "Basic Pages": "Leathanaigh Bunúsacha",
   "Capacity-Building": "Forbairt acmhainní",
   "Capacity-Buildings": "Foirgnimh Cumas",
+  "Capacity Development Initiative": "Tionscnamh Forbartha C",
   "Field Trial": "Triail Allamuigh",
   "Field Trials": "Trialacha Allamuigh",
   "National Information": "Faisnéis Náisiúnta",
@@ -66,8 +84,10 @@
   "content": "ábhar an láithreáin",
   "secretariate": "rúnaíocht",
   "notification": "Fógraí",
+  "Statement": "Ráiteas",
   "statement": "Ráitis",
   "meeting": "Cruinnithe",
+  "Press Release": "Preasráiteas",
   "pressRelease": "Preaseisiúintí",
   "focalPoint": "pointe fócasach",
   "resource": "Acmhainní Leabharlainne",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Bithéagsúlacht Bhithland",
   "Home": "Baile",
   "Biodiversity CHM": "Bithéagsúlacht CHM",
+  "Biosafety Clearing-House Search": "Cuardach Tí Glantacháin Bithshábháilteachta",
   "National Reports": "Tuarascálacha Náisiúnta",
   "View all National Reports": "Féach ar gach Tuarascáil Náisiúnta",
   "section1": "Alt I. Faisnéis faoi na spriocanna atá á shaothrú ar an leibhéal náisiúnta",
@@ -228,7 +249,10 @@
   "Updated Date": "Dáta Nuashonraithe",
   "Download": "Íosluchtaigh",
   "Latest News and Updates": "Nuacht is Déanaí agus Nuashonruithe",
+  "Latest Announcements, News and Updates": "Fógraí, Nuacht agus Nuashonruithe is Dé",
+  "Latest Records": "Taifid is déanaí",
   "View more news and updates": "Féach ar a thuilleadh nuachta agus nuashonruithe",
+  "from the Biosafety Clearing-House": "ón Teach Glantacháin Bithshábháilteachta",
   "implementation": "cur i bhfeidhm",
   "Browse TSC Opportunities": "Brabhsáil Deiseanna TSC",
   "Browse TSC Assistance and Providers": "Brabhsáil Cúnamh agus Soláthraithe TSC",
@@ -268,9 +292,18 @@
   "Revisions": "Athbhreithnithe",
   "Clone": "Clón",
   "Translate": "Aistrigh",
+  "Translation": "Aistriúchán",
+  "No translation available": "Níl aon aistriúchán ar fáil",
+  "Auto Translate": "Auto Translate",
   "BBI Contacts": "Teagmhálacha BBI",
   "Bioland 1": "Bithfholand 1",
-  "Write a public comment ...": "Scríobh trácht poiblí...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Scríobh trácht poiblí..."
+      }
+    }
+  },
   "Login or sign up": "Logáil isteach nó cláraigh",
   "Post": "Post",
   "Login": "Logáil isteach",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Aonán Neamh-phróiseáilte",
   "Failed to POST comment": "Theip ar thrácht a phostáil",
   "all": "go léir",
-  "for an account in order to comment or interact.": "le haghaidh cuntas d'fhonn trácht a dhéanamh nó idirghníomhú.",
+  "for an account in order to comment or interact": {
+    "": "le haghaidh cuntas d'fhonn trácht a dhéanamh nó idirghníomhú."
+  },
   "Sign Up": "Cláraigh",
   "CBD-type": "Coinbhinsiún maidir le héagsúlacht",
   "CPB-FP1-type": "Prótacal Cartagena maidir le Bithshábháilteacht",
@@ -888,6 +923,7 @@
   "Progress": "Dul chun cinn",
   "Created": "Cruthaithe",
   "Unassigned": "Neamhshannaithe",
+  "No description available": "Níl aon tuairisc ar fáil",
   "Work Overview": "Forbhreathnú Obair",
   "Bug": "Bug",
   "Task": "Tasc",
@@ -906,7 +942,13 @@
   "Low": "Íseal",
   "Lowest": "Is ísle",
   "Selected For Development": "Roghnaithe le haghaidh Forbartha",
-  "View More ...": "Féach Tuilleadh...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Féach Tuilleadh..."
+      }
+    }
+  },
   "bioland-context-description": "Stórálann na fianáin seo an comhthéacs don uirlis Bioland. Freastalaíonn sampla cód amháin ar go leor suíomhanna Gréasáin. Cuidíonn an comhthéacs idirdhealú idir na suíomhanna Gréasáin éagsúla Tuilleadh fianáin maidir le nuair a logálann tú isteach chun do sheisiún a choinneáil. Ar deireadh aistriú agus féach ar mhéid an chalafoirt chun cabhrú leis an uirlis ar an bhfreastala Tá na fianáin seo riachtanach le haghaidh feidhmiúlacht an láithreáin ghréasáin.",
   "bioland-context-cookies": "Fianáin Comhthéacs Bioland",
   "cookie-control-description": "Úsáidimid ár bhfianáin féin agus fianáin tríú páirtí ionas gur féidir linn an láithreán gréasáin seo a thaispeáint i gceart agus tuiscint níos fearr a fháil ar an gcaoi a n-úsáidtear an láithreán gréasáin seo, d'fhonn na Is féidir cinneadh maidir le ceadanna úsáide fianán a athrú am ar bith ag baint úsáide as an gcnaipe fianán a bheidh le feiceáil tar éis rogha a dhéanamh ar an meirge seo.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Cónaitheas",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "cearta maoine intleachtúla",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Measúnuithe sóisialta agus/nó",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Rialacha agus caighdeáin trádála"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Rialacha agus caighdeáin trádála",
+  "Competent National Authority": "Údarás Náisiúnta Inniúil",
+  "Contact": "Déan teagmháil",
+  "Biosafety Virtual Library Resources": "Acmhainní Leabharlainne Fíorúil Bithsh",
+  "BCH News": "Nuacht BCH",
+  "National Focal Point": "Pointe Fócasach Náisiúnta",
+  "Risk Assessment generated by an independent or non-regulatory process": "Measúnú Riosca a ghintear trí phróiseas neamhspleách nó neamh",
+  "Genetic element": "Gné Géiniteach",
+  "Organism": "Orgánach",
+  "Living Modified Organism": "Orgánach Modhnaithe Beo",
+  "Biosafety Organization": "Eagraíocht Bithshábháilteachta",
+  "Laboratory for detection and identification of LMOs": "Saotharlann chun LMOanna a bhrath agus a aithint",
+  "What's New": "Cad atá Nua"
 }

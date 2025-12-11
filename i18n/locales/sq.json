@@ -7,10 +7,28 @@
   "Meetings": "Takimet",
   "Announcement": "Njoftim",
   "Announcements": "Njoftime",
+  "announcement": "Njoftim",
+  "meeting or event": "Takim ose ngjarje",
+  "learning resource": "Burimi mësimor",
+  "article": "artikull",
+  "basic page": "Faqja bazë",
+  "government ministry or institute": "Ministria ose Instituti i Qeverisë",
+  "protected area": "Zonë e Mbrojtur",
+  "biodiversity data": "Të dhënat e biodiversitetit",
+  "related website": "Uebfaqe e ngjashme",
+  "other resource": "Burime të tjera",
+  "image or video": "Imazhi ose Video",
+  "faq": "FAQ",
+  "national information": "Informacion Kombëtar",
+  "status of lmo": "Statusi i LMO",
+  "field trial": "Prova në terren",
+  "national mainstreaming strategy": "Strategjia Kombëtare e Integrimit",
+  "capacity building": "Ndërtimi i kapaciteteve",
   "Basic Page": "Faqja bazë",
   "Basic Pages": "Faqet bazë",
   "Capacity-Building": "Ndërtim kapaciteti",
   "Capacity-Buildings": "Ndërtesa e kapaciteteve",
+  "Capacity Development Initiative": "Iniciativa për zhvillimin e kapaciteteve",
   "Field Trial": "Prova në terren",
   "Field Trials": "Provat në terren",
   "National Information": "Informacion Kombëtar",
@@ -66,8 +84,10 @@
   "content": "përmbajtja e faqes",
   "secretariate": "sekretariati",
   "notification": "Njoftimet",
+  "Statement": "Deklaratë",
   "statement": "Deklaratat",
   "meeting": "Takimet",
+  "Press Release": "Njoftim për shtyp",
   "pressRelease": "Njoftime për shtyp",
   "focalPoint": "pikë qendrore",
   "resource": "Burimet e bibliotekës virtuale",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Biodiversiteti Bioland",
   "Home": "Shtëpi",
   "Biodiversity CHM": "Biodiversiteti CHM",
+  "Biosafety Clearing-House Search": "Kërkimi i Shtëpisë së Pastrimit të Biosigurisë",
   "National Reports": "Raportet Kombëtare",
   "View all National Reports": "Shikoni të gjitha Raportet Kombëtare",
   "section1": "Seksioni I. Informacion mbi objektivat që ndiqen në nivel kombëtar",
@@ -228,7 +249,10 @@
   "Updated Date": "Data e përditësimit",
   "Download": "Shkarkoni",
   "Latest News and Updates": "Lajmet dhe përditësimet më të fundit",
+  "Latest Announcements, News and Updates": "Njoftimet e fundit, lajmet dhe përditësimet",
+  "Latest Records": "Rekordet më të fundit",
   "View more news and updates": "Shikoni më shumë lajme dhe përditësime",
+  "from the Biosafety Clearing-House": "nga Shtëpia e Pastrimit të Biosigurisë",
   "implementation": "zbatimi",
   "Browse TSC Opportunities": "Shfletoni mundësitë e TSC",
   "Browse TSC Assistance and Providers": "Shfletoni Ndihmën dhe Ofruesit e TSC",
@@ -268,9 +292,18 @@
   "Revisions": "Rishikimet",
   "Clone": "Klonimi",
   "Translate": "Përkthejeni",
+  "Translation": "Përkthim",
+  "No translation available": "Nuk ka përkthim",
+  "Auto Translate": "Përkthejeni automatikisht",
   "BBI Contacts": "BBI Kontaktet",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Shkruani një koment publik...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Shkruani një koment publik..."
+      }
+    }
+  },
   "Login or sign up": "Identifikohu ose regjistrohu",
   "Post": "Postimi",
   "Login": "Identifikohu",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Entitet e papërpunueshme",
   "Failed to POST comment": "Dështoi për të postuar komentin",
   "all": "të gjithë",
-  "for an account in order to comment or interact.": "për një llogari për të komentuar ose ndërvepruar.",
+  "for an account in order to comment or interact": {
+    "": "për një llogari për të komentuar ose ndërvepruar."
+  },
   "Sign Up": "Regjistrohu",
   "CBD-type": "Konventa për Diversiteti Biologjik",
   "CPB-FP1-type": "Protokolli i Kartagenës për Biosigurinë",
@@ -888,6 +923,7 @@
   "Progress": "Progresi",
   "Created": "Krijuar",
   "Unassigned": "I papërcaktuar",
+  "No description available": "Nuk ka përshkrim në dispozicion",
   "Work Overview": "Përmbledhje e punës",
   "Bug": "Bug",
   "Task": "Detyra",
@@ -906,7 +942,13 @@
   "Low": "I ulët",
   "Lowest": "Më i ulët",
   "Selected For Development": "Zgjedhur për zhvillim",
-  "View More ...": "Shiko më shumë...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Shiko më shumë..."
+      }
+    }
+  },
   "bioland-context-description": "Këto cookies ruajnë kontekstin e mjetit Bioland. Një instancë kodi shërben për shumë faqe në internet. Konteksti ndihmon për të dalluar midis faqeve të ndryshme të internetit. Më tej një cookie për kur identifikoheni për të mbajtur seancën tuaj. Së fundi përkthimi dhe shikoni madhësinë e portit për të ndihmuar mjetin në server. Këto cookies janë të nevojshme për funksionalitetin e faqes së internetit.",
   "bioland-context-cookies": "Cookies e kontekstit të Bioland",
   "cookie-control-description": "Ne përdorim cookies tona dhe cookies të palëve të treta në mënyrë që të mund ta shfaqim këtë faqe në internet në mënyrë korrekte dhe të kuptojmë më mirë se si përdoret kjo faqe interneti, me qëllim përmirësimin e shërbimeve që ofrojmë. Një vendim për lejet e përdorimit të cookies mund të ndryshohet në çdo kohë duke përdorur butonin cookie që do të shfaqet pasi të jetë bërë një përzgjedhje në këtë banderol.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Bashkëjetesa",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Të drejtat e pronësisë intelektuale",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Vlerësimet sociale dhe/ose ekonomike",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Rregullat dhe standardet e tregtisë"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Rregullat dhe standardet e tregtisë",
+  "Competent National Authority": "Autoriteti Kombëtar Kompetent",
+  "Contact": "Kontakti",
+  "Biosafety Virtual Library Resources": "Burimet e Bibliotekës Virtuale të Biosigurisë",
+  "BCH News": "Lajmet e BCH",
+  "National Focal Point": "Pika qendrore kombëtare",
+  "Risk Assessment generated by an independent or non-regulatory process": "Vlerësimi i rrezikut i gjeneruar nga një proces i pavarur ose jo rregullator",
+  "Genetic element": "Element gjenetik",
+  "Organism": "Organizmi",
+  "Living Modified Organism": "Organizmi i modifikuar i gjallë",
+  "Biosafety Organization": "Organizata e Biosigurisë",
+  "Laboratory for detection and identification of LMOs": "Laboratori për zbulimin dhe identifikimin e LMO-ve",
+  "What's New": "Çfarë është e re"
 }

@@ -7,10 +7,28 @@
   "Meetings": "Reyinyon",
   "Announcement": "Anons",
   "Announcements": "Anons",
+  "announcement": "Anons",
+  "meeting or event": "Reyinyon oswa Evènman",
+  "learning resource": "Resous Aprantisaj",
+  "article": "Atik",
+  "basic page": "Paj debaz",
+  "government ministry or institute": "Ministè oswa Enstiti Gouvènman an",
+  "protected area": "Zòn Pwoteje",
+  "biodiversity data": "Done divèsite biyolojik",
+  "related website": "Sit wèb ki gen rapò",
+  "other resource": "Lòt resous",
+  "image or video": "Imaj oswa Videyo",
+  "faq": "FAQ",
+  "national information": "Enfòmasyon Nasyonal",
+  "status of lmo": "Estati LMO",
+  "field trial": "Jijman jaden",
+  "national mainstreaming strategy": "Estrateji Nasyonal Mainstream",
+  "capacity building": "Konstriksyon kapasite",
   "Basic Page": "Paj debaz",
   "Basic Pages": "Paj debaz yo",
   "Capacity-Building": "Kapasite-Building",
   "Capacity-Buildings": "Kapasite bilding",
+  "Capacity Development Initiative": "Inisyativ Devlopman Kapasite",
   "Field Trial": "Jijman jaden",
   "Field Trials": "Essè jaden",
   "National Information": "Enfòmasyon Nasyonal",
@@ -66,8 +84,10 @@
   "content": "kontni sit",
   "secretariate": "Sekretarya",
   "notification": "Notifikasyon",
+  "Statement": "Deklarasyon",
   "statement": "Deklarasyon",
   "meeting": "Reyinyon",
+  "Press Release": "Release pou laprès",
   "pressRelease": "Press Releases",
   "focalPoint": "pwen fokal",
   "resource": "Resous bibliyotèk vityèl",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Bioland Biodiversity",
   "Home": "Lakay",
   "Biodiversity CHM": "Biodivèsite CHM",
+  "Biosafety Clearing-House Search": "Biossekirite kliring-House Search",
   "National Reports": "Rapò Nasyonal",
   "View all National Reports": "Gade tout Rapò Nasyonal yo",
   "section1": "Seksyon I. Enfòmasyon sou objektif yo ke yo te kouri dèyè nan nivo nasyonal la",
@@ -228,7 +249,10 @@
   "Updated Date": "Mizajou Dat",
   "Download": "Telechaje",
   "Latest News and Updates": "Dènye Nouvèl ak Mizajou",
+  "Latest Announcements, News and Updates": "Dènye anons, nouvèl ak dènye nouvèl",
+  "Latest Records": "Dènye Dosye",
   "View more news and updates": "Gade plis nouvèl ak mizajou",
+  "from the Biosafety Clearing-House": "soti nan Biosafety Clearing-House",
   "implementation": "aplikasyon",
   "Browse TSC Opportunities": "Browse TSC Opportunities",
   "Browse TSC Assistance and Providers": "Browse TSC Asistans ak Founisè yo",
@@ -268,9 +292,18 @@
   "Revisions": "Revizyon",
   "Clone": "Klonaj",
   "Translate": "Tradui",
+  "Translation": "tradiksyon",
+  "No translation available": "Pa gen tradiksyon ki disponib",
+  "Auto Translate": "Translate Auto",
   "BBI Contacts": "BBI Kontak",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Ekri yon kòmantè piblik...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Ekri yon kòmantè piblik..."
+      }
+    }
+  },
   "Login or sign up": "Login oswa enskri",
   "Post": "Post",
   "Login": "Ouvri sesyon an",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Entite unprocessable",
   "Failed to POST comment": "Echwe nan POST kòmantè",
   "all": "tout",
-  "for an account in order to comment or interact.": "pou yon kont yo nan lòd fè kòmantè oswa kominike.",
+  "for an account in order to comment or interact": {
+    "": "pou yon kont yo nan lòd fè kòmantè oswa kominike."
+  },
   "Sign Up": "Enskripsyon",
   "CBD-type": "Konvansyon sou divèsite byolojik",
   "CPB-FP1-type": "Cartagena Pwotokòl sou biosekirite",
@@ -888,6 +923,7 @@
   "Progress": "Pwogrè",
   "Created": "Kreye",
   "Unassigned": "Pa asiyen",
+  "No description available": "Pa gen deskripsyon ki disponib",
   "Work Overview": "Apèsi sou travay",
   "Bug": "Pinèz",
   "Task": "Travay",
@@ -906,7 +942,13 @@
   "Low": "Low",
   "Lowest": "Pi ba",
   "Selected For Development": "Chwazi Pou Devlopman",
-  "View More ...": "Gade Plis...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Gade Plis..."
+      }
+    }
+  },
   "bioland-context-description": "Bonbon sa yo sere kontèks la pou zouti a Bioland. Yon sèl egzanp kòd founi anpil sit entènèt. Kontèks la ede yo diferansye ant sit entènèt yo diferan. Pli lwen yon bonbon pou lè ou login pou kenbe sesyon ou. Anfen tradiksyon ak wè gwosè pò pou ede zouti a sou sèvè a. Bonbon sa yo nesesè pou fonctionnalités nan sit entènèt la.",
   "bioland-context-cookies": "Bonbon Kontèks Bioland",
   "cookie-control-description": "Nou itilize bonbon pwòp nou yo ak bonbon twazyèm-pati pou ke nou ka montre sit entènèt sa a kòrèkteman ak pi byen konprann ki jan sit entènèt sa a yo itilize, ak yon View nan amelyore sèvis yo nou ofri. Yon desizyon sou otorizasyon l 'bonbon ka chanje nenpòt lè lè l sèvi avèk bouton bonbon an ki pral parèt apre yon seleksyon te fèt sou banyè sa a.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Konsistans",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "dwa pwopriyete entelektyèl",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Evalyasyon sosyal ak/oswa ekonomik",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Règleman komès ak estanda"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Règleman komès ak estanda",
+  "Competent National Authority": "Konpetan Otorite Nasyonal",
+  "Contact": "Kontakte",
+  "Biosafety Virtual Library Resources": "Biyosekirite Resous Bibliyotèk Virtual",
+  "BCH News": "BCH Nouvèl",
+  "National Focal Point": "Pwen fokal nasyonal",
+  "Risk Assessment generated by an independent or non-regulatory process": "Evalyasyon risk ki te pwodwi pa yon pwosesis endepandan oswa ki pa regilasyon",
+  "Genetic element": "Eleman jenetik",
+  "Organism": "Òganis",
+  "Living Modified Organism": "Viv òganis modifye",
+  "Biosafety Organization": "Òganizasyon Biosekirite",
+  "Laboratory for detection and identification of LMOs": "Laboratwa pou deteksyon ak idantifikasyon LMO",
+  "What's New": "Ki sa ki nan nouvo"
 }

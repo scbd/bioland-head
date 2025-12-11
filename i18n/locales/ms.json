@@ -7,10 +7,28 @@
   "Meetings": "Perjumpaan",
   "Announcement": "Pengumuman",
   "Announcements": "Pengumuman",
+  "announcement": "Pengumuman",
+  "meeting or event": "Mesyuarat atau Acara",
+  "learning resource": "Sumber Pembelajaran",
+  "article": "Artikel",
+  "basic page": "Halaman Asas",
+  "government ministry or institute": "Kementerian atau Institut Kerajaan",
+  "protected area": "Kawasan Terlindung",
+  "biodiversity data": "Data Biodiversiti",
+  "related website": "Laman Web Berkaitan",
+  "other resource": "Sumber Lain",
+  "image or video": "Imej atau Video",
+  "faq": "FAQ",
+  "national information": "Maklumat Negara",
+  "status of lmo": "Status LMO",
+  "field trial": "Percubaan Lapangan",
+  "national mainstreaming strategy": "Strategi Penampilan Utama Negara",
+  "capacity building": "Pembinaan Kapasiti",
   "Basic Page": "Halaman Asas",
   "Basic Pages": "Halaman Asas",
   "Capacity-Building": "Kapasiti bangunan",
   "Capacity-Buildings": "Kapasiti Bangunan",
+  "Capacity Development Initiative": "Inisiatif Pembangunan Kapasiti",
   "Field Trial": "Percubaan Lapangan",
   "Field Trials": "Percubaan Lapangan",
   "National Information": "Maklumat Negara",
@@ -66,8 +84,10 @@
   "content": "kandungan laman web",
   "secretariate": "urusetia",
   "notification": "Pemberitahuan",
+  "Statement": "Pernyataan",
   "statement": "Pernyataan",
   "meeting": "Perjumpaan",
+  "Press Release": "Siaran Akhbar",
   "pressRelease": "Siaran Akhbar",
   "focalPoint": "titik fokus",
   "resource": "Sumber Perpustakaan Maya",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Biodiversiti Bioland",
   "Home": "Rumah",
   "Biodiversity CHM": "Biodiversiti CHM",
+  "Biosafety Clearing-House Search": "Carian Rumah Pembersihan Biokeselamatan",
   "National Reports": "Laporan Kebangsaan",
   "View all National Reports": "Lihat semua Laporan Negara",
   "section1": "Bahagian I. Maklumat mengenai sasaran yang sedang dicapai di peringkat kebangsaan",
@@ -228,7 +249,10 @@
   "Updated Date": "Tarikh Kemas Kini",
   "Download": "Muat turun",
   "Latest News and Updates": "Berita dan Kemas Kini Terkini",
+  "Latest Announcements, News and Updates": "Pengumuman, Berita dan Kemas Kini Terkini",
+  "Latest Records": "Rekod Terkini",
   "View more news and updates": "Lihat lebih banyak berita dan kemas kini",
+  "from the Biosafety Clearing-House": "dari Rumah Pembersihan Biokeselamatan",
   "implementation": "pelaksanaan",
   "Browse TSC Opportunities": "Semak imbas Peluang TSC",
   "Browse TSC Assistance and Providers": "Semak imbas Bantuan dan Pembekal TSC",
@@ -268,9 +292,18 @@
   "Revisions": "Semakan",
   "Clone": "Klon",
   "Translate": "Terjemah",
+  "Translation": "Terjemahan",
+  "No translation available": "Tiada terjemahan tersedia",
+  "Auto Translate": "Terjemah automatik",
   "BBI Contacts": "BBI Kenalan",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Tulis komen awam...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Tulis komen awam..."
+      }
+    }
+  },
   "Login or sign up": "Log masuk atau daftar",
   "Post": "Pos",
   "Login": "Log masuk",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Entiti Tidak Boleh Diproses",
   "Failed to POST comment": "Gagal untuk menghantar komen",
   "all": "seluruh",
-  "for an account in order to comment or interact.": "untuk akaun untuk memberi komen atau berinteraksi.",
+  "for an account in order to comment or interact": {
+    "": "untuk akaun untuk memberi komen atau berinteraksi."
+  },
   "Sign Up": "Daftar",
   "CBD-type": "Konvensyen Kepelbagaian Biologi",
   "CPB-FP1-type": "Protokol Cartagena mengenai Biokeselamatan",
@@ -888,6 +923,7 @@
   "Progress": "Kemajuan",
   "Created": "Dicipta",
   "Unassigned": "Tidak ditugaskan",
+  "No description available": "Tiada keterangan tersedia",
   "Work Overview": "Gambaran Keseluruhan Kerja",
   "Bug": "Bug",
   "Task": "Tugas",
@@ -906,7 +942,13 @@
   "Low": "Rendah",
   "Lowest": "terendah",
   "Selected For Development": "Dipilih Untuk Pembangunan",
-  "View More ...": "Lihat Lagi...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Lihat Lagi..."
+      }
+    }
+  },
   "bioland-context-description": "Kuki ini menyimpan konteks untuk alat Bioland. Satu contoh kod memenuhi banyak laman web. Konteks membantu membezakan antara laman web yang berbeza. Selanjutnya kuki untuk apabila anda log masuk untuk mengekalkan sesi anda. Terjemahan terakhir dan lihat saiz port untuk membantu alat pada pelayan. Kuki ini diperlukan untuk fungsi laman web.",
   "bioland-context-cookies": "Kuki Konteks Bioland",
   "cookie-control-description": "Kami menggunakan kuki kami sendiri dan kuki pihak ketiga supaya kami dapat memaparkan laman web ini dengan betul dan lebih memahami bagaimana laman web ini digunakan, dengan tujuan untuk meningkatkan perkhidmatan yang kami tawarkan. Keputusan mengenai keizinan penggunaan kuki boleh diubah bila-bila masa menggunakan butang kuki yang akan muncul selepas pemilihan dibuat pada sepanduk ini.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Bersama-sama",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Hak harta intelek",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Penilaian sosial dan/atau ekonomi",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Peraturan dan piawaian perdagangan"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Peraturan dan piawaian perdagangan",
+  "Competent National Authority": "Pihak Berkuasa Nasional yang kompeten",
+  "Contact": "Hubungi",
+  "Biosafety Virtual Library Resources": "Sumber Perpustakaan Maya Biokeselamatan",
+  "BCH News": "Berita BCH",
+  "National Focal Point": "Pusat Fokus Negara",
+  "Risk Assessment generated by an independent or non-regulatory process": "Penilaian Risiko yang dihasilkan oleh proses bebas atau bukan pengawalseliaan",
+  "Genetic element": "Unsur genetik",
+  "Organism": "Organisma",
+  "Living Modified Organism": "Organisme Diubahsuai Hidup",
+  "Biosafety Organization": "Organisasi Biokeselamatan",
+  "Laboratory for detection and identification of LMOs": "Makmal untuk pengesanan dan pengenalpastian LMO",
+  "What's New": "Apa yang Baru"
 }

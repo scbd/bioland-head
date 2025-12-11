@@ -7,10 +7,28 @@
   "Meetings": "సమావేశాలు",
   "Announcement": "ప్రకటన",
   "Announcements": "ప్రకటనలు",
+  "announcement": "ప్రకటన",
+  "meeting or event": "సమావేశం లేదా ఈవెంట్",
+  "learning resource": "అభ్యాస వనరు",
+  "article": "వ్యాసం",
+  "basic page": "ప్రాథమిక పేజీ",
+  "government ministry or institute": "ప్రభుత్వ మంత్రిత్వ శాఖ లేదా సంస్థ",
+  "protected area": "రక్షిత ప్రాంతం",
+  "biodiversity data": "జీవవైవిధ్య డేటా",
+  "related website": "సంబంధిత వెబ్‌సైట్",
+  "other resource": "ఇతర వనరులు",
+  "image or video": "చిత్రం లేదా వీడియో",
+  "faq": "ఎఫ్ ఎ క్యూ",
+  "national information": "జాతీయ సమాచారం",
+  "status of lmo": "LMO యొక్క స్థితి",
+  "field trial": "ఫీల్డ్ ట్రయల్",
+  "national mainstreaming strategy": "నేషనల్ మెయిన్ స్ట్రీమింగ్ స్ట్రాటజీ",
+  "capacity building": "కెపాసిటీ బిల్డింగ్",
   "Basic Page": "ప్రాథమిక పేజీ",
   "Basic Pages": "ప్రాథమిక పేజీలు",
   "Capacity-Building": "కెపాసిటీ-బిల్డింగ్",
   "Capacity-Buildings": "సామర్థ్యం-భవనాలు",
+  "Capacity Development Initiative": "సామర్థ్య అభివృద్ధి ఇనిషియేటివ్",
   "Field Trial": "ఫీల్డ్ ట్రయల్",
   "Field Trials": "ఫీల్డ్ ట్రయల్స్",
   "National Information": "జాతీయ సమాచారం",
@@ -66,8 +84,10 @@
   "content": "సైట్ కంటెంట్",
   "secretariate": "సచివాలయం",
   "notification": "నోటిఫికేషన్",
+  "Statement": "స్టేట్మెంట్",
   "statement": "ప్రకటనలు",
   "meeting": "సమావేశాలు",
+  "Press Release": "పత్రికా ప్రకటన",
   "pressRelease": "పత్రికా ప్రకటనలు",
   "focalPoint": "కేంద్ర బిందువు",
   "resource": "వర్చువల్ లైబ్రరీ వనరులు",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "బయోల్యాండ్ జీవవైవిధ్యం",
   "Home": "హోమ్",
   "Biodiversity CHM": "జీవవైవిధ్యం CHM",
+  "Biosafety Clearing-House Search": "బయోసేఫ్టీ క్లియరింగ్-హౌస్ సెర్చ్",
   "National Reports": "జాతీయ నివేదికలు",
   "View all National Reports": "అన్ని జాతీయ నివేదికలను వీక్షించండి",
   "section1": "సెక్షన్ I జాతీయ స్థాయిలో అనుసరిస్తున్న లక్ష్యాలపై సమాచారం.",
@@ -228,7 +249,10 @@
   "Updated Date": "నవీకరించబడిన తేదీ",
   "Download": "డౌన్‌లోడ్ చేయండి",
   "Latest News and Updates": "తాజా వార్తలు మరియు నవీకరణలు",
+  "Latest Announcements, News and Updates": "తాజా ప్రకటనలు, వార్తలు మరియు నవీకరణలు",
+  "Latest Records": "తాజా రికార్డ్స్",
   "View more news and updates": "మరిన్ని వార్తలు మరియు నవీకరణలను వీక్షించండి",
+  "from the Biosafety Clearing-House": "బయోసేఫ్టీ క్లియరింగ్-హౌస్ నుండి",
   "implementation": "అమలు",
   "Browse TSC Opportunities": "TSC అవకాశాలను బ్రౌజ్ చేయండి",
   "Browse TSC Assistance and Providers": "TSC సహాయం మరియు ప్రొవైడర్లను బ్రౌజ్ చేయండి",
@@ -268,9 +292,18 @@
   "Revisions": "పునర్విమర్శలు",
   "Clone": "క్లోన్",
   "Translate": "అనువదించు",
+  "Translation": "అనువాదం",
+  "No translation available": "అనువాదం అందుబాటులో లేదు",
+  "Auto Translate": "ఆటో అనువదించండి",
   "BBI Contacts": "BBI కాంటాక్ట్స్",
   "Bioland 1": "బయోలాండ్ 1",
-  "Write a public comment ...": "బహిరంగ వ్యాఖ్య రాయండి...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "బహిరంగ వ్యాఖ్య రాయండి..."
+      }
+    }
+  },
   "Login or sign up": "లాగిన్ చేయండి లేదా సైన్ అప్ చేయండి",
   "Post": "పోస్ట్",
   "Login": "ప్రవేశించండి",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "ప్రాసెస్ చేయని ఎంటిటీ",
   "Failed to POST comment": "వ్యాఖ్యను పోస్ట్ చేయడంలో విఫలమైంది",
   "all": "అన్ని",
-  "for an account in order to comment or interact.": "వ్యాఖ్యానించడానికి లేదా పరస్పర చర్య చేయడానికి ఖాతా కోసం.",
+  "for an account in order to comment or interact": {
+    "": "వ్యాఖ్యానించడానికి లేదా పరస్పర చర్య చేయడానికి ఖాతా కోసం."
+  },
   "Sign Up": "సైన్ అప్ చేయండి",
   "CBD-type": "జీవ వైవిధ్యంపై కన్వెన్షన్",
   "CPB-FP1-type": "బయోసేఫ్టీపై కార్టజేనా ప్రోటోకాల్",
@@ -888,6 +923,7 @@
   "Progress": "పురోగతి",
   "Created": "సృష్టించబడింది",
   "Unassigned": "కేటాయించబడలేదు",
+  "No description available": "వివరణ అందుబాటులో లేదు",
   "Work Overview": "పని అవలోకనం",
   "Bug": "బగ్",
   "Task": "టాస్క్",
@@ -906,7 +942,13 @@
   "Low": "తక్కువ",
   "Lowest": "అత్యల్ప",
   "Selected For Development": "అభివృద్ధి కోసం ఎంపిక చేయబడింది",
-  "View More ...": "మరిన్ని వీక్షించండి...",
+  "View More ": {
+    "": {
+      "": {
+        "": "మరిన్ని వీక్షించండి..."
+      }
+    }
+  },
   "bioland-context-description": "ఈ కుకీలు బయోల్యాండ్ సాధనం కోసం సందర్భాన్ని నిల్వ చేస్తాయి. ఒక కోడ్ ఉదాహరణ అనేక వెబ్సైట్లకు అనుగుణంగా ఉంటుంది. సందర్భం వేర్వేరు వెబ్సైట్ల మధ్య తేడాను గుర్తించడానికి సహాయపడుతుంది. మీ సెషన్ను ఉంచడానికి మీరు లాగిన్ అయినప్పుడు కోసం ఇంకా ఒక కుకీలు. చివరగా అనువాదం మరియు సర్వర్లో సాధనాన్ని సహాయపడటానికి పోర్ట్ పరిమాణాన్ని వీక్షించండి. వెబ్సైట్ యొక్క కార్యాచరణకు ఈ కుకీలు అవసరం.",
   "bioland-context-cookies": "బయోల్యాండ్ కాంటెక్స్ట్ కుకీలు",
   "cookie-control-description": "మేము మా స్వంత కుకీలు మరియు మూడవ పార్టీ కుకీలను ఉపయోగిస్తాము, తద్వారా మేము ఈ వెబ్సైట్ను సరిగ్గా ప్రదర్శించగలము మరియు ఈ వెబ్సైట్ ఎలా ఉపయోగించబడుతుందో బాగా అర్థం చేసుకోవచ్చు, మేము అందించే సేవలను మెరుగుపరిచే దృష్టితో. ఈ బ్యానర్పై ఎంపిక చేసిన తర్వాత కనిపించే కుకీ బటన్ను ఉపయోగించి కుకీ వినియోగ అనుమతులపై నిర్ణయం ఎప్పుడైనా మార్చవచ్చు.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "సహజీవనం",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "మేధో సంపత్తి హక్కులు",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "సామాజిక మరియు/లేదా ఆర్థిక అంచనాలు",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "వాణిజ్య నియమాలు మరియు ప్రమాణాలు"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "వాణిజ్య నియమాలు మరియు ప్రమాణాలు",
+  "Competent National Authority": "సమర్థ జాతీయ అథారిటీ",
+  "Contact": "సంప్రదించండి",
+  "Biosafety Virtual Library Resources": "బయోసేఫ్టీ వర్చువల్ లైబ్రరీ వనరులు",
+  "BCH News": "BCH న్యూస్",
+  "National Focal Point": "నేషనల్ ఫోకల్ పాయింట్",
+  "Risk Assessment generated by an independent or non-regulatory process": "స్వతంత్ర లేదా నియంత్రణేతర ప్రక్రియ ద్వారా ఉత్పత్తి అయ్యే రిస్క్ అసెస్మెంట్",
+  "Genetic element": "జన్యు మూలకం",
+  "Organism": "జీవి",
+  "Living Modified Organism": "జీవన సవరించిన జీవి",
+  "Biosafety Organization": "బయోసేఫ్టీ ఆర్గనైజేషన్",
+  "Laboratory for detection and identification of LMOs": "LMO లను గుర్తించడం మరియు గుర్తించడం కోసం ప్రయోగశాల",
+  "What's New": "కొత్తది ఏమిటి"
 }

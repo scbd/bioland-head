@@ -7,10 +7,28 @@
   "Meetings": "Kokoukset",
   "Announcement": "Ilmoitus",
   "Announcements": "Ilmoitukset",
+  "announcement": "Ilmoitus",
+  "meeting or event": "Kokous tai tapahtuma",
+  "learning resource": "Oppimisresurssi",
+  "article": "Artikla",
+  "basic page": "Perussivu",
+  "government ministry or institute": "Hallituksen ministeriö tai instituutti",
+  "protected area": "Suojeltu alue",
+  "biodiversity data": "Biologisen monimuotoisuuden tiedot",
+  "related website": "Aiheeseen liittyvä verkkosivusto",
+  "other resource": "Muu resurssi",
+  "image or video": "Kuva tai video",
+  "faq": "FAQ",
+  "national information": "Kansalliset tiedot",
+  "status of lmo": "LMO: n tila",
+  "field trial": "Kenttäkokeilu",
+  "national mainstreaming strategy": "Kansallinen valtavirtaistamisstrategia",
+  "capacity building": "Valmiuksien kehittäminen",
   "Basic Page": "Perussivu",
   "Basic Pages": "Perussivut",
   "Capacity-Building": "Kapasiteetin kehittäminen",
   "Capacity-Buildings": "Kapasiteetin rakentaminen",
+  "Capacity Development Initiative": "Valmiuksien kehittämisaloite",
   "Field Trial": "Kenttäkokeilu",
   "Field Trials": "Kenttäkokeet",
   "National Information": "Kansalliset tiedot",
@@ -66,8 +84,10 @@
   "content": "sivuston sisältö",
   "secretariate": "kanslia",
   "notification": "Ilmoitukset",
+  "Statement": "Lausunto",
   "statement": "Lausunnot",
   "meeting": "Kokoukset",
+  "Press Release": "Lehdistötiedote",
   "pressRelease": "Lehdistötiedotteet",
   "focalPoint": "keskipiste",
   "resource": "Virtuaalikirjaston resurssit",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Bioland Biodiversity",
   "Home": "Koti",
   "Biodiversity CHM": "Biodiversiteetti CHM",
+  "Biosafety Clearing-House Search": "Bioturvallisuuden selvityskeskuksen haku",
   "National Reports": "Kansalliset raportit",
   "View all National Reports": "Katso kaikki kansalliset raportit",
   "section1": "I jakso Tietoa kansallisella tasolla tavoiteltavista tavoitteista",
@@ -228,7 +249,10 @@
   "Updated Date": "Päivitetty päivämäärä",
   "Download": "Lataa",
   "Latest News and Updates": "Uusimmat uutiset ja päivitykset",
+  "Latest Announcements, News and Updates": "Uusimmat ilmoitukset, uutiset ja päivitykset",
+  "Latest Records": "Uusimmat tietueet",
   "View more news and updates": "Katso lisää uutisia ja päivityksiä",
+  "from the Biosafety Clearing-House": "Biosafety Clearing-Housesta",
   "implementation": "täytäntöönpanoa",
   "Browse TSC Opportunities": "Selaa TSC:n mahdollisuuksia",
   "Browse TSC Assistance and Providers": "Selaa TSC-apua ja -palveluntarjoajia",
@@ -268,9 +292,18 @@
   "Revisions": "Tarkistukset",
   "Clone": "Klooni",
   "Translate": "Kääntää",
+  "Translation": "Käännös",
+  "No translation available": "Ei käännöstä saatavilla",
+  "Auto Translate": "Automaattinen käännös",
   "BBI Contacts": "BBI Yhteystiedot",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Kirjoita julkinen kommentti...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Kirjoita julkinen kommentti..."
+      }
+    }
+  },
   "Login or sign up": "Kirjaudu tai rekisteröidy",
   "Post": "Postia",
   "Login": "Kirjaudu sisään",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Käsittelemätön entiteetti",
   "Failed to POST comment": "Kommenttien lähettäminen epäonnistui",
   "all": "kaikki",
-  "for an account in order to comment or interact.": "tiliä varten kommentoidaksesi tai vuorovaikutuksessa.",
+  "for an account in order to comment or interact": {
+    "": "tiliä varten kommentoidaksesi tai vuorovaikutuksessa."
+  },
   "Sign Up": "Rekisteröidy",
   "CBD-type": "Biologista monimuotoisuutta koskeva yleissopimus",
   "CPB-FP1-type": "Cartagenan bioturvallisuuspöytäkirja",
@@ -888,6 +923,7 @@
   "Progress": "Edistyminen",
   "Created": "Luotu",
   "Unassigned": "Määrittämätön",
+  "No description available": "Ei kuvausta saatavilla",
   "Work Overview": "Työn yleiskatsaus",
   "Bug": "Bugi",
   "Task": "Tehtävä",
@@ -906,7 +942,13 @@
   "Low": "Matala",
   "Lowest": "Alin",
   "Selected For Development": "Valittu Kehitettäväksi",
-  "View More ...": "Näytä lisää...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Näytä lisää..."
+      }
+    }
+  },
   "bioland-context-description": "Nämä evästeet tallentavat Bioland-työkalun kontekstin. Yksi koodiesiintymä palvelee monia verkkosivustoja. Konteksti auttaa erottamaan eri verkkosivustot. Lisäksi evästeet, kun kirjaudut sisään istuntosi säilyttämiseksi. Lopuksi käännös ja näytä portin koko palvelimen työkalun avuksi. Nämä evästeet ovat välttämättömiä verkkosivuston toimivuuden kannalta.",
   "bioland-context-cookies": "Bioland-kontekstievästeet",
   "cookie-control-description": "Käytämme omia evästeitämme ja kolmannen osapuolen evästeitä, jotta voimme näyttää tämän verkkosivuston oikein ja ymmärtää paremmin, miten tätä verkkosivustoa käytetään, tarjoamiemme palvelujen parantamiseksi. Evästeiden käyttöoikeuksia koskevaa päätöstä voidaan muuttaa milloin tahansa käyttämällä evästepainiketta, joka tulee näkyviin, kun valinta on tehty tässä bannerissa.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Rinnakkaiselo",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Immateriaalioikeudet",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Sosiaaliset ja/tai taloudelliset arviot",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Kauppasäännöt ja standardit"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Kauppasäännöt ja standardit",
+  "Competent National Authority": "Toimivaltainen kansallinen viranomainen",
+  "Contact": "Yhteystiedot",
+  "Biosafety Virtual Library Resources": "Bioturvallisuuden virtuaalikirjaston resurssit",
+  "BCH News": "BCH Uutiset",
+  "National Focal Point": "Kansallinen yhteyspiste",
+  "Risk Assessment generated by an independent or non-regulatory process": "Riskinarviointi, joka perustuu riippumattomaan tai muuhun kuin sääntelyprosessiin",
+  "Genetic element": "Geneettinen elementti",
+  "Organism": "Organismi",
+  "Living Modified Organism": "Elävä muunnettu organismi",
+  "Biosafety Organization": "Bioturvallisuusjärjestö",
+  "Laboratory for detection and identification of LMOs": "Laboratorio LMO:iden havaitsemiseksi ja tunnistamiseksi",
+  "What's New": "Mitä uutta"
 }

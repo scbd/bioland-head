@@ -7,10 +7,28 @@
   "Meetings": "Pertemuan",
   "Announcement": "Pengumuman",
   "Announcements": "Pengumuman",
+  "announcement": "Pengumuman",
+  "meeting or event": "Pertemuan atau Acara",
+  "learning resource": "Sumber Belajar",
+  "article": "Artikel",
+  "basic page": "Halaman Dasar",
+  "government ministry or institute": "Kementerian atau Institut Pemerintah",
+  "protected area": "Kawasan Lindung",
+  "biodiversity data": "Data Keanekaragaman Hayati",
+  "related website": "Situs Terkait",
+  "other resource": "Sumber Daya Lainnya",
+  "image or video": "Gambar atau Video",
+  "faq": "FAQ",
+  "national information": "Informasi Nasional",
+  "status of lmo": "Status LMO",
+  "field trial": "Uji Coba Lapangan",
+  "national mainstreaming strategy": "Strategi Pengarusutamaan Nasional",
+  "capacity building": "Pengembangan Kapasitas",
   "Basic Page": "Halaman Dasar",
   "Basic Pages": "Halaman Dasar",
   "Capacity-Building": "Pembangunan Kapasitas",
   "Capacity-Buildings": "Kapasitas-Bangunan",
+  "Capacity Development Initiative": "Inisiatif Pengembangan Kapasitas",
   "Field Trial": "Uji Coba Lapangan",
   "Field Trials": "Uji Coba Lapangan",
   "National Information": "Informasi Nasional",
@@ -66,8 +84,10 @@
   "content": "konten situs",
   "secretariate": "sekretariat",
   "notification": "Pemberitahuan",
+  "Statement": "Pernyataan",
   "statement": "Pernyataan",
   "meeting": "Pertemuan",
+  "Press Release": "Siaran Pers",
   "pressRelease": "Siaran Pers",
   "focalPoint": "titik fokus",
   "resource": "Sumber Daya Perpustakaan Virtual",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Keanekaragaman Hayati Bioland",
   "Home": "Rumah",
   "Biodiversity CHM": "Keanekaragaman Hayati CHM",
+  "Biosafety Clearing-House Search": "Pencarian Rumah Kliring Keamanan Hayati",
   "National Reports": "Laporan Nasional",
   "View all National Reports": "Lihat semua Laporan Nasional",
   "section1": "Bagian I. Informasi mengenai sasaran yang dikejar di tingkat nasional",
@@ -228,7 +249,10 @@
   "Updated Date": "Tanggal Diperbarui",
   "Download": "Unduh",
   "Latest News and Updates": "Berita dan Pembaruan Terkini",
+  "Latest Announcements, News and Updates": "Pengumuman Terbaru, Berita dan Pembaruan",
+  "Latest Records": "Catatan Terbaru",
   "View more news and updates": "Lihat lebih banyak berita dan pembaruan",
+  "from the Biosafety Clearing-House": "dari Biosafety Clearing-House",
   "implementation": "penerapan",
   "Browse TSC Opportunities": "Telusuri Peluang TSC",
   "Browse TSC Assistance and Providers": "Telusuri Bantuan dan Penyedia TSC",
@@ -268,9 +292,18 @@
   "Revisions": "Revisi",
   "Clone": "Klon",
   "Translate": "Menerjemahkan",
+  "Translation": "Terjemahan",
+  "No translation available": "Tidak ada terjemahan yang tersedia",
+  "Auto Translate": "Terjemahkan Otomatis",
   "BBI Contacts": "Kontak BBI",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Tulis komentar publik...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Tulis komentar publik..."
+      }
+    }
+  },
   "Login or sign up": "Masuk atau daftar",
   "Post": "Posting",
   "Login": "Gabung",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Entitas yang Tidak Dapat Diproses",
   "Failed to POST comment": "Gagal mengirim komentar",
   "all": "segala",
-  "for an account in order to comment or interact.": "untuk akun untuk berkomentar atau berinteraksi.",
+  "for an account in order to comment or interact": {
+    "": "untuk akun untuk berkomentar atau berinteraksi."
+  },
   "Sign Up": "Mendaftar",
   "CBD-type": "Konvensi Keanekaragaman Hayati",
   "CPB-FP1-type": "Protokol Cartagena tentang Keamanan Hayati",
@@ -888,6 +923,7 @@
   "Progress": "Kemajuan",
   "Created": "Dibuat",
   "Unassigned": "Tidak ditugaskan",
+  "No description available": "Tidak ada deskripsi yang tersedia",
   "Work Overview": "Ikhtisar Pekerjaan",
   "Bug": "Bug",
   "Task": "Tugas",
@@ -906,7 +942,13 @@
   "Low": "Rendah",
   "Lowest": "Terendah",
   "Selected For Development": "Dipilih Untuk Pengembangan",
-  "View More ...": "Lihat Selengkapnya...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Lihat Selengkapnya..."
+      }
+    }
+  },
   "bioland-context-description": "Cookie ini menyimpan konteks untuk alat Bioland. Satu contoh kode melayani banyak situs web. Konteks membantu membedakan antara situs web yang berbeda. Selanjutnya cookie untuk saat Anda masuk untuk menjaga sesi Anda. Terakhir menerjemahkan dan melihat ukuran port untuk membantu alat di server. Cookie ini diperlukan untuk fungsionalitas situs web.",
   "bioland-context-cookies": "Cookie Konteks Bioland",
   "cookie-control-description": "Kami menggunakan cookie kami sendiri dan cookie pihak ketiga sehingga kami dapat menampilkan situs web ini dengan benar dan lebih memahami bagaimana situs web ini digunakan, dengan maksud untuk meningkatkan layanan yang kami tawarkan. Keputusan tentang izin penggunaan cookie dapat diubah kapan saja menggunakan tombol cookie yang akan muncul setelah pilihan dibuat pada spanduk ini.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Koeksistensi",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Hak kekayaan intelektual",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Penilaian sosial dan/atau ekonomi",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Aturan dan standar perdagangan"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Aturan dan standar perdagangan",
+  "Competent National Authority": "Otoritas Nasional yang Kompeten",
+  "Contact": "Kontak",
+  "Biosafety Virtual Library Resources": "Sumber Daya Perpustakaan Virtual Keamanan Hayati",
+  "BCH News": "Berita BCH",
+  "National Focal Point": "Titik Fokus Nasional",
+  "Risk Assessment generated by an independent or non-regulatory process": "Penilaian Risiko yang dihasilkan oleh proses independen atau non-regulasi",
+  "Genetic element": "Elemen genetik",
+  "Organism": "Organisme",
+  "Living Modified Organism": "Organisme Modifikasi Hidup",
+  "Biosafety Organization": "Organisasi Keamanan Hayati",
+  "Laboratory for detection and identification of LMOs": "Laboratorium untuk deteksi dan identifikasi LMO",
+  "What's New": "Apa yang baru"
 }

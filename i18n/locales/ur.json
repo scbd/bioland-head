@@ -7,10 +7,28 @@
   "Meetings": "ملاقاتیں",
   "Announcement": "اعلان",
   "Announcements": "اعلانات",
+  "announcement": "اعلان",
+  "meeting or event": "میٹنگ یا واقعہ",
+  "learning resource": "سیکھنے کا وسیلہ",
+  "article": "آرٹیکل",
+  "basic page": "بنیادی صفحہ",
+  "government ministry or institute": "حکومتی وزارت یا ادارہ",
+  "protected area": "محفوظ علاقہ",
+  "biodiversity data": "حیاتیاتی تنوع کا ڈیٹا",
+  "related website": "متعلقہ ویب سائٹ",
+  "other resource": "دوسرے وسائل",
+  "image or video": "تصویر یا ویڈیو",
+  "faq": "اکثر پوچھے گئے سوالات",
+  "national information": "قومی معلومات",
+  "status of lmo": "ایل ایم او کی حیثیت",
+  "field trial": "فیلڈ ٹرائل",
+  "national mainstreaming strategy": "قومی مرکزی اسٹریمنگ حکمت عملی",
+  "capacity building": "صلاحیت بلڈنگ",
   "Basic Page": "بنیادی صفحہ",
   "Basic Pages": "بنیادی صفحات",
   "Capacity-Building": "صلاحیت کی تعمیر",
   "Capacity-Buildings": "صلاحیت کی عمارتیں",
+  "Capacity Development Initiative": "صلاحیت کی ترقی اقدام",
   "Field Trial": "فیلڈ ٹرائل",
   "Field Trials": "فیلڈ ٹرائلز",
   "National Information": "قومی معلومات",
@@ -66,8 +84,10 @@
   "content": "سائٹ کا مواد",
   "secretariate": "سیکرٹریٹ",
   "notification": "اطلاعات",
+  "Statement": "بیان",
   "statement": "بیانات",
   "meeting": "ملاقاتیں",
+  "Press Release": "پریس ریلیز",
   "pressRelease": "پریس ریلیزز",
   "focalPoint": "فوکل پوائنٹ",
   "resource": "مجازی لائبریری وسائل",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "بایولینڈ حیاتیاتی تنوع",
   "Home": "گھر",
   "Biodiversity CHM": "حیاتیاتی تنوع CHM",
+  "Biosafety Clearing-House Search": "بائیو سیفٹی کلیئرنگ ہاؤس سرچ",
   "National Reports": "قومی رپورٹس",
   "View all National Reports": "تمام قومی رپورٹس دیکھیں",
   "section1": "سیکشن I قومی سطح پر اہداف کی پیروی کی جارہی ہے اس کے بارے میں معلومات",
@@ -228,7 +249,10 @@
   "Updated Date": "تازہ کاری کی تاریخ",
   "Download": "ڈاؤن لوڈ کریں",
   "Latest News and Updates": "تازہ ترین خبریں اور اپڈیٹس",
+  "Latest Announcements, News and Updates": "تازہ ترین اعلانات، خبریں اور اپ ڈیٹس",
+  "Latest Records": "تازہ ترین ریکارڈ",
   "View more news and updates": "مزید خبریں اور اپ ڈیٹس دیکھیں",
+  "from the Biosafety Clearing-House": "بائیو سیفٹی کلیئرنگ ہاؤس سے",
   "implementation": "نفاذ",
   "Browse TSC Opportunities": "TSC مواقع براؤز کریں۔",
   "Browse TSC Assistance and Providers": "TSC معاونت اور فراہم کنندگان کو براؤز کریں۔",
@@ -268,9 +292,18 @@
   "Revisions": "نظرثانی",
   "Clone": "کلون",
   "Translate": "ترجمہ کریں۔",
+  "Translation": "ترجمہ",
+  "No translation available": "کوئی ترجمہ دستیاب نہیں",
+  "Auto Translate": "آٹو ترجمہ",
   "BBI Contacts": "بی بی آئی رابطے",
   "Bioland 1": "بائیولینڈ 1",
-  "Write a public comment ...": "عوامی تبصرہ لکھیں...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "عوامی تبصرہ لکھیں..."
+      }
+    }
+  },
   "Login or sign up": "لاگ ان یا سائن اپ کریں",
   "Post": "پوسٹ",
   "Login": "لاگ ان کریں",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "غیر قابل عمل ادارہ",
   "Failed to POST comment": "تبصرہ پوسٹ کرنے میں ناکام",
   "all": "سبھی",
-  "for an account in order to comment or interact.": "تبصرہ کرنے یا بات چیت کرنے کے لئے کسی اکاؤنٹ کے لئے۔",
+  "for an account in order to comment or interact": {
+    "": "تبصرہ کرنے یا بات چیت کرنے کے لئے کسی اکاؤنٹ کے لئے۔"
+  },
   "Sign Up": "سائن اپ کریں",
   "CBD-type": "حیاتیاتی تنوع پر کنونشن",
   "CPB-FP1-type": "بائیو سیفٹی پر کارٹیجینا پروٹوکول",
@@ -888,6 +923,7 @@
   "Progress": "پیشرفت",
   "Created": "تخلیق",
   "Unassigned": "غیر تفویض",
+  "No description available": "کوئی تفصیل دستیاب نہیں",
   "Work Overview": "کام کا جائزہ",
   "Bug": "بگ",
   "Task": "ٹاسک",
@@ -906,7 +942,13 @@
   "Low": "کم",
   "Lowest": "سب سے کم",
   "Selected For Development": "ترقی کے لئے منتخب",
-  "View More ...": "مزید دیکھیں...",
+  "View More ": {
+    "": {
+      "": {
+        "": "مزید دیکھیں..."
+      }
+    }
+  },
   "bioland-context-description": "یہ کوکیز بائیولینڈ ٹول کے سیاق و سباق کو محفوظ کرتی ہیں۔ ایک کوڈ کی مثال بہت سی ویب سائٹوں کو پورا کرتی ہے۔ سیاق و سباق مختلف ویب سائٹوں کے درمیان فرق کرنے میں مدد کرتا ہے۔ جب آپ اپنا سیشن برقرار رکھنے کے لیے لاگ ان کرتے ہیں تو اس کے لیے مزید کوکیز۔ سرور پر ٹول کی مدد کے لئے آخر میں ترجمہ اور پورٹ سائز دیکھیں۔ یہ کوکیز ویب سائٹ کی فعالیت کے لئے ضروری ہیں۔",
   "bioland-context-cookies": "بائیولینڈ سیاق و سباق کو",
   "cookie-control-description": "ہم اپنی کوکیز اور تھرڈ پارٹی کوکیز استعمال کرتے ہیں تاکہ ہم اس ویب سائٹ کو صحیح طریقے سے ظاہر کرسکیں اور بہتر طور پر سمجھ سکیں کہ اس ویب سائٹ کو کس طرح استعمال کیا جاتا ہے، ہماری پیش کردہ خدمات کو بہتر بنانے کوکی کے استعمال کی اجازتوں کے بارے میں فیصلہ کوکی بٹن کا استعمال کرتے ہوئے کسی بھی وقت تبدیل کیا جاسکتا ہے جو اس بینر پر انتخاب کرنے کے بعد ظاہر ہوگا۔",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "بقاہتی",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "دانشورانہ املاک کے ح",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "سماجی اور/یا معاشی تشخی",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "تجارتی قواعد اور معیارات"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "تجارتی قواعد اور معیارات",
+  "Competent National Authority": "قابل قومی اتھارٹی",
+  "Contact": "رابطہ",
+  "Biosafety Virtual Library Resources": "بائیو سیفٹی ورچوئل لائبریری کے",
+  "BCH News": "بی سی ایچ نیوز",
+  "National Focal Point": "نیشنل فوکل پوائنٹ",
+  "Risk Assessment generated by an independent or non-regulatory process": "آزاد یا غیر ریگولیٹری عمل کے ذریعہ تیار کردہ خطرے کی تشخیص",
+  "Genetic element": "جینیاتی عنصر",
+  "Organism": "حیاتیات",
+  "Living Modified Organism": "زندہ تبدیل شدہ حیاتیات",
+  "Biosafety Organization": "حیاتیاتی حفاظت کی تنظیم",
+  "Laboratory for detection and identification of LMOs": "ایل ایم او کے پتہ لگانے اور شناخت کے لئے لیبارٹ",
+  "What's New": "نیا کیا ہے"
 }

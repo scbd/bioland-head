@@ -7,10 +7,28 @@
   "Meetings": "Találkozók",
   "Announcement": "Közlemény",
   "Announcements": "Közlemények",
+  "announcement": "Közlemény",
+  "meeting or event": "Találkozó vagy esemény",
+  "learning resource": "Tanulási forrás",
+  "article": "Cikk",
+  "basic page": "Alapoldal",
+  "government ministry or institute": "Kormányminisztérium vagy intézet",
+  "protected area": "Védett terület",
+  "biodiversity data": "Biodiverzitási adatok",
+  "related website": "Kapcsolódó weboldal",
+  "other resource": "Egyéb erőforrás",
+  "image or video": "Kép vagy videó",
+  "faq": "GYIK",
+  "national information": "Nemzeti Információ",
+  "status of lmo": "Az LMO állapota",
+  "field trial": "Terepi próba",
+  "national mainstreaming strategy": "Nemzeti általános érvényesítési stratégia",
+  "capacity building": "Kapacitásépítés",
   "Basic Page": "Alapoldal",
   "Basic Pages": "Alapoldalak",
   "Capacity-Building": "Kapacitásbővítés",
   "Capacity-Buildings": "Kapacitásépítés",
+  "Capacity Development Initiative": "kapacitásfejlesztési kezdeményezés",
   "Field Trial": "Terepi próba",
   "Field Trials": "Terepi kísérletek",
   "National Information": "Nemzeti Információ",
@@ -66,8 +84,10 @@
   "content": "webhely tartalma",
   "secretariate": "titkárság",
   "notification": "Értesítések",
+  "Statement": "Nyilatkozat",
   "statement": "Nyilatkozatok",
   "meeting": "Találkozók",
+  "Press Release": "Sajtóközlemény",
   "pressRelease": "Sajtóközlemények",
   "focalPoint": "fókuszpont",
   "resource": "Virtuális könyvtári források",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Bioland Biodiverzitás",
   "Home": "itthon",
   "Biodiversity CHM": "Biodiverzitás CHM",
+  "Biosafety Clearing-House Search": "Biológiai biztonság tisztázási háza keresése",
   "National Reports": "Országos Jelentések",
   "View all National Reports": "Az összes nemzeti jelentés megtekintése",
   "section1": "I. szakasz Tájékoztatás a nemzeti szinten kitűzött célokról",
@@ -228,7 +249,10 @@
   "Updated Date": "Frissítés dátuma",
   "Download": "Letöltés",
   "Latest News and Updates": "Legfrissebb hírek és frissítések",
+  "Latest Announcements, News and Updates": "Legfrissebb közlemények, hírek és frissítések",
+  "Latest Records": "Legújabb rekordok",
   "View more news and updates": "További hírek és frissítések megtekintése",
+  "from the Biosafety Clearing-House": "a Biológiai Biztonsági Tájékoztató Háztól",
   "implementation": "végrehajtás",
   "Browse TSC Opportunities": "Böngésszen a TSC lehetőségek között",
   "Browse TSC Assistance and Providers": "Böngésszen a TSC segítség és szolgáltatók között",
@@ -268,9 +292,18 @@
   "Revisions": "Revíziók",
   "Clone": "Klón",
   "Translate": "Fordítás",
+  "Translation": "Fordítás",
+  "No translation available": "Nincs elérhető fordítás",
+  "Auto Translate": "Automatikus fordítás",
   "BBI Contacts": "BBI Kapcsolat",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Írj nyilvános megjegyzést...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Írj nyilvános megjegyzést..."
+      }
+    }
+  },
   "Login or sign up": "Bejelentkezés vagy regisztráció",
   "Post": "Hozzászólás",
   "Login": "Belépés",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Feldolgozatlan entitás",
   "Failed to POST comment": "Nem sikerült hozzászólást közzétenni",
   "all": "minden",
-  "for an account in order to comment or interact.": "egy fiókhoz hozzászólás vagy interakció céljából.",
+  "for an account in order to comment or interact": {
+    "": "egy fiókhoz hozzászólás vagy interakció céljából."
+  },
   "Sign Up": "Regisztrálj",
   "CBD-type": "Egyezmény a biológiai sokféleségről",
   "CPB-FP1-type": "Cartagenai jegyzőkönyv a biológiai biztonságról",
@@ -888,6 +923,7 @@
   "Progress": "Előrelépés",
   "Created": "Létrehozott",
   "Unassigned": "Nem hozzárendelt",
+  "No description available": "Nincs elérhető leírás",
   "Work Overview": "Munka áttekintése",
   "Bug": "Hiba",
   "Task": "Feladat",
@@ -906,7 +942,13 @@
   "Low": "Alacsony",
   "Lowest": "Legalacsonyabb",
   "Selected For Development": "Fejlesztésre kiválasztva",
-  "View More ...": "További információk...",
+  "View More ": {
+    "": {
+      "": {
+        "": "További információk..."
+      }
+    }
+  },
   "bioland-context-description": "Ezek a cookie-k tárolják a Bioland eszköz kontextusát. Egy kódpéldány sok webhelyre szolgál. A kontextus segít megkülönböztetni a különböző webhelyek között. Továbbá sütik a munkamenet fenntartása érdekében bejelentkezéskor. Végül fordítás és a portméret megtekintése az eszköz kiszolgálón való segítése érdekében. Ezek a cookie-k szükségesek a weboldal működéséhez.",
   "bioland-context-cookies": "Bioland környezeti cookie-k",
   "cookie-control-description": "Saját cookie-kat és harmadik féltől származó cookie-kat használjuk annak érdekében, hogy helyesen jelenítsük meg ezt a weboldalt, és jobban megértsük, hogyan használják ezt a weboldalt, az általunk kínált szolgáltatások javítása érdekében. A cookie-használati engedélyekkel kapcsolatos döntés bármikor megváltoztatható a cookie gomb segítségével, amely a banner kiválasztása után jelenik meg.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Együttélés",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Szellemi tulajdonjogok",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Társadalmi és/vagy gazdasági értékelések",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Kereskedelmi szabályok és szabványok"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Kereskedelmi szabályok és szabványok",
+  "Competent National Authority": "Illetékes nemzeti hatóság",
+  "Contact": "Kapcsolat",
+  "Biosafety Virtual Library Resources": "Biológiai biztonsági virtuális könyvtári források",
+  "BCH News": "BCH hírek",
+  "National Focal Point": "Nemzeti fókuszpont",
+  "Risk Assessment generated by an independent or non-regulatory process": "Független vagy nem szabályozási eljárás által létrehozott kockázatértékelés",
+  "Genetic element": "Genetikai elem",
+  "Organism": "Szervezet",
+  "Living Modified Organism": "Élő módosított szervezet",
+  "Biosafety Organization": "Biológiai Biztonsági Szervezet",
+  "Laboratory for detection and identification of LMOs": "LMO-k kimutatására és azonosítására szolgáló laboratórium",
+  "What's New": "Mi újdonság"
 }

@@ -7,10 +7,28 @@
   "Meetings": "ਮੀਟਿੰਗਾਂ",
   "Announcement": "ਘੋਸ਼ਣਾ",
   "Announcements": "ਘੋਸ਼ਣਾਵਾਂ",
+  "announcement": "ਘੋਸ਼ਣਾ",
+  "meeting or event": "ਮੀਟਿੰਗ ਜਾਂ ਇਵੈਂਟ",
+  "learning resource": "ਸਿੱਖਣ ਦਾ ਸਰੋਤ",
+  "article": "ਲੇਖ",
+  "basic page": "ਮੂਲ ਪੰਨਾ",
+  "government ministry or institute": "ਸਰਕਾਰੀ ਮੰਤਰਾਲਾ ਜਾਂ ਸੰਸਥਾ",
+  "protected area": "ਸੁਰੱਖਿਅਤ ਖੇਤਰ",
+  "biodiversity data": "ਜੈਵ ਵਿਭਿੰਨਤਾ ਡੇਟਾ",
+  "related website": "ਸੰਬੰਧਿਤ ਵੈੱਬਸਾਈਟ",
+  "other resource": "ਹੋਰ ਸਰੋਤ",
+  "image or video": "ਚਿੱਤਰ ਜਾਂ ਵੀਡੀਓ",
+  "faq": "ਅਕਸਰ ਪੁੱਛੇ",
+  "national information": "ਰਾਸ਼ਟਰੀ ਜਾਣਕਾਰੀ",
+  "status of lmo": "ਐਲਐਮਓ ਦੀ ਸਥਿਤੀ",
+  "field trial": "ਫੀਲਡ ਟ੍ਰਾਇਲ",
+  "national mainstreaming strategy": "ਨੈਸ਼ਨਲ ਮੇਨਸਟ੍ਰੀਮਿੰਗ ਰਣਨੀਤੀ",
+  "capacity building": "ਸਮਰੱਥਾ ਨਿਰਮਾਣ",
   "Basic Page": "ਮੂਲ ਪੰਨਾ",
   "Basic Pages": "ਮੂਲ ਪੰਨੇ",
   "Capacity-Building": "ਸਮਰੱਥਾ-ਨਿਰਮਾਣ",
   "Capacity-Buildings": "ਸਮਰੱਥਾ-ਇਮਾਰਤਾਂ",
+  "Capacity Development Initiative": "ਸਮਰੱਥਾ ਵਿਕਾਸ ਪਹਿਲ",
   "Field Trial": "ਫੀਲਡ ਟ੍ਰਾਇਲ",
   "Field Trials": "ਫੀਲਡ ਟਰਾਇਲ",
   "National Information": "ਰਾਸ਼ਟਰੀ ਜਾਣਕਾਰੀ",
@@ -66,8 +84,10 @@
   "content": "ਸਾਈਟ ਸਮੱਗਰੀ",
   "secretariate": "ਸਕੱਤਰੇਤ",
   "notification": "ਸੂਚਨਾਵਾਂ",
+  "Statement": "ਬਿਆਨ",
   "statement": "ਬਿਆਨ",
   "meeting": "ਮੀਟਿੰਗਾਂ",
+  "Press Release": "ਪ੍ਰੈਸ ਰਿਲੀਜ਼",
   "pressRelease": "ਪ੍ਰੈਸ ਰਿਲੀਜ਼",
   "focalPoint": "ਫੋਕਲ ਪੁਆਇੰਟ",
   "resource": "ਵਰਚੁਅਲ ਲਾਇਬ੍ਰੇਰੀ ਦੇ",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "ਬਾਇਓਲੈਂਡ ਜੈਵ ਵਿਭਿੰਨਤਾ",
   "Home": "ਘਰ",
   "Biodiversity CHM": "ਜੈਵ ਵਿਭਿੰਨਤਾ CHM",
+  "Biosafety Clearing-House Search": "ਬਾਇਓਸੇਫਟੀ ਕਲੀਅਰਿੰਗ-ਹਾਊਸ ਖੋਜ",
   "National Reports": "ਰਾਸ਼ਟਰੀ ਰਿਪੋਰਟਾਂ",
   "View all National Reports": "ਸਾਰੀਆਂ ਰਾਸ਼ਟਰੀ ਰਿਪੋਰਟਾਂ ਦੇਖੋ",
   "section1": "ਸੈਕਸ਼ਨ I ਰਾਸ਼ਟਰੀ ਪੱਧਰ 'ਤੇ ਪਿੱਛਾ ਕੀਤੇ ਜਾ ਰਹੇ ਟੀਚਿਆਂ ਬਾਰੇ ਜਾਣਕਾਰੀ",
@@ -228,7 +249,10 @@
   "Updated Date": "ਅੱਪਡੇਟ ਕੀਤੀ ਮਿਤੀ",
   "Download": "ਡਾਊਨਲੋਡ ਕਰੋ",
   "Latest News and Updates": "ਤਾਜ਼ਾ ਖ਼ਬਰਾਂ ਅਤੇ ਅੱਪਡੇਟ",
+  "Latest Announcements, News and Updates": "ਤਾਜ਼ਾ ਘੋਸ਼ਣਾਵਾਂ, ਖ਼ਬਰਾਂ ਅਤੇ ਅੱਪ",
+  "Latest Records": "ਤਾਜ਼ਾ ਰਿਕਾਰਡ",
   "View more news and updates": "ਹੋਰ ਖਬਰਾਂ ਅਤੇ ਅੱਪਡੇਟ ਦੇਖੋ",
+  "from the Biosafety Clearing-House": "ਬਾਇਓਸੇਫਟੀ ਕਲੀਅਰਿੰਗ-ਹਾ Houseਸ ਤੋਂ",
   "implementation": "ਲਾਗੂ ਕਰਨਾ",
   "Browse TSC Opportunities": "TSC ਮੌਕੇ ਬ੍ਰਾਊਜ਼ ਕਰੋ",
   "Browse TSC Assistance and Providers": "TSC ਸਹਾਇਤਾ ਅਤੇ ਪ੍ਰਦਾਤਾ ਬ੍ਰਾਊਜ਼ ਕਰੋ",
@@ -268,9 +292,18 @@
   "Revisions": "ਸੰਸ਼ੋਧਨ",
   "Clone": "ਕਲੋਨ",
   "Translate": "ਅਨੁਵਾਦ ਕਰੋ",
+  "Translation": "ਅਨੁਵਾਦ",
+  "No translation available": "ਕੋਈ ਅਨੁਵਾਦ ਉਪਲਬਧ ਨਹੀਂ ਹੈ",
+  "Auto Translate": "ਆਟੋ ਅਨੁਵਾਦ",
   "BBI Contacts": "BBI ਸੰਪਰਕ",
   "Bioland 1": "ਬਾਇਓਲੈਂਡ 1",
-  "Write a public comment ...": "ਜਨਤਕ ਟਿੱਪਣੀ ਲਿਖੋ...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "ਜਨਤਕ ਟਿੱਪਣੀ ਲਿਖੋ..."
+      }
+    }
+  },
   "Login or sign up": "ਲੌਗਇਨ ਜਾਂ ਸਾਈਨ ਅਪ ਕਰੋ",
   "Post": "ਪੋਸਟ",
   "Login": "ਲਾਗਿਨ",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "ਗੈਰ-ਪ੍ਰੋਸੈਸਯੋਗ ਹਸਤੀ",
   "Failed to POST comment": "ਟਿੱਪਣੀ ਪੋਸਟ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
   "all": "ਸਾਰੇ",
-  "for an account in order to comment or interact.": "ਟਿੱਪਣੀ ਕਰਨ ਜਾਂ ਗੱਲਬਾਤ ਕਰਨ ਲਈ ਕਿਸੇ ਖਾਤੇ ਲਈ.",
+  "for an account in order to comment or interact": {
+    "": "ਟਿੱਪਣੀ ਕਰਨ ਜਾਂ ਗੱਲਬਾਤ ਕਰਨ ਲਈ ਕਿਸੇ ਖਾਤੇ ਲਈ."
+  },
   "Sign Up": "ਸਾਈਨ ਅਪ ਕਰੋ",
   "CBD-type": "ਜੀਵ ਵਿਭਿੰਨਤਾ 'ਤੇ ਸੰਮੇਲ",
   "CPB-FP1-type": "ਬਾਇਓਸੇਫਟੀ 'ਤੇ ਕਾਰਟੇਗੇਨਾ ਪ੍ਰੋਟੋਕੋਲ",
@@ -888,6 +923,7 @@
   "Progress": "ਤਰੱਕੀ",
   "Created": "ਬਣਾਇਆ",
   "Unassigned": "ਅਣ-ਨਿਰਧਾਰਤ",
+  "No description available": "ਕੋਈ ਵੇਰਵਾ ਉਪਲਬਧ ਨਹੀਂ",
   "Work Overview": "ਕੰਮ ਦੀ ਸੰਖੇਪ ਜਾਣਕਾਰੀ",
   "Bug": "ਬੱਗ",
   "Task": "ਟਾਸਕ",
@@ -906,7 +942,13 @@
   "Low": "ਘੱਟ",
   "Lowest": "ਸਭ ਤੋਂ ਘੱਟ",
   "Selected For Development": "ਵਿਕਾਸ ਲਈ ਚੁਣਿਆ ਗਿਆ",
-  "View More ...": "ਹੋਰ ਵੇਖੋ...",
+  "View More ": {
+    "": {
+      "": {
+        "": "ਹੋਰ ਵੇਖੋ..."
+      }
+    }
+  },
   "bioland-context-description": "ਇਹ ਕੂਕੀਜ਼ ਬਾਇਓਲੈਂਡ ਟੂਲ ਲਈ ਪ੍ਰਸੰਗ ਸਟੋਰ ਕਰਦੀਆਂ ਹਨ. ਇੱਕ ਕੋਡ ਉਦਾਹਰਣ ਬਹੁਤ ਸਾਰੀਆਂ ਵੈਬਸਾਈਟਾਂ ਨੂੰ ਪੂਰਾ ਕਰਦਾ ਹੈ. ਪ੍ਰਸੰਗ ਵੱਖ-ਵੱਖ ਵੈਬਸਾਈਟਾਂ ਵਿੱਚ ਫਰਕ ਕਰਨ ਵਿੱਚ ਸਹਾਇਤਾ ਕਰਦਾ ਹੈ. ਅੱਗੇ ਇੱਕ ਕੂਕੀਜ਼ ਜਦੋਂ ਤੁਸੀਂ ਆਪਣਾ ਸੈਸ਼ਨ ਰੱਖਣ ਲਈ ਲੌਗਇਨ ਕਰਦੇ ਹੋ. ਅੰਤ ਵਿੱਚ ਅਨੁਵਾਦ ਕਰੋ ਅਤੇ ਸਰਵਰ ਤੇ ਟੂਲ ਦੀ ਸਹਾਇਤਾ ਲਈ ਪੋਰਟ ਦਾ ਆਕਾਰ ਵੇਖੋ. ਇਹ ਕੂਕੀਜ਼ ਵੈਬਸਾਈਟ ਦੀ ਕਾਰਜਸ਼ੀਲਤਾ ਲਈ ਜ਼ਰੂਰੀ ਹਨ.",
   "bioland-context-cookies": "ਬਾਇਓਲੈਂਡ ਸੰਦਰਭ ਕੂਕੀਜ਼",
   "cookie-control-description": "ਅਸੀਂ ਆਪਣੀਆਂ ਕੂਕੀਜ਼ ਅਤੇ ਤੀਜੀ-ਧਿਰ ਦੀਆਂ ਕੂਕੀਜ਼ ਦੀ ਵਰਤੋਂ ਕਰਦੇ ਹਾਂ ਤਾਂ ਜੋ ਅਸੀਂ ਇਸ ਵੈਬਸਾਈਟ ਨੂੰ ਸਹੀ ਢੰਗ ਨਾਲ ਪ੍ਰਦਰਸ਼ਿਤ ਕਰ ਸਕੀਏ ਅਤੇ ਬਿਹਤਰ ਤਰੀਕੇ ਨਾਲ ਸਮਝ ਸਕੀਏ ਕਿ ਇਸ ਵੈਬਸਾਈਟ ਦੀ ਵਰਤੋਂ ਕਿਵੇਂ ਕੀਤੀ ਜਾਂਦੀ ਹੈ, ਉਹਨਾਂ ਸੇਵਾਵਾਂ ਨੂੰ ਬਿਹਤਰ ਕੂਕੀ ਦੀ ਵਰਤੋਂ ਦੀਆਂ ਇਜਾਜ਼ਤਾਂ ਬਾਰੇ ਫੈਸਲਾ ਕਿਸੇ ਵੀ ਸਮੇਂ ਕੂਕੀ ਬਟਨ ਦੀ ਵਰਤੋਂ ਕਰਕੇ ਬਦਲਿਆ ਜਾ ਸਕਦਾ ਹੈ ਜੋ ਇਸ ਬੈਨਰ 'ਤੇ ਚੋਣ ਕੀਤੇ ਜਾਣ ਤੋਂ ਬਾਅਦ ਦਿਖਾਈ ਦੇਵੇਗਾ।",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "ਸਹਿ-ਹੋਂਦ",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "ਬੌਧਿਕ ਸੰਪਤੀ ਅਧਿਕਾਰ",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "ਸਮਾਜਿਕ ਅਤੇ/ਜਾਂ ਆਰਥਿਕ ਮੁ",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "ਵਪਾਰ ਦੇ ਨਿਯਮ ਅਤੇ ਮਿਆਰ"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "ਵਪਾਰ ਦੇ ਨਿਯਮ ਅਤੇ ਮਿਆਰ",
+  "Competent National Authority": "ਯੋਗ ਰਾਸ਼ਟਰੀ ਅਥਾਰਟੀ",
+  "Contact": "ਸੰਪਰਕ ਕਰੋ",
+  "Biosafety Virtual Library Resources": "ਜੀਵ ਸੁਰੱਖਿਆ ਵਰਚੁਅਲ ਲਾਇਬ੍ਰੇਰੀ ਸਰੋਤ",
+  "BCH News": "ਬੀਸੀਐਚ ਨਿਊਜ਼",
+  "National Focal Point": "ਰਾਸ਼ਟਰੀ ਫੋਕਲ ਪੁਆਇੰਟ",
+  "Risk Assessment generated by an independent or non-regulatory process": "ਇੱਕ ਸੁਤੰਤਰ ਜਾਂ ਗੈਰ-ਨਿਯਮਿਤ ਪ੍ਰਕਿਰਿਆ ਦੁਆਰਾ ਤਿਆਰ ਜੋਖਮ ਮੁਲਾਂਕਣ",
+  "Genetic element": "ਜੈਨੇਟਿਕ ਤੱਤ",
+  "Organism": "ਜੀਵ",
+  "Living Modified Organism": "ਜੀਵਤ ਸੰਸ਼ੋਧਿਤ ਜੀਵ",
+  "Biosafety Organization": "ਜੀਵ ਸੁਰੱਖਿਆ ਸੰਗਠਨ",
+  "Laboratory for detection and identification of LMOs": "ਐਲਐਮਓ ਦੀ ਖੋਜ ਅਤੇ ਪਛਾਣ ਲਈ ਪ੍ਰਯੋਗਸ਼ਾਲਾ",
+  "What's New": "ਨਵਾਂ ਕੀ ਹੈ"
 }

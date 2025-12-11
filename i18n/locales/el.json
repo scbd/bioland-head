@@ -7,10 +7,28 @@
   "Meetings": "Συναντήσεις",
   "Announcement": "Ανακοίνωση",
   "Announcements": "Ανακοινώσεις",
+  "announcement": "Ανακοίνωση",
+  "meeting or event": "Συνάντηση ή εκδήλωση",
+  "learning resource": "Πηγή μάθησης",
+  "article": "Άρθρο",
+  "basic page": "Βασική σελίδα",
+  "government ministry or institute": "Κυβερνητικό Υπουργείο ή Ινστιτούτο",
+  "protected area": "Προστατευόμενη Περιοχή",
+  "biodiversity data": "Δεδομένα βιοποικιλότητας",
+  "related website": "Σχετική ιστοσελίδα",
+  "other resource": "Άλλος πόρος",
+  "image or video": "Εικόνα ή Βίντεο",
+  "faq": "ΣΥΧΝΈΣ ΕΡΩΤΉΣΕΙΣ",
+  "national information": "Εθνικές πληροφορίες",
+  "status of lmo": "Κατάσταση του LMO",
+  "field trial": "Δοκιμή πεδίου",
+  "national mainstreaming strategy": "Εθνική στρατηγική ενσωμάτωσης",
+  "capacity building": "Ανάπτυξη Ικανοτήτων",
   "Basic Page": "Βασική σελίδα",
   "Basic Pages": "Βασικές σελίδες",
   "Capacity-Building": "Ανάπτυξη ικανοτήτων",
   "Capacity-Buildings": "Κτίρια χωρητικότητας",
+  "Capacity Development Initiative": "Πρωτοβουλία Ανάπτυξης Ικανοτήτων",
   "Field Trial": "Δοκιμή πεδίου",
   "Field Trials": "Δοκιμές πεδίου",
   "National Information": "Εθνικές πληροφορίες",
@@ -66,8 +84,10 @@
   "content": "περιεχόμενο της ιστοσελίδας",
   "secretariate": "γραμματεία",
   "notification": "Ειδοποιήσεις",
+  "Statement": "Δήλωση",
   "statement": "Δηλώσεις",
   "meeting": "Συναντήσεις",
+  "Press Release": "Δελτίο Τύπου",
   "pressRelease": "Δελτία Τύπου",
   "focalPoint": "εστιακό σημείο",
   "resource": "Πόροι εικονικής βιβλιοθήκης",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Βιοποικιλότητα Bioland",
   "Home": "Σπίτι",
   "Biodiversity CHM": "Βιοποικιλότητα CHM",
+  "Biosafety Clearing-House Search": "Αναζήτηση στο κέντρο εκκαθάρισης βιοασφάλειας",
   "National Reports": "Εθνικές Εκθέσεις",
   "View all National Reports": "Δείτε όλες τις Εθνικές Εκθέσεις",
   "section1": "Τμήμα Ι. Πληροφορίες σχετικά με τους επιδιωκόμενους στόχους σε εθνικό επίπεδο",
@@ -228,7 +249,10 @@
   "Updated Date": "Ημερομηνία ενημέρωσης",
   "Download": "Λήψη",
   "Latest News and Updates": "Τελευταία Νέα και Ενημερώσεις",
+  "Latest Announcements, News and Updates": "Τελευταίες Ανακοινώσεις, Νέα και Ενημερώσεις",
+  "Latest Records": "Τελευταία αρχεία",
   "View more news and updates": "Δείτε περισσότερα νέα και ενημερώσεις",
+  "from the Biosafety Clearing-House": "από το Κέντρο Εκκαθάρισης Βιοασφάλειας",
   "implementation": "εκτέλεση",
   "Browse TSC Opportunities": "Περιηγηθείτε στο TSC Opportunities",
   "Browse TSC Assistance and Providers": "Περιηγηθείτε στο TSC Assistance and Providers",
@@ -268,9 +292,18 @@
   "Revisions": "Αναθεωρήσεις",
   "Clone": "Κλώνος",
   "Translate": "Μεταφράζω",
+  "Translation": "Μετάφραση",
+  "No translation available": "Δεν υπάρχει διαθέσιμη μετάφραση",
+  "Auto Translate": "Αυτόματη Μετάφραση",
   "BBI Contacts": "Επαφές BBI",
   "Bioland 1": "Μπιολάντ 1",
-  "Write a public comment ...": "Γράψτε ένα δημόσιο σχόλιο...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Γράψτε ένα δημόσιο σχόλιο..."
+      }
+    }
+  },
   "Login or sign up": "Συνδεθείτε ή εγγραφείτε",
   "Post": "Δημοσίευση",
   "Login": "Σύνδεση",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Μη επεξεργάσιμη οντότητα",
   "Failed to POST comment": "Αποτυχία δημοσίευσης σχολίου",
   "all": "όλα",
-  "for an account in order to comment or interact.": "για έναν λογαριασμό προκειμένου να σχολιάσετε ή να αλληλεπιδράσετε.",
+  "for an account in order to comment or interact": {
+    "": "για έναν λογαριασμό προκειμένου να σχολιάσετε ή να αλληλεπιδράσετε."
+  },
   "Sign Up": "Εγγραφείτε",
   "CBD-type": "Σύμβαση για τη βιολογική ποικιλομορφία",
   "CPB-FP1-type": "Πρωτόκολλο της Καρταχένα για τη βιοασφάλεια",
@@ -888,6 +923,7 @@
   "Progress": "Πρόοδος",
   "Created": "Δημιουργήθηκε",
   "Unassigned": "Μη εκχωρημένος",
+  "No description available": "Δεν υπάρχει διαθέσιμη περιγραφή",
   "Work Overview": "Επισκόπηση εργασίας",
   "Bug": "Σφάλμα",
   "Task": "Εργασία",
@@ -906,7 +942,13 @@
   "Low": "Χαμηλή",
   "Lowest": "Χαμηλότερη",
   "Selected For Development": "Επιλέχθηκε για ανάπτυξη",
-  "View More ...": "Δείτε περισσότερα...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Δείτε περισσότερα..."
+      }
+    }
+  },
   "bioland-context-description": "Αυτά τα cookies αποθηκεύουν το πλαίσιο για το εργαλείο Bioland. Ένα παράδειγμα κώδικα εξυπηρετεί πολλούς ιστότοπους. Το πλαίσιο βοηθά στη διάκριση μεταξύ των διαφόρων ιστότοπων. Περαιτέρω, ένα cookie για όταν συνδέεστε για να διατηρήσετε τη συνεδρία σας. Τέλος, μετάφραση και προβολή μεγέθους θύρας για να βοηθήσει το εργαλείο στο διακομιστή. Αυτά τα cookies είναι απαραίτητα για τη λειτουργικότητα του ιστότοπου.",
   "bioland-context-cookies": "Μπισκότα περιβάλλοντος της Bioland",
   "cookie-control-description": "Χρησιμοποιούμε τα δικά μας cookies και cookies τρίτων για να μπορέσουμε να εμφανίσουμε σωστά αυτόν τον ιστότοπο και να κατανοήσουμε καλύτερα τον τρόπο χρήσης αυτού του ιστότοπου, με σκοπό τη βελτίωση των υπηρεσιών που προσφέρουμε. Μια απόφαση σχετικά με τα δικαιώματα χρήσης cookie μπορεί να αλλάξει ανά πάσα στιγμή χρησιμοποιώντας το κουμπί cookie που θα εμφανιστεί αφού γίνει μια επιλογή σε αυτό το banner.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Συνύπαρξη",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Δικαιώματα πνευματικής ιδιοκτησίας",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Κοινωνικές και/ή οικονομικές εκτιμήσεις",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Εμπορικοί κανόνες και πρότυπα"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Εμπορικοί κανόνες και πρότυπα",
+  "Competent National Authority": "Αρμόδια Εθνική Αρχή",
+  "Contact": "Επικοινωνία",
+  "Biosafety Virtual Library Resources": "Πόροι εικονικής βιβλιοθήκης βιοασφάλειας",
+  "BCH News": "Ειδήσεις BCH",
+  "National Focal Point": "Εθνικό σημείο εστίασης",
+  "Risk Assessment generated by an independent or non-regulatory process": "Εκτίμηση κινδύνου που προκύπτει από ανεξάρτητη ή μη ρυθμιστική διαδικασία",
+  "Genetic element": "Γενετικό στοιχείο",
+  "Organism": "Οργανισμός",
+  "Living Modified Organism": "Ζωντανός τροποποιημένος οργανισμός",
+  "Biosafety Organization": "Οργανισμός Βιοασφάλειας",
+  "Laboratory for detection and identification of LMOs": "Εργαστήριο ανίχνευσης και ταυτοποίησης των LMO",
+  "What's New": "Τι είναι καινούργιο"
 }

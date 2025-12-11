@@ -7,10 +7,28 @@
   "Meetings": "Stretnutia",
   "Announcement": "Oznámenie",
   "Announcements": "Oznámenia",
+  "announcement": "Oznámenie",
+  "meeting or event": "Stretnutie alebo udalosť",
+  "learning resource": "Vzdelávací zdroj",
+  "article": "článok",
+  "basic page": "Základná stránka",
+  "government ministry or institute": "Vládne ministerstvo alebo inštitút",
+  "protected area": "Chránené územie",
+  "biodiversity data": "Údaje o biodiverzite",
+  "related website": "Súvisiace webové stránky",
+  "other resource": "Iné zdroje",
+  "image or video": "Obrázok alebo Video",
+  "faq": "FAQ",
+  "national information": "Národné informácie",
+  "status of lmo": "Stav LMO",
+  "field trial": "Terénna skúška",
+  "national mainstreaming strategy": "Národná stratégia mainstreamingu",
+  "capacity building": "Budovanie kapacít",
   "Basic Page": "Základná stránka",
   "Basic Pages": "Základné stránky",
   "Capacity-Building": "Budovanie kapacít",
   "Capacity-Buildings": "Budovanie kapacít",
+  "Capacity Development Initiative": "Iniciatíva na rozvoj kapacít",
   "Field Trial": "Terénna skúška",
   "Field Trials": "Terénne skúšky",
   "National Information": "Národné informácie",
@@ -66,8 +84,10 @@
   "content": "obsah stránok",
   "secretariate": "sekretariát",
   "notification": "Oznámenia",
+  "Statement": "Vyhlásenie",
   "statement": "Vyhlásenia",
   "meeting": "Stretnutia",
+  "Press Release": "Tlačová správa",
   "pressRelease": "Tlačové správy",
   "focalPoint": "ústredný bod",
   "resource": "Zdroje virtuálnej knižnice",
@@ -147,6 +167,7 @@
   "Bioland Biodiversity": "Bioland Biodiverzita",
   "Home": "Domov",
   "Biodiversity CHM": "Biodiverzita CHM",
+  "Biosafety Clearing-House Search": "Vyhľadávanie čistenia biologickej bezpečnosti",
   "National Reports": "Národné správy",
   "View all National Reports": "Pozrite si všetky národné správy",
   "section1": "Oddiel I. Informácie o cieľoch sledovaných na vnútroštátnej úrovni",
@@ -228,7 +249,10 @@
   "Updated Date": "Aktualizovaný dátum",
   "Download": "Stiahnuť",
   "Latest News and Updates": "Najnovšie správy a aktualizácie",
+  "Latest Announcements, News and Updates": "Najnovšie oznámenia, novinky a aktualizácie",
+  "Latest Records": "Najnovšie záznamy",
   "View more news and updates": "Pozrite si ďalšie novinky a aktualizácie",
+  "from the Biosafety Clearing-House": "z Clearing-House pre biologickú bezpečnosť",
   "implementation": "implementáciu",
   "Browse TSC Opportunities": "Prezrite si TSC Opportunities",
   "Browse TSC Assistance and Providers": "Prezrite si pomoc a poskytovateľov TSC",
@@ -268,9 +292,18 @@
   "Revisions": "Revízie",
   "Clone": "Klonovať",
   "Translate": "Preložiť",
+  "Translation": "Preklad",
+  "No translation available": "Nie je k dispozícii žiadny preklad",
+  "Auto Translate": "Automatický preklad",
   "BBI Contacts": "Kontakty BBI",
   "Bioland 1": "Bioland 1",
-  "Write a public comment ...": "Napíšte verejný komentár...",
+  "Write a public comment ": {
+    "": {
+      "": {
+        "": "Napíšte verejný komentár..."
+      }
+    }
+  },
   "Login or sign up": "Prihláste sa alebo zaregistrujte",
   "Post": "Príspevok",
   "Login": "Prihlásiť sa",
@@ -282,7 +315,9 @@
   "Unprocessable Entity": "Nespracovateľná entita",
   "Failed to POST comment": "Nepodarilo sa odoslať komentár",
   "all": "všetko",
-  "for an account in order to comment or interact.": "pre účet s cieľom komentovať alebo komunikovať.",
+  "for an account in order to comment or interact": {
+    "": "pre účet s cieľom komentovať alebo komunikovať."
+  },
   "Sign Up": "Prihlásiť sa",
   "CBD-type": "Dohovor o biologickej diverzite",
   "CPB-FP1-type": "Kartagenský protokol o biologickej bezpečnosti",
@@ -888,6 +923,7 @@
   "Progress": "Pokrok",
   "Created": "Vytvorené",
   "Unassigned": "Nepriradené",
+  "No description available": "Nie je k dispozícii žiadny popis",
   "Work Overview": "Prehľad práce",
   "Bug": "Chyba",
   "Task": "Úloha",
@@ -906,7 +942,13 @@
   "Low": "Nízka",
   "Lowest": "Najnižšia",
   "Selected For Development": "Vybrané pre vývoj",
-  "View More ...": "Zobraziť viac...",
+  "View More ": {
+    "": {
+      "": {
+        "": "Zobraziť viac..."
+      }
+    }
+  },
   "bioland-context-description": "Tieto súbory cookie ukladajú kontext nástroja Bioland. Jedna inštancia kódu slúži na mnoho webových stránok. Kontext pomáha rozlišovať medzi rôznymi webovými stránkami. Ďalej súbory cookie pre prihlásenie, aby ste si udržali reláciu. Nakoniec preklad a zobrazenie veľkosti portu na pomoc nástroju na serveri. Tieto súbory cookie sú nevyhnutné pre funkčnosť webovej stránky.",
   "bioland-context-cookies": "Kontextové súbory cookie Bioland",
   "cookie-control-description": "Používame vlastné súbory cookie a súbory cookie tretích strán, aby sme mohli túto webovú stránku správne zobraziť a lepšie pochopiť, ako sa táto webová stránka používa, s cieľom zlepšiť služby, ktoré ponúkame. Rozhodnutie o povoleniach na používanie súborov cookie je možné kedykoľvek zmeniť pomocou tlačidla cookie, ktoré sa zobrazí po výbere na tomto banneri.",
@@ -975,5 +1017,17 @@
   "6F2AF399-1719-470B-B518-4838D3D192F5": "Spolužitie",
   "A25D0042-57BA-423C-B122-CD282D4159C3": "Práva duševného vlastníctva",
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "Sociálne a/alebo ekonomické hodnotenia",
-  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Obchodné pravidlá a normy"
+  "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "Obchodné pravidlá a normy",
+  "Competent National Authority": "Príslušný vnútroštátny orgán",
+  "Contact": "Kontakt",
+  "Biosafety Virtual Library Resources": "Zdroje virtuálnej knižnice biologickej bezpečnosti",
+  "BCH News": "BCH Novinky",
+  "National Focal Point": "Národné kontaktné miesto",
+  "Risk Assessment generated by an independent or non-regulatory process": "Posúdenie rizika vytvorené nezávislým alebo neregulačným procesom",
+  "Genetic element": "Genetický prvok",
+  "Organism": "organizmus",
+  "Living Modified Organism": "Živý modifikovaný organizmus",
+  "Biosafety Organization": "Organizácia biologickej bezpečnosti",
+  "Laboratory for detection and identification of LMOs": "Laboratórium na detekciu a identifikáciu LMO",
+  "What's New": "Čo je nové"
 }
