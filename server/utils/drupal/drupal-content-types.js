@@ -9,37 +9,50 @@ async function getContentMenus (ctx, drupalInternalId) {
     const   lengthMap               = { 2:3, 3:3, 4:6, 5:3, 8:7, 9:7, 10:6, 11:7, 12:3, 16:6 };
     const { localizedHost } = ctx;
 
-    const length         = lengthMap[drupalInternalId] || 20;
-    const filters        = `${getTypeFilterParams({ drupalInternalId })}${getSortParams()}${getPaginationParams({rowsPerPage:length})}`;
+    const length         = lengthMap[drupalInternalId] || 20
+    const filters        = `${getTypeFilterParams({ drupalInternalId })}${getSortParams()}${getPaginationParams({rowsPerPage:length})}`
     const uri            = `${localizedHost}/jsonapi/index/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image${filters}`
-    
-    // consola.info('getContentMenus - URI:', uri);
-    
-    //`${localizedHost}/jsonapi/node/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image&filter[taxonomy_term--tags][condition][path]=field_type_placement.drupal_internal__tid&filter[taxonomy_term--tags][condition][operator]=IN&filter[taxonomy_term--tags][condition][value][]=${encodeURIComponent(drupalInternalId)}&page[limit]=14&sort[sticky][path]=sticky&sort[sticky][direction]=DESC&sort[sort-changed][path]=created&sort[sort-changed][direction]=DESC`;
     const method         = 'get';
-    const headers        = { 'Content-Type': 'application/json' };
+    const headers        = { 'Content-Type': 'application/json' }
 
 
-    const { data, meta } = await $fetch(uri, $fetchBaseOptions({ method, headers }));
+    const { data, meta } = await $fetch(uri, $fetchBaseOptions({ method, headers }))
 
     return { data: data?.map(mapThumbNails(ctx)), count: meta?.count }
 };
+
+
+/**
+ * Builds the sort query string parameters for Drupal JSON:API content requests.
+ * 
+ * Applies a multi-level sort order:
+ * 1. `sticky` - Sticky items first (DESC)
+ * 2. `field_order` - Custom order field (ASC)
+ * 3. `field_published` - Published date (DESC)
+ * 4. `field_start_date` - Start date (DESC)
+ * 5. `changed` - Last modified date (DESC)
+ * 
+ * @returns {string} URL-encoded query string for sort parameters (prefixed with `&`)
+ * @example
+ * // Returns: "&sort[sticky][path]=sticky&sort[sticky][direction]=DESC&..."
+ * const sortParams = getSortParams();
+ */
 function getSortParams(){
 
-    const direction  = 'DESC' ;
+    const direction  = 'DESC' 
 
-    let sortQueryString = '';
+    let sortQueryString = ''
 
     sortQueryString += `&sort[sticky][path]=sticky`
     sortQueryString += `&sort[sticky][direction]=${encodeURIComponent(direction)}`
 
-    sortQueryString += `&sort[promoted][path]=promote`
-    sortQueryString += `&sort[promoted][direction]=${encodeURIComponent(direction)}`
+    sortQueryString += `&sort[sort-order][path]=field_order`
+    sortQueryString += `&sort[sort-order][direction]=ASC`
     sortQueryString += `&sort[sort-published][path]=field_published`
     sortQueryString += `&sort[sort-published][direction]=${encodeURIComponent(direction)}`
     sortQueryString += `&sort[sort-start][path]=field_start_date`
     sortQueryString += `&sort[sort-start][direction]=${encodeURIComponent(direction)}`
-    sortQueryString += `&sort[sort-created][path]=${encodeURIComponent('changed')}`
+    sortQueryString += `&sort[sort-changed][path]=${encodeURIComponent('changed')}`
     sortQueryString += `&sort[sort-created][direction]=${encodeURIComponent(direction)}`
 
     return sortQueryString;
