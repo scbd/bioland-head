@@ -95,11 +95,16 @@ export const useDocumentHelpers = (passedContentRecord, {passedType} = {}) => {
     const { t }      = useI18n();
     const localePath = useLocalePath();
 
-    const  record       = unref(passedContentRecord);
-    const  recordExists = computed(()=> record?.title)
-    const  tags         = computed(()=> record?.tags);
-    const  external     = computed(()=> {
-                                        if(record?.href?.startsWith('https://')) return true;
+    const  record        = unref(passedContentRecord);
+    const  recordExists  = computed(()=> record?.title)
+    const  tags          = computed(()=> record?.tags);
+    const isNotification = computed(()=> record?.schema === 'Notification');
+
+    if(isNotification.value) record.href = 'https://www.cbd.int' + record.url; 
+
+    const  external      = computed(()=> {
+                                        if (isNotification.value) return true;
+                                        if (record?.href?.startsWith("https://")) return true;
                                         if(record?.realms?.length) return true;
 
                                         return false;

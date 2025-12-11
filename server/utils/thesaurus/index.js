@@ -1,3 +1,10 @@
+// Re-export from TypeScript modules
+export { isValidDomain, getApiUrl, thesaurusApiUrls, dataSources, searchableDomains, getSanitizerConfig } from './config';
+export { getThesaurusData, fetchFromApi, getGeoLocations, getBchSubjectGroups, buildBchSubjectChildren, findDomainForTerm } from './fetcher';
+export { sanitizers, getSanitizer, sanitizeItems, getLocalizedName, createSanitizer } from './sanitizers';
+export { ecosystemTypes } from './ecosystems';
+export { documentStates, actionCategories, orgTypeOther, gbfTargets, sdgsShort } from './static-data';
+
 export const getThesaurusByKey = defineCachedFunction(async (keysRaw) => {
 
     if(!keysRaw) return [false];

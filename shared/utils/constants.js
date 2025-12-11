@@ -14,6 +14,7 @@ export const contentTypes = [
     { drupalInternalTid: 4, name: 'Learning Resource', field_plural: 'Learning Resources', icon: '🎓' },
     { drupalInternalTid: 5, name: 'Project', field_plural: 'Projects', icon: '📊' },
     { drupalInternalTid: 6, name: 'Article', field_plural: 'Articles', icon: '📄' },
+    { drupalInternalTid: 6, name: 'Basic Page', field_plural: 'Basic Pages', icon: '📄' },
     { drupalInternalTid: 8, name: 'Government Ministry or Institute', field_plural: 'Government Ministries or Institutes', icon: '🏛️' },
     { drupalInternalTid: 9, name: 'Ecosystem', field_plural: 'Ecosystems', icon: '🌍' },
     { drupalInternalTid: 10, name: 'Protected Area', field_plural: 'Protected Areas', icon: '🏞️' },

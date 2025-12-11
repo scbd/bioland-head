@@ -3,7 +3,7 @@
         <span class="align-self-center" id="breadCrumbLinks">
             <span class="text-nowrap">
                 <NuxtLink :style="style" class="fw-bold" :to="localePath('/')">
-                    {{t('National CHM')}} {{locale}}
+                    {{t('National CHM')}}
                 </NuxtLink>
                 <span>&nbsp; <LazyIcon name="triangle-right"/> &nbsp;</span>
             </span>

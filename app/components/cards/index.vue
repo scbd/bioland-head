@@ -56,6 +56,7 @@
 
                             return record?.value?.tags?.gbfTargets || [];
                         });
+                        // if(schema.value) 
 
     const type = computed(()=> { 
         if(record?.value?.fieldTypePlacement?.name) 
@@ -73,6 +74,8 @@
 
         return record.value?.schema? `- ${t(record?.value?.schema)}`: ''
     });
+
+//consola.warn(record.value);
 </script>
 
 <style lang="scss" scoped>

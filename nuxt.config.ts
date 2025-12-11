@@ -20,6 +20,12 @@ const resolvedLogLevel = resolveLogLevel();
 export default defineNuxtConfig({
   devtools: { enabled: false },
   debug: false,
+  watch: [
+    "~/app/components/**/*", // Watches all .js files in the 'custom' directory within the project root
+    "~/server/api/**/*", // Watches all .ts files in subdirectories of 'server/api'
+    "~/server/utils/**/*", // Watches all .ts files in subdirectories of 'server/utils'
+    "~shared/**/*",
+  ],
   sourcemap: { server: true, client: true },
   logLevel: "verbose",
   css,
@@ -27,9 +33,9 @@ export default defineNuxtConfig({
     pageTransition: { name: "page", mode: "out-in" },
     head: {
       meta: [
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' }
-      ]
-    }
+        { name: "viewport", content: "width=device-width, initial-scale=.80" },
+      ],
+    },
   },
   runtimeConfig: {
     apiUser: process.env.API_USER,
@@ -37,6 +43,17 @@ export default defineNuxtConfig({
     apiKey: process.env.API_KEY,
     panoramaKey: process.env.PANORAMA_KEY,
     jiraToken: process.env.JIRA_TOKEN,
+    // AWS Translate Configuration
+    awsRegion: process.env.AWS_REGION || 'us-east-1',
+    awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    // i18n Cache Database Configuration
+    i18nDbHost: process.env.I18N_DB_HOST,
+    i18nDbPort: process.env.I18N_DB_PORT ? parseInt(process.env.I18N_DB_PORT) : 3306,
+    i18nDbUser: process.env.I18N_DB_USER,
+    i18nDbPassword: process.env.I18N_DB_PASSWORD,
+    i18nDbName: process.env.I18N_DB_NAME || 'i18n_cache',
+    i18nDbConnectionLimit: process.env.I18N_DB_CONNECTION_LIMIT ? parseInt(process.env.I18N_DB_CONNECTION_LIMIT) : 5,
     public: {
       isLocalHost:
         process.env.NUXT_PUBLIC_IS_LOCAL_HOST === "true" ? true : false,
@@ -104,7 +121,7 @@ export default defineNuxtConfig({
     debug: false,
     defaultLocale: "en",
     fallbackLocale: "en",
-    baseUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://www.cbd.int', // Set dynamically via plugin (app/plugins/i18n-base-url.js)
+    baseUrl: process.env.NUXT_PUBLIC_SITE_URL || "https://www.cbd.int", // Set dynamically via plugin (app/plugins/i18n-base-url.js)
     locale: "en",
     detectBrowserLanguage: false, // CRITICAL: Disabled to let DMSM control default locale
     precompile: { strictMessage: false },
@@ -123,11 +140,8 @@ export default defineNuxtConfig({
       hmr: { protocol: "ws", host: "localhost", clientPort: 3000 },
     },
     optimizeDeps: {
-      include: [
-        'string-strip-html',
-        '@unhead/schema-org/vue'
-      ]
-    }
+      include: ["string-strip-html", "@unhead/schema-org/vue"],
+    },
   },
   delayHydration: { mode: "init" },
 

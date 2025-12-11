@@ -5,7 +5,7 @@ import { kebabCase } from 'change-case';
 export default defineEventHandler(async (event) => {
         try{
           const rowsPerPage = 10;
-          const bchRowsPerPage = 1;
+          const bchRowsPerPage = 10;
           const from = DateTime.now()
             .minus({ months: 24 })
             .toFormat("yyyy-MM-dd");

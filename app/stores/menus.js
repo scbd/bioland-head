@@ -82,7 +82,17 @@ export const useMenusStore = defineStore('menus', {
             return this.isInMenu(this.footerCredits, href)
         },
         getContentTypeById(id, locale){
-            return  unref(locale)? Object.values(this.contentTypes).find((ct)=> ct.drupalInternalId === id && ct.langcode === unref(locale)) : Object.values(this.contentTypes).find((ct)=> ct.drupalInternalId === id) ;
+            const localeValue = unref(locale);
+            if (localeValue) {
+                // First try to find by locale
+                const localized = Object.values(this.contentTypes).find((ct)=> ct.drupalInternalId === id && ct.langcode === localeValue);
+                if (localized) return localized;
+                // Fall back to English
+                const english = Object.values(this.contentTypes).find((ct)=> ct.drupalInternalId === id && ct.langcode === 'en');
+                if (english) return english;
+            }
+            // Return first match if no locale specified or no match found
+            return Object.values(this.contentTypes).find((ct)=> ct.drupalInternalId === id);
         },
         getContentTypeByName(name, locale){
             

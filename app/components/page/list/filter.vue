@@ -49,10 +49,26 @@
         const currentLocale = locale.value || siteStore.locale || 'en';
 
         // Build options from menuStore with facet counts
-        // Filter by current locale to avoid duplicate drupalInternalId keys across locales
-        const options = Object.entries(menuStore.contentTypes)
-            .filter(([name, data]) => data.langcode === currentLocale || (!data.langcode && currentLocale === 'en'))
-            .map(([name, data]) => {
+        // Group by drupalInternalId, preferring current locale, falling back to English or any available
+        const contentTypesByIdMap = new Map();
+        Object.entries(menuStore.contentTypes).forEach(([name, data]) => {
+            const id = data.drupalInternalId;
+            const existing = contentTypesByIdMap.get(id);
+            
+            // Priority: current locale > English > first found
+            if (!existing) {
+                contentTypesByIdMap.set(id, data);
+            } else if (data.langcode === currentLocale) {
+                // Current locale always wins
+                contentTypesByIdMap.set(id, data);
+            } else if (data.langcode === 'en' && existing.langcode !== currentLocale) {
+                // English is better than other non-matching locales
+                contentTypesByIdMap.set(id, data);
+            }
+        });
+
+        const options = Array.from(contentTypesByIdMap.values())
+            .map((data) => {
                 const facetCount = facetMap.get(data.drupalInternalId) ?? 0;
                 const labelBase = facetCount === 1 ? data.name : (data.plural || data.name);
                 return {
