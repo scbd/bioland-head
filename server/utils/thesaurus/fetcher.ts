@@ -5,7 +5,7 @@
 import { dataSourceConfigs, searchableDomains, isValidDomain } from './config-new';
 import { sanitizeItems, getSanitizer } from './sanitizers-new';
 import { ecosystemTypes } from './ecosystems';
-import { documentStates, actionCategories, orgTypeOther, gbfTargets } from './static-data';
+import { documentStates, orgTypeOther, gbfTargets } from './static-data';
 import type { SanitizedItem } from '~/shared/types';
 
 const SORT_BY_ID = new Set(['aichis', 'sdgs', 'sdts', 'gbfTargets']);
@@ -19,7 +19,6 @@ const sortItems = (items: SanitizedItem[], domain: string) => {
 const staticData: Record<string, any[]> = {
   ecosystemTypes,
   documentStates,
-  actionCategories,
   gbfTargets
 };
 

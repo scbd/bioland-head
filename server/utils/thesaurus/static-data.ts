@@ -18,21 +18,6 @@ export const orgTypeOther: ThesaurusTerm = {
   title: { en: 'Other' }
 };
 
-// Action categories for biodiversity commitments
-export const actionCategories: ThesaurusTerm[] = [
-  { identifier: 'ACCESS-TO-BENEFIT-SHARING', name: { en: 'Access to Benefit Sharing' } },
-  { identifier: 'BIOSAFETY', name: { en: 'Biosafety' } },
-  { identifier: 'CLIMATE-MITIGATION-AND-ADAPTATION', name: { en: 'Climate Mitigation and Adaptation' } },
-  { identifier: 'LAND-ECOSYSTEMS', name: { en: 'Land Ecosystems' } },
-  { identifier: 'SPECIES', name: { en: 'Species' } },
-  { identifier: 'FOOD-AND-HEALTH', name: { en: 'Food and Health' } },
-  { identifier: 'FRESHWATER-COASTAL-AND-OCEAN-ECOSYSTEMS', name: { en: 'Freshwater, Coastal and Ocean Ecosystems' } },
-  { identifier: 'GREEN-FINANCE', name: { en: 'Green Finance' } },
-  { identifier: 'STEWARDSHIP', name: { en: 'Stewardship' } },
-  { identifier: 'SUSTAINABLE-CONSUMPTION-AND-PRODUCTION', name: { en: 'Sustainable Consumption and Production' } },
-  { identifier: 'URBAN-SUSTAINABILITY', name: { en: 'Urban Sustainability' } }
-];
-
 // Sustainable Development Goals - short names by locale
 export const sdgsShort: Record<string, string[]> = {
   en: [

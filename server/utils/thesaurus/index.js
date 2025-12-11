@@ -3,7 +3,7 @@ export { isValidDomain, getApiUrl, thesaurusApiUrls, dataSources, searchableDoma
 export { getThesaurusData, fetchFromApi, getGeoLocations, getBchSubjectGroups, buildBchSubjectChildren, findDomainForTerm } from './fetcher';
 export { sanitizers, getSanitizer, sanitizeItems, getLocalizedName, createSanitizer } from './sanitizers';
 export { ecosystemTypes } from './ecosystems';
-export { documentStates, actionCategories, orgTypeOther, gbfTargets, sdgsShort } from './static-data';
+export { documentStates, orgTypeOther, gbfTargets, sdgsShort } from './static-data';
 
 export const getThesaurusByKey = defineCachedFunction(async (keysRaw) => {
 

@@ -96,7 +96,6 @@ export const dataSourceConfigs: Record<string, DataSourceConfig> = {
   // Static data domains
   ecosystemTypes:    { source: 'static', searchable: true, sanitizer: { type: 'Place', transform: () => ({ termSetId: 'IUCN-ECOSYSTEMS' }) }},
   documentStates:    { source: 'static', searchable: true, sanitizer: { type: 'Thing' }},
-  actionCategories:  { source: 'static', searchable: true, sanitizer: { type: 'Thing' }},
   
   // Composite domains
   geoLocations:      { source: 'static', searchable: false, sanitizer: { type: 'AdministrativeArea' }},
