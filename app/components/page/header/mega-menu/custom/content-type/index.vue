@@ -38,7 +38,7 @@
     const   isFinalLink        = (aMenu)=> unref(aMenu)?.class?.includes('main-nav-final-link') || unref(aMenu)?.class?.includes('mm-main-nav-final-link');
     const   hasFinalLink       = computed(()=> unref(passedMenu)?.children?.find(aMenu => isFinalLink(aMenu)));
     const   finalLink          = computed(()=> {
-        const existing = unref(hasFinalLink);
+    const   existing           = unref(hasFinalLink);
 
         if(existing)
             return clone(existing);
@@ -121,7 +121,7 @@
 
             if(!contentType) return aMenu; // Content type not loaded yet for this locale
 
-            aMenu.href = localePath(`${contentType.slug}`);
+            aMenu.href = contentType.slug;
         }
         for (const country of countries)
             aMenu.dataMap[country] = getContentTypeData(country)

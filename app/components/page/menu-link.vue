@@ -19,13 +19,27 @@
                                     localize: { type: Boolean, default: false },
                                 });
     const localePath  = useLocalePath()
-    const { href, title, target:targets, localize: shouldLocalize  } = toRefs(props);
+    const { locales: localeObjects } = useRuntimeConfig().public;
+    const localeCodes = localeObjects.map(({ code }) => code);
+    const { href, title, target:targets, localize } = toRefs(props);
 
-    const locale = (path) => shouldLocalize.value? localePath(path): path;
+    const isExternal = computed(() => {
+        const url = unref(href) || '';
+        return url.startsWith('http://') || url.startsWith('https://');
+    });
+
+    const startsWithLocale = computed(() => {
+        const path = unref(href) || '';
+        const pathParts = path.split('/');
+        // Check if path starts with a locale code (e.g., /en/page or /fr/page)
+        return localeCodes.includes(pathParts[1]);
+    });
+
+    const shouldLocalize = computed(() => localize.value && !unref(isExternal) && !unref(startsWithLocale));
+    const locale = (path) => shouldLocalize.value ? localePath(path) : path;
 
 
-    const targetValue = targets;
-    const isExternal  = computed(()=>unref(href).includes(['http'],['https'])) 
+    const targetValue = targets; 
     const to          = computed(() => {
 
         if (!unref(isExternal) && href.value==='/') return locale('/');

@@ -1,5 +1,5 @@
 <template>
-    <NuxtLink  v-if="!noHeader" class="main-nav-sub-heading"  :to="menu.href" :title="menu.title" :external="isExternal" :target="target">
+    <NuxtLink  v-if="!noHeader" class="main-nav-sub-heading"  :to="localizePath(menu.href)" :title="menu.title" :external="isExternal" :target="target">
         <h4 class="text-wrap position-relative d-inline-block mb-2" :style="lineStyle">
             {{menu.title}}
             <LazyIcon v-if="hasArrow" name="arrow-right" class="arrow" :style="arrowStyle"/>
@@ -9,6 +9,7 @@
 </template>
 
 <script setup>
+        const   localizePath = useLocalePath();
         const   props      = defineProps({ menu: Object });
         const { menu }     = toRefs(props);
         const   hasArrow   = computed(()=>menu?.value?.class?.includes('arrow')||menu?.value?.class?.includes('mm-arrow'));
