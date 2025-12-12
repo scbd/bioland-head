@@ -20,12 +20,12 @@ const resolvedLogLevel = resolveLogLevel();
 export default defineNuxtConfig({
   devtools: { enabled: false },
   debug: false,
-  watch: [
-    "~/app/components/**/*", // Watches all .js files in the 'custom' directory within the project root
-    "~/server/api/**/*", // Watches all .ts files in subdirectories of 'server/api'
-    "~/server/utils/**/*", // Watches all .ts files in subdirectories of 'server/utils'
-    "~shared/**/*",
-  ],
+  // watch: [
+  //   "~/app/components/**/*", // Watches all .js files in the 'custom' directory within the project root
+  //   "~/server/api/**/*", // Watches all .ts files in subdirectories of 'server/api'
+  //   "~/server/utils/**/*", // Watches all .ts files in subdirectories of 'server/utils'
+  //   "~shared/**/*",
+  // ],
   sourcemap: { server: true, client: true },
   logLevel: "verbose",
   css,
