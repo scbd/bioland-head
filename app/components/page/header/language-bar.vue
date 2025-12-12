@@ -17,14 +17,14 @@
                 <div v-if="limitedMenus.length > 1 && pageLoaded " class="col-sm-7 d-flex justify-content-end">
                     <ul class="nav" >
                         <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
-                            <NuxtLink v-if="aMenu.code !== 'xx'" class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}">{{aMenu.nativeName}}</NuxtLink>
+                            <NuxtLink v-if="aMenu.code !== 'xx'" class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}" external>{{aMenu.nativeName}}</NuxtLink>
                         </li>
 
                         <li v-if="otherMenus?.length" @click.stop.prevent="toggle" class="nav-item dropdown d-block " v-click-outside="close">
                             <a  ref="dropDownLinkEl" class="nav-link dropdown-toggle" to="#">{{ t('Other') }}</a>
 
                             <div ref="dropDownEl" class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <NuxtLink v-for="(aMenu,index) in otherMenus" :key="index" class="dropdown-item" :to="pageStore?.page?.aliases[aMenu.code]">{{aMenu.nativeName}}</NuxtLink>
+                                <NuxtLink v-for="(aMenu,index) in otherMenus" :key="index" class="dropdown-item" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}" external>{{aMenu.nativeName}}</NuxtLink>
                             </div>
                         </li>
                     </ul>
