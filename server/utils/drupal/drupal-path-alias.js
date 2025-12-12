@@ -85,7 +85,13 @@ export async function mapAliasByLocale(ctx, type, id){
     const isHomePath = homePath === `/${type}/${id}`; 
 
     const languages = await getById(ctx)(type, id, true)
-    const locales = (await getInstalledLanguages(ctx)).map(mapLocaleFromDrupal);
+    // getInstalledLanguages returns array of objects with drupalInternalId
+    // Map each object to include the normalized code from mapLocaleFromDrupal
+    const installedLangs = await getInstalledLanguages(ctx);
+    const locales = installedLangs.map(lang => ({
+        drupalInternalId: lang.drupalInternalId,
+        code: mapLocaleFromDrupal(lang.drupalInternalId || lang.langcode)
+    }));
 
 
     const map = {};

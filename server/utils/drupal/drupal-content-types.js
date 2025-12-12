@@ -165,11 +165,11 @@ function mapThumbNails(ctx){
       // Example in your code context:
       const tags       = field_tags && typeof field_tags === 'string' ? field_tags.split(',') : [];
       const hasAlias   = path?.alias && mapLocaleFromDrupal(path.langcode) === ctx.locale;
-      const localePath = ctx.locale === ctx.defaultLocale ? "" : `/${ctx.locale}`;
 
+      // Don't prepend locale here - the frontend's localePath() will handle localization
       const href = hasAlias
-        ? `${localePath}${path.alias}`
-        : `${localePath}/node/${drupal_internal__nid}`;
+        ? path.alias
+        : `/node/${drupal_internal__nid}`;
 
       if (!hasAttachments)
         return {
