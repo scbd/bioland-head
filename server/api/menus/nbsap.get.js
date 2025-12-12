@@ -1,7 +1,8 @@
 
 export default cachedEventHandler(async (event) => {
         try{
-            const receivedQuery = parseQuery(event);
+            const ctx           = await useRequestContext(event);
+            const receivedQuery = { ...ctx, ...getQuery(event) };
             const query         = getQueryString(receivedQuery);
             const response      = await $indexFetch(query);
 

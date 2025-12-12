@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
             const schemas     = [ 'news', 'notification', 'statement', 'meeting', 'pressRelease' ];
 
             const query             = { ...getQuery(event), drupalInternalIds, rowsPerPage, from, schemas, promote:true };
-            const context           = getContext (event);
+            const context           = await useRequestContext(event);
 
 
             const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(context || query || {}))};` }

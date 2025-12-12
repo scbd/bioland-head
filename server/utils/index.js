@@ -2,15 +2,16 @@
 import limax from 'limax';
 import anyAscii from 'any-ascii';
 
-
-export { unLocales, mapLocaleToDrupal, mapLocaleFromDrupal } from '~/utils/index';
+// NOTE: Do NOT re-export locale functions here - they are exported from translate/locale.js
+// Re-exporting causes "Duplicated imports" warnings during build
+export { unLocales } from '~/utils/index';
 export { htmlSanitize } from '~/utils/html';
 
 
 export function isOddNumber(num) { return num % 2;}
 
-export function passError(event, error){
-    const { siteCode, locale } = getContext(event);
+export async function passError(event, error){
+    const { siteCode, locale } = await useRequestContext(event).catch(() => ({ siteCode: 'unknown', locale: 'en' }));
     const   requestUrl         = new URL(getRequestURL(event));
     const { pathname, host }   = requestUrl;
     const { baseHost, env }    = useRuntimeConfig().public;

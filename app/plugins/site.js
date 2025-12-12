@@ -36,7 +36,8 @@ export default defineNuxtPlugin({
         const pathLocaleOverride = getLocaleFromPath(requestUrl.pathname);
         
         // Fetch context from server (DMSM is cached server-side)
-        const initialContext = await getSiteContext(undefined);
+        // Pass the locale from URL path so siteName is fetched in correct language
+        const initialContext = await getSiteContext(pathLocaleOverride);
         
         // If user is on a specific locale path (e.g., /en, /ru), use that locale
         // Otherwise use DMSM's defaultLocale (e.g., 'es' for seed site)

@@ -1,8 +1,8 @@
 import crypto from 'crypto';
 
-export const getKey =  (event) => {
+export const getKey = async (event) => {
     const { pathname } = new URL(getRequestURL(event))
-    const   ctx        = getContext(event);
+    const   ctx        = await useRequestContext(event).catch(() => ({ siteCode: 'unknown', locale: 'en', multiSiteCode: 'bl2', env: 'dev' }));
     const   query      = getQuery(event);
 
     const { key:k, locale, siteCode , multiSiteCode, env } = ctx;
@@ -42,6 +42,7 @@ const shouldInvalidateCacheForums     = async (event) => shouldInvalidateCache(e
 const shouldInvalidateCacheLists      = async (event) => shouldInvalidateCache(event, 'lists');
 const shouldInvalidateCacheExternal   = async (event) => shouldInvalidateCache(event, 'external');
 const shouldInvalidateCacheMenus      = async (event) => shouldInvalidateCache(event, 'menus');
+const shouldInvalidateCacheTags       = async (event) => shouldInvalidateCache(event, 'tags');
 
 export const shouldBypassCache = async (event, storageName='db') => {
 
@@ -63,6 +64,7 @@ const shouldBypassCacheForums    = async (event) => shouldBypassCache(event, 'fo
 const shouldBypassCacheLists     = async (event) => shouldBypassCache(event, 'lists');
 const shouldBypassCacheExternal  = async (event) => shouldBypassCache(event, 'external');
 const shouldBypassCacheMenus     = async (event) => shouldBypassCache(event, 'menus');
+const shouldBypassCacheTags      = async (event) => shouldBypassCache(event, 'tags');
 
 export const commentCache = { 
     maxAge: 60 * 60 * 60 * 24,
@@ -125,3 +127,24 @@ export const menusCache = {
     shouldBypassCache    :shouldBypassCacheMenus,
     shouldInvalidateCache:shouldInvalidateCacheMenus
 }
+
+export const tagsCache = { 
+    maxAge: 60 * 60 * 12, // 12 hours cache
+    getKey,
+    base:'tags',
+    varies:['host', 'x-forwarded-host'],
+    shouldBypassCache    :shouldBypassCacheTags,
+    shouldInvalidateCache:shouldInvalidateCacheTags
+}
+
+/**
+ * Check if cache should be bypassed based on query params
+ * Checks for 'bypass-cache' or 'seachain-taisce' in context/query
+ * @param {Object} ctx - Context object with query params
+ * @returns {boolean} - True if cache should be bypassed
+ */
+export const shouldBypassCacheByQuery = (ctx) => {
+    const bypassCache = ctx?.['bypass-cache'] || ctx?.bypassCache;
+    const seachainTaisce = ctx?.['seachain-taisce'] || ctx?.seachainTaisce;
+    return !!bypassCache || !!seachainTaisce;
+};

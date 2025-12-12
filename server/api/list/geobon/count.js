@@ -1,7 +1,7 @@
 
 export default cachedEventHandler(async (event) => {
         try{
-            const ctx     = getContext (event);
+            const ctx     = await useRequestContext(event);
             const country = await getCountryName(getCountryCode(ctx));
 
             const body = new FormData();

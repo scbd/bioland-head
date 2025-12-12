@@ -1,8 +1,7 @@
-
 export default defineEventHandler(async (event) => {
         try{
             const query      = getQuery      (event);
-            const ctx        = getContext    (event);
+            const ctx        = await useRequestContext(event);
 
             ctx.topicId = getRouterParam(event, 'topicId');
 

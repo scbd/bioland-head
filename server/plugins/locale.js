@@ -7,12 +7,12 @@
  * 
  * Uses the unified context system (DMSM config is cached)
  */
-import { useRequestContext } from '~/server/utils/context-unified'
+// Server utils (useRequestContext) are auto-imported by Nuxt
 
 export default defineNitroPlugin((nitro) => {
     nitro.hooks.hook("request", async (event) => {
 
-        const skipPaths = ['_i18n','/_ipx','/api','/__nuxt_error','/_nuxt','/sites','/images','/favicon.ico','/.well-known','/fonts.googleapis.com','/.well-known/appspecific'];
+        const skipPaths = ['/_i18n','/_ipx','/api','/__nuxt_error','/_nuxt','/sites','/images','/favicon.ico','/.well-known','/fonts.googleapis.com','/.well-known/appspecific'];
 
         // Check if path should be skipped
         for(let path of skipPaths) {

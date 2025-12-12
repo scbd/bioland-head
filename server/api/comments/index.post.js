@@ -18,13 +18,13 @@ export default defineEventHandler(async (event) => {
 
         const { entityIdentifier, entityType, replyIdentifier, replyType, comment, localeChosen } = await readBody(event);
 
-        const context = await getContext (event);
+        const context = await useRequestContext(event);
         const resp    = await postComment(event);
 
         return resp;
 
         async function postComment(event){
-            const { locale: localeCtx } = await getContext (event);
+            const { locale: localeCtx } = await useRequestContext(event);
             const   locale              = localeChosen || localeCtx;
             const   uri                 = `${context.host}/${locale}${typeMap[entityType]}`;
             const   method              = 'post';

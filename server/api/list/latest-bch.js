@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon';
 import { kebabCase } from 'change-case';
+import consola from 'consola';
 
 
 export default defineEventHandler(async (event) => {
@@ -43,19 +44,25 @@ export default defineEventHandler(async (event) => {
             )};`,
           };
 
-
           // Schema 2 = news, Schema 49 = announcements, Schema 3 = meetings
           // News & announcements: no future date (use changed/published dates)
           // Meetings: include future dates (use field_start_date)
+          
+          // Add context params to queries for internal fetches (siteCode, locale)
+          const contextParams = { siteCode: ctx?.siteCode, locale: ctx?.locale };
+          
           const [newsContent, bchContent] = await Promise.all([
             $fetch(
               "/api/list/drupal",
               $fetchBaseOptions({
-                query: { ...baseQuery, drupalInternalIds: [2, 49, 3] },
+                query: { ...baseQuery, ...contextParams, drupalInternalIds: [2, 49, 3] },
                 method: "get",
                 headers,
               })
-            ),
+            ).catch((e) => {
+              consola.error('[latest-bch] Error fetching drupal content:', e?.message || e);
+              return { data: [] };
+            }),
             // $fetch(
             //   "/api/list/drupal",
             //   $fetchBaseOptions({
@@ -67,15 +74,22 @@ export default defineEventHandler(async (event) => {
             $fetch(
               "/api/list/bch",
               $fetchBaseOptions({
-                query: bchQuery,
+                query: { ...bchQuery, ...contextParams },
                 method: "get",
                 headers,
               })
-            ).then((resp) => resp.data.map(cleanIndexDataMap)),
+            ).then((resp) => resp?.data?.map(cleanIndexDataMap) || [])
+             .catch((e) => {
+              consola.error('[latest-bch] Error fetching BCH content:', e?.message || e);
+              return [];
+            }),
           ]);
 
 
-          const top3Articles = await getTop3BchArticles(context?.locale || 'en');
+          const top3Articles = await getTop3BchArticles(ctx?.locale || 'en').catch((e) => {
+            consola.error('[latest-bch] Error fetching top 3 BCH articles:', e?.message || e);
+            return [];
+          });
 
           return sortData([
             ...(newsContent?.data || []), 

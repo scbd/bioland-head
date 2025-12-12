@@ -13,28 +13,60 @@ import type { SiteContext, DmsmConfig, ContextCookie } from '~/shared/types'
 const DMSM_CACHE_TTL = 60 * 60 * 24 // 24 hours in seconds
 const DMSM_CACHE_BASE = 'dmsm-config'
 
+interface RequestContextOptions {
+  /** Explicit siteCode (skips host extraction) - used by context API route */
+  siteCode?: string
+  /** Explicit locale (skips path/cookie resolution) */
+  locale?: string
+}
+
 /**
  * Get site context for the current request
  * Caches result on event.context.site to avoid re-resolution
+ * 
+ * @param event - H3 event
+ * @param options - Optional overrides for siteCode and locale (used by context API route)
  */
-export async function useRequestContext(event: H3Event): Promise<SiteContext> {
-  // Return cached context if already resolved for this request
-  if (event.context.site) {
+export async function useRequestContext(event: H3Event, options?: RequestContextOptions): Promise<SiteContext> {
+  const { baseHost, env, multiSiteCode, locales: runtimeLocales } = useRuntimeConfig().public
+  
+  // If explicit siteCode provided (from route params), use it directly
+  // This is for the /api/context/[siteCode]/[locale] route where host may be localhost
+  const explicitSiteCode = options?.siteCode
+  const explicitLocale = options?.locale
+  
+  // Create cache key based on whether we have explicit params
+  const cacheKey = explicitSiteCode ? `site-${explicitSiteCode}-${explicitLocale || 'default'}` : 'site'
+  
+  // Return cached context if already resolved for this request (only for non-explicit calls)
+  if (!explicitSiteCode && event.context.site) {
     return event.context.site as SiteContext
   }
 
-  const { baseHost, env, multiSiteCode, locales: runtimeLocales } = useRuntimeConfig().public
-
-  // 1. Extract siteCode from hostname
-  const host = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host') || ''
-  const siteCode = extractSiteCodeFromHost(host)
-
+  // 1. Extract siteCode from hostname OR use explicit value OR query params OR cookie
+  let siteCode = explicitSiteCode
   if (!siteCode) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Bad Request',
-      message: `Could not derive siteCode from host: ${host}`
-    })
+    const host = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host') || ''
+    siteCode = extractSiteCodeFromHost(host)
+
+    // Fallback: try to get siteCode from query params (for internal fetches from client)
+    if (!siteCode) {
+      const query = getQuery(event) as { siteCode?: string }
+      siteCode = query.siteCode || null
+    }
+
+    // Fallback: try to get siteCode from context cookie (for internal server-to-server fetches)
+    if (!siteCode) {
+      siteCode = getCookieSiteCode(event)
+    }
+
+    if (!siteCode) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Bad Request',
+        message: `Could not derive siteCode from host: ${host}`
+      })
+    }
   }
 
   // 2. Get DMSM config (cached)
@@ -48,10 +80,18 @@ export async function useRequestContext(event: H3Event): Promise<SiteContext> {
     })
   }
 
-  // 3. Resolve locale (priority: path > cookie > DMSM default)
-  const pathLocale = extractLocaleFromPath(event.path, config.locales, runtimeLocales)
-  const cookieLocale = getCookieLocale(event)
-  const locale = resolveLocale(pathLocale, cookieLocale, config.defaultLocale, config.locales)
+  // 3. Resolve locale (priority: explicit > query > path > cookie > DMSM default)
+  let locale: string
+  if (explicitLocale && explicitLocale !== 'und' && config.locales.includes(explicitLocale)) {
+    locale = explicitLocale
+  } else {
+    // Also check query params for locale (internal fetches from client include it)
+    const query = getQuery(event) as { locale?: string }
+    const queryLocale = query.locale && config.locales.includes(query.locale) ? query.locale : null
+    const pathLocale = extractLocaleFromPath(event.path, config.locales, runtimeLocales)
+    const cookieLocale = getCookieLocale(event)
+    locale = resolveLocale(queryLocale || pathLocale, cookieLocale, config.defaultLocale, config.locales)
+  }
 
   // 4. Build full context
   const context = buildSiteContext({
@@ -63,8 +103,10 @@ export async function useRequestContext(event: H3Event): Promise<SiteContext> {
     baseHost
   })
 
-  // 5. Cache on event for this request
-  event.context.site = context
+  // 5. Cache on event for this request (only for non-explicit calls)
+  if (!explicitSiteCode) {
+    event.context.site = context
+  }
 
   return context
 }
@@ -133,6 +175,21 @@ function extractLocaleFromPath(
   // Fallback to runtime locales
   const validCodes = runtimeLocales?.map(l => l.code) || []
   return validCodes.includes(potentialLocale) ? potentialLocale : null
+}
+
+/**
+ * Get siteCode from context cookie (for internal server-to-server fetches)
+ */
+function getCookieSiteCode(event: H3Event): string | null {
+  try {
+    const { context: cookieStr } = parseCookies(event)
+    if (!cookieStr) return null
+
+    const cookie = JSON.parse(decodeURIComponent(cookieStr)) as Partial<ContextCookie>
+    return cookie.siteCode || null
+  } catch {
+    return null
+  }
 }
 
 /**

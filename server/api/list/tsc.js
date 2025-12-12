@@ -2,7 +2,7 @@ export default cachedEventHandler(async (event) => {
         try{
             const { gaiaApi }  = useRuntimeConfig().public;
             const   query      = getQuery   (event);
-            const   ctx        = getContext (event);
+            const   ctx        = await useRequestContext(event);
 
             const { locale, rows }  = { ...ctx, ...query };
             const   indexLocale     = unLocales.includes(locale)? locale?.toUpperCase() : 'EN';

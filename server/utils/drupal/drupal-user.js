@@ -3,7 +3,7 @@ const anonUser = { userID: 1, name: 'anonymous', email: '@anonymous', isAuthenti
 export const getUser = async (event, repo) => {
 
     try{
-        const { localizedHost, env, siteCode, locale , multiSiteCode, locales, defaultLocale} = getContext(event);
+        const { localizedHost, env, siteCode, locale , multiSiteCode, locales, defaultLocale} = await useRequestContext(event);
 
         if(!siteCode ||  !isValidLocalePrefix({defaultLocale, locales, locale})) return anonUser;
 
@@ -34,8 +34,8 @@ export const getUser = async (event, repo) => {
     }   
 }
 
-  function getKeyUser(event){
-    const { localizedHost, env, siteCode, locale , multiSiteCode, locales, defaultLocale} = getContext(event);
+  async function getKeyUser(event){
+    const { localizedHost, env, siteCode, locale , multiSiteCode, locales, defaultLocale} = await useRequestContext(event);
 
     return`${env}-${siteCode}-${locale}-${multiSiteCode}-${localizedHost}`;
   }
@@ -52,7 +52,7 @@ export async function getToken(event) {
 
     if(!me.isAuthenticated) return '';
 
-    const { localizedHost, siteCode } = getContext(event);
+    const { localizedHost, siteCode } = await useRequestContext(event);
 
     if(!siteCode) return createError({ statusCode: 500, statusMessage: 'Server.drupal.user.getToken: no context derived' })
         
@@ -86,8 +86,8 @@ function mapUserFromDrupal({ data, included }, token, event){
     }
 }
 
-function getImg(event, included=[]){
-    const { host, siteCode } = getContext(event);
+async function getImg(event, included=[]){
+    const { host, siteCode } = await useRequestContext(event);
     const imgData = included.find(({ type }) => type === 'file--file');
 
     if(!imgData) return;

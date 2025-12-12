@@ -1,8 +1,8 @@
 import { stripHtml } from "string-strip-html"; 
 export default cachedEventHandler(async (event) => {
         try{
-            const query            = parseQuery   (event);
-            const ctx              = getContext (event);
+            const query            = getQuery(event);
+            const ctx              = await useRequestContext(event);
 
             const { locale, countries } = { ...ctx, ...query }
 
