@@ -1,3 +1,4 @@
+import { thesaurusSourceMap } from '../thesaurus/source-map';
 
 export function getTagFilterParams(filters){
     if(!filters || !filters?.length) return '';
@@ -30,9 +31,9 @@ export function getPaginationParams({ page=1, rowsPerPage=10 }){
     const overFetchMultiplier = 5;
     const drupalLimit = limit * overFetchMultiplier;
     
-    // For pages beyond 1, we need to skip items. Since access filtering is unpredictable,
-    // we use the drupal limit as the offset unit.
-    const offSet = pageNum > 1 ? (pageNum - 1) * drupalLimit : 0;
+    // The offset should be based on the actual requested page size (limit), not the over-fetched drupalLimit.
+    // This ensures proper pagination where page 2 starts at offset = rowsPerPage (e.g., 10), not drupalLimit (e.g., 50).
+    const offSet = pageNum > 1 ? (pageNum - 1) * limit : 0;
 
     return `&page[limit]=${encodeURIComponent(drupalLimit)}&page[offset]=${encodeURIComponent(offSet)}`;
 }
