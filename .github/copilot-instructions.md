@@ -1,14 +1,28 @@
 # Bioland Head - AI Coding Agent Instructions
 
+## Instruction Precedence (Highest → Lowest)
+
+| Priority | File | Governs |
+|----------|------|---------|
+| 1 | `personal.md` | Memory, voice, user context, communication style |
+| 2 | `default.instructions.md` | Code standards, naming, tools, architecture |
+| 3 | `copilot-instructions.md` | Project overview, domain context |
+
+**Conflict Resolution:**
+- When instructions conflict, **higher priority wins**
+- If same priority level, **more specific rule wins** over general rule
+- If still ambiguous, **ask user** before proceeding
+- Never silently ignore a conflict—flag it in your response
+
 ## Important!
-- if this exists follow these memory rules every questions for every response`.github/instructions/personal.md`
-- if it exists the default guidance at `.github/instructions/default.instructions.md` is the canonical source of instructions for every response.
-- **CRITICAL**:if this exists, Follow the Jira and Git workflow at `.github/instructions/workflow.md` for ALL code generation tasks for every response.
+- Follow memory rules from `.github/instructions/personal.md` for every response
+- Follow code standards from `.github/instructions/default.instructions.md` as canonical source
+- Jira workflow is documented in the Jira Issue Management section below
 
 ## Speed and Accuracy
 - Prioritize speed and accuracy in code generation.
-- Use sub agents tool when every you can to save time or verify accuracy.
-- same use claude, gemini and codex mcp's as subagent as well.'
+- Use `runSubagent` tool liberally to improve speed through parallel/async execution.
+- MCP LLM tools (claude, gemini, codex) are restricted - only use when explicitly requested for collaboration/consensus.
 
 ## Overview
 Multi-site headless Drupal 11 + Nuxt.js 4 system serving hundreds of CBD-related websites from a single codebase. Every request is context-driven by site code, locale, and environment.
@@ -123,7 +137,7 @@ yarn clean
 
 ## File Naming & Structure
 
-- **Components:** `PascalCase.vue` (auto-imported)
+- **Components:** `kebab-case.vue` (auto-imported)
 - **Composables:** `kebab-case.js` in `composables/` (auto-imported, must use Vue APIs)
 - **Utilities:** `kebab-case.js` in `utils/` (pure functions, no Vue context)
 - **Stores:** `kebab-case.js` in `stores/` (Pinia stores)

@@ -1,34 +1,15 @@
 
 
 ## Table of Contents
-1. [AI Agent Guidelines](#ai-agent-guidelines)
-2. [Technology Stack](#technology-stack)
-3. [Naming Conventions](#naming-conventions)
-4. [Code Standards](#code-standards)
-5. [Error Handling](#error-handling)
-6. [Version Control](#version-control)
-7. [Code Review Process](#code-review-process)
+1. [Technology Stack](#technology-stack)
+2. [Naming Conventions](#naming-conventions)
+3. [Code Standards](#code-standards)
+4. [Error Handling](#error-handling)
+5. [Version Control](#version-control)
+6. [Code Review Process](#code-review-process)
 
 
 ---
-## AI Agent Guidelines
-
-### Tool Usage
-
-#### General Principle
-- **MUST use your direct tool usage** when working on tasks without collaboration or async requirements using sub agents or sub agent mcp's such as claude, gemini or codex mcps.
-- Only delegate to subagents when explicitly requested, when async execution is required, or when proactively suggested and approved by user.  
-- **Proactive suggestions:** If you identify an opportunity where a subagent would save significant time or provide more accurate/complete results, suggest it to the user with clear reasoning and wait for approval before proceeding.  Do the same if the you have no tool capible of a task needed but a sub agent does.
-
-
-
-#### Subagent Usage
-- **ONLY use subagents when explicitly directed by the user**
-- Primary use cases for subagents:
-  - Async/background work that doesn't block the main conversation
-  - LLM collaborative work requiring multiple AI perspectives
-  - Complex research tasks requiring independent execution
-- Default to direct execution unless specifically instructed otherwise
 
 ## Technology Stack
 
@@ -88,7 +69,7 @@
 
 #### Files
 - Use **kebab-case** for all files to avoid case-sensitivity issues across different operating systems
-- Examples: `user-service.ts`, `auth-controller.js`, `data-validator.ts`
+- Examples: `user-service.ts`, `auth-controller.js`, `data-validator.ts`, `user-profile.vue`
 
 **Special Files (UPPERCASE):**
 - `README.md` - Main repository documentation
