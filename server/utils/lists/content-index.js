@@ -12,6 +12,35 @@ export const useContentTypeIndex = async (ctx) => {
     return  getListIndex(ctx);
 }
 
+// /**
+//  * Fetch field_tags from the default locale for a specific node
+//  * This is needed because field_tags may not be translatable in Drupal,
+//  * so translated content doesn't include the tag data
+//  * @param {Object} ctx - Context with host and defaultLocale
+//  * @param {string} uuid - Drupal node UUID
+//  * @returns {Promise<Object|null>} - The field_tags object or null
+//  */
+
+// Fetch field_tags with caching, respects bypass-cache and seachain-taisce query params
+const fetchDefaultLocaleTags = defineCachedFunction(async (ctx, uuid) => {
+    const { host, defaultLocale } = ctx;
+    const defaultLocalePath = defaultLocale ? `/${defaultLocale}` : '/en';
+    const uri = `${host}${defaultLocalePath}/jsonapi/node/content/${uuid}?fields[node--content]=field_tags`;
+    
+    try {
+        const response = await $fetch(uri, $fetchBaseOptions({ method: 'get', headers: { 'Content-Type': 'application/json' } }));
+        return response?.data?.field_tags || response?.data?.fieldTags || null;
+    } catch (e) {
+        // Node might not exist or be accessible in default locale
+        return null;
+    }
+}, {
+    maxAge: 60 * 60 * 12, // 12 hours cache
+    getKey: (ctx, uuid) => `${ctx.host}-${ctx.defaultLocale}-${uuid}`,
+    base: 'tags',
+    shouldBypassCache: (ctx) => shouldBypassCacheByQuery(ctx)
+});
+
 function mapData(ctx){
 
 
@@ -20,11 +49,34 @@ function mapData(ctx){
         const promises = [];
 
         for (const aDoc of results.data){
-            const { value, value2 } = (aDoc?.field_tags ||  aDoc?.fieldTags) || {};
-            const keys = ((value || '') + (value2 ? ','+value2 : '')).split(',').map(k=>k.trim()).filter(Boolean);
+            // Get field_tags from current doc - may be null for non-default locale translations
+            // Drupal's field_tags is often not translatable, so we need to handle this
+            let fieldTags = aDoc?.field_tags || aDoc?.fieldTags;
+            
+            // If no field_tags and we're in a non-default locale, try to get from default locale
+            // This handles the case where field_tags is not a translatable field in Drupal
+            if(!fieldTags && ctx.locale !== ctx.defaultLocale && aDoc?.id) {
+                promises.push(
+                    fetchDefaultLocaleTags(ctx, aDoc.id)
+                        .then((defaultTags) => {
+                            if(defaultTags) {
+                                const { value, value2 } = defaultTags;
+                                const keys = ((value || '') + (value2 ? ','+value2 : '')).split(',').map(k=>k.trim()).filter(Boolean);
+                                if(keys.length) {
+                                    return getThesaurusByKey(keys).then((p) => { aDoc.tags = mapTagsByType(p) || {}; });
+                                }
+                            }
+                        })
+                        .catch(() => { /* silently ignore fetch errors */ })
+                );
+            } else {
+                const { value, value2 } = fieldTags || {};
+                const keys = ((value || '') + (value2 ? ','+value2 : '')).split(',').map(k=>k.trim()).filter(Boolean);
       
-            if(keys)
-                promises.push(getThesaurusByKey(keys).then((p)=>{aDoc.tags =mapTagsByType(p) ;}));
+                // Only fetch thesaurus data if we have keys
+                if(keys.length)
+                    promises.push(getThesaurusByKey(keys).then((p)=>{aDoc.tags = mapTagsByType(p) || {};}));
+            }
         }
         await Promise.all(promises);
 
@@ -100,6 +152,40 @@ async function getListIndex(ctx ) {
 
     // Map all fetched data first
     const mappedResults = await mapData(ctx)({ data, count });
+    
+    // Apply stable sort with ID as final tiebreaker to ensure deterministic ordering
+    // This prevents SSR/hydration mismatches when Drupal returns items with same sort field values
+    // in non-deterministic order across different requests.
+    // We replicate Drupal's sort order and add ID as final tiebreaker:
+    // 1. sticky (DESC) 2. fieldOrder (ASC) 3. fieldStartDate (DESC) 4. changed (DESC) 5. id (ASC)
+    if (mappedResults.data && mappedResults.data.length > 1) {
+        mappedResults.data.sort((a, b) => {
+            // sticky DESC (true = 1 comes before false = 0)
+            const stickyA = a.sticky ? 1 : 0;
+            const stickyB = b.sticky ? 1 : 0;
+            if (stickyB !== stickyA) return stickyB - stickyA;
+            
+            // fieldOrder ASC (lower numbers first, default 10000)
+            const orderA = a.fieldOrder ?? 10000;
+            const orderB = b.fieldOrder ?? 10000;
+            if (orderA !== orderB) return orderA - orderB;
+            
+            // fieldStartDate DESC (newer first)
+            const startA = a.fieldStartDate || '';
+            const startB = b.fieldStartDate || '';
+            if (startA !== startB) return startB.localeCompare(startA);
+            
+            // changed DESC (newer first)
+            const changedA = a.changed || '';
+            const changedB = b.changed || '';
+            if (changedA !== changedB) return changedB.localeCompare(changedA);
+            
+            // Final tiebreaker: id ASC (stable UUID)
+            const idA = a.id || a.dnid || '';
+            const idB = b.id || b.dnid || '';
+            return String(idA).localeCompare(String(idB));
+        });
+    }
     
     // Slice to requested page size since getPaginationParams over-fetches to compensate for access filtering
     // See: https://www.drupal.org/docs/core-modules-and-themes/core-modules/jsonapi-module/pagination
