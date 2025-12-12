@@ -24,7 +24,7 @@
 /**
  * Content type definition with Drupal Term ID, names, and display icon.
  */
-export interface ContentType {
+interface ContentType {
   /** The internal Drupal Term ID (tid) for this content type */
   drupalInternalTid: number;
   /** The singular display name of the content type */

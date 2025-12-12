@@ -1,6 +1,5 @@
 import consola from 'consola';
 import type { ConsolaInstance } from 'consola';
-import { colorize } from 'consola/utils';
 import { LOG_LEVEL } from './constants';
 import type { LogLevelConfig, ConfiguredLogger } from '#shared/types/logger';
 

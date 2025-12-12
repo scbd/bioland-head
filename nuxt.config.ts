@@ -2,7 +2,7 @@ import locales from './i18n/locales'        ;
 import en      from './i18n/locales/en.json';
 import domains from './configs/domains'     ;
 import cookieControl from './configs/cookie-control';
-import { LOG_LEVEL } from './shared/utils/constants.js';
+import { LOG_LEVEL } from './shared/utils/constants';
 
 const css   =   [ '~/assets/custom.scss', 'vue-final-modal/style.css' ]
 
