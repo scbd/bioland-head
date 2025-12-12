@@ -1,5 +1,4 @@
-import { useRequestContext, passError } from '~/server/utils/context';
-import { getLocalizedName } from '~/server/utils/thesaurus/sanitizers';
+// Server utils (useRequestContext, passError, getLocalizedName) are auto-imported by Nuxt
 
 export default defineEventHandler(async (event) => {
   try {

@@ -5,7 +5,7 @@
  * Response: { supported?: string[], unsupported?: string[], all?: string[], count?: number }
  */
 
-import { getAwsSupportedLanguages, checkSupportedLocales } from '~/server/utils/translate'
+// Note: getAwsSupportedLanguages and checkSupportedLocales are auto-imported from server/utils/translate
 
 export default defineEventHandler(async (event) => {
   const { check, sourceLocale = 'en' } = getQuery(event)

@@ -6,7 +6,7 @@
  * Response: { translation: string | string[], stats?: object }
  */
 
-import { translateText, createTranslator } from '~/server/utils/translate'
+// Server utils (translateText, createTranslator) are auto-imported by Nuxt
 
 export default defineEventHandler(async (event) => {
   const { text, targetLocale, sourceLocale = 'en' } = await readBody(event)

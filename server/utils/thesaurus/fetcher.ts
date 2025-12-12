@@ -2,8 +2,8 @@
  * Thesaurus Data Fetcher (Refactored)
  * Simplified fetcher using unified config
  */
-import { dataSourceConfigs, searchableDomains, isValidDomain } from './config-new';
-import { sanitizeItems, getSanitizer } from './sanitizers-new';
+import { dataSourceConfigs, searchableDomains, isValidDomain } from './config';
+import { sanitizeItems, getSanitizer } from './sanitizers';
 import { ecosystemTypes } from './ecosystems';
 import { documentStates, orgTypeOther, gbfTargets } from './static-data';
 import type { SanitizedItem } from '~/shared/types';

@@ -1,9 +1,9 @@
 /**
  * Thesaurus Sanitizers (Refactored)
- * Factory-based sanitizer using configuration from config-new.ts
+ * Factory-based sanitizer using configuration from config.ts
  */
 import type { ThesaurusItem, SanitizedItem, LString } from '~/shared/types';
-import { dataSourceConfigs, type SanitizerConfig } from './config-new';
+import { dataSourceConfigs, type SanitizerConfig } from './config';
 
 /** Extract localized text from lstring, falls back to 'en' */
 export const getLocalizedName = (val: LString | string | undefined, locale = 'en'): string | undefined => {

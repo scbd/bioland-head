@@ -1,5 +1,4 @@
-import { useRequestContext } from '~/server/utils/context';
-import { findDomainForTerm } from '~/server/utils/thesaurus';
+// Server utils (useRequestContext, findDomainForTerm, passError) are auto-imported by Nuxt
 
 export default defineEventHandler(async (event) => {
   try {

@@ -1,9 +1,6 @@
-// Re-export from TypeScript modules
-export { isValidDomain, getApiUrl, thesaurusApiUrls, dataSources, searchableDomains, getSanitizerConfig } from './config';
-export { getThesaurusData, fetchFromApi, getGeoLocations, getBchSubjectGroups, buildBchSubjectChildren, findDomainForTerm } from './fetcher';
-export { sanitizers, getSanitizer, sanitizeItems, getLocalizedName, createSanitizer } from './sanitizers';
-export { ecosystemTypes } from './ecosystems';
-export { documentStates, orgTypeOther, gbfTargets, sdgsShort } from './static-data';
+// NOTE: Do NOT re-export from TS modules here - Nuxt auto-imports them directly
+// Re-exporting causes "Duplicated imports" warnings during build
+// Individual exports like config.ts, fetcher.ts, sanitizers.ts, etc. are auto-imported by Nuxt
 
 export const getThesaurusByKey = defineCachedFunction(async (keysRaw) => {
 
