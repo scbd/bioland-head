@@ -29,6 +29,10 @@ pages-*
 cypress*
 .unlighthouse
 outputDir
+
+# Playwright artifacts
+playwright-report
+test-results
 .vscode
 .yarn
 .github/*

@@ -165,8 +165,30 @@ yarn clean            # Clear Nuxt cache
 yarn test             # Run tests (watch mode)
 yarn test:run         # Run tests once
 yarn test:coverage    # Run with coverage
+yarn test:e2e         # Run Playwright E2E tests
+yarn test:e2e:ui      # Run Playwright E2E tests (UI)
+yarn test:e2e:report  # Open the latest Playwright HTML report
 yarn analyze          # Bundle analysis
 ```
+
+## End-to-end testing (Playwright)
+
+This repo uses Nuxt's Playwright integration (`@nuxt/test-utils/playwright`) with the Playwright test runner.
+
+### Target URL configuration
+
+By default, E2E tests run against:
+
+- `http://seed.localhost:3000`
+
+You can override the test target without changing any test code:
+
+- `E2E_BASE_URL` - explicit base URL (highest priority)
+- `E2E_TARGET` - named target from `tests/e2e/e2e-targets.ts` (defaults to `seed`)
+
+### Running
+
+- Ensure the target app is running (for seed: `yarn dev-open-bsl`), then run `yarn test:e2e`.
 
 ## File Naming Conventions
 
