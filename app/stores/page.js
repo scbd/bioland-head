@@ -135,7 +135,11 @@ export const usePageStore = defineStore('page', {
         
             if(!heroImages.length) return undefined;
         
-            const picIndex = randomTime(heroImages.length);
+            // Use hour-based selection instead of minute-based for SSR stability
+            // This ensures server and client render the same hero image during hydration
+            const now = new Date();
+            const hourOfDay = now.getHours();
+            const picIndex = Math.floor((hourOfDay / 24) * heroImages.length);
 
             return heroImages[picIndex];
         },

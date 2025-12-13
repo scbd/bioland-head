@@ -3,6 +3,11 @@ import { colors } from "consola/utils";
 
 export const $fetchBaseOptions = (options = {}) => ({onRequest, onRequestError,onResponse,onResponseError,method:'GET',redirect: 'follow',  ...options})
 
+function shouldLogServerOutRequests () {
+  const { logAll, logServerOutRequests } = useRuntimeConfig().public || {}
+  return !!(logAll || logServerOutRequests)
+}
+
 async function onRequest({ request, options }) {
   const { logAll, logServerOutRequests }  = useRuntimeConfig().public;
 
@@ -11,7 +16,8 @@ async function onRequest({ request, options }) {
 
 }
 async function onRequestError({ request, options, error }) {
-    consola.error( `${colors.red('[fetch request error]')}`, request, error);
+  //if (!shouldLogServerOutRequests()) return
+  consola.error( `${colors.red('[fetch request error]')}`, request, error);
 }
 
 
@@ -23,5 +29,6 @@ async function onResponse({ request, response, options }) {
 }
 
 async function onResponseError({ request, response, options }) {
-    consola.error( `${colors.red('[fetch response error]')}`, request, response.status, response.statusText );
+  //if (!shouldLogServerOutRequests()) return
+  consola.error( `${colors.red('[fetch response error]')}`, request, response.status, response.statusText );
 }

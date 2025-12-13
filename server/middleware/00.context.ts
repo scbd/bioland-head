@@ -9,7 +9,8 @@
 
 export default defineEventHandler(async (event) => {
   // Skip static assets and internal routes
-  const skipPaths = ['/_nuxt', '/_ipx', '/__nuxt', '/favicon.ico', '/.well-known', '/fonts']
+  // Note: /_i18n is Nuxt i18n's lazy-loaded messages endpoint and does not require site context.
+  const skipPaths = ['/_nuxt', '/_ipx', '/_i18n', '/__nuxt', '/favicon.ico', '/.well-known', '/fonts']
   
   for (const path of skipPaths) {
     if (event.path.startsWith(path)) return

@@ -29,7 +29,9 @@
     const siteStore        = useSiteStore();
     const pageStore        = usePageStore();
     const route            = useRoute();
-    const hasHeroImage     = computed(() => pageStore?.page?.hasHeroImage || pageStore?.heroImage?.fieldMediaImage?.uri?.url);
+    // Check both data availability AND that host is properly initialized
+    const isHostReady      = computed(() => siteStore.host && !siteStore.host.includes('undefined'));
+    const hasHeroImage     = computed(() => isHostReady.value && (pageStore?.page?.hasHeroImage || pageStore?.heroImage?.fieldMediaImage?.uri?.url));
     const img              = useImage();
     const isDevSite        = computed(()=> !siteStore?.config?.published || siteStore?.config?.hasBl1);
     const hi               = computed(() => pageStore.heroImage);
@@ -37,6 +39,9 @@
     const backgroundStyles = computed(() => {
 
         if(!hasHeroImage.value || !pageStore?.heroImage?.fieldMediaImage?.uri?.url) return {}
+
+        // Guard against undefined host during SSR before context is fully resolved
+        if(!siteStore.host || siteStore.host.includes('undefined')) return {}
 
         const imgOptions = { 
                                 height : 750,

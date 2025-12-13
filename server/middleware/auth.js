@@ -1,6 +1,6 @@
 export default defineEventHandler(async (event) => {
     const { pathname } = new URL(getRequestURL(event))
-    const   skipPaths  = ['/api/menus/topics','/api/menus/drupal','/api/menus/system-page','/_ipx','/api/context','/__nuxt_error','/_nuxt', '/api/menus/absch', '/api/menus/bch', '/api/menus/nr', '/api/menus/nr6', '/api/menus/nbsap', '/api/menus/focal-points', '/api/menus/content-types', '/api/menus/languages'];
+    const   skipPaths  = ['/api/menus/topics','/api/menus/drupal','/api/menus/system-page','/_ipx','/_i18n','/api/context','/__nuxt_error','/_nuxt', '/api/menus/absch', '/api/menus/bch', '/api/menus/nr', '/api/menus/nr6', '/api/menus/nbsap', '/api/menus/focal-points', '/api/menus/content-types', '/api/menus/languages'];
 
     for(let path of skipPaths)
         if(pathname.startsWith(path)) return;

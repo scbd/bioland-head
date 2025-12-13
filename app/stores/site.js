@@ -24,6 +24,9 @@ export const useSiteStore = defineStore('site', {
         getHost(ignoreLocale = false){
             const { locale, siteCode, baseHost, redirect } = this;
         
+            // Guard against incomplete initialization during SSR
+            if (!siteCode || !baseHost) return '';
+        
             const pathLocale = ignoreLocale? '' : `/${locale}`;
             const base       = redirect    ? `https://${redirect}` : `https://${encodeURIComponent(siteCode)}.${encodeURIComponent(baseHost)}`;
         

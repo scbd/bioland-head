@@ -46,7 +46,9 @@ export async function useRequestContext(event: H3Event, options?: RequestContext
   // 1. Extract siteCode from hostname OR use explicit value OR query params OR cookie
   let siteCode = explicitSiteCode
   if (!siteCode) {
-    const host = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host') || ''
+    const rawHost = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host') || ''
+    const host = normalizeHost(rawHost)
+
     siteCode = extractSiteCodeFromHost(host)
 
     // Fallback: try to get siteCode from query params (for internal fetches from client)
@@ -64,7 +66,7 @@ export async function useRequestContext(event: H3Event, options?: RequestContext
       throw createError({
         statusCode: 400,
         statusMessage: 'Bad Request',
-        message: `Could not derive siteCode from host: ${host}`
+        message: `Could not derive siteCode from host: ${host || rawHost || 'unknown'}`
       })
     }
   }
@@ -148,8 +150,33 @@ async function getCachedDmsmConfig(siteCode: string): Promise<DmsmConfig | null>
  */
 function extractSiteCodeFromHost(host: string): string | null {
   if (!host) return null
+
+  // Ignore common non-multisite hosts.
+  // These can happen for internal/self fetches or when an upstream proxy strips Host.
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return null
+  if (host.startsWith('[')) return null // IPv6 literal like [::]
+
   const parts = host.split('.')
   return parts.length > 1 ? parts[0] : null
+}
+
+/**
+ * Normalize host header values:
+ * - take first value if comma-separated (x-forwarded-host)
+ * - strip port (example.com:443)
+ * - trim whitespace
+ */
+function normalizeHost(rawHost: string): string {
+  if (!rawHost) return ''
+
+  // x-forwarded-host can be a comma-separated list; first is the original host.
+  const first = rawHost.split(',')[0]?.trim() || ''
+
+  // Strip port if present (avoid breaking subdomain extraction)
+  // Keep IPv6 literals untouched (they start with '[').
+  if (first.startsWith('[')) return first
+
+  return first.replace(/:\d+$/, '')
 }
 
 /**

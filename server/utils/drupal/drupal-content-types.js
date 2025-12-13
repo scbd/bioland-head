@@ -1,8 +1,17 @@
 
 export const useContentTypeMenus = async (ctx) => {
-    await useDrupalLogin(ctx.siteCode);
+    try {
+        await useDrupalLogin(ctx.siteCode);
 
-    return  makeTypeMap(await getAllContentTypeMenus(ctx), ctx);
+        return makeTypeMap(await getAllContentTypeMenus(ctx), ctx);
+    }
+    catch (e) {
+   
+        consola.fail('useContentTypeMenus - upstream failure', e);
+
+
+        return {};
+    }
 }
 
 async function getContentMenus (ctx, drupalInternalId) {
@@ -17,9 +26,16 @@ async function getContentMenus (ctx, drupalInternalId) {
     const headers        = { 'Content-Type': 'application/json' }
 
 
-    const { data, meta } = await $fetch(uri, $fetchBaseOptions({ method, headers }))
+    try {
+        const { data, meta } = await $fetch(uri, $fetchBaseOptions({ method, headers }))
 
-    return { data: data?.map(mapThumbNails(ctx)), count: meta?.count }
+        return { data: data?.map(mapThumbNails(ctx)), count: meta?.count }
+    }
+    catch (e) {
+        consola.error('getContentMenus - upstream failure', { drupalInternalId, uri });
+
+        return { data: [], count: 0 }
+    }
 };
 
 
@@ -238,9 +254,19 @@ async function getAllContentTypeMenus(ctx){
 
     for(const term of dedupedTerms){
         // Always fetch content for all terms - localizedHost handles locale filtering
-        const aRequest = getContentMenus(ctx, term.drupalInternalId).then(({ data, count }) => {
-            return { ...term, data, count };
-        });
+        const aRequest = getContentMenus(ctx, term.drupalInternalId)
+            .then(({ data, count }) => ({ ...term, data, count }))
+            .catch((e) => {
+                const { logAll, logServerOutRequests } = useRuntimeConfig().public || {}
+                if (logAll || logServerOutRequests) {
+                    consola.warn('getAllContentTypeMenus - term fetch failure', {
+                        drupalInternalId: term.drupalInternalId,
+                        error: e
+                    })
+                }
+
+                return { ...term, data: [], count: 0 }
+            })
 
         requests.push(aRequest);
     }
@@ -276,9 +302,29 @@ async function getTerms ({ localizedHost}) {
     const method        = 'get';
     const headers       = { 'Content-Type': 'application/json' };
 
-    const { data } = await $fetch(uri, $fetchBaseOptions({ method, headers }));
+    try {
+        const { data } = await $fetch(uri, $fetchBaseOptions({ method, headers }));
 
-    return data.filter(({ status })=> status)
-                .map(({ drupal_internal__tid:drupalInternalId, name, uuid, path, field_plural, langcode })=> ({ drupalInternalTid:drupalInternalId,drupalInternalId, langcode:mapLocaleFromDrupal(langcode), name, slug:field_plural? `/${slugify(field_plural)}`: path?.alias, plural: field_plural, uuid, hrefs:[name?`/${slugify(name)}`:'', field_plural?`/${slugify(field_plural)}`:''].filter(x=>x)  }))
+        return data
+            .filter(({ status }) => status)
+            .map(({ drupal_internal__tid: drupalInternalId, name, uuid, path, field_plural, langcode }) => ({
+                drupalInternalTid: drupalInternalId,
+                drupalInternalId,
+                langcode: mapLocaleFromDrupal(langcode),
+                name,
+                slug: field_plural ? `/${slugify(field_plural)}` : path?.alias,
+                plural: field_plural,
+                uuid,
+                hrefs: [name ? `/${slugify(name)}` : '', field_plural ? `/${slugify(field_plural)}` : ''].filter(x => x)
+            }))
+    }
+    catch (e) {
+
+        const { logAll, logServerOutRequests } = useRuntimeConfig().public || {}
+        if (logAll || logServerOutRequests) {
+            consola.warn('getTerms - upstream failure', { uri })
+        }
+
+        return []
+    }
 };
-
