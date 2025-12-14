@@ -1,5 +1,5 @@
 <template >
-    <section>
+    <section data-testid="widget-content-types-stats">
         <hr v-if="types.length">
         <div v-for="t in types">
             <NuxtLink :to="localePath({path: t.slug})">

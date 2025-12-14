@@ -5,7 +5,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['tests/**/*.{test,spec}.{js,ts}'],
+    // Keep Vitest scoped to unit tests. E2E specs live under tests/e2e and
+    // are executed by Playwright (yarn test:e2e), not Vitest.
+    include: ['tests/unit/**/*.{test,spec}.{js,ts}'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

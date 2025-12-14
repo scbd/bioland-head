@@ -190,6 +190,12 @@ You can override the test target without changing any test code:
 
 - Ensure the target app is running (for seed: `yarn dev-open-bsl`), then run `yarn test:e2e`.
 
+To run a single spec (or any Playwright CLI args) with Yarn (Berry), you must include `--` so args are forwarded to Playwright:
+
+- `yarn test:e2e -- tests/e2e/bl-576-bsl/BL-581/BL-581.spec.ts`
+
+Without the `--`, Yarn may treat the path/flags as Yarn options and exit without running the tests.
+
 ## File Naming Conventions
 
 | Type | Convention | Example |

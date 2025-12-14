@@ -1,6 +1,6 @@
 <template>
 
-    <div class="container">
+    <div class="container" data-testid="home-bch">
         <LazyPageBodyTabs id="home-page-body-tabs" v-if="meStore.showEdit"/>
         <div v-if="body?.value" class="row">
             <div class="col-12 my-2" >

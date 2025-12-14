@@ -1,18 +1,22 @@
 import { test, expect } from '@playwright/test';
 
+import { getE2EBaseURL } from '../../e2e-targets'
+import { seedConsentCookies } from '../../helpers/seed-consent-cookies'
+
 test.describe('BL-606: Facet counts update with search and filters', () => {
-  const baseUrl = 'http://seed.localhost:3000/en/search';
+  const E2E_BASE_URL = getE2EBaseURL()
+
+  test.use({
+    baseURL: E2E_BASE_URL,
+  })
 
   test.beforeEach(async ({ page }) => {
     // Pre-seed consent cookies so the cookie bar doesn't cover screenshots
-    const cookieUrl = `${new URL(baseUrl).origin}/`;
-    const oneYearFromNow = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365;
-    await page.context().addCookies([
-      { name: 'ncc_c', value: 'bl2ga', url: cookieUrl, expires: oneYearFromNow },
-      { name: 'ncc_e', value: 'bl2=ga', url: cookieUrl, expires: oneYearFromNow },
-    ]);
+    await seedConsentCookies(page.context(), E2E_BASE_URL)
 
-    await page.goto(baseUrl);
+    // Use '/search' so i18n can redirect/prefix as needed (keeps this compatible
+    // if baseURL is configured with or without a locale prefix).
+    await page.goto('/search');
     await page.waitForSelector('#listTypeFilter', { timeout: 10000 });
   });
 

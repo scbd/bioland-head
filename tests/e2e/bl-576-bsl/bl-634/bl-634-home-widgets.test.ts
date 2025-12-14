@@ -1,6 +1,7 @@
 import { expect, test } from '@nuxt/test-utils/playwright'
 
 import { getE2EBaseURL } from "../../e2e-targets";
+import { seedConsentCookies } from '../../helpers/seed-consent-cookies'
 
 const E2E_BASE_URL = getE2EBaseURL();
 
@@ -12,16 +13,7 @@ test('BL-634: biosafety home widgets have ids and correct order', async ({ page 
   testInfo.setTimeout(60_000)
 
   // Pre-seed consent cookies so the cookie bar doesn't cover screenshots.
-  // Requested values:
-  // - ncc_c = bl2ga
-  // - ncc_e = bl2=ga
-  const cookieUrl = `${new URL(E2E_BASE_URL).origin}/`;
-  const oneYearFromNow = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365;
-  // hides cookie complience bar
-  await page.context().addCookies([
-    { name: 'ncc_c', value: 'bl2ga', url: cookieUrl, expires: oneYearFromNow },
-    { name: 'ncc_e', value: 'bl2=ga', url: cookieUrl, expires: oneYearFromNow },
-  ]);
+  await seedConsentCookies(page.context(), E2E_BASE_URL)
 
   await page.goto('/', { waitUntil: 'networkidle' })
 
