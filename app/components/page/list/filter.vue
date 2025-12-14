@@ -1,5 +1,5 @@
 <template >
-    <div v-if="!isSecretariat" class="mb-3">
+    <div v-if="!isSecretariat" id="listTypeFilter" class="mb-3">
         <label class="form-label"><strong>{{ t('Filter by Type:') }}</strong></label>
         <div class="input-group">
             <div class="filter-select-custom" :style="{ '--primary-color': siteStore.primaryColor }">
@@ -7,6 +7,8 @@
                     v-for="t in types" 
                     :key="t.value" 
                     class="filter-option" 
+                    :data-testid="`filter-option-${t.value}`"
+                    :data-count="t.count"
                     :class="{ 'selected': selected.includes(t.value), 'zero-count': t.count === 0 }"
                     @click="toggleSelection(t.value)"
                 >

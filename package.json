@@ -30,6 +30,7 @@
     "@unhead/vue": "2.0.19",
     "@vitest/coverage-v8": "^4.0.15",
     "@vue/devtools-api": "8.0.5",
+    "dotenv": "^17.2.3",
     "json5": "2.2.3",
     "nuxi": "3.30.0",
     "nuxt": "4.2.1",
