@@ -6,7 +6,7 @@
         </div>
         <div class="position-relative mt-0" style="min-height:250px;">
             <div class="row g-3">
-                <div v-for="n in slidePerView" :key="n" :class="cardColClass">
+                <div v-for="n in placeholderCount" :key="n" :class="cardColClass">
                     <CardsPlaceholder />
                 </div>
             </div>
@@ -135,6 +135,9 @@ onMounted(() => {
     }, 50);
 });
 
+// SSR-safe default for placeholder rendering (avoids hydration mismatch)
+const ssrSlidePerView = 2;
+
 // consola.error(data.value)
 const loading = computed(()=> status.value === 'pending' && !slides?.value?.length);
 
@@ -171,10 +174,15 @@ const linkStyle = reactive({
 });
 
 // Calculate Bootstrap column classes based on slides per view
+// Use SSR-safe default during placeholder to avoid hydration mismatch
 const cardColClass = computed(() => {
-    const cols = Math.floor(12 / slidePerView.value);
+    const slidesCount = hasHydrated.value ? slidePerView.value : ssrSlidePerView;
+    const cols = Math.floor(12 / slidesCount);
     return `col-12 col-md-${cols}`;
 });
+
+// SSR-safe slide count for placeholder loop
+const placeholderCount = computed(() => hasHydrated.value ? slidePerView.value : ssrSlidePerView);
 </script>
 <style lang="scss" scoped>
 .arrow{
