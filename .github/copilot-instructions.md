@@ -218,6 +218,29 @@ When adding tests (see `.github/old.md` for full TDD guide):
   2. Link to epic: `jira_link_to_epic` with `epic_key: "BL-460"` and `issue_key: "BL-XXX"`
   3. Verify linkage in response
 
+### Jira update protocol for E2E tasks (template)
+
+> **Read this first:** For **Story Points** and **evidence attachments**, use the repo custom scripts documented at:
+> `/.github/agent-scripts/custom-tools.md`
+
+**Hard rules**
+
+1. **If missing, set Original Estimate + Story Points first** (before any other Jira updates)
+  - Story Points allowed values: **`1, 2, 4, 8, 16, 32`**
+  - Use custom tool for Story Points (preferred):
+    - `node .github/agent-scripts/jira-edit-story-points.mjs {JIRA_ID} {1|2|4|8|16|32}`
+2. **Do not replace Jira Description content.** Append to the bottom:
+  - Add a `## Acceptance Criteria` section
+  - Keep existing description text intact
+3. **Worklog:** add a detailed entry describing the testing work
+  - Log time as **(actual time) × 2** to reflect a single-human effort
+4. **Evidence:** attach screenshots/videos after other Jira updates
+  - Use custom attachment tool (preferred):
+    - `node .github/agent-scripts/jira-attach-file.mjs -i {JIRA_ID} -f ./.test-results/.../evidence.png`
+  - Add a follow-up Jira comment referencing the uploaded attachment URL(s)
+5. **Git commits must start with the Jira ID**
+  - Example: `BL-581: add e2e coverage for home page widget`
+
 Bulding docker 
 
 
