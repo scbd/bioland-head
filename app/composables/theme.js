@@ -40,24 +40,49 @@ export const defaultImageOptions = {
     width  : 232     ,
     fit    : 'outside',
     quality: 60       ,
-    format : [ 'webp', 'avif', 'jpeg', 'jpg', 'png','gif' ]
+    format : 'webp'
 };
 
 export function useImageBackground(record, options = defaultImageOptions){
     const nuxtApp       = useNuxtApp();
     const imageGenStore = useImageGenStore(nuxtApp.$pinia);
-    const img           = useImage();
-    const imgUri        = unref(record)? (unref(record)?.mediaImage?.src || imageGenStore.getImage(unref(record))?.src) : undefined;
-    const hasImg        = unref(record)?.mediaImage?.src
+    const $img          = useImage();
+
+    // Get generated image once, outside computed to avoid reactive loop
+    const currentRecord = unref(record);
+    const generatedImg = !currentRecord?.mediaImage?.src ? imageGenStore.getImage(currentRecord) : null;
+    
+    const imgUri = computed(() => {
+        const rec = unref(record);
+        return rec?.mediaImage?.src || generatedImg?.src;
+    });
 
     const backgroundStyles = computed(() => {
+        const imgUriValue = imgUri.value;
+        
+        // If no image URI, return empty background
+        if (!imgUriValue) {
+            return { 'background': 'none' };
+        }
 
-        const imageOptions = { ...unref(defaultImageOptions), ...unref(options) };
+        const imageOptions = unref(options) || unref(defaultImageOptions);
 
-        const imgSrc = img(imgUri, imageOptions);
+        // Use Nuxt Image's $img to generate optimized URL
+        const imgSrc = $img(imgUriValue, {
+            width: imageOptions.width || defaultImageOptions.width,
+            height: imageOptions.height || defaultImageOptions.height,
+            fit: imageOptions.fit || defaultImageOptions.fit,
+            quality: imageOptions.quality || defaultImageOptions.quality,
+            format: imageOptions.format || defaultImageOptions.format
+        });
 
-        return { 'background':`url('${imgSrc}') no-repeat center`,  'background-size': 'cover' };
-        })
+        return { 
+            'background': `url('${imgSrc}') no-repeat center`,  
+            'background-size': 'cover' 
+        };
+    });
+
+    const hasImg = computed(() => !!imgUri.value);
 
     return { backgroundStyles, imgUri, hasImg }
 }
@@ -99,21 +124,21 @@ export function usePageSideImageDefaults({height, width} = {height: 600, width: 
       },
     };
 
-    return computed(() => ({...{ fit, quality, format }, ...sizeMap[viewport.breakpoint.value]}));
+    return computed(() => ({...{ fit, quality, format: 'webp' }, ...sizeMap[viewport.breakpoint.value]}));
 }
 
 export function useWidgetCardImageDefaults() {
     const viewport = useViewport();
 
     const sizeMap = {
-        xs:  { height: 217, width: 200, fit, quality, format },
-        sm:  { height: 313, width: 200, fit, quality, format },
-        md:  { height: 350, width: 200, fit, quality, format },
-        lg:  { height: 350, width: 200, fit, quality, format },
-        xl:  { height: 350, width: 200, fit, quality, format },
-        xxl: { height: 350, width: 200, fit, quality, format },
+        xs:  { height: 217, width: 200, fit, quality, format: 'webp' },
+        sm:  { height: 313, width: 200, fit, quality, format: 'webp' },
+        md:  { height: 350, width: 200, fit, quality, format: 'webp' },
+        lg:  { height: 350, width: 200, fit, quality, format: 'webp' },
+        xl:  { height: 350, width: 200, fit, quality, format: 'webp' },
+        xxl: { height: 350, width: 200, fit, quality, format: 'webp' },
     };
-    return () => computed(() => sizeMap[viewport.breakpoint.value]);
+    return computed(() => sizeMap[viewport.breakpoint.value]);
 }
 
 export function useMediaCardImageDefaults() {
@@ -127,6 +152,6 @@ export function useMediaCardImageDefaults() {
     xl: { height: 315, width: 250, fit, quality, format },
     xxl: { height: 315, width: 250, fit, quality, format },
   };
-  return () => computed(() => sizeMap[viewport.breakpoint.value]);
+  return computed(() => sizeMap[viewport.breakpoint.value]);
 }
 

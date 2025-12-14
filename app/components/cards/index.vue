@@ -46,8 +46,8 @@
 
     const { getGbfUrl, goTo }                        = useDocumentHelpers(record);
     const { colorStyle ,badgePrimaryStyle, badgeSecondaryStyle } = useTheme();
-    const getImageDefaults                           = useWidgetCardImageDefaults();
-    const { backgroundStyles }                       = useImageBackground(record, getImageDefaults().value);
+    const imageDefaults                              = useWidgetCardImageDefaults();
+    const { backgroundStyles }                       = useImageBackground(record, imageDefaults);
     const isFromTheBCH = computed(()=> siteStore.isBiosafetySite && (record.type==='bch' || !record?.value?.fieldTypePlacement?.name));
     const   external     = computed(()=> !!record?.value?.realms ||isFromTheBCH.value );
     

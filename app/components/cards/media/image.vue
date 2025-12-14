@@ -47,7 +47,7 @@
 
     const   dateFormat         = useDateFormat(locale);
     const { style, arrowFill } = useTheme();
-    const   imageDefaults      = useMediaCardImageDefaults()();
+    const   imageDefaults      = useMediaCardImageDefaults();
 
 
     const { getGbfUrl, descriptionTruncated, imageAlt, tags, imageSrc, linkTo,  imgHeight, imgWidth, iconName, iconColor} = useMediaRecord(record);

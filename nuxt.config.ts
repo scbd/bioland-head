@@ -146,6 +146,7 @@ export default defineNuxtConfig({
   delayHydration: { mode: "init" },
 
   image: {
+    provider: 'ipx',
     domains: [
       "portal.geobon.org",
       "chm-cbd.net",
@@ -155,13 +156,16 @@ export default defineNuxtConfig({
       "be.bl2.cbddev.xyz",
       "cbd.int",
       "www.cbd.int",
-      "https://panorama.solutions/",
-      "https://scbd.atlassian.net",
+      "panorama.solutions",
+      "scbd.atlassian.net",
       ...domains,
     ],
     format: ["webp", "avif", "jpeg", "jpg", "png", "gif"],
     quality: 50,
     screens: { xs: 320, sm: 552, md: 992, lg: 1330, xl: 1600 },
+    ipx: {
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+    },
   },
   nitro: {
     logLevel: resolvedLogLevel,
