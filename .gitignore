@@ -32,7 +32,9 @@ outputDir
 
 # Playwright artifacts
 playwright-report
+.playwright-report
 test-results
+.test-results
 .vscode
 .yarn
 .github/*

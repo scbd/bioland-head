@@ -7,6 +7,6 @@ test.use({
 })
 
 test('home page has correct title', async ({ page }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto("/", { waitUntil: "networkidle" })
   await expect(page).toHaveTitle(/Biosafety Seed \(GT\)/)
 })
