@@ -8,33 +8,31 @@
         </div>
         <div class="row my-4">
             <div   class="col-12 border-col">
-                <ClientOnly>
-                    <section id="home-bch-national-biosafety-framework" data-testid="home-bch-national-biosafety-framework">
-                        <SwiperContentType
-                            :pagination="true"
-                            :arrows="true"
-                            :leftArrow="true"
-                            :hideArrowsCount="3"
-                            :schemas="[44, 5, 45, 46, 47]"
-                            :title="$t('National Biosafety Framework')"
-                        />
-                    </section>
+                <section id="home-bch-national-biosafety-framework" data-testid="home-bch-national-biosafety-framework">
+                    <SwiperContentType
+                        :pagination="true"
+                        :arrows="true"
+                        :leftArrow="true"
+                        :hideArrowsCount="3"
+                        :schemas="[44, 5, 45, 46, 47]"
+                        :title="$t('National Biosafety Framework')"
+                    />
+                </section>
 
-                    <section id="home-bch-news" data-testid="home-bch-news">
-                        <LazySwiperBchNews :pagination="true"/>
-                    </section>
+                <section id="home-bch-news" data-testid="home-bch-news">
+                    <SwiperBchNews :pagination="true"/>
+                </section>
 
-                    <section id="home-bch-resources" data-testid="home-bch-resources">
-                        <SwiperContentType
-                            :pagination="true"
-                            :arrows="true"
-                            :leftArrow="true"
-                            :hideArrowsCount="3"
-                            :schemas="[15,48,43,16,6, 12]"
-                            :title="$t('Resources')"
-                        />
-                    </section>
-                </ClientOnly>
+                <section id="home-bch-resources" data-testid="home-bch-resources">
+                    <SwiperContentType
+                        :pagination="true"
+                        :arrows="true"
+                        :leftArrow="true"
+                        :hideArrowsCount="3"
+                        :schemas="[15,48,43,16,6, 12]"
+                        :title="$t('Resources')"
+                    />
+                </section>
 
             </div>
 

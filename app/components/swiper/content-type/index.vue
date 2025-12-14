@@ -1,31 +1,42 @@
 <template>
-    <ClientOnly>
-        <div v-if="slides?.length" class="col-12 mt-3 mb-0">
+    <!-- Show placeholders during SSR and while loading -->
+    <template v-if="!hasHydrated || loading">
+        <div class="col-12 mt-3 mb-0">
             <h3 :style="headerStyle">{{title}}</h3>
-            <NuxtLink v-if="hasMore" :to="newsLink" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more') + ' ' + title}} <LazyIcon  name="arrow-right" class="arrow" /></NuxtLink>
         </div>
-        <div v-if="slides?.length" class="position-relative mt-0" style="min-height:250px;">
-
-                <LazySwiperButton  v-if="isStartIndex &&hasMore && leftArrow" direction="left" :swiper-ref="swiperRef"/>
-                <swiper-container
-                            :loop="slides?.length > 3"
-                            :slidesPerView="slidePerView"
-                            :spaceBetween="spaceBetween"
-                            :pagination="{ clickable: true }"
-                            :modules="modules"
-                            ref="swiperRef"
-                            >
-
-                    <swiper-slide :class="{ 'mb-4': pagination }" v-for="slide in slides" :key="slide">
-                        <LazyCards :record="slide" />
-                    </swiper-slide>
-
-                </swiper-container>
-                <LazySwiperButton  v-if="hasMore && leftArrow" direction="right" :swiper-ref="swiperRef"/> 
-
+        <div class="position-relative mt-0" style="min-height:250px;">
+            <div class="row g-3">
+                <div v-for="n in slidePerView" :key="n" :class="cardColClass">
+                    <CardsPlaceholder />
+                </div>
+            </div>
+            <div v-if="pagination" class="d-flex justify-content-center mt-4">
+                <span v-for="i in Math.min(slides?.length || 3, 10)" :key="i" class="rounded-circle bg-secondary opacity-25 me-2" style="width: 10px; height: 10px;"></span>
+            </div>
         </div>
-        <div v-else-if="loading" class="col-12 mt-3 mb-0">
-            <LazySpinner />
+    </template>
+
+    <!-- Show actual swiper after hydration and data loads -->
+    <ClientOnly v-else-if="slides?.length">
+        <div class="col-12 mt-3 mb-0">
+            <h3 :style="headerStyle">{{title}}</h3>
+            <NuxtLink v-if="hasMore" :to="newsLink" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more') + ' ' + title}} <LazyIcon name="arrow-right" class="arrow" /></NuxtLink>
+        </div>
+        <div class="position-relative mt-0" style="min-height:250px;">
+            <LazySwiperButton v-if="isStartIndex && hasMore && leftArrow" direction="left" :swiper-ref="swiperRef" />
+            <swiper-container
+                :loop="slides?.length > 3"
+                :slidesPerView="slidePerView"
+                :spaceBetween="spaceBetween"
+                :pagination="{ clickable: true }"
+                :modules="modules"
+                ref="swiperRef"
+            >
+                <swiper-slide :class="{ 'mb-4': pagination }" v-for="slide in slides" :key="slide">
+                    <LazyCards :record="slide" />
+                </swiper-slide>
+            </swiper-container>
+            <LazySwiperButton v-if="hasMore && leftArrow" direction="right" :swiper-ref="swiperRef" />
         </div>
     </ClientOnly>
 </template>
@@ -109,10 +120,19 @@ const query = computed(() => clone({
     schemas: schemas.value 
 }));
 
-const { data, status } = await useLazyFetch(() => `/api/list/drupal`, {  
+const { data, status } = await useFetch(() => `/api/list/drupal`, {  
     method: 'GET', 
     query, 
     watch: [locale]
+});
+
+// Track if client has hydrated
+const hasHydrated = ref(false);
+onMounted(() => {
+    // Small delay to prevent flash
+    setTimeout(() => {
+        hasHydrated.value = true;
+    }, 50);
 });
 
 // consola.error(data.value)
@@ -148,6 +168,12 @@ const linkStyle = reactive({
     color: siteStore.primaryColor,
     'text-decoration': 'underline',
     'text-decoration-color': siteStore.primaryColor,
+});
+
+// Calculate Bootstrap column classes based on slides per view
+const cardColClass = computed(() => {
+    const cols = Math.floor(12 / slidePerView.value);
+    return `col-12 col-md-${cols}`;
 });
 </script>
 <style lang="scss" scoped>
