@@ -1,16 +1,16 @@
 <template>
-    <div  class="col-12 text-wrap px-0">
+    <div id="page-header-mega-menu-custom-national-report-six" class="col-12 text-wrap px-0">
         <LazyPageHeaderMegaMenuHeader  :menu="menu" />
 
-        <LazyPageHeaderMegaMenuLink v-for="(aChild,j) in menu.children" :key="j" :menu="aChild" />
+        <LazyPageHeaderMegaMenuLink v-for="(aChild,j) in menu.children" :id="`page-header-mega-menu-custom-national-report-six-child-${j}`" :key="j" :menu="aChild" />
 
-        <section v-for="(aChild,j) in drupalMenus" :key="j">
+        <section v-for="(aChild,j) in drupalMenus" :id="`page-header-mega-menu-custom-national-report-six-drupal-item-${j}`" :key="j">
             <p >
                 <LazyPageHeaderMegaMenuLink :title="aChild.title"  :menu="aChild" />
             </p>
         </section>
 
-        <LazyPageHeaderMegaMenuLink :menu="finalLink" />
+        <LazyPageHeaderMegaMenuLink id="page-header-mega-menu-custom-national-report-six-final-link" :menu="finalLink" />
     </div>
 </template>
 <script setup>

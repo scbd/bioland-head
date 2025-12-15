@@ -1,16 +1,16 @@
 <template>
-    <div class="col-12 text-wrap px-0">
+    <div id="page-header-mega-menu-custom-country-profiles" class="col-12 text-wrap px-0">
         <LazyPageHeaderMegaMenuHeader  :menu="menu" />
 
         <LazyPageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menus" >
             <Transition :name="slotProps.fadeName">
-                <section v-if="slotProps.hide">
-                    <section v-for="(aChild,j) in children" :key="j">
+                <section v-if="slotProps.hide" id="page-header-mega-menu-custom-country-profiles-content">
+                    <section v-for="(aChild,j) in children" :id="`page-header-mega-menu-custom-country-profiles-child-${j}`" :key="j">
                         <p >
                             <LazyPageHeaderMegaMenuLink :title="aChild.title"  :menu="aChild" />
                         </p>
                     </section>
-                    <section v-for="(aChild,j) in menus[slotProps.country]" :key="j">
+                    <section v-for="(aChild,j) in menus[slotProps.country]" :id="`page-header-mega-menu-custom-country-profiles-country-link-${j}`" :key="j">
                         <p >
                             <NuxtLink  class="child-link" :class="aChild.class"   :to="aChild.href" :title="aChild.title"  external target="_blank">
                                 {{aChild.title}}<span class="text-nowrap">&#65279;&nbsp;<LazyIcon name="external-link"  class="ex-link" /></span>

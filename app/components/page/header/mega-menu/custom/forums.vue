@@ -1,8 +1,8 @@
 <template>
-    <div class="col-12 text-wrap px-0">
+    <div id="page-header-mega-menu-custom-forums" class="col-12 text-wrap px-0">
         <LazyPageHeaderMegaMenuHeader  :menu="menu" />
 
-        <div v-for="(aChild,j) in children" :key="j" class="row mb-1 overflow-hidden">
+        <div v-for="(aChild,j) in children" :id="`page-header-mega-menu-custom-forums-item-${j}`" :key="j" class="row mb-1 overflow-hidden">
             <div class="col-5 text-nowrap">
                 <NuxtLink  class="child-link"   :to="getHref(aChild)" :title="aChild.title" >
                     {{aChild.title}}

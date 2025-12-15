@@ -1,7 +1,7 @@
 <template >
-    <div class="position-relative">
+    <div id="page-header-mega-menu-custom-all-content-types" class="position-relative">
             <LazyPageHeaderMegaMenuHeader  :menu="menu" />  
-            <div v-for="t in types">
+            <div v-for="(t,index) in types" :id="`page-header-mega-menu-custom-all-content-types-item-${index}`" :key="index">
 
                 <LazyPageHeaderMegaMenuLink  :show-thumbs="menu.class?.includes('bl2-show-thumbs')"   :menu="t" />
             </div>

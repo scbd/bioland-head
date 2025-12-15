@@ -1,5 +1,5 @@
 <template>
-    <div class="col-12 text-wrap px-0">
+    <div id="page-header-mega-menu-custom-national-report" class="col-12 text-wrap px-0">
         <LazyPageHeaderMegaMenuCustomNationalReportList v-if="!showNrSix" :menu="passedMenu"/>
         <LazyPageHeaderMegaMenuCustomNationalReportSix v-if="showNrSix" :menu="passedMenu"/>
 

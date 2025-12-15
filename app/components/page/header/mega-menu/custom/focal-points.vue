@@ -1,16 +1,16 @@
 <template>
-    <div class="col-12 text-wrap px-0">
+    <div id="page-header-mega-menu-custom-focal-points" class="col-12 text-wrap px-0">
         <LazyPageHeaderMegaMenuHeader  :menu="menu" />
 
         <LazyPageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menus" >
             <Transition :name="slotProps.fadeName">
-                <section v-if="slotProps.hide">
-                    <section v-for="(aChild,j) in children" :key="j">
+                <section v-if="slotProps.hide" id="page-header-mega-menu-custom-focal-points-content">
+                    <section v-for="(aChild,j) in children" :id="`page-header-mega-menu-custom-focal-points-child-${j}`" :key="j">
                         <p >
                             <LazyPageHeaderMegaMenuLink :title="aChild.title" :menu="aChild" />
                         </p>
                     </section>
-                    <section v-for="(aChild,j) in menus[slotProps.country]" :key="j">
+                    <section v-for="(aChild,j) in menus[slotProps.country]" :id="`page-header-mega-menu-custom-focal-points-country-item-${j}`" :key="j">
                         <p >
                             <LazyPageHeaderMegaMenuLink :title="t(aChild.title, aChild.count)"  :menu="aChild" />
                         </p>

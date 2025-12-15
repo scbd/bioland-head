@@ -1,9 +1,9 @@
 <template>
-    <div class="container position-relative mega d-none d-md-block">
-        <div class="cont-x">
-            <nav  class="navbar nav bg-dark w-100 pt-0">
-                <ul class="nav ">
-                    <li @click.stop="toggle(index, aMenu)" v-for="(aMenu,index) in menus" :ref="el => refElements.push(el)" :key="index" :style="loginStyle(aMenu)" class="nav-item text-nowrap"  >
+    <div id="page-header-mega-menu" class="container position-relative mega d-none d-md-block">
+        <div id="page-header-mega-menu-wrapper" class="cont-x">
+            <nav id="page-header-mega-menu-nav" class="navbar nav bg-dark w-100 pt-0">
+                <ul id="page-header-mega-menu-nav-list" class="nav ">
+                    <li @click.stop="toggle(index, aMenu)" v-for="(aMenu,index) in menus" :id="`page-header-mega-menu-nav-item-${index}`" :ref="el => refElements.push(el)" :key="index" :style="loginStyle(aMenu)" class="nav-item text-nowrap"  >
                         <NuxtLink  v-if="showMenu(aMenu)" :class="menuClass(aMenu)" class="nav-link" :to="aMenu.href" :title="aMenu.title"  >
                             {{aMenu.title}} 
                         </NuxtLink>
@@ -12,7 +12,7 @@
                         
                         <PageHeaderMegaMenuLogin v-if="aMenu.class?.includes('login')" :aMenu="aMenu" :show="toggles[index]" v-click-outside="unToggle"/>
 
-                        <LazyPageHeaderMegaMenuDropDown v-if="toggles[index]" :menus="aMenu.children"  v-click-outside="unToggle"/>
+                        <LazyPageHeaderMegaMenuDropDown v-if="toggles[index]" :menus="aMenu.children" :parent-id="`page-header-mega-menu-nav-item-${index}`" v-click-outside="unToggle"/>
                     </li>
                 </ul>
             </nav>

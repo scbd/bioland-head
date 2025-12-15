@@ -1,12 +1,12 @@
 <template>
-    <div v-if="isMobile" class="w-100 small-header position-fixed top-0 start-0 justify-content-start align-items-center  d-flex flex-row   d-md-none">
+    <div v-if="isMobile" id="page-header-title-search-mobile" class="w-100 small-header position-fixed top-0 start-0 justify-content-start align-items-center  d-flex flex-row   d-md-none">
     
-            <NuxtLink  class="me-0" :to="localePath(`/`)" :alt="t('Home')"  >
+            <NuxtLink id="page-header-title-search-mobile-home-link" class="me-0" :to="localePath(`/`)" :alt="t('Home')"  >
                 <NuxtImg  :alt="name" height="64" width="100%" format="webp" :src="logo" class="small-header-logo m-2 me-1"/>
             </NuxtLink>
             
 
-            <svg class="scbd-logo-small me-1" :class="{ hero: hasHeroImage }" width="19.34" height="24" viewBox="0 0 34 42"  fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg id="page-header-title-search-mobile-scbd-logo" class="scbd-logo-small me-1" :class="{ hero: hasHeroImage }" width="19.34" height="24" viewBox="0 0 34 42"  fill="none" xmlns="http://www.w3.org/2000/svg">
                 <g opacity="0.8">
                     <path d="M27.3342 6.08834C30.7265 6.08834 32.611 2.60188 32.988 1V9.90459C32.988 14.0035 30.1611 15.9823 27.3342 15.9823H23.094C19.1364 15.9823 17.4874 19.9399 16.8749 21.9187V14.0035C16.8749 8.68905 20.6911 6.08834 22.8584 6.08834H27.3342Z"  stroke-width="1.5" stroke-miterlimit="4.62023"/>
                     <path d="M6.41551 16.4063C3.02329 16.4063 1.13872 12.9199 0.761805 11.318V20.2226C0.761805 24.3215 3.58866 26.3003 6.41551 26.3003H10.6558C14.6134 26.3003 16.2624 30.2579 16.8749 32.2367V24.3215C16.8749 19.007 13.0586 16.4063 10.8914 16.4063H6.41551Z"  stroke-width="1.5" stroke-miterlimit="4.62023"/>
@@ -14,7 +14,7 @@
                 </g>
             </svg>
 
-            <div class="brand-small">
+            <div id="page-header-title-search-mobile-brand" class="brand-small">
                 <NuxtLink class="me-0 pe-0 navbar-brand-small fw-bold" :to="localePath(`/`)" :alt="t('Home')" >
                     {{name}}
                 </NuxtLink><br/>
@@ -22,24 +22,24 @@
                     <span >{{t('Biodiversity CHM')}}</span>
                 </NuxtLink>
             </div>
-            <div class="flex-fill d-flex align-items-center justify-content-end" >
+            <div id="page-header-title-search-mobile-burger-container" class="flex-fill d-flex align-items-center justify-content-end" >
                 <LazyPageHeaderMegaMenuBurger/>
             </div>
             
     </div>
-    <div v-if="!hasLargeName" ref="cont" class="container d-none d-md-flex">
-        <div class=" navbar-header row align-items-center pe-3" :style="{ width: rowElWidth?`${rowElWidth+64}px`: '100%' }">
-            <div class="col-md-9 col-lg-9 d-flex  justify-content-start align-items-center">
-                <NuxtLink  class="me-2" :to="localePath(`/`)" :alt="t('Home')"  >
+    <div v-if="!hasLargeName" ref="cont" id="page-header-title-search-desktop" class="container d-none d-md-flex">
+        <div id="page-header-title-search-desktop-row" class=" navbar-header row align-items-center pe-3" :style="{ width: rowElWidth?`${rowElWidth+64}px`: '100%' }">
+            <div id="page-header-title-search-desktop-brand-col" class="col-md-9 col-lg-9 d-flex  justify-content-start align-items-center">
+                <NuxtLink id="page-header-title-search-desktop-logo-link" class="me-2" :to="localePath(`/`)" :alt="t('Home')"  >
                     <NuxtImg  :alt="name" height="64" width="100%" format="webp" class="logo" :src="logo"  />
                 </NuxtLink>
-                <NuxtLink class="me-0 pe-0 navbar-brand"  :class="{ hero: hasHeroImage }" :to="localePath(`/`)" :alt="t('Home')" >
+                <NuxtLink id="page-header-title-search-desktop-brand-link" class="me-0 pe-0 navbar-brand"  :class="{ hero: hasHeroImage }" :to="localePath(`/`)" :alt="t('Home')" >
                     {{name}}
                 </NuxtLink>
                 <NuxtLink class="navbar-brand line align-self-stretch" :class="{ hero: hasHeroImage }" :to="localePath(`/`)" :alt="t('Home')" > &nbsp; </NuxtLink>
 
-                <NuxtLink v-if="!isBiosafetySite" class="sublogo ms-1" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')" >
-                    <svg class="scbd-logo" :class="{ hero: hasHeroImage }" width="34" height="42" viewBox="0 0 34 42"  fill="none" xmlns="http://www.w3.org/2000/svg">
+                <NuxtLink v-if="!isBiosafetySite" id="page-header-title-search-desktop-scbd-logo-link" class="sublogo ms-1" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')" >
+                    <svg id="page-header-title-search-desktop-scbd-logo" class="scbd-logo" :class="{ hero: hasHeroImage }" width="34" height="42" viewBox="0 0 34 42"  fill="none" xmlns="http://www.w3.org/2000/svg">
                         <g opacity="0.8">
                             <path d="M27.3342 6.08834C30.7265 6.08834 32.611 2.60188 32.988 1V9.90459C32.988 14.0035 30.1611 15.9823 27.3342 15.9823H23.094C19.1364 15.9823 17.4874 19.9399 16.8749 21.9187V14.0035C16.8749 8.68905 20.6911 6.08834 22.8584 6.08834H27.3342Z"  stroke-width="1.5" stroke-miterlimit="4.62023"/>
                             <path d="M6.41551 16.4063C3.02329 16.4063 1.13872 12.9199 0.761805 11.318V20.2226C0.761805 24.3215 3.58866 26.3003 6.41551 26.3003H10.6558C14.6134 26.3003 16.2624 30.2579 16.8749 32.2367V24.3215C16.8749 19.007 13.0586 16.4063 10.8914 16.4063H6.41551Z"  stroke-width="1.5" stroke-miterlimit="4.62023"/>
@@ -47,7 +47,7 @@
                         </g>
                     </svg>
                 </NuxtLink>
-                <span v-if="!isBiosafetySite" class="navbar-subbrand ps-2">
+                <span v-if="!isBiosafetySite" id="page-header-title-search-desktop-cbd-links" class="navbar-subbrand ps-2">
                     <NuxtLink class="navbar-subbrand text-nowrap" :class="{ hero: hasHeroImage }" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')"  >
                         <span class="w-500">{{t('Convention on Biological Diversity')}}</span><br/>
                     </NuxtLink>
@@ -55,7 +55,7 @@
                         <span class="fw-lighter">{{t('Clearing House Mechanism')}}</span>
                     </NuxtLink>
                 </span>
-                <span v-if="isBiosafetySite" class="navbar-subbrand ps-2">
+                <span v-if="isBiosafetySite" id="page-header-title-search-desktop-biosafety-links" class="navbar-subbrand ps-2">
                     <NuxtLink class="navbar-subbrand text-nowrap" :class="{ hero: hasHeroImage }" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')"  >
                         <span class="w-500">{{t('Cartagena Protocol on Biosafety')}}</span><br/>
                     </NuxtLink>
@@ -65,28 +65,28 @@
                 </span>
             </div>
 
-            <div class=" col-md-3 col-lg-3 d-flex justify-content-end align-items-center" >
-                <div  class="input-group" :class="{ hero: hasHeroImage }" style="margin-left:2rem;margin-right:-2rem;">
-                    <input @keyup.enter="()=>{onClick(queryText);}" type="text" v-model="queryText" class="form-control" :class="{ hero: hasHeroImage }" :placeholder="t('Search this site')" aria-label="search" >
+            <div id="page-header-title-search-desktop-search-col" class=" col-md-3 col-lg-3 d-flex justify-content-end align-items-center" >
+                <div id="page-header-title-search-desktop-search-box" class="input-group" :class="{ hero: hasHeroImage }" style="margin-left:2rem;margin-right:-2rem;">
+                    <input id="page-header-title-search-desktop-search-input" @keyup.enter="()=>{onClick(queryText);}" type="text" v-model="queryText" class="form-control" :class="{ hero: hasHeroImage }" :placeholder="t('Search this site')" aria-label="search" >
 
-                    <span v-on:click="onClick(queryText)" class="input-group-text"  :class="{ hero: hasHeroImage }"  :alt="t('Search this site')"  >
+                    <span id="page-header-title-search-desktop-search-btn" v-on:click="onClick(queryText)" class="input-group-text"  :class="{ hero: hasHeroImage }"  :alt="t('Search this site')"  >
                         <LazyIcon name="search" class="white-icon" :class="{ hero: hasHeroImage }"/>&nbsp;
                     </span>
                 </div>
             </div>
         </div> 
     </div>
-    <div v-if="hasLargeName" ref="contL" class="container d-none d-md-flex">
-        <div class=" navbar-header row align-items-center pe-3" :style="{ width: rowElWidth?`${rowElWidth+64}px`: '100%' }">
-            <div class="col-md-9 col-lg-9 d-flex  justify-content-start align-items-center">
-                <NuxtLink  class="me-2" :to="localePath(`/`)" :alt="t('Home')"  >
+    <div v-if="hasLargeName" ref="contL" id="page-header-title-search-large" class="container d-none d-md-flex">
+        <div id="page-header-title-search-large-row" class=" navbar-header row align-items-center pe-3" :style="{ width: rowElWidth?`${rowElWidth+64}px`: '100%' }">
+            <div id="page-header-title-search-large-brand-col" class="col-md-9 col-lg-9 d-flex  justify-content-start align-items-center">
+                <NuxtLink id="page-header-title-search-large-logo-link" class="me-2" :to="localePath(`/`)" :alt="t('Home')"  >
                     <NuxtImg format="webp"  :alt="name" height="64" width="100%" class="logo" :src="logo"  />
                 </NuxtLink>
 
                 <NuxtLink class="line-left align-self-stretch pe-1 " :class="{ hero: hasHeroImage }" :to="localePath(`/`)" :alt="t('Home')" > &nbsp; </NuxtLink>
 
-                <NuxtLink v-if="!isBiosafetySite" class="sublogo ms-1 me-2" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')" >
-                    <svg class="scbd-logo" :class="{ hero: hasHeroImage }" width="49" height="57" viewBox="0 0 34 42"  fill="none" xmlns="http://www.w3.org/2000/svg">
+                <NuxtLink v-if="!isBiosafetySite" id="page-header-title-search-large-scbd-logo-link" class="sublogo ms-1 me-2" to="https://www.cbd.int/" :alt="t('Secretariat of the Convention on Biological Diversity')" >
+                    <svg id="page-header-title-search-large-scbd-logo" class="scbd-logo" :class="{ hero: hasHeroImage }" width="49" height="57" viewBox="0 0 34 42"  fill="none" xmlns="http://www.w3.org/2000/svg">
                         <g opacity="0.8">
                             <path d="M27.3342 6.08834C30.7265 6.08834 32.611 2.60188 32.988 1V9.90459C32.988 14.0035 30.1611 15.9823 27.3342 15.9823H23.094C19.1364 15.9823 17.4874 19.9399 16.8749 21.9187V14.0035C16.8749 8.68905 20.6911 6.08834 22.8584 6.08834H27.3342Z"  stroke-width="1.5" stroke-miterlimit="4.62023"/>
                             <path d="M6.41551 16.4063C3.02329 16.4063 1.13872 12.9199 0.761805 11.318V20.2226C0.761805 24.3215 3.58866 26.3003 6.41551 26.3003H10.6558C14.6134 26.3003 16.2624 30.2579 16.8749 32.2367V24.3215C16.8749 19.007 13.0586 16.4063 10.8914 16.4063H6.41551Z"  stroke-width="1.5" stroke-miterlimit="4.62023"/>
@@ -95,8 +95,8 @@
                     </svg>
                 </NuxtLink>
 
-                <span class="navbar-subbrand ps-1">
-                    <NuxtLink class=" me-0 pe-0 navbar-brand "  :class="{ hero: hasHeroImage, 'fs-3':  name.length > 32 && name.length < 40  , 'fs-4':  name.length > 39}" :to="localePath(`/`)" :alt="t('Home')" >
+                <span id="page-header-title-search-large-brand-links" class="navbar-subbrand ps-1">
+                    <NuxtLink id="page-header-title-search-large-brand-home" class=" me-0 pe-0 navbar-brand "  :class="{ hero: hasHeroImage, 'fs-3':  name.length > 32 && name.length < 40  , 'fs-4':  name.length > 39}" :to="localePath(`/`)" :alt="t('Home')" >
                     {{name}}
                     </NuxtLink><br/>
 
@@ -116,11 +116,11 @@
                 
             </div>
 
-            <div class=" col-md-3 col-lg-3 d-flex justify-content-end align-items-center" >
-                <div  class="input-group" :class="{ hero: hasHeroImage }" style="margin-left:2rem;margin-right:-2rem;">
-                    <input @keyup.enter="()=>{onClick(queryText);}" type="text" v-model="queryText" class="form-control" :class="{ hero: hasHeroImage }" :placeholder="t('Search this site')" aria-label="search" >
+            <div id="page-header-title-search-large-search-col" class=" col-md-3 col-lg-3 d-flex justify-content-end align-items-center" >
+                <div id="page-header-title-search-large-search-box" class="input-group" :class="{ hero: hasHeroImage }" style="margin-left:2rem;margin-right:-2rem;">
+                    <input id="page-header-title-search-large-search-input" @keyup.enter="()=>{onClick(queryText);}" type="text" v-model="queryText" class="form-control" :class="{ hero: hasHeroImage }" :placeholder="t('Search this site')" aria-label="search" >
 
-                    <a  v-on:click="onClick(queryText)" class="input-group-text"  :class="{ hero: hasHeroImage }"  :alt="t('Search this site')"  >
+                    <a id="page-header-title-search-large-search-btn" v-on:click="onClick(queryText)" class="input-group-text"  :class="{ hero: hasHeroImage }"  :alt="t('Search this site')"  >
                         <LazyIcon name="search" class="white-icon" :class="{ hero: hasHeroImage }"/>&nbsp;
                     </a>
                 </div>

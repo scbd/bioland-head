@@ -1,17 +1,17 @@
 <template>
-    <section>
-        <div v-if="hasCountries">
-            <div v-if="!hasOneCountry" class="country-select mb-2 d-flex position-relative align-items-center justify-content-between flex-row">
-                <div @click="clickLeft" class="arrow-cont"><LazyIcon name="arrow-left" class="arrow"/></div>
+    <section id="page-header-mega-menu-custom-country-tab-selector-section">
+        <div v-if="hasCountries" id="page-header-mega-menu-custom-country-tab-selector-container">
+            <div v-if="!hasOneCountry" id="page-header-mega-menu-custom-country-tab-selector-controls" class="country-select mb-2 d-flex position-relative align-items-center justify-content-between flex-row">
+                <div id="page-header-mega-menu-custom-country-tab-selector-arrow-left" @click="clickLeft" class="arrow-cont"><LazyIcon name="arrow-left" class="arrow"/></div>
 
-                <div class="flag-box">
+                <div id="page-header-mega-menu-custom-country-tab-selector-flag-box" class="flag-box">
                     <Transition :name="fadeName">
                         <NuxtImg  v-if="!hide" :src="logo" class="flag"/>
                     </Transition>
                     &nbsp;
                 </div>
 
-                <div @click="clickRight" class="arrow-cont align-self-stretch d-flex justify-content-end align-items-center" style="width:30%; "><LazyIcon name="arrow-right" class="arrow"/></div>
+                <div id="page-header-mega-menu-custom-country-tab-selector-arrow-right" @click="clickRight" class="arrow-cont align-self-stretch d-flex justify-content-end align-items-center" style="width:30%; "><LazyIcon name="arrow-right" class="arrow"/></div>
             </div>
 
 

@@ -1,9 +1,12 @@
 <template>
-    <div class="overflow-scroll mm">
-        <div class="container px-0 cont">
+    <div id="page-header-mega-menu-language-mobile" class="overflow-scroll mm">
+        <button type="button" class="mm-close-btn" @click="closeMenu" :aria-label="t('Close menu')">
+            <LazyIcon name="close" :size="1.5" />
+        </button>
+        <div id="page-header-mega-menu-language-mobile-container" class="container px-0 cont">
             <div class="row  m-0">
 
-                <h5 >
+                <h5 id="page-header-mega-menu-language-mobile-current">
                     <NuxtLink  class="nav-link" :title="currentLanguage.nativeName" :alt="currentLanguage.nativeName" >
                         {{currentLanguage.nativeName}}
                         <LazyIcon name="language" :size="1.5"/>
@@ -11,8 +14,8 @@
                     <hr>
                 </h5>
 
-                <h5  class="text-wrap"  v-for="(menu,index) in menus" :key="index">
-                    <NuxtLink  class="nav-link" :to="pageStore?.page?.aliases[menu.code]"  >
+                <h5 v-for="(menu,index) in menus" :id="`page-header-mega-menu-language-mobile-item-${index}`" :key="index" class="text-wrap">
+                    <NuxtLink  class="nav-link" :to="pageStore?.page?.aliases[menu.code]" external >
                         {{menu.nativeName}}
                     </NuxtLink>
                 </h5>
@@ -21,13 +24,26 @@
     </div>
 </template>
 <script setup>
-        const { locale  }   = useI18n();
+        const { t, locale  } = useI18n();
         const   props       = defineProps({ menus: Array });
         const   menuStore   = useMenusStore();
         const   pageStore   = usePageStore();
+        const   eventBus    = useEventBus();
+        const   emit        = defineEmits(['close']);
+        const   router      = useRouter();
 
         const menus           = computed(()=> (menuStore.languages.filter(aMenu =>  !['xx',locale.value].includes(aMenu.code))).reverse());
         const currentLanguage = computed(()=> menuStore.languages.find(lang => lang.code === locale.value));
+
+        const closeMenu = () => {
+            emit('close');
+            eventBus.emit('closeAllMenus');
+        };
+
+        // Close on route change
+        router.beforeEach(() => {
+            emit('close');
+        });
 </script>
 
 <style lang="scss" scoped>
@@ -54,6 +70,10 @@
 
 }
 
+.mm-close-btn {
+    display: none;
+}
+
 :root {
     --fadeDown-distance: -.25em;
 }
@@ -78,14 +98,46 @@
 
 @media (max-width: 991.98px) { 
     .cont{
-        height: 175vh;
+        height: auto;
+        min-height: auto;
     }
     .mm{
         top: 0; 
         padding-top: 2rem;
+        padding-bottom: 5rem;
         transition: all 0.4s cubic-bezier(1, 0.5, 0.8, 1);
         width: 100%;
-        height:100%;
+        height: 100vh;
+        min-height: 100vh;
+        position: fixed;
+        overflow-y: auto;
+        overflow-x: hidden;
+        z-index: 10001;
+    }
+    .mm-close-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 0.75rem;
+        right: 0.75rem;
+        z-index: 10002;
+        width: 2.5rem;
+        height: 2.5rem;
+        border: none;
+        border-radius: 50%;
+        background-color: var(--bs-dark, #212529);
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        
+        &:hover {
+            background-color: var(--bs-gray-700, #495057);
+        }
+        
+        :deep(svg) {
+            fill: white;
+        }
     }
     .menu-section{
         border-right: none;

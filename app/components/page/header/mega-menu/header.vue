@@ -1,11 +1,11 @@
 <template>
     <NuxtLink  v-if="!noHeader" class="main-nav-sub-heading"  :to="localizePath(menu.href)" :title="menu.title" :external="isExternal" :target="target">
-        <h4 class="text-wrap position-relative d-inline-block mb-2" :style="lineStyle">
+        <h4 id="page-header-mega-menu-header-title" class="text-wrap position-relative d-inline-block mb-2" :style="lineStyle">
             {{menu.title}}
             <LazyIcon v-if="hasArrow" name="arrow-right" class="arrow" :style="arrowStyle"/>
         </h4>
     </NuxtLink>
-    <p v-if="description" :class="{'mm-special-description': hasSpecialDescription}" class="small" :style="descriptionStyle">{{description}}</p>
+    <p v-if="description" id="page-header-mega-menu-header-description" :class="{'mm-special-description': hasSpecialDescription}" class="small" :style="descriptionStyle">{{description}}</p>
 </template>
 
 <script setup>

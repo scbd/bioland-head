@@ -1,5 +1,5 @@
 <template>
-    <LazyPageHeaderMegaMenuLink v-if="data.href"  :menu="menu" />
+    <LazyPageHeaderMegaMenuLink v-if="data.href" id="page-header-mega-menu-custom-nbsap" :menu="menu" />
 </template>
 <script setup>
     const { t, locale } = useI18n();

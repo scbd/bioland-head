@@ -1,8 +1,11 @@
 <template>
-    <div v-if="sectionRows.length" class="overflow-scroll mm">
-        <div class="container px-0 cont">
+    <div v-if="sectionRows.length" id="page-header-mega-menu-dropdown" class="overflow-scroll mm">
+        <button v-if="isMobile" type="button" class="mm-close-btn" @click="closeDropdown" :aria-label="t('Close menu')">
+            <LazyIcon name="close" :size="1.5" />
+        </button>
+        <div id="page-header-mega-menu-dropdown-container" class="container px-0 cont">
             <div class="row  m-0 ">
-                <div   v-if="meStore.showEditMenu"  class="alert alert-warning p-0 text-center" role="alert">
+                <div v-if="meStore.showEditMenu" id="page-header-mega-menu-dropdown-edit-alert" class="alert alert-warning p-0 text-center" role="alert">
                     <NuxtLink :to="editUrl" role="button" type="button" class="btn btn-dark btn-sm pointer">
                         <LazyIcon name="edit" style="margin-top: .3rem;" :size="2"/>
                     </NuxtLink>
@@ -10,28 +13,30 @@
                 <div class="w-100 d-flex flex-column">
                     <div
                         v-for="(row, rowIndex) in sectionRows"
+                        :id="`page-header-mega-menu-dropdown-row-${rowIndex}`"
                         :key="`row-${rowIndex}`"
                         class="d-flex w-100 px-0 align-items-stretch mm-row"
                     >
                         <div
                             class="menu-section text-wrap d-flex flex-column"
                             v-for="(aMenu,index) in row"
+                            :id="`page-header-mega-menu-dropdown-row-${rowIndex}-section-${index}`"
                             :key="`row-${rowIndex}-menu-${index}`"
                             :class="getSectionScaleClasses(aMenu)"
                         >
-                            <div class="position-relative flex-fill d-flex flex-column">
-                                <section v-if="!isComponent(aMenu)" class="d-flex flex-column flex-fill">
+                            <div class="section-inner" :class="{'section-inner--desktop': !isMobile}">
+                                <section v-if="!isComponent(aMenu)" :id="`page-header-mega-menu-dropdown-row-${rowIndex}-section-${index}-content`" class="section-content">
                                     <LazyPageHeaderMegaMenuHeader :menu="aMenu" />
 
-                                    <div class="flex-fill d-flex flex-column">
-                                        <section v-for="(aChild,j) in aMenu.children" :key="j">
+                                    <div class="section-children">
+                                        <section v-for="(aChild,j) in aMenu.children" :id="`page-header-mega-menu-dropdown-row-${rowIndex}-section-${index}-child-${j}`" :key="j">
                                             <LazyPageHeaderMegaMenuLink v-if="!isHeader(aChild)"  :show-thumbs="showThumbs(aMenu)" :menu="aChild" :hide-final="aChild.count===aMenu.children.length"/>
                                             <LazyPageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
                                         </section>
                                     </div>
                                 </section>
 
-                                <div v-if="isComponent(aMenu)" class="h-100 position-relative d-flex flex-column">
+                                <div v-if="isComponent(aMenu)" :id="`page-header-mega-menu-dropdown-row-${rowIndex}-section-${index}-custom`" class="section-custom">
                                     <LazyPageHeaderMegaMenuCustom :is="componentName(aMenu)" :menu="aMenu" />
                                 </div>
                             </div>
@@ -47,6 +52,9 @@
 
         const {t, locale} = useI18n();
         const   route    = useRoute();
+        const   router   = useRouter();
+        const   eventBus = useEventBus();
+        const   emit     = defineEmits(['close']);
         const props      = defineProps({ menus: Array });
         const siteStore  = useSiteStore();
         const menuStore  = useMenusStore();
@@ -55,6 +63,16 @@
         const maxColumns = computed(()=> siteStore.config?.runTime?.theme?.megaMenu?.maxColumns || 5);
         const viewport   = useViewport();
         const isMobile   = computed(() => !['lg','xl', 'xxl'].includes(viewport.breakpoint.value));
+
+        const closeDropdown = () => {
+            emit('close');
+            eventBus.emit('closeAllMenus');
+        };
+
+        // Close on route change
+        router.beforeEach(() => {
+            emit('close');
+        });
 
     
         const sections = computed(() => {
@@ -340,6 +358,43 @@
 .debug{
     border: 1px solid red;
 }
+
+// Section inner layout - desktop uses flex, mobile uses block
+.section-inner {
+    display: block;
+}
+.section-inner--desktop {
+    position: relative;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
+.section-content {
+    display: block;
+}
+.section-inner--desktop .section-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+}
+.section-children {
+    display: block;
+}
+.section-inner--desktop .section-children {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
+.section-custom {
+    display: block;
+}
+.section-inner--desktop .section-custom {
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
 .menu-section{
     padding: 0 1.5rem 3rem 1rem;
     border-right: 2px solid rgb(0, 0, 0, .2);
@@ -370,6 +425,10 @@
     min-height: 400px;
 }
 
+.mm-close-btn {
+    display: none;
+}
+
 :root {
     --fadeDown-distance: -.25em;
 }
@@ -394,21 +453,95 @@
 
 @media (max-width: 991.98px) { 
     .cont{
-        height: 175vh;
+        height: auto;
+        min-height: auto;
     }
     .mm{
         top: 0; 
         padding-top: 2rem;
+        padding-bottom: 5rem;
         transition: all 0.4s cubic-bezier(1, 0.5, 0.8, 1);
         width: 100%;
-        height:100%;
+        height: 100vh;
+        min-height: 100vh;
+        position: fixed;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    .mm-close-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 0.75rem;
+        right: 0.75rem;
+        z-index: 10001;
+        width: 2.5rem;
+        height: 2.5rem;
+        border: none;
+        border-radius: 50%;
+        background-color: var(--bs-dark, #212529);
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        
+        &:hover {
+            background-color: var(--bs-gray-700, #495057);
+        }
+        
+        :deep(svg) {
+            fill: white;
+        }
     }
     .mm-row{
         flex-direction: column;
+        align-items: flex-start !important;
     }
     .menu-section{
         border-right: none;
         margin-bottom: 1.5rem;
+        flex: none !important;
+        width: 100%;
+        min-height: auto;
+        height: auto;
+        overflow: visible;
+        padding-bottom: 0;
+    }
+    .menu-section :deep(.h-100),
+    .menu-section :deep(.flex-fill) {
+        height: auto !important;
+        flex: none !important;
+    }
+    .menu-section :deep(.position-relative) {
+        position: static !important;
+    }
+    .menu-section :deep(#page-header-mega-menu-custom) {
+        display: block;
+    }
+    .menu-section :deep(#page-header-mega-menu-custom-content-type) {
+        display: block;
+    }
+    .menu-section :deep(#page-header-mega-menu-custom-content-type-cards) {
+        display: block !important;
+        flex-wrap: nowrap !important;
+    }
+    .menu-section :deep(#page-header-mega-menu-custom-content-type-cards > section) {
+        flex: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin-bottom: 0.5rem;
+    }
+    .menu-section :deep(.card) {
+        max-width: 100% !important;
+        width: 100% !important;
+        flex-direction: row;
+    }
+    .menu-section :deep(.card .card-img) {
+        width: 80px !important;
+        height: auto !important;
+        margin-right: 0.5rem;
+        flex-shrink: 0;
     }
     @keyframes fadeDown {
     0% {

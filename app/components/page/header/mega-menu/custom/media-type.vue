@@ -1,14 +1,14 @@
 <template>
     <LazyPageHeaderMegaMenuHeader :menu="menu" />
-    <div :class="{ 'd-flex justify-content-between':isCardView}">
-        <section v-for="(aChild,j) in menu.children" :key="j">
+    <div id="page-header-mega-menu-custom-media-type" :class="{ 'd-flex justify-content-between':isCardView}">
+        <section v-for="(aChild,j) in menu.children" :id="`page-header-mega-menu-custom-media-type-item-${j}`" :key="j">
 
                 <LazyPageHeaderMegaMenuLink v-if="!isHeader(aChild)"  :show-thumbs="menu.class?.includes('bl2-show-thumbs')" :show-cards="isCardView"  :menu="aChild" />
                 <LazyPageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
             
         </section>
     </div>
-    <LazyPageHeaderMegaMenuLink v-if="hasFinalLink && isCardView"  :menu="hasFinalLink" />
+    <LazyPageHeaderMegaMenuLink v-if="hasFinalLink && isCardView" id="page-header-mega-menu-custom-media-type-final-link" :menu="hasFinalLink" />
 </template>
 
 <script setup>

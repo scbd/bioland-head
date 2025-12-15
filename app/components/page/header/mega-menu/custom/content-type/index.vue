@@ -3,9 +3,9 @@
 
         <LazyPageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menu.dataMap" >
             <Transition :name="slotProps.fadeName">
-                <section v-if="slotProps.hide">
-                    <div :class="cardContainerClasses" class="align-self-stretch">
-                        <section v-for="(aChild,j) in menu.dataMap[slotProps.country]" :key="j" :style="cardSectionStyle">
+                <section v-if="slotProps.hide" id="page-header-mega-menu-custom-content-type">
+                    <div :class="cardContainerClasses" id="page-header-mega-menu-custom-content-type-cards" class="align-self-stretch">
+                        <section v-for="(aChild,j) in menu.dataMap[slotProps.country]" :id="`page-header-mega-menu-custom-content-type-item-${j}`" :key="j" :style="cardSectionStyle">
 
                             <LazyPageHeaderMegaMenuLink v-if="!isHeader(aChild)" :type="getContentType()" :show-thumbs="menu.class?.includes('bl2-show-thumbs')" :show-cards="isCardView"  :menu="aChild" />
                             <LazyPageHeaderMegaMenuHeader v-if="isHeader(aChild)"  :menu="aChild" />
@@ -13,7 +13,7 @@
                         </section>
                     </div>
 
-                    <div v-if="menu.finalLink" class="content-type__final-link">
+                    <div v-if="menu.finalLink" id="page-header-mega-menu-custom-content-type-final-link" class="content-type__final-link">
                         <LazyPageHeaderMegaMenuLink
                             :menu="menu.finalLink"
                             :type="getContentType()"

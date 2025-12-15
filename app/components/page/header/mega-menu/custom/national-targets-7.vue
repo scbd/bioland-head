@@ -1,18 +1,18 @@
 <template>
-    <div class="col-12 text-wrap px-0">
+    <div id="page-header-mega-menu-custom-national-targets-7" class="col-12 text-wrap px-0">
         <LazyPageHeaderMegaMenuHeader  :menu="menu" />
 
         <LazyPageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menus" >
             <Transition :name="slotProps.fadeName">
-                <section v-if="slotProps.hide">
-                    <section v-for="(aChild,j) in children" :key="j">
+                <section v-if="slotProps.hide" id="page-header-mega-menu-custom-national-targets-7-content">
+                    <section v-for="(aChild,j) in children" :id="`page-header-mega-menu-custom-national-targets-7-child-${j}`" :key="j">
                         <p >
                             <LazyPageHeaderMegaMenuLink :title="aChild.title" :menu="aChild" />
                         </p>
                     </section>
                     <!-- <p>{{t(slotProps.country)}}</p> -->
-                    <div class="d-flex justify-content-start" >
-                        <LazyCardsNt7 class="mx-2" :record="aChild" :no-flag="true" v-for="(aChild,j) in menus[slotProps.country]" :key="j"/>
+                    <div id="page-header-mega-menu-custom-national-targets-7-cards" class="d-flex justify-content-start" >
+                        <LazyCardsNt7 class="mx-2" :id="`page-header-mega-menu-custom-national-targets-7-card-${j}`" :record="aChild" :no-flag="true" v-for="(aChild,j) in menus[slotProps.country]" :key="j"/>
                     </div>
                 </section>
             </Transition>

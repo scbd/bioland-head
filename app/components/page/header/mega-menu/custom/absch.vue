@@ -1,13 +1,13 @@
 <template>
-    <div class="col-12 text-wrap px-0">
+    <div id="page-header-mega-menu-custom-absch" class="col-12 text-wrap px-0">
         <LazyPageHeaderMegaMenuHeader  :menu="menu" />
 
-        <section v-for="(aChild,j) in drupalMenus" :key="j">
+        <section v-for="(aChild,j) in drupalMenus" :id="`page-header-mega-menu-custom-absch-drupal-item-${j}`" :key="j">
             <p >
                 <LazyPageHeaderMegaMenuLink :title="aChild.title"  :menu="aChild" />
             </p>
         </section>
-        <LazyPageHeaderMegaMenuLink v-for="(aMenu,j) in menu.children" :key="j" :menu="aMenu" />
+        <LazyPageHeaderMegaMenuLink v-for="(aMenu,j) in menu.children" :id="`page-header-mega-menu-custom-absch-child-${j}`" :key="j" :menu="aMenu" />
     </div>
 </template>
 <script setup>

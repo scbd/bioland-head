@@ -33,7 +33,7 @@
     height:100%;
     top: 0;
     cursor: pointer;
-    z-index: 10;
+    z-index: 2;
 }
 .right{
     cursor: pointer;

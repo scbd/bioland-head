@@ -1,39 +1,39 @@
 <template>
     
-    <div >
-        <NuxtLink v-if="!isAuthenticated"  class="nav-link text-white" :to="loginUrl" :title="aMenu.title" >
+    <div id="page-header-mega-menu-login">
+        <NuxtLink v-if="!isAuthenticated" id="page-header-mega-menu-login-link" class="nav-link text-white" :to="loginUrl" :title="aMenu.title" >
             <span v-if="!isAuthenticated"> {{aMenu.title}} </span>
         </NuxtLink>
-        <button v-if="isAuthenticated" class="nav-link text-white" :to="loginUrl" :title="aMenu.title" >
+        <button v-if="isAuthenticated" id="page-header-mega-menu-login-btn" class="nav-link text-white" :to="loginUrl" :title="aMenu.title" >
             <span v-if="isAuthenticated"> 
                 <LazyIcon name="drupal" color="#ffffff" :size="2" class="me-1"/> 
             </span>
         </button>
-        <div v-if="show"   class="overflow-scroll mm" >
-            <div class="container px-0 cont" >
+        <div v-if="show" id="page-header-mega-menu-login-dropdown" class="overflow-scroll mm" >
+            <div id="page-header-mega-menu-login-dropdown-container" class="container px-0 cont" >
                 <div class="row  m-0">
-                        <div  class="col-8 menu-section text-center pt-1 " style="min-height: 100px;">
+                        <div id="page-header-mega-menu-login-drupal-section" class="col-8 menu-section text-center pt-1 " style="min-height: 100px;">
                             <div class="h-100 d-flex  justify-content-center align-items-center ">
                                 <LazyIcon name="drupal-new"  :size="isDrupalSize" />
-                                <div class="btn-group  ms-5" :class="{'btn-group-sm': isMd}" >
+                                <div id="page-header-mega-menu-login-drupal-actions" class="btn-group  ms-5" :class="{'btn-group-sm': isMd}" >
 
-                                    <NuxtLink v-if="meStore.isContributor" class="btn btn-outline-dark icon-hover" :to="publishUrl" external >
+                                    <NuxtLink v-if="meStore.isContributor" id="page-header-mega-menu-login-publish-btn" class="btn btn-outline-dark icon-hover" :to="publishUrl" external >
                                         <LazyIcon name="drupal-publish"  :size="1.5" class="me-1"/> {{t('Publishing')}}
                                     </NuxtLink>
 
-                                    <NuxtLink v-if="meStore.isContentManager" class="btn btn-outline-dark icon-hover" :to="structureUrl" external >
+                                    <NuxtLink v-if="meStore.isContentManager" id="page-header-mega-menu-login-structure-btn" class="btn btn-outline-dark icon-hover" :to="structureUrl" external >
                                         <LazyIcon name="drupal-structure":size="1.5" class="me-1"/> {{t('Structure')}}
                                     </NuxtLink>
 
-                                    <NuxtLink  v-if="meStore.isSiteManager" class="btn btn-outline-dark icon-hover" :to="configureUrl" external >
+                                    <NuxtLink v-if="meStore.isSiteManager" id="page-header-mega-menu-login-config-btn" class="btn btn-outline-dark icon-hover" :to="configureUrl" external >
                                         <LazyIcon name="drupal-configure"  :size="1.5" class="me-1"/> {{t('Configuration')}}
                                     </NuxtLink>
 
-                                    <NuxtLink v-if="meStore.isSiteManager" class="btn btn-outline-dark icon-hover" :to="peopleUrl" external >
+                                    <NuxtLink v-if="meStore.isSiteManager" id="page-header-mega-menu-login-people-btn" class="btn btn-outline-dark icon-hover" :to="peopleUrl" external >
                                         <LazyIcon name="drupal-people"  :size="1.5" class="me-1"/> {{t('People')}}
                                     </NuxtLink>
 
-                                    <NuxtLink  v-if="meStore.isSiteManager" class="btn btn-outline-dark icon-hover" :to="reportsUrl" external >
+                                    <NuxtLink v-if="meStore.isSiteManager" id="page-header-mega-menu-login-reports-btn" class="btn btn-outline-dark icon-hover" :to="reportsUrl" external >
                                         <LazyIcon name="drupal-reports" color="#000000" :size="1.5" class="me-1"/> {{t('Reports')}}
                                     </NuxtLink>
                                 </div>
@@ -41,21 +41,21 @@
                             </div>
                         </div>
     
-                        <div  class="col-4 menu-section text-wrap  p-0" >
+                        <div id="page-header-mega-menu-login-user-section" class="col-4 menu-section text-wrap  p-0" >
                             <div class="d-flex  justify-content center align-items-center flex-column ">
-                                <div v-if="meStore.user?.img?.src">
+                                <div v-if="meStore.user?.img?.src" id="page-header-mega-menu-login-user-avatar">
                                     <LazyAvatar :user="meStore.user"  :size="150"/>
                                 </div>
-                                <div class="my-1">
+                                <div id="page-header-mega-menu-login-user-name" class="my-1">
                                     <span>{{meStore.user?.displayName}}</span>
                                 </div>
-                                <div  class="w-100 d-flex  justify-content-around align-items-center ">
+                                <div id="page-header-mega-menu-login-user-actions" class="w-100 d-flex  justify-content-around align-items-center ">
                                     <!-- @click="doLogOut()" -->
-                                    <a class="nav-link text-black" :href="logOutUrl" >
+                                    <a id="page-header-mega-menu-login-logout-link" class="nav-link text-black" :href="logOutUrl" >
                                         <LazyIcon name="lock" color="#000000" :size="1.5" class="me-1"/> {{t('Logout')}}
                                     </a>
 
-                                    <button v-if="meStore.canEditMenu" class="nav-link text-black" @click="meStore.toggleEditMode()">
+                                    <button v-if="meStore.canEditMenu" id="page-header-mega-menu-login-edit-toggle" class="nav-link text-black" @click="meStore.toggleEditMode()">
                                             <LazyIcon :name="meStore.editMode? 'toggle-on' : 'toggle-off'" color="#000000" :size="1" class="me-1"/> {{t('Edit Mode')}}
                                     </button>
 

@@ -1,18 +1,18 @@
 <template>
-    <div class="col-12 text-wrap px-0">
+    <div id="page-header-mega-menu-custom-national-report-list" class="col-12 text-wrap px-0">
         <LazyPageHeaderMegaMenuHeader  :menu="menu" />
 
         <LazyPageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menus" >
             <Transition :name="slotProps.fadeName">
-                <section v-if="slotProps.hide">
-                    <section v-for="(aChild,j) in drupalMenus" :key="j">
+                <section v-if="slotProps.hide" id="page-header-mega-menu-custom-national-report-list-content">
+                    <section v-for="(aChild,j) in drupalMenus" :id="`page-header-mega-menu-custom-national-report-list-drupal-item-${j}`" :key="j">
                         <p >
                             <LazyPageHeaderMegaMenuLink :title="aChild.title"  :menu="aChild" />
                         </p>
                     </section>
-                    <LazyPageHeaderMegaMenuLink v-for="(aChild,i) in menus[slotProps.country]" :key="i" :menu="aChild" />
+                    <LazyPageHeaderMegaMenuLink v-for="(aChild,i) in menus[slotProps.country]" :id="`page-header-mega-menu-custom-national-report-list-country-item-${i}`" :key="i" :menu="aChild" />
 
-                    <LazyPageHeaderMegaMenuLink :menu="finalLink(slotProps.country)" />
+                    <LazyPageHeaderMegaMenuLink id="page-header-mega-menu-custom-national-report-list-final-link" :menu="finalLink(slotProps.country)" />
                 </section>
             </Transition>
         </LazyPageHeaderMegaMenuCustomCountryTab>

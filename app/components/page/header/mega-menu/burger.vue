@@ -1,8 +1,8 @@
 <template>
-    <div @click="toggleBurger()" :class="{'nav-open': burgerToggle}" class="pointer">
-        <div  class="container-burger position-relative" >
+    <div id="page-header-mega-menu-burger" @click="toggleBurger()" :class="{'nav-open': burgerToggle}" class="pointer">
+        <div id="page-header-mega-menu-burger-container" class="container-burger position-relative" >
             <div  class="container-burger" >
-                <a id="menu-toggle" class="menu-toggle" >
+                <a id="page-header-mega-menu-burger-toggle" class="menu-toggle" >
                     <span class="menu-toggle-bar menu-toggle-bar--top"></span>
                     <span class="menu-toggle-bar menu-toggle-bar--middle"></span>
                     <span class="menu-toggle-bar menu-toggle-bar--bottom"></span>
@@ -11,34 +11,33 @@
         </div>
     </div>
     <Transition  name="slide-fade">
-        <div v-if="burgerToggle" class="navbar d-flex flex-column justify-content-start pt-3" >
+        <div v-if="burgerToggle" id="page-header-mega-menu-burger-nav" class="navbar d-flex flex-column justify-content-start pt-3" >
 
-            <div class="overflow-scroll" style="height:100%; width:100%;">
-                    <h5 v-for="(aMenu,index) in menus" :key="index" class="m-row mb-0" @click.stop="toggle(index)" :class="{'bg-primary': aMenu.class?.includes('login')}"   >
+            <div id="page-header-mega-menu-burger-nav-scroll" class="overflow-scroll" style="height:100%; width:100%;">
+                    <h5 v-for="(aMenu,index) in menus" :id="`page-header-mega-menu-burger-nav-item-${index}`" :key="index" class="m-row mb-0" @click.stop="toggle(index)" :class="{'bg-primary': aMenu.class?.includes('login')}"   >
                         <NuxtLink  :class="aMenu.class" class="nav-link" :title="aMenu.title" >
                             {{aMenu.title}}
                         </NuxtLink>
                     </h5 >
 
-                    <h5 @click.stop="toggle(langToggleIndex)" class="m-row">
+                    <h5 id="page-header-mega-menu-burger-nav-lang" @click.stop="toggle(langToggleIndex)" class="m-row">
                         <NuxtLink  class="nav-link" :title="currentLanguage.nativeName" :alt="currentLanguage.nativeName" >
                             {{currentLanguage.nativeName}}
                             <LazyIcon name="language" :size="1.5"/>
                         </NuxtLink>
                     </h5>
-                    <div  class="input-group px-1 position-fixed bottom-0 mb-1" >
-                        <input @keyup.enter="()=>{onClick(queryText);}" type="text" v-model="queryText" class="form-control"  :placeholder="t('Search this site')" aria-label="search" >
+                    <div id="page-header-mega-menu-burger-search-box" class="input-group position-fixed bottom-0 mb-1 burger-search-box" >
+                        <input id="page-header-mega-menu-burger-search-input" @keyup.enter="()=>{onClick(queryText);}" type="text" v-model="queryText" class="form-control"  :placeholder="t('Search this site')" aria-label="search" >
 
-                        <a  v-on:click="onClick(queryText)" class="input-group-text"  :alt="t('Search this site')"  >
+                        <a id="page-header-mega-menu-burger-search-btn" v-on:click="onClick(queryText)" class="input-group-text"  :alt="t('Search this site')"  >
                             <LazyIcon name="search" class="white-icon" />&nbsp;
                         </a>
                     </div>
             </div>
-            <section  v-for="(aMenu,index) in menus" :key="index">
-                    <LazyPageHeaderMegaMenuDropDown v-if="aMenu.children && toggles[index]" :menus="aMenu.children"  v-click-outside="unToggle"/>
-                &nbsp;
+            <section v-for="(aMenu,index) in menus" :id="`page-header-mega-menu-burger-dropdown-section-${index}`" :key="index" class="burger-dropdown-section">
+                    <LazyPageHeaderMegaMenuDropDown v-if="aMenu.children && toggles[index]" :menus="aMenu.children" :parent-id="`page-header-mega-menu-burger-nav-item-${index}`" v-click-outside="unToggle" @close="unToggle"/>
             </section>
-            <LazyPageHeaderMegaMenuLanguageMobile v-if="toggles[langToggleIndex]"   v-click-outside="unToggle"/>
+            <LazyPageHeaderMegaMenuLanguageMobile v-if="toggles[langToggleIndex]" v-click-outside="unToggle" @close="unToggle"/>
         </div>
     </Transition>
 </template>
@@ -62,6 +61,9 @@
             eventBus.on('openMenu', (index) => { 
                 toggleBurger();
                 toggle(index);
+            });
+            eventBus.on('closeAllMenus', () => {
+                unToggle();
             });
         });
 
@@ -203,5 +205,17 @@
             transform: translate(0, 0) rotate(-45deg);
         }
     }
+}
+
+.burger-dropdown-section {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.burger-search-box {
+    left: 0;
+    width: 85%;
+    margin-left: 0.5rem;
 }
 </style>
