@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div data-testid="swiper-placeholder">
         <!-- Title and "View more" link placeholders -->
         <div class="col-12 mt-3 mb-0">
             <div class="placeholder-glow d-inline-block" style="margin-bottom: 2rem; border-bottom-width: 4px;">

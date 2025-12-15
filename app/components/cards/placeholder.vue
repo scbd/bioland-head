@@ -1,38 +1,53 @@
 <template>
-    <div class="card card-placeholder placeholder-wave h-100">
+    <div :id="baseId" class="card card-placeholder placeholder-wave" data-testid="card-placeholder">
         <!-- Image placeholder with wave from parent card -->
-        <div class="card-img-top placeholder bg-secondary opacity-75"></div>
+        <div :id="`${baseId}-img`" class="card-img-top placeholder bg-secondary opacity-75"></div>
         
-        <div class="card-body d-flex flex-column">
+        <div :id="`${baseId}-body`" class="card-body d-flex flex-column">
             <!-- Type/category badge placeholder -->
-            <div class="placeholder-glow mb-2 text-center">
+            <div :id="`${baseId}-badge`" class="placeholder-glow mb-2 text-center">
                 <span class="placeholder rounded-pill bg-secondary opacity-25 col-6"></span>
             </div>
             
             <!-- Title placeholder (2 lines with glow animation) -->
-            <div class="placeholder-glow mb-2">
+            <div :id="`${baseId}-title`" class="placeholder-glow mb-2">
                 <span class="placeholder col-12 placeholder-lg rounded-1 bg-secondary opacity-75"></span>
                 <span class="placeholder col-9 placeholder-lg rounded-1 bg-secondary opacity-75"></span>
             </div>
             
             <!-- Description placeholder (3 lines) -->
-            <div class="placeholder-glow mb-3 flex-grow-1">
+            <div :id="`${baseId}-description`" class="placeholder-glow mb-3 flex-grow-1">
                 <span class="placeholder col-12 rounded-1"></span>
                 <span class="placeholder col-11 rounded-1"></span>
                 <span class="placeholder col-8 rounded-1"></span>
             </div>
             
             <!-- Date/metadata placeholder at bottom -->
-            <div class="placeholder-wave mt-auto text-end">
+            <div :id="`${baseId}-footer`" class="placeholder-wave mt-auto text-end">
                 <span class="placeholder col-5 placeholder-sm rounded-1 bg-secondary opacity-25"></span>
             </div>
         </div>
     </div>
 </template>
 
+<script setup>
+const attrs = useAttrs();
+const baseId = computed(() => {
+    if (attrs?.id) return String(attrs.id);
+    return 'card-placeholder';
+});
+</script>
+
 <style scoped>
 .card-placeholder {
     border: 1px solid rgba(0, 0, 0, 0.125);
+    height: 600px;
+}
+
+@media (max-width: 991px) {
+    .card-placeholder {
+        height: 650px; /* Match mobile swiper visible card height (~725px - pagination) */
+    }
 }
 
 .card-img-top {

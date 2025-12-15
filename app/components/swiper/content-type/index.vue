@@ -191,5 +191,13 @@ const placeholderCount = computed(() => hasHydrated.value ? slidePerView.value :
     width       : 1em;
     height      : 1em;
 }
+
+/* Hide second placeholder card on mobile to prevent CLS 
+   (swiper shows 1 card at a time on small screens) */
+@media (max-width: 767px) {
+    .row.g-3 > div:nth-child(2) {
+        display: none;
+    }
+}
 </style>
 
