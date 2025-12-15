@@ -1,24 +1,24 @@
 <template>
-    <div v-if="showTabs" class="tabs">
-        <ul  class="nav nav-tabs mb-1" >
+    <div v-if="showTabs" :id="baseId" class="tabs">
+        <ul :id="`${baseId}-nav`" class="nav nav-tabs mb-1" >
 
-            <li   class="nav-item ">
-                <NuxtLink :style="getStyle(siteContentTo)"  :to="siteContentTo" class="nav-link  text-capitalize">
+            <li :id="`${baseId}-site-content-item`" class="nav-item ">
+                <NuxtLink :id="`${baseId}-site-content-link`" :style="getStyle(siteContentTo)"  :to="siteContentTo" class="nav-link  text-capitalize">
                     {{t('Site Content')}}
                 </NuxtLink>
             </li>
-            <li   class="nav-item ">
-                <NuxtLink :style="getStyle(secretariatContentTo)" :to="secretariatContentTo" class="nav-link  text-capitalize">
+            <li :id="`${baseId}-secretariat-item`" class="nav-item ">
+                <NuxtLink :id="`${baseId}-secretariat-link`" :style="getStyle(secretariatContentTo)" :to="secretariatContentTo" class="nav-link  text-capitalize">
                     {{t('Secretariat')}}
                 </NuxtLink>
             </li>
-            <li  v-if="siteStore.isBiosafetySite" class="nav-item ">
-                <NuxtLink :style="getStyle(biosafetyContentTo)" :to="biosafetyContentTo" class="nav-link  text-capitalize">
+            <li v-if="siteStore.isBiosafetySite" :id="`${baseId}-biosafety-item`" class="nav-item ">
+                <NuxtLink :id="`${baseId}-biosafety-link`" :style="getStyle(biosafetyContentTo)" :to="biosafetyContentTo" class="nav-link  text-capitalize">
                     {{t('Biosafety Clearing-House')}} 
                 </NuxtLink>
             </li>
-            <li  v-if="siteStore.isAbsSite" class="nav-item ">
-                <NuxtLink :style="getStyle(accessBenefitContentTo)" :to="accessBenefitContentTo" class="nav-link  text-capitalize">
+            <li v-if="siteStore.isAbsSite" :id="`${baseId}-access-benefit-item`" class="nav-item ">
+                <NuxtLink :id="`${baseId}-access-benefit-link`" :style="getStyle(accessBenefitContentTo)" :to="accessBenefitContentTo" class="nav-link  text-capitalize">
                     {{t('Access and Benefit-Sharing Clearing-House')}} 
                 </NuxtLink>
             </li>
@@ -28,6 +28,9 @@
 </template>
 
 <script setup>
+    const attrs = useAttrs();
+    const baseId = computed(() => (attrs?.id ? String(attrs.id) : 'page-list-tabs'));
+
     const { t, locale }     = useI18n();
     const localePath = useLocalePath();
     const siteStore  = useSiteStore();

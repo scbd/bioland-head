@@ -1,27 +1,27 @@
 <template>
-    <div class="container page-body">
+    <div id="page-list-container" class="container page-body">
         <div class="row">
-            <div v-if="!schemaOnly" class="col-md-3">
+            <div v-if="!schemaOnly" id="page-list-sidebar-container" class="col-md-3">
                 &nbsp;
             </div>
-            <div class="col-12 col-md-9 px-0" :class="{ 'col-md-12': schemaOnly }">
+            <div id="page-list-breadcrumbs-container" class="col-12 col-md-9 px-0" :class="{ 'col-md-12': schemaOnly }">
                 <LazyPageBreadCrumbs :count="results?.count"/>
             </div>
-            <div v-if="!schemaOnly" class="col-12 col-md-3" :class="{ 'ps-0': !isMobile }">
-                <h2  :style="primaryColorStyle" v-if="contentTypeName && !title" class="page-type">{{contentTypeName}}</h2>
-                <h2  :style="primaryColorStyle" v-if="title" class="page-type">{{t(title,2)}}</h2>
-                <LazyPageListTextSearch/>
-                <LazyPageListFilter v-if="!typeId" :facets="results?.facets"/>
+            <div v-if="!schemaOnly" id="page-list-sidebar-filters-container" class="col-12 col-md-3" :class="{ 'ps-0': !isMobile }">
+                <h2  id="page-list-title-content-type" :style="primaryColorStyle" v-if="contentTypeName && !title" class="page-type">{{contentTypeName}}</h2>
+                <h2  id="page-list-title-provided" :style="primaryColorStyle" v-if="title" class="page-type">{{t(title,2)}}</h2>
+                <LazyPageListTextSearch id="page-list-text-search"/>
+                <LazyPageListFilter id="page-list-type-filter" v-if="!typeId" :facets="results?.facets"/>
             </div>
-            <div name="list" tag="div" class="col-12 col-md-9 data-body" :class="{ 'col-md-12': schemaOnly, 'px-0': !isMobile, 'mt-3': isMobile}">
-                <LazyPageBodyTabs v-if="meStore.showEditSystemPages"/>
-                <LazyPageListTabs  v-if="!schemaOnly" :types="types" :key="JSON.stringify(types)"/>
-                <LazyPageListPager v-if="hasHydrated && showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results?.count}`"/>
+            <div id="page-list-data-body" name="list" tag="div" class="col-12 col-md-9 data-body" :class="{ 'col-md-12': schemaOnly, 'px-0': !isMobile, 'mt-3': isMobile}">
+                <LazyPageBodyTabs id="page-list-body-tabs" v-if="meStore.showEditSystemPages"/>
+                <LazyPageListTabs  id="page-list-tabs" v-if="!schemaOnly" :types="types" :key="JSON.stringify(types)"/>
+                <LazyPageListPager id="page-list-top-pager" v-if="hasHydrated && showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results?.count}`"/>
 
                 <ClientOnly>
                     <template v-if="loading">
-                        <div class="list-container">
-                            <div v-for="n in skeletonCount" :key="n" class="list-placeholder-card placeholder-wave">
+                        <div id="page-list-skeleton-container" class="list-container">
+                            <div v-for="(n, index) in skeletonCount" :id="`page-list-skeleton-card-${index}`" :key="n" class="list-placeholder-card placeholder-wave">
                                 <div class="row g-3 align-items-center">
                                     <div class="col-8 col-md-9">
                                         <div class="placeholder-glow mb-2">
@@ -47,12 +47,12 @@
                             </div>
                         </div>
                     </template>
-                    <component v-else :is="hasHydrated ? TransitionGroup : 'div'" name="list" tag="div" class="list-container">
-                        <LazyPageListRow :a-line="aLine" v-for="aLine in sortedResults" :key="aLine.id || aLine.dnid || aLine.href" />
+                    <component v-else :is="hasHydrated ? TransitionGroup : 'div'" id="page-list-results-container" name="list" tag="div" class="list-container">
+                        <LazyPageListRow :a-line="aLine" v-for="(aLine, index) in sortedResults" :id="`page-list-row-${index}`" :key="aLine.id || aLine.dnid || aLine.href" />
                     </component>
                     <template #fallback>
-                        <div class="list-container">
-                            <div v-for="n in skeletonCount" :key="n" class="list-placeholder-card placeholder-wave">
+                        <div id="page-list-fallback-skeleton-container" class="list-container">
+                            <div v-for="(n, index) in skeletonCount" :id="`page-list-fallback-skeleton-card-${index}`" :key="n" class="list-placeholder-card placeholder-wave">
                                 <div class="row g-3 align-items-center">
                                     <div class="col-8 col-md-9">
                                         <div class="placeholder-glow mb-2">
@@ -81,7 +81,7 @@
                         </div>
                     </template>
                 </ClientOnly>
-                <LazyPageListPager v-if="hasHydrated && results?.count" :count="results?.count"/>
+                <LazyPageListPager id="page-list-bottom-pager" v-if="hasHydrated && results?.count" :count="results?.count"/>
             </div>
         </div>
     </div>

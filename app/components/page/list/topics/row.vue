@@ -1,31 +1,31 @@
 <template>
-    <NuxtLink :to="getHref(aLine)" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" >
-        <div   class="card p-1 m-1 mb-3"  >
-            <div  class="row g-0">
+    <NuxtLink :id="baseId" :to="getHref(aLine)" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" >
+        <div :id="`${baseId}-card`" class="card p-1 m-1 mb-3"  >
+            <div :id="`${baseId}-row`" class="row g-0">
                 <div class="col-8 fw-bold"> {{t('Topic')}} </div>
                 <div class="col-1 fw-bold"> {{t('Comments')}} </div>
                 <div class="col-3 fw-bold"> {{t('Last Comment')}}</div>
 
                 <div class="col-12">
-                    <div class="card-header">
+                    <div :id="`${baseId}-header`" class="card-header">
                         <hr class="my-0 mx-0 line" >
                     </div>
                 </div>
 
                 <div class="col-8">
-                    <div class="card-body pe-1">
-                        <h5 class="card-title">{{aLine.title || aLine.name}}</h5>
-                        <p v-if="aLine.summary" class="card-text">{{aLine.summary}}...</p>
+                    <div :id="`${baseId}-body`" class="card-body pe-1">
+                        <h5 :id="`${baseId}-title`" class="card-title">{{aLine.title || aLine.name}}</h5>
+                        <p v-if="aLine.summary" :id="`${baseId}-summary`" class="card-text">{{aLine.summary}}...</p>
 
                     </div>
                 </div>
                 <div class="col-1">
-                    <div class="card-body">
+                    <div :id="`${baseId}-comments-count`" class="card-body">
                         {{aLine?.count}}
                     </div>
                 </div>
                 <div class="col-3">
-                    <div class="card-body">
+                    <div :id="`${baseId}-last-comment`" class="card-body">
                         <p>{{t('By')}} {{user?.displayName}}</p>
                         <p>{{aLine?.dateString}}</p>
                     </div>
@@ -35,6 +35,16 @@
     </NuxtLink>
 </template>
 <script setup>
+    const attrs = useAttrs();
+    const baseId = computed(() => {
+        if (attrs?.id) return String(attrs.id);
+
+        const line = unref(aLine);
+        const key = line?.nodeId || line?.id;
+
+        return key ? `page-list-topics-row-${key}` : 'page-list-topics-row';
+    });
+
     const   localePath   = useLocalePath();
     const { t, locale  } = useI18n();
     const   props        = defineProps({  aLine: { type: Object  } });

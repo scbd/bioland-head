@@ -1,14 +1,17 @@
 <template >
-    <div class="input-group mb-3">
-        <input type="text" id="listTextSearch" v-model="queryText" class="form-control"  :class="{ 'not-allowed': disabled }" :placeholder="t('Free text search')" aria-label="search" :disabled="disabled">
+    <div :id="baseId" class="input-group mb-3">
+        <input type="text" :id="`${baseId}-input`" v-model="queryText" class="form-control"  :class="{ 'not-allowed': disabled }" :placeholder="t('Free text search')" aria-label="search" :disabled="disabled">
 
-        <a class="input-group-text"    :alt="t('Free text search')"  >
-            <LazyIcon v-if="!queryText" name="search" class="white-icon" />
-            <LazyIcon @click="clear()" v-if="queryText" name="cancel" class="white-icon" />&nbsp;
+        <a :id="`${baseId}-action`" class="input-group-text" :alt="t('Free text search')"  >
+            <LazyIcon v-if="!queryText" :id="`${baseId}-search-icon`" name="search" class="white-icon" />
+            <LazyIcon @click="clear()" v-if="queryText" :id="`${baseId}-clear-icon`" name="cancel" class="white-icon" />&nbsp;
         </a>
     </div>
 </template>
 <script setup>
+    const attrs = useAttrs();
+    const baseId = computed(() => (attrs?.id ? String(attrs.id) : 'page-list-text-search'));
+
     const { t        } = useI18n    ();
     const   router     = useRouter  ();
     const   route      = useRoute   ();

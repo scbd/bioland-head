@@ -1,6 +1,6 @@
 <template>
-    <section>
-        <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="htmlSanitize(pageStore?.body)"></div>
+    <section id="page-body-main">
+        <div id="page-body-main-body" :style="pageTypeStyle" v-if="pageStore?.body" v-html="htmlSanitize(pageStore?.body)"></div>
     </section>
 </template>
 <script setup>

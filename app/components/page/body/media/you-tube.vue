@@ -1,7 +1,7 @@
 <template>
-    <section v-if="(pageStore.isVideo || pageStore.isMediaRemoteVideo) && url">
-        <div v-if="match" class="col-12 my-2">
-            <iframe class="youtube-video" :src="`https://www.youtube.com/embed/${match}`" :title="title" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <section id="page-body-media-you-tube" v-if="(pageStore.isVideo || pageStore.isMediaRemoteVideo) && url">
+        <div id="page-body-media-you-tube-container" v-if="match" class="col-12 my-2">
+            <iframe id="page-body-media-you-tube-iframe" class="youtube-video" :src="`https://www.youtube.com/embed/${match}`" :title="title" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
     </section>
 </template>

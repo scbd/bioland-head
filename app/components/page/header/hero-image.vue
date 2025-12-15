@@ -1,8 +1,8 @@
 <template>
-    <div ref="heroContainer"  :style="backgroundStyles" :class="{'un3-hero':hasHeroImage, 'hero-image':hasHeroImage, 'no-hero':!hasHeroImage, 'dev-site': isDevSite }"  >
+    <div id="page-header-hero-image" ref="heroContainer"  :style="backgroundStyles" :class="{'un3-hero':hasHeroImage, 'hero-image':hasHeroImage, 'no-hero':!hasHeroImage, 'dev-site': isDevSite }"  >
         <slot></slot>
         
-        <div v-if="hasHeroImage"  class="container text-white">
+        <div v-if="hasHeroImage" id="page-header-hero-image-content" class="container text-white">
             <div class="row pb-1 position-relative ">
                 <div v-if="meStore.showEdit && meStore.isContentManager" class="position-absolute text-end bottom-50" style="min-width:3rem;">
                     <NuxtLink :to="editUrl()" type="button" class="btn btn btn-light btn-sm mt-1">

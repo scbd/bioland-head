@@ -1,36 +1,36 @@
 <template>
-    <div class="container mt-1">
+    <div id="page-list-forums-container" class="container mt-1">
         <div class="row">
-            <div class="col-md-3">
+            <div id="page-list-forums-sidebar-container" class="col-md-3">
                 &nbsp;
             </div>
-            <div class="col-12 col-md-9 px-0">
+            <div id="page-list-forums-breadcrumbs-container" class="col-12 col-md-9 px-0">
                 <LazyPageBreadCrumbs :count="results?.length"/>
             </div>
-            <div class="col-12 col-md-3 ps-0" >
-                <h2  :style="primaryColorStyle"  class="page-type text-capitalize">{{t('Forums',2)}}</h2>
+            <div id="page-list-forums-title-container" class="col-12 col-md-3 ps-0" >
+                <h2 id="page-list-forums-title" :style="primaryColorStyle"  class="page-type text-capitalize">{{t('Forums',2)}}</h2>
                 <!-- <LazyPageListTextSearch/> -->
             </div>
 
             <ClientOnly >
-                <div name="list" tag="div" class="col-12 col-md-9 data-body">
+                <div id="page-list-forums-data-body" name="list" tag="div" class="col-12 col-md-9 data-body">
 
                     <transition-group name="list">
-                        <LazyPageListForumsRow  :a-line="aLine" v-for="(aLine,index) in results" :key="index" />
+                        <LazyPageListForumsRow  :a-line="aLine" v-for="(aLine,index) in results" :id="`page-list-forums-row-${index}`" :key="index" />
                         <span :key="`showTopPage${showTopPager}${results?.count}-span`">&nbsp;</span>
                     </transition-group>
                 </div>
                 <template #fallback>
-                    <div name="list" tag="div" class="col-12 col-md-9 data-body">
+                    <div id="page-list-forums-fallback-data-body" name="list" tag="div" class="col-12 col-md-9 data-body">
 
-                        <LazyPageListForumsRow  :a-line="aLine" v-for="(aLine,index) in results" :key="index" />
+                        <LazyPageListForumsRow  :a-line="aLine" v-for="(aLine,index) in results" :id="`page-list-forums-fallback-row-${index}`" :key="index" />
                         <span :key="`showTopPage${showTopPager}${results?.count}-span`">&nbsp;</span>
                     </div>
                 </template>
             </ClientOnly>
 
-            <div class="col-12 col-md-9 offset-md-3 ">
-                <LazyPageListPager :count="results?.count"/>
+            <div id="page-list-forums-pager-container" class="col-12 col-md-9 offset-md-3 ">
+                <LazyPageListPager id="page-list-forums-pager" :count="results?.count"/>
             </div>
         </div>
     </div>

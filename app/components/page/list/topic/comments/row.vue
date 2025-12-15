@@ -1,29 +1,39 @@
 <template>
-    <div   class="card p-1 mb-3" :style="`border-left: 7px solid ${aLine.fieldColor};`" >
-        <div  class="row g-0">
+    <div :id="baseId" class="card p-1 mb-3" :style="`border-left: 7px solid ${aLine.fieldColor};`" >
+        <div :id="`${baseId}-row`" class="row g-0">
             <div class="col-12">
-                <div class="card-header">
+                <div :id="`${baseId}-header`" class="card-header">
                     <LazyAvatar :user="aLine.user" />
-                    <span class="text-muted ms-2">{{aLine.user.displayName}}</span>
+                    <span :id="`${baseId}-user`" class="text-muted ms-2">{{aLine.user.displayName}}</span>
                     <hr class="my-0 mx-0 mt-1" :style="`border: 1px solid ${aLine.fieldColor};`">
                 </div>
             </div>
 
             <div class="col-12">
-                <div class="card-body">
-                    <div v-html="htmlSanitize(aLine.commentBody.value)"></div>
+                <div :id="`${baseId}-body`" class="card-body">
+                    <div :id="`${baseId}-body-html`" v-html="htmlSanitize(aLine.commentBody.value)"></div>
                 </div>
             </div>
 
             <div class="col-12">
-                <div class="card-footer">
-                    <LazyFormCommentInput />
+                <div :id="`${baseId}-footer`" class="card-footer">
+                    <LazyFormCommentInput :id="`${baseId}-reply-input`" />
                 </div>
             </div>
         </div>
     </div>
 </template>
 <script setup>
+    const attrs = useAttrs();
+    const baseId = computed(() => {
+        if (attrs?.id) return String(attrs.id);
+
+        const line = unref(aLine);
+        const key = line?.id || line?.commentId;
+
+        return key ? `page-list-topic-comment-${key}` : 'page-list-topic-comment';
+    });
+
     const   props     = defineProps({  aLine: { type: Object  } });
     const { aLine }   = toRefs(props);
     

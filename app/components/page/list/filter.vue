@@ -1,26 +1,41 @@
 <template >
-    <div v-if="!isSecretariat" id="listTypeFilter" class="mb-3">
-        <label class="form-label"><strong>{{ t('Filter by Type:') }}</strong></label>
-        <div class="input-group">
-            <div class="filter-select-custom" :style="{ '--primary-color': siteStore.primaryColor }">
-                <div 
-                    v-for="t in types" 
-                    :key="t.value" 
-                    class="filter-option" 
-                    :data-testid="`filter-option-${t.value}`"
-                    :data-count="t.count"
-                    :class="{ 'selected': selected.includes(t.value), 'zero-count': t.count === 0 }"
-                    @click="toggleSelection(t.value)"
-                >
-                    <span class="option-text">{{ t.name }}</span>
-                    <LazyIcon v-if="selected.includes(t.value)" name="cancel" :size="0.875" color="white" class="remove-icon" />
+    <div v-if="!isSecretariat" :id="baseId" class="mb-3">
+        <div :id="`${baseId}-header`" class="filter-header d-flex justify-content-between align-items-center" @click="toggleFilter">
+            <label :id="`${baseId}-label`" class="form-label mb-0"><strong>{{ t('Filter by Type:') }}</strong></label>
+            <LazyIcon 
+                v-if="isMobile" 
+                name="arrow-down" 
+                :size="1.25" 
+                class="filter-toggle-icon" 
+                :class="{ 'expanded': filterExpanded }"
+            />
+        </div>
+        <Transition name="slide-fade">
+            <div v-show="!isMobile || filterExpanded" :id="`${baseId}-input-group`" class="input-group">
+                <div :id="`${baseId}-options`" class="filter-select-custom" :style="{ '--primary-color': siteStore.primaryColor }">
+                    <div 
+                        v-for="t in types" 
+                        :id="`${baseId}-option-${t.value}`"
+                        :key="t.value" 
+                        class="filter-option" 
+                        :data-testid="`filter-option-${t.value}`"
+                        :data-count="t.count"
+                        :class="{ 'selected': selected.includes(t.value), 'zero-count': t.count === 0 }"
+                        @click="toggleSelection(t.value)"
+                    >
+                        <span class="option-text">{{ t.name }}</span>
+                        <LazyIcon v-if="selected.includes(t.value)" name="cancel" :size="0.875" color="white" class="remove-icon" />
+                    </div>
                 </div>
             </div>
-        </div>
+        </Transition>
         <!-- Debug: {{ types.map(t => `${t.name} - disabled:${t.disabled}`).join(', ') }} -->
     </div>
 </template>
 <script setup>
+    const attrs = useAttrs();
+    const baseId = computed(() => (attrs?.id ? String(attrs.id) : 'page-list-filter'));
+
     const { t, locale } = useI18n    ();
     const   router      = useRouter  ();
     const   route       = useRoute   ();
@@ -29,6 +44,15 @@
     const   pageStore   = usePageStore();
     const   siteStore   = useSiteStore();
     const   disabled    = ref(false);
+    const   viewport    = useViewport();
+    const   isMobile    = computed(() => !['lg','xl', 'xxl'].includes(viewport.breakpoint.value));
+    const   filterExpanded = ref(false);
+
+    const toggleFilter = () => {
+        if (isMobile.value) {
+            filterExpanded.value = !filterExpanded.value;
+        }
+    };
 
     const props = defineProps({
         facets: { type: Array, default: () => [] }
@@ -208,6 +232,44 @@
             &:hover {
                 opacity: 0.7;
             }
+        }
+    }
+
+    // Filter header and toggle
+    .filter-header {
+        cursor: default;
+    }
+
+    .filter-toggle-icon {
+        transition: transform 0.3s ease;
+        cursor: pointer;
+        transform: rotate(180deg);
+        
+        &.expanded {
+            transform: rotate(0deg);
+        }
+    }
+
+    // Slide fade transition
+    .slide-fade-enter-active {
+        transition: all 0.3s ease-out;
+    }
+    .slide-fade-leave-active {
+        transition: all 0.2s ease-in;
+    }
+    .slide-fade-enter-from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    .slide-fade-leave-to {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+
+    @media (max-width: 991.98px) {
+        .filter-header {
+            cursor: pointer;
+            padding: 0.5rem 0;
         }
     }
 </style>

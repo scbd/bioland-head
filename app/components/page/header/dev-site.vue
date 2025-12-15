@@ -1,5 +1,5 @@
 <template>
-    <div class="dev-site  fixed-top ">
+    <div id="page-header-dev-site-banner" class="dev-site  fixed-top ">
         {{t('This is a development/pre-production website')}}
     </div>
 </template>

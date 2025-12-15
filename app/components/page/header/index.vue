@@ -1,5 +1,5 @@
 <template>
-    <header >
+    <header id="page-header">
         <LazyPageHeaderDevSite v-if="isDevSite"/>
         <LazyPageHeaderStagingSite v-if="isBl2Staging"/>
         <LazyPageHeaderLanguageBar v-if="!isMobile"/>

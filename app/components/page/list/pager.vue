@@ -1,21 +1,24 @@
 <template>
-    <nav v-if="showPaging" >
-        <ul class="pagination justify-content-center">
-            <li  @click.prevent="prevPage()" :class="{'disabled': prevDisabled}" class="page-item">
-                <a :style="linkStyle" class="page-link" href="#" >{{t('Previous')}}</a>
+    <nav v-if="showPaging" :id="baseId" >
+        <ul :id="`${baseId}-pagination`" class="pagination justify-content-center">
+            <li :id="`${baseId}-prev`" @click.prevent="prevPage()" :class="{'disabled': prevDisabled}" class="page-item">
+                <a :id="`${baseId}-prev-link`" :style="linkStyle" class="page-link" href="#" >{{t('Previous')}}</a>
             </li>
-            <li  @click.prevent="changePage(aPage)" class="page-item" v-for="(aPage,index) in range" :key="index">
-                <a :style="linkStyle" :class="{'disabled current':page === aPage}" class="page-link" href="#">
+            <li :id="`${baseId}-page-${aPage}`" @click.prevent="changePage(aPage)" class="page-item" v-for="(aPage,index) in range" :key="index">
+                <a :id="`${baseId}-page-link-${aPage}`" :style="linkStyle" :class="{'disabled current':page === aPage}" class="page-link" href="#">
                     {{aPage}}
                 </a>
             </li>
-            <li  @click.prevent="nextPage()" :class="{ 'disabled': nextDisabled }" class="page-item">
-                <a :style="linkStyle" class="page-link" href="#"> {{t('Next')}}</a>
+            <li :id="`${baseId}-next`" @click.prevent="nextPage()" :class="{ 'disabled': nextDisabled }" class="page-item">
+                <a :id="`${baseId}-next-link`" :style="linkStyle" class="page-link" href="#"> {{t('Next')}}</a>
             </li>
         </ul>
     </nav>
 </template>
 <script setup>
+const attrs = useAttrs();
+const baseId = computed(() => (attrs?.id ? String(attrs.id) : 'page-list-pager'));
+
 const   siteStore = useSiteStore();
 const { t  }      = useI18n();
 const   props     = defineProps({ count: { type: Number } });

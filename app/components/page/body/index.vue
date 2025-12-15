@@ -1,109 +1,109 @@
 <template>
 
-    <div class="container page-body">
-        <div  class="row">
+    <div id="page-body" class="container page-body">
+        <div id="page-body-layout" class="row">
             <div   class="col-md-3 d-lg-block"> &nbsp; </div>
 
-            <div  class="col-12 col-md-9">
+            <div id="page-body-breadcrumbs" class="col-12 col-md-9">
                 <LazyPageBreadCrumbs/>
             </div>
 
             <div  class="col-12 d-md-none">
-                <h2 :style="pageTypeStyle" class="page-type">{{pageStore?.typeName}}</h2>
+                <h2 id="page-body-type-mobile" :style="pageTypeStyle" class="page-type">{{pageStore?.typeName}}</h2>
             </div>
 
-            <div  class="col-3 d-none d-md-block">
+            <div id="page-body-side" class="col-3 d-none d-md-block">
 
-                <h2 :style="pageTypeStyle" class="page-type">{{pageStore?.typeName}}</h2>
+                <h2 id="page-body-type-desktop" :style="pageTypeStyle" class="page-type">{{pageStore?.typeName}}</h2>
 
-                <div v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  class="mt-3 position-relative">
+                <div id="page-body-side-image" v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  class="mt-3 position-relative">
                     <ClientOnly v-if="meStore.showEdit">
                         <div  class="position-absolute end-0 top-0" style="min-width:3rem;">
-                            <button @click="editAttachments" type="button" class="btn btn-light btn-sm ">
+                            <button id="page-body-side-image-edit-btn" @click="editAttachments" type="button" class="btn btn-light btn-sm ">
                                 <LazyIcon name="edit" style="margin-top: .2rem;" :size="2"/>
                             </button>
                         </div>
                     </ClientOnly>
 
-                    <NuxtLink v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  :to="localePath(pageStore?.image?.url)">
-                        <NuxtImg v-bind="imageDefaults" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid w-100"/>
+                    <NuxtLink id="page-body-side-image-link" v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  :to="localePath(pageStore?.image?.url)">
+                        <NuxtImg id="page-body-side-image-img" v-bind="imageDefaults" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid w-100"/>
                     </NuxtLink>
                 </div>
 
-                <LazyPageMediaFileDetails v-if="isImageOrVideo || isDocument" :vertical="true" />
+                <LazyPageMediaFileDetails id="page-body-media-file-details-desktop" v-if="isImageOrVideo || isDocument" :vertical="true" />
             </div>
 
-            <div  class="col-12 col-md-9">
-                <LazyPageBodyTabs v-if="showEdit()"/>
-                <h2  class="data-body mb-0" :class="{'has-hero': pageStore?.heroImage}" >{{ pageStore?.title}}</h2>
+            <div id="page-body-content" class="col-12 col-md-9">
+                <LazyPageBodyTabs id="page-body-tabs" v-if="showEdit()"/>
+                <h2 id="page-body-title" class="data-body mb-0" :class="{'has-hero': pageStore?.heroImage}" >{{ pageStore?.title}}</h2>
 
-                <div v-if="pageStore?.page?.fieldUrl?.length" v-for="url in pageStore?.page?.fieldUrl"  >
+                <div v-if="pageStore?.page?.fieldUrl?.length" v-for="(url, index) in pageStore?.page?.fieldUrl" :id="`page-body-external-url-${index}`" :key="index">
                     <ExternalUrl v-bind="url"/>
                 </div>
 
                 <hr class="mt-1">
 
-                <div v-if="isImageOrVideo" class="d-flex flex-row justify-content-end" >
+                <div id="page-body-media" v-if="isImageOrVideo" class="d-flex flex-row justify-content-end" >
                     <div class="align-self-start w-100">
-                        <NuxtImg v-if="pageStore?.image?.src" format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image.alt" :src="pageStore?.image.src" class="img-fluid mt-0 mb-1 w-100"/>
-                        <LazyPageBodyMediaYouTube  v-if="pageStore?.isVideo" :url="pageStore?.video?.fieldMediaOembedVideo" :title="pageStore?.video?.name || pageStore?.media?.title"/>
+                        <NuxtImg id="page-body-media-img" v-if="pageStore?.image?.src" format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image.alt" :src="pageStore?.image.src" class="img-fluid mt-0 mb-1 w-100"/>
+                        <LazyPageBodyMediaYouTube id="page-body-media-you-tube" v-if="pageStore?.isVideo" :url="pageStore?.video?.fieldMediaOembedVideo" :title="pageStore?.video?.name || pageStore?.media?.title"/>
                     </div>
-                    <LazyPageBodyTagsDate class="mt-2" />
+                    <LazyPageBodyTagsDate id="page-body-tags-date-media" class="mt-2" />
                 </div>
 
-                <div class="d-md-flex"  >
+                <div id="page-body-body-layout" class="d-md-flex"  >
                     <div v-if="!isImageOrVideo" class="d-md-none align-self-start" > 
-                        <LazyPageBodyTagsDate /> 
+                        <LazyPageBodyTagsDate id="page-body-tags-date-mobile" /> 
                     </div>
                     <div class="align-self-start w-100">
                         <div v-if="!isImageOrVideo"class="d-none d-md-block" > 
-                            <LazyPageBodyTagsDate /> 
+                            <LazyPageBodyTagsDate id="page-body-tags-date-desktop" /> 
                         </div>
-                        <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="sanitizedBody"></div>
+                        <div id="page-body-body" :style="pageTypeStyle" v-if="pageStore?.body" v-html="sanitizedBody"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
-                <LazyPageMediaFileDetails />
+            <div id="page-body-media-file-details-mobile" class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
+                <LazyPageMediaFileDetails id="page-body-media-file-details-mobile-component" />
             </div>
 
-            <div v-if="pageStore?.image?.url" class="col-12 d-md-none px-0">
+            <div id="page-body-image-mobile" v-if="pageStore?.image?.url" class="col-12 d-md-none px-0">
 
-                <NuxtImg format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
+                <NuxtImg id="page-body-image-mobile-img" format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
 
-                <LazyPageBodyTagsDate />
+                <LazyPageBodyTagsDate id="page-body-tags-date-image-mobile" />
             </div>
         </div>
             
-            <div v-if="pageStore?.media?.length"  class="row mt-3">
+            <div id="page-body-attachments" v-if="pageStore?.media?.length"  class="row mt-3">
                 <div class="col-12 col-md-3">
-                    <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{pageStore?.media.length}})</span></h2>
+                    <h2 id="page-body-attachments-heading" :style="pageTypeStyle" class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{pageStore?.media.length}})</span></h2>
 
                 </div>
                 <div class="col-12 col-md-9">
                     <ClientOnly>
-                        <LazySwiperMedia :slides="pageStore?.media" type="media"/>
+                        <LazySwiperMedia id="page-body-attachments-swiper" :slides="pageStore?.media" type="media"/>
                     </ClientOnly>
                 </div>
             </div>
-            <div v-if="pageStore?.tags?.nt7?.length" class="row mt-3">
+            <div id="page-body-national-targets" v-if="pageStore?.tags?.nt7?.length" class="row mt-3">
                 <div class="col-12 col-md-3">
-                    <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('National Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.nt7.length}})</span></h2>
+                    <h2 id="page-body-national-targets-heading" :style="pageTypeStyle" class="side-heading text-nowrap">{{t('National Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.nt7.length}})</span></h2>
                 </div>
                 <div class="col-12 col-md-9">
                     <ClientOnly>
-                        <LazySwiperGbf :slides="pageStore?.tags?.nt7" type="nt7"/>
+                        <LazySwiperGbf id="page-body-national-targets-swiper" :slides="pageStore?.tags?.nt7" type="nt7"/>
                     </ClientOnly>
                 </div>
             </div>
-            <div v-if="pageStore?.tags?.gbfTargets?.length" class="row mt-3">
+            <div id="page-body-gbf-targets" v-if="pageStore?.tags?.gbfTargets?.length" class="row mt-3">
                 <div class="col-12 col-md-3">
-                    <h2 :style="pageTypeStyle" class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.gbfTargets.length}})</span></h2>
+                    <h2 id="page-body-gbf-targets-heading" :style="pageTypeStyle" class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.gbfTargets.length}})</span></h2>
                 </div>
                 <div class="col-12 col-md-9">
                     <ClientOnly>
-                        <LazySwiperGbf :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
+                        <LazySwiperGbf id="page-body-gbf-targets-swiper" :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
                     </ClientOnly>
                 </div>
             </div>

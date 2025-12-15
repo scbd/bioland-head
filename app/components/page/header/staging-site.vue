@@ -1,5 +1,5 @@
 <template>
-    <div class="dev-site  fixed-top ">
+    <div id="page-header-staging-site-banner" class="dev-site  fixed-top ">
         {{t('This is a staging website to review Bioland 2 and migrations')}}
     </div>
 </template>

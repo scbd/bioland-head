@@ -1,10 +1,10 @@
 <template>
-    <NuxtLink style="text-decoration: none;" :to="goTo(href)" prefetch-on="visibility" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" :target="target" :external="external">
-        <div :style="cardStyle" class="card p-1 mb-3" >
+    <NuxtLink :id="baseId" style="text-decoration: none;" :to="goTo(href)" prefetch-on="visibility" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" :target="target" :external="external">
+        <div :id="`${baseId}-card`" :style="cardStyle" class="card p-1 mb-3" >
             <div  class="row g-0">
-                <div v-if="aLine.sticky || aLine.promote" class="text-center position-absolute top-0">
+                <div v-if="aLine.sticky || aLine.promote" :id="`${baseId}-flags`" class="text-center position-absolute top-0">
                     <ClientOnly>
-                        <Popper v-if="aLine.sticky" class="dark" :hover="true" :arrow="true" placement="bottom">
+                        <Popper v-if="aLine.sticky" :id="`${baseId}-sticky-indicator`" class="dark" :hover="true" :arrow="true" placement="bottom">
                             <LazyIcon  name="pushpin" :size="1.5"  />
                                 <template #content>
                                     <div >
@@ -15,7 +15,7 @@
                         </Popper>
                     </ClientOnly>
                     <ClientOnly>
-                        <Popper v-if="aLine.promote" class="dark" :hover="true" :arrow="true" placement="bottom">
+                        <Popper v-if="aLine.promote" :id="`${baseId}-promote-indicator`" class="dark" :hover="true" :arrow="true" placement="bottom">
                             <LazyIcon name="promote" :size="2" class="ms-3"/>
                                 <template #content>
                                     <div >
@@ -26,39 +26,39 @@
                         </Popper>
                     </ClientOnly>               
                 </div>
-                <div :class="{ 'col-9': aLine.mediaImage, 'col-12': !aLine.mediaImage, 'mt-2':aLine.sticky || aLine.promote }">
-                    <div class="card-body pe-1">
-                        <h5 class="card-title">{{aLine.title || aLine.name}}</h5>
-                        <p v-if="aLine.summary" class="card-text">{{aLine.summary}}...</p>
+                <div :id="`${baseId}-content`" :class="{ 'col-9': aLine.mediaImage, 'col-12': !aLine.mediaImage, 'mt-2':aLine.sticky || aLine.promote }">
+                    <div :id="`${baseId}-body`" class="card-body pe-1">
+                        <h5 :id="`${baseId}-title`" class="card-title">{{aLine.title || aLine.name}}</h5>
+                        <p v-if="aLine.summary" :id="`${baseId}-summary`" class="card-text">{{aLine.summary}}...</p>
 
                     </div>
                 </div>
-                <div v-if="aLine.mediaImage" class="col-md-3">
-                    <NuxtImg  format="webp" loading="lazy" quality="25" class="img-fluid" :alt="aLine.mediaImage.alt" :src="aLine.mediaImage.src" :width="aLine.mediaImage.width" :height="aLine.mediaImage.height" />
+                <div v-if="aLine.mediaImage" :id="`${baseId}-media`" class="col-md-3">
+                    <NuxtImg  :id="`${baseId}-media-image`" format="webp" loading="lazy" quality="25" class="img-fluid" :alt="aLine.mediaImage.alt" :src="aLine.mediaImage.src" :width="aLine.mediaImage.width" :height="aLine.mediaImage.height" />
                 </div>
-                <div class="col-12 ">
-                    <div class="card-footer pb-0 text-center">
-                        <ul class="float-start">
-                            <li v-if="!isSingleType"><span :style="typeStyle" class="fw-bold text-uppercase">{{getDocumentTypeName(aLine)}}</span></li>
-                            <li v-if="aLine?.tags?.countries?.length" v-for="(aCountry,i) in aLine.tags?.countries" :key="i"   class="text-uppercase" >
-                                <NuxtLink :to="`https://www.cbd.int/countries/?country=${aCountry.identifier}`" target="_blank" external>
+                <div :id="`${baseId}-footer-container`" class="col-12 ">
+                    <div :id="`${baseId}-footer`" class="card-footer pb-0 text-center">
+                        <ul :id="`${baseId}-tags`" class="float-start">
+                            <li v-if="!isSingleType"><span :style="typeStyle" :id="`${baseId}-type`" class="fw-bold text-uppercase">{{getDocumentTypeName(aLine)}}</span></li>
+                            <li v-if="aLine?.tags?.countries?.length" v-for="(aCountry,i) in aLine.tags?.countries" :id="`${baseId}-country-${i}`" :key="i"   class="text-uppercase" >
+                                <NuxtLink :to="`https://www.cbd.int/countries/?country=${aCountry.identifier}`" target="_blank" external :id="`${baseId}-country-link-${i}`">
                                     {{t(aCountry.identifier)}}
                                 </NuxtLink>
                             </li>
                         </ul>
 
-                        <span v-if="aLine?.tags?.gbfTargets?.length" v-for="(aTarget,i) in aLine?.tags?.gbfTargets" :key="i"  >
-                            <LazyGbfIcon :identifier="aTarget.identifier" size="xs" class="me-1"/>
+                        <span v-if="aLine?.tags?.gbfTargets?.length" v-for="(aTarget,i) in aLine?.tags?.gbfTargets" :id="`${baseId}-gbf-target-${i}`" :key="i"  >
+                            <LazyGbfIcon :identifier="aTarget.identifier" size="xs" class="me-1" :id="`${baseId}-gbf-icon-${i}`"/>
                         </span>
-                        <span v-if="aLine?.tags?.sdgs?.length" v-for="(aSdg,i) in aLine?.tags?.sdgs" :key="i"  >
-                            <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
+                        <span v-if="aLine?.tags?.sdgs?.length" v-for="(aSdg,i) in aLine?.tags?.sdgs" :id="`${baseId}-sdg-${i}`" :key="i"  >
+                            <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1" :id="`${baseId}-sdg-image-${i}`"/>
                         </span>
-                        <p class="float-end card-text pe-1"><small class="text-muted">{{getDateFormated()}}</small></p>
+                        <p :id="`${baseId}-date`" class="float-end card-text pe-1"><small class="text-muted">{{getDateFormated()}}</small></p>
             
-                        <span  v-for="(subject,i) in aLine.tags?.subjects" :key="i" :style="bgStyle" class="badge text-bg-primary">{{ t(subject.identifier) }}</span>
+                        <span  v-for="(subject,i) in aLine.tags?.subjects" :id="`${baseId}-subject-${i}`" :key="i" :style="bgStyle" class="badge text-bg-primary">{{ t(subject.identifier) }}</span>
                 
 
-                        <span  v-for="(bchSubject,i) in aLine.tags?.bchSubjects" :key="i" :style="bgStyle" class="badge text-bg-primary text-white me-1">{{ t(bchSubject.identifier) }}</span>
+                        <span  v-for="(bchSubject,i) in aLine.tags?.bchSubjects" :id="`${baseId}-bch-subject-${i}`" :key="i" :style="bgStyle" class="badge text-bg-primary text-white me-1">{{ t(bchSubject.identifier) }}</span>
 
                     </div>
                 </div>
@@ -68,6 +68,16 @@
 </template>
 <script setup>
     import   Popper         from 'vue3-popper';
+
+    const attrs = useAttrs();
+    const baseId = computed(() => {
+        if (attrs?.id) return String(attrs.id);
+
+        const line = unref(aLine);
+        const key = line?.id || line?.dnid || line?.nodeId;
+
+        return key ? `page-list-row-${key}` : 'page-list-row';
+    });
 
     const   siteStore                   = useSiteStore();
     const   localePath                  = useLocalePath();

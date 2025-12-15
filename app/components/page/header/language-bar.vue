@@ -1,30 +1,30 @@
 <template>
-    <div class="brandbar-header fixed-top d-none d-md-block" :class="{'dev-site': isDevSite}" :style="brandBarStyle">
-        <div class="container py-0 pl-sm-3 pr-sm-3">
+    <div id="page-header-language-bar" class="brandbar-header fixed-top d-none d-md-block" :class="{'dev-site': isDevSite}" :style="brandBarStyle">
+        <div id="page-header-language-bar-container" class="container py-0 pl-sm-3 pr-sm-3">
             <div class="row">
                 <div class="col-sm-5 d-flex align-items-center">
                     <NuxtLink v-if="!isBiosafetySite" class="navbar-brand" to="https://www.cbd.int" external target="_blank">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</NuxtLink>
                     <NuxtLink v-if="isBiosafetySite" class="navbar-brand" to="https://www.cbd.int" external target="_blank">{{t('Welcome to the Cartagena Protocol on Biosafety Network')}}</NuxtLink>
                 </div>
 
-                <div v-if="!(limitedMenus.length > 1) && pageLoaded" class="col-sm-7 d-flex justify-content-end">
-                    <ul class="nav" >
-                        <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
+                <div v-if="!(limitedMenus.length > 1) && pageLoaded" id="page-header-language-bar-single" class="col-sm-7 d-flex justify-content-end">
+                    <ul id="page-header-language-bar-single-nav" class="nav" >
+                        <li v-for="(aMenu,index) in limitedMenus" :id="`page-header-language-bar-single-item-${index}`" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
                             <NuxtLink v-if="aMenu.code !== 'xx'" class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}">&nbsp;</NuxtLink>
                         </li>
                     </ul>
                 </div>
-                <div v-if="limitedMenus.length > 1 && pageLoaded " class="col-sm-7 d-flex justify-content-end">
-                    <ul class="nav" >
-                        <li v-for="(aMenu,index) in limitedMenus" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
+                <div v-if="limitedMenus.length > 1 && pageLoaded " id="page-header-language-bar-multi" class="col-sm-7 d-flex justify-content-end">
+                    <ul id="page-header-language-bar-multi-nav" class="nav" >
+                        <li v-for="(aMenu,index) in limitedMenus" :id="`page-header-language-bar-multi-item-${index}`" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
                             <NuxtLink v-if="aMenu.code !== 'xx'" class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}" external>{{aMenu.nativeName}}</NuxtLink>
                         </li>
 
-                        <li v-if="otherMenus?.length" @click.stop.prevent="toggle" class="nav-item dropdown d-block " v-click-outside="close">
+                        <li v-if="otherMenus?.length" id="page-header-language-bar-other-dropdown" @click.stop.prevent="toggle" class="nav-item dropdown d-block " v-click-outside="close">
                             <a  ref="dropDownLinkEl" class="nav-link dropdown-toggle" to="#">{{ t('Other') }}</a>
 
-                            <div ref="dropDownEl" class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <NuxtLink v-for="(aMenu,index) in otherMenus" :key="index" class="dropdown-item" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}" external>{{aMenu.nativeName}}</NuxtLink>
+                            <div ref="dropDownEl" id="page-header-language-bar-other-dropdown-menu" class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <NuxtLink v-for="(aMenu,index) in otherMenus" :id="`page-header-language-bar-other-item-${index}`" :key="index" class="dropdown-item" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}" external>{{aMenu.nativeName}}</NuxtLink>
                             </div>
                         </li>
                     </ul>

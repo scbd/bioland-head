@@ -1,36 +1,36 @@
 <template>
-    <div   class="tabs mb-3">
-        <ul  class="nav nav-tabs" >
-            <li   class="nav-item " id="page-view">
-                <span :style="getStyle()"  class="nav-link  text-capitalize" >{{t('View')}}</span> 
+    <div id="page-body-tabs" class="tabs mb-3">
+        <ul id="page-body-tabs-nav" class="nav nav-tabs" >
+            <li class="nav-item" id="page-body-tabs-view">
+                <span id="page-body-tabs-view-label" :style="getStyle()" class="nav-link text-capitalize" >{{t('View')}}</span> 
             </li>
-            <li  v-if="meStore.isContentManager || isContributorCanEdit"  class="nav-item ">
-                <NuxtLink :style="getStyleActive()" :to="editUrl" class="nav-link  text-capitalize"  external>
+            <li v-if="meStore.isContentManager || isContributorCanEdit" class="nav-item">
+                <NuxtLink id="page-body-tabs-edit-link" :style="getStyleActive()" :to="editUrl" class="nav-link text-capitalize" external>
                     {{t('Edit')}}
                 </NuxtLink>
             </li>
-            <li  v-if="meStore.isContentManager" class="nav-item ">
-                <NuxtLink :style="getStyleActive()" :to="baseUrl+'/delete' " class="nav-link  text-capitalize"  external>
+            <li v-if="meStore.isContentManager" class="nav-item">
+                <NuxtLink id="page-body-tabs-delete-link" :style="getStyleActive()" :to="baseUrl+'/delete' " class="nav-link text-capitalize" external>
                     {{t('Delete')}}
                 </NuxtLink>
             </li>
-            <li  v-if="meStore.isContentManager" class="nav-item">
-                <NuxtLink :style="getStyleActive()" :to="baseUrl+'/revisions'+returnUrl " class="nav-link  text-capitalize"  external>
+            <li v-if="meStore.isContentManager" class="nav-item">
+                <NuxtLink id="page-body-tabs-revisions-link" :style="getStyleActive()" :to="baseUrl+'/revisions'+returnUrl " class="nav-link text-capitalize" external>
                     {{t('Revisions')}}
                 </NuxtLink>
             </li>
-            <li  v-if="meStore.isContributor && pageStore?.isNodePage" class="nav-item">
-                <NuxtLink :style="getStyleActive()" :to="cloneUrl" class="nav-link  text-capitalize"  external>
+            <li v-if="meStore.isContributor && pageStore?.isNodePage" class="nav-item">
+                <NuxtLink id="page-body-tabs-clone-link" :style="getStyleActive()" :to="cloneUrl" class="nav-link text-capitalize" external>
                     {{t('Clone')}}
                 </NuxtLink>
             </li>
-            <li  v-if="meStore.isContentManager" class="nav-item ">
-                <NuxtLink :style="getStyleActive()" :to="baseUrl+'/translations'+returnUrl " class="nav-link  text-capitalize" external  >
+            <li v-if="meStore.isContentManager" class="nav-item">
+                <NuxtLink id="page-body-tabs-translate-link" :style="getStyleActive()" :to="baseUrl+'/translations'+returnUrl " class="nav-link text-capitalize" external>
                     {{t('Translate')}} 
                 </NuxtLink>
             </li>
-            <li  v-if="(meStore.isSiteManager || meStore.isScbdStaff) && canAutoTranslate " class="nav-item ">
-                <NuxtLink :style="getStyleActive()" :to="baseUrl+'/auto-translate-form'+returnUrl " class="nav-link  text-capitalize" external  >
+            <li v-if="(meStore.isSiteManager || meStore.isScbdStaff) && canAutoTranslate" class="nav-item">
+                <NuxtLink id="page-body-tabs-auto-translate-link" :style="getStyleActive()" :to="baseUrl+'/auto-translate-form'+returnUrl " class="nav-link text-capitalize" external>
                     {{t('Auto Translate')}}
                 </NuxtLink>
             </li>

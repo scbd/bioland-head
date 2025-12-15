@@ -1,49 +1,49 @@
 <template>
-    <div class="container mt-0">
-        <div class="row align-items-end">
-            <div class="col-md-3 ps-0 ">
+    <div id="page-list-topic-comments-container" class="container mt-0">
+        <div id="page-list-topic-comments-breadcrumbs-row" class="row align-items-end">
+            <div id="page-list-topic-comments-sidebar-container" class="col-md-3 ps-0 ">
                 <!-- <LazyPageListTextSearch class="mb-1"/> -->
             </div>
-            <div class="col-12 col-md-9 px-0">
+            <div id="page-list-topic-comments-breadcrumbs-container" class="col-12 col-md-9 px-0">
                 <LazyPageBreadCrumbs :count="results?.comments.filter(({status})=>status)?.length"/>
             </div>
         </div>
-        <div class="row ">
-            <div class="col-12 col-md-3 ps-0" >
+        <div id="page-list-topic-comments-content-row" class="row ">
+            <div id="page-list-topic-comments-title-container" class="col-12 col-md-3 ps-0" >
 
-                <h2 :style="primaryColorStyle" class="page-type mb-1">{{results?.title}}</h2>
+                <h2 id="page-list-topic-comments-title" :style="primaryColorStyle" class="page-type mb-1">{{results?.title}}</h2>
             </div>
 
             <ClientOnly >
-                <div name="list" tag="div" class="col-12 col-md-9 data-body">
+                <div id="page-list-topic-comments-data-body" name="list" tag="div" class="col-12 col-md-9 data-body">
                     
-                    <div>
-                        <div v-html="htmlSanitize(results?.body?.value)"></div>
+                    <div id="page-list-topic-comments-topic-body">
+                        <div id="page-list-topic-comments-topic-body-html" v-html="htmlSanitize(results?.body?.value)"></div>
 
-                        <LazyFormCommentInput :likes="likes" :count="results?.comments.filter(({status})=>status)?.length"/>
+                        <LazyFormCommentInput id="page-list-topic-comments-input" :likes="likes" :count="results?.comments.filter(({status})=>status)?.length"/>
                     </div>
-                    <LazySpinner v-if="loading" :size="75"/>
+                    <LazySpinner id="page-list-topic-comments-loading" v-if="loading" :size="75"/>
                     <transition-group name="list">
                         
-                        <LazyPageComment   :comment="aLine" v-for="(aLine,index) in results?.comments" :key="index" />
+                        <LazyPageComment :comment="aLine" v-for="(aLine,index) in results?.comments" :id="`page-list-topic-comments-comment-${index}`" :key="index" />
                         <span :key="`showTopPage${showTopPager}${results?.comments?.count}-span`">&nbsp;</span>
                     </transition-group>
                 </div>
                 <template #fallback>
-                    <div name="list" tag="div" class="col-12 col-md-9 data-body">
-                        <div>
-                            <div v-html="htmlSanitize(results?.body?.value)"></div>
+                    <div id="page-list-topic-comments-fallback-data-body" name="list" tag="div" class="col-12 col-md-9 data-body">
+                        <div id="page-list-topic-comments-fallback-topic-body">
+                            <div id="page-list-topic-comments-fallback-topic-body-html" v-html="htmlSanitize(results?.body?.value)"></div>
 
-                            <LazyFormCommentInput :likes="likes" :count="results?.comments?.length"/>
+                            <LazyFormCommentInput id="page-list-topic-comments-fallback-input" :likes="likes" :count="results?.comments?.length"/>
                         </div>
-                        <LazyPageComment  :comment="aLine" v-for="(aLine,index) in results?.comments" :key="index" />
+                        <LazyPageComment  :comment="aLine" v-for="(aLine,index) in results?.comments" :id="`page-list-topic-comments-fallback-comment-${index}`" :key="index" />
                     </div>
                 </template>
             </ClientOnly>
 
 
-            <div class="col-12 col-md-9 offset-md-3 ">
-                <LazyPageListPager :count="results?.comments.filter(({status})=>status)?.count"/>
+            <div id="page-list-topic-comments-pager-container" class="col-12 col-md-9 offset-md-3 ">
+                <LazyPageListPager id="page-list-topic-comments-pager" :count="results?.comments.filter(({status})=>status)?.count"/>
             </div>
         </div>
     </div>
