@@ -26,7 +26,7 @@
                     </ClientOnly>
 
                     <NuxtLink id="page-body-side-image-link" v-if="(pageStore?.image &&!isImageOrVideo && !isDocument)"  :to="localePath(pageStore?.image?.url)">
-                        <NuxtImg id="page-body-side-image-img" v-bind="imageDefaults" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid w-100"/>
+                        <NuxtImg id="page-body-side-image-img" v-bind="imageDefaults" :src="pageStore?.image?.src" :alt="pageStore?.image?.alt" class="img-fluid w-100"/>
                     </NuxtLink>
                 </div>
 
@@ -45,7 +45,7 @@
 
                 <div id="page-body-media" v-if="isImageOrVideo" class="d-flex flex-row justify-content-end" >
                     <div class="align-self-start w-100">
-                        <NuxtImg id="page-body-media-img" v-if="pageStore?.image?.src" format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image.alt" :src="pageStore?.image.src" class="img-fluid mt-0 mb-1 w-100"/>
+                        <NuxtImg id="page-body-media-img" v-if="pageStore?.image?.src" format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
                         <LazyPageBodyMediaYouTube id="page-body-media-you-tube" v-if="pageStore?.isVideo" :url="pageStore?.video?.fieldMediaOembedVideo" :title="pageStore?.video?.name || pageStore?.media?.title"/>
                     </div>
                     <LazyPageBodyTagsDate id="page-body-tags-date-media" class="mt-2" />
@@ -124,6 +124,8 @@
     const   isDocument     = computed(()=> pageStore?.isDocument );
     const   imageDefaults  = usePageSideImageDefaults({height: pageStore?.image?.fieldHeight, width: pageStore?.image?.fieldWidth});
     const { pageTypeStyle } = useTheme();
+
+    console.log('DEBUG image:', { src: pageStore?.image?.src, alt: pageStore?.image?.alt, image: pageStore?.image });
 
     function showEdit(){
             return meStore?.showEdit;

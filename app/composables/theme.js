@@ -89,7 +89,7 @@ export function useImageBackground(record, options = defaultImageOptions){
 export function calculateResizedHeight(originalWidth, originalHeight, newWidth) {
   const aspectRatio = originalHeight / originalWidth;
   const newHeight = newWidth * aspectRatio;
-  return newHeight;
+  return Math.round(newHeight);
 }
 
 export function usePageSideImageDefaults({height, width} = {height: 600, width: 400}, original=false) {
