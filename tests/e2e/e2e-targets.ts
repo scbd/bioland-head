@@ -1,5 +1,6 @@
 export const E2E_TARGETS = {
-  seed: 'http://seed.localhost:3000',
+  seed: 'http://seed.localhost:3330',
+  bsl: 'http://bsl.localhost:3330',
 } as const
 
 export type E2ETarget = keyof typeof E2E_TARGETS
