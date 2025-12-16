@@ -126,8 +126,6 @@
     const { pageTypeStyle } = useTheme();
 
     function showEdit(){
-            if(pageStore?.isTaxonomyPage) return meStore?.showEditSystemPages;
-
             return meStore?.showEdit;
     }
 

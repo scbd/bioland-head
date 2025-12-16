@@ -223,7 +223,10 @@ export const usePageStore = defineStore('page', {
         isMediaRemoteVideo(){ return this?.page?.type?.includes('remote_video') },
         isMediaHero(){ return this?.page?.type?.includes('hero') },
         isContentType(){
-            return this?.page?.type === 'taxonomy_term--tags';
+            // Content type pages are taxonomy_term--tags with a drupalInternalTid that matches a content type ID
+            if (this?.page?.type !== 'taxonomy_term--tags') return false;
+            const menusStore = useMenusStore();
+            return menusStore.isContentTypeId(this?.page?.drupalInternalTid);
         },
         isSearchAll(){
             return this.isSearch && !this.isContentType && ( getTids(this?.page?.fieldSearch) || []).includes(27);

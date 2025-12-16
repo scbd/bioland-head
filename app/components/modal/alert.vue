@@ -8,10 +8,10 @@
       swipe-to-close="down"
       >
 
-      <div :class="typeClass" class="alert  alert-dismissible mb-0" role="alert">
+      <div :class="typeClass" class="alert  alert-dismissible mb-0 position-relative" role="alert">
         <div class="container">
           <div v-if="!hasMultiple">
-            <h4 class="alert-heading"><LazyIcon v-if="getIcon(alert)" :name="getIcon(alert)" :size="1.25" class="me-1"/> {{t(alert.message)}}</h4>
+            <h4 class="alert-heading"><LazyIcon v-if="getIcon(alert)" :name="getIcon(alert)" :size="5" class="me-1"/> {{t(alert.message)}}</h4>
             <p v-if="alert.statusCode || alert.statusMessage">{{alert.statusCode}} {{t(alert.statusMessage)}} </p>
             <p v-if="alert.description">{{alert.description}}</p>
             <hr v-if="alert.notice || alert.data?.data?.errors?.length">
@@ -23,8 +23,8 @@
           </div>
 
 
-          <div v-for="(anAlert,index) in alerts" :key="index"  :class="getTypeClass(anAlert)" class="alert  alert-dismissible mb-2" role="alert">
-            <h4 class="alert-heading"><LazyIcon v-if="getIcon(anAlert)" :name="getIcon(anAlert)" :size="1.25" class="me-1"/> {{t(anAlert.message)}}</h4>
+          <div v-for="(anAlert,index) in alerts" :key="index"  :class="getTypeClass(anAlert)" class="alert  alert-dismissible mb-2 position-relative" role="alert">
+            <h4 class="alert-heading"><LazyIcon v-if="getIcon(anAlert)" :name="getIcon(anAlert)" :size="5" class="me-1"/> {{t(anAlert.message)}}</h4>
             <p v-if="anAlert.statusCode || anAlert.statusMessage">{{anAlert.statusCode}} {{t(anAlert.statusMessage)}} </p>
             <p v-if="anAlert.description">{{anAlert.description}}</p>
             <hr v-if="anAlert.notice || anAlert.data?.data?.errors?.length">
@@ -34,13 +34,13 @@
               <p class="mb-0">{{e.detail}}</p>
             </div>
 
-            <button @click="alertStore.clearAlert(index)"  type="button" class=" text-danger btn btn-outline-dark nb position-absolute top-0 end-0 me-5" data-bs-dismiss="alert" aria-label="Close">
-              <LazyIcon name="close" :size="2" color="currentColor"/>
+            <button @click="alertStore.clearAlert(index)"  type="button" class="text-danger btn btn-outline-dark nb alert-close-btn" data-bs-dismiss="alert" aria-label="Close" :title="t('Close')">
+              <LazyIcon name="close" :size="3" color="currentColor"/>
             </button>
           </div>
 
-          <button @click="closeAll"  type="button" class="btn btn-outline-dark nb position-absolute top-0 end-0 me-5" data-bs-dismiss="alert" aria-label="Close">
-            <LazyIcon name="close" :size="2" :color="!hasMultiple? 'currentColor': ''"/>
+          <button @click="closeAll"  type="button" class="btn btn-outline-dark nb alert-close-btn" data-bs-dismiss="alert" aria-label="Close" :title="t('Close')">
+            <LazyIcon name="close" :size="3" :color="!hasMultiple? 'currentColor': ''"/>
           </button>
         </div>
 
@@ -103,4 +103,9 @@ function closeAll(){
 <style lang="scss" scoped>
 h4{ border-bottom: none; }
 .nb{ border: none; }
+.alert-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
 </style>

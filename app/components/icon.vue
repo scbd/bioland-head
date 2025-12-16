@@ -13,11 +13,11 @@ const   props        = defineProps({  name : { type: String, required: true },
 
 const { name, flip, color, size } = toRefs(props);
 
-const iconStyle = reactive({ 
+const iconStyle = computed(() => ({ 
                               'fill'  : color.value || siteStore.primaryColor,
                               'width' : `${size.value}em`,
                               'height': `${size.value}em`
-                            });
+                            }));
 </script>
 <style scoped>
 .bl2-icon {

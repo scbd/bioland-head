@@ -8,7 +8,7 @@
                 <LazyPageBreadCrumbs/>
             </div>
             <div id="page-list-ncps-body-tabs-container" class="col-12 b-line">
-                <LazyPageBodyTabs :can-edit="meStore.showEditSystemPages"/>
+                <LazyPageBodyTabs :can-edit="meStore.showEdit"/>
             </div>
             <div id="page-list-ncps-title-container" class="col-9 offset-3 b-line ps-0">
                 <h1 id="page-list-ncps-title" class="d-flex align-items-center mt-2" >{{ pageStore?.title}}</h1>

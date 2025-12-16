@@ -1,6 +1,7 @@
 <template>
 
     <div class="container">
+        <LazyPageBodyTabs id="home-page-body-tabs" v-if="meStore.showEdit"/>
         <div v-if="body?.value" class="row">
             <div class="col-12 my-2" >
                 <div  v-html="htmlSanitize(body?.value)"></div>
@@ -25,6 +26,7 @@
 <script setup>
 const siteStore = useSiteStore();
 const pageStore = usePageStore();
+const meStore   = useMeStore();
 const body      = computed(()=>pageStore?.page?.body);
 
 const columnsOfWidgetComponents = computed(() => siteStore?.theme?.homePageWidgets?.columns);

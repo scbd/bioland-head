@@ -1,4 +1,11 @@
 {
+  "systemPageWarningTitle": "View Only Mode",
+  "systemPageWarningMessage": "This is a system page managed by site administrators. System pages define the structure of content types and site functionality, and cannot be edited by regular users.",
+  "systemPageDisabled": "System page - editing disabled",
+  "dontShowAgain": "Don't show this message again on system pages",
+  "Close": "Close",
+  "Published": "Published",
+  "Unpublished": "Unpublished",
   "Notification": "Notification",
   "National Target": "National Target",
   "National Targets": "National Targets",

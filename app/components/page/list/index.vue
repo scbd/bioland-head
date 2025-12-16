@@ -14,7 +14,7 @@
                 <LazyPageListFilter id="page-list-type-filter" v-if="!typeId" :facets="results?.facets"/>
             </div>
             <div id="page-list-data-body" name="list" tag="div" class="col-12 col-md-9 data-body" :class="{ 'col-md-12': schemaOnly, 'px-0': !isMobile, 'mt-3': isMobile}">
-                <LazyPageBodyTabs id="page-list-body-tabs" v-if="meStore.showEditSystemPages"/>
+                <LazyPageBodyTabs id="page-list-body-tabs" v-if="meStore.showEdit"/>
                 <LazyPageListTabs  id="page-list-tabs" v-if="!schemaOnly" :types="types" :key="JSON.stringify(types)"/>
                 <LazyPageListPager id="page-list-top-pager" v-if="hasHydrated && showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results?.count}`"/>
 
