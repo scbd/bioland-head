@@ -54,6 +54,8 @@ export default defineNuxtConfig({
     i18nDbPassword: process.env.I18N_DB_PASSWORD,
     i18nDbName: process.env.I18N_DB_NAME || 'i18n_cache',
     i18nDbConnectionLimit: process.env.I18N_DB_CONNECTION_LIMIT ? parseInt(process.env.I18N_DB_CONNECTION_LIMIT) : 5,
+    // Local dev: Drupal session cookie bypass (e.g., SSESSxxx=yyy)
+    localDrupalSession: process.env.NUXT_LOCAL_DRUPAL_SESSION || '',
     public: {
       isLocalHost:
         process.env.NUXT_PUBLIC_IS_LOCAL_HOST === "true" ? true : false,

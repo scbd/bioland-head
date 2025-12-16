@@ -187,7 +187,15 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   async function getMe(){
 
     try{
-      const headers = requestCookieHeader?.cookie?.includes('SSESS')? requestCookieHeader: ({ cookie: {[hasSessionCookieClient()]:clientCookie.value}})
+      // Check for SSESS cookie in request, client cookie, or env fallback (localhost dev)
+      const { public: { isLocalHost }, localDrupalSession } = useRuntimeConfig();
+      const envSession = isLocalHost && localDrupalSession ? localDrupalSession : null;
+      
+      const headers = requestCookieHeader?.cookie?.includes('SSESS')
+        ? requestCookieHeader
+        : envSession
+          ? { cookie: envSession }
+          : { cookie: { [hasSessionCookieClient()]: clientCookie.value } }
 
       const { data, error } = await useFetch(`/api/me`, {  method: 'GET',headers,  query: clone({...siteStore.params, path:to.path})})//.then(({ data }) => data);
 
