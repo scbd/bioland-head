@@ -60,6 +60,7 @@ test.describe('BL-583: National Biosafety Framework Widget', () => {
       if (url.includes('/api/list/drupal')) {
         apiRequestFound = true
         apiUrl = url
+        console.log(`✅ Found API request: ${url}`)
         
         // Parse and verify schema parameters
         const urlObj = new URL(url)
@@ -78,26 +79,13 @@ test.describe('BL-583: National Biosafety Framework Widget', () => {
     await page.goto(`${E2E_BASE_URL}${BCH_HOME_PATH}`)
 
     // Wait for the widget to be visible
-    await expect(page.locator('[data-testid="home-bch-national-biosafety-framework"]')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('[data-testid="home-bch-national-biosafety-framework"]')).toBeVisible({ timeout: 15000 })
 
-    // Wait for API call to complete
-    await page.waitForTimeout(5000)
+    // Wait longer for API call - server needs time to warm up and process request
+    console.log('Waiting for API call to /api/list/drupal...')
+    await page.waitForTimeout(10000)
 
-    // Check if widget is showing content or in an empty state
-    const widget = page.locator('[data-testid="home-bch-national-biosafety-framework"]')
-    const swiperContainer = widget.locator('swiper-container')
-    const containerCount = await swiperContainer.count()
-
-    if (!apiRequestFound) {
-      console.log('⚠️  No API request detected to /api/list/drupal')
-      console.log(`⚠️  Widget state: ${containerCount > 0 ? 'has swiper-container' : 'no swiper-container (likely no data)'}`)
-      console.log('⚠️  This is expected for seed.localhost test environment with no Drupal backend data')
-      console.log('✅ SOFT PASS: Widget component is correctly configured, would make API request in production')
-      await writeEvidenceScreenshot(page, testInfo, 'no-api-call-empty-state')
-      return
-    }
-
-    expect(apiRequestFound, `Expected API request to /api/list/drupal with schemas parameter. Last URL: ${apiUrl}`).toBeTruthy()
+    expect(apiRequestFound, `Expected API request to /api/list/drupal with schemas parameter. API URL found: ${apiUrl}`).toBeTruthy()
 
     await writeEvidenceScreenshot(page, testInfo, 'api-validated')
   })
@@ -153,10 +141,11 @@ test.describe('BL-583: National Biosafety Framework Widget', () => {
   test('Responsive behavior shows correct slide counts', async ({ page }, testInfo) => {
     await page.goto(`${E2E_BASE_URL}${BCH_HOME_PATH}`)
     const widget = page.locator('[data-testid="home-bch-national-biosafety-framework"]')
-    await expect(widget).toBeVisible({ timeout: 10000 })
+    await expect(widget).toBeVisible({ timeout: 15000 })
 
-    // Wait for swiper to initialize and content to load
-    await page.waitForTimeout(5000)
+    // Wait longer for swiper to initialize and content to load (server warm-up)
+    console.log('Waiting for content to load...')
+    await page.waitForTimeout(10000)
 
     // Desktop: 3 slides per view
     await page.setViewportSize(DESKTOP_VIEWPORT)
@@ -284,35 +273,21 @@ test.describe('BL-583: National Biosafety Framework Widget', () => {
     await page.goto(`${E2E_BASE_URL}${BCH_HOME_PATH}`)
 
     const widget = page.locator('[data-testid="home-bch-national-biosafety-framework"]')
-    await expect(widget).toBeVisible({ timeout: 10000 })
+    await expect(widget).toBeVisible({ timeout: 15000 })
 
-    // Wait for swiper to initialize and content to load
-    await page.waitForTimeout(5000)
+    // Wait longer for swiper to initialize and content to load (server warm-up)
+    console.log('Waiting for swiper content...')
+    await page.waitForTimeout(10000)
 
     // Check for swiper container first
     const swiperContainer = widget.locator('swiper-container')
-    const containerExists = await swiperContainer.count() > 0
-    
-    if (containerExists) {
-      await expect(swiperContainer).toBeVisible({ timeout: 10000 })
-    }
+    await expect(swiperContainer).toBeVisible({ timeout: 15000 })
 
     // Check for swiper slides
     const slides = widget.locator('.swiper-slide')
     const slideCount = await slides.count()
 
-    if (slideCount === 0) {
-      console.log('⚠️  No slides found - widget may have no content from Drupal API')
-      const placeholders = widget.locator('.placeholder, [class*="placeholder"]')
-      const placeholderCount = await placeholders.count()
-      console.log(`Found ${placeholderCount} placeholder elements`)
-      await writeEvidenceScreenshot(page, testInfo, 'no-content-loaded')
-      // Soft fail - log warning but don't fail test if this is expected behavior
-      console.log('⚠️  SOFT PASS: Widget renders correctly but has no content to display')
-      return
-    }
-
-    expect(slideCount, 'Widget should have at least one slide when content exists').toBeGreaterThan(0)
+    expect(slideCount, 'Widget should have at least one slide with content loaded').toBeGreaterThan(0)
 
     // Verify first visible card has expected structure
     const firstCard = slides.first()
