@@ -1,0 +1,167 @@
+<template>
+    <!-- Show placeholders during SSR and while loading -->
+    <template v-if="!hasHydrated || loading">
+        <div class="col-12 mt-3 mb-0">
+            <h3 :style="headerStyle">{{ t('Resources') }}</h3>
+        </div>
+        <div class="position-relative mt-1" style="min-height:250px;">
+            <div class="row g-3">
+                <div v-for="n in placeholderCount" :key="n" :class="cardColClass">
+                    <CardsPlaceholder />
+                </div>
+            </div>
+            <div v-if="pagination" class="d-flex justify-content-center mt-4">
+                <span v-for="i in Math.min(slides?.length || 3, 10)" :key="i" class="rounded-circle bg-secondary opacity-25 me-2" style="width: 10px; height: 10px;"></span>
+            </div>
+        </div>
+    </template>
+
+    <!-- Show actual swiper after hydration and data loads -->
+    <ClientOnly v-else-if="slides?.length">
+        <div class="col-12 mt-3 mb-0">
+            <h3 :style="headerStyle">{{ t('Resources') }}</h3>
+            <NuxtLink :to="resourcesLink" class="t float-end text-bold fs-5" :style="linkStyle">{{ t('View more resources') }} <LazyIcon name="arrow-right" class="arrow" /></NuxtLink>
+        </div>
+        <div class="position-relative mt-1" style="min-height:250px;">
+            <swiper-container
+                :loop="slides?.length > 3"
+                :slidesPerView="slidePerView"
+                :spaceBetween="spaceBetween"
+                :pagination="{ clickable: true }"
+                :modules="modules"
+                @swiper="onSwiper"
+                ref="swiperRef"
+            >
+                <swiper-slide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide.id || slide.href">
+                    <LazyCards :record="slide" />
+                </swiper-slide>
+            </swiper-container>
+            <LazySwiperButton direction="right" :swiper-ref="swiperRef" />
+        </div>
+    </ClientOnly>
+</template>
+
+<script setup>
+import { Pagination } from 'swiper/modules';
+import { useWindowSize } from '@vueuse/core';
+import 'swiper/css';
+import clone from 'lodash.clonedeep';
+
+const swiperRef = ref(null);
+
+const { locale } = useI18n();
+const menusStore = useMenusStore();
+const localePath = useLocalePath();
+const siteStore = useSiteStore();
+const { t } = useI18n();
+
+const props = defineProps({
+    pagination: { type: Boolean, default: false },
+    arrows: { type: Boolean, default: true },
+    leftArrow: { type: Boolean, default: false },
+    hideArrowsCount: { type: Number, default: 4 },
+});
+
+const { pagination, arrows, leftArrow, hideArrowsCount } = toRefs(props);
+
+const onSwiper = (swiper) => {
+    swiperRef.value = swiper;
+};
+
+const { width: rowElWidth } = useWindowSize();
+
+const modules = computed(() => (pagination.value ? [Pagination] : []));
+const viewport = useViewport();
+
+const hideArrows = computed(() =>
+    viewport.breakpoint.value === 'lg' ||
+    viewport.breakpoint.value === 'xl' ||
+    viewport.breakpoint.value === 'xxl'
+        ? slides.value?.length > hideArrowsCount.value
+        : slides.value?.length > 1
+);
+
+const slidePerView = computed(() => {
+    if (rowElWidth.value > 1600) return 3;
+    if (rowElWidth.value > 990) return 2;
+    return 2;
+});
+
+const spaceBetween = computed(() => {
+    if (slidePerView.value === 4) return 10;
+    if (slidePerView.value === 3 && rowElWidth.value < 1350 && rowElWidth.value >= 990) return 100;
+    if (slidePerView.value === 3) return 5;
+    return 5;
+});
+
+// Link to resources search page with BCH resource schemas
+// Schemas: 15=resource, 48=capacityBuildingInitiative, 43=organism, 16=modifiedOrganism, 6=dnaSequence, 12=laboratoryDetection
+const resourcesLink = computed(() =>
+    localePath({
+        path: menusStore.getSystemPagePath({ id: systemPageTidConstants.SEARCH, locale: unref(locale) }),
+        query: { schemas: [15, 48, 43, 16, 6, 12] },
+    })
+);
+
+// Override locale with current i18n locale to ensure correct locale is sent to API
+const query = computed(() =>
+    clone({
+        ...siteStore.params,
+        locale: locale.value,
+        localizedHost: `${siteStore.host}/${locale.value}`,
+    })
+);
+
+const { data: slides, status } = await useFetch(() => `/api/list/latest-bch-resources`, {
+    method: 'GET',
+    query,
+    watch: [locale],
+});
+
+// Track if client has hydrated
+const hasHydrated = ref(false);
+onMounted(() => {
+    // Small delay to prevent flash
+    setTimeout(() => {
+        hasHydrated.value = true;
+    }, 50);
+});
+
+// SSR-safe default for placeholder rendering (avoids hydration mismatch)
+const ssrSlidePerView = 2;
+
+const loading = computed(() => status.value === 'pending' && !slides?.value?.length);
+
+const headerStyle = reactive({
+    display: 'inline-block',
+    'border-bottom': `.25rem solid ${siteStore.primaryColor}`,
+    'margin-bottom': '2rem',
+    'border-bottom-width': '4px',
+});
+
+const linkStyle = reactive({
+    color: siteStore.primaryColor,
+    'text-decoration': 'underline',
+    'text-decoration-color': siteStore.primaryColor,
+});
+
+// Calculate Bootstrap column classes based on slides per view
+// Use SSR-safe default during placeholder to avoid hydration mismatch
+const cardColClass = computed(() => {
+    const slidesCount = hasHydrated.value ? slidePerView.value : ssrSlidePerView;
+    const cols = Math.floor(12 / slidesCount);
+    return `col-12 col-md-${cols}`;
+});
+
+// SSR-safe slide count for placeholder loop
+const placeholderCount = computed(() => (hasHydrated.value ? slidePerView.value : ssrSlidePerView));
+</script>
+
+<style lang="scss" scoped>
+.arrow {
+    fill: var(--bs-blue);
+    transition: 0.3s;
+    width: 1em;
+    height: 1em;
+}
+</style>

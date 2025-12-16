@@ -24,14 +24,7 @@
                 </section>
 
                 <section id="home-bch-resources" data-testid="home-bch-resources">
-                    <SwiperContentType
-                        :pagination="true"
-                        :arrows="true"
-                        :leftArrow="true"
-                        :hideArrowsCount="3"
-                        :schemas="[15,48,43,16,6, 12]"
-                        :title="$t('Resources')"
-                    />
+                    <SwiperBchResources :pagination="true"/>
                 </section>
 
             </div>
