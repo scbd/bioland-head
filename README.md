@@ -255,6 +255,9 @@ yarn test:e2e
 # Run specific test file
 yarn test:e2e -- tests/e2e/bl-576-bsl/BL-581/BL-581.spec.ts
 
+# Run with specific E2E target (BSL site with real content)
+E2E_TARGET=bsl yarn test:e2e
+
 # Run with UI
 yarn test:e2e:ui
 
@@ -263,6 +266,8 @@ yarn test:e2e:report
 ```
 
 **Note:** Use `--` when passing Playwright CLI args with Yarn Berry.
+
+**Important:** Tests in `bl-576-bsl/` should run against the BSL target (`E2E_TARGET=bsl`) which has actual content. The default `e2e` target is for development and may not have all required content.
 
 ### Troubleshooting
 
