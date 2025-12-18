@@ -158,6 +158,8 @@ export default defineNuxtConfig({
       "be.bl2.cbddev.xyz",
       "cbd.int",
       "www.cbd.int",
+      "attachments.cbd.int",
+      "bch.cbd.int",
       "panorama.solutions",
       "scbd.atlassian.net",
       ...domains,

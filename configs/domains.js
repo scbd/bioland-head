@@ -13,6 +13,7 @@ export default [
   "ana.bsl.staging.cbd.int",
   "zak.bsl.staging.cbd.int",
   "gt.bsl.staging.cbd.int",
+  "e2e.bsl.staging.cbd.int",
   "han-demo.bl2.chm-cbd.net",
   "demo.bl2.chm-cbd.net",
   "training.bl2.chm-cbd.net",
