@@ -171,30 +171,127 @@ yarn test:e2e:report  # Open the latest Playwright HTML report
 yarn analyze          # Bundle analysis
 ```
 
-## End-to-end testing (Playwright)
+## End-to-end Testing (Playwright)
 
-This repo uses Nuxt's Playwright integration (`@nuxt/test-utils/playwright`) with the Playwright test runner.
+This repo uses Playwright with role-based authentication fixtures that apply **staging Drupal cookies** to the **local dev server**.
 
-### Target URL configuration
+### How Auth Works
 
-By default, E2E tests run against:
+```
+Staging Drupal                     Local Dev Server
+(NUXT_E2E_DRUPAL_URL)      →      (NUXT_E2E_LOCAL_URL)
+         │                              │
+    1. Login as role                    │
+         │                              │
+    2. Extract SSESS* cookie            │
+         │                              │
+    3. Save cookie ──────────────────→  4. Apply to local tests
+```
 
-- `http://seed.localhost:3000`
+**Benefits:**
+- ✅ No need to create local test users
+- ✅ Use real staging roles and permissions
+- ✅ Same authentication as production
+- ✅ Fast test execution (no repeated logins)
 
-You can override the test target without changing any test code:
+### Quick Setup
 
-- `E2E_BASE_URL` - explicit base URL (highest priority)
-- `E2E_TARGET` - named target from `tests/e2e/e2e-targets.ts` (defaults to `seed`)
+1. **Configure `.env`** (see `.env.example` for template):
+   ```bash
+   NUXT_E2E_DRUPAL_URL=<your_staging_url>
+   NUXT_E2E_LOCAL_URL=<your_local_url>
+   NUXT_E2E_USER_PASSWORD=<password>
+   NUXT_E2E_USER_SCBD_STAFF=<username>
+   NUXT_E2E_USER_SITE_MANAGER=<username>
+   NUXT_E2E_USER_CONTENT_MANAGER=<username>
+   NUXT_E2E_USER_CONTRIBUTOR=<username>
+   NUXT_E2E_USER_AUTHENTICATED=<username>
+   ```
 
-### Running
+2. **Run auth setup** (extracts staging cookies for local use):
+   ```bash
+   yarn test:e2e:auth-setup
+   ```
 
-- Ensure the target app is running (for seed: `yarn dev-open-bsl`), then run `yarn test:e2e`.
+3. **Start local dev server**:
+   ```bash
+   yarn stg-open-bsl-e2e
+   ```
 
-To run a single spec (or any Playwright CLI args) with Yarn (Berry), you must include `--` so args are forwarded to Playwright:
+4. **Run tests**:
+   ```bash
+   yarn test:e2e
+   ```
 
-- `yarn test:e2e -- tests/e2e/bl-576-bsl/BL-581/BL-581.spec.ts`
+### Available Auth Fixtures
 
-Without the `--`, Yarn may treat the path/flags as Yarn options and exit without running the tests.
+| Fixture | Role | Access Level |
+|---------|------|-------------|
+| `scbdStaff` | SCBD Staff | Full admin |
+| `siteManager` | Site Manager | Restricted |
+| `contentManager` | Content Manager | Restricted |
+| `contributor` | Contributor | Restricted |
+| `authenticated` | Authenticated User | Basic |
+| `anonymous` | Anonymous | Public |
+
+### Usage in Tests
+
+```typescript
+import { test, expect } from '../../fixtures/auth'
+
+// Staging cookie automatically applied!
+test('content manager test', async ({ page, contentManager }) => {
+  await page.goto('/en/about')
+  // User has content_manager role from staging
+})
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+yarn test:e2e
+
+# Run specific test file
+yarn test:e2e -- tests/e2e/bl-576-bsl/BL-581/BL-581.spec.ts
+
+# Run with UI
+yarn test:e2e:ui
+
+# View latest report
+yarn test:e2e:report
+```
+
+**Note:** Use `--` when passing Playwright CLI args with Yarn Berry.
+
+### Troubleshooting
+
+**Auth setup fails:**
+```bash
+# Check staging is accessible
+curl -I "$NUXT_E2E_DRUPAL_URL"
+
+# Verify .env variables
+grep NUXT_E2E .env
+```
+
+**Tests fail with "storageState: file does not exist":**
+```bash
+# Re-run auth setup
+yarn test:e2e:auth-setup
+```
+
+**Sessions expire:**
+```bash
+# Refresh staging cookies
+yarn test:e2e:auth-setup
+```
+
+### Documentation
+
+- **Quick Start:** `tests/e2e/QUICK-START.md`
+- **Auth System:** `tests/e2e/AUTH-SETUP-SUMMARY.md`
+- **Auth Fixtures:** `tests/e2e/fixtures/README.md`
 
 ## File Naming Conventions
 

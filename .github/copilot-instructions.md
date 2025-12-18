@@ -193,6 +193,47 @@ When adding tests (see `.github/old.md` for full TDD guide):
 - **Component tests:** `tests/components/` (Vitest + @vue/test-utils)
 - **E2E tests:** `tests/e2e/` (Playwright)
 
+### E2E Authentication System
+
+E2E tests use **staging Drupal authentication** applied to **local dev server**:
+
+```
+Staging Drupal (NUXT_E2E_DRUPAL_URL) → Extract SSESS cookies → Apply to Local Dev Server (NUXT_E2E_LOCAL_URL)
+```
+
+**Setup:**
+1. Configure `.env` with `NUXT_E2E_*` variables (see `.env.example`)
+2. Run `yarn test:e2e:auth-setup` to extract staging cookies
+3. Start local server: `yarn stg-open-bsl-e2e`
+4. Run tests: `yarn test:e2e`
+
+**Available fixtures:**
+- `scbdStaff` - Full admin access
+- `siteManager`, `contentManager`, `contributor` - Restricted roles
+- `authenticated` - Basic logged-in user
+- `anonymous` - Public access
+
+**Usage in tests:**
+```typescript
+import { test, expect } from '../../fixtures/auth'
+
+test('content manager test', async ({ page, contentManager }) => {
+  // Staging SSESS cookie already applied to local context
+  await page.goto('/en/about')
+})
+```
+
+**Key benefits:**
+- ✅ No local user creation needed
+- ✅ Real staging permissions
+- ✅ Fast execution (no repeated logins)
+- ⚠️ Re-run auth setup when staging sessions expire
+
+**Documentation:**
+- Quick Start: `tests/e2e/QUICK-START.md`
+- Auth Setup: `tests/e2e/AUTH-SETUP-SUMMARY.md`
+- Fixtures Guide: `tests/e2e/fixtures/README.md`
+
 ## External Dependencies
 
 - **DMSM API:** Site configurations (`{dmsm}/config/{env}/{multiSiteCode}/{siteCode}`)

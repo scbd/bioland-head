@@ -3,6 +3,7 @@
         <div 
             v-if="showWarning" 
             id="system-page-warning"
+            data-testid="system-page-warning"
             class="alert alert-warning alert-dismissible fade show d-flex align-items-start mb-3" 
             role="alert"
         >
@@ -17,6 +18,7 @@
                 <div class="form-check">
                     <input 
                         id="dont-show-again-checkbox"
+                        data-testid="system-page-warning-dont-show-checkbox"
                         v-model="dontShowAgain" 
                         type="checkbox" 
                         class="form-check-input"
@@ -29,6 +31,7 @@
             </div>
             <button 
                 type="button" 
+                data-testid="system-page-warning-close-button"
                 class="btn-close-custom" 
                 :aria-label="t('Close')"
                 @click="dismiss"
@@ -61,10 +64,10 @@
         return pageStore.isSystemPage || pageStore.isContentType;
     });
     
-    // User is content manager level (scbd_staff, site_manager, content_manager) but cannot edit system pages
-    // Only these roles see the warning - contributors and regular users don't see tabs at all
+    // User has editing roles (content_manager, contributor, site_manager) but cannot edit system pages
+    // These roles see the warning when on system pages
     const isContentManagerLevel = computed(() => {
-        return meStore.isContentManager && !meStore.canEditSystemPages;
+        return (meStore.isContentManager || meStore.isContributor) && !meStore.canEditSystemPages;
     });
     
     // Main computed: show warning when all conditions met

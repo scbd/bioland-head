@@ -82,7 +82,7 @@ export const useMeStore = defineStore('me', {
             return this.canEditSystemPages && this.editMode;
         },
         canEditSystemPages(){
-            const roles = [ "administrator" ];
+            const roles = [ "administrator", "scbd_staff" ];
 
             return this.isAuthenticated && intersect(this.roles, roles).length;
         },

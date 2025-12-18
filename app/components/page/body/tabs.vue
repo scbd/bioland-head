@@ -6,45 +6,45 @@
         <div id="page-body-tabs" class="tabs mb-3">
             <ul id="page-body-tabs-nav" class="nav nav-tabs" >
             <li class="nav-item" id="page-body-tabs-view">
-                <span id="page-body-tabs-view-label" :style="getStyle()" class="nav-link text-capitalize" :class="{ 'disabled-tab-view': isDisabledTab }" :title="isDisabledTab ? t('systemPageDisabled') : ''">{{t('View')}}</span> 
+                <span id="page-body-tabs-view-label" data-testid="page-tab-view" :style="getStyle()" class="nav-link text-capitalize" :class="{ 'disabled-tab-view': isDisabledTab }" :title="isDisabledTab ? t('systemPageDisabled') : ''">{{t('View')}}</span> 
             </li>
             <li v-if="meStore.isContentManager || isContributorCanEdit" class="nav-item">
-                <span v-if="isDisabledTab" id="page-body-tabs-edit-disabled" class="nav-link text-capitalize disabled-tab" :title="t('systemPageDisabled')">
+                <span v-if="isDisabledTab" id="page-body-tabs-edit-disabled" data-testid="page-tab-edit" data-disabled="true" class="nav-link text-capitalize disabled-tab" :title="t('systemPageDisabled')">
                     {{t('Edit')}}
                 </span>
-                <NuxtLink v-else id="page-body-tabs-edit-link" :style="getStyleActive()" :to="editUrl" class="nav-link text-capitalize" external>
+                <NuxtLink v-else id="page-body-tabs-edit-link" data-testid="page-tab-edit" :style="getStyleActive()" :to="editUrl" class="nav-link text-capitalize" external>
                     {{t('Edit')}}
                 </NuxtLink>
             </li>
             <li v-if="meStore.isContentManager" class="nav-item">
-                <span v-if="isDisabledTab" id="page-body-tabs-delete-disabled" class="nav-link text-capitalize disabled-tab" :title="t('systemPageDisabled')">
+                <span v-if="isDisabledTab" id="page-body-tabs-delete-disabled" data-testid="page-tab-delete" data-disabled="true" class="nav-link text-capitalize disabled-tab" :title="t('systemPageDisabled')">
                     {{t('Delete')}}
                 </span>
-                <NuxtLink v-else id="page-body-tabs-delete-link" :style="getStyleActive()" :to="baseUrl+'/delete' " class="nav-link text-capitalize" external>
+                <NuxtLink v-else id="page-body-tabs-delete-link" data-testid="page-tab-delete" :style="getStyleActive()" :to="baseUrl+'/delete' " class="nav-link text-capitalize" external>
                     {{t('Delete')}}
                 </NuxtLink>
             </li>
             <li v-if="meStore.isContentManager" class="nav-item">
-                <span v-if="isDisabledTab" id="page-body-tabs-revisions-disabled" class="nav-link text-capitalize disabled-tab" :title="t('systemPageDisabled')">
+                <span v-if="isDisabledTab" id="page-body-tabs-revisions-disabled" data-testid="page-tab-revisions" data-disabled="true" class="nav-link text-capitalize disabled-tab" :title="t('systemPageDisabled')">
                     {{t('Revisions')}}
                 </span>
-                <NuxtLink v-else id="page-body-tabs-revisions-link" :style="getStyleActive()" :to="baseUrl+'/revisions'+returnUrl " class="nav-link text-capitalize" external>
+                <NuxtLink v-else id="page-body-tabs-revisions-link" data-testid="page-tab-revisions" :style="getStyleActive()" :to="baseUrl+'/revisions'+returnUrl " class="nav-link text-capitalize" external>
                     {{t('Revisions')}}
                 </NuxtLink>
             </li>
             <li v-if="meStore.isContributor && pageStore?.isNodePage" class="nav-item">
-                <span v-if="isDisabledTab" id="page-body-tabs-clone-disabled" class="nav-link text-capitalize disabled-tab" :title="t('systemPageDisabled')">
+                <span v-if="isDisabledTab" id="page-body-tabs-clone-disabled" data-testid="page-tab-clone" data-disabled="true" class="nav-link text-capitalize disabled-tab" :title="t('systemPageDisabled')">
                     {{t('Clone')}}
                 </span>
-                <NuxtLink v-else id="page-body-tabs-clone-link" :style="getStyleActive()" :to="cloneUrl" class="nav-link text-capitalize" external>
+                <NuxtLink v-else id="page-body-tabs-clone-link" data-testid="page-tab-clone" :style="getStyleActive()" :to="cloneUrl" class="nav-link text-capitalize" external>
                     {{t('Clone')}}
                 </NuxtLink>
             </li>
             <li v-if="meStore.isContentManager" class="nav-item">
-                <span v-if="isDisabledTab" id="page-body-tabs-translate-disabled" class="nav-link text-capitalize disabled-tab" :title="t('systemPageDisabled')">
+                <span v-if="isDisabledTab" id="page-body-tabs-translate-disabled" data-testid="page-tab-translate" data-disabled="true" class="nav-link text-capitalize disabled-tab" :title="t('systemPageDisabled')">
                     {{t('Translate')}}
                 </span>
-                <NuxtLink v-else id="page-body-tabs-translate-link" :style="getStyleActive()" :to="baseUrl+'/translations'+returnUrl " class="nav-link text-capitalize" external>
+                <NuxtLink v-else id="page-body-tabs-translate-link" data-testid="page-tab-translate" :style="getStyleActive()" :to="baseUrl+'/translations'+returnUrl " class="nav-link text-capitalize" external>
                     {{t('Translate')}} 
                 </NuxtLink>
             </li>

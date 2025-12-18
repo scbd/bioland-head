@@ -129,8 +129,17 @@ async function getCachedDmsmConfig(siteCode: string): Promise<DmsmConfig | null>
 
   // Fetch from DMSM
   try {
-    const uri = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}/${encodeURIComponent(siteCode)}`
-    const data = await $fetch<DmsmConfig>(uri)
+    // DMSM API returns all sites for a multiSiteCode, not individual sites
+    const uri = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}`
+    const response = await $fetch<{sites: Record<string, DmsmConfig>}>(uri)
+    
+    // Extract the specific site config
+    const data = response.sites?.[siteCode]
+    
+    if (!data) {
+      consola.error(`Site ${siteCode} not found in DMSM config for ${env}/${multiSiteCode}`)
+      return null
+    }
 
     // Cache the result
     await storage.setItem(cacheKey, {

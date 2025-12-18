@@ -16,8 +16,8 @@ export default defineConfig<ConfigOptions>({
   
   // Auto-start dev server before running tests
   webServer: {
-    command: 'yarn nuxt dev --host seed.localhost --port 3330',
-    url: 'http://seed.localhost:3330',
+    command: 'yarn nuxt dev --host e2e.localhost --port 3330',
+    url: 'http://e2e.localhost:3330',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000, // 2 minutes for server to start and warm up
     stdout: 'pipe',
