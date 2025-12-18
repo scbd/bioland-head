@@ -1,5 +1,5 @@
 <template>
-    <div id="page-header-hero-image" ref="heroContainer"  :style="backgroundStyles" :class="{'un3-hero':hasHeroImage, 'hero-image':hasHeroImage, 'no-hero':!hasHeroImage, 'dev-site': isDevSite }"  >
+    <div id="page-header-hero-image" ref="heroContainer" data-testid="hero-image" :style="backgroundStyles" :class="{'un3-hero':hasHeroImage, 'hero-image':hasHeroImage, 'no-hero':!hasHeroImage, 'dev-site': isDevSite }"  >
         <slot></slot>
         
         <div v-if="hasHeroImage" id="page-header-hero-image-content" class="container text-white">
