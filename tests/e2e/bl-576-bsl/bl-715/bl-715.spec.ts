@@ -49,6 +49,49 @@ async function writeEvidenceScreenshot(page: Page, testInfo: TestInfo, basename:
   return filePath
 }
 
+/**
+ * Find and navigate to a node page that contains a side image.
+ * Strategy:
+ * - Visit each path in TEST_PATHS
+ * - Look for links to '/node/' and navigate to them, checking for a visible side image
+ * - As a fallback, check the TEST_PATHS pages themselves for a side image
+ */
+async function findNodePageWithSideImage(page: Page): Promise<{found: boolean, url?: string}> {
+  for (const p of TEST_PATHS) {
+    await page.goto(`${E2E_BASE_URL}${p}`)
+    await page.waitForLoadState('networkidle')
+
+    const anchors = page.locator('a[href*="/node/"]')
+    const count = await anchors.count()
+    for (let i = 0; i < count; i++) {
+      const href = await anchors.nth(i).getAttribute('href')
+      if (!href) continue
+      const target = new URL(href, E2E_BASE_URL).href
+      await page.goto(target)
+      await page.waitForLoadState('networkidle')
+      // small pause for client rendering
+      await page.waitForTimeout(300)
+
+      const img = page.locator(SELECTORS.sideImage)
+      if ((await img.count()) > 0 && await img.isVisible()) {
+        return { found: true, url: target }
+      }
+    }
+  }
+
+  // Fallback: check the TEST_PATHS pages themselves for a side image
+  for (const p of TEST_PATHS) {
+    await page.goto(`${E2E_BASE_URL}${p}`)
+    await page.waitForLoadState('networkidle')
+    const img = page.locator(SELECTORS.sideImage)
+    if ((await img.count()) > 0 && await img.isVisible()) {
+      return { found: true, url: `${E2E_BASE_URL}${p}` }
+    }
+  }
+
+  return { found: false }
+}
+
 test.describe('BL-715: Side Image Rendering', () => {
   test.describe.configure({ mode: 'serial' })
   test.setTimeout(60000)
@@ -58,29 +101,12 @@ test.describe('BL-715: Side Image Rendering', () => {
     test('side image renders correctly with proper attributes', async ({ anonymous: page }, testInfo) => {
       await seedConsentCookies(page.context(), E2E_BASE_URL)
       
-      // Try multiple paths to find one with a side image
-      let hasImage = false
-      let testPath = TEST_PATHS[0]
-      
-      for (const path of TEST_PATHS) {
-        await page.goto(`${E2E_BASE_URL}${path}`)
-        await page.waitForLoadState('networkidle')
-        
-        const imageElement = page.locator(SELECTORS.sideImage)
-        const imageCount = await imageElement.count()
-        
-        if (imageCount > 0 && await imageElement.isVisible()) {
-          hasImage = true
-          testPath = path
-          console.log(`✅ Found side image on path: ${path}`)
-          break
-        }
-      }
-
-      // Fail if no side image found - tests must not be skipped
-      expect(hasImage, `No side image found on any test path. Tested: ${TEST_PATHS.join(', ')}`).toBe(true)
+      // Find a node page that contains a side image (navigates to the node page)
+      const result = await findNodePageWithSideImage(page)
+      expect(result.found, `No node page with side image found on any path. Tested: ${TEST_PATHS.join(', ')}`).toBe(true)
 
       const imageElement = page.locator(SELECTORS.sideImage)
+      const testPath = result.url || TEST_PATHS[0]
       
       // Verify image is visible
       await expect(imageElement).toBeVisible()
@@ -345,6 +371,69 @@ test.describe('BL-715: Side Image Rendering', () => {
       } else {
         console.log('ℹ️  No media images on this page to test')
       }
+    })
+  })
+
+  test.describe('Evidence - specific page node', () => {
+    test('capture evidence for /en/national-informations/decisions-or-any-other-communications', async ({ anonymous: page }, testInfo) => {
+      await seedConsentCookies(page.context(), E2E_BASE_URL)
+
+      const targetPath = '/en/national-informations/decisions-or-any-other-communications'
+      await page.goto(`${E2E_BASE_URL}${targetPath}`)
+      await page.waitForLoadState('networkidle')
+
+      // Try to find node links on the page and navigate to the first node that has a side image
+      const anchors = page.locator('a[href*="/node/"]')
+      let nodeFound = false
+      let nodeUrl = ''
+      const anchorCount = await anchors.count()
+
+      for (let i = 0; i < anchorCount; i++) {
+        const href = await anchors.nth(i).getAttribute('href')
+        if (!href) continue
+        const url = new URL(href, E2E_BASE_URL).href
+        await page.goto(url)
+        await page.waitForLoadState('networkidle')
+        await page.waitForTimeout(300)
+
+        const img = page.locator(SELECTORS.sideImage)
+        if ((await img.count()) > 0 && await img.isVisible()) {
+          nodeFound = true
+          nodeUrl = url
+          break
+        }
+      }
+
+      // Fallback: check the target page itself for a side image
+      if (!nodeFound) {
+        const img = page.locator(SELECTORS.sideImage)
+        if ((await img.count()) > 0 && await img.isVisible()) {
+          nodeFound = true
+          nodeUrl = `${E2E_BASE_URL}${targetPath}`
+        }
+      }
+
+      expect(nodeFound, `No node with side image found for path ${targetPath}`).toBe(true)
+
+      // Ensure we are on the node page that has the image
+      if (nodeUrl && page.url() !== nodeUrl) {
+        await page.goto(nodeUrl)
+        await page.waitForLoadState('networkidle')
+      }
+
+      const imageElement = page.locator(SELECTORS.sideImage)
+      await expect(imageElement).toBeVisible()
+
+      // Capture full page screenshot and element screenshot
+      const full = await writeEvidenceScreenshot(page, testInfo, 'bl-715-node-fullpage')
+
+      const dir = path.join(process.cwd(), '.test-results', 'BL-715')
+      await mkdir(dir, { recursive: true })
+      const elFile = path.join(dir, `bl-715-node-element--${testInfo.project.name}.png`)
+      await imageElement.screenshot({ path: elFile })
+      await testInfo.attach('bl-715-node-element.png', { path: elFile, contentType: 'image/png' })
+
+      console.log(`✅ Evidence captured for node: ${nodeUrl}`)
     })
   })
 })
