@@ -55,31 +55,28 @@ test.describe('BL-714: System Page Warning Component', () => {
   test.describe.configure({ mode: 'serial' })
   test.setTimeout(60000)
 
-  test.describe('Privileged Role - No Warning, Full Access', () => {
+  test.describe('Restricted Roles - Warning + Disabled Tabs', () => {
     
-    test('scbd_staff: sees no warning and has full tab access on system pages', async ({ scbdStaff: page }, testInfo) => {
+    test('scbd_staff: sees warning and has disabled tabs on system pages', async ({ scbdStaff: page }, testInfo) => {
       await seedConsentCookies(page.context(), E2E_BASE_URL)
       await page.goto(`${E2E_BASE_URL}${SYSTEM_PAGE_PATH}`)
 
-      // Verify warning is NOT displayed
+      // Verify warning IS displayed
       const warning = page.locator(SELECTORS.warning)
-      await expect(warning).not.toBeVisible()
+      await expect(warning).toBeVisible()
+      await expect(warning).toContainText('View Only Mode')
 
-      // Verify tabs are present and enabled
+      // Verify tabs are disabled
       const editTab = page.locator(SELECTORS.tabEdit)
       await expect(editTab).toBeVisible()
-      await expect(editTab).not.toHaveAttribute('data-disabled', 'true')
-      await expect(editTab).not.toHaveClass(/disabled/)
+      await expect(editTab).toHaveAttribute('data-disabled', 'true')
 
       // Capture evidence
-      await writeEvidenceScreenshot(page, testInfo, 'scbd-staff-no-warning-full-access')
+      await writeEvidenceScreenshot(page, testInfo, 'scbd-staff-warning-disabled-tabs')
 
-      console.log('✅ scbd_staff: No warning, tabs enabled')
+      console.log('✅ scbd_staff: Warning shown, tabs disabled')
     })
-  })
 
-  test.describe('Restricted Roles - Warning + Disabled Tabs', () => {
-    
     test('site_manager: sees warning and has disabled tabs on system pages', async ({ siteManager: page }, testInfo) => {
       await seedConsentCookies(page.context(), E2E_BASE_URL)
       await page.goto(`${E2E_BASE_URL}${SYSTEM_PAGE_PATH}`)
