@@ -21,7 +21,8 @@ import { seedConsentCookies } from '../../helpers/seed-consent-cookies'
 const E2E_BASE_URL = getE2EBaseURL()
 
 // Test pages with side images
-// Using BSL site pages that typically have side image configured
+// Note: Tests must run against BSL target (E2E_TARGET=bsl) which has actual content
+// Run with: E2E_TARGET=bsl yarn test:e2e tests/e2e/bl-576-bsl/bl-715/bl-715.spec.ts
 const TEST_PATHS = [
   '/en',  // Home page (may have side image)
   '/en/about',  // About page (typically has side image)
@@ -76,11 +77,8 @@ test.describe('BL-715: Side Image Rendering', () => {
         }
       }
 
-      // Skip if no side image found
-      if (!hasImage) {
-        test.skip()
-        return
-      }
+      // Fail if no side image found - tests must not be skipped
+      expect(hasImage, `No side image found on any test path. Tested: ${TEST_PATHS.join(', ')}`).toBe(true)
 
       const imageElement = page.locator(SELECTORS.sideImage)
       
@@ -141,10 +139,7 @@ test.describe('BL-715: Side Image Rendering', () => {
         }
       }
 
-      if (!hasImage) {
-        test.skip()
-        return
-      }
+      expect(hasImage, `No side image found on any test path. Tested: ${TEST_PATHS.join(', ')}`).toBe(true)
 
       // Verify container structure
       const container = page.locator(SELECTORS.sideImageContainer)
@@ -182,10 +177,7 @@ test.describe('BL-715: Side Image Rendering', () => {
         }
       }
 
-      if (!hasImage) {
-        test.skip()
-        return
-      }
+      expect(hasImage, `No side image found on any test path. Tested: ${TEST_PATHS.join(', ')}`).toBe(true)
 
       const imageElement = page.locator(SELECTORS.sideImage)
       
@@ -247,10 +239,7 @@ test.describe('BL-715: Side Image Rendering', () => {
         }
       }
 
-      if (!hasImage) {
-        test.skip()
-        return
-      }
+      expect(hasImage, `No side image found on any test path. Tested: ${TEST_PATHS.join(', ')}`).toBe(true)
 
       // Wait a bit to catch any delayed errors
       await page.waitForTimeout(2000)
@@ -299,10 +288,7 @@ test.describe('BL-715: Side Image Rendering', () => {
         }
       }
 
-      if (!hasImage) {
-        test.skip()
-        return
-      }
+      expect(hasImage, `No side image found on any test path. Tested: ${TEST_PATHS.join(', ')}`).toBe(true)
 
       const imageElement = page.locator(SELECTORS.sideImage)
       await expect(imageElement).toBeVisible()
