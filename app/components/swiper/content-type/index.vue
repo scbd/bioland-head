@@ -136,7 +136,8 @@ onMounted(() => {
 });
 
 // SSR-safe default for placeholder rendering (avoids hydration mismatch)
-const ssrSlidePerView = 2;
+// Show only 1 placeholder to match mobile swiper (most users are mobile)
+const ssrSlidePerView = 1;
 
 // consola.error(data.value)
 const loading = computed(()=> status.value === 'pending' && !slides?.value?.length);
@@ -190,14 +191,6 @@ const placeholderCount = computed(() => hasHydrated.value ? slidePerView.value :
     transition: 0.3s;
     width       : 1em;
     height      : 1em;
-}
-
-/* Hide second placeholder card on mobile to prevent CLS 
-   (swiper shows 1 card at a time on small screens) */
-@media (max-width: 767px) {
-    .row.g-3 > div:nth-child(2) {
-        display: none;
-    }
 }
 </style>
 

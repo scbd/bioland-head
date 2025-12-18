@@ -128,7 +128,9 @@ onMounted(() => {
 });
 
 // SSR-safe default for placeholder rendering (avoids hydration mismatch)
-const ssrSlidePerView = 2;
+// On mobile (< 768px), show only 1 placeholder to match swiper's visible area
+// Must be static during SSR to avoid hydration mismatch
+const ssrSlidePerView = 1;
 
 const loading = computed(() => status.value === 'pending' && !slides?.value?.length);
 

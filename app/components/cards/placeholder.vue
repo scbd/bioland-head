@@ -46,7 +46,7 @@ const baseId = computed(() => {
 
 @media (max-width: 991px) {
     .card-placeholder {
-        height: 650px; /* Match mobile swiper visible card height (~725px - pagination) */
+        height: 700px; /* Match mobile swiper visible card height (~695px with pagination) */
     }
 }
 

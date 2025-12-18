@@ -192,14 +192,17 @@ test.describe('BL-709: BCH home page placeholders + CLS stability', () => {
     }
   })
 
-  // TODO: Fix hydration test - dev server instability causing interruptions
   test('Hydrated content loads and placeholders are replaced', async ({ page }, testInfo) => {
-    testInfo.setTimeout(90_000)
+    testInfo.setTimeout(120_000)
 
     await page.setViewportSize(DESKTOP_VIEWPORT)
     await seedConsentCookies(page.context(), E2E_BASE_URL)
 
-    await page.goto(BCH_HOME_PATH, { waitUntil: 'domcontentloaded' })
+    // Use 'load' instead of 'domcontentloaded' for more stability
+    await page.goto(BCH_HOME_PATH, { waitUntil: 'load', timeout: 60_000 })
+    
+    // Give the page a moment to settle after navigation
+    await page.waitForTimeout(1000)
 
     const { nbf, news, resources } = getHomeSections(page)
 
@@ -208,9 +211,11 @@ test.describe('BL-709: BCH home page placeholders + CLS stability', () => {
     await expect(news.locator('[data-testid="card-placeholder"]').first()).toBeVisible({ timeout: 15_000 })
     await expect(resources.locator('[data-testid="card-placeholder"]').first()).toBeVisible({ timeout: 15_000 })
 
-    // Hydration + data fetching should eventually render real swiper content.
-    await page.waitForLoadState('networkidle')
+    // Capture placeholder state
+    await writeEvidenceScreenshot(page, testInfo, '02a-placeholders-desktop')
 
+    // Hydration + data fetching should eventually render real swiper content.
+    // Wait for swiper elements instead of networkidle (more reliable)
     const nbfSwiper = nbf.locator('swiper-container')
     const newsSwiper = news.locator('swiper-container')
     const resourcesSwiper = resources.locator('swiper-container')
@@ -229,33 +234,31 @@ test.describe('BL-709: BCH home page placeholders + CLS stability', () => {
     await expect(news.locator('swiper-slide').first()).toBeVisible({ timeout: 30_000 })
     await expect(resources.locator('swiper-slide').first()).toBeVisible({ timeout: 30_000 })
 
-    await writeEvidenceScreenshot(page, testInfo, '02-hydrated-content')
+    // Capture final hydrated state
+    await writeEvidenceScreenshot(page, testInfo, '02b-hydrated-desktop')
   })
 
-  // TODO: Fix CLS test - currently failing with ERR_ABORTED during page navigation
-  // Issue: Dev server appears to reload mid-test causing navigation failures
-  // Last measured CLS: 0.917 (target: < 0.1)
-  // Next steps:
-  // 1. Investigate dev server stability during test runs
-  // 2. Adjust placeholder dimensions to better match final swiper content
-  // 3. Consider using production build for CLS measurement tests
   test('CLS stays below threshold (Layout Instability API)', async ({ page }, testInfo) => {
-    testInfo.setTimeout(120_000)
+    testInfo.setTimeout(150_000)
 
     await page.setViewportSize(DESKTOP_VIEWPORT)
     await seedConsentCookies(page.context(), E2E_BASE_URL)
 
     await installCLSObserver(page)
 
-    await page.goto(BCH_HOME_PATH, { waitUntil: 'domcontentloaded' })
+    // Use 'load' for better stability
+    await page.goto(BCH_HOME_PATH, { waitUntil: 'load', timeout: 60_000 })
+    
+    // Give the page a moment to settle
+    await page.waitForTimeout(1000)
 
     const { nbf, news, resources } = getHomeSections(page)
 
     // Ensure the main content has hydrated (otherwise CLS measurement is meaningless).
-    await page.waitForLoadState('networkidle')
-    await expect(nbf.locator('swiper-container')).toBeVisible({ timeout: 30_000 })
-    await expect(news.locator('swiper-container')).toBeVisible({ timeout: 30_000 })
-    await expect(resources.locator('swiper-container')).toBeVisible({ timeout: 30_000 })
+    // Wait for swipers to be visible instead of networkidle (more reliable)
+    await expect(nbf.locator('swiper-container')).toBeVisible({ timeout: 45_000 })
+    await expect(news.locator('swiper-container')).toBeVisible({ timeout: 45_000 })
+    await expect(resources.locator('swiper-container')).toBeVisible({ timeout: 45_000 })
 
     const clsSupported = await page.evaluate(() => Boolean((window as any).__e2e_cls_supported))
     test.skip(!clsSupported, 'Layout Instability API not supported in this browser')
@@ -282,20 +285,23 @@ test.describe('BL-709: BCH home page placeholders + CLS stability', () => {
     // Helpful output for CI logs / Jira evidence.
     console.log(`[BL-709] measured CLS (max session): ${cls} (raw total: ${clsTotal})`)
 
-    // TODO: Adjust placeholder dimensions to reduce CLS, then lower threshold back to 0.1
-    expect(cls).toBeLessThan(1.4)
+    // Lower threshold now that placeholders are better tuned
+    expect(cls).toBeLessThan(0.2)
 
-    await writeEvidenceScreenshot(page, testInfo, '03-cls')
+    await writeEvidenceScreenshot(page, testInfo, '03-cls-desktop')
   })
 
-  // TODO: Fix mobile height stability test - depends on hydration test being stable
   test('Mobile: section heights do not change wildly during load', async ({ page }, testInfo) => {
-    testInfo.setTimeout(120_000)
+    testInfo.setTimeout(150_000)
 
     await page.setViewportSize(MOBILE_VIEWPORT)
     await seedConsentCookies(page.context(), E2E_BASE_URL)
 
-    await page.goto(BCH_HOME_PATH, { waitUntil: 'domcontentloaded' })
+    // Use 'load' for better stability
+    await page.goto(BCH_HOME_PATH, { waitUntil: 'load', timeout: 60_000 })
+    
+    // Give the page a moment to settle
+    await page.waitForTimeout(1000)
 
     const { nbf, news, resources } = getHomeSections(page)
 
@@ -306,12 +312,14 @@ test.describe('BL-709: BCH home page placeholders + CLS stability', () => {
     // Confirm we are measuring the placeholder state first.
     await expect(nbf.locator('[data-testid="card-placeholder"]').first()).toBeVisible({ timeout: 15_000 })
 
+    // Capture placeholder state on mobile
+    await writeEvidenceScreenshot(page, testInfo, '04a-placeholders-mobile')
+
     const initialNbfHeight = await getHeightPx(nbf)
     const initialNewsHeight = await getHeightPx(news)
     const initialResourcesHeight = await getHeightPx(resources)
 
-    await page.waitForLoadState('networkidle')
-
+    // Remove networkidle wait - use swiper visibility instead
     // Confirm the sections have transitioned to real swiper content before taking the final measurement.
     await expect(nbf.locator('swiper-container')).toBeVisible({ timeout: 60_000 })
     await expect(news.locator('swiper-container')).toBeVisible({ timeout: 60_000 })
@@ -329,6 +337,7 @@ test.describe('BL-709: BCH home page placeholders + CLS stability', () => {
     assertHeightChangeNotWild('News section', initialNewsHeight, finalNewsHeight)
     assertHeightChangeNotWild('Resources section', initialResourcesHeight, finalResourcesHeight)
 
-    await writeEvidenceScreenshot(page, testInfo, '04-mobile-height-stability')
+    // Capture final mobile state
+    await writeEvidenceScreenshot(page, testInfo, '04b-hydrated-mobile')
   })
 })
