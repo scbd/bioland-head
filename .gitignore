@@ -57,4 +57,4 @@ playwright/.auth
 .claude
 tmp
 .tmp
-.github/*
+.github/*.playwright-mcp/
