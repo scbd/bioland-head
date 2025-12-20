@@ -47,12 +47,12 @@ playwright/.auth
 .copilot_exports*
 .github/instructions/*
 !.github/instructions/default.instructions.md
-!.github/instructions/write-detailed-jira-description.md
+# !.github/instructions/write-detailed-jira-description.md
 
 # Agent temp files (checkpoints, drafts)
 .github/agents-temp/*
 !.github/agents-temp/README.md
-
+.playwright-mcp
 
 .claude
 tmp
