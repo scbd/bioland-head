@@ -249,6 +249,10 @@ test.describe('BL-674: News Widget Link Fix', () => {
       const href = await viewMoreLink.getAttribute('href')
       console.log(`Clicking link: ${href}`)
       
+      // Screenshot BEFORE navigation - showing the link on homepage
+      await viewMoreLink.scrollIntoViewIfNeeded()
+      await writeEvidenceScreenshot(page, testInfo, 'before-navigation-homepage')
+      
       // Verify href structure before clicking
       expect(href, 'Link should have schemas parameter').toContain('schemas')
       
@@ -262,18 +266,30 @@ test.describe('BL-674: News Widget Link Fix', () => {
       
       // Verify we're on a search page (may redirect from taxonomy/term/21 to /search alias)
       const currentUrl = page.url()
-      console.log(`Current URL: ${currentUrl}`)
+      console.log(`Current URL after navigation: ${currentUrl}`)
       
       // The page should have loaded successfully
       // Even if there's a redirect, it should be to a search page, not search-sec
       expect(currentUrl, 'URL should not contain search-sec').not.toContain('search-sec')
       
+      // Verify the final URL contains search (aliased from taxonomy/term/21)
+      expect(currentUrl, 'URL should resolve to search page').toContain('/search')
+      
+      // Verify schemas are preserved in the URL after navigation
+      const finalUrl = new URL(currentUrl)
+      const schemasParam = finalUrl.searchParams.getAll('schemas')
+      console.log(`Schemas in final URL: ${schemasParam.join(', ')}`)
+      expect(schemasParam.length, 'Schemas should be preserved after navigation').toBeGreaterThan(0)
+      
       // Wait for page content to load
       await page.waitForSelector('body', { timeout: 5000 })
       
-      await writeEvidenceScreenshot(page, testInfo, 'search-page-content')
+      // Screenshot AFTER navigation - showing the search page with results
+      await writeEvidenceScreenshot(page, testInfo, 'after-navigation-search-page')
       
       console.log('✅ Search page loaded successfully')
+      console.log(`   Final URL: ${currentUrl}`)
+      console.log(`   Schemas preserved: ${schemasParam.join(', ')}`)
     })
   })
 
