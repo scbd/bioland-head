@@ -13,11 +13,9 @@
     <PageFooter/>
     <ModalsContainer/>
     <LazyUserAlerts/>
-    <Transition name="cookie-fade">
-      <div v-show="showCookieControl" class="cookie-fade-wrapper">
-        <CookieControl :locale="locale" />
-      </div>
-    </Transition>
+    <div v-show="showCookieControl">
+      <CookieControl :locale="locale" />
+    </div>
 </template> 
 <script setup >
 import { ModalsContainer } from 'vue-final-modal'
@@ -98,22 +96,6 @@ onMounted(() => {
         width:100%;
         text-align: center;
     }
-.cookie-fade-enter-active,
-.cookie-fade-leave-active {
-  transition: opacity 1s ease, transform 1s ease;
-}
-
-.cookie-fade-enter-from,
-.cookie-fade-leave-to {
-  opacity: 0;
-  transform: translateY(18px);
-}
-
-.cookie-fade-enter-to,
-.cookie-fade-leave-from {
-  opacity: 1;
-  transform: translateY(0);
-}
 </style>
 <style lang="scss">
 @import "@/assets/scss/variables.scss";
