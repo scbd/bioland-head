@@ -108,13 +108,15 @@
     const { title  }     = toRefs(props);
     const isSecretariat  = computed(()=> pageStore?.isSearchSecretariat); 
     const isSearchBch    = computed(()=> pageStore?.isSearchBch);
-    const isSearchAbs     = computed(()=> pageStore?.isSearchAbs);
+    const isSearchAbs    = computed(()=> pageStore?.isSearchAbs);
     // const isContent      = computed(()=> pageStore?.page?.drupalInternalNid === 25 || pageStore?.page?.drupalInternalNid === 88 && r.query?.schemas?.length === 2);  
     const type           = computed(()=> isSecretariat.value? 'secretariat' :  undefined); //isContent.value? 'content' : undefined
 
     const { isContentTypeId, getContentType }  = useMenusStore();
-    const realm         =    isSearchBch.value || siteStore.isBiosafetySite? 'BCH' : isSearchAbs.value ? 'ABS' : 'CHM';
-    const realms=[realm];                
+    
+    // Make realm reactive so it updates when page data changes
+    const realm = computed(() => isSearchBch.value || siteStore.isBiosafetySite ? 'BCH' : isSearchAbs.value ? 'ABS' : 'CHM');
+    const realms = computed(() => [realm.value]);                
     
     // Use computed for query to ensure reactivity when route changes
     const query = computed(() => ({
@@ -124,8 +126,8 @@
         page: r?.query?.page || 1,
         rowsPerPage: r?.query?.rowsPerPage || 10,
         schemas: r?.query?.schemas || undefined,
-        realm,
-        realms
+        realm: realm.value,
+        realms: realms.value
     }));
     
     const typeId            = computed(getContentTypeId);
@@ -138,6 +140,7 @@
     const initialKey = `list-${initialPath}-${JSON.stringify(initialQuery)}`;
     
     // Build the query object once at setup time (non-reactive for initial fetch)
+    // Use current reactive values for realm/realms at mount time
     const staticQuery = {
         ...initialQuery,
         ...siteStore.params,
@@ -145,8 +148,8 @@
         page: initialQuery?.page || 1,
         rowsPerPage: initialQuery?.rowsPerPage || 10,
         schemas: initialQuery?.schemas || undefined,
-        realm,
-        realms
+        realm: realm.value,
+        realms: realms.value
     };
 
     const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  
@@ -231,17 +234,33 @@
     }
 
     function getApiUri(){
-
-
-            if(isSearchBch.value) 
-                return `/api/list/bch`;
-            if(isSearchAbs.value) 
-                return `/api/list/abs`;
-            if(isSecretariat.value)
-                return `/api/list/chm`;
+        if(isSearchBch.value) 
+            return `/api/list/bch`;
+        if(isSearchAbs.value) 
+            return `/api/list/abs`;
+        if(isSecretariat.value)
+            return `/api/list/chm`;
 
         if(typeId.value)
             return `/api/list/drupal/${encodeURIComponent(typeId.value)}`;
+
+        // Only warn if pageStore.page isn't properly initialized (drupalInternalTid missing)
+        // This indicates a timing issue during client-side navigation
+        // Don't warn for the main search page (tid 21) which legitimately falls back to /api/list/drupal
+        const pageTid = pageStore?.page?.drupalInternalTid;
+        const isMainSearchPage = pageTid === 21; // systemPageTidConstants.SEARCH
+        
+        if (!isMainSearchPage && (r.path?.includes('/search') || r.path?.includes('/suchen') || r.path?.includes('/buscar') || r.path?.includes('/recherche'))) {
+            console.warn('[page/list] getApiUri - falling back to /api/list/drupal on search path', {
+                path: r.path,
+                pageTid,
+                pageType: pageStore?.page?.type,
+                isSearchBch: isSearchBch.value,
+                isSearchAbs: isSearchAbs.value,
+                isSecretariat: isSecretariat.value,
+                reason: !pageTid ? 'pageStore not ready (tid undefined)' : 'unrecognized search page type'
+            });
+        }
 
         return `/api/list/drupal`;
     }

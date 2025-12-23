@@ -1,14 +1,14 @@
 <template>
     <section>
-        <LazyPageBody              v-if="pageStore.isPage"/>
-        <LazyPageBodyMedia         v-if="pageStore.isMediaPage "/>  
-        <LazyPageList              v-if="pageStore.isSearch"/>
-        <LazyPageListForums        v-if="pageStore.isForumsList"/>
-        <LazyPageListTopics        v-if="pageStore.isTopicsList" />
-        <LazyPageListTopicComments v-if="pageStore.isTopicsCommentsList" /> 
-        <LazyPageListNcps          v-if="pageStore.isNcpsList" />
-        <LazyPageCustomChmNetwork  v-if="pageStore.isChmNetwork" />
-        <LazyPageCustomDevelopment v-if="pageStore.isSystemPageDev" />
+        <LazyPageBody              v-if="pageStore.isInitialized && pageStore.isPage"/>
+        <LazyPageBodyMedia         v-if="pageStore.isInitialized && pageStore.isMediaPage"/>  
+        <LazyPageList              v-if="pageStore.isInitialized && pageStore.isSearch"/>
+        <LazyPageListForums        v-if="pageStore.isInitialized && pageStore.isForumsList"/>
+        <LazyPageListTopics        v-if="pageStore.isInitialized && pageStore.isTopicsList" />
+        <LazyPageListTopicComments v-if="pageStore.isInitialized && pageStore.isTopicsCommentsList" /> 
+        <LazyPageListNcps          v-if="pageStore.isInitialized && pageStore.isNcpsList" />
+        <LazyPageCustomChmNetwork  v-if="pageStore.isInitialized && pageStore.isChmNetwork" />
+        <LazyPageCustomDevelopment v-if="pageStore.isInitialized && pageStore.isSystemPageDev" />
     </section>
 </template>
 

@@ -125,7 +125,24 @@
         if(aLine?.type?.includes('media--'))
             return t(aLine.type.replace('media--',''),1);
 
-        return t(aLine.schema) + ' - ' + getRealmText(aLine);
+        // Guard against undefined/empty schema to prevent i18n "Invalid arguments" error
+        if (!aLine?.schema) {
+            console.warn('[row.vue] getDocumentTypeName - missing schema', { 
+                type: aLine?.type, 
+                dnid: aLine?.dnid,
+                title: aLine?.title?.substring(0, 50)
+            });
+        }
+        
+        const schemaText = aLine?.schema ? t(aLine.schema) : '';
+        const realmText = getRealmText(aLine);
+        
+        if (schemaText && realmText) return `${schemaText} - ${realmText}`;
+        if (schemaText) return schemaText;
+        if (realmText) return realmText;
+        
+        // Fallback for items without schema (e.g., forum nodes)
+        return aLine?.type ? t(aLine.type.replace('node--', '')) : '';
     }
 
     function getRealmText({ realms }){

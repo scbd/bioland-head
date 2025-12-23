@@ -139,7 +139,12 @@ export default defineNuxtConfig({
   },
   vite: {
     server: {
-      hmr: { protocol: "ws", host: "seed.localhost", clientPort: 3330, port: 3330 },
+      hmr: { 
+        protocol: "ws", 
+        host: "localhost",
+        // Use random port to avoid conflicts with multiple dev servers
+        // Setting to true lets Vite auto-select an available port
+      },
     },
     optimizeDeps: {
       include: ["string-strip-html", "@unhead/schema-org/vue"],

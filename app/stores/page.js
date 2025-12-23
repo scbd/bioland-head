@@ -14,7 +14,6 @@ export const usePageStore = defineStore('page', {
         } ,
         loadPage(pageDataRaw, key){
             this.$reset()
-            this.isInitialized = key;
             if(!pageDataRaw) throw new Error('usePageStore.initialize -> pageDataRaw is undefined');
 
             const pageData = camelCase(pageDataRaw);
@@ -25,6 +24,10 @@ export const usePageStore = defineStore('page', {
             const   hasHeroImage       = Array.isArray(fieldAttachments)? !!fieldAttachments?.find(({ type })=> type === 'media--hero') : false ;
 
             this.page.hasHeroImage     = hasHeroImage;
+            
+            // Set isInitialized AFTER page data is fully loaded
+            // Use key if provided, otherwise true
+            this.isInitialized = key || true;
         } ,
         mapImage({  name,fieldMediaImage, drupalInternalMid, path, filename, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage }){
             const siteStore = useSiteStore();
