@@ -20,6 +20,7 @@ export default defineNitroPlugin((nitro) => {
         }
 
         await handleLocaleRedirect();
+        await handleTaxonomyTermAlias();
 
 
         async function handleLocaleRedirect(){
@@ -43,6 +44,37 @@ export default defineNitroPlugin((nitro) => {
             } catch (error) {
                 // Context resolution failed - let request continue
                 // The actual page handler can decide what to do
+                return;
+            }
+        }
+
+        /**
+         * Redirects /taxonomy/term/{id} paths to their alias or homepage.
+         */
+        async function handleTaxonomyTermAlias(){
+            try {
+                const taxonomyTermMatch = event.path.match(/^\/([a-z]{2})\/taxonomy\/term\/(\d+)/);
+                
+                if(!taxonomyTermMatch) return;
+
+                const locale = taxonomyTermMatch[1];
+                const termId = taxonomyTermMatch[2];
+                const termPath = `/taxonomy/term/${termId}`;
+                
+                const ctx = await useRequestContext(event);
+                
+                // If this term is the homepage, redirect to root
+                if(ctx.homePath === termPath) {
+                    return sendRedirect(event, `/${locale}`, 301);
+                }
+                
+                // Otherwise, check if there's an alias for this term
+                const aliasData = await getTermAliasById(ctx, termId);
+                
+                if(aliasData?.alias) {
+                    return sendRedirect(event, `/${locale}${aliasData.alias}`, 301);
+                }
+            } catch (error) {
                 return;
             }
         }
