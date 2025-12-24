@@ -269,14 +269,14 @@ function resolveLocale(
 /**
  * Build full SiteContext from resolved values
  */
-function buildSiteContext(params: {
+async function buildSiteContext(params: {
   siteCode: string
   locale: string
   config: DmsmConfig
   env: string
   multiSiteCode: string
   baseHost: string
-}): SiteContext {
+}): Promise<SiteContext> {
   const { siteCode, locale, config, env, multiSiteCode, baseHost } = params
 
   const hasRedirect = env === 'production' && config.redirect
@@ -297,6 +297,17 @@ function buildSiteContext(params: {
                     host.includes('biosafety') || 
                     host.includes('bsl')
 
+  // Fetch site settings from Drupal (siteName + homePath in one call)
+  let siteName: string | undefined
+  let homePath: string | undefined
+  try {
+    const settings = await getSiteSettings({ siteCode, locale, config, host, localizedHost })
+    siteName = settings.siteName
+    homePath = settings.homePath
+  } catch (e) {
+    // Non-critical - continue without site settings
+  }
+
   return {
     siteCode,
     identifier: siteCode,
@@ -313,6 +324,8 @@ function buildSiteContext(params: {
     countries,
     redirect: config.redirect,
     isBchSite,
+    siteName,
+    homePath,
     config
   }
 }

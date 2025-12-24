@@ -25,19 +25,13 @@ export default defineEventHandler(async (event) => {
                 locale: l !== 'und' ? l : undefined 
             });
 
-            // Get site name from Drupal
-            const siteName = await getSiteDefinedName({ 
-                siteCode, 
-                locale: ctx.locale, 
-                config: ctx.config 
-            });
-
             return {
                 siteCode: ctx.siteCode,
                 locale: ctx.locale,
                 defaultLocale: ctx.defaultLocale,
                 config: ctx.config,
-                siteName,
+                siteName: ctx.siteName,
+                homePath: ctx.homePath,
                 host: ctx.host,
                 locales: ctx.locales
             };

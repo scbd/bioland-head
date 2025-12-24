@@ -38,13 +38,31 @@ export async function getSiteDefinedName (ctx) {
 
 export async function getSiteDefinedHome (ctx) {
     const { apiKey }     = useRuntimeConfig()
-    const localizedHost  = getHost(ctx)
+    const host           = ctx.localizedHost || ctx.host
     const query          = { jsonapi_include: 1 };
-    const uri            = `${localizedHost}/jsonapi/site/site?api-key=${encodeURIComponent(apiKey)}`
+    const uri            = `${host}/jsonapi/site/site?api-key=${encodeURIComponent(apiKey)}`
 
     const resp = await $fetch(uri,$fetchBaseOptions({query}))
 
     return resp?.data?.page_front
+}
+
+/**
+ * Get site settings from Drupal (siteName and homePath) in a single call
+ */
+export async function getSiteSettings (ctx) {
+    const { apiKey }     = useRuntimeConfig()
+    const host           = ctx.host || ctx.localizedHost
+    const query          = { jsonapi_include: 1 };
+    const uri            = `${host}/${encodeURIComponent(ctx.locale)}/jsonapi/site/site?api-key=${encodeURIComponent(apiKey)}`
+
+    const resp = await $fetch(uri, $fetchBaseOptions({query}))
+    const name = resp?.data?.name
+    
+    return {
+        siteName: name === '_' ? '' : name,
+        homePath: resp?.data?.page_front
+    }
 }
 
 function getHost(ctx, ignoreLocale = false){

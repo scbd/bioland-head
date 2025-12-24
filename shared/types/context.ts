@@ -64,6 +64,7 @@ export interface SiteContext {
   siteName?: string
   redirect?: string
   isBchSite: boolean
+  homePath?: string
 
   // Full DMSM config for advanced use
   config?: DmsmConfig
