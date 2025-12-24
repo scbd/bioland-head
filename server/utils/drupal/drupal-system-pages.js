@@ -5,8 +5,6 @@ export const getSystemPagesMap = async (ctx) => {
 }
 
 async function formatSystemPages(ctx, data){
-    const { getByTermId } = await usePathAlias(ctx);
-
     const terms    = [];
     const requests = [];
 
@@ -15,7 +13,7 @@ async function formatSystemPages(ctx, data){
 
         const t = { name, status, path, id,  drupalInternalTid:drupal_internal__tid  }
 
-        requests.push(getByTermId(drupal_internal__tid, true).then((res)=> {
+        requests.push(getTermAliasById(ctx, drupal_internal__tid, true).then((res)=> {
             const aliases = {};
 
             if(!res?.length) return

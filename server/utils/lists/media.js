@@ -87,8 +87,6 @@ function flattenData(ctx){
 
 }
 function mapData(ctx){
-    const pathAlias = usePathAlias(ctx)
-
     return async (r)=>{
         const results = flattenData(ctx)(r)
         const promises = [];
@@ -96,7 +94,7 @@ function mapData(ctx){
         for (const aDoc of results.data){
             if(aDoc.field_tags || aDoc.fieldTags)
                 promises.push(getThesaurusByKey(aDoc.field_tags || aDoc.fieldTags).then((p)=>{aDoc.tags =mapTagsByType(p) ;}));
-            promises.push(pathAlias.getByMediaId(aDoc.drupal_internal__mid).then((p)=>{ 
+            promises.push(getMediaAliasById(ctx, aDoc.drupal_internal__mid).then((p)=>{ 
                 aDoc.path = p;
             }))
         }

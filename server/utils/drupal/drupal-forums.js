@@ -20,8 +20,7 @@ export async function addForumIdentifierToContext(ctx){
         return ctx
     } else ctx.uuid = '';
 
-    const pathAlias = usePathAlias(ctx);
-    const { path }  = (await pathAlias.getByAlias(`/forums/${encodeURIComponent(ctx.forumAlias)}`)) || {};
+    const { path }  = (await getAliasByPath(ctx)(`/forums/${encodeURIComponent(ctx.forumAlias)}`)) || {};
 
     if(!path){
         ctx.tid = '';
@@ -35,8 +34,7 @@ export async function addForumIdentifierToContext(ctx){
 }
 
 export async function getForumTidFromAlias(ctx){
-    const pathAlias = usePathAlias(ctx);
-    const { path }  = await pathAlias.getByAlias(`/forums/${encodeURIComponent(ctx.forumAlias)}`);
+    const { path }  = (await getAliasByPath(ctx)(`/forums/${encodeURIComponent(ctx.forumAlias)}`)) || {};
     
     if(!path) return undefined;
 

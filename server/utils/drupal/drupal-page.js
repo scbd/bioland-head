@@ -179,15 +179,13 @@ async function getThumbFiles(data,  {localizedHost, host }){
 }
 
 function mapData(ctx){
-    const pathAlias = usePathAlias(ctx);
-
     return async (document)=>{
         const promises = [];
 
         if(document?.field_attachments?.length)
         for (const media of document['field_attachments']){
 
-            promises.push(pathAlias.getByMediaId(media.drupal_internal__mid).then((p)=>{ 
+            promises.push(getMediaAliasById(ctx, media.drupal_internal__mid).then((p)=>{ 
                 if(media)
                     media.path = p;
             }))

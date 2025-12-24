@@ -23,8 +23,6 @@ async function getMediaMenus (ctx, drupalInternalId) {
     return mapData(ctx, drupalInternalId)(data)
 };
 function mapData(ctx, drupalInternalId){
-    const pathAlias = usePathAlias(ctx)
-
     return async (data)=>{
         const docs = []
         const promises = [];
@@ -39,7 +37,7 @@ function mapData(ctx, drupalInternalId){
             const aDoc = { thumb, title:title || name, name, href, created, changed, drupalInternalMid }
             docs.push(aDoc);
 
-            promises.push(pathAlias.getByMediaId(drupalInternalMid).then((p)=>{ 
+            promises.push(getMediaAliasById(ctx, drupalInternalMid).then((p)=>{ 
                 aDoc.path=p;
                 if(p?.alias) aDoc.href=p?.alias;
             }))
