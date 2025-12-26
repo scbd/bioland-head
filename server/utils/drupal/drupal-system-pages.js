@@ -13,15 +13,22 @@ async function formatSystemPages(ctx, data){
 
         const t = { name, status, path, id,  drupalInternalTid:drupal_internal__tid  }
 
-        requests.push(getTermAliasById(ctx, drupal_internal__tid, true).then((res)=> {
-            const aliases = {};
+        requests.push(getTermAliasById(ctx, drupal_internal__tid, true)
+            .then((res)=> {
+                const aliases = {};
+                const defaultPath = `/taxonomy/term/${drupal_internal__tid}`;
 
-            if(!res?.length) return
-            for (const a of res) {
-                aliases[a.langcode] = a.alias
-            }
-            t.aliases = aliases;
-        }));
+                if(!res?.length) return
+                for (const a of res) {
+                    aliases[a.langcode] = a.alias || defaultPath;
+                }
+                t.aliases = aliases;
+            })
+            .catch(() => {
+                // Fallback to default taxonomy path when alias fetch fails
+                t.aliases = { [ctx.locale]: `/taxonomy/term/${drupal_internal__tid}` };
+            })
+        );
 
         terms.push(t)
     }

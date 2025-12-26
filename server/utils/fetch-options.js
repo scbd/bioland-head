@@ -1,7 +1,19 @@
 import { colors } from "consola/utils";
 
 
-export const $fetchBaseOptions = (options = {}) => ({onRequest, onRequestError,onResponse,onResponseError,method:'GET',redirect: 'follow',  ...options})
+export const $fetchBaseOptions = (options = {}) => ({
+  onRequest, 
+  onRequestError,
+  onResponse,
+  onResponseError,
+  method:'GET',
+  redirect: 'follow',
+  // Retry GET requests on transient failures (Drupal can return 500 under load)
+  retry: options.method && options.method.toUpperCase() !== 'GET' ? 0 : 2,
+  retryDelay: 300, // 300ms delay between retries
+  retryStatusCodes: [408, 429, 500, 502, 503, 504],
+  ...options
+})
 
 function shouldLogServerOutRequests () {
   const { logAll, logServerOutRequests } = useRuntimeConfig().public || {}
