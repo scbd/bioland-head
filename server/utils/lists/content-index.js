@@ -12,31 +12,49 @@ export const useContentTypeIndex = async (ctx) => {
     return  getListIndex(ctx);
 }
 
-// /**
-//  * Fetch field_tags from the default locale for a specific node
-//  * This is needed because field_tags may not be translatable in Drupal,
-//  * so translated content doesn't include the tag data
-//  * @param {Object} ctx - Context with host and defaultLocale
-//  * @param {string} uuid - Drupal node UUID
-//  * @returns {Promise<Object|null>} - The field_tags object or null
-//  */
-
-// Fetch field_tags with caching, respects bypass-cache and seachain-taisce query params
-const fetchDefaultLocaleTags = defineCachedFunction(async (ctx, uuid) => {
+/**
+ * Fetch field_tags for multiple nodes in a single bulk query
+ * This replaces individual per-node fetches to avoid overwhelming Drupal
+ *  This is needed because field_tags may not be translatable in Drupal,
+ * so translated content doesn't include the tag data
+ * 
+ * @param {Object} ctx - Context with host and defaultLocale
+ * @param {string[]} uuids - Array of Drupal node UUIDs
+ * @returns {Promise<Map<string, Object>>} - Map of uuid -> field_tags
+ */
+const fetchBulkDefaultLocaleTags = defineCachedFunction(async (ctx, uuids) => {
+    if (!uuids?.length) return {};
+    
     const { host, defaultLocale } = ctx;
     const defaultLocalePath = defaultLocale ? `/${defaultLocale}` : '/en';
-    const uri = `${host}${defaultLocalePath}/jsonapi/node/content/${uuid}?fields[node--content]=field_tags`;
+    
+    // Build filter for multiple UUIDs using IN operator
+    const uuidFilter = uuids.map(uuid => `filter[id][value][]=${encodeURIComponent(uuid)}`).join('&');
+    const uri = `${host}${defaultLocalePath}/jsonapi/node/content?fields[node--content]=field_tags&filter[id][operator]=IN&${uuidFilter}`;
     
     try {
         const response = await $fetch(uri, $fetchBaseOptions({ method: 'get', headers: { 'Content-Type': 'application/json' } }));
-        return response?.data?.field_tags || response?.data?.fieldTags || null;
+        const tagsMap = new Map();
+        
+        if (response?.data) {
+            for (const node of response.data) {
+                const fieldTags = node?.field_tags || node?.fieldTags;
+                if (fieldTags) {
+                    tagsMap.set(node.id, fieldTags);
+                }
+            }
+        }
+        
+        // Convert Map to plain object for caching (Map doesn't serialize well)
+        return Object.fromEntries(tagsMap);
     } catch (e) {
-        // Node might not exist or be accessible in default locale
-        return null;
+        // Bulk fetch failed - return empty object, tags are optional
+        consola.warn('fetchBulkDefaultLocaleTags failed:', e.message);
+        return {};
     }
 }, {
     maxAge: 60 * 60 * 12, // 12 hours cache
-    getKey: (ctx, uuid) => `${ctx.host}-${ctx.defaultLocale}-${uuid}`,
+    getKey: (ctx, uuids) => `bulk-tags-${ctx.host}-${ctx.defaultLocale}-${uuids.sort().join(',')}`,
     base: 'tags',
     shouldBypassCache: (ctx) => shouldBypassCacheByQuery(ctx)
 });
@@ -47,30 +65,38 @@ function mapData(ctx){
     return async (results)=>{
 
         const promises = [];
-
+        
+        // Collect UUIDs that need field_tags from default locale (for non-default locale requests)
+        const uuidsNeedingTags = [];
+        
         for (const aDoc of results.data){
             // Get field_tags from current doc - may be null for non-default locale translations
             // Drupal's field_tags is often not translatable, so we need to handle this
             let fieldTags = aDoc?.field_tags || aDoc?.fieldTags;
             
-            // If no field_tags and we're in a non-default locale, try to get from default locale
+            // If no field_tags and we're in a non-default locale, collect UUID for bulk fetch
             // This handles the case where field_tags is not a translatable field in Drupal
             if(!fieldTags && ctx.locale !== ctx.defaultLocale && aDoc?.id) {
-                promises.push(
-                    fetchDefaultLocaleTags(ctx, aDoc.id)
-                        .then((defaultTags) => {
-                            if(defaultTags) {
-                                const { value, value2 } = defaultTags;
-                                const keys = ((value || '') + (value2 ? ','+value2 : '')).split(',').map(k=>k.trim()).filter(Boolean);
-                                if(keys.length) {
-                                    return getThesaurusByKey(keys).then((p) => { aDoc.tags = mapTagsByType(p) || {}; });
-                                }
-                            }
-                        })
-                        .catch(() => { /* silently ignore fetch errors */ })
-                );
-            } else {
-                const { value, value2 } = fieldTags || {};
+                uuidsNeedingTags.push(aDoc.id);
+            }
+        }
+        
+        // Fetch all missing field_tags in a single bulk query (returns plain object for caching)
+        const bulkTagsObj = uuidsNeedingTags.length > 0 
+            ? await fetchBulkDefaultLocaleTags(ctx, uuidsNeedingTags)
+            : {};
+
+        // Now process all docs with tags (either from original doc or bulk fetch)
+        for (const aDoc of results.data){
+            let fieldTags = aDoc?.field_tags || aDoc?.fieldTags;
+            
+            // If we fetched from bulk, use that
+            if (!fieldTags && bulkTagsObj[aDoc.id]) {
+                fieldTags = bulkTagsObj[aDoc.id];
+            }
+            
+            if (fieldTags) {
+                const { value, value2 } = fieldTags;
                 const keys = ((value || '') + (value2 ? ','+value2 : '')).split(',').map(k=>k.trim()).filter(Boolean);
       
                 // Only fetch thesaurus data if we have keys
@@ -81,7 +107,7 @@ function mapData(ctx){
         await Promise.all(promises);
 
         for (const key in results.data) {
-            const { drupal_internal__nid:dnid, type, title, tags, path, field_type_placement,field_attachments, field_start_date, changed, sticky, promote, id, body, field_migrated, field_order, } = results.data[key];
+            const { drupal_internal__nid:dnid, type, title, tags, path, field_type_placement,field_attachments, field_start_date, field_published, changed, created, sticky, promote, id, body, field_migrated, field_order, } = results.data[key];
 
             if(body?.value) body.summary = body.summary || stripHtml(body?.value).result.substring(0, 400);
 
@@ -95,7 +121,7 @@ function mapData(ctx){
             const fieldOrder = (field_order !== null && field_order !== '' && field_order !== undefined) ? field_order : 10000;
             const fieldMigrated = hasFieldMigratedValue(field_migrated);
 
-            results.data[key] = camelCase({dnid, href, type, mediaImage, title, tags, path, fieldOrder, field_type_placement, field_start_date, changed, sticky, promote, id, summary: body?.summary, index, fieldMigrated }, {deep: true}  );
+            results.data[key] = camelCase({dnid, href, type, mediaImage, title, tags, path, fieldOrder, field_type_placement, field_start_date, field_published, changed, created, sticky, promote, id, summary: body?.summary, index, fieldMigrated }, {deep: true}  );
 
             if(tags?.subjects)
                 for (const subject of tags.subjects) 
