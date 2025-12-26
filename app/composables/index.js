@@ -67,7 +67,7 @@ export const useGetPage = () => {
         const { identifier } = siteStore;
 
         const headers = { cookie:rHeader };//process.server? { cookie:rHeader }: { cookie: document.cookie};
-        const key     = ref(`${multiSiteCode}-${identifier}-${encodeURIComponent(path.value)}`);
+        const key     = ref(`${multiSiteCode}-${identifier}-${path.value}`);
 
         try{
         
