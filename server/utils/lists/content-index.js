@@ -75,7 +75,6 @@ function mapData(ctx){
             let fieldTags = aDoc?.field_tags || aDoc?.fieldTags;
             
             // If no field_tags and we're in a non-default locale, collect UUID for bulk fetch
-            // This handles the case where field_tags is not a translatable field in Drupal
             if(!fieldTags && ctx.locale !== ctx.defaultLocale && aDoc?.id) {
                 uuidsNeedingTags.push(aDoc.id);
             }
@@ -182,19 +181,37 @@ async function getListIndex(ctx ) {
     // Apply stable sort with ID as final tiebreaker to ensure deterministic ordering
     // This prevents SSR/hydration mismatches when Drupal returns items with same sort field values
     // in non-deterministic order across different requests.
-    // We replicate Drupal's sort order and add ID as final tiebreaker:
-    // 1. sticky (DESC) 2. fieldOrder (ASC) 3. fieldStartDate (DESC) 4. changed (DESC) 5. id (ASC)
+    // We replicate Drupal's sort order (from getSortParams) and add ID as final tiebreaker:
+    // 1. promoted (if ctx.promoted) 2. sticky (if no freeText or not noSticky)
+    // 3. fieldOrder (ASC) 4. fieldPublished (DESC) 5. fieldStartDate (DESC) 6. changed (DESC) 7. created (DESC) 8. id (ASC)
+    const { freeText, noSticky, promoted } = ctx;
+    const shouldSortBySticky = !freeText || !noSticky;
+    
     if (mappedResults.data && mappedResults.data.length > 1) {
         mappedResults.data.sort((a, b) => {
-            // sticky DESC (true = 1 comes before false = 0)
-            const stickyA = a.sticky ? 1 : 0;
-            const stickyB = b.sticky ? 1 : 0;
-            if (stickyB !== stickyA) return stickyB - stickyA;
+            // promoted DESC (if requested)
+            if (promoted) {
+                const promoteA = a.promote ? 1 : 0;
+                const promoteB = b.promote ? 1 : 0;
+                if (promoteB !== promoteA) return promoteB - promoteA;
+            }
+            
+            // sticky DESC (if no freeText or not noSticky)
+            if (shouldSortBySticky) {
+                const stickyA = a.sticky ? 1 : 0;
+                const stickyB = b.sticky ? 1 : 0;
+                if (stickyB !== stickyA) return stickyB - stickyA;
+            }
             
             // fieldOrder ASC (lower numbers first, default 10000)
             const orderA = a.fieldOrder ?? 10000;
             const orderB = b.fieldOrder ?? 10000;
             if (orderA !== orderB) return orderA - orderB;
+            
+            // fieldPublished DESC (newer first)
+            const publishedA = a.fieldPublished || '';
+            const publishedB = b.fieldPublished || '';
+            if (publishedA !== publishedB) return publishedB.localeCompare(publishedA);
             
             // fieldStartDate DESC (newer first)
             const startA = a.fieldStartDate || '';
@@ -205,6 +222,11 @@ async function getListIndex(ctx ) {
             const changedA = a.changed || '';
             const changedB = b.changed || '';
             if (changedA !== changedB) return changedB.localeCompare(changedA);
+            
+            // created DESC (newer first)
+            const createdA = a.created || '';
+            const createdB = b.created || '';
+            if (createdA !== createdB) return createdB.localeCompare(createdA);
             
             // Final tiebreaker: id ASC (stable UUID)
             const idA = a.id || a.dnid || '';
@@ -294,15 +316,18 @@ function getSortParams({ sortBy, sortDirection, freeText, noSticky, promoted }){
 
     let sortQueryString = '';
 
+    if (!freeText || !noSticky) {
+        sortQueryString += `&sort[sticky][path]=sticky`;
+        sortQueryString += `&sort[sticky][direction]=${encodeURIComponent(
+        direction
+        )}`;
+    }
+
     if(promoted){
         sortQueryString += `&sort[promoted][path]=promote`
         sortQueryString += `&sort[promoted][direction]=${encodeURIComponent(direction)}`
     }
     
-    if(!freeText || !noSticky){
-        sortQueryString += `&sort[sticky][path]=sticky`
-        sortQueryString += `&sort[sticky][direction]=${encodeURIComponent(direction)}`
-    }
 
     sortQueryString += `&sort[sort-order][path]=field_order`;
     sortQueryString += `&sort[sort-order][direction]=ASC`;
