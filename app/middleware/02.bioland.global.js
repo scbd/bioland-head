@@ -184,29 +184,52 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
    * @returns {Promise<void>}
    * @throws {Error} If the /api/me request fails
    */
-  async function getMe(){
+  async function getMe() {
+    try {
+      const headers = getAuthCookieHeaders();
+      const { data, error } = await useFetch(`/api/me`, {
+        method: 'GET',
+        headers,
+        query: clone({ ...siteStore.params, path: to.path })
+      });
 
-    try{
-      // Check for SSESS cookie in request, client cookie, or env fallback (localhost dev)
-      const { public: { isLocalHost }, localDrupalSession } = useRuntimeConfig();
-      const envSession = isLocalHost && localDrupalSession ? localDrupalSession : null;
-      
-      const headers = requestCookieHeader?.cookie?.includes('SSESS')
-        ? requestCookieHeader
-        : envSession
-          ? { cookie: envSession }
-          : { cookie: { [hasSessionCookieClient()]: clientCookie.value } }
-
-      const { data, error } = await useFetch(`/api/me`, {  method: 'GET',headers,  query: clone({...siteStore.params, path:to.path})})//.then(({ data }) => data);
-
-      if(!error.value && data.value) meStore.initialize(data)
-    }catch(e){
-      console.error(e)
-
-      throw createError({ statusCode: 500, statusMessage: 'Internal Server Error', message: 'Error getting user'})
+      if (!error.value && data.value) meStore.initialize(data);
+    } catch (e) {
+      console.error(e);
+      throw createError({ statusCode: 500, statusMessage: 'Internal Server Error', message: 'Error getting user' });
     }
-  
+  }
 
+  /**
+   * Builds the authentication cookie headers for Drupal API requests.
+   * 
+   * Priority order:
+   * 1. SSESS cookie from incoming request headers (SSR with authenticated user)
+   * 2. localDrupalSession from env (localhost dev fallback for first request)
+   * 3. Client-side cookie (browser navigations)
+   * 
+   * The localhost-dev middleware sets a cookie from localDrupalSession,
+   * but on the FIRST request that cookie won't be in requestCookieHeader yet.
+   * So we still need the env fallback for that first request.
+   * 
+   * @returns {{ cookie: string|object }} Headers object with cookie
+   */
+  function getAuthCookieHeaders() {
+    // 1. Check if request already has SSESS cookie (normal authenticated flow)
+    if (requestCookieHeader?.cookie?.includes('SSESS')) {
+      return requestCookieHeader;
+    }
+
+    // 2. Localhost dev fallback: use env var for first request (server-side only)
+    const { public: { isLocalHost } } = useRuntimeConfig();
+    const localDrupalSession = import.meta.server ? useRuntimeConfig().localDrupalSession : null;
+    
+    if (isLocalHost && localDrupalSession) {
+      return { cookie: localDrupalSession };
+    }
+
+    // 3. Client-side: use cookie from browser
+    return { cookie: { [hasSessionCookieClient()]: clientCookie.value } };
   }
 
   /**
