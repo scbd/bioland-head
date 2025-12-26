@@ -102,7 +102,7 @@ function getTypeFilterParams({ drupalInternalId, drupalInternalIds }){
 function getLangcodeFilterParams(locale) {
     if (!locale) return '';
     
-    return `&filter[langcode][value]=${encodeURIComponent(locale)}`;
+    return `&filter[language][value]=${encodeURIComponent(locale)}`;
 }
 
 function makeTypeMap(data, ctx){

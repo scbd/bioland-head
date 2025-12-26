@@ -92,7 +92,7 @@
     const   meStore   = useMeStore();
     const { primaryColorStyle } = useTheme();
     const   isMobile    = isMobileFn   ();
-    const { t         } = useI18n      ();
+    const { t, locale } = useI18n      ();
     const   r           = useRoute     ();
     const { schemaOnly } = r?.query || {};
     const   siteStore   = useSiteStore ();
@@ -141,9 +141,13 @@
     
     // Build the query object once at setup time (non-reactive for initial fetch)
     // Use current reactive values for realm/realms at mount time
+    // IMPORTANT: Override locale and localizedHost with current i18n locale to ensure
+    // correct locale is sent to API, especially after language switch navigation
     const staticQuery = {
         ...initialQuery,
         ...siteStore.params,
+        locale: locale.value,
+        localizedHost: `${siteStore.host}/${locale.value}`,
         freeText: initialQuery?.freeText || '',
         page: initialQuery?.page || 1,
         rowsPerPage: initialQuery?.rowsPerPage || 10,
