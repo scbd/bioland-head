@@ -82,13 +82,12 @@ const spaceBetween = computed(()=> {
     return 5
 });
 
-const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ id:systemPageTidConstants.SEARCH_SEC, locale:unref(locale)}), query:{ schemas:['nationalTarget7']}}));
+const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ id:systemPageTidConstants.SEARCH_SEC, locale:unref(locale)}), query:{ schemaOnly: true, schemas:['nationalTarget7']}}));
 
 const query = clone({ ...siteStore.params, schemas:['nationalTarget7'], rowsPerPage:100 });
 
 const { data, status } = await useLazyFetch(`/api/list/widget/nt7`, {  method: 'GET', query, getCachedData, onResponse });
 
-// consola.error(data.value)
 const loading = computed(()=> status.value === 'pending' && !slides?.value?.length);
 
 const slides = computed(()=> data.value?.data);

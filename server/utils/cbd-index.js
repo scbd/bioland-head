@@ -116,7 +116,7 @@ export const normalizeIndexKeys = (obj) => {
     if(obj?.globalTargetAlignment_REL_ss?.length) tags.sdgs = obj.globalTargetAlignment_REL_ss.filter((x)=>x.includes('-GOAL-')).map((target)=>sdgsData.find(({identifier})=>(identifier===target.replace('SUSTAINABLE-DEVELOPMENT-', 'SDG-'))))
         // { identifier :target.replace('SUSTAINABLE-DEVELOPMENT-', 'SDG-')}));
     
-    return {...newObj, ...obj, tags};
+    return {...obj, ...newObj, tags};
 }
 
 export const getAllBySchemas = defineCachedFunction((ctx, schemas, countries=[]) => queryScbdIndex ({ ...ctx, schemas, countries,rowsPerPage: 5000 }),{
@@ -190,8 +190,18 @@ function getAllQuery(ctx){
 
     const { country, countries, locale, indexLocal, page: passedPage, rowsPerPage, freeText, schemas: passedSchemas, filters:passedFilters, realms: passedRealms, isBchSite } = ctx;
 
-    const realms                  = Array.isArray(passedRealms)? passedRealms : passedRealms? [ passedRealms ] : '';
+    // Use ORT-aware locale detection based on schemas being queried
+
     const schemas                 = Array.isArray(passedSchemas)? passedSchemas : passedSchemas? [ passedSchemas ] : '';
+    
+    // Auto-detect ORT schemas and include ORT realm when needed
+    const hasOrtSchemas = schemas?.length ? schemas.some(s => ortSchemas.includes(s)) : false;
+    let realms = Array.isArray(passedRealms) ? [...passedRealms] : passedRealms ? [passedRealms] : [];
+    
+    // If ORT schemas are being queried and ORT realm is not already included, add it
+    if (hasOrtSchemas && realms.length && !realms.some(r => r.toLowerCase() === 'ort')) {
+        realms = [...realms, 'ORT'];
+    }
     const filters                 = Array.isArray(passedFilters)? passedFilters : passedFilters? [ passedFilters ] : '';
     const countryString           = Array.isArray(countries)? countries.join(' ')+` ${country}` : country;
     const hasCbdSchemas           = schemas?.length? schemas.some((s)=>cbdSchemas.includes(s)): false;
