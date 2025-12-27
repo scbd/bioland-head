@@ -1,21 +1,21 @@
 <template>
     <div id="page-list-container" class="container page-body">
         <div class="row">
-            <div v-if="!schemaOnly" id="page-list-sidebar-container" class="col-md-3">
+            <div id="page-list-sidebar-container" class="col-md-3">
                 &nbsp;
             </div>
-            <div id="page-list-breadcrumbs-container" class="col-12 col-md-9 px-0" :class="{ 'col-md-12': schemaOnly }">
+            <div id="page-list-breadcrumbs-container" class="col-12 col-md-9 px-0">
                 <LazyPageBreadCrumbs :count="results?.count"/>
             </div>
-            <div v-if="!schemaOnly" id="page-list-sidebar-filters-container" class="col-12 col-md-3" :class="{ 'ps-0': !isMobile }">
+            <div id="page-list-sidebar-filters-container" class="col-12 col-md-3" :class="{ 'ps-0': !isMobile }">
                 <h2  id="page-list-title-content-type" :style="primaryColorStyle" v-if="contentTypeName && !title" class="page-type">{{contentTypeName}}</h2>
                 <h2  id="page-list-title-provided" :style="primaryColorStyle" v-if="title" class="page-type">{{t(title,2)}}</h2>
                 <LazyPageListTextSearch id="page-list-text-search"/>
                 <LazyPageListFilter id="page-list-type-filter" v-if="!typeId" :facets="results?.facets"/>
             </div>
-            <div id="page-list-data-body" name="list" tag="div" class="col-12 col-md-9 data-body" :class="{ 'col-md-12': schemaOnly, 'px-0': !isMobile, 'mt-3': isMobile}">
+            <div id="page-list-data-body" name="list" tag="div" class="col-12 col-md-9 data-body" :class="{ 'px-0': !isMobile, 'mt-3': isMobile}">
                 <LazyPageBodyTabs id="page-list-body-tabs" v-if="meStore.showEdit"/>
-                <LazyPageListTabs  id="page-list-tabs" v-if="!schemaOnly" :types="types" :key="JSON.stringify(types)"/>
+                <LazyPageListTabs  id="page-list-tabs" :types="types" :key="JSON.stringify(types)"/>
                 <LazyPageListPager id="page-list-top-pager" v-if="hasHydrated && showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results?.count}`"/>
 
                 <ClientOnly>
@@ -116,7 +116,11 @@
     
     // Make realm reactive so it updates when page data changes
     const realm = computed(() => isSearchBch.value || siteStore.isBiosafetySite ? 'BCH' : isSearchAbs.value ? 'ABS' : 'CHM');
-    const realms = computed(() => [realm.value]);                
+    const realms = computed(() => [realm.value]);
+    
+    // When schemaOnly=true, don't filter by realm to allow cross-realm schema searches
+    // (e.g., nationalTarget7 is in ORT realm, not CHM)
+    const shouldFilterByRealm = computed(() => !schemaOnly);
     
     // Use computed for query to ensure reactivity when route changes
     const query = computed(() => ({
@@ -126,8 +130,7 @@
         page: r?.query?.page || 1,
         rowsPerPage: r?.query?.rowsPerPage || 10,
         schemas: r?.query?.schemas || undefined,
-        realm: realm.value,
-        realms: realms.value
+        ...(shouldFilterByRealm.value ? { realm: realm.value, realms: realms.value } : {})
     }));
     
     const typeId            = computed(getContentTypeId);
@@ -143,6 +146,7 @@
     // Use current reactive values for realm/realms at mount time
     // IMPORTANT: Override locale and localizedHost with current i18n locale to ensure
     // correct locale is sent to API, especially after language switch navigation
+    // When schemaOnly=true, don't include realm/realms to allow cross-realm schema searches
     const staticQuery = {
         ...initialQuery,
         ...siteStore.params,
@@ -152,8 +156,7 @@
         page: initialQuery?.page || 1,
         rowsPerPage: initialQuery?.rowsPerPage || 10,
         schemas: initialQuery?.schemas || undefined,
-        realm: realm.value,
-        realms: realms.value
+        ...(shouldFilterByRealm.value ? { realm: realm.value, realms: realms.value } : {})
     };
 
     const { data: results, status, refresh } = await useFetch(()=>getApiUri(), {  
@@ -180,6 +183,7 @@
     // This must match the server-side sort in content-index.js exactly:
     // 1. sticky (DESC) 2. fieldOrder (ASC) 3. fieldStartDate (DESC) 4. changed (DESC) 5. id (ASC)
     const sortedResults = computed(() => {
+        return results.value?.data
         if (!results.value?.data) return [];
         return [...results.value.data].sort((a, b) => {
             // sticky DESC (true = 1 comes before false = 0)

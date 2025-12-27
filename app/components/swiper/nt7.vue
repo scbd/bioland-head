@@ -14,6 +14,7 @@
                     :pagination="{ clickable: true }"
                     :modules="modules"
                     @swiper="onSwiper"
+                    ref="swiperRef"
                     >
 
                     <swiper-slide :class="{ 'mb-4': pagination }" v-for="slide in slides" :key="slide">
@@ -84,7 +85,7 @@ const spaceBetween = computed(()=> {
 
 const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ id:systemPageTidConstants.SEARCH_SEC, locale:unref(locale)}), query:{ schemaOnly: true, schemas:['nationalTarget7']}}));
 
-const query = clone({ ...siteStore.params, schemas:['nationalTarget7'], rowsPerPage:100 });
+const query = clone({ ...siteStore.params, schemas:['nationalTarget7'] });
 
 const { data, status } = await useLazyFetch(`/api/list/widget/nt7`, {  method: 'GET', query, getCachedData, onResponse });
 

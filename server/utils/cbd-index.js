@@ -262,6 +262,14 @@ function getAllQuery(ctx){
     const isOrtRealm = realms?.length ? realms.some(r => r.toLowerCase() === 'ort') : false;
     const sortOrder = isOrtRealm ? "uniqueIdentifier_s asc, updatedDate_dt desc" : "updatedDate_dt desc";
 
+    // Optimize field list for ORT schemas (nationalTarget7) - only fields actually used by components
+    // Components use: identifier, title (multilingual), summary (multilingual), url, 
+    // globalTargetAlignment_ss (GBF targets), globalTargetAlignment_REL_ss (SDGs), countryRegions_ss (country ownership)
+    const ortFieldList = `identifier_s, uniqueIdentifier_s, title_${textLocale}_s, title_EN_s, title_s, summary_${textLocale}_s, summary_EN_s, summary_s, url_ss, globalTargetAlignment_ss, globalTargetAlignment_REL_ss, countryRegions_ss, realm_ss, schema_s`;
+    
+    // Full field list for non-ORT schemas
+    const fullFieldList = `id, realm_ss, updatedDate_dt, createdDate_dt, identifier_s, uniqueIdentifier_s, url_ss, government_s, schema_${textLocale}_s, schema_s, schemaSort_i, sort1_i, sort2_i, sort3_i, sort4_i, _revision_i, summary_${textLocale}_s, summary_s, symbol_s, startDate_dt, endDate_dt, eventCity_s, government_${textLocale}_s, government_s, title_${textLocale}_s, title_s, type_${textLocale}_s, type_s, meta1_${textLocale}_txt, meta1_txt, meta2_${textLocale}_txt, meta2_txt, meta3_${textLocale}_txt, meta3_txt, meta4_${textLocale}_txt, meta4_txt, meta5_${textLocale}_txt, meta5_txt, eventCountry_C${textLocale}_s, eventCountry_s, globalTargetAlignment_ss, globalTargetAlignment_REL_ss, countryRegions_ss`;
+
     const query = {
       df: `text_${textLocale}_txt`,
       fq: [
@@ -274,7 +282,7 @@ function getAllQuery(ctx){
       ].filter((x) => x),
       q,
       sort: sortOrder,
-      fl: `id, realm_ss, updatedDate_dt, createdDate_dt, identifier_s, uniqueIdentifier_s, url_ss, government_s, schema_${textLocale}_s, schema_s, schemaSort_i, sort1_i, sort2_i, sort3_i, sort4_i, _revision_i, summary_${textLocale}_s, summary_s, symbol_s, startDate_dt, endDate_dt, eventCity_s, government_${textLocale}_s, government_s, title_${textLocale}_s, title_s, type_${textLocale}_s, type_s, meta1_${textLocale}_txt, meta1_txt, meta2_${textLocale}_txt, meta2_txt, meta3_${textLocale}_txt, meta3_txt, meta4_${textLocale}_txt, meta4_txt, meta5_${textLocale}_txt, meta5_txt, eventCountry_C${textLocale}_s, eventCountry_s, globalTargetAlignment_ss, globalTargetAlignment_REL_ss, countryRegions_ss`,
+      fl: hasOrtSchemas && schemas.length === 1 ? ortFieldList : fullFieldList,
       wt: "json",
       start,
       rows,

@@ -13,6 +13,9 @@ export default cachedEventHandler(async (event) => {
 
         const schemas = ['nationalTarget7'];
         const countries = ({ ...ctx, ...query }).countries;
+        
+        // Fetch with all fields (getAllBySchemas doesn't support field selection)
+        // Field filtering happens at index query level in cbd-index.js
         const response = await getAllBySchemas({ ...ctx, ...query, countries, realms: ['ORT'] }, schemas, countries);
 
         // Debug: Log first item to check tags structure

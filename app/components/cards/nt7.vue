@@ -50,23 +50,25 @@
     const summary = computed(()=> {
         if(record.value?.summary?.[locale.value]) return record.value.summary[locale.value];
         if(record.value?.summary?.en) return record.value.summary.en;
-
-        if(record.value?.body?.header?.languages?.length)
-            for(let lang of record?.value.body?.header?.languages.filter(l => l !== locale.value && l !== 'en')) {
-                if(record.value?.summary?.[lang]) return record.value.summary[lang];
-            }
-        return record.value.summary;
+        
+        // Fallback: return first available language or raw value
+        if(typeof record.value?.summary === 'object') {
+            const firstLang = Object.keys(record.value.summary).find(key => record.value.summary[key]);
+            if(firstLang) return record.value.summary[firstLang];
+        }
+        return record.value?.summary;
     });
 
     const title = computed(()=> {
         if(record.value?.title?.[locale.value]) return record.value.title[locale.value];
         if(record.value?.title?.en) return record.value.title.en;
-
-        if(record.value?.body?.header?.languages?.length)
-            for(let lang of record?.value.body?.header?.languages.filter(l => l !== locale.value && l !== 'en')) {
-                if(record.value?.title?.[lang]) return record.value.title[lang];
-            }
-        return record.value.title;
+        
+        // Fallback: return first available language or raw value
+        if(typeof record.value?.title === 'object') {
+            const firstLang = Object.keys(record.value.title).find(key => record.value.title[key]);
+            if(firstLang) return record.value.title[firstLang];
+        }
+        return record.value?.title;
     });
 
     const gbfTargets = computed(()=> {

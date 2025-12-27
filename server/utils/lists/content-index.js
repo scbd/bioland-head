@@ -97,7 +97,7 @@ function mapData(ctx){
             if (fieldTags) {
                 const { value, value2 } = fieldTags;
                 const keys = ((value || '') + (value2 ? ','+value2 : '')).split(',').map(k=>k.trim()).filter(Boolean);
-      
+
                 // Only fetch thesaurus data if we have keys
                 if(keys.length)
                     promises.push(getThesaurusByKey(keys).then((p)=>{aDoc.tags = mapTagsByType(p) || {};}));
@@ -140,7 +140,7 @@ function getMediaImage(ctx, fieldAttachments){
     if(!image) return undefined;
 
     if(!image.uri) return undefined
- 
+
     const { meta, uri, filename } = image;
     const { width, height, alt, title } = meta
     const { url:src } = uri;
@@ -187,53 +187,53 @@ async function getListIndex(ctx ) {
     const { freeText, noSticky, promoted } = ctx;
     const shouldSortBySticky = !freeText || !noSticky;
     
-    if (mappedResults.data && mappedResults.data.length > 1) {
-        mappedResults.data.sort((a, b) => {
-            // promoted DESC (if requested)
-            if (promoted) {
-                const promoteA = a.promote ? 1 : 0;
-                const promoteB = b.promote ? 1 : 0;
-                if (promoteB !== promoteA) return promoteB - promoteA;
-            }
+    // if (mappedResults.data && mappedResults.data.length > 1) {
+    //     mappedResults.data.sort((a, b) => {
+    //         // promoted DESC (if requested)
+    //         if (promoted) {
+    //             const promoteA = a.promote ? 1 : 0;
+    //             const promoteB = b.promote ? 1 : 0;
+    //             if (promoteB !== promoteA) return promoteB - promoteA;
+    //         }
             
-            // sticky DESC (if no freeText or not noSticky)
-            if (shouldSortBySticky) {
-                const stickyA = a.sticky ? 1 : 0;
-                const stickyB = b.sticky ? 1 : 0;
-                if (stickyB !== stickyA) return stickyB - stickyA;
-            }
+    //         // sticky DESC (if no freeText or not noSticky)
+    //         if (shouldSortBySticky) {
+    //             const stickyA = a.sticky ? 1 : 0;
+    //             const stickyB = b.sticky ? 1 : 0;
+    //             if (stickyB !== stickyA) return stickyB - stickyA;
+    //         }
             
-            // fieldOrder ASC (lower numbers first, default 10000)
-            const orderA = a.fieldOrder ?? 10000;
-            const orderB = b.fieldOrder ?? 10000;
-            if (orderA !== orderB) return orderA - orderB;
+    //         // fieldOrder ASC (lower numbers first, default 10000)
+    //         const orderA = a.fieldOrder ?? 10000;
+    //         const orderB = b.fieldOrder ?? 10000;
+    //         if (orderA !== orderB) return orderA - orderB;
             
-            // fieldPublished DESC (newer first)
-            const publishedA = a.fieldPublished || '';
-            const publishedB = b.fieldPublished || '';
-            if (publishedA !== publishedB) return publishedB.localeCompare(publishedA);
+    //         // fieldPublished DESC (newer first)
+    //         const publishedA = a.fieldPublished || '';
+    //         const publishedB = b.fieldPublished || '';
+    //         if (publishedA !== publishedB) return publishedB.localeCompare(publishedA);
             
-            // fieldStartDate DESC (newer first)
-            const startA = a.fieldStartDate || '';
-            const startB = b.fieldStartDate || '';
-            if (startA !== startB) return startB.localeCompare(startA);
+    //         // fieldStartDate DESC (newer first)
+    //         const startA = a.fieldStartDate || '';
+    //         const startB = b.fieldStartDate || '';
+    //         if (startA !== startB) return startB.localeCompare(startA);
             
-            // changed DESC (newer first)
-            const changedA = a.changed || '';
-            const changedB = b.changed || '';
-            if (changedA !== changedB) return changedB.localeCompare(changedA);
+    //         // changed DESC (newer first)
+    //         const changedA = a.changed || '';
+    //         const changedB = b.changed || '';
+    //         if (changedA !== changedB) return changedB.localeCompare(changedA);
             
-            // created DESC (newer first)
-            const createdA = a.created || '';
-            const createdB = b.created || '';
-            if (createdA !== createdB) return createdB.localeCompare(createdA);
+    //         // created DESC (newer first)
+    //         const createdA = a.created || '';
+    //         const createdB = b.created || '';
+    //         if (createdA !== createdB) return createdB.localeCompare(createdA);
             
-            // Final tiebreaker: id ASC (stable UUID)
-            const idA = a.id || a.dnid || '';
-            const idB = b.id || b.dnid || '';
-            return String(idA).localeCompare(String(idB));
-        });
-    }
+    //         // Final tiebreaker: id ASC (stable UUID)
+    //         const idA = a.id || a.dnid || '';
+    //         const idB = b.id || b.dnid || '';
+    //         return String(idA).localeCompare(String(idB));
+    //     });
+    // }
     
     // Slice to requested page size since getPaginationParams over-fetches to compensate for access filtering
     // See: https://www.drupal.org/docs/core-modules-and-themes/core-modules/jsonapi-module/pagination
