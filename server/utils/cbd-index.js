@@ -17,7 +17,19 @@ export const $indexFetch = async (queryString) => {
     return response;
 };
 
+// UN official languages supported by most CBD index content
 export const getIndexLocale = (locale) => ['en', 'ar', 'es', 'fr', 'ru', 'zh'].includes(locale)? locale.toLocaleUpperCase() : 'EN';
+
+// ORT (Online Reporting Tool) schemas support all locales - use actual locale uppercase
+const ortSchemas = ['nationalTarget7', 'nationalTarget7Mapping'];
+export const getOrtIndexLocale = (locale) => locale?.toLocaleUpperCase() || 'EN';
+
+// Get the appropriate index locale based on schemas being queried
+export const getIndexLocaleForSchemas = (locale, schemas = []) => {
+    const schemasArray = Array.isArray(schemas) ? schemas : schemas ? [schemas] : [];
+    const isOrtOnly = schemasArray.length > 0 && schemasArray.every(s => ortSchemas.includes(s));
+    return isOrtOnly ? getOrtIndexLocale(locale) : getIndexLocale(locale);
+};
 
 export const getIndexQuery = (s, { countries, country } = {}) => {
 
@@ -87,6 +99,9 @@ export const getIndexNrFields = (localePassed) => {
 export const normalizeIndexKeys = (obj) => {
     const newObj = {};
 
+    // Check if this is an English fallback field (contains _EN_)
+    const isEnglishFallback = (key) => /_EN_/.test(key);
+
     for (const key in obj) {
             const newKey = key
                             .replace(/_[A-Z]{2}_txt/, 'Texts')
@@ -98,8 +113,28 @@ export const normalizeIndexKeys = (obj) => {
                             .replace('_t', '')
                             .replace(/_dt/, '');
 
-            
-            newObj[newKey] = obj[key];
+            const value = obj[key];
+            const hasValue = value !== undefined && value !== null && value !== '';
+            const existingValue = newObj[newKey];
+            const existingHasValue = existingValue !== undefined && existingValue !== null && existingValue !== '';
+
+            // Localized field strategy:
+            // - If this is an EN fallback field, only use it if no value exists yet
+            // - If this is a localized field (non-EN), it takes priority ONLY if it has a value
+            // - Empty localized fields should NOT overwrite existing EN fallback values
+            if (isEnglishFallback(key)) {
+                // EN fallback: only set if nothing exists yet
+                if (!existingHasValue && hasValue) {
+                    newObj[newKey] = value;
+                }
+            } else {
+                // Non-EN field (localized or unlocalized): prefer over EN fallback ONLY if has value
+                // Do NOT overwrite existing value with empty/null
+                if (hasValue) {
+                    newObj[newKey] = value;
+                }
+                // Removed: else if (!existingHasValue) - don't set empty values
+            }
 
             if(newKey==='urls' && newObj?.urls?.length)
                 newObj.url = newObj.urls[0];
@@ -181,7 +216,6 @@ function cleanCountries({countries, country}){
 const filterSchemas = (schemas) => (s)=> schemas.includes(s);
 
 function getAllQuery(ctx){
-    const textLocale = ctx.indexLocal || getIndexLocale(ctx.locale);
     const cbdSchemas   = [ 'news', 'notification', 'statement', 'meeting', 'pressRelease']
     const chmSchemas   = [ 'nationalTarget7Mapping','nationalTarget7','focalPoint','resource', 'organization', 'capacityBuildingInitiative', 'contact', 'database'];
     const abschSchemas = [ 'modelContractualClause', 'communityProtocol', 'absNationalReport', 'absCheckpointCommunique', 'absCheckpoint', 'database', 'absPermit', 'absNationalModelContractualClause', 'absProcedure', 'measure', 'authority', 'focalPoint' ];
@@ -191,6 +225,7 @@ function getAllQuery(ctx){
     const { country, countries, locale, indexLocal, page: passedPage, rowsPerPage, freeText, schemas: passedSchemas, filters:passedFilters, realms: passedRealms, isBchSite } = ctx;
 
     // Use ORT-aware locale detection based on schemas being queried
+    const textLocale = indexLocal || getIndexLocaleForSchemas(locale, passedSchemas);
 
     const schemas                 = Array.isArray(passedSchemas)? passedSchemas : passedSchemas? [ passedSchemas ] : '';
     
@@ -223,8 +258,12 @@ function getAllQuery(ctx){
     const isBchRealm = realms?.length ? realms.some(r => r.toLowerCase() === 'bch') : false;
     const schemaTypeFilter = (isBchSite && isBchRealm) ? '{!tag=schemaType}(schemaType_s:scbd OR schemaType_s:reference)' : '';
 
+    // For ORT realm, sort by uniqueIdentifier_s first to group national targets logically
+    const isOrtRealm = realms?.length ? realms.some(r => r.toLowerCase() === 'ort') : false;
+    const sortOrder = isOrtRealm ? "uniqueIdentifier_s asc, updatedDate_dt desc" : "updatedDate_dt desc";
+
     const query = {
-      df: `text_${indexLocal}_txt`,
+      df: `text_${textLocale}_txt`,
       fq: [
         "{!tag=version}(*:* NOT version_s:*)",
         schemaQuery,
@@ -234,8 +273,8 @@ function getAllQuery(ctx){
         schemaTypeFilter
       ].filter((x) => x),
       q,
-      sort: "updatedDate_dt desc",
-      fl: `id, realm_ss, updatedDate_dt, createdDate_dt, identifier_s, uniqueIdentifier_s, url_ss, government_s, schema_${textLocale}_s, schemaSort_i, sort1_i, sort2_i, sort3_i, sort4_i, _revision_i, summary_s,symbol_s,startDate_dt,endDate_dt,eventCity_s,government_${textLocale}_s,title_${textLocale}_s,type_${textLocale}_s,meta1_${textLocale}_txt,meta2_${textLocale}_txt,meta3_${textLocale}_txt,meta4_${textLocale}_txt,meta5_${textLocale}_txt,eventCountry_C${textLocale}_s`,
+      sort: sortOrder,
+      fl: `id, realm_ss, updatedDate_dt, createdDate_dt, identifier_s, uniqueIdentifier_s, url_ss, government_s, schema_${textLocale}_s, schema_s, schemaSort_i, sort1_i, sort2_i, sort3_i, sort4_i, _revision_i, summary_${textLocale}_s, summary_s, symbol_s, startDate_dt, endDate_dt, eventCity_s, government_${textLocale}_s, government_s, title_${textLocale}_s, title_s, type_${textLocale}_s, type_s, meta1_${textLocale}_txt, meta1_txt, meta2_${textLocale}_txt, meta2_txt, meta3_${textLocale}_txt, meta3_txt, meta4_${textLocale}_txt, meta4_txt, meta5_${textLocale}_txt, meta5_txt, eventCountry_C${textLocale}_s, eventCountry_s, globalTargetAlignment_ss, globalTargetAlignment_REL_ss, countryRegions_ss`,
       wt: "json",
       start,
       rows,
