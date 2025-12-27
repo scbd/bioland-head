@@ -63,16 +63,21 @@ export default defineNitroPlugin((nitro) => {
                 
                 const ctx = await useRequestContext(event);
                 
+                // Preserve query string in redirects
+                const queryString = event.node.req.url?.split('?')[1];
+                const queryPart = queryString ? `?${queryString}` : '';
+                
                 // If this term is the homepage, redirect to root
                 if(ctx.homePath === termPath) {
-                    return sendRedirect(event, `/${locale}`, 301);
+                    return sendRedirect(event, `/${locale}${queryPart}`, 301);
                 }
                 
-                // Otherwise, check if there's an alias for this term
-                const aliasData = await getTermAliasById(ctx, termId);
+                // Otherwise, check if there's an alias for this term in the requested locale
+                const allAliases = await getTermAliasById(ctx, termId, true);
+                const aliasData = allAliases?.find(a => a.langcode === locale);
                 
                 if(aliasData?.alias) {
-                    return sendRedirect(event, `/${locale}${aliasData.alias}`, 301);
+                    return sendRedirect(event, `/${locale}${aliasData.alias}${queryPart}`, 301);
                 }
             } catch (error) {
                 return;
