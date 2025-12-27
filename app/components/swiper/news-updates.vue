@@ -1,12 +1,29 @@
 <template>
-     <ClientOnly  v-if="slides?.length">
-        <div  v-if="slides?.length" class="col-12 mt-3 mb-0">
+    <!-- Show placeholders during SSR and while loading -->
+    <template v-if="!hasHydrated || loading">
+        <div class="col-12 mt-3 mb-0">
             <h3 :style="headerStyle">{{t('Latest News and Updates')}}</h3>
-            <NuxtLink :to="newsLink" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more news and updates')}} <LazyIcon  name="arrow-right" class="arrow" /></NuxtLink>
         </div>
-        <div   v-if="slides?.length" class="position-relative mt-1" style="min-height:250px;">
+        <div class="position-relative mt-1" style="min-height:250px;">
+            <div class="row g-3">
+                <div v-for="n in placeholderCount" :key="n" :class="cardColClass">
+                    <CardsPlaceholder />
+                </div>
+            </div>
+            <div v-if="pagination" class="d-flex justify-content-center mt-4">
+                <span v-for="i in Math.min(slides?.length || 3, 10)" :key="i" class="rounded-circle bg-secondary opacity-25 me-2" style="width: 10px; height: 10px;"></span>
+            </div>
+        </div>
+    </template>
 
-            <LazySwiperButton  direction="left" :swiper-ref="swiperRef" />
+    <!-- Show actual swiper after hydration and data loads -->
+    <ClientOnly v-else-if="slides?.length">
+        <div class="col-12 mt-3 mb-0">
+            <h3 :style="headerStyle">{{t('Latest News and Updates')}}</h3>
+            <NuxtLink :to="newsLink" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more news and updates')}} <LazyIcon name="arrow-right" class="arrow" /></NuxtLink>
+        </div>
+        <div class="position-relative mt-1" style="min-height:250px;">
+            <LazySwiperButton direction="left" :swiper-ref="swiperRef" />
             <swiper-container
                 :loop="slides?.length > 3"
                 :slidesPerView="slidePerView"
@@ -15,16 +32,12 @@
                 :modules="modules"
                 @swiper="onSwiper"
                 ref="swiperRef"
-                >
-
+            >
                 <swiper-slide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
-
                     <LazyCards :record="slide" />
                 </swiper-slide>
-
             </swiper-container>
-            <LazySwiperButton  direction="right" :swiper-ref="swiperRef"/> 
-
+            <LazySwiperButton direction="right" :swiper-ref="swiperRef" />
         </div>
     </ClientOnly>
 </template>
@@ -88,6 +101,12 @@ const query = clone({ ...siteStore.params });
 
 const { data:slides, status } = await useLazyFetch(`/api/list/latest`, {  method: 'GET', query, getCachedData });
 
+// Track if client has hydrated
+const hasHydrated = ref(false);
+onMounted(() => {
+    hasHydrated.value = true;
+});
+
 const loading = computed(()=> status.value === 'pending' && !slides?.value?.length);
 
 const headerStyle = reactive({
@@ -102,6 +121,15 @@ const linkStyle = reactive({
     'text-decoration': 'underline',
     'text-decoration-color': siteStore.primaryColor,
 });
+
+// Calculate Bootstrap column classes based on slides per view
+const cardColClass = computed(() => {
+    const cols = Math.floor(12 / slidePerView.value);
+    return `col-12 col-md-${cols}`;
+});
+
+// Use actual slidePerView for placeholder count (responsive to viewport)
+const placeholderCount = computed(() => slidePerView.value);
 </script>
 <style lang="scss" scoped>
 .arrow{
