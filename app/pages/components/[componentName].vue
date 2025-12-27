@@ -8,7 +8,6 @@
 
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue';
-import { pascalCase } from 'change-case';
 
 definePageMeta({ 
   layout: 'component',
@@ -34,22 +33,44 @@ if (componentName.includes('..') || componentName.includes('/') || componentName
   });
 }
 
+// Pre-load all component paths at build time (Vite requirement for dynamic imports)
+const componentModules = import.meta.glob('~/components/**/*.vue');
+
 // Convert kebab-case to file path
 // e.g., "spinner" -> "spinner.vue"
+// e.g., "widget-e-learning" -> "widget/e-learning.vue"
 // e.g., "widget-content-types-stats" -> "widget/content-types-stats.vue"
-const componentPath = componentName.replace(/-([^-]+)$/, '/$1');
+const componentPath = componentName.replace(/-/, '/');
+
+// Find matching component loader
+const findComponentLoader = () => {
+  // Try subfolder path first (e.g., widget/geobon.vue)
+  const subfolderKey = Object.keys(componentModules).find(
+    key => key.endsWith(`/components/${componentPath}.vue`)
+  );
+  if (subfolderKey) return componentModules[subfolderKey];
+
+  // Try direct path (e.g., spinner.vue)
+  const directKey = Object.keys(componentModules).find(
+    key => key.endsWith(`/components/${componentName}.vue`)
+  );
+  if (directKey) return componentModules[directKey];
+
+  return null;
+};
+
+const loader = findComponentLoader();
+
+if (!loader) {
+  throw showError({
+    statusCode: 404,
+    statusMessage: `Component "${componentName}" not found`
+  });
+}
 
 // Load component dynamically
 const DynamicComponent = defineAsyncComponent({
-  loader: () => import(`~/components/${componentPath}.vue`).catch(() => {
-    // Try without subfolder
-    return import(`~/components/${componentName}.vue`);
-  }).catch(() => {
-    throw showError({
-      statusCode: 404,
-      statusMessage: `Component "${componentName}" not found`
-    });
-  })
+  loader: loader as () => Promise<any>
 });
 
 // Parse query params as props

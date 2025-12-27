@@ -1,5 +1,5 @@
 
-export default cachedEventHandler(async (event) => {
+export default defineEventHandler(async (event) => {
         try{
             const ctx     = await useRequestContext(event);
             const country = await getCountryName(getCountryCode(ctx));
@@ -13,13 +13,13 @@ export default cachedEventHandler(async (event) => {
             const data    =( await $fetch(`https://portal.geobon.org/bioland/fetch-data.php`, $fetchBaseOptions({  method: 'POST', body,headers,  mode: 'cors' }))).replaceAll(/\s/g,'');
 
 
-            return parseJson(data).count
+            return parseJson(data)?.count || 0;
         }
         catch (e) {
             passError(event, e);
         }
     },
-    externalCache
+    // externalCache
 )
 
 

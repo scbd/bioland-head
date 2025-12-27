@@ -32,8 +32,17 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   // Check for component viewer routes early - before any other processing
   const isComponentRoute = path.match(/^\/[a-z]{2}\/components\//);
   
-  if (isComponentRoute) {
-    return; // Exit middleware entirely for component routes
+  // Components that need store data (menus, site context) to render properly
+  const componentsNeedingStores = [
+    'widget-content-types-stats',
+  ];
+  
+  // Check if this component route needs store data
+  const componentName = isComponentRoute ? path.split('/components/')[1]?.split('?')[0] : null;
+  const needsStoreData = componentName && componentsNeedingStores.includes(componentName);
+  
+  if (isComponentRoute && !needsStoreData) {
+    return; // Exit middleware entirely for component routes that don't need stores
   }
 
   await changeLocale();
@@ -90,6 +99,16 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   // Use siteStore.locale which is guaranteed to be set by the site plugin
   const locale = nuxtApp.$i18n?.locale?.value || siteStore.locale || siteStore.defaultLocale;
   const   getPage          = useGetPage(locale);
+  
+  // For component routes that need stores, only fetch menus (no page data)
+  if (isComponentRoute && needsStoreData) {
+    const { data: menuData } = await getMenus() || { data: undefined };
+    if (menuData?.value) {
+      menuStore.loadAllMenus(menuData.value);
+    }
+    return; // Skip page fetch for component routes
+  }
+  
   const [ pData, fetch ]   = await Promise.all([getPage(path), getMenus()]);
   const { data: menuData } = fetch || { data: undefined};
 

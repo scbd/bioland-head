@@ -1,14 +1,44 @@
 <template>
     <div class="position-relative">
-        <LazySpinner v-if="loading" :is-modal="true" />
-        <div v-if="!error && showWidget">
+        <!-- Placeholder shown during SSR and loading -->
+        <template v-if="showWidget && (!hasHydrated || loading) && !error">
+            <div class="text-capitalize placeholder-glow">
+                <h4 class="bm-3"><span class="placeholder" style="width:50px;"></span></h4>
+            </div>
+            <!-- Map placeholder -->
+            <div class="bg-light placeholder-glow" style="width:100%;height:300px;">
+                <span class="placeholder w-100 h-100"></span>
+            </div>
+            <!-- Stats placeholder -->
+            <div class="d-flex justify-content-between mt-2 mb-3">
+                <div class="placeholder-glow">
+                    <h5 class="fs-4 mb-1"><span class="placeholder" style="width:80px;"></span></h5>
+                    <span class="placeholder" style="width:100px;"></span>
+                </div>
+                <div class="placeholder-glow">
+                    <h5 class="fs-4 mb-1"><span class="placeholder" style="width:50px;"></span></h5>
+                    <span class="placeholder" style="width:70px;"></span>
+                </div>
+                <div class="placeholder-glow">
+                    <h5 class="fs-4 mb-1"><span class="placeholder" style="width:40px;"></span></h5>
+                    <span class="placeholder" style="width:100px;"></span>
+                </div>
+            </div>
+            <!-- Link placeholder -->
+            <div class="text-start my-3 placeholder-glow">
+                <span class="placeholder col-5"></span>
+            </div>
+        </template>
+
+        <!-- Actual content after hydration and data loads -->
+        <div v-else-if="!error && showWidget">
             <div class="text-capitalize">
                 <h4 :style="style" class="bm-3">{{t('GBIF')}} </h4>
             </div>
 
 
             <div style="height:300px; width:100%;">
-                <LMap ref="map" :zoom="zoom" :center="config?.coordinates.reverse()" :use-global-leaflet="false" >
+                <LMap ref="map" :zoom="zoom" :center="center" :use-global-leaflet="false" >
                     <LTileLayer url="https://tile.gbif.org/3857/omt/{z}/{x}/{y}@2x.png?style=gbif-classic" layer-type="base" />
                     <LTileLayer :url="url" layer-type="base" />
                 </LMap>
@@ -47,23 +77,21 @@
     const { t }     = useI18n();
     const siteStore = useSiteStore();
     const config    = computed(getCountry);
-    const center    = ref(config.value?.coordinates.reverse());
-    const zoom      = ref(config.value?.zoomLevel);
+    const center    = computed(() => config.value?.coordinates ? [...config.value.coordinates].reverse() : [0, 0]);
+    const zoom      = computed(() => config.value?.zoomLevel || 4);
     const showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.gbif);
     const getCachedData  = useGetCachedData();
+
+    // Track if client has hydrated
+    const hasHydrated = ref(false);
+    onMounted(() => {
+        hasHydrated.value = true;
+    });
 
     const { style, colorStyle, linkStyle} = useTheme();
 
     const url = computed(()=> `https://api.gbif.org/v2/map/occurrence/adhoc/{z}/{x}/{y}@2x.png?style=classic-noborder.poly&bin=hex&country=${config?.value?.identifier}&hasCoordinate=true&hasGeospatialIssue=false&advanced=false&srs=EPSG%3A3857`);
 
-    onMounted(() => {
-        center.value = config.value?.coordinates.reverse();
-        zoom.value   = config.value?.zoomLevel;
-        setTimeout(() => {
-            center.value = config.value?.coordinates.reverse();
-            zoom.value   = config.value?.zoomLevel;
-        }, 100);
-    });
     function getCountry(){
         const { countries, country:c } = siteStore.params;
         const   countryIndex           = randomArrayIndexTimeBased(countries.length);
@@ -102,7 +130,7 @@
     
     const { data, status, error } =  await useLazyFetch(`/api/list/gbif`, {  method: 'GET', query, key: 'gbif-widget', getCachedData });
 
-    const loading = computed(()=> status.value === 'pending' && data?.value?.length); 
+    const loading = computed(()=> status.value === 'pending'); 
 </script>
 <style scoped>
     .hide{ color:white; }

@@ -9,15 +9,15 @@
         </div>
         <div class="row">
             
-            <!-- <div v-if="hasNews" class="col-12 pe-0 me-0 mb-4" >
+            <div v-if="hasNews" class="col-12 pe-0 me-0 mb-4" >
                 <LazySwiperNewsUpdates  :pagination="true"/>
             </div>
             <div class="col-12 pe-0 me-0 mb-4" >
                 <SwiperNt7  :pagination="true"/>
-            </div> -->
-            <!-- <div  v-for="(column,i) in columnsOfWidgetComponents" :key="i" class="col-md-4 col-12 border-col">
+            </div>
+            <div  v-for="(column,i) in columnsOfWidgetComponents" :key="i" class="col-md-4 col-12 border-col">
                 <PageHomePageWidgetSelection  :is="widgetName" v-for="widgetName in column" :key="widgetName"/>
-            </div> -->
+            </div>
 
         </div>
     </div>
@@ -29,6 +29,7 @@ const pageStore = usePageStore();
 const meStore   = useMeStore();
 const body      = computed(()=>pageStore?.page?.body);
 
+siteStore?.theme?.homePageWidgets?.columns[2]?.push('WidgetContentTypesStats');
 const columnsOfWidgetComponents = computed(() => siteStore?.theme?.homePageWidgets?.columns);
 
 const hasNews = computed(() => siteStore?.theme?.homePageWidgets?.news);

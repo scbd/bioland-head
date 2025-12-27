@@ -3,11 +3,17 @@ export default cachedEventHandler(async (event) => {
             const query            = getQuery(event);
             const ctx              = await useRequestContext(event);
 
-            const { countries:c } = { ...ctx, ...query }
+            const { countries:c, country } = { ...ctx, ...query }
 
-            const countries = c.filter(x => x)
+            // Ensure countries is an array, fallback to country if available
+            const countriesArray = Array.isArray(c) ? c : (c ? [c] : (country ? [country] : []));
+            const countries = countriesArray.filter(x => x);
 
-            const countryQueryString = Array.isArray(countries) && countries.length? countries.filter(x=>x).map((s)=>`country=${s.toUpperCase()}`).join('&') : '';
+            if (!countries.length) {
+                return { occurrences: 0, publishers: 0, datasets: 0 };
+            }
+
+            const countryQueryString = countries.map((s)=>`country=${s.toUpperCase()}`).join('&');
             const uri  = `https://api.gbif.org/v1/occurrence/search?${countryQueryString}&limit=0&facet=publishingOrg&facetLimit=1000`;
             const uri2 = `https://api.gbif.org/v1/dataset?${countryQueryString}`;
 

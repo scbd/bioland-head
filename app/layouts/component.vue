@@ -5,8 +5,8 @@
 </template>
 
 <script setup lang="ts">
-// Import Bootstrap CSS for component styling
-import 'bootstrap/dist/css/bootstrap.min.css';
+// Main project SCSS (includes Bootstrap + custom styles)
+import '~/assets/custom.scss';
 </script>
 
 <style scoped>

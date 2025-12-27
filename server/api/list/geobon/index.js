@@ -14,7 +14,7 @@ export default cachedEventHandler(async (event) => {
 
             const dataObject = parseJson(data);
 
-            return dataObject || {};
+            return dataObject || createError({ statusCode: 404, statusMessage: 'Not Found', message: `No GEO BON data found for country: ${country}` });
         }
         catch (e) {
             passError(event, e);

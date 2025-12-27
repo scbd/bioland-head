@@ -19,7 +19,7 @@ export default cachedEventHandler(async (event) => {
                 return r
         });
 
-            return dataObject?.data[index || 0]
+            return dataObject?.data[index || 0] || createError({ statusCode: 404, statusMessage: 'Not Found', message: `No GEO BON record found for index: ${index}` });
         }
         catch (e) {
             passError(event, e);
