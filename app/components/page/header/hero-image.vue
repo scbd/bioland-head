@@ -9,13 +9,28 @@
                         <LazyIcon name="edit" style="margin-top: .2rem;" :size="2"/>
                     </NuxtLink>
                 </div>
-                <div v-if="hi?.fieldDescription?.value" v-html="htmlSanitize(hi?.fieldDescription?.value)">
+                
+                <!-- Description: placeholder or actual content -->
+                <div v-if="hasHydrated && hi?.fieldDescription?.value" v-html="htmlSanitize(hi?.fieldDescription?.value)">
+                </div>
+                <div v-else class="col-12" style="max-height: 250px;">
+                    <!-- 3 large lighter lines (0.9 alpha) -->
+                    <p class="placeholder-glow mb-2"><span class="placeholder hero-placeholder hero-placeholder-light" style="width: 264px; height: 28px;"></span></p>
+                    <p class="placeholder-glow mb-2"><span class="placeholder hero-placeholder hero-placeholder-light" style="width: 397px; height: 28px;"></span></p>
+                    <p class="placeholder-glow mb-3"><span class="placeholder hero-placeholder hero-placeholder-light" style="width: 89px; height: 28px;"></span></p>
+                    <!-- 2 small lines (0.7 alpha) -->
+                    <p class="placeholder-glow mb-2"><span class="placeholder hero-placeholder hero-placeholder-dark" style="width: 1024px; max-width: 100%; height: 21px;"></span></p>
+                    <p class="placeholder-glow mb-0"><span class="placeholder hero-placeholder hero-placeholder-dark" style="width: 512px; max-width: 100%; height: 21px;"></span></p>
                 </div>
 
-                <div v-if="hi?.fieldCredits"  class="col-12 d-flex justify-content-end align-items-center">
+                <!-- Credits: placeholder or actual content -->
+                <div v-if="hasHydrated && hi?.fieldCredits" class="col-12 d-flex justify-content-end align-items-center">
                     <div class="small" style="opacity:70%;">
                         {{hi.fieldCredits}}
                     </div>
+                </div>
+                <div v-else class="col-12 d-flex justify-content-end align-items-center mt-2">
+                    <p class="placeholder-glow mb-0"><span class="placeholder hero-placeholder hero-placeholder-dark" style="width: 120px; height: 1em;"></span></p>
                 </div>
             </div>
         </div>
@@ -29,6 +44,13 @@
     const siteStore        = useSiteStore();
     const pageStore        = usePageStore();
     const route            = useRoute();
+    
+    // Track hydration state
+    const hasHydrated      = ref(false);
+    onMounted(() => {
+        hasHydrated.value = true;
+    });
+    
     // Check both data availability AND that host is properly initialized
     const isHostReady      = computed(() => siteStore.host && !siteStore.host.includes('undefined'));
     const hasHeroImage     = computed(() => isHostReady.value && (pageStore?.page?.hasHeroImage || pageStore?.heroImage?.fieldMediaImage?.uri?.url));
@@ -96,7 +118,7 @@ a {
     text-decoration-line: underline !important;
 }
 
-// Jumbotron, Hero Images, and Hero Videos
+/* Jumbotron, Hero Images, and Hero Videos */
 section {
     overflow-x: hidden;
 }
@@ -105,10 +127,10 @@ section {
     margin-top: 2rem;;
 }
 .hero-image {
-    // top: 0;
-    // z-index: -2;
-    // min-height: 472px;
-    // max-height: 472px;
+    /* top: 0; */
+    /* z-index: -2; */
+    /* min-height: 472px; */
+    /* max-height: 472px; */
     width: 100vw;
     margin-top: 1.5rem;
     padding-top: 1rem;
@@ -123,23 +145,48 @@ section {
         animation: scrollBackground ease-in-out 120s infinite;
     }
 
-    // @media (max-aspect-ratio: 4/3) {
-    //     height: 100vh;
-    // }
+    /* @media (max-aspect-ratio: 4/3) {
+        height: 100vh;
+    } */
 
-    // @media (min-width: 1600px) {
-    //     filter: blur(1px);
-    // }
+    /* @media (min-width: 1600px) {
+        filter: blur(1px);
+    } */
 }
 
-// .hero-image {
-//    width: 100vw;
-//    max-height: 472px;
-// }
+/* .hero-image {
+   width: 100vw;
+   max-height: 472px;
+} */
 
 @media (max-width: 991.98px) {
     .hero-image {
         margin-top: 4rem;
     }
+}
+
+.hero-placeholder {
+    display: inline-block;
+    
+    &.hero-placeholder-light {
+        background-color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    &.hero-placeholder-dark {
+        background-color: rgba(255, 255, 255, 0.7) !important;
+    }
+}
+
+/* Animation keyframes for hero placeholders */
+@keyframes hero-placeholder-wave {
+    100% {
+        mask-position: -200% 0%;
+    }
+}
+
+.placeholder-glow .hero-placeholder {
+    animation: hero-placeholder-wave 2s linear infinite;
+    mask-image: linear-gradient(130deg, #000 55%, rgba(0, 0, 0, 0.8) 75%, #000 95%);
+    mask-size: 200% 100%;
 }
 </style>
