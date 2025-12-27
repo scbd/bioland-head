@@ -28,8 +28,8 @@
                 </div>
                 <div :id="`${baseId}-content`" :class="{ 'col-9': aLine.mediaImage, 'col-12': !aLine.mediaImage, 'mt-2':aLine.sticky || aLine.promote }">
                     <div :id="`${baseId}-body`" class="card-body pe-1">
-                        <h5 :id="`${baseId}-title`" class="card-title">{{aLine.title || aLine.name}}</h5>
-                        <p v-if="aLine.summary" :id="`${baseId}-summary`" class="card-text">{{aLine.summary}}...</p>
+                        <h5 :id="`${baseId}-title`" class="card-title">{{smartTruncate(aLine.title || aLine.name, 200, locale)}}</h5>
+                        <p v-if="aLine.summary" :id="`${baseId}-summary`" class="card-text">{{smartTruncate(aLine.summary, 500, locale)}}</p>
 
                     </div>
                 </div>
@@ -91,6 +91,7 @@
     const   props        = defineProps({  aLine: { type: Object  }, });
     const { aLine }      = toRefs(props);
     const { bgStyle }    = useTheme();
+    const { smartTruncate } = useText();
 
     const isChm         = computed(()=> aLine.value?.realms?.length);
     const isContentType = computed(()=>!!contentTypes[type]);

@@ -12,19 +12,18 @@
             </div>
 
             <h5 class="card-title  mb-2 " style="font-size: 1.3rem;">
-                <NuxtLink :to="url" :style="colorStyle" :external="true" target="_blank">{{trunc(title, 250)}}</NuxtLink>
+                <NuxtLink :to="url" :style="colorStyle" :external="true" target="_blank">{{smartTruncate(title, 100, locale)}}</NuxtLink>
             </h5>
-            <p class="card-text">{{trunc(summary, 400)}}</p>
+            <p class="card-text">{{smartTruncate(summary, 250, locale)}}</p>
 
         </div>
-        <div class="card-footer text-center text-nowrap pt-2">
-
+        <div v-if="gbfTargets.length" class="card-footer text-center text-nowrap pt-2">
             <NuxtLink class="me-1 lh-lg" v-for="(aTarget,i) in gbfTargets" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
                 <LazyGbfIcon :identifier="aTarget.identifier" size="lg"/>
             </NuxtLink>
         </div>
-        <div class="card-footer text-center text-nowrap">
-            <NuxtLink class="me-1 lh-lg" v-for="(aSdg,i) in sdgs || []" :key="i"  :to="aSdg.url" target="_blank" external>
+        <div v-if="sdgs.length" class="card-footer text-center text-nowrap">
+            <NuxtLink class="me-1 lh-lg" v-for="(aSdg,i) in sdgs" :key="i"  :to="aSdg.url" target="_blank" external>
                 <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
             </NuxtLink>
         </div>
@@ -39,7 +38,7 @@
     const { record, noFlag    }  = toRefs(props);
     const   siteStore    = useSiteStore();
     const { t, locale }          = useI18n();
-    const { trunc      } = useText();
+    const { smartTruncate } = useText();
 
     const   hasCountries    = computed(()=>siteStore?.countries?.length > 1);
     const { getGbfUrl }     = useDocumentHelpers(record);
@@ -71,7 +70,7 @@
     });
 
     const gbfTargets = computed(()=> {
-        if(!record.value?.tags?.gbfTargets) return [];
+        if(!record.value?.tags?.gbfTargets?.length) return [];
         
         const sliceSize = 4;
         const targets   = randomizedArray(record.value.tags.gbfTargets);
@@ -85,13 +84,12 @@
         return `https://ort.cbd.int/national-targets/my-country/part-1/${record.value.identifier}/view`;
     });
     const sdgs = computed(()=> {
-        if(!record.value?.tags?.sdgs) return [];
+        if(!record.value?.tags?.sdgs?.length) return [];
         
         const sliceSize = 8;
-        const sdgsArr   = randomizedArray(record.value?.tags?.sdgs);
+        const sdgsArr   = randomizedArray(record.value.tags.sdgs);
 
         return sdgsArr.slice(0, sliceSize);
-
     });
 </script>
 
