@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon';
 import consola from 'consola';
+import { smartTruncate } from '~~/shared/utils/text';
 
 /**
  * BCH Resources list API endpoint.
@@ -129,7 +130,7 @@ async function fetchBchResources(ctx, locale, country) {
         }));
 
         // Normalize and transform BCH records
-        return (response?.docs || []).map(normalizeIndexKeys).map(cleanBchResourceRecord);
+        return (response?.docs || []).map(normalizeIndexKeys).map((record) => cleanBchResourceRecord(record, locale));
     } catch (error) {
         consola.error('[latest-bch-resources] BCH index request failed:', error.message);
         throw error;
@@ -139,12 +140,12 @@ async function fetchBchResources(ctx, locale, country) {
 /**
  * Clean and normalize BCH resource record for card display
  */
-function cleanBchResourceRecord(record) {
+function cleanBchResourceRecord(record, locale = 'en') {
     return {
         ...record,
         href: record.urls?.[0] || record.url,
         title: record.recTitle || record.title,
-        summary: record.recSummary || record.summary,
+        summary: smartTruncate(record.recSummary || record.summary, 500, locale),
         changed: record.recDate || record.updatedDate,
         schema: record.schema,
         source: 'bch-index'
