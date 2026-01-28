@@ -65,10 +65,13 @@ function getSortParams(){
 
     sortQueryString += `&sort[sort-order][path]=field_order`
     sortQueryString += `&sort[sort-order][direction]=ASC`
-    sortQueryString += `&sort[sort-published][path]=field_published`
-    sortQueryString += `&sort[sort-published][direction]=${encodeURIComponent(direction)}`
+
     sortQueryString += `&sort[sort-start][path]=field_start_date`
     sortQueryString += `&sort[sort-start][direction]=${encodeURIComponent(direction)}`
+
+    sortQueryString += `&sort[sort-published][path]=field_published`
+    sortQueryString += `&sort[sort-published][direction]=${encodeURIComponent(direction)}`
+
     sortQueryString += `&sort[sort-changed][path]=changed`
     sortQueryString += `&sort[sort-changed][direction]=${encodeURIComponent(direction)}`
 
@@ -125,7 +128,10 @@ function makeTypeMap(data, ctx){
             }
         }
 
-        map[item.slug.slice(1)] = item;
+        if(item.slug) 
+            map[item.slug?.slice(1)] = item;
+        else
+            map[slugify(item.plural)] = item;
     }
 
     return map;

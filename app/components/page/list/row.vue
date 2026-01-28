@@ -2,9 +2,9 @@
     <NuxtLink :id="baseId" style="text-decoration: none;" :to="goTo(href)" prefetch-on="visibility" :alt="aLine.title || aLine.name" :title="aLine.title || aLine.name" :target="target" :external="external">
         <div :id="`${baseId}-card`" :style="cardStyle" class="card p-1 mb-3" >
             <div  class="row g-0">
-                <div v-if="aLine.sticky || aLine.promote" :id="`${baseId}-flags`" class="text-center position-absolute top-0">
+                <div v-if="(aLine.sticky || aLine.promote) && siteStore.isPromoteAndStickyPublic" :id="`${baseId}-flags`" class="text-center position-absolute top-0">
                     <ClientOnly>
-                        <Popper v-if="aLine.sticky" :id="`${baseId}-sticky-indicator`" class="dark" :hover="true" :arrow="true" placement="bottom">
+                        <Popper v-if="aLine.sticky " :id="`${baseId}-sticky-indicator`" class="dark" :hover="true" :arrow="true" placement="bottom">
                             <LazyIcon  name="pushpin" :size="1.5"  />
                                 <template #content>
                                     <div >

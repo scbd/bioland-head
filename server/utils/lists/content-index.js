@@ -161,13 +161,11 @@ async function getListIndex(ctx ) {
     const headers       = { 'Content-Type': 'application/json' };
 
     const fullUrl = uri+getQuestString(ctx);
-    
+
     // Calculate the requested page size for slicing (getPaginationParams over-fetches)
     const requestedLimit = Number(rowsPerPage) || 10;
     const requestedPage = Number(page) || 1;
     
-    // consola.debug('[content-index] Query URL:', fullUrl);
-    // consola.debug('[content-index] Context:', { host, localizedHost, locale, defaultLocale, page, rowsPerPage, requestedLimit });
 
     const { data, meta } = await $fetch(fullUrl, $fetchBaseOptions({ method, headers }));
 
@@ -312,7 +310,7 @@ function getTypeFilterParams({ drupalInternalId, drupalInternalIds }){
 
 function getSortParams({ sortBy, sortDirection, freeText, noSticky, promoted }){
 
-    const direction = !sortDirection? 'DESC' : 'ASC';
+    const direction = !sortDirection || sortDirection?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
 
     let sortQueryString = '';
 
@@ -327,16 +325,19 @@ function getSortParams({ sortBy, sortDirection, freeText, noSticky, promoted }){
         sortQueryString += `&sort[promoted][path]=promote`
         sortQueryString += `&sort[promoted][direction]=${encodeURIComponent(direction)}`
     }
-    
+    // the priority is correct but appears  incorrect.  just dat shown does not show order,published date start date direeferentiation.
 
-    sortQueryString += `&sort[sort-order][path]=field_order`;
-    sortQueryString += `&sort[sort-order][direction]=ASC`;
-    sortQueryString += `&sort[sort-published][path]=field_published`
-    sortQueryString += `&sort[sort-published][direction]=${encodeURIComponent(direction)}`
+    sortQueryString += `&sort[sort-order][path]=field_order`
+    sortQueryString += `&sort[sort-order][direction]=ASC`
+
     sortQueryString += `&sort[sort-start][path]=field_start_date`
     sortQueryString += `&sort[sort-start][direction]=${encodeURIComponent(direction)}`
-    sortQueryString += `&sort[sort-created][path]=${encodeURIComponent(sortBy || 'changed')}`
-    sortQueryString += `&sort[sort-created][direction]=${encodeURIComponent(direction)}`
+
+    sortQueryString += `&sort[sort-published][path]=field_published`
+    sortQueryString += `&sort[sort-published][direction]=${encodeURIComponent(direction)}`
+
+    sortQueryString += `&sort[sort-changed][path]=${encodeURIComponent( sortBy || "changed" )}`
+    sortQueryString += `&sort[sort-changed][direction]=${encodeURIComponent(direction)}`
 
     return sortQueryString;
 }
@@ -357,13 +358,13 @@ function getDateFilterParams({ from, to }){
 
     if(from){
         filterQueryString += `&filter[date-from][condition][path]=field_start_date`;
-        filterQueryString += `&filter[date-from][condition][operator]=>=`;
+        filterQueryString += `&filter[date-from][condition][operator]=>${encodeURIComponent('>=')}`;
         filterQueryString += `&filter[date-from][condition][value]=${encodeURIComponent(from)}`;
     }
 
     if(to){
         filterQueryString += `&filter[date-to][condition][path]=field_start_date`;
-        filterQueryString += `&filter[date-to][condition][operator]=<=`;
+        filterQueryString += `&filter[date-to][condition][operator]=${encodeURIComponent('<=')}`;
         filterQueryString += `&filter[date-to][condition][value]=${encodeURIComponent(to)}`;
     }
 

@@ -31,20 +31,20 @@ export default defineEventHandler(async (event) => {
 function sortData(data){
     const stickies = data.filter(({ sticky })=> sticky);
 
-    const rest = data.filter(({ sticky })=> !sticky).sort(sortDates);
+    const rest = data.filter(({ sticky })=> !sticky)//.sort(sortDates);
 
     return [ ...stickies, ...rest ]
 }
 
-function sortDates(a,b){
-    const aDate = DateTime.fromISO(a.changed || a.updatedDate || a.fieldPublished || a.fieldStartDate || a.startDate);
-    const bDate = DateTime.fromISO(b.changed || b.updatedDate || b.fieldPublished || b.fieldStartDate || b.startDate);
+// function sortDates(a,b){
+//     const aDate = DateTime.fromISO(a.startDate || a.fieldStartDate || a.fieldPublished || a.updatedDate || a.changed);
+//     const bDate = DateTime.fromISO(b.startDate || b.fieldStartDate || b.fieldPublished || b.updatedDate || b.changed);
 
-    if(aDate > bDate) return -1;
-    if(bDate > aDate) return 1;
+//     if(aDate > bDate) return -1;
+//     if(bDate > aDate) return 1;
 
-    return 0;
-}
+//     return 0;
+// }
 
 function cleanIndexDataMap(record){
     record.href =record.urls[0];

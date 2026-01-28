@@ -30,6 +30,13 @@
             <NuxtLink class="me-1" v-for="(aSdg,i) in record?.tags?.sdgs || []" :key="i"  :to="aSdg.url" target="_blank" external>
                 <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
             </NuxtLink>
+        
+            <span class="ms-auto" style="z-index: 10;">
+                <ClientOnly>
+                    <LazyIcon v-if="showPromoteSticky && record?.sticky" name="pushpin" :size="1.5" />
+                    <LazyIcon v-if="showPromoteSticky && record?.promote" name="promote" :size="2" class="ms-1" />
+                </ClientOnly>
+            </span>
         </div>
     </div>
 </template>
@@ -50,7 +57,7 @@
     const { backgroundStyles }                       = useImageBackground(record, imageDefaults);
     const isFromTheBCH = computed(()=> siteStore.isBiosafetySite && (record.type==='bch' || !record?.value?.fieldTypePlacement?.name));
     const   external     = computed(()=> !!record?.value?.realms ||isFromTheBCH.value );
-    
+    const isPromotionPublic = computed(()=> siteStore?.isPromoteAndStickyPublic);
     const gbfTags = computed(()=>{
                             if(isFromTheBCH .value) return [ { "identifier": "GBF-TARGET-17", } ];
 
@@ -74,6 +81,10 @@
 
         return record.value?.schema? `- ${t(record?.value?.schema)}`: ''
     });
+
+    const showPromoteSticky = computed(() => 
+        siteStore?.isPromoteAndStickyPublic && (record?.value?.sticky || record?.value?.promote)
+    );
 
 //consola.warn(record.value);
 </script>
