@@ -65,7 +65,7 @@
                 </span>
             </div>
 
-            <div id="page-header-title-search-desktop-search-col" class=" col-md-3 col-lg-3 d-flex justify-content-end align-items-center" >
+            <div v-if="!pageStore.isSearch" id="page-header-title-search-desktop-search-col" class=" col-md-3 col-lg-3 d-flex justify-content-end align-items-center" >
                 <div id="page-header-title-search-desktop-search-box" class="input-group" :class="{ hero: hasHeroImage }" style="margin-left:2rem;margin-right:-2rem;">
                     <input id="page-header-title-search-desktop-search-input" @keyup.enter="()=>{onClick(queryText);}" type="text" v-model="queryText" class="form-control" :class="{ hero: hasHeroImage }" :placeholder="t('Search this site')" aria-label="search" >
 
@@ -116,7 +116,7 @@
                 
             </div>
 
-            <div id="page-header-title-search-large-search-col" class=" col-md-3 col-lg-3 d-flex justify-content-end align-items-center" >
+            <div v-if="!pageStore.isSearch"  id="page-header-title-search-large-search-col" class=" col-md-3 col-lg-3 d-flex justify-content-end align-items-center" >
                 <div id="page-header-title-search-large-search-box" class="input-group" :class="{ hero: hasHeroImage }" style="margin-left:2rem;margin-right:-2rem;">
                     <input id="page-header-title-search-large-search-input" @keyup.enter="()=>{onClick(queryText);}" type="text" v-model="queryText" class="form-control" :class="{ hero: hasHeroImage }" :placeholder="t('Search this site')" aria-label="search" >
 
@@ -143,6 +143,8 @@
     const route        = useRoute();
     const isMobile     = computed(()=> !!!viewport?.isGreaterThan('sm'));
     const hasHeroImage = computed(() => pageStore.page.hasHeroImage );
+
+    //isSearch
 
     const { t, locale  }         = useI18n();
     const { width }              = useElementSize(cont);
