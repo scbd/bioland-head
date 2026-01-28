@@ -300,7 +300,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       const data = await $fetch(`/api/context/${encodeURIComponent(siteIdentifier)}/${encodeURIComponent(requestedLocale)}`);
 
       // Initialize siteStore with fetched data + runtime config
-      siteStore.initialize({
+      siteStore.initialize({ ...data, ...{
         locale: data?.locale,
         identifier: data?.siteCode,
         siteCode: data?.siteCode,
@@ -310,8 +310,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         gaiaApi: runtime?.gaiaApi,
         multiSiteCode: runtime?.multiSiteCode,
         baseHost: runtime?.baseHost,
-        env: runtime?.env
-      });
+        env: runtime?.env,
+        homePath: data?.homePath
+      }});
 
       // Set context cookie for subsequent requests (SSR response will include Set-Cookie)
       const contextCookie = useCookie('context');
