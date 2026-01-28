@@ -33,6 +33,7 @@
 
     const { t, locale }     = useI18n();
     const localePath = useLocalePath();
+    const route      = useRoute();
     const siteStore  = useSiteStore();
     const pageStore  = usePageStore();
     const menusStore = useMenusStore();
@@ -41,13 +42,30 @@
 
     const showTabs  = computed(()=>  (pageStore?.page?.children?.length || (pageStore?.page?.parent?.length && pageStore?.page?.parent[0].id !== 'virtual')));
 
-    const siteContentTo        = computed(()=> getLocalizedPath(tabObjects.value.searchTab) || localePath(makeDrupalPathFromENtity(tabObjects.value.searchTab)));
+    const siteContentTo        = computed(() => {
+        const path = getLocalizedPath(tabObjects.value.searchTab) || localePath(makeDrupalPathFromENtity(tabObjects.value.searchTab));
+        return { path, query: route.query };
+    });
 
-    const secretariatContentTo = computed(()=> getLocalizedPath(tabObjects.value.searchSecTab) || localePath( makeDrupalPathFromENtity(tabObjects.value.searchSecTab)));
-    const biosafetyContentTo   = computed(()=> getLocalizedPath(tabObjects.value.searchBchTab) || localePath( makeDrupalPathFromENtity(tabObjects.value.searchBchTab)));
-    const accessBenefitContentTo   = computed(()=> getLocalizedPath(tabObjects.value.searchAbsTab) || localePath( makeDrupalPathFromENtity(tabObjects.value.searchAbsTab)));
+    const secretariatContentTo = computed(() => {
+        const path = getLocalizedPath(tabObjects.value.searchSecTab) || localePath(makeDrupalPathFromENtity(tabObjects.value.searchSecTab));
+        return { path, query: route.query };
+    });
     
-    const isActive = (to) => localePath(pageStore?.path?.alias) === to || localePath(makeDrupalPathFromENtity(pageStore?.page)) === to;
+    const biosafetyContentTo   = computed(() => {
+        const path = getLocalizedPath(tabObjects.value.searchBchTab) || localePath(makeDrupalPathFromENtity(tabObjects.value.searchBchTab));
+        return { path, query: route.query };
+    });
+    
+    const accessBenefitContentTo   = computed(() => {
+        const path = getLocalizedPath(tabObjects.value.searchAbsTab) || localePath(makeDrupalPathFromENtity(tabObjects.value.searchAbsTab));
+        return { path, query: route.query };
+    });
+    
+    const isActive = (to) => {
+        const path = typeof to === 'string' ? to : to?.path;
+        return localePath(pageStore?.path?.alias) === path || localePath(makeDrupalPathFromENtity(pageStore?.page)) === path;
+    };
 
     function getParentAlias(){
         if(!pageStore?.page?.parent?.length || pageStore?.page?.parent[0].id === 'virtual') return ''
