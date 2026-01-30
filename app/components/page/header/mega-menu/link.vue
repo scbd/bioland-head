@@ -1,40 +1,57 @@
 <template>
-    <p v-if="!showThumbs &&  !isFinalLink &&  !showCards " id="page-header-mega-menu-link-text" class="text-wrap">
-        <NuxtLink  class="child-link" :class="menu.class"   :to="localePath (menu.href)" :title="title || menu.title" :external="isExternal" :target="target">
-            {{title || menu.title}}  {{menu.class}} {{isFinalLink}}<span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<LazyIcon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
-        </NuxtLink>
-    </p>
-    <div v-if="isFinalLink && menu.count && !hideFinal" id="page-header-mega-menu-link-final" :class="menu.class">
-        <NuxtLink  class="child-link"   :to="localePath (menu.href)" :title="title || menu.title" :external="isExternal" :target="target">
-            {{title || menu.title}} <span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<LazyIcon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
-        </NuxtLink>
-    </div>
-    <section v-if="!showCards" id="page-header-mega-menu-link-thumb-section">
-        <NuxtLink  v-if="showThumbs && !isFinalLink " id="page-header-mega-menu-link-thumb" class="child-link" :class="menu.class"   :to="localePath(menu.href)" :title="menu.title" :external="isExternal" :target="target">
-            <div class="d-flex mb-2">
-                <div class="col-3 align-self-center">
-                    <NuxtImg :src="menu.thumb || '/images/no-image.png'" class="img-fluid" :alt="title || menu.title" width="64" height="64"/>
+    <div class="mega-menu-link-wrapper" :style="{ paddingLeft: depth > 0 ? '1rem' : '0' }">
+        <p v-if="!showThumbs &&  !isFinalLink &&  !showCards " id="page-header-mega-menu-link-text" class="text-wrap">
+            <NuxtLink  class="child-link" :class="menu.class"   :to="safeLocalePath(menu.href)" :title="title || menu.title" :external="isExternal" :target="target">
+                {{title || menu.title}}  {{menu.class}} {{isFinalLink}}<span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<LazyIcon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
+            </NuxtLink>
+        </p>
+        <div v-if="isFinalLink && menu.count && !hideFinal" id="page-header-mega-menu-link-final" :class="menu.class">
+            <NuxtLink  class="child-link"   :to="safeLocalePath(menu.href)" :title="title || menu.title" :external="isExternal" :target="target">
+                {{title || menu.title}} <span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<LazyIcon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
+            </NuxtLink>
+        </div>
+        <section v-if="!showCards" id="page-header-mega-menu-link-thumb-section">
+            <NuxtLink  v-if="showThumbs && !isFinalLink " id="page-header-mega-menu-link-thumb" class="child-link" :class="menu.class"   :to="safeLocalePath(menu.href)" :title="menu.title" :external="isExternal" :target="target">
+                <div class="d-flex mb-2">
+                    <div class="col-3 align-self-center">
+                        <NuxtImg :src="menu.thumb || '/images/no-image.png'" class="img-fluid" :alt="title || menu.title" width="64" height="64"/>
+                    </div>
+                    <div class="col-9 align-self-center">
+                        <p class="text-wrap card-text ps-1">
+                            {{title || menu.title}}<span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<LazyIcon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
+                        </p>
+                    </div>
                 </div>
-                <div class="col-9 align-self-center">
-                    <p class="text-wrap card-text ps-1">
-                        {{title || menu.title}}<span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<LazyIcon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
-                    </p>
-                </div>
-            </div>
-        </NuxtLink>
-    </section>
+            </NuxtLink>
+        </section>
 
-    <section v-if="showCards && !isFinalLink" id="page-header-mega-menu-link-card-section">
-        <NuxtLink id="page-header-mega-menu-link-card" class="child-link" :class="menu.class"   :to="localePath(menu.href)" :title="menu.title" :external="isExternal" :target="target">
-            <div class="card" style="max-width: 160px;">
-                <NuxtImg :src="menu.thumb" class="img-fluid card-img" :alt="menu.title" width="102" height="64" fit="cover" format="webp"/>
-                <div class="card-body">
-                    <p class="card-text" :class="{ 'card-text--long-word': hasLongWord }">{{menu.title}}</p>
-                    <p class="card-text"><small class="text-muted">{{dateFormat(menu)}}</small></p>
+        <section v-if="showCards && !isFinalLink" id="page-header-mega-menu-link-card-section">
+            <NuxtLink id="page-header-mega-menu-link-card" class="child-link" :class="menu.class"   :to="safeLocalePath(menu.href)" :title="menu.title" :external="isExternal" :target="target">
+                <div class="card" style="max-width: 160px;">
+                    <NuxtImg :src="menu.thumb" class="img-fluid card-img" :alt="menu.title" width="102" height="64" fit="cover" format="webp"/>
+                    <div class="card-body">
+                        <p class="card-text" :class="{ 'card-text--long-word': hasLongWord }">{{menu.title}}</p>
+                        <p class="card-text"><small class="text-muted">{{dateFormat(menu)}}</small></p>
+                    </div>
                 </div>
-            </div>
-        </NuxtLink>
-    </section>
+            </NuxtLink>
+        </section>
+
+        <!-- Recursive children rendering -->
+        <div v-if="hasChildren" class="mega-menu-link-children">
+            <PageHeaderMegaMenuLink
+                v-for="(child, index) in menu.children"
+                :key="child.href || index"
+                :menu="child"
+                :show-thumbs="showThumbs"
+                :show-cards="showCards"
+                :type="type"
+                :localize="localize"
+                :hide-final="hideFinal"
+                :depth="depth + 1"
+            />
+        </div>
+    </div>
 </template>
 
 <script setup>
@@ -48,7 +65,8 @@
                                         title     : String,
                                         type      : String,
                                         localize  : { type: Boolean, default: true },
-                                        hideFinal : { type: Boolean, default: false }
+                                        hideFinal : { type: Boolean, default: false },
+                                        depth     : { type: Number, default: 0 }
                                     });
     const propRefs = toRefs(props);
     const menu = propRefs.menu;
@@ -57,14 +75,16 @@
     const localize = propRefs.localize;
     const providedTitle = propRefs.title;
     const hideFinal = propRefs.hideFinal;
+    const depth = propRefs.depth;
 
-    const   localizePath = useLocalePath();
-    const   localePath   = (to)=> localize.value? localizePath(to): to;
+    const { safeLocalePath } = useSafeLocalePath(localize);
+
     const   isFinalLink  = computed(()=> menu?.value?.class?.includes('main-nav-final-link') || menu?.value?.class?.includes('mm-main-nav-final-link'));
     const   isSpecial    = computed(()=> menu?.value?.class?.includes('special'));
     const   isExternal   = computed(()=> menu?.value?.href?.includes('http'));
     const   target       = computed(()=> menu?.value?.target? menu?.value?.target[0] : isExternal.value? '_blank':'_self');
     const   displayTitle = computed(()=> providedTitle?.value || menu?.value?.title || '');
+    const   hasChildren  = computed(()=> menu?.value?.children?.length > 0);
     const   hasLongWord  = computed(()=> {
         const value = displayTitle.value.trim();
 
@@ -93,6 +113,15 @@
 </script>
 
 <style lang="scss" scoped>
+.mega-menu-link-wrapper {
+    position: relative;
+}
+
+.mega-menu-link-children {
+    display: flex;
+    flex-direction: column;
+}
+
 .mm-main-nav-final-link,
 .main-nav-final-link{
     position: absolute;
