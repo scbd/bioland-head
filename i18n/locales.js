@@ -314,7 +314,7 @@ export default[
     {
         "code": "pt",
         "name": "Portuguese, Portugal",
-        "nativeName": "Português, Portugal"
+        "nativeName": "Português"
     },
     {
         "code": "ro",

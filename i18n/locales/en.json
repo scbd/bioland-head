@@ -1,4 +1,8 @@
-{
+{ "forum": "forum",
+"Clear Cache":"Clear Cache",
+  "topic": "topic | topics",
+  "post": "post | posts",
+"comments": "comments",
   "systemPageWarningTitle": "View Only Mode",
   "systemPageWarningMessage": "This is a system page managed by site administrators. System pages define the structure of content types and site functionality, and cannot be edited by regular users.",
   "systemPageDisabled": "System page - editing disabled",
@@ -6,6 +10,8 @@
   "Close": "Close",
   "Online Report Tool": "Online Report Tool",
   "nationalTarget7": "National Target",
+  "start date": "start date",
+  "published on": "published on",
   "Published": "Published",
   "Unpublished": "Unpublished",
   "Notification": "Notification",
@@ -91,6 +97,7 @@
   "photos-and-videos": "photo or video | photos & videos",
   "search": "search",
   "content": "site content",
+  "Content Statistics": "Content Statistics",
   "secretariate": "secretariate",
   "notification": "Notifications",
   "Statement": "Statement",
@@ -1025,6 +1032,7 @@
   "Living Modified Organism": "Living Modified Organism",
   "Biosafety Organization": "Biosafety Organization",
   "Laboratory for detection and identification of LMOs": "Laboratory for detection and identification of LMOs",
-  "What's New": "What's New"
+  "What's New": "What's New",
+  "Drupal Status": "Drupal Status"
   
 }
