@@ -1,31 +1,43 @@
 <template>
     <div id="page-header-mega-menu-custom-bch" class="col-12 text-wrap px-0">
-        <LazyPageHeaderMegaMenuHeader  :menu="menu" />
+        <LazyPageHeaderMegaMenuHeader  :menu="menuWithChildren" />
+        
+        <section v-if="isTop" >
+            <LazyPageHeaderMegaMenuLink v-for="(aMenu,j) in menuWithChildren.children" :id="`page-header-mega-menu-custom-bch-child-${j}`" :key="j" :menu="aMenu" />
+        </section>
         <section v-for="(aChild,j) in drupalMenus" :id="`page-header-mega-menu-custom-bch-drupal-item-${j}`" :key="j">
             <p >
                 <LazyPageHeaderMegaMenuLink :title="aChild.title" :menu="aChild" />
             </p>
         </section>
-        <LazyPageHeaderMegaMenuLink v-for="(aMenu,j) in menu.children" :id="`page-header-mega-menu-custom-bch-child-${j}`" :key="j" :menu="aMenu" />
+        <section v-if="!isTop" >
+            <LazyPageHeaderMegaMenuLink v-for="(aMenu,j) in menuWithChildren.children" :id="`page-header-mega-menu-custom-bch-child-${j}`" :key="j" :menu="aMenu" />
+        </section>
     </div>
 </template>
 <script setup>
-    import clone from 'lodash.clonedeep';
-
     const { t , locale } = useI18n();
     const   siteStore    = useSiteStore();
     const   menuStore    = useMenusStore();
-
     const   props              = defineProps({ menu: Object });
     const { menu: passedMenu } = toRefs(props);
-    const aMenu        = computed(() => clone(unref(passedMenu)));
-    const drupalMenus  = computed(()=>aMenu.value?.children || []); 
+
+    const { menu } = useMenuOverride(passedMenu, {
+        defaultTitle: () => t('bch'),
+        defaultHref: 'https://bch.cbd.int',
+        baseClasses: ['main-nav-sub-heading', 'arrow']
+    });
+
+    const drupalMenus  = computed(() => passedMenu.value?.children || []); 
+    const isTop        = computed(() => (!siteStore.biolandSettings?.megaMenu?.bch?.position || siteStore.biolandSettings?.megaMenu?.bch?.position === 'top'));
 
     const country = siteStore.config?.countries?.length? [...siteStore.config.countries, siteStore.config?.country] : siteStore.config?.country;
 
     const { bch:data } = storeToRefs(menuStore);
-    const   children   = makeMenu(data.value,t, siteStore.name,country, locale.value);
-    const   menu       = ref({ title: t('bch'), href: 'https://bch.cbd.int', class: ['main-nav-sub-heading', 'arrow'], children });
+    const   children   = makeMenu(data.value, t, siteStore.name, country, locale.value);
+    
+    // Merge generated children into menu
+    const menuWithChildren = computed(() => ({ ...menu.value, children: children.value }));
 
 
     function makeMenu(data,t, name, passedCountry, passedLocale){

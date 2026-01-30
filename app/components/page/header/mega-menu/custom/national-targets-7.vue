@@ -25,21 +25,23 @@
     const { t, locale } = useI18n();
     const menusStore    = useMenusStore();
     const menus         = computed(() => menusStore.nt7);
-    const localePath    = useLocalePath();
+    const { safeLocalePath } = useSafeLocalePath();
     const   props              = defineProps({ menu: Object });
     const { menu: passedMenu } = toRefs(props);
-    const systemPage    = menusStore.getSystemPageById(31);
-    //const aliasPath     = systemPage?.aliases && systemPage?.aliases[locale.value]? systemPage?.aliases[locale.value] : `/taxonomy/term/${systemPageTidConstants.NT7}`;
-    const href     = computed(()=> localePath({path: menusStore.getSystemPagePath({ id:systemPageTidConstants.SEARCH_SEC, locale:unref(locale)}), query:{ schemaOnly: true, schemas:['nationalTarget7']}}));
-   // const href          = localePath(aliasPath.value);
-    const menu          = ref({ 
-                                title: t('National Targets'), 
-                                href,
-                                class: ['mm-main-nav-sub-heading', 'mm-arrow'] 
-                            });
+
+    const defaultHref = computed(() => safeLocalePath({
+        path: menusStore.getSystemPagePath({ id: systemPageTidConstants.SEARCH_SEC, locale: unref(locale) }), 
+        query: { schemaOnly: true, schemas: ['nationalTarget7'] }
+    }));
+
+    const { menu } = useMenuOverride(passedMenu, {
+        defaultTitle: () => t('National Targets'),
+        defaultHref,
+        baseClasses: ['mm-main-nav-sub-heading', 'mm-arrow']
+    });
 
     const aMenu     = clone(unref(passedMenu));
-    const children  = aMenu?.children || []; //.filter(aMenu => !isFinalLink(aMenu))
+    const children  = aMenu?.children || [];
     
 </script>
 

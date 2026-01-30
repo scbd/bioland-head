@@ -1,11 +1,11 @@
 <template>
     <div id="page-header-mega-menu-custom-country-profiles" class="col-12 text-wrap px-0">
-        <LazyPageHeaderMegaMenuHeader  :menu="menu" />
+        <LazyPageHeaderMegaMenuHeader  :menu="aMenu" />
 
         <LazyPageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menus" >
             <Transition :name="slotProps.fadeName">
                 <section v-if="slotProps.hide" id="page-header-mega-menu-custom-country-profiles-content">
-                    <section v-for="(aChild,j) in children" :id="`page-header-mega-menu-custom-country-profiles-child-${j}`" :key="j">
+                    <section v-if="isTop" v-for="(aChild,j) in children" :id="`page-header-mega-menu-custom-country-profiles-child-${j}`" :key="j">
                         <p >
                             <LazyPageHeaderMegaMenuLink :title="aChild.title"  :menu="aChild" />
                         </p>
@@ -17,6 +17,12 @@
                             </NuxtLink>
                         </p>
                     </section>
+
+                    <section v-if="!isTop" v-for="(aChild,j) in children" :id="`page-header-mega-menu-custom-country-profiles-child-${j}`" :key="`top-${j}`">
+                        <p >
+                            <LazyPageHeaderMegaMenuLink :title="aChild.title"  :menu="aChild" />
+                        </p>
+                    </section>
                 </section>
             </Transition>
         </LazyPageHeaderMegaMenuCustomCountryTab>
@@ -26,18 +32,20 @@
     import clone from 'lodash.clonedeep';
     
     const { t } = useI18n();
-    const menu  = ref({ 
-                        title: t('Country Profiles'), 
-                        href : '#', 
-                        class: ['main-nav-sub-heading'] 
-                    });
+
     const siteStore = useSiteStore();
     const   props              = defineProps({ menu: Object });
     const { menu: passedMenu } = toRefs(props);
-    
-    const menus      = computed(() => generateMenus());
-    const aMenu     = computed(() => clone(unref(passedMenu)));
-    const children  = computed(()=>aMenu.value?.children || []); 
+
+    const { menu: aMenu } = useMenuOverride(passedMenu, {
+        defaultTitle: () => t('Country Profiles'),
+        defaultHref: undefined,
+        baseClasses: ['main-nav-sub-heading', 'arrow']
+    });
+
+    const menus     = computed(() => generateMenus());
+    const children  = computed(() => aMenu.value?.children || []); 
+    const isTop     = computed(()=>(!siteStore.biolandSettings?.megaMenu?.countryProfiles?.position || siteStore.biolandSettings?.megaMenu?.countryProfiles?.position === 'top')); 
 
     function generateMenus(){
         const countries = siteStore.countries;
