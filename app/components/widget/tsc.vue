@@ -1,7 +1,7 @@
 <template>
-    <div class="position-relative">
+    <div v-if="showWidget" class="position-relative">
         <!-- Placeholder shown during SSR and loading -->
-        <template v-if="showWidget && (!hasHydrated || loading) && !error">
+        <template v-if="!hasHydrated || loading || !record">
             <div class="text-capitalize placeholder-glow">
                 <h4 class="mb-3"><span class="placeholder col-6"></span></h4>
             </div>
@@ -42,7 +42,7 @@
         </template>
 
         <!-- Actual content after hydration and data loads -->
-        <LazyWidget v-else-if="!error && record && showWidget" :loading="loading" :name="t('Technical & scientific cooperation')" :record="record" :links="links"/>
+        <LazyWidget v-else :loading="loading" :name="t('Technical & scientific cooperation')" :record="record" :links="links"/>
     </div>
 </template>
 <script setup>
@@ -52,13 +52,19 @@
     const   siteStore      = useSiteStore();
     const { t }            = useI18n();
     const   query          = clone({...siteStore.params, rowsPerPage: 5, promoted: true, });
-    const   showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.tsc);
-
+    
     // Track if client has hydrated
     const hasHydrated = ref(false);
     onMounted(() => {
         hasHydrated.value = true;
     });
+
+    // Check if widget is enabled from store settings
+    const isWidgetEnabled = computed(() => siteStore?.biolandSettings?.homeWidgets?.technicalCooperationWidget?.enable);
+    
+    // For consistent hydration: always render during SSR/initial hydration,
+    // then respect the actual setting after hydration completes
+    const showWidget = computed(() => !hasHydrated.value || isWidgetEnabled.value);
 
     const { data: record, status, error  } = await useLazyFetch('/api/list/tsc', {  method: 'GET', query, onResponse,key: 'tsc-widgert', getCachedData});
 

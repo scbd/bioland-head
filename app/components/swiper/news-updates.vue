@@ -1,45 +1,56 @@
 <template>
-    <!-- Show placeholders during SSR and while loading -->
-    <template v-if="!hasHydrated || loading">
-        <div class="col-12 mt-3 mb-0">
-            <h3 :style="headerStyle">{{t('Latest News and Updates')}}</h3>
-        </div>
-        <div class="position-relative mt-1" style="min-height:250px;">
-            <div class="row g-3">
-                <div v-for="n in placeholderCount" :key="n" :class="cardColClass">
-                    <CardsPlaceholder />
+    <div v-if="showWidget">
+        <!-- Show placeholders during loading -->
+        <template v-if="loading">
+            <div class="col-12 mt-3 mb-0">
+                <h3 :style="headerStyle">{{t('Latest News and Updates')}}</h3>
+            </div>
+            <div class="position-relative mt-1" style="min-height:250px;">
+                <div class="row g-3">
+                    <div v-for="n in placeholderCount" :key="n" :class="cardColClass">
+                        <CardsPlaceholder />
+                    </div>
+                </div>
+                <div v-if="pagination" class="d-flex justify-content-center mt-4">
+                    <span v-for="i in Math.min(slides?.length || 3, 10)" :key="i" class="rounded-circle bg-secondary opacity-25 me-2" style="width: 10px; height: 10px;"></span>
                 </div>
             </div>
-            <div v-if="pagination" class="d-flex justify-content-center mt-4">
-                <span v-for="i in Math.min(slides?.length || 3, 10)" :key="i" class="rounded-circle bg-secondary opacity-25 me-2" style="width: 10px; height: 10px;"></span>
-            </div>
-        </div>
-    </template>
+        </template>
 
-    <!-- Show actual swiper after hydration and data loads -->
-    <ClientOnly v-else-if="slides?.length">
-        <div class="col-12 mt-3 mb-0">
-            <h3 :style="headerStyle">{{t('Latest News and Updates')}}</h3>
-            <NuxtLink :to="newsLink" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more news and updates')}} <LazyIcon name="arrow-right" class="arrow" /></NuxtLink>
-        </div>
-        <div class="position-relative mt-1" style="min-height:250px;">
-            <LazySwiperButton direction="left" :swiper-ref="swiperRef" />
-            <swiper-container
-                :loop="slides?.length > 3"
-                :slidesPerView="slidePerView"
-                :spaceBetween="spaceBetween"
-                :pagination="{ clickable: true }"
-                :modules="modules"
-                @swiper="onSwiper"
-                ref="swiperRef"
-            >
-                <swiper-slide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
-                    <LazyCards :record="slide" />
-                </swiper-slide>
-            </swiper-container>
-            <LazySwiperButton direction="right" :swiper-ref="swiperRef" />
-        </div>
-    </ClientOnly>
+        <!-- Show actual swiper when data loads -->
+        <template v-else-if="slides?.length">
+            <div class="col-12 mt-3 mb-0">
+                <h3 :style="headerStyle">{{t('Latest News and Updates')}}</h3>
+                <NuxtLink :to="newsLink" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more news and updates')}} <LazyIcon name="arrow-right" class="arrow" /></NuxtLink>
+            </div>
+            <div class="position-relative mt-1" style="min-height:250px;">
+                <ClientOnly>
+                    <LazySwiperButton direction="left" :swiper-ref="swiperRef" />
+                    <swiper-container
+                        :loop="slides?.length > 3"
+                        :slidesPerView="slidePerView"
+                        :spaceBetween="spaceBetween"
+                        :pagination="{ clickable: true }"
+                        :modules="modules"
+                        @swiper="onSwiper"
+                        ref="swiperRef"
+                    >
+                        <swiper-slide :class="{ 'mb-3': pagination }" v-for="slide in slides" :key="slide">
+                            <LazyCards :record="slide" />
+                        </swiper-slide>
+                    </swiper-container>
+                    <LazySwiperButton direction="right" :swiper-ref="swiperRef" />
+                    <template #fallback>
+                        <div class="row g-3">
+                            <div v-for="slide in slides.slice(0, ssrSafeSlidePerView)" :key="slide" :class="cardColClass">
+                                <LazyCards :record="slide" />
+                            </div>
+                        </div>
+                    </template>
+                </ClientOnly>
+            </div>
+        </template>
+    </div>
 </template>
 <script setup>
 import { Pagination  }   from 'swiper/modules';
@@ -56,6 +67,8 @@ const localePath     = useLocalePath();
 const siteStore      = useSiteStore();
 const { t }          = useI18n();
 const swiper         = useSwiper(swiperRef);
+// Default to true during SSR to ensure consistent rendering, actual value hydrates on client
+const showWidget     = computed(() => siteStore?.biolandSettings?.homeWidgets?.latestNewsWidget?.enable ?? true);
 
 const props = defineProps({ 
                             pagination: { type: Boolean, default: false },
@@ -71,17 +84,30 @@ const onSwiper = (swiper) => {
 
 const { width: rowElWidth } = useWindowSize();
 
+// SSR-safe default (desktop-first: 3 cards)
+const SSR_DEFAULT_SLIDES = 3;
+
+// Track hydration state to prevent mismatch
+const isHydrated = ref(false);
+onMounted(() => { isHydrated.value = true; });
 
 const modules      = computed(()=> pagination.value? [ Pagination ] : []); 
 const viewport     = useViewport();
 
 const hideArrows   = computed(()=> (viewport.breakpoint.value === 'lg' || viewport.breakpoint.value === 'xl'|| viewport.breakpoint.value === 'xxl')? slides.value.length > hideArrowsCount.value : slides.value.length > 1  );
 
+// Client-side responsive slidePerView (only used after hydration for swiper)
 const slidePerView = computed(()=> {
     if(rowElWidth.value > 1600 ) return 4;
     if(rowElWidth.value > 990 ) return 3;
+    return 2;
+});
 
-    return 2
+// SSR-safe slidePerView for placeholder rendering (uses fixed value until hydration completes)
+const ssrSafeSlidePerView = computed(() => {
+    // Use fixed default during SSR and initial hydration to prevent mismatch
+    if (import.meta.server || !isHydrated.value) return SSR_DEFAULT_SLIDES;
+    return slidePerView.value;
 });
 
 const spaceBetween = computed(()=> {
@@ -99,12 +125,13 @@ const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ 
 
 const query = clone({ ...siteStore.params });
 
-const { data:slides, status } = await useLazyFetch(`/api/list/latest`, {  method: 'GET', query, getCachedData });
-
-// Track if client has hydrated
-const hasHydrated = ref(false);
-onMounted(() => {
-    hasHydrated.value = true;
+// Use useFetch to ensure SSR fetching
+const { data:slides, status } = await useFetch(`/api/list/latest`, {  
+    method: 'GET', 
+    query, 
+    getCachedData,
+    lazy: true,
+    server: true
 });
 
 const loading = computed(()=> status.value === 'pending' && !slides?.value?.length);
@@ -122,14 +149,13 @@ const linkStyle = reactive({
     'text-decoration-color': siteStore.primaryColor,
 });
 
-// Calculate Bootstrap column classes based on slides per view
+// Calculate Bootstrap column classes based on slides per view (SSR-safe)
 const cardColClass = computed(() => {
-    const cols = Math.floor(12 / slidePerView.value);
+    const cols = Math.floor(12 / ssrSafeSlidePerView.value);
     return `col-12 col-md-${cols}`;
 });
 
-// Use actual slidePerView for placeholder count (responsive to viewport)
-const placeholderCount = computed(() => slidePerView.value);
+const placeholderCount = computed(() => ssrSafeSlidePerView.value);
 </script>
 <style lang="scss" scoped>
 .arrow{

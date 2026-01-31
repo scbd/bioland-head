@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
             });
 
             return {
+                ...ctx,
                 siteCode: ctx.siteCode,
                 locale: ctx.locale,
                 defaultLocale: ctx.defaultLocale,
@@ -33,7 +34,8 @@ export default defineEventHandler(async (event) => {
                 siteName: ctx.siteName,
                 homePath: ctx.homePath,
                 host: ctx.host,
-                locales: ctx.locales
+                locales: ctx.locales,
+                biolandSettings: ctx.biolandSettings
             };
         }
         catch (e) {
@@ -41,3 +43,18 @@ export default defineEventHandler(async (event) => {
         }
     }
 );
+//additionalTags: Object;
+// continent: asia;
+// core: Object;
+// countries: Array[1];
+// debugLogAreas: Object;
+// enableAdditionalFields: true;
+// enableAutoSummary: true;
+// enableDebugLogging: false;
+// enableFieldVisibility: true;
+// enableHelpComments: true;
+
+// fieldVisibility: Object;
+// fieldVisibilityRules: helpComments: Object;
+// mainMenuLock: true;
+// translation: Object;

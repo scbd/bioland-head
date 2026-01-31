@@ -1,12 +1,12 @@
 export const useSiteStore = defineStore('site', {
-    state: () => ({ i18nStrategy: 'prefix', locale  : undefined, identifier                : undefined, siteCode                  : undefined, pageIdentifiers           : undefined, defaultLocale             : undefined, gaiaApi                   : undefined, drupalMultisiteIdentifier : undefined, multiSiteCode             : undefined, baseHost                  : undefined, logo                      : undefined, config                    : undefined, name                      : undefined, redirect                  : undefined, drupalInternalRevisionId : undefined, }),
+    state: () => ({ i18nStrategy: 'prefix', locale  : undefined, identifier                : undefined, siteCode                  : undefined, pageIdentifiers           : undefined, defaultLocale             : undefined, gaiaApi                   : undefined, drupalMultisiteIdentifier : undefined, multiSiteCode             : undefined, baseHost                  : undefined, logo                      : undefined, config                    : undefined, name                      : undefined, redirect                  : undefined, drupalInternalRevisionId : undefined, biolandSettings: undefined, }),
     actions:{
         set(name, value){
             this.$patch({ [name]: unref(value) } );
 
             return this;
         },
-        initialize( { locale, identifier,siteCode, defaultLocale, config, siteName, gaiaApi, multiSiteCode, baseHost, env }){
+        initialize( { biolandSettings, locale, identifier,siteCode, defaultLocale, config, siteName, gaiaApi, multiSiteCode, baseHost, env, homePath }){
             this.set('baseHost',                  baseHost);
             this.set('gaiaApi',                   gaiaApi);
             this.set('drupalMultisiteIdentifier', multiSiteCode);
@@ -20,6 +20,11 @@ export const useSiteStore = defineStore('site', {
             this.set('logo',   this.getLogoUri);
             this.set('name',   siteName);
             this.set('redirect', env === 'production'? config?.redirect || '' : '');
+            this.set('homePath', homePath);
+
+            if(biolandSettings)
+                this.set('biolandSettings', biolandSettings);
+            
         },
         getHost(ignoreLocale = false){
             const { locale, siteCode, baseHost, redirect } = this;

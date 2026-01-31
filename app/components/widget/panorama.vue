@@ -1,7 +1,7 @@
 <template>
-    <div class="position-relative">
-        <!-- Placeholder shown during SSR and loading -->
-        <template v-if="showWidget && (!hasHydrated || loading) && !error">
+    <div v-if="showWidget" class="position-relative">
+        <!-- Placeholder shown during loading -->
+        <div v-if="loading || !record">
             <div class="text-capitalize placeholder-glow">
                 <h4 class="mb-3"><span class="placeholder col-5"></span></h4>
             </div>
@@ -28,10 +28,10 @@
             <div class="text-start my-3 placeholder-glow">
                 <span class="placeholder col-4"></span>
             </div>
-        </template>
+        </div>
 
-        <!-- Actual content after hydration and data loads -->
-        <LazyWidget v-else-if="!error && record && showWidget" :loading="loading" :t="'solution'" :name="t('Panorama Solutions')" :record="record" :links="links"/>
+        <!-- Actual content after data loads -->
+        <LazyWidget v-else-if="!error && Object.keys(record || {}).length" :loading="loading" :t="'solution'" :name="t('Panorama Solutions')" :record="record" :links="links"/>
     </div>
 </template>
 <script setup>
@@ -41,25 +41,12 @@
     const siteStore      = useSiteStore();
     const { t  }         = useI18n();
     const query          = clone({ ...siteStore.params });
-    const showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.panorama);
-
-    // Track if client has hydrated
-    const hasHydrated = ref(false);
-    onMounted(() => {
-        hasHydrated.value = true;
-    });
+    // Default to true when biolandSettings not yet loaded to prevent hydration mismatch
+    const showWidget     = computed(()=> siteStore?.biolandSettings?.homeWidgets?.panoramaSolutionsWidget?.enable ?? true);
 
     const { data: record, status, error } = await useLazyFetch('/api/list/panorama', {  method: 'GET', onResponse, query,key: 'panorama-widget', getCachedData });
 
     const loading = computed(()=> status.value === 'pending'); 
-
-    // function onResponse({ request, response, options}){
-    //     const data    = response._data;
-    //     const { length } = data || []
-
-
-    //     response._data = data[Math.floor(Math.random() * length)];
-    // }
     
     function onResponse({ request, response, options}){
         const   data     = response._data;

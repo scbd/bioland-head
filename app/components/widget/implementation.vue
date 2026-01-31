@@ -60,13 +60,19 @@
     const query          = clone({ ...siteStore.params, promoted: true, });
     const localePath     = useLocalePath();
     const getCachedData  = useGetCachedData();
-    const showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.implementation);
 
     // Track if client has hydrated
     const hasHydrated = ref(false);
     onMounted(() => {
         hasHydrated.value = true;
     });
+
+    // Check if widget is enabled from store settings
+    const isWidgetEnabled = computed(() => siteStore?.biolandSettings?.homeWidgets?.implementationWidget?.enable);
+    
+    // For consistent hydration: always render during SSR/initial hydration,
+    // then respect the actual setting after hydration completes
+    const showWidget = computed(() => !hasHydrated.value || isWidgetEnabled.value);
 
     const { data: record , status, error }= await useLazyFetch(`/api/list/drupal/5`, {  method: 'GET', query, onResponse, key: 'implimentation', getCachedData });
 
@@ -98,7 +104,7 @@
     const links = [
         { name: t('View National Reports'),    to: { path:localePath(searchSecretariatPath.value), query:{ schemas:['cpbNationalReport2','cpbNationalReport3','cpbNationalReport4','absNationalReport','nationalReport','nationalReport6']}} },
         { name: t('View Laws & Regulations'),  to: { path:localePath(searchSecretariatPath.value), query:{ schemas:['measure','absProcedure','biosafetyLaw', 'biosafetyDecision']}} },
-        { name: t('View NBSAP(s)'),            to: { path:localePath(searchSecretariatPath.value),query:{ schemas:['nationalReport'], freeText:'nbsap'}}},
+        { name: t('View NBSAP(s)'),            to: { path:localePath(searchSecretariatPath.value),query:{ schemas:['nbsap']}}},
         { name: t('View Projects'),            to: { path:localePath(searchPath.value),query:{ schemas:[5]}}},
         { name: t('View Documents'),           to: { path:localePath(searchPath.value),query:{ schemas:[12]}}},
     ];

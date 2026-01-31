@@ -27,7 +27,7 @@
                                 .filter(([name, data])=> data.count)
                                 .sort(sortObj)
                                 .map(([name, data])=>{
-                                    return { title: `${data.name}`, count:data.count, href:`/taxonomy/term/21?schemas=${data.drupalInternalId}` }
+                                    return { title: `${data.name}`, count:data.count, href:`/taxonomy/term/${data.drupalInternalId}` }
                                 })
                             );
 

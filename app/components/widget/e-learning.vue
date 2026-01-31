@@ -1,7 +1,7 @@
 <template>
-    <div class="position-relative">
-        <!-- Placeholder shown during SSR and loading -->
-        <template v-if="showWidget && (!hasHydrated || loading) && !error">
+    <div v-if="showWidget" class="position-relative">
+        <!-- Placeholder shown during loading -->
+        <div v-if="loading || !record">
             <div class="text-capitalize placeholder-glow">
                 <h4 class="mb-3"><span class="placeholder col-3"></span></h4>
             </div>
@@ -32,10 +32,10 @@
             <div class="text-start my-3 placeholder-glow">
                 <span class="placeholder col-4"></span>
             </div>
-        </template>
+        </div>
 
-        <!-- Actual content after hydration and data loads -->
-        <LazyWidget v-else-if="!error && record && showWidget" :loading="loading" :name="t('e-Learning')" :record="record" :links="links"/>
+        <!-- Actual content after data loads -->
+        <LazyWidget v-else-if="!error" :loading="loading" :name="t('e-Learning')" :record="record" :links="links"/>
     </div>
 </template>
 <script setup>
@@ -46,27 +46,23 @@
     const   query        = clone({ ...siteStore.params, promoted: true,});
     const   localePath   = useLocalePath();
     const   getCachedData  = useGetCachedData();
-    const   showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.eLearning);
+    // Default to true when biolandSettings not yet loaded to prevent hydration mismatch
+    const   showWidget     = computed(()=> siteStore?.biolandSettings?.homeWidgets?.elearningWidget?.enable ?? true);
 
-    // Track if client has hydrated
-    const hasHydrated = ref(false);
-    onMounted(() => {
-        hasHydrated.value = true;
-    });
-
-    const { data: record, status, error  }= await useLazyFetch(`/api/list/drupal/4`, {  method: 'GET', query, onResponse,key: 'e-learning-widget', getCachedData });
+    const { data: record, status, error  }= await useLazyFetch(`/api/list/drupal/4`, {  method: 'GET', query, onResponse, key: 'e-learning-widget', getCachedData });
 
     const loading = computed(()=> status.value === 'pending'); 
 
-    function onResponse({ request, response, options}){
+    function onResponse({ request, response, options }){
         const { data }   = response._data;
         const { length } = data || [];
         
-        if(!length) return response._data = {};
+        if(!length) return response._data = null;
 
-        const index = computed(()=> randomArrayIndexTimeBased(Number(length)));
+        // Use a stable index based on the current hour to ensure SSR/client match
+        const index = randomArrayIndexTimeBased(Number(length));
 
-        response._data = data[index.value];
+        response._data = data[index];
     }
     
     const links = [ { name: t('Browse Courses'),  to: { path:localePath('/search'),query:{ promoted: true, schemas:[4]}}}, ];

@@ -1,7 +1,7 @@
 <template>
-    <div class="position-relative">
-        <!-- Placeholder shown during SSR and loading -->
-        <template v-if="showWidget && (!hasHydrated || loading) && !error">
+    <div v-show="showWidget" class="position-relative">
+        <!-- Placeholder shown during loading -->
+        <div v-show="!hasData && !error">
             <div class="text-capitalize placeholder-glow">
                 <h4 class="bm-3"><span class="placeholder col-6"></span></h4>
             </div>
@@ -53,21 +53,21 @@
                     <span class="placeholder col-5"></span>
                 </div>
             </div>
-        </template>
+        </div>
 
-        <!-- Actual content after hydration and data loads -->
-        <div v-else-if="!error && data?.length && showWidget">
+        <!-- Actual content after data loads -->
+        <div v-show="hasData && !error">
             <div class="text-capitalize">
                 <h4 :style="style" class="bm-3">{{t('Latest Discussions')}} </h4>
             </div>
-            <div v-for="(forum,i) in data || []" :key="i"  class="mb-4">
+            <div v-for="(forum,i) in data" :key="i"  class="mb-4">
                 <h5 class="card-title  mb-2">
                     <NuxtLink :style="linkStyle" class="fw-bold"  :to="getHref(forum)">{{forum.title}}</NuxtLink>
                 </h5>
                 <div>
-                    <span v-for="(user,j) in forum?.users || []" :key="j" >
+                    <template v-for="(user,j) in forum?.users || []" :key="j">
                         <LazyAvatar :user="user" />
-                    </span>
+                    </template>
                 </div>
                 <div class="mt-1">
                     <span :style="bgStyle" class="badge  me-2">{{forum.forum.name}}</span>
@@ -85,7 +85,6 @@
                 </div>
             </div>
         </div>
-        <!-- Nothing shown on error (display:none behavior) -->
     </div>
 </template>
 <script setup>
@@ -96,24 +95,18 @@
     const   localePath     = useLocalePath();
     const   siteStore      = useSiteStore ();
 
-    // Track if client has hydrated
-    const hasHydrated = ref(false);
-    onMounted(() => {
-        hasHydrated.value = true;
-    });
-
-    const   showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.forums);
+    const   showWidget     = computed(()=> siteStore?.biolandSettings?.homeWidgets?.latestDiscussionsWidget?.enable);
     const   query                 = clone({...siteStore.params, rowsPerPage:5 });
     const { data, status, error } =  await useLazyFetch(`/api/list/topics`, {  method: 'GET', query,key: 'forums-widget', getCachedData });
 
     const forumsUrl = computed(() => localePath('/taxonomy/term/'+systemPageTidConstants.FORUMS));
+    const hasData   = computed(() => data.value?.length > 0);
     function getHref(topic){
         const { nodeId } = topic;
 
         return localePath(`/node/${nodeId}`);
     }
 
-    const loading   = computed(()=> status.value === 'pending');
     const style     = reactive({ '--bs-primary': siteStore.primaryColor })
     const linkStyle = reactive({ '--bs-primary': siteStore.primaryColor, color: siteStore.primaryColor, 'text-decoration': `underline ${siteStore.primaryColor}` })
     const bgStyle   = reactive({ 'background-color': siteStore.primaryColor })

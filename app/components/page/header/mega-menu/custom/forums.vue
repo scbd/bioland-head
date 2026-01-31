@@ -1,7 +1,9 @@
 <template>
     <div id="page-header-mega-menu-custom-forums" class="col-12 text-wrap px-0">
         <LazyPageHeaderMegaMenuHeader  :menu="menu" />
-
+        <section v-if="isTop" >
+            <LazyPageHeaderMegaMenuLink v-for="(aMenu,j) in drupalMenus" :id="`page-header-mega-menu-custom-forums-child-${j}`" :key="j" :menu="aMenu" />
+        </section>
         <div v-for="(aChild,j) in children" :id="`page-header-mega-menu-custom-forums-item-${j}`" :key="j" class="row mb-1 overflow-hidden">
             <div class="col-5 text-nowrap">
                 <NuxtLink  class="child-link"   :to="getHref(aChild)" :title="aChild.title" >
@@ -21,16 +23,24 @@
             <hr v-if="j<children.length-1" class="mt-2 mb-1"/>
             </div>
         </div>
-
+        <section v-if="!isTop" >
+            <LazyPageHeaderMegaMenuLink v-for="(aMenu,j) in drupalMenus" :id="`page-header-mega-menu-custom-forums-child-${j}`" :key="`top-${j}`" :menu="aMenu" />
+        </section>
     </div>
 </template>
 <script setup>
+    import clone from 'lodash.clonedeep';
+
     const   siteStore   = useSiteStore ();
     const   menuStore   = useMenusStore();
     const   localePath  = useLocalePath();
-    const   props       = defineProps({ menu: Object });
+    const   props              = defineProps({ menu: Object });
+    const { menu: passedMenu } = toRefs(props);
     const   bgStyle     = reactive({ 'background-color': siteStore.primaryColor })
-    const { menu }      = toRefs(props);
+    const   aMenu       = computed(() => clone(unref(passedMenu)));
+    const   menu        = aMenu;
+    const   drupalMenus = computed(()=>aMenu.value?.children || []);
+    const   isTop       = computed(()=>(!siteStore.biolandSettings?.megaMenu?.forums?.position || siteStore.biolandSettings?.megaMenu?.forums?.position === 'top'));
     const { t, locale } = useI18n();
     const children      = computed(() => { return menuStore.forums; });
 
