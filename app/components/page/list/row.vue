@@ -39,7 +39,7 @@
                 <div :id="`${baseId}-footer-container`" class="col-12 ">
                     <div :id="`${baseId}-footer`" class="card-footer pb-0 text-center">
                         <ul :id="`${baseId}-tags`" class="float-start">
-                            <li v-if="!isSingleType"><span :style="typeStyle" :id="`${baseId}-type`" class="fw-bold text-uppercase">{{getDocumentTypeName(aLine)}}</span></li>
+                            <li v-if="!isSingleType"><span :style="typeStyle" :id="`${baseId}-type`" class="fw-bold text-uppercase">{{getDocumentTypeName(aLine)}}</span><template v-if="getRealmText(aLine)"> - <span :style="getRealmStyle(aLine)" :id="`${baseId}-realm`" class="fw-bold text-uppercase">{{getRealmText(aLine)}}</span></template></li>
                             <li v-if="aLine?.tags?.countries?.length" v-for="(aCountry,i) in aLine.tags?.countries" :id="`${baseId}-country-${i}`" :key="i"   class="text-uppercase" >
                                 <NuxtLink :to="`https://www.cbd.int/countries/?country=${aCountry.identifier}`" target="_blank" external :id="`${baseId}-country-link-${i}`">
                                     {{t(aCountry.identifier)}}
@@ -53,7 +53,11 @@
                         <span v-if="aLine?.tags?.sdgs?.length" v-for="(aSdg,i) in aLine?.tags?.sdgs" :id="`${baseId}-sdg-${i}`" :key="i"  >
                             <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1" :id="`${baseId}-sdg-image-${i}`"/>
                         </span>
-                        <p :id="`${baseId}-date`" class="float-end card-text pe-1"><small class="text-muted">{{getDateFormated()}}</small></p>
+                        <p :id="`${baseId}-date`" class="float-end card-text pe-1">
+                            <small v-if="isPublishedDate" class="text-muted text-uppercase">{{t('published on')}} : </small>
+                            <small v-if="isStartDate" class="text-muted text-uppercase">{{t('start date')}} : </small>
+                            <span >{{getDateFormated()}}</span>
+                        </p>
             
                         <span  v-for="(subject,i) in aLine.tags?.subjects" :id="`${baseId}-subject-${i}`" :key="i" :style="bgStyle" class="badge text-bg-primary">{{ t(subject.identifier) }}</span>
                 
@@ -128,7 +132,7 @@
 
         // Guard against undefined/empty schema to prevent i18n "Invalid arguments" error
         if (!aLine?.schema) {
-            console.warn('[row.vue] getDocumentTypeName - missing schema', { 
+            console.debug('[row.vue] getDocumentTypeName - missing schema', { 
                 type: aLine?.type, 
                 dnid: aLine?.dnid,
                 title: aLine?.title?.substring(0, 50)
@@ -137,9 +141,8 @@
         
         const schemaText = aLine?.schema ? t(aLine.schema) : '';
         
-        if (schemaText && realmText) return `${schemaText} - ${realmText}`;
+        // Return only schema text; realm text is now rendered separately with getRealmText
         if (schemaText) return schemaText;
-        if (realmText) return realmText;
         
         // Fallback for items without schema (e.g., forum nodes)
         return aLine?.type ? t(aLine.type.replace('node--', '')) : '';
@@ -169,6 +172,33 @@
         if(hasBch && realms.length == 1) return t('Biosafety Clearing-House');
     }
 
+    function getRealmType({ realms }){
+        if(! realms || !realms.length) return '';
+
+        const hasChm = realms.includes('CHM');
+        const hasAbs = realms.includes('ABS');
+        const hasBch = realms.includes('BCH');
+
+        if(hasChm && hasAbs && hasBch) return 'secretariat';
+        if(hasChm && hasAbs) return 'absch';
+        if(hasChm && hasBch) return 'bch';
+        if(hasChm && realms.length == 1) return 'secretariat';
+        if(hasAbs && realms.length == 1) return 'absch';
+        if(hasBch && realms.length == 1) return 'bch';
+
+        return '';
+    }
+
+    function getRealmStyle(aLine){
+        const realmType = getRealmType(aLine);
+        
+        if(realmType === 'secretariat') return { color: '#1FA65D' };
+        if(realmType === 'absch') return { color: '#fd7e14', 'text-decoration': 'underline', 'text-decoration-color': '#1FA65D', 'text-decoration-thickness': '0.5px' };
+        if(realmType === 'bch') return { color: '#fd7e14' };
+        
+        return {};
+    }
+
     function getRealmHost(){
         const { realms } = aLine.value;
         if(! realms || !realms.length) return '';
@@ -192,9 +222,12 @@
         if(isChm.value) return dateFormat(line.startDate || line.updatedDate )
 
         else
-        return dateFormat(line.fieldStartDate || line.fieldPublishedDate || line.changed)
+        return dateFormat(line.fieldStartDate || line.fieldPublished || line.changed)
     }
 
+    const isStartDate = computed(()=> !!(aLine?.value?.fieldStartDate || aLine?.value?.startDate));
+    const isPublishedDate = computed(()=> !!(aLine?.value?.fieldPublished));
+    const hasOrder = computed(()=> !!(aLine?.value?.fieldOrder) && (aLine?.value?.fieldOrder < 10000));
     
     const cardStyle = reactive({
                                     'background-color': siteStore?.theme?.backGround?.secondary,

@@ -21,7 +21,7 @@ export const useGetCachedData= () =>  {
             return nuxtApp?.payload?.data[key] || nuxtApp?.static?.data[key];
         }
 }
-export const useDateFormat = () => (date, format = 'dd LLL yyyy')=>{
+export const useDateFormat = () => (date, format = 'yyyy LLL dd')=>{
 
     const { locale } = useI18n();
 

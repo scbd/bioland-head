@@ -21,6 +21,11 @@
             <h5 class="mb-0 text-nowrap">{{t('Published on')}}</h5>
             {{formatDate(pageStore?.publishedOn)}}
         </div>
+        <div v-if="pageStore?.endDate" class="mb-2">
+            <h5 class="mb-0 text-nowrap" >{{t('End Date')}}</h5>
+            <span >{{formatDate(pageStore?.endDate)}}</span>
+        </div>
+
         <div v-if="tags?.gbfTargets?.length" class="mb-2">
             <h5 >{{t('GBF Targets')}}</h5>
             <NuxtLink  v-for="(aTarget,i) in tags.gbfTargets" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
