@@ -28,9 +28,18 @@ export function getTextDirection(localeCode) {
  * Checks for summary first, then strips HTML from body/description and truncates
  * @param {Object} page - Page data from pageStore
  * @param {number} maxLength - Maximum length for description
+ * @param {boolean} isHomePage - Whether this is the home page
+ * @param {Object} heroImage - Hero image from pageStore (for home page)
  * @returns {string} - Clean description text
  */
-function getMetaDescription(page, maxLength = 160) {
+function getMetaDescription(page, maxLength = 160, isHomePage = false, heroImage = null) {
+    // For home page, use hero image description if available
+    if (isHomePage && heroImage?.fieldDescription?.value) {
+        const { trunc } = useText();
+        const plainText = stripHtml(heroImage.fieldDescription.value).result.replace(/\s+/g, ' ').trim();
+        return trunc(plainText, maxLength);
+    }
+    
     // Check for pre-existing summary first (already processed by Drupal)
     const summary = page?.body?.summary || page?.description?.summary;
     if (summary) {
@@ -201,9 +210,25 @@ function generateTwitterHandle(siteName, isBiosafetySite) {
  * Get the first image from page attachments for OG image
  * @param {Object} page - Page data
  * @param {string} host - Base host URL
+ * @param {boolean} isHomePage - Whether this is the home page
+ * @param {string} logo - Site logo URL (for home page)
+ * @param {Object} logoDimensions - Logo dimensions { width, height, type }
+ * @param {string} siteName - Site name for alt text
  * @returns {Object|null} - Image object with src, alt, width, height
  */
-function getOgImage(page, host) {
+function getOgImage(page, host, isHomePage = false, logo = null, logoDimensions = null, siteName = '') {
+    // For home page, use the site logo
+    if (isHomePage && logo) {
+        return {
+            src: logo,
+            secureUrl: logo,
+            alt: `${siteName} logo`,
+            width: logoDimensions?.width,
+            height: logoDimensions?.height,
+            type: logoDimensions?.type || 'image/png'
+        };
+    }
+    
     const attachments = page?.fieldAttachments;
     
     if (!Array.isArray(attachments) || !attachments.length) return null;
@@ -246,11 +271,14 @@ export function usePageSeo(options = {}) {
     const seoData = computed(() => {
         const currentLocale = unref(locale);
         const page = pageStore.page;
+        const heroImage = pageStore.heroImage;
         const host = siteStore.host; // Host without locale
         const defaultLocale = siteStore.defaultLocale || 'en';
         const allLocales = siteStore.allLocales || [];
         const siteName = siteStore.name || '';
         const isBiosafetySite = siteStore.isBiosafetySite || false;
+        const logo = siteStore.logo;
+        const logoDimensions = siteStore.logoDimensions;
         
         // Title - page title for content, site name for home
         const title = isHomePage 
@@ -260,8 +288,8 @@ export function usePageSeo(options = {}) {
         // Full title always uses template: ${pageTitle} | ${siteName}
         const fullTitle = title && siteName ? `${title} | ${siteName}` : (title || siteName);
         
-        // Description - check for summary first, then strip HTML and truncate
-        const description = getMetaDescription(page, 160);
+        // Description - check for hero image description for home page
+        const description = getMetaDescription(page, 160, isHomePage, heroImage);
         
         // Canonical URL - self-canonicalize to the alias path
         const canonicalPath = getCanonicalPath(page, currentLocale);
@@ -281,8 +309,8 @@ export function usePageSeo(options = {}) {
         // Text direction from i18n config
         const dir = getTextDirection(currentLocale);
         
-        // OG Image
-        const ogImage = getOgImage(page, host);
+        // OG Image - use logo for home page
+        const ogImage = getOgImage(page, host, isHomePage, logo, logoDimensions, siteName);
         
         // Type name for article type
         const typeName = page?.fieldTypePlacement?.name || '';

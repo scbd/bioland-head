@@ -1,5 +1,5 @@
 export const useSiteStore = defineStore('site', {
-    state: () => ({ i18nStrategy: 'prefix', locale  : undefined, identifier                : undefined, siteCode                  : undefined, pageIdentifiers           : undefined, defaultLocale             : undefined, gaiaApi                   : undefined, drupalMultisiteIdentifier : undefined, multiSiteCode             : undefined, baseHost                  : undefined, logo                      : undefined, config                    : undefined, name                      : undefined, redirect                  : undefined, drupalInternalRevisionId : undefined, biolandSettings: undefined, }),
+    state: () => ({ i18nStrategy: 'prefix', locale  : undefined, identifier                : undefined, siteCode                  : undefined, pageIdentifiers           : undefined, defaultLocale             : undefined, gaiaApi                   : undefined, drupalMultisiteIdentifier : undefined, multiSiteCode             : undefined, baseHost                  : undefined, logo                      : undefined, logoDimensions            : undefined, config                    : undefined, name                      : undefined, redirect                  : undefined, drupalInternalRevisionId : undefined, biolandSettings: undefined, }),
     actions:{
         set(name, value){
             this.$patch({ [name]: unref(value) } );
@@ -25,6 +25,58 @@ export const useSiteStore = defineStore('site', {
             if(biolandSettings)
                 this.set('biolandSettings', biolandSettings);
             
+            // Fetch logo dimensions asynchronously
+            this.fetchLogoDimensions();
+        },
+        async fetchLogoDimensions() {
+            const logoUrl = this.logo;
+            if (!logoUrl) return;
+            
+            try {
+                // Use Image API to get dimensions
+                if (import.meta.client) {
+                    const img = new Image();
+                    await new Promise((resolve, reject) => {
+                        img.onload = () => {
+                            this.set('logoDimensions', {
+                                width: img.naturalWidth,
+                                height: img.naturalHeight,
+                                type: this.getImageTypeFromUrl(logoUrl)
+                            });
+                            resolve();
+                        };
+                        img.onerror = reject;
+                        img.src = logoUrl;
+                    });
+                } else {
+                    // For SSR, set default dimensions (will be updated on client)
+                    this.set('logoDimensions', {
+                        width: 96,
+                        height: 96,
+                        type: this.getImageTypeFromUrl(logoUrl)
+                    });
+                }
+            } catch (error) {
+                // Fallback to default dimensions if image loading fails
+                this.set('logoDimensions', {
+                    width: 96,
+                    height: 96,
+                    type: 'image/png'
+                });
+            }
+        },
+        getImageTypeFromUrl(url) {
+            if (!url) return 'image/png';
+            const ext = url.split('.').pop()?.toLowerCase();
+            const typeMap = {
+                'png': 'image/png',
+                'jpg': 'image/jpeg',
+                'jpeg': 'image/jpeg',
+                'gif': 'image/gif',
+                'webp': 'image/webp',
+                'svg': 'image/svg+xml'
+            };
+            return typeMap[ext] || 'image/png';
         },
         getHost(ignoreLocale = false){
             const { locale, siteCode, baseHost, redirect } = this;
@@ -39,6 +91,16 @@ export const useSiteStore = defineStore('site', {
         }
     },
     getters:{
+        isPromoteAndStickyPublic(){
+            const meStore = useMeStore();
+            const hasRequiredRole = meStore.roles?.some(role => 
+                ['administrator', 'scbd_staff', 'site_manager', 'content_manager', 'contributor'].includes(role)
+            );
+            
+            if (hasRequiredRole) return true;
+            
+            return this.biolandSettings?.config?.promoteAndStickyPublic || false;
+        },
         allLocales(){
             return [...Array.from(new Set([this?.config?.defaultLocale, ...this?.config?.locales|| [] ] || []))];
         },
@@ -88,6 +150,17 @@ export const useSiteStore = defineStore('site', {
         },
         isBiosafetySite(){
             return this.baseHost.includes('bsl') || this.baseHost.includes('biosafety') || this.baseHost.includes('bch');
+        },
+        isHomePage(){
+            const route = useRoute();
+            const path = route?.path;
+            
+            if (!path) return false;
+            
+            // Check if path matches root, locale root, or configured homePath
+            return path === '/' || 
+                   path === `/${this.locale}` || 
+                   path === this.homePath;
         }
     }
 });

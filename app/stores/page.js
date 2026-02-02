@@ -1,7 +1,7 @@
 
 import { camelCase } from 'change-case/keys';
 export const usePageStore = defineStore('page', {
-    state: ()=>({ page: {}, loading: true, cancelLoading: true, isInitialized: false, cacheKeys:{} }), 
+    state: ()=>({ page: {}, loading: true, cancelLoading: true, isInitialized: false, cacheKeys:{}, breadcrumbsSchemaOrg: null, headerSchemaOrg: null, footerSchemaOrg: null, mainMenuSchemaOrg: null }), 
     actions:{
         isLoading(){
             return this.loading && !this.cancelLoading;
@@ -29,6 +29,19 @@ export const usePageStore = defineStore('page', {
             // Use key if provided, otherwise true
             this.isInitialized = key || true;
         } ,
+        setBreadcrumbsSchemaOrg(schema){
+            // Direct assignment to avoid triggering extra reactivity from $patch
+            this.breadcrumbsSchemaOrg = schema;
+        },
+        setHeaderSchemaOrg(schema){
+            this.headerSchemaOrg = schema;
+        },
+        setFooterSchemaOrg(schema){
+            this.footerSchemaOrg = schema;
+        },
+        setMainMenuSchemaOrg(schema){
+            this.mainMenuSchemaOrg = schema;
+        },
         mapImage({  name,fieldMediaImage, drupalInternalMid, path, filename, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage }){
             const siteStore = useSiteStore();
             const alt       = fieldMediaImage?.meta?.alt|| name || filename || '';
@@ -146,6 +159,7 @@ export const usePageStore = defineStore('page', {
 
             return heroImages[picIndex];
         },
+
         typeName(){ 
             if(this.isTaxonomyTermTag || this.isSystemPage) return this.page?.name || '';
 
@@ -236,6 +250,10 @@ export const usePageStore = defineStore('page', {
         },
         title(){
             return this.page?.title || this.page?.name;
+        },
+        isHomePage(){
+            const siteStore = useSiteStore();
+            return siteStore.homePath === `/taxonomy/term/${this?.page?.drupalInternalTid}`;
         },
         body(){
             return this.page?.body?.processed || this.page?.body?.value || this.page?.description?.processed || this.page?.description?.value;
