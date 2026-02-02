@@ -8,9 +8,11 @@
             <div id="page-list-ncps-breadcrumbs-container" class="col-12 col-md-9 ps-0">
                 <LazyPageBreadCrumbs/>
             </div>
-            <div id="page-list-ncps-body-tabs-container" class="col-12 b-line">
+
+            <div id="page-list-ncps-body-tabs-container" class="col-12 b-line p-0">
                 <LazyPageBodyTabs :can-edit="meStore.showEdit"/>
             </div>
+            
             <div id="page-list-ncps-title-container" class="col-9 offset-3 b-line ps-0">
                 <h1 id="page-list-ncps-title" class="d-flex align-items-center mt-2" >{{ pageStore?.title}}</h1>
                 <LazySpinner v-if="loading" :size="100"/>
@@ -23,7 +25,7 @@
                 <h2 :id="`page-list-ncps-type-${aType}-${typeIndex}-title-mobile`" :style="pageTypeStyle"  class="page-type">{{t(`${aType}-type`)}}</h2>
             </div>
 
-            <div :id="`page-list-ncps-type-${aType}-${typeIndex}-title-desktop-container`" class="col-3 d-none d-md-block" >
+            <div :id="`page-list-ncps-type-${aType}-${typeIndex}-title-desktop-container`" class="col-3 d-none d-md-block ps-0" >
                 <h2  :id="`page-list-ncps-type-${aType}-${typeIndex}-title-desktop`" :style="pageTypeStyle" class="page-type pt-5">{{t(`${aType}-type`)}}</h2>
             </div>
 

@@ -1,35 +1,45 @@
 <template>
-    <div class="card " >
+    <div class="card position-relative">
+        <!-- Sticky/Promote indicators - TEST: showing all without auth -->
+
         <div v-if="hasOwnImage" :style="backgroundStyles" class="cit bg-light">
             <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
         </div>
-        <ClientOnly v-if="!hasOwnImage" >
-            <div :style="backgroundStyles" class="cit bg-light">
-                <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
-            </div>
-        </ClientOnly>
+        <div v-else :style="backgroundStyles" class="cit bg-light">
+            <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
+        </div>
         <div class="card-body mb-1" style="max-height: 300px; overflow:hidden;">
-            <h6 class="card-subtitle text-muted mb-2" :class="{'text-center': isFromTheBCH}"><span v-if="isFromTheBCH" :style="colorStyle">{{type}}</span ><span v-else>{{type}}</span> {{schema}}</h6>
-            <h5 class="card-title  mb-3">
+            <h6 class="card-subtitle text-muted mb-2" :class="{'text-center': isFromTheBCH}"><span :style="isFromTheBCH ? colorStyle : undefined">{{type}}</span> {{schema}}</h6>
+            <h5 class="card-title  mb-2">
                 <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''">{{record.title}}</NuxtLink>
             </h5>
             <p class="card-text">{{trunc(record.summary)}}</p>
 
         </div>
-        <div class="card-footer">
-            <h6 class="card-subtitle text-muted text-small mb-2">{{dateFormat(record.fieldPublished || record.fieldStartDate || record.changed || record.startDate || record.updatedDate || record.rec_date)}}</h6>
+        <div class="card-footer d-flex flex-wrap align-items-center">
+            <h6 class="card-subtitle text-center mb-2 w-100">
+                <span class="fw-lighter text-small text-muted text-uppercase fs-6">{{ dateLabel }}</span>
+                <br> 
+                <span class="fw-bolder">{{dateFormat(displayDate)}} </span>
+            </h6>
 
-            <span v-if="record?.eventCity" class="badge me-1" :style="badgePrimaryStyle"> {{record.eventCity}}</span>
-            <span v-if="record?.eventCountry?.symbol" class="badge me-1" :style="badgeSecondaryStyle"> {{ t(record?.eventCountry?.symbol) }}</span>
-            <span v-for="(aCountry,i) in record?.tags?.countries" class="badge me-1" :style="badgeSecondaryStyle"> {{ t(aCountry.identifier) }}</span>
+            <span v-show="record?.eventCity" class="badge me-1" :style="badgePrimaryStyle"> {{record?.eventCity || ''}}</span>
+            <span v-show="record?.eventCountry?.symbol" class="badge me-1" :style="badgeSecondaryStyle"> {{ record?.eventCountry?.symbol ? t(record.eventCountry.symbol) : '' }}</span>
+            <template v-for="(aCountry,i) in countriesList" :key="i">
+                <span class="badge me-1 mb-1" :style="badgeSecondaryStyle"> {{ t(aCountry.identifier) }}</span>
+            </template>
 
-            <NuxtLink class="me-1" v-for="(aTarget,i) in gbfTags || []" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
-                <LazyGbfIcon :identifier="aTarget.identifier" size="xs"/>
-            </NuxtLink>
+            <template v-for="(aTarget,i) in gbfTagsList" :key="i">
+                <NuxtLink class="me-1 mb-1" :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
+                    <LazyGbfIcon :identifier="aTarget.identifier" size="xs"/>
+                </NuxtLink>
+            </template>
 
-            <NuxtLink class="me-1" v-for="(aSdg,i) in record?.tags?.sdgs || []" :key="i"  :to="aSdg.url" target="_blank" external>
-                <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
-            </NuxtLink>
+            <template v-for="(aSdg,i) in sdgsList" :key="i">
+                <NuxtLink class="me-1 mb-1" :to="aSdg.url" target="_blank" external>
+                    <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
+                </NuxtLink>
+            </template>
         
             <span class="ms-auto" style="z-index: 10;">
                 <ClientOnly>
@@ -46,7 +56,8 @@
     const { record    }  = toRefs(props);
     const { t, locale }  = useI18n();
     const { trunc      } = useText();
-    const   siteStore   = useSiteStore();
+    const   siteStore    = useSiteStore();
+    const   meStore      = useMeStore();
     const   dateFormat   = useDateFormat(locale);
 
     const   hasOwnImage  = computed(()=> !!unref(record)?.mediaImage?.src);
@@ -59,7 +70,7 @@
     const   external     = computed(()=> !!record?.value?.realms ||isFromTheBCH.value );
     const isPromotionPublic = computed(()=> siteStore?.isPromoteAndStickyPublic);
     const gbfTags = computed(()=>{
-                            if(isFromTheBCH .value) return [ { "identifier": "GBF-TARGET-17", } ];
+                            if(isFromTheBCH .value) return uniqueArrayObjectsByKey([ ...(record?.value?.tags?.gbfTargets || []),{ "identifier": "GBF-TARGET-17" } ], 'identifier');
 
                             return record?.value?.tags?.gbfTargets || [];
                         });
@@ -82,9 +93,31 @@
         return record.value?.schema? `- ${t(record?.value?.schema)}`: ''
     });
 
+    // SSR-safe computed properties to avoid hydration mismatch
+    const displayDate = computed(() => 
+        record?.value?.fieldStartDate ||
+        record?.value?.startDate || 
+        record?.value?.fieldPublished || 
+        record?.value?.changed || 
+        record?.value?.updatedDate || 
+        record?.value?.rec_date || 
+        ''
+    );
+
+    const dateLabel = computed(() => {
+        if (record?.value?.fieldPublished) return t('published on');
+        if (record?.value?.startDate || record?.value?.fieldStartDate) return t('start date');
+        return '\u00A0'; // non-breaking space as default
+    });
+
     const showPromoteSticky = computed(() => 
         siteStore?.isPromoteAndStickyPublic && (record?.value?.sticky || record?.value?.promote)
     );
+
+    // SSR-safe array computeds to ensure consistent DOM structure
+    const countriesList = computed(() => record?.value?.tags?.countries || []);
+    const gbfTagsList = computed(() => gbfTags.value || []);
+    const sdgsList = computed(() => record?.value?.tags?.sdgs || []);
 
 //consola.warn(record.value);
 </script>

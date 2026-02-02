@@ -4,14 +4,14 @@
         
         <div v-if="hasHeroImage" id="page-header-hero-image-content" class="container text-white">
             <div class="row pb-1 position-relative ">
-                <div v-if="meStore.showEdit && meStore.isContentManager" class="position-absolute text-end bottom-50" style="min-width:3rem;">
+                <div v-if="meStore.showEdit && meStore.isContentManager && hasHydrated " class="position-absolute text-end bottom-50" style="min-width:3rem;">
                     <NuxtLink :to="editUrl()" type="button" class="btn btn btn-light btn-sm mt-1">
                         <LazyIcon name="edit" style="margin-top: .2rem;" :size="2"/>
                     </NuxtLink>
                 </div>
                 
                 <!-- Description: placeholder or actual content -->
-                <div v-if="hasHydrated && hi?.fieldDescription?.value" v-html="htmlSanitize(hi?.fieldDescription?.value)">
+                <div v-if="hasHydrated " v-html="htmlSanitize(hi?.fieldDescription?.value)" class="mt-3 text-light">
                 </div>
                 <div v-else class="col-12" style="max-height: 250px;">
                     <!-- 3 large lighter lines (0.9 alpha) -->
@@ -47,9 +47,7 @@
     
     // Track hydration state
     const hasHydrated      = ref(false);
-    onMounted(() => {
-        hasHydrated.value = true;
-    });
+    onMounted(() => { hasHydrated.value = true; });
     
     // Check both data availability AND that host is properly initialized
     const isHostReady      = computed(() => siteStore.host && !siteStore.host.includes('undefined'));
@@ -77,16 +75,19 @@
 
         return getBackgroundStyles(imgSrc);
     })
-    function editUrl () {
+
+    function editUrl() {
+        return pageStore?.isHomePage? editUrlHomePage() : editUrlDirect();
+    }
+
+    function editUrlHomePage () {
+        return  `${siteStore.localizedHost}/admin/config/bioland/settings/front-end/home-page?destination=${encodeURIComponent(route.path)}`;
+    }
+
+    function editUrlDirect () {
         const menuName =  hi.value?.drupalInternalMid;
 
         return  `${siteStore.host}/media/${menuName}/edit?destination=${encodeURIComponent(route.path)}`;
-    }
-
-    function editHero () {
-        const menuName =  hi.value?.drupalInternalMid;
-
-        navigateTo(`${siteStore.host}/media/${menuName}/edit`,{ external: true });
     }
 
     const hexToRgb = hex => hex?.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i,(m, r, g, b) => '#' + r + r + g + g + b + b)
