@@ -136,7 +136,6 @@
         }
         
         const schemaText = aLine?.schema ? t(aLine.schema) : '';
-        const realmText = getRealmText(aLine);
         
         if (schemaText && realmText) return `${schemaText} - ${realmText}`;
         if (schemaText) return schemaText;

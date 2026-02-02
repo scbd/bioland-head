@@ -343,12 +343,6 @@
         return siteStore?.countries?.length || siteStore?.country;
     }
 
-    // const comps=[]
-    //     for (const aMenu of sections.value) {
-    //         if(isComponent(aMenu)) comps.push(componentName(aMenu));
-    //     }
-
-    //     consola.error(comps)
 </script>
 
 <style lang="scss" scoped>

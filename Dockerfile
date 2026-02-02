@@ -40,6 +40,9 @@ RUN yarn install --immutable
 
 COPY . ./
 
+# Increase memory limit for the build process, nuxtjs exceeds default 2gb limit
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 RUN yarn build
 
 # ---- Runner stage: assemble minimal production image with non-root user ----
@@ -66,9 +69,8 @@ COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/.output ./.output
 COPY --from=build /usr/src/app/node_modules/sharp ./.output/server/node_modules/sharp
 
-# Create cache directories with correct ownership for nuxt user
-RUN mkdir -p /usr/src/app/cache/db /usr/src/app/cache/external /usr/src/app/cache/lists && \
-    chown -R nuxt:nodejs /usr/src/app/cache
+# Create cache directory (permissions will be fixed manually from host)
+RUN mkdir -p /usr/src/app/cache
 
 ENV PORT=8000
 ENV NUXT_HOST=0.0.0.0

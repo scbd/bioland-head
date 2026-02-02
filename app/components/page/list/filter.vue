@@ -2,6 +2,7 @@
     <div v-if="!isSecretariat" :id="baseId" class="mb-3">
         <div :id="`${baseId}-header`" class="filter-header d-flex justify-content-between align-items-center" @click="toggleFilter">
             <label :id="`${baseId}-label`" class="form-label mb-0"><strong>{{ t('Filter by Type:') }}</strong></label>
+
             <LazyIcon 
                 v-if="isMobile" 
                 name="arrow-down" 
@@ -45,7 +46,7 @@
     const   siteStore   = useSiteStore();
     const   disabled    = ref(false);
     const   viewport    = useViewport();
-    const   isMobile    = computed(() => !['lg','xl', 'xxl'].includes(viewport.breakpoint.value));
+    const   isMobile    = computed(() => !['md','lg','xl', 'xxl'].includes(viewport.breakpoint.value));
     const   filterExpanded = ref(false);
 
     const toggleFilter = () => {

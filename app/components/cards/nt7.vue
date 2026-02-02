@@ -44,7 +44,7 @@
     const { getGbfUrl }     = useDocumentHelpers(record);
     const { colorStyle, style, arrowFill }     = useTheme();
  
-    const countryCode = computed(()=>record?.value?._ownership? record.value._ownership.replace('country:','') : '');
+    const countryCode = computed(()=>record?.value?.government? record.value.government.replace('country:','') : '');
 
 
     const summary = computed(()=> {

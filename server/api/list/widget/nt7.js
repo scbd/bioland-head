@@ -18,16 +18,7 @@ export default cachedEventHandler(async (event) => {
         // Field filtering happens at index query level in cbd-index.js
         const response = await getAllBySchemas({ ...ctx, ...query, countries, realms: ['ORT'] }, schemas, countries);
 
-        // Debug: Log first item to check tags structure
-        if (response.data?.[0]) {
-            consola.info('NT7 Sample Item:', {
-                id: response.data[0].identifier,
-                hasTags: !!response.data[0].tags,
-                hasGbfTargets: !!response.data[0].tags?.gbfTargets,
-                gbfTargetsCount: response.data[0].tags?.gbfTargets?.length || 0,
-                globalTargetAlignment_ss: response.data[0].globalTargetAlignment_ss
-            });
-        }
+
 
         // Return a random chunk of 20 items in sequence, wrapping around if needed
         // Use time-based seed that changes every 5 minutes for consistent results

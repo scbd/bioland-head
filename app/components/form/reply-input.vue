@@ -109,7 +109,7 @@
 
             return resp;
         }catch(e){
-            consola.error(e);
+            consola.error('sendComment',e);
             alertStore.addError({
                                     message       : 'Failed to POST reply',
                                     statusCode    : e.statusCode,

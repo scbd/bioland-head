@@ -1,5 +1,5 @@
 <template>
-    <div id="breadCrumbs" :style="style" class="d-flex justify-content-between my-1" :class="{ 'mt-4 mb-2 ': isMobile && !count, 'mt-4 mb-3 mx-3': isMobile && count }">
+    <div id="breadCrumbs" :style="style" class="d-flex justify-content-between my-1 px-1" :class="{ 'mt-4 mb-2 ': isMobile && !count, 'mt-4 mb-3 mx-3': isMobile && count }">
         <span class="align-self-center" id="breadCrumbLinks">
             <span class="text-nowrap">
                 <NuxtLink :style="style" class="fw-bold" :to="localePath('/')">
@@ -59,6 +59,88 @@
         return route.path.split('/').slice(0, -1).join('/');
     }
 
+    /**
+     * Build breadcrumb entries from a menu entry, handling hierarchy synthesis
+     * and normalization for both system pages and content type pages.
+     * 
+     * @param {object} menuEntry - The menu entry with crumbs/hierarchy
+     * @param {object} options
+     * @param {boolean} options.isListingPage - Whether this is a listing page (filters out self-crumb)
+     * @param {number} [options.contentTypeId] - The content type ID to filter/link (for content type pages)
+     * @param {object} [options.contentType] - The content type object with slug (for content type pages)
+     * @returns {Array} The normalized breadcrumb entries
+     */
+    function buildCrumbsFromMenuEntry(menuEntry, { isListingPage, contentTypeId: ctId, contentType } = {}){
+        // Use the stored crumbs, but if the menu entry only has a
+        // single crumb (e.g. just "FAQs" or "Search"), synthesize the parent
+        // main menu item (like "Resources") from the hierarchy so
+        // breadcrumbs can render "National CHM > Resources > FAQs".
+        let entryCrumbs = Array.isArray(menuEntry.crumbs)
+            ? [ ...menuEntry.crumbs ]
+            : [];
+
+        if(entryCrumbs.length <= 1 && Array.isArray(menuEntry.hierarchy) && menuEntry.hierarchy.length){
+            const topIndex = menuEntry.hierarchy[0];
+            const parentMain = menusStore.main?.[topIndex];
+
+            if(parentMain){
+                const baseParentCrumb = Array.isArray(parentMain.crumbs) && parentMain.crumbs.length
+                    ? parentMain.crumbs[0]
+                    : null;
+
+                const parentCrumb = baseParentCrumb || {
+                    title: parentMain.title,
+                    href: parentMain.href || '',
+                    index: topIndex,
+                    contentTypeId: parentMain.contentTypeId,
+                    machineName: parentMain.machineName,
+                };
+
+                entryCrumbs.unshift(parentCrumb);
+            }
+        }
+
+        if(!entryCrumbs.length) return [];
+
+        // Filter crumbs based on page type:
+        //  - On listing pages, we DO NOT include the crumb for the listing itself
+        //    (only keep the parent main menu crumb).
+        //  - On node pages, we keep all crumbs so users can jump back to the listing.
+        // For system pages without a contentTypeId, we filter by matching href or title.
+        const filteredCrumbs = isListingPage
+            ? entryCrumbs.filter((crumb) => {
+                // Filter by contentTypeId if provided
+                if(ctId && crumb.contentTypeId === ctId) return false;
+                // Filter by matching href for system pages (the last crumb is self)
+                // Only filter if menuEntry has a non-empty href to compare
+                if(!ctId && menuEntry.href && crumb.href === menuEntry.href) return false;
+                // Also filter by title match for menu entries with empty href (custom components)
+                if(!ctId && !menuEntry.href && crumb.title === menuEntry.title) return false;
+                return true;
+            })
+            : entryCrumbs;
+
+        if(!filteredCrumbs.length) return [];
+
+        const normalizedCrumbs = filteredCrumbs.map((crumb, index) => {
+            const newCrumb = { ...crumb };
+
+            if(index === 0){
+                // Root menu item: open mega-menu only
+                newCrumb.href = '';
+            }
+
+            if(!isListingPage && ctId && newCrumb.contentTypeId === ctId){
+                // Ensure CT crumb links to the listing path
+                newCrumb.href = contentType?.slug || newCrumb.href || '';
+            }
+
+            return newCrumb;
+        });
+
+        return normalizedCrumbs;
+    }
+
     function makeCrumb(){
 
         if(pageStore?.isSystemPage && systemPageTidConstants.SEARCH_SEC && schemaOnly) {
@@ -69,11 +151,27 @@
                 }
             ];
         }
+
+
         // For generic system pages, we do not show extra crumbs beyond
         // the root "National CHM". Content-type listing pages are
         // handled below via the contentTypeId, so we must NOT early
         // return for taxonomy_term--tags here.
-        if(pageStore?.isSystemPage) return [];
+        // However, if the system page IS in the main menu, we should
+        // show breadcrumbs for it.
+        if(pageStore?.isSystemPage){
+            const systemPageTid = pageStore?.page?.drupalInternalTid;
+            const menuEntry = menusStore.isInMainMenuBySystemPageTid(systemPageTid, locale.value);
+
+            if (import.meta.dev) {
+                console.log('[breadcrumbs] system page tid:', systemPageTid, 'menuEntry:', menuEntry);
+            }
+
+            if(!menuEntry) return [];
+
+            // System page is in the menu - build crumbs from menu entry
+            return buildCrumbsFromMenuEntry(menuEntry, { isListingPage: true });
+        }
 
         if(pageStore.isTopicsList || pageStore.isTopicsCommentsList){
             const crumbs = [
@@ -149,43 +247,15 @@
             ];
         }
 
-        // Use the stored crumbs, but if the menu entry only has a
-        // single crumb (e.g. just "FAQs"), synthesize the parent
-        // main menu item (like "Resources") from the hierarchy so
-        // breadcrumbs can render "National CHM > Resources > FAQs".
-        let entryCrumbs = Array.isArray(menuEntry.crumbs)
-            ? [ ...menuEntry.crumbs ]
-            : [];
+        // Build crumbs from menu entry using the shared helper
+        const builtCrumbs = buildCrumbsFromMenuEntry(menuEntry, {
+            isListingPage,
+            contentTypeId: contentTypeId.value,
+            contentType,
+        });
 
-        if(entryCrumbs.length <= 1 && Array.isArray(menuEntry.hierarchy) && menuEntry.hierarchy.length){
-            const topIndex = menuEntry.hierarchy[0];
-            const parentMain = menusStore.main?.[topIndex];
-
-            if(parentMain){
-                const baseParentCrumb = Array.isArray(parentMain.crumbs) && parentMain.crumbs.length
-                    ? parentMain.crumbs[0]
-                    : null;
-
-                const parentCrumb = baseParentCrumb || {
-                    title: parentMain.title,
-                    href: parentMain.href || '',
-                    index: topIndex,
-                    contentTypeId: parentMain.contentTypeId,
-                    machineName: parentMain.machineName,
-                };
-
-                entryCrumbs.unshift(parentCrumb);
-            }
-        }
-
-        if(!entryCrumbs.length){
-            // If, for some reason, we end up without any crumbs from
-            // the menu entry:
-            //  - on listing pages we again show no extra crumb.
-            //  - on node pages we fall back to a single crumb that
-            //    links back to the listing.
-            if(isListingPage) return [];
-
+        // If no crumbs from menu entry, fall back to content type crumb for node pages
+        if(!builtCrumbs.length && !isListingPage){
             return [
                 {
                     title: contentType?.plural,
@@ -194,45 +264,7 @@
             ];
         }
 
-        // 2. If it is under a main menu child (e.g. Resources), build
-        //    the path from the menu crumbs, but:
-        //
-        //    - On listing pages (/en/faqs, /en/contacts, /en/projects
-        //      etc.), we DO NOT include the content type crumb
-        //      itself. We only keep the parent main menu crumb (e.g.
-        //      Resources), so breadcrumbs look like:
-        //        National CHM > Resources
-        //
-        //    - On node pages, we keep the content type crumb so users
-        //      can jump back to the listing:
-        //        National CHM > Resources > FAQs
-        //
-        //    In both cases, the first crumb (Resources) should only
-        //    open the mega-menu (no navigation), so we force
-        //    href = ''.
-        const filteredCrumbs = isListingPage
-            ? entryCrumbs.filter((crumb) => crumb.contentTypeId !== contentTypeId.value)
-            : entryCrumbs;
-
-        if(!filteredCrumbs.length) return [];
-
-        const normalizedCrumbs = filteredCrumbs.map((crumb, index) => {
-            const newCrumb = { ...crumb };
-
-            if(index === 0){
-                // Root menu item: open mega-menu only
-                newCrumb.href = '';
-            }
-
-            if(!isListingPage && newCrumb.contentTypeId === contentTypeId.value){
-                // Ensure CT crumb links to the listing path
-                newCrumb.href = contentType?.slug || newCrumb.href || '';
-            }
-
-            return newCrumb;
-        });
-
-        return normalizedCrumbs;
+        return builtCrumbs;
     }
     
 

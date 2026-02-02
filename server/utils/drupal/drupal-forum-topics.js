@@ -113,7 +113,7 @@ async function getLatestCommentsUsersFromForum(ctx, topicId){
     const { host,  localizedHost,rowsPerPage=20, } = ctx;
     const uri                      = `${localizedHost}/jsonapi/comment/comment_forum?jsonapi_include=1&include=uid.user_picture&page[limit]=${encodeURIComponent(rowsPerPage)}${queryString}`;
 
-
+consola.info(uri);
     const { body }  = await $http.get(uri).withCredentials().accept('json');
 
     const { data } = body

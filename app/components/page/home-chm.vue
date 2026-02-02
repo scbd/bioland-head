@@ -29,7 +29,7 @@ const pageStore = usePageStore();
 const meStore   = useMeStore();
 const body      = computed(()=>pageStore?.page?.body);
 
-siteStore?.theme?.homePageWidgets?.columns[2]?.push('WidgetContentTypesStats');
+
 const columnsOfWidgetComponents = computed(() => siteStore?.theme?.homePageWidgets?.columns);
 
 const hasNews = computed(() => siteStore?.theme?.homePageWidgets?.news);

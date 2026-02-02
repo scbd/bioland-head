@@ -139,7 +139,7 @@ onMounted(() => {
 // Show only 1 placeholder to match mobile swiper (most users are mobile)
 const ssrSlidePerView = 1;
 
-// consola.error(data.value)
+
 const loading = computed(()=> status.value === 'pending' && !slides?.value?.length);
 
 const slides = computed(()=> {

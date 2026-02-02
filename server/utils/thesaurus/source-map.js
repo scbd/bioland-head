@@ -1,349 +1,29 @@
-export const thesaurusSourceMap = {
+import { thesaurusApiUrls, apiDomains } from './config';
+
+/**
+ * Static fallback source map for identifiers that may not be in the API
+ * or need explicit domain mapping
+ */
+const thesaurusSourceMap = {
   draft: "documentStates",
   published: "documentStates",
   rejected: "documentStates",
   deleted: "documentStates",
-  "ACCESS-TO-BENEFIT-SHARING": "actionCategories",
-  BIOSAFETY: "actionCategories",
-  "CLIMATE-MITIGATION-AND-ADAPTATION": "actionCategories",
-  "LAND-ECOSYSTEMS": "actionCategories",
-  SPECIES: "actionCategories",
-  "FOOD-AND-HEALTH": "actionCategories",
-  "FRESHWATER-COASTAL-AND-OCEAN-ECOSYSTEMS": "actionCategories",
-  "GREEN-FINANCE": "actionCategories",
-  STEWARDSHIP: "actionCategories",
-  "SUSTAINABLE-CONSUMPTION-AND-PRODUCTION": "actionCategories",
-  "URBAN-SUSTAINABILITY": "actionCategories",
+  "ORG-TYPE-OTHER": "orgTypes",
   "86D464C3-B5BB-4B02-85E4-1AAD8D64CD27": "orgTypes",
   "64432E86-23C9-4D9A-B835-962D8221E6CA": "orgTypes",
   "8A265B81-3973-42ED-BB06-40ACC755E496": "orgTypes",
   "90C29DF8-D863-4255-851D-A7A6E8FDFA8F": "orgTypes",
   "39EA5BC2-FEC4-4946-A543-A4F6E1A2F330": "orgTypes",
   "692b3eb1-a00c-437d-8903-d9b7714a7514": "orgTypes",
-  "ORG-TYPE-OTHER": "orgTypes",
   "B3699A74-EF2E-467A-A82F-EF2149A2EFC5": "govTypes",
   "8830904C-8AF4-4C2F-AADB-363D98D854DA": "govTypes",
   "1C3A4FF4-9AB7-4A34-BE06-E07F575B7A32": "govTypes",
-  "AICHI-TARGET-01": "aichis",
-  "AICHI-TARGET-02": "aichis",
-  "AICHI-TARGET-03": "aichis",
-  "AICHI-TARGET-04": "aichis",
-  "AICHI-TARGET-05": "aichis",
-  "AICHI-TARGET-06": "aichis",
-  "AICHI-TARGET-07": "aichis",
-  "AICHI-TARGET-08": "aichis",
-  "AICHI-TARGET-09": "aichis",
-  "AICHI-TARGET-10": "aichis",
-  "AICHI-TARGET-11": "aichis",
-  "AICHI-TARGET-12": "aichis",
-  "AICHI-TARGET-13": "aichis",
-  "AICHI-TARGET-14": "aichis",
-  "AICHI-TARGET-15": "aichis",
-  "AICHI-TARGET-16": "aichis",
-  "AICHI-TARGET-17": "aichis",
-  "AICHI-TARGET-18": "aichis",
-  "AICHI-TARGET-19": "aichis",
-  "AICHI-TARGET-20": "aichis",
-  "SDG-GOAL-01": "sdgs",
-  "SDG-GOAL-02": "sdgs",
-  "SDG-GOAL-03": "sdgs",
-  "SDG-GOAL-04": "sdgs",
-  "SDG-GOAL-05": "sdgs",
-  "SDG-GOAL-06": "sdgs",
-  "SDG-GOAL-07": "sdgs",
-  "SDG-GOAL-08": "sdgs",
-  "SDG-GOAL-09": "sdgs",
-  "SDG-GOAL-10": "sdgs",
-  "SDG-GOAL-11": "sdgs",
-  "SDG-GOAL-12": "sdgs",
-  "SDG-GOAL-13": "sdgs",
-  "SDG-GOAL-14": "sdgs",
-  "SDG-GOAL-15": "sdgs",
-  "SDG-GOAL-16": "sdgs",
-  "SDG-GOAL-17": "sdgs",
+
   "7437F880-7B12-4F26-AA91-CED37250DD0A": "jurisdictions",
   "528B1187-F1BD-4479-9FB3-ADBD9076D361": "jurisdictions",
   "DEBB019D-8647-40EC-8AE5-10CA88572F6E": "jurisdictions",
-  "CBD-SUBJECT-TARGET": "subjects",
-  "CBD-SUBJECT-25TH-ANN": "subjects",
-  "CBD-SUBJECT-ABS": "subjects",
-  "CBD-SUBJECT-AGR": "subjects",
-  "CBD-SUBJECT-AICHI": "subjects",
-  "CBD-SUBJECT-AICHI-TF": "subjects",
-  "CBD-SUBJECT-DEV": "subjects",
-  "CBD-SUBJECT-IND-P": "subjects",
-  "CBD-SUBJECT-LIAISON-GROUP": "subjects",
-  "CBD-SUBJECT-BIOMES": "subjects",
-  "CBD-SUBJECT-BTB": "subjects",
-  "CBD-SUBJECT-BIZ": "subjects",
-  "CBD-SUBJECT-NAP-CB": "subjects",
-  "CBD-SUBJECT-CPB": "subjects",
-  "CBD-SUBJECT-CHPO": "subjects",
-  "CBD-SUBJECT-CITY": "subjects",
-  "CBD-SUBJECT-CHM": "subjects",
-  "CBD-SUBJECT-CC": "subjects",
-  "CBD-SUBJECT-COMM": "subjects",
-  "CBD-SUBJECT-COP": "subjects",
-  "CBD-SUBJECT-CROSS-CUTTING": "subjects",
-  "CBD-SUBJECT-DSHL": "subjects",
-  "CBD-SUBJECT-ETI": "subjects",
-  "CBD-SUBJECT-ECOA": "subjects",
-  "CBD-SUBJECT-ECOA+ECORES": "subjects",
-  "CBD-SUBJECT-ECORES": "subjects",
-  "CBD-SUBJECT-ENDS": "subjects",
-  "CBD-SUBJECT-EXS": "subjects",
-  "CBD-SUBJECT-XCH": "subjects",
-  "BD8F75CA-32D4-427B-A9CE-55079989A0CC": "subjects",
-  "3FEF79FF-9EA2-4E3A-BEC9-2991CCDD7F3A": "subjects",
-  "CBD-SUBJECT-FIN": "subjects",
-  "CBD-SUBJECT-FOR": "subjects",
-  "CBD-SUBJECT-GEND": "subjects",
-  "CBD-SUBJECT-GURT": "subjects",
-  "CBD-SUBJECT-GBO": "subjects",
-  "CBD-SUBJECT-GSPC": "subjects",
-  "CBD-SUBJECT-GTI": "subjects",
-  "CBD-SUBJECT-CPB-HTPI": "subjects",
-  "CBD-SUBJECT-HH": "subjects",
-  "CBD-SUBJECT-IMPA": "subjects",
-  "CBD-SUBJECT-ICBD": "subjects",
-  "CBD-SUBJECT-IMPL-MON-REPORT": "subjects",
-  "CBD-SUBJECT-INS": "subjects",
-  "CBD-SUBJECT-IND": "subjects",
-  "CBD-SUBJECT-ILC": "subjects",
-  "CBD-SUBJECT-WTR": "subjects",
-  "CBD-SUBJECT-IPR": "subjects",
-  "CBD-SUBJECT-IBD": "subjects",
-  "CBD-SUBJECT-IYB": "subjects",
-  "CBD-SUBJECT-IAS": "subjects",
-  "CBD-SUBJECT-ISL": "subjects",
-  "CBD-SUBJECT-JLG": "subjects",
-  "CBD-SUBJECT-LEGAL-STRUCT": "subjects",
-  "CBD-SUBJECT-LR": "subjects",
-  "CBD-SUBJECT-MAR": "subjects",
-  "CBD-SUBJECT-COOP": "subjects",
-  "CBD-SUBJECT-MNT": "subjects",
-  "CBD-SUBJECT-NPABS": "subjects",
-  "CBD-SUBJECT-NBSAP": "subjects",
-  "CBD-SUBJECT-NR": "subjects",
-  "CBD-SUBJECT-NEW": "subjects",
-  "CBD-SUBJECT-OUT+CEPA": "subjects",
-  "CBD-SUBJECT-PART-INIT-COOP": "subjects",
-  "CBD-SUBJECT-PLR": "subjects",
-  "CBD-SUBJECT-POST2020": "subjects",
-  "CBD-SUBJECT-PA": "subjects",
-  "CBD-SUBJECT-STC": "subjects",
-  "CBD-SUBJECT-CBD": "subjects",
-  "CBD-SUBJECT-SSC": "subjects",
-  "CBD-SUBJECT-STRAT": "subjects",
-  "CBD-SUBJECT-STRATEGY-PLAN": "subjects",
-  "CBD-SUBJECT-SBI": "subjects",
-  "CBD-SUBJECT-SBSTTA": "subjects",
-  "CBD-SUBJECT-SDEV": "subjects",
-  "CBD-SUBJECT-SUSE": "subjects",
-  "CBD-SUBJECT-TAXONOMY": "subjects",
-  "CBD-SUBJECT-TOUR": "subjects",
-  "CBD-SUBJECT-TKIP": "subjects",
-  "CBD-SUBJECT-TTC": "subjects",
-  "CBD-SUBJECT-UNDB": "subjects",
-  "CBD-SUBJECT-YOUTH": "subjects",
-  af: "countries",
-  al: "countries",
-  dz: "countries",
-  ad: "countries",
-  ao: "countries",
-  ag: "countries",
-  ar: "countries",
-  am: "countries",
-  au: "countries",
-  at: "countries",
-  az: "countries",
-  bs: "countries",
-  bh: "countries",
-  bd: "countries",
-  bb: "countries",
-  by: "countries",
-  be: "countries",
-  bz: "countries",
-  bj: "countries",
-  bt: "countries",
-  bo: "countries",
-  ba: "countries",
-  bw: "countries",
-  br: "countries",
-  bn: "countries",
-  bg: "countries",
-  bf: "countries",
-  bi: "countries",
-  cv: "countries",
-  kh: "countries",
-  cm: "countries",
-  ca: "countries",
-  cf: "countries",
-  td: "countries",
-  cl: "countries",
-  cn: "countries",
-  co: "countries",
-  km: "countries",
-  cg: "countries",
-  ck: "countries",
-  cr: "countries",
-  ci: "countries",
-  hr: "countries",
-  cu: "countries",
-  cy: "countries",
-  cz: "countries",
-  kp: "countries",
-  cd: "countries",
-  dk: "countries",
-  dj: "countries",
-  dm: "countries",
-  do: "countries",
-  ec: "countries",
-  eg: "countries",
-  sv: "countries",
-  gq: "countries",
-  er: "countries",
-  ee: "countries",
-  sz: "countries",
-  et: "countries",
-  eu: "countries",
-  fj: "countries",
-  fi: "countries",
-  fr: "countries",
-  ga: "countries",
-  gm: "countries",
-  ge: "countries",
-  de: "countries",
-  gh: "countries",
-  gr: "countries",
-  gd: "countries",
-  gt: "countries",
-  gn: "countries",
-  gw: "countries",
-  gy: "countries",
-  ht: "countries",
-  va: "countries",
-  hn: "countries",
-  hu: "countries",
-  is: "countries",
-  in: "countries",
-  id: "countries",
-  ir: "countries",
-  iq: "countries",
-  ie: "countries",
-  il: "countries",
-  it: "countries",
-  jm: "countries",
-  jp: "countries",
-  jo: "countries",
-  kz: "countries",
-  ke: "countries",
-  ki: "countries",
-  kw: "countries",
-  kg: "countries",
-  la: "countries",
-  lv: "countries",
-  lb: "countries",
-  ls: "countries",
-  lr: "countries",
-  ly: "countries",
-  li: "countries",
-  lt: "countries",
-  lu: "countries",
-  mg: "countries",
-  mw: "countries",
-  my: "countries",
-  mv: "countries",
-  ml: "countries",
-  mt: "countries",
-  mh: "countries",
-  mr: "countries",
-  mu: "countries",
-  mx: "countries",
-  fm: "countries",
-  mc: "countries",
-  mn: "countries",
-  me: "countries",
-  ma: "countries",
-  mz: "countries",
-  mm: "countries",
-  na: "countries",
-  nr: "countries",
-  np: "countries",
-  nl: "countries",
-  nz: "countries",
-  ni: "countries",
-  ne: "countries",
-  ng: "countries",
-  nu: "countries",
-  mk: "countries",
-  no: "countries",
-  om: "countries",
-  pk: "countries",
-  pw: "countries",
-  pa: "countries",
-  pg: "countries",
-  py: "countries",
-  pe: "countries",
-  ph: "countries",
-  pl: "countries",
-  pt: "countries",
-  qa: "countries",
-  kr: "countries",
-  md: "countries",
-  ro: "countries",
-  ru: "countries",
-  rw: "countries",
-  kn: "countries",
-  lc: "countries",
-  vc: "countries",
-  ws: "countries",
-  sm: "countries",
-  st: "countries",
-  sa: "countries",
-  sn: "countries",
-  rs: "countries",
-  sc: "countries",
-  sl: "countries",
-  sg: "countries",
-  sk: "countries",
-  si: "countries",
-  sb: "countries",
-  so: "countries",
-  za: "countries",
-  ss: "countries",
-  es: "countries",
-  lk: "countries",
-  sd: "countries",
-  sr: "countries",
-  se: "countries",
-  ch: "countries",
-  sy: "countries",
-  tj: "countries",
-  th: "countries",
-  ps: "countries",
-  tl: "countries",
-  tg: "countries",
-  to: "countries",
-  tt: "countries",
-  tn: "countries",
-  tr: "countries",
-  tm: "countries",
-  tv: "countries",
-  ug: "countries",
-  ua: "countries",
-  ae: "countries",
-  gb: "countries",
-  tz: "countries",
-  us: "countries",
-  uy: "countries",
-  uz: "countries",
-  vu: "countries",
-  ve: "countries",
-  vn: "countries",
-  ye: "countries",
-  zm: "countries",
-  zw: "countries",
+
   "E0006E60-E0D9-4196-855F-8456F0C38690": "regions",
   "CCA4B662-8EF4-418D-B327-0D6F418AA703": "regions",
   "0938DB0F-E4BB-464F-ABBB-ADD615BE5371": "regions",
@@ -454,29 +134,7 @@ export const thesaurusSourceMap = {
   "0451E289-BC9E-4F9D-95C0-B28A20F86BE9": "regions",
   "9EED1DD1-BA36-41F1-BEF9-63021AB24EBF": "regions",
   "952F18B8-BB83-4C7E-9232-7B3E3EA64A3C": "regions",
-  "GBF-TARGET-01": "gbfTargets",
-  "GBF-TARGET-02": "gbfTargets",
-  "GBF-TARGET-03": "gbfTargets",
-  "GBF-TARGET-04": "gbfTargets",
-  "GBF-TARGET-05": "gbfTargets",
-  "GBF-TARGET-06": "gbfTargets",
-  "GBF-TARGET-07": "gbfTargets",
-  "GBF-TARGET-08": "gbfTargets",
-  "GBF-TARGET-09": "gbfTargets",
-  "GBF-TARGET-10": "gbfTargets",
-  "GBF-TARGET-11": "gbfTargets",
-  "GBF-TARGET-12": "gbfTargets",
-  "GBF-TARGET-13": "gbfTargets",
-  "GBF-TARGET-14": "gbfTargets",
-  "GBF-TARGET-15": "gbfTargets",
-  "GBF-TARGET-16": "gbfTargets",
-  "GBF-TARGET-17": "gbfTargets",
-  "GBF-TARGET-18": "gbfTargets",
-  "GBF-TARGET-19": "gbfTargets",
-  "GBF-TARGET-20": "gbfTargets",
-  "GBF-TARGET-21": "gbfTargets",
-  "GBF-TARGET-22": "gbfTargets",
-  "GBF-TARGET-23": "gbfTargets",
+
   "B18CE475-8D23-4DEC-A9F1-13F0243C9233": "bchSubjects",
   "E3E3E362-4E46-4C4A-A2A3-EABBDDAA2DEE": "bchSubjects",
   "50D167CC-A994-49E2-8880-E800EF916629": "bchSubjects",
@@ -534,3 +192,101 @@ export const thesaurusSourceMap = {
   "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF": "bchSubjects",
   "ADAE3310-22E2-4F86-A689-FB47C18AD50E": "bchSubjects",
 };
+
+/**
+ * Fetch a single domain's terms from the API
+ * Each domain is cached separately with `${domainName}-domain` naming
+ */
+const fetchDomainTerms = defineCachedFunction(
+  async (domainName) => {
+    const url = thesaurusApiUrls[domainName];
+    if (!url) return [];
+
+    try {
+      const response = await $fetch(url, {
+        mode: 'cors',
+        ignoreResponseError: true,
+      });
+
+      // Handle different response formats (CBD API vs UN SDG API)
+      const items = Array.isArray(response) ? response : [];
+      
+      // Extract identifiers from the domain
+      return items
+        .map(item => item?.identifier)
+        .filter(Boolean);
+    } catch (e) {
+      consola.warn(`fetchDomainTerms: Failed to fetch ${domainName}`, e.message);
+      return [];
+    }
+  },
+  {
+    ...getThesaurusCacheOptions('domain'),
+    getKey: (domainName) => `${domainName}-domain`,
+  }
+);
+
+/**
+ * Build the complete source map by fetching all API domains and merging with static map
+ * The combined result is cached with name 'thesaurus-source-map'
+ */
+export const buildThesaurusSourceMap = defineCachedFunction(
+  async () => {
+    const dynamicMap = {};
+
+    // Fetch all API domains in parallel
+    const domainResults = await Promise.allSettled(
+      apiDomains.map(async (domainName) => {
+        const identifiers = await fetchDomainTerms(domainName);
+        return { domainName, identifiers };
+      })
+    );
+
+    // Build dynamic map from API results
+    for (const result of domainResults) {
+      if (result.status === 'fulfilled') {
+        const { domainName, identifiers } = result.value;
+        for (const identifier of identifiers) {
+          if (identifier && !dynamicMap[identifier]) {
+            dynamicMap[identifier] = domainName;
+          }
+        }
+      }
+    }
+
+    // Merge: static map takes precedence over dynamic (for explicit overrides)
+    return { ...dynamicMap, ...thesaurusSourceMap };
+  },
+  {
+    ...getThesaurusCacheOptions('thesaurus-source-map'),
+    getKey: () => 'thesaurus-source-map',
+  }
+);
+
+/**
+ * Get the domain name for a given identifier
+ * Builds/retrieves the source map from cache and looks up the identifier
+ * 
+ * @param {string} identifier - The thesaurus identifier to look up
+ * @returns {Promise<string|undefined>} - The domain name or undefined if not found
+ */
+export async function getDomainByIdentifier(identifier) {
+  if (!identifier) return undefined;
+  
+  const sourceMap = await buildThesaurusSourceMap();
+  return sourceMap[identifier];
+}
+
+/**
+ * Initialize the thesaurus source map (warm the cache)
+ * Called by server plugin on app startup
+ */
+export async function initializeThesaurusSourceMap() {
+  try {
+    await buildThesaurusSourceMap();
+    consola.success('✓ Thesaurus source map initialized');
+  } catch (e) {
+    consola.warn('⚠ Failed to initialize thesaurus source map:', e.message);
+  }
+}
+

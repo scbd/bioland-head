@@ -4,6 +4,7 @@
         <div id="page-list-ncps-header-row" class="row">
             <div id="page-list-ncps-sidebar-spacer"  class="col-md-3 d-lg-block"> &nbsp; </div>
 
+            
             <div id="page-list-ncps-breadcrumbs-container" class="col-12 col-md-9 ps-0">
                 <LazyPageBreadCrumbs/>
             </div>
@@ -103,16 +104,7 @@ h4{
 border-bottom: black .5rem solid;
 
 }
-// .data-body{
 
-//     padding-left: 0;
-//     border-bottom: black .5rem solid;
-//     padding-top: 1rem;
-
-// }
-// .has-hero{
-//         font-size: 1.2rem;
-//     }
 .page-type{
     margin-top: -6px;
     padding-left: 0;
@@ -121,10 +113,5 @@ border-bottom: black .5rem solid;
     font-size: 2rem;
 
 }
-// .side-heading{
-//     padding-left: 0;
-//     padding-top: 1rem;
-//     border-top: var(--bs-primary) .5rem solid;
-//     font-size: 2rem;
-// }
+
 </style>

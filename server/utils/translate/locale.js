@@ -54,14 +54,14 @@ export function mapLocaleToDrupal(awsLocale) {
   if (!awsLocale) return 'en'
 
   const mapping = {
-    'zh': 'zh-hans',
-    'zh-TW': 'zh-hant',
-    'pt': 'pt-br',
-    'pt-PT': 'pt-pt',
-    'es': 'es',
-    'es-MX': 'es-mx',
-    'fr-CA': 'fr-ca',
-  }
+    zh: "zh-hans",
+    'tl' : "fil",
+    "zh-TW": "zh-hans",
+    "pt-br": "pt",
+    "pt-pt": "pt",
+    "es-mx": "es",
+    "fr-ca": "fr",
+  };
 
   return mapping[awsLocale] || awsLocale.toLowerCase()
 }

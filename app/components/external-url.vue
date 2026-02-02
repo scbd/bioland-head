@@ -12,8 +12,7 @@
     const props = defineProps({ 
                                 title: { type: String, default: '' },
                                 uri:   { type: String, required: true },
-                                alt:   { type: String, default: '' },
-                                options: { type: Array }
+                                alt:   { type: String, default: '' }
                             });
 
     const { title, uri, alt:altPassed } = toRefs(props);

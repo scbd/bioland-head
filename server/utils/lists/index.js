@@ -1,5 +1,3 @@
-import { thesaurusSourceMap } from '../thesaurus/source-map';
-
 export function getTagFilterParams(filters){
     if(!filters || !filters?.length) return '';
 
@@ -16,7 +14,7 @@ export function getTagFilterParams(filters){
     return  filterQueryString;
 }
 
-export function getPaginationParams({ page=1, rowsPerPage=10 }){
+export function getPaginationParams({ page=1, rowsPerPage=10, bypassMultiplier=false }){
     
     const limit  = Number(rowsPerPage)? Number(rowsPerPage) : 10;
     const pageNum = Number(page) || 1;
@@ -28,7 +26,7 @@ export function getPaginationParams({ page=1, rowsPerPage=10 }){
     // 
     // Access filtering happens AFTER the database query limit, so if many items are
     // inaccessible (unpublished, access-controlled), we need to request more than we want.
-    const overFetchMultiplier = 5;
+    const overFetchMultiplier = bypassMultiplier ? 1 : 5;
     const drupalLimit = limit * overFetchMultiplier;
     
     // The offset should be based on the actual requested page size (limit), not the over-fetched drupalLimit.
@@ -40,20 +38,3 @@ export function getPaginationParams({ page=1, rowsPerPage=10 }){
 
 
 
-export function mapTagsByType(tags){
-    if(!tags) return  undefined;
-    const map = { };
-
-    for (const tag of tags) {
-        if(!tag?.identifier) continue;
-        
-        const isNr7 = tag?.identifier?.includes('ort-nr7')
-        const type = isNr7? 'nr7' : thesaurusSourceMap[tag.identifier];
-
-        if(!map[type]) map[type] = [];
-
-        map[type].push(tag);
-    }
-
-    return map
-}

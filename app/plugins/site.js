@@ -72,7 +72,6 @@ export default defineNuxtPlugin({
               // If no locale requested, use 'und' (undefined) to signal server to use default
               const fetchLocale = requestedLocale || 'und';
               const uri = `/api/context/${id}/${fetchLocale}`;
-              
               const data = await $fetch(uri);
               
               if(!data?.defaultLocale) {
@@ -92,13 +91,13 @@ export default defineNuxtPlugin({
               const derivedDefaultLocale = data.defaultLocale;
               const resolvedLocale = data.locale; // Server already resolved this correctly
 
-              siteStore.initialize({
+              siteStore.initialize({ ...data, ...{
                 ...runTimePublic,
                 i18nStrategy,
                 ...(data || {}),
                 locale: resolvedLocale,
                 defaultLocale: derivedDefaultLocale,
-              });
+              }});
 
               ensureContext(siteStore.params);
 

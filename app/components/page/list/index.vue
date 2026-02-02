@@ -6,15 +6,15 @@
             </div>
             <div id="page-list-breadcrumbs-container" class="col-12 col-md-9 px-0">
                 <LazyPageBreadCrumbs :count="results?.count"/>
+                <LazyPageBodyTabs id="page-list-body-tabs" v-if="meStore.showEdit"/>
             </div>
             <div id="page-list-sidebar-filters-container" class="col-12 col-md-3" :class="{ 'ps-0': !isMobile }">
                 <h2  id="page-list-title-content-type" :style="primaryColorStyle" v-if="contentTypeName && !title" class="page-type">{{contentTypeName}}</h2>
                 <h2  id="page-list-title-provided" :style="primaryColorStyle" v-if="title" class="page-type">{{t(title,2)}}</h2>
                 <LazyPageListTextSearch id="page-list-text-search"/>
-                <LazyPageListFilter id="page-list-type-filter" v-if="!typeId" :facets="results?.facets"/>
+                <ClientOnly><LazyPageListFilter id="page-list-type-filter" v-show="!typeId" :facets="results?.facets"/></ClientOnly>
             </div>
             <div id="page-list-data-body" name="list" tag="div" class="col-12 col-md-9 data-body" :class="{ 'px-0': !isMobile, 'mt-3': isMobile}">
-                <LazyPageBodyTabs id="page-list-body-tabs" v-if="meStore.showEdit"/>
                 <LazyPageListTabs  id="page-list-tabs" :types="types" :key="JSON.stringify(types)"/>
                 <LazyPageListPager id="page-list-top-pager" v-if="hasHydrated && showTopPager" :count="results?.count" :key="`showTopPage${showTopPager}${results?.count}`"/>
 
@@ -98,6 +98,10 @@
     const   siteStore   = useSiteStore ();
     const   pageStore   = usePageStore ();
     const   eventBus    = useEventBus  ();
+    
+
+    useSearchPageSchemaOrg();
+    
     const   props       = defineProps ({    
                                         title: { type: String,  default: '' },
                                         types: { type: Array, default: () => [] }
@@ -114,13 +118,29 @@
 
     const { isContentTypeId, getContentType }  = useMenusStore();
     
+    // Schema-to-realm mappings for auto-detection
+    const absSchemas = ['modelContractualClause', 'communityProtocol', 'absNationalReport', 'absCheckpointCommunique', 'absCheckpoint', 'absPermit', 'absNationalModelContractualClause', 'absProcedure', 'measure'];
+    const bchSchemas = ['biosafetyLaw', 'biosafetyDecision', 'nationalRiskAssessment', 'nationalReport', 'biosafetyExpert', 'supplementaryAuthority', 'cpbNationalReport4', 'cpbNationalReport3', 'cpbNationalReport2', 'biosafetyNews', 'independentRiskAssessment', 'organism', 'dnaSequence', 'modifiedOrganism', 'laboratoryDetection'];
+    
+    // Detect if schemas span multiple realms (excluding shared schemas)
+    const schemasArray = computed(() => {
+        const s = r?.query?.schemas;
+        return Array.isArray(s) ? s : s ? [s] : [];
+    });
+    const hasMultiRealmSchemas = computed(() => {
+        if (!schemasArray.value.length) return false;
+        const hasAbs = schemasArray.value.some(s => absSchemas.includes(s));
+        const hasBch = schemasArray.value.some(s => bchSchemas.includes(s));
+        return hasAbs && hasBch;
+    });
+    
     // Make realm reactive so it updates when page data changes
     const realm = computed(() => isSearchBch.value || siteStore.isBiosafetySite ? 'BCH' : isSearchAbs.value ? 'ABS' : 'CHM');
     const realms = computed(() => [realm.value]);
     
-    // When schemaOnly=true, don't filter by realm to allow cross-realm schema searches
-    // (e.g., nationalTarget7 is in ORT realm, not CHM)
-    const shouldFilterByRealm = computed(() => !schemaOnly);
+    // When schemaOnly=true OR schemas span multiple realms, don't filter by realm 
+    // to allow cross-realm schema searches (e.g., Laws & Regulations from ABS + BCH)
+    const shouldFilterByRealm = computed(() => !schemaOnly && !hasMultiRealmSchemas.value);
     
     // Use computed for query to ensure reactivity when route changes
     const query = computed(() => ({
@@ -169,10 +189,8 @@
         getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
     });
 
-  
-    // Track if this is initial SSR load - don't show spinner if we already have SSR data
-    const hasHydrated = ref(false);
-    onMounted(() => { hasHydrated.value = true; });
+
+
     
     // Show loading only after hydration (client-side navigation), not on initial SSR load
     const loading = computed(()=> hasHydrated.value && (pageStore.loading || status.value === 'pending'));
@@ -182,42 +200,14 @@
     // Sort results to ensure consistent ordering between SSR and client hydration
     // This must match the server-side sort in content-index.js exactly:
     // 1. sticky (DESC) 2. fieldOrder (ASC) 3. fieldStartDate (DESC) 4. changed (DESC) 5. id (ASC)
-    const sortedResults = computed(() => {
-        return results.value?.data
-        if (!results.value?.data) return [];
-        return [...results.value.data].sort((a, b) => {
-            // sticky DESC (true = 1 comes before false = 0)
-            const stickyA = a.sticky ? 1 : 0;
-            const stickyB = b.sticky ? 1 : 0;
-            if (stickyB !== stickyA) return stickyB - stickyA;
-            
-            // fieldOrder ASC (lower numbers first, default 10000)
-            const orderA = a.fieldOrder ?? 10000;
-            const orderB = b.fieldOrder ?? 10000;
-            if (orderA !== orderB) return orderA - orderB;
-            
-            // fieldStartDate DESC (newer first)
-            const startA = a.fieldStartDate || '';
-            const startB = b.fieldStartDate || '';
-            if (startA !== startB) return startB.localeCompare(startA);
-            
-            // changed DESC (newer first)
-            const changedA = a.changed || '';
-            const changedB = b.changed || '';
-            if (changedA !== changedB) return changedB.localeCompare(changedA);
-            
-            // Final tiebreaker: id ASC (stable UUID)
-            const idA = a.id || a.dnid || '';
-            const idB = b.id || b.dnid || '';
-            return String(idA).localeCompare(String(idB));
-        });
-    });
+    const sortedResults = computed(() => results.value?.data || []);
 
+    // Track if this is initial SSR load - don't show spinner if we already have SSR data
+    const hasHydrated = ref(false);
     onMounted(() => { 
-        eventBus.on('changePage', () => {
-        setTimeout(refresh, 250);
-        
-    }); });
+        eventBus.on('changePage', () => setTimeout(refresh, 250));
+        hasHydrated.value = true;
+    });
  
     function getContentTypeId(){
     
@@ -273,9 +263,7 @@
         return `/api/list/drupal`;
     }
 
-    function isNumberString(string) {
-        return /^[0-9]*$/.test(string);
-    }
+
 </script>
 
 <style scoped>

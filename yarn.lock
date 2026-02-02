@@ -3943,32 +3943,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@unhead/schema-org@npm:^2.0.14":
-  version: 2.0.19
-  resolution: "@unhead/schema-org@npm:2.0.19"
-  dependencies:
-    defu: "npm:^6.1.4"
-    ohash: "npm:^2.0.11"
-    ufo: "npm:^1.6.1"
-    unhead: "npm:2.0.19"
-  peerDependencies:
-    "@unhead/react": 2.0.19
-    "@unhead/solid-js": 2.0.19
-    "@unhead/svelte": 2.0.19
-    "@unhead/vue": 2.0.19
-  peerDependenciesMeta:
-    "@unhead/react":
-      optional: true
-    "@unhead/solid-js":
-      optional: true
-    "@unhead/svelte":
-      optional: true
-    "@unhead/vue":
-      optional: true
-  checksum: 10c0/6847327dfab07ba003a542e736669c01f16680c4e803e88c550e5c087fd8cf1a9e8e9c601766cc2c6edee56731f6f27aad66d8c5923e523c06a737a49157dd64
-  languageName: node
-  linkType: hard
-
 "@unhead/vue@npm:2.0.19, @unhead/vue@npm:^2.0.19":
   version: 2.0.19
   resolution: "@unhead/vue@npm:2.0.19"
@@ -8641,7 +8615,6 @@ __metadata:
     nuxt-delay-hydration: "npm:1.3.8"
     nuxt-emoji-picker: "npm:1.1.0"
     nuxt-gravatar: "npm:1.1.0"
-    nuxt-schema-org: "npm:^5.0.9"
     nuxt-swiper: "npm:2.0.1"
     nuxt-viewport: "npm:2.3.1"
     pinia: "npm:3.0.3"
@@ -8695,59 +8668,6 @@ __metadata:
   dependencies:
     "@vue/reactivity": "npm:^3.2.45"
   checksum: 10c0/5f7a635a7aafd750811bf3f7c4df3a62a0cff395bac5ecf69b2b4cb03dd5550932f71d21b439f99440889df5b644b10e92f8680bc3831928dfef576509b0d157
-  languageName: node
-  linkType: hard
-
-"nuxt-schema-org@npm:^5.0.9":
-  version: 5.0.9
-  resolution: "nuxt-schema-org@npm:5.0.9"
-  dependencies:
-    "@nuxt/kit": "npm:^4.1.2"
-    "@unhead/schema-org": "npm:^2.0.14"
-    defu: "npm:^6.1.4"
-    nuxt-site-config: "npm:^3.2.5"
-    pathe: "npm:^2.0.3"
-    pkg-types: "npm:^2.3.0"
-    sirv: "npm:^3.0.2"
-  peerDependencies:
-    "@unhead/vue": ^2.0.7
-    unhead: ^2.0.7
-  peerDependenciesMeta:
-    "@unhead/vue":
-      optional: true
-    unhead:
-      optional: true
-  checksum: 10c0/45d75986d84ee71c42df4b0b762ea0c6bb37268961977118c1af95bb0279369559c29d109f8cbf9d042c9b17691d19bb62379fdd87ffac0e7f1722155e41e15c
-  languageName: node
-  linkType: hard
-
-"nuxt-site-config-kit@npm:3.2.11":
-  version: 3.2.11
-  resolution: "nuxt-site-config-kit@npm:3.2.11"
-  dependencies:
-    "@nuxt/kit": "npm:^4.1.3"
-    pkg-types: "npm:^2.3.0"
-    site-config-stack: "npm:3.2.11"
-    std-env: "npm:^3.10.0"
-    ufo: "npm:^1.6.1"
-  checksum: 10c0/4d9eab6e9051a283af323b317096b7d2ad7d9d6c126723ece17bdb0acb71df7d9440298891925f478d2fa4e33d62f8f262830fe24ded73c667ea24cc9ef705f0
-  languageName: node
-  linkType: hard
-
-"nuxt-site-config@npm:^3.2.5":
-  version: 3.2.11
-  resolution: "nuxt-site-config@npm:3.2.11"
-  dependencies:
-    "@nuxt/kit": "npm:^4.1.3"
-    nuxt-site-config-kit: "npm:3.2.11"
-    pathe: "npm:^2.0.3"
-    pkg-types: "npm:^2.3.0"
-    sirv: "npm:^3.0.2"
-    site-config-stack: "npm:3.2.11"
-    ufo: "npm:^1.6.1"
-  peerDependencies:
-    h3: ^1
-  checksum: 10c0/5ccc97a45427403296ac5179362deea060646de5ddb40dce137dc8e2f119128ad3b64ce3ca9abb8334c9cb9fd75fefd84f9b88921d7b15f1dd44196e1db0f72d
   languageName: node
   linkType: hard
 
@@ -10651,17 +10571,6 @@ __metadata:
   version: 1.0.5
   resolution: "sisteransi@npm:1.0.5"
   checksum: 10c0/230ac975cca485b7f6fe2b96a711aa62a6a26ead3e6fb8ba17c5a00d61b8bed0d7adc21f5626b70d7c33c62ff4e63933017a6462942c719d1980bb0b1207ad46
-  languageName: node
-  linkType: hard
-
-"site-config-stack@npm:3.2.11":
-  version: 3.2.11
-  resolution: "site-config-stack@npm:3.2.11"
-  dependencies:
-    ufo: "npm:^1.6.1"
-  peerDependencies:
-    vue: ^3
-  checksum: 10c0/afe14bc4af4df132d21971deb2efed015349e6d63517662824736c28d68c6b644db4f08ce1928806b3dac932d94f5f71e4509923224e6be3fe18e65437d8c09e
   languageName: node
   linkType: hard
 

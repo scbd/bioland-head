@@ -16,16 +16,22 @@ const resolveLogLevel = () => {
 };
 
 const resolvedLogLevel = resolveLogLevel();
+
+// Force both storage configs to use dev paths when running `yarn dev`
+const storageBase = process.dev ? './.nuxt/cache' : './cache';
   
 export default defineNuxtConfig({
   devtools: { enabled: false },
   debug: false,
   // watch: [
-  //   "~/app/components/**/*", // Watches all .js files in the 'custom' directory within the project root
-  //   "~/server/api/**/*", // Watches all .ts files in subdirectories of 'server/api'
-  //   "~/server/utils/**/*", // Watches all .ts files in subdirectories of 'server/utils'
-  //   "~shared/**/*",
+    // "~/app/components/page/**/*", // Watches all .js files in the 'custom' directory within the project root
+    // "~/server/utils/drupal/**/*",
+    // "~/server/utils/menus/**/*",
+    // "~/server/api/**/*", // Watches all .ts files in subdirectories of 'server/api'
+    // "~/server/utils/**/*", // Watches all .ts files in subdirectories of 'server/utils'
+    // "~shared/**/*",
   // ],
+
   sourcemap: { server: true, client: true },
   logLevel: "verbose",
   css,
@@ -44,18 +50,22 @@ export default defineNuxtConfig({
     panoramaKey: process.env.PANORAMA_KEY,
     jiraToken: process.env.JIRA_TOKEN,
     // AWS Translate Configuration
-    awsRegion: process.env.AWS_REGION || 'us-east-1',
+    awsRegion: process.env.AWS_REGION || "us-east-1",
     awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
     awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     // i18n Cache Database Configuration
     i18nDbHost: process.env.I18N_DB_HOST,
-    i18nDbPort: process.env.I18N_DB_PORT ? parseInt(process.env.I18N_DB_PORT) : 3306,
+    i18nDbPort: process.env.I18N_DB_PORT
+      ? parseInt(process.env.I18N_DB_PORT)
+      : 3306,
     i18nDbUser: process.env.I18N_DB_USER,
     i18nDbPassword: process.env.I18N_DB_PASSWORD,
-    i18nDbName: process.env.I18N_DB_NAME || 'i18n_cache',
-    i18nDbConnectionLimit: process.env.I18N_DB_CONNECTION_LIMIT ? parseInt(process.env.I18N_DB_CONNECTION_LIMIT) : 5,
+    i18nDbName: process.env.I18N_DB_NAME || "i18n_cache",
+    i18nDbConnectionLimit: process.env.I18N_DB_CONNECTION_LIMIT
+      ? parseInt(process.env.I18N_DB_CONNECTION_LIMIT)
+      : 5,
     // Local dev: Drupal session cookie bypass (e.g., SSESSxxx=yyy)
-    localDrupalSession: process.env.NUXT_LOCAL_DRUPAL_SESSION || '',
+    localDrupalSession: process.env.NUXT_LOCAL_DRUPAL_SESSION || "",
     public: {
       isLocalHost:
         process.env.NUXT_PUBLIC_IS_LOCAL_HOST === "true" ? true : false,
@@ -98,12 +108,18 @@ export default defineNuxtConfig({
     // '@nuxt/scripts',
     "@dargmuesli/nuxt-cookie-control",
     "@nuxt/scripts",
-    "nuxt-schema-org",
+    // DISABLED: nuxt-schema-org auto-generates workTranslation from all i18n locales
+    // We now manually generate Schema.org JSON-LD in composables/schema-org.js
+    // "nuxt-schema-org",
   ],
-  schemaOrg: {
-    // Reactive identity - will be set dynamically per site/locale
-    reactive: true,
-  },
+  // schemaOrg config no longer needed - we generate manually
+  // schemaOrg config no longer needed - we generate manually
+  // schemaOrg: {
+  //   reactive: true,
+  //   enabled: true,
+  //   host: () => undefined,
+  //   identity: { type: 'WebSite' },
+  // },
   cookieControl,
   piniaPersistedstate: {
     cookieOptions: { sameSite: "strict" },
@@ -139,21 +155,45 @@ export default defineNuxtConfig({
   },
   vite: {
     server: {
-      hmr: { 
-        protocol: "ws", 
+      hmr: {
+        protocol: "ws",
         host: "localhost",
         // Use random port to avoid conflicts with multiple dev servers
         // Setting to true lets Vite auto-select an available port
       },
     },
     optimizeDeps: {
-      include: ["string-strip-html", "@unhead/schema-org/vue"],
+      // Pre-bundle dependencies to avoid multiple reloads during dev startup
+      include: [
+        "string-strip-html",
+        "@unhead/schema-org/vue",
+        // Dependencies discovered at runtime that cause reloads
+        "click-outside-vue3",
+        "lodash.isplainobject",
+        "vue-final-modal",
+        "lodash.clonedeep",
+        "isomorphic-dompurify",
+        "change-case",
+        "change-case/keys",
+        "json5",
+        "native-url",
+        "lodash.intersection",
+        "luxon",
+        "mitt",
+        "mrmime",
+        "swiper/modules",
+        "@vueuse/core",
+        "uuid",
+        "@vue-leaflet/vue-leaflet",
+        "vue3-popper",
+        "pretty-bytes",
+      ],
     },
   },
   delayHydration: { mode: "init" },
 
   image: {
-    provider: 'ipx',
+    provider: "ipx",
     domains: [
       "portal.geobon.org",
       "chm-cbd.net",
@@ -173,33 +213,17 @@ export default defineNuxtConfig({
     quality: 50,
     screens: { xs: 320, sm: 552, md: 992, lg: 1330, xl: 1600 },
     ipx: {
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24 * 30 * 12, // 12 months
     },
   },
   nitro: {
     logLevel: resolvedLogLevel,
     experimental: { tasks: true },
     devStorage: {
-      db: { driver: "fs", base: "./.nuxt/data/db" },
-      comments: { driver: "fs", base: "./.nuxt/data/comments" },
-      pages: { driver: "fs", base: "./.nuxt/data/pages" },
-      context: { driver: "fs", base: "./.nuxt/data/context" },
-      lists: { driver: "fs", base: "./.nuxt/data/lists" },
-      forums: { driver: "fs", base: "./.nuxt/data/forums" },
-      external: { driver: "fs", base: "./.nuxt/data/external" },
-      menus: { driver: "fs", base: "./.nuxt/data/menus" },
-      gbfTargets: { driver: "fs", base: "./.nuxt/data/gbf-targets" },
+      cache: { driver: "fs", base: "./.nuxt/cache" }
     },
     storage: {
-      db: { driver: "fs", base: "./cache/db" },
-      comments: { driver: "fs", base: "./cache/comments" },
-      pages: { driver: "fs", base: "./cache/pages" },
-      context: { driver: "fs", base: "./cache/context" },
-      lists: { driver: "fs", base: "./cache/lists" },
-      forums: { driver: "fs", base: "./cache/forums" },
-      external: { driver: "fs", base: "./cache/external" },
-      menus: { driver: "fs", base: "./cache/menus" },
-      gbfTargets: { driver: "fs", base: "./cache/gbf-targets" },
+      cache: { driver: "fs", base: storageBase }
     },
   },
   experimental: {

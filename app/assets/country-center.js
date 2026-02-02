@@ -29,7 +29,7 @@ export const zoomLevels = new Set([
     { id: 'CI', zoomLevel: 3 },
     { id: 'CK', zoomLevel: 4 },
     { id: 'BW', zoomLevel: 8 },
-    { id: 'CM', zoomLevel: 8 },
+    { id: 'CM', zoomLevel: 12 },
     { id: 'CO', zoomLevel: 4 },
     { id: 'CR', zoomLevel: 5 },
     { id: 'CF', zoomLevel: 5 },

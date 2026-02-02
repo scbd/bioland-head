@@ -13,7 +13,5 @@
 </template>
 
 <script setup>
-
-
     const pageStore = usePageStore();
 </script>
