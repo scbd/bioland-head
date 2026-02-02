@@ -128,6 +128,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   /**
    * Validates that the URL has a proper locale prefix (e.g., /en/, /fr/).
    * If the locale prefix is missing or invalid, redirects to the default locale.
+   * Also removes duplicate locale prefixes to prevent redirect loops.
    * 
    * @returns {void|NavigateToOptions} Redirect if invalid, undefined if valid
    */
@@ -138,7 +139,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     // siteStore.defaultLocale is guaranteed to be set by site.js plugin
     // which runs before this middleware
     const defaultLocale = siteStore.defaultLocale;
-    const pathLocale = to.path.split('/')[1];
+    const pathSegments = to.path.split('/').filter(Boolean); // Remove empty strings
+    const pathLocale = pathSegments[0];
     
     if(!defaultLocale) {
       // This should never happen - plugin ensures defaultLocale is set
@@ -146,9 +148,38 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       return;
     }
     
+    // Handle root path: / should redirect to /${defaultLocale}
+    if(!pathLocale || pathSegments.length === 0) {
+      return navigateTo(`/${defaultLocale}`);
+    }
+    
     const isValid = preFixes.includes(pathLocale);
 
-    if(!isValid) return navigateTo(`/${defaultLocale}${to.path}`);
+    // Check if there are duplicate locale prefixes (e.g., /en/en/page or /en/fr/page)
+    if(isValid && pathSegments.length > 1 && preFixes.includes(pathSegments[1])) {
+      // Remove all consecutive locale prefixes, keep only the first valid one
+      let cleanSegments = [pathSegments[0]];
+      let i = 1;
+      // Skip any additional locale codes
+      while(i < pathSegments.length && preFixes.includes(pathSegments[i])) {
+        i++;
+      }
+      // Add remaining path segments (if any exist after removing duplicate locales)
+      if(i < pathSegments.length) {
+        cleanSegments = cleanSegments.concat(pathSegments.slice(i));
+      }
+      // If only locale prefixes existed, cleanSegments will just be [locale]
+      const cleanPath = '/' + cleanSegments.join('/');
+      return navigateTo(cleanPath.replace(/\/{2,}/g, '/'), { redirectCode: 301, replace: true });
+    }
+
+    if(!isValid) {
+      // Invalid or missing locale prefix: replace with default locale
+      const pathWithoutFirstSegment = pathSegments.slice(1).join('/');
+      const correctedPath = pathWithoutFirstSegment ? `/${defaultLocale}/${pathWithoutFirstSegment}` : `/${defaultLocale}`;
+      // Normalize multiple consecutive slashes to single slash
+      return navigateTo(correctedPath.replace(/\/{2,}/g, '/'), { redirectCode: 301, replace: true });
+    }
 }
 
   /**
