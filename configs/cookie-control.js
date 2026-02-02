@@ -90,122 +90,157 @@ export default {
     localeTexts: {
         en: { 
             decline: 'Decline',
-            accept: 'Accept All',
+            declineAll: 'Reset Preferences',
+            accept: 'Accept All'
         },
         da: {
-            decline: 'Tilbagekaldelse',
+            decline: 'Afvis',
+            declineAll: 'Nulstil præferencer',
             accept: 'Accepter alle'
         },
         az: {
-            decline: 'İzləmə',
+            decline: 'Rədd et',
+            declineAll: 'Sıfırla',
             accept: 'Hamısını qəbul edin'
         },
         ar: {
-            decline: 'تراجع',
+            decline: 'رفض',
+            declineAll: 'إعادة تعيين التفضيلات',
             accept: 'اقبل الكل'
         },
         cs: {
-            decline: 'Pokles',
+            decline: 'Odmítnout',
+            declineAll: 'Obnovit předvolby',
             accept: 'Přijmout vše'
         },
         bg: {
-            decline: 'Спад',
+            decline: 'Отказване',
+            declineAll: 'Нулиране на предпочитанията',
             accept: 'Приемете всички'
         },
         ca: {
-            decline: 'Declinació',
-            accept: 'Acceptar tots'
+            decline: 'Rebutjar',
+            declineAll: 'Restableix les preferències',
+            accept: 'Accepta-ho tot'
+        },
+        be: {
+            decline: 'Адмовіцца',
+            declineAll: 'Скінуць налады',
+            accept: 'Прыняць усё'
         },
         de: {
-            decline: 'Rückgang',
+            decline: 'Ablehnen',
+            declineAll: 'Einstellungen zurücksetzen',
             accept: 'Alles akzeptieren'
         },
         es: {
-            decline: 'Declinación',
+            decliene: 'Rechazar',
+            declineAll: 'Restablecer preferencias',
             accept: 'Aceptar todo'
         },
         fi: {
-            decline: 'Vähennä',
+            decline: 'Hylkää',
+            declineAll: 'Palauta asetukset',
             accept: 'Hyväksy kaikki'
         },
         fr: {
-            decline: 'Déclin',
+            decline: 'Refuser',
+            declineAll: 'Réinitialiser les préférences',
             accept: 'Tout accepter'
         },
         hr: {
-            decline: 'Opadanje',
+            decline: 'Odbij',
+            declineAll: 'Poništi postavke',
             accept: 'Prihvati sve'
         },
         hu: {
-            decline: 'visszaesés',
+            decline: 'Elutasít',
+            declineAll: 'Visszaállítás',
             accept: 'Fogadja el az egészet'
         },
         it: {
-            decline: 'Declino',
+            decline: 'Rifiuta',
+            declineAll: 'Reimpostare preferenze',
             accept: 'Accetta tutto'
         },
         ja: {
             decline: '拒否',
+            declineAll: '設定をリセット',
             accept: '[すべて承認]'
         },
         ko: {
-            decline: '거절',
+            decline: '거부',
+            declineAll: '설정 재설정',
             accept: '모두 수락'
         },
         no: {
-            decline: 'Nedgang',
+            decline: 'Avslå',
+            declineAll: 'Tilbakestill preferanser',
             accept: 'Godta alle'
         },
         nl: {
-            decline: 'Afname',
+            decline: 'Weigeren',
+            declineAll: 'Reset voorkeuren',
             accept: 'Alles accepteren'
         },
         lt: {
-            decline: 'Sumažėjimas',
+            decline: 'Atsisakyti',
+            declineAll: 'Atstatyti nuostatas',
             accept: 'Priimkite visus'
         },
         pl: {
             decline: 'Odrzuć',
+            declineAll: 'Resetuj preferencje',
             accept: 'Zaakceptuj wszystko'
         },
         ps: {
-            decline: 'کمی',
+            decline: 'رد کول',
+            declineAll: 'ترجيحات بیا تنظیم کړئ',
             accept: 'ټول منل کړئ'
         },
         pt: {
-            decline: 'Declínio',
+            decline: 'Recusar',
+            declineAll: 'Restabelecer preferências',
             accept: 'Aceitar tudo'
         },
         ru: {
-            decline: 'Снижение',
+            decline: 'Отклонить',
+            declineAll: 'Сбросить настройки',
             accept: 'Примите все'
         },
         ro: {
-            decline: 'Declinul',
+            decline: 'Refuză',
+            declineAll: 'Resetează preferințele',
             accept: 'Acceptă toate'
         },
         sk: {
-            decline: 'Pokles',
+            decline: 'Odmietnuť',
+            declineAll: 'Obnoviť predvoľby',
             accept: 'Prijmite všetko'
         },
         sv: {
-            decline: 'Nedgång',
+            decline: 'Avböj',
+            declineAll: 'Återställ inställningar',
             accept: 'Acceptera alla'
         },
         sl: {
-            decline: 'Upadanje',
+            decline: 'Zavrni',
+            declineAll: 'Ponastavi nastavitve',
             accept: 'Sprejmi vse'
         },
         tr: {
-            decline: 'Düşüş',
+            decline: 'Reddet',
+            declineAll: 'Tercihleri Sıfırla',
             accept: 'Tümünü Kabul Et'
         },
         uk: {
-            decline: 'Зниження',
+            decline: 'Відхилити',
+            declineAll: 'Скинути налаштування',
             accept: 'Прийняти все'
         },
         zh: {
             decline: '拒绝',
+            declineAll: '重置偏好设置',
             accept: '全部接受'
         }
     },
