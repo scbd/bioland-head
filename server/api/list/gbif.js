@@ -1,4 +1,4 @@
-export default cachedEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
         try{
             const query            = getQuery(event);
             const ctx              = await useRequestContext(event);
@@ -14,9 +14,8 @@ export default cachedEventHandler(async (event) => {
             }
 
             const countryQueryString = countries.map((s)=>`country=${s.toUpperCase()}`).join('&');
-            const uri  = `https://api.gbif.org/v1/occurrence/search?${countryQueryString}&limit=0&facet=publishingOrg&facetLimit=1000`;
+            const uri  = `https://api.gbif.org/v1/occurrence/search?${countryQueryString}&limit=0&facet=publishingOrg&facetLimit=10000`;
             const uri2 = `https://api.gbif.org/v1/dataset?${countryQueryString}`;
-
 
             const data = await Promise.all([$fetch(uri, $fetchBaseOptions({ mode: 'cors' })).then(mapOccurrence),$fetch(uri2, $fetchBaseOptions({ mode: 'cors' })).then(mapDataSets)])
 
@@ -27,7 +26,7 @@ export default cachedEventHandler(async (event) => {
         }
     
     },
-    externalCache
+    getExternalShortCacheOptions('gbif-summary')
 )
 
 function mapOccurrence({ count, facets }){

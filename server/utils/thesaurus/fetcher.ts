@@ -7,6 +7,7 @@ import { sanitizeItems, getSanitizer } from './sanitizers';
 import { ecosystemTypes } from './ecosystems';
 import { documentStates, orgTypeOther, gbfTargets } from './static-data';
 import type { SanitizedItem } from '~/shared/types';
+import { $fetchBaseOptions } from '../fetch-options';
 
 const SORT_BY_ID = new Set(['aichis', 'sdgs', 'sdts', 'gbfTargets']);
 
@@ -28,7 +29,7 @@ async function fetchFromApi(domain: string, locale = 'en'): Promise<SanitizedIte
   if (!config?.url) return [];
 
   try {
-    const data = await $fetch<any[]>(config.url);
+    const data = await $fetch<any[]>(config.url, $fetchBaseOptions());
     if (!Array.isArray(data)) return [];
     
     let result = sanitizeItems(data, domain, locale);

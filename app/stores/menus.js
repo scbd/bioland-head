@@ -4,7 +4,22 @@ import { contentTypeTidConstants } from "#shared/utils/constants";
 const typeMapIds = Object.fromEntries(Object.entries(contentTypeTidConstants).map(([key, value]) => [kebabCase(key), value]));
 
 export const useMenusStore = defineStore('menus', { 
-    state: () => ({ footer: [], main: [], footerCredits: [], languages: [], nrSix:[], nr:[], nbsap:{}, bch:[], absch:[], nfps:[], contentTypes:{}, forums: [], systemPages:[], nt7:[]}),
+    state: () => ({ 
+        footer: [], 
+        main: [], 
+        footerCredits: [], 
+        languages: [], 
+        nrSix:[], 
+        nr:[], 
+        nbsap:{}, 
+        bch:[], 
+        absch:[], 
+        nfps:[], 
+        contentTypes:{}, 
+        forums: [], 
+        systemPages:[], 
+        nt7:[]
+    }),
     actions:{
         set(name, value){
 
@@ -108,7 +123,6 @@ export const useMenusStore = defineStore('menus', {
             const id          = typeMapIds[name];
             const contentType =  this.getContentTypeById(id, locale);
         
-            //  consola.error('contentType',contentType)
 
             return contentType;
         },
@@ -147,6 +161,96 @@ export const useMenusStore = defineStore('menus', {
                 for(let i = 0; i < menu.children.length; i++)
                     if(this.isInMenuByContentTypeId(menu.children[i], id)) 
                         return this.isInMenuByContentTypeId(menu.children[i], id);
+        
+            return false;
+        },
+        /**
+         * Find a menu entry in the main menu that matches the given taxonomy term ID (system page).
+         * Checks both `/taxonomy/term/{tid}` paths and any system page aliases.
+         * Also checks for component classes that map to system pages (e.g., bl2-component-focal-points).
+         * 
+         * @param {number} tid - The drupalInternalTid of the system page
+         * @param {string} locale - The current locale for alias lookup
+         * @returns {object|false} The matching menu entry with crumbs/hierarchy, or false
+         */
+        isInMainMenuBySystemPageTid(tid, locale){
+            if(!tid || !this?.main?.length) return false;
+    
+            // Get system page to check for aliases
+            const systemPage = this.getSystemPageById(tid);
+            const taxonomyPath = `/taxonomy/term/${tid}`;
+            const aliasPath = systemPage?.aliases?.[locale];
+            // Also check with locale prefix since menu hrefs often include it
+            const localizedAliasPath = aliasPath ? `/${locale}${aliasPath}` : null;
+            
+            // Map of known system page TIDs to their component class names
+            const systemPageComponentMap = {
+                30: 'focal-points', // NATIONAL_CONTACT_POINTS
+                24: 'forums',       // FORUMS
+                21: 'search',       // SEARCH
+            };
+            const componentClass = systemPageComponentMap[tid];
+    
+            for(let i = 0; i < this.main.length; i++){
+                // First try direct href match
+                const found = this.isInMenuByHref(this.main[i], taxonomyPath, aliasPath, localizedAliasPath);
+                if(found) return found;
+                
+                // If not found by href and we have a component class, try matching by class
+                if(componentClass){
+                    const foundByClass = this.isInMenuByComponentClass(this.main[i], componentClass);
+                    if(foundByClass) return foundByClass;
+                }
+            }
+        
+            return false;
+        },
+        /**
+         * Recursively search a menu tree for an entry matching the given href(s).
+         * 
+         * @param {object} menu - The menu item to search
+         * @param {string} primaryHref - The primary href to match (e.g., /taxonomy/term/21)
+         * @param {string} [aliasHref] - An optional alias href to also match
+         * @param {string} [localizedAliasHref] - An optional localized alias href (e.g., /en/national-contact-points)
+         * @returns {object|false} The matching menu entry, or false
+         */
+        isInMenuByHref(menu, primaryHref, aliasHref, localizedAliasHref){
+            const hrefMatch = (menu.href === primaryHref) || 
+                              (aliasHref && menu.href === aliasHref) ||
+                              (localizedAliasHref && menu.href === localizedAliasHref);
+            
+            if(hrefMatch && menu.href) return menu;
+        
+            if(menu?.children?.length)
+                for(let i = 0; i < menu.children.length; i++){
+                    const found = this.isInMenuByHref(menu.children[i], primaryHref, aliasHref, localizedAliasHref);
+                    if(found) return found;
+                }
+        
+            return false;
+        },
+        /**
+         * Recursively search a menu tree for an entry with a matching component class.
+         * Component classes are like bl2-component-focal-points, mm-component-search, etc.
+         * 
+         * @param {object} menu - The menu item to search
+         * @param {string} componentName - The component name to match (e.g., 'focal-points')
+         * @returns {object|false} The matching menu entry, or false
+         */
+        isInMenuByComponentClass(menu, componentName){
+            const classPatterns = [
+                `bl2-component-${componentName}`,
+                `mm-component-${componentName}`,
+            ];
+            
+            const hasClass = menu?.class?.some(c => classPatterns.includes(c));
+            if(hasClass) return menu;
+        
+            if(menu?.children?.length)
+                for(let i = 0; i < menu.children.length; i++){
+                    const found = this.isInMenuByComponentClass(menu.children[i], componentName);
+                    if(found) return found;
+                }
         
             return false;
         },

@@ -1,18 +1,17 @@
-export default cachedEventHandler(async (event) => {
-        try{
+export default defineCachedEventHandler(
+    async (event) => {
+        try {
             const ctx      = await useRequestContext(event);
             const query    = getQueryString(ctx);
             const response = await $indexFetch(query);
 
             return mapByGov(response, ctx);
-        }
-        catch (e) {
-
+        } catch (e) {
             passError(event, e);
         }
     },
-    externalCache
-)
+    getMenusCacheOptions('nr-menus', true, CACHE_TTL.CBD_API_LONG)
+);
 
 function getQueryString({ countries, country, locale }={}){
     
@@ -47,8 +46,6 @@ function mapByGov({ docs }, ctx){
         const nbsaps = tMap[aCountryCode].filter(({ symbol })=> symbol === 'B0EBAE91-9581-4BB2-9C02-52FCF9D82721').sort((a,b)=> sortArrayOfObjectsByProp(a,b, 'createdDate'));
         const nrs =  tMap[aCountryCode].filter(({ symbol })=> symbol !== 'B0EBAE91-9581-4BB2-9C02-52FCF9D82721').sort((a,b)=> sortArrayOfObjectsByProp(a,b, 'createdDate'));
 
-        
-
         const progress = { title: 'Progress Assessment', href:`https://chm.cbd.int/database?schema_s=nationalAssessment&hostGovernments_ss=${aCountryCode}`, target: '_blank',createdDate:"1913-05-02T18:36:31.137Z"}
         const targets = { title: 'National Targets', href:`https://chm.cbd.int/database?schema_s=nationalTarget&hostGovernments_ss=${aCountryCode}`, target: '_blank',createdDate:"1914-05-02T18:36:31.137Z"}
 
@@ -57,10 +54,3 @@ function mapByGov({ docs }, ctx){
 
     return tMap
 }
-
-// function sort(a,b, prop){
-//     if(a[prop] < b[prop]) return 1; 
-//     if(a[prop] > b[prop]) return -1;
-
-//     return 0;
-// }

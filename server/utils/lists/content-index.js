@@ -7,9 +7,9 @@ import { camelCase } from 'change-case/keys';
 //     return  getAllContent(ctx)//makeTypeMap(await getAllContentTypeMenus(ctx))
 // }
 
-export const useContentTypeIndex = async (ctx) => {
+export const useContentTypeIndex = async (event, ctx) => {
 
-    return  getListIndex(ctx);
+    return  getListIndex(event, ctx);
 }
 
 /**
@@ -22,44 +22,46 @@ export const useContentTypeIndex = async (ctx) => {
  * @param {string[]} uuids - Array of Drupal node UUIDs
  * @returns {Promise<Map<string, Object>>} - Map of uuid -> field_tags
  */
-const fetchBulkDefaultLocaleTags = defineCachedFunction(async (ctx, uuids) => {
-    if (!uuids?.length) return {};
-    
-    const { host, defaultLocale } = ctx;
-    const defaultLocalePath = defaultLocale ? `/${defaultLocale}` : '/en';
-    
-    // Build filter for multiple UUIDs using IN operator
-    const uuidFilter = uuids.map(uuid => `filter[id][value][]=${encodeURIComponent(uuid)}`).join('&');
-    const uri = `${host}${defaultLocalePath}/jsonapi/node/content?fields[node--content]=field_tags&filter[id][operator]=IN&${uuidFilter}`;
-    
-    try {
-        const response = await $fetch(uri, $fetchBaseOptions({ method: 'get', headers: { 'Content-Type': 'application/json' } }));
-        const tagsMap = new Map();
-        
-        if (response?.data) {
-            for (const node of response.data) {
-                const fieldTags = node?.field_tags || node?.fieldTags;
-                if (fieldTags) {
-                    tagsMap.set(node.id, fieldTags);
-                }
-            }
+const getFacetsInDefaultLocale = defineCachedFunction(async (ctx, uuids) => {
+  if (!uuids?.length) return {};
+
+  const { host, defaultLocale } = ctx;
+  const defaultLocalePath = defaultLocale ? `/${defaultLocale}` : "/en";
+
+  // Build filter for multiple UUIDs using IN operator
+  const uuidFilter = uuids .map((uuid) => `filter[id][value][]=${encodeURIComponent(uuid)}`) .join("&");
+  const uri = `${host}${defaultLocalePath}/jsonapi/node/content?fields[node--content]=field_tags&filter[id][operator]=IN&${uuidFilter}`;
+
+  try {
+    const response = await $fetch( uri, $fetchBaseOptions({ method: "get", headers: { "Content-Type": "application/json" }, }), );
+    const tagsMap = new Map();
+
+    if (response?.data) {
+        for (const node of response.data) {
+            const fieldTags = node?.field_tags || node?.fieldTags;
+
+            if (fieldTags) tagsMap.set(node.id, fieldTags);
         }
-        
-        // Convert Map to plain object for caching (Map doesn't serialize well)
-        return Object.fromEntries(tagsMap);
-    } catch (e) {
-        // Bulk fetch failed - return empty object, tags are optional
-        consola.warn('fetchBulkDefaultLocaleTags failed:', e.message);
-        return {};
     }
+
+    // Convert Map to plain object for caching (Map doesn't serialize well)
+    return Object.fromEntries(tagsMap);
+  } catch (e) {
+    // Bulk fetch failed - return empty object, tags are optional
+    consola.warn("getFacetsInDefaultLocale failed:", e.message);
+    return {};
+  }
 }, {
-    maxAge: 60 * 60 * 12, // 12 hours cache
-    getKey: (ctx, uuids) => `bulk-tags-${ctx.host}-${ctx.defaultLocale}-${uuids.sort().join(',')}`,
-    base: 'tags',
-    shouldBypassCache: (ctx) => shouldBypassCacheByQuery(ctx)
+    ...getListCacheOptions('get-facets-in-default-locale'),
+    getKey: (event, ctx ) => {
+            const { siteCode } = ctx;
+            const { multiSiteCode } = useRuntimeConfig().public;
+
+        return `${multiSiteCode}:${siteCode}`;
+    }
 });
 
-function mapData(ctx){
+function mapData(event,ctx){
 
 
     return async (results)=>{
@@ -81,9 +83,7 @@ function mapData(ctx){
         }
         
         // Fetch all missing field_tags in a single bulk query (returns plain object for caching)
-        const bulkTagsObj = uuidsNeedingTags.length > 0 
-            ? await fetchBulkDefaultLocaleTags(ctx, uuidsNeedingTags)
-            : {};
+        const bulkTagsObj = uuidsNeedingTags.length > 0 ? await getFacetsInDefaultLocale(ctx, uuidsNeedingTags) : {};
 
         // Now process all docs with tags (either from original doc or bulk fetch)
         for (const aDoc of results.data){
@@ -100,7 +100,7 @@ function mapData(ctx){
 
                 // Only fetch thesaurus data if we have keys
                 if(keys.length)
-                    promises.push(getThesaurusByKey(keys).then((p)=>{aDoc.tags = mapTagsByType(p) || {};}));
+                    promises.push(getThesaurusByKey(event, keys).then(async (p)=>{aDoc.tags = await mapTagsByType(p) || {};}));
             }
         }
         await Promise.all(promises);
@@ -151,7 +151,7 @@ function getMediaImage(ctx, fieldAttachments){
 
 
 
-async function getListIndex(ctx ) {
+async function getListIndex(event, ctx ) {
     const { localizedHost, locale, host, defaultLocale, page, rowsPerPage } = ctx;
     // Use localizedHost which includes the user's current locale (e.g., /es/)
     // Drupal content IS localized - titles, descriptions, and tags are stored per-language
@@ -174,7 +174,7 @@ async function getListIndex(ctx ) {
     const { count, facets } = meta || {};
 
     // Map all fetched data first
-    const mappedResults = await mapData(ctx)({ data, count });
+    const mappedResults = await mapData(event, ctx)({ data, count });
     
     // Apply stable sort with ID as final tiebreaker to ensure deterministic ordering
     // This prevents SSR/hydration mismatches when Drupal returns items with same sort field values
@@ -278,7 +278,7 @@ function getQuestString(ctx){
     getLanguageFilterParams(ctx) +
     getFreeTextFilterParams(ctx) +
     getTypeFilterParams(ctx) +
-    getDateFilterParams(ctx) +
+    // getDateFilterParams(ctx) +
     getSortParams(ctx)+getPaginationParams(ctx)
   ); //
 }

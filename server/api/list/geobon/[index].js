@@ -1,31 +1,37 @@
 
-export default cachedEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
         try{
             const ctx     = await useRequestContext(event);
-            const country = await getCountryName(getCountryCode(ctx));
+            const country = await getCountryName(event, getCountryCode(ctx));
             const index   = getRouterParam(event, 'index')
             const body    = new FormData();
     
             body.append('action', 'fetch_data');
-            body.append('country', country);
+            body.append("country", isPlainObject(country) ? country?.name: country);
 
-            const headers =  { "Accept": "application/json" }
-            const data    = ( await $fetch(`https://portal.geobon.org/bioland/fetch-data.php`, $fetchBaseOptions({  method: 'POST', body,headers,  mode: 'cors' }))).replaceAll(/\n/g,'');
+            const headers =  { "Accept": "application/json", 'User-Agent': `Mozilla/5.0 (compatible; BiolandHead/1.0; +${ctx.host})`}
+            const data    = ( await $fetch(`https://portal.geobon.org/bioland/fetch-data.php`, $fetchBaseOptions({  method: 'POST', body, headers,  mode: 'cors' }))).replaceAll(/\n/g,'');
 
             const dataObject = parseJson(data);
 
             dataObject.data  = dataObject.data.map((r)=>{
                 r.ecosystemType = r.ecosystem_type.split(',').map(e=>e.trim());
                 return r
-        });
+            });
 
-            return dataObject?.data[index || 0] || createError({ statusCode: 404, statusMessage: 'Not Found', message: `No GEO BON record found for index: ${index}` });
+            const record = dataObject?.data[index || 0];
+            
+            if (!record) {
+                consola.warn({ statusCode: 404, statusMessage: 'Not Found', message: `No GEO BON record found for index: ${index}` });
+            }
+            
+            return record || {};
         }
         catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     },
-    { ...externalCache, maxAge: 60 * 5 }
+    getExternalCacheOptions('geobon-record', true, CACHE_TTL.FIVE_MINUTES)
 )
 
 

@@ -55,7 +55,7 @@ interface ContentType {
  */
 export const contentTypes: ContentType[] = [
     { drupalInternalTid: 2, name: 'News', field_plural: 'News', icon: '📰' },
-    { drupalInternalTid: 3, name: 'Meeting or Event', field_plural: 'Meetings & Events', icon: '📅' },
+    { drupalInternalTid: 3, name: 'Event', field_plural: 'Events', icon: '📅' },
     { drupalInternalTid: 4, name: 'Learning Resource', field_plural: 'Learning Resources', icon: '🎓' },
     { drupalInternalTid: 5, name: 'Project', field_plural: 'Projects', icon: '📊' },
     { drupalInternalTid: 6, name: 'Basic Page', field_plural: 'Basic Pages', icon: '📄' },
@@ -79,6 +79,39 @@ export const contentTypes: ContentType[] = [
     { drupalInternalTid: 50, name: 'Contact', field_plural: 'Contacts', icon: '📞' }
 ];
 
+export const contentTypesBl2: ContentType[] = [
+    { drupalInternalTid: 2, name: 'News', field_plural: 'News', icon: '📰' },
+    { drupalInternalTid: 3, name: 'Event', field_plural: 'Events', icon: '📅' },
+    { drupalInternalTid: 4, name: 'Learning Resource', field_plural: 'Learning Resources', icon: '🎓' },
+    { drupalInternalTid: 5, name: 'Project', field_plural: 'Projects', icon: '📊' },
+    { drupalInternalTid: 6, name: 'Basic Page', field_plural: 'Basic Pages', icon: '📄' },
+    { drupalInternalTid: 8, name: 'Government Ministry or Institute', field_plural: 'Government Ministries or Institutes', icon: '🏛️' },
+    { drupalInternalTid: 9, name: 'Ecosystem', field_plural: 'Ecosystems', icon: '🌍' },
+    { drupalInternalTid: 10, name: 'Protected Area', field_plural: 'Protected Areas', icon: '🏞️' },
+    { drupalInternalTid: 11, name: 'Biodiversity Data', field_plural: 'Biodiversity Data', icon: '📈' },
+    { drupalInternalTid: 12, name: 'Document', field_plural: 'Documents', icon: '📋' },
+    { drupalInternalTid: 13, name: 'Related Website', field_plural: 'Related Websites', icon: '🔗' },
+    { drupalInternalTid: 15, name: 'Other', field_plural: 'Others', icon: '⚙️' },
+    { drupalInternalTid: 16, name: 'Image or Video', field_plural: 'Images or Videos', icon: '🎬' }
+];
+
+export const contentTypesBsl: ContentType[] = [
+    { drupalInternalTid: 2, name: 'News', field_plural: 'News', icon: '📰' },
+    { drupalInternalTid: 3, name: 'Event', field_plural: 'Events', icon: '📅' },
+    { drupalInternalTid: 5, name: 'Project', field_plural: 'Projects', icon: '📊' },
+    { drupalInternalTid: 12, name: 'Document', field_plural: 'Documents', icon: '📋' },
+    { drupalInternalTid: 13, name: 'Related Website', field_plural: 'Related Websites', icon: '🔗' },
+    { drupalInternalTid: 16, name: 'Image or Video', field_plural: 'Images or Videos', icon: '🎬' },
+    { drupalInternalTid: 55, name: 'Other Resource', field_plural: 'Other Resources', icon: '⚙️' },
+    { drupalInternalTid: 43, name: 'FAQ', field_plural: 'FAQs', icon: '❓' },
+    { drupalInternalTid: 44, name: 'National Information', field_plural: 'National Informations', icon: '🏴' },
+    { drupalInternalTid: 45, name: 'Status of LMO', field_plural: 'Status of LMOs', icon: '🧬' },
+    { drupalInternalTid: 46, name: 'Field Trial', field_plural: 'Field Trials', icon: '🌱' },
+    { drupalInternalTid: 47, name: 'National Mainstreaming Strategy', field_plural: 'National Mainstreaming Strategies', icon: '🗂️' },
+    { drupalInternalTid: 48, name: 'Capacity Building', field_plural: 'Capacity Building', icon: '🔧' },
+    { drupalInternalTid: 49, name: 'Announcement', field_plural: 'Announcements', icon: '📢' },
+    { drupalInternalTid: 50, name: 'Contact', field_plural: 'Contacts', icon: '📞' }
+];
 /**
  * Creates a kebab-case mapping from content type names to their Drupal Term IDs.
  * 
@@ -400,3 +433,21 @@ export const LOG_TYPES: Record<number, string[]> = {
     [LOG_LEVEL.DEBUG]: ['debug'],
     [LOG_LEVEL.TRACE]: ['trace'],
 };
+
+export const CACHE_TTL = {
+  DEFAULT: 15, // 15 seconds
+  ONE_MINUTE: 60, // 1 minute
+  FIVE_MINUTES: 60 * 5,
+  MENUS: 60 * 5, // 5 minutes
+  CBD_API: 60 * 60 * 24, // 24 hours
+  CBD_API_LONG: 60 * 60 * 24 * 30 * 1, // 1 month
+  DRUPAL_LANGUAGES: 60 * 60 * 24 * 30, // 30 days
+  DRUPAL_SYSTEM_PAGES: 60 * 60 * 24 * 30, // 30 days
+  DRUPAL_TOPICS: 60 * 60, // 1 hour
+  EXTERNAL: 60 * 60 * 24 * 30, // 30 days
+  EXTERNAL_SHORT: 60 * 60 * 24, // 1 day
+  THESAURUS: 60 * 60 * 24 * 7, // 7 days
+  LISTS: 60 * 5, // 5 minutes
+  USERS: 60 * 5, // 5 minutes
+  ONE_YEAR: 60 * 60 * 24 * 365, // 1 year
+} as const;          

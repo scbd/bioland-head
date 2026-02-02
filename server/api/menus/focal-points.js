@@ -3,25 +3,24 @@ import   clone           from 'lodash.clonedeep';
 const focalPointTypes = [ 'CBD-FP1', 'CHM-FP',   'ABS-FP', 'BCH-FP', 'CPB-FP1' ];
 const focalPointAll = [ 'CBD-FP1',  'CBD-FP2', 'CPB-FP1', 'ABS-FP', 'CHM-FP', 'BCH-FP', 'CPB-A17-FP', 'RM-FP', 'PA-FP', 'TKBD-FP', 'SBSTTA-FP', 'GTI-FP', 'GSPC-FP' ];
 
-export default cachedEventHandler(async (event) => {
-        try{
-            const ctx        = await useRequestContext(event);
-            const query      = getQueryString(ctx);
-            const response   = await $indexFetch(query);
+export default defineCachedEventHandler(
+    async (event) => {
+        try {
+            const ctx = await useRequestContext(event);
+            const query = getQueryString(ctx);
+            const response = await $indexFetch(query);
             const countryMap = mapByCountry(response, ctx);
-            const links      = getLinks(countryMap);
+            const links = getLinks(countryMap);
 
             await getProtocolContacts(ctx, links);
 
             return links;
-        }
-        catch (e) {
+        } catch (e) {
             passError(event, e);
         }
-    
     },
-    externalCache
-)
+    getMenusCacheOptions('focal-points-menus', true, CACHE_TTL.CBD_API)
+);
 
 function mapByCountry({ docs }, ctx){
 

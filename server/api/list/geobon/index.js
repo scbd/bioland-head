@@ -1,8 +1,8 @@
 
-export default cachedEventHandler(async (event) => {
+export default defineEventHandler(async (event) => {
         try{
             const ctx     = await useRequestContext(event);
-            const country = await getCountryName(getCountryCode(ctx));
+            const country = await getCountryName(event, getCountryCode(ctx));
 
             const body = new FormData();
     
@@ -14,7 +14,10 @@ export default cachedEventHandler(async (event) => {
 
             const dataObject = parseJson(data);
 
-            return dataObject || createError({ statusCode: 404, statusMessage: 'Not Found', message: `No GEO BON data found for country: ${country}` });
+            if(!dataObject)
+                consola.warn({ statusCode: 404, statusMessage: 'Not Found', message: `No GEO BON data found for country: ${country}` });
+
+            return dataObject //|| createError({ statusCode: 404, statusMessage: 'Not Found', message: `No GEO BON data found for country: ${country}` });
         }
         catch (e) {
             passError(event, e);

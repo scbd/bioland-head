@@ -45,16 +45,17 @@ export default cachedEventHandler(async (event) => {
     catch (e) {
         passError(event, e);
     }
-}, {
-    maxAge: 60 * 5, // 5 minutes cache
-    getKey: async (event) => {
-        const ctx = await useRequestContext(event).catch(() => ({ siteCode: 'unknown', locale: 'en', multiSiteCode: 'bl2', env: 'dev' }));
-        const { siteCode, locale, multiSiteCode, env } = ctx;
-        // Include 5-minute window in cache key to align with seeded random
-        const timeWindow = Math.floor(Date.now() / 300000);
-        return `${env}-${multiSiteCode}-${siteCode}-${locale}-nt7-${timeWindow}`;
-    },
-    base: 'lists',
-    varies: ['host', 'x-forwarded-host']
-})
+    }, 
+    {
+        ...getListCacheOptions('nt7-list'),
+        getKey: async (event) => {
+            const ctx = await useRequestContext(event)//.catch(() => ({ siteCode: 'unknown', locale: 'en', multiSiteCode: 'bl2', env: 'dev' }));
+            const { siteCode, locale, multiSiteCode, env } = ctx;
+            // Include 5-minute window in cache key to align with seeded random
+            const timeWindow = Math.floor(Date.now() / 300000);
+
+            return `${env}-${multiSiteCode}-${siteCode}-${locale}-nt7-${timeWindow}`;
+        }
+    }
+)
 

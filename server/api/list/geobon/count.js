@@ -1,8 +1,8 @@
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
         try{
             const ctx     = await useRequestContext(event);
-            const country = await getCountryName(getCountryCode(ctx));
+            const country = await getCountryName(event, getCountryCode(ctx));
 
             const body = new FormData();
     
@@ -12,14 +12,19 @@ export default defineEventHandler(async (event) => {
             const headers =  { "Accept": "application/json" }
             const data    =( await $fetch(`https://portal.geobon.org/bioland/fetch-data.php`, $fetchBaseOptions({  method: 'POST', body,headers,  mode: 'cors' }))).replaceAll(/\s/g,'');
 
-
-            return parseJson(data)?.count || 0;
+            const count = parseJson(data)?.count || 0;
+            
+            if (count === 0) {
+                consola.warn({ statusCode: 404, statusMessage: 'Not Found', message: 'No GEO BON records found for this country' });
+            }
+            
+            return { count }|| 0;
         }
         catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     },
-    // externalCache
+    getExternalCacheOptions('geobon-count')
 )
 
 

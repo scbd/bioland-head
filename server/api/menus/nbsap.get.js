@@ -1,19 +1,23 @@
 
-export default cachedEventHandler(async (event) => {
-        try{
-            const ctx           = await useRequestContext(event);
-            const receivedQuery = { ...ctx, ...getQuery(event) };
-            const query         = getQueryString(receivedQuery);
-            const response      = await $indexFetch(query);
+export default defineCachedEventHandler(
+  async (event) => {
+        try {
+        const ctx = await useRequestContext(event);
+        const receivedQuery = { ...ctx, ...getQuery(event) };
+        const query = getQueryString(receivedQuery);
+        const response = await $indexFetch(query);
 
-            return response?.docs?.length? response.docs.map(mapDocs(receivedQuery.locale)).filter(filterDocs(receivedQuery.locale)) : {};
-        }
-        catch (e) {
-            passError(event, e);
+        return response?.docs?.length
+            ? response.docs
+                .map(mapDocs(receivedQuery.locale))
+                .filter(filterDocs(receivedQuery.locale))
+            : {};
+        } catch (e) {
+        passError(event, e);
         }
     },
-    externalCache
-)
+    getMenusCacheOptions('nbsap-menus', true, CACHE_TTL.CBD_API_LONG)
+);
 
 function getQueryString({ countries, country, locale }={}){
     

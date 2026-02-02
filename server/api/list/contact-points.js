@@ -16,7 +16,7 @@ export default cachedEventHandler(async (event) => {
             passError(event, e);
         }
     },
-    externalCache
+    getExternalCacheOptions('focal-points')
 )
 
 function mapByCountry({ docs }, ctx){

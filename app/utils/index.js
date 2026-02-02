@@ -14,6 +14,19 @@ export function uniqueArray(passedArray){
     return Array.from(setOfStrings);
 }
 
+export function uniqueArrayObjectsByKey(passedArray, key){
+    const seen = new Set();
+
+    return passedArray.filter(item => {
+        const value = item[key];
+
+        if (seen.has(value)) return false;
+
+        seen.add(value);
+        return true;
+    });
+}
+
 export const falsyFilter = x => x && x !== 'undefined' && x !== 'null';
 
 export function parseJson(dataString){

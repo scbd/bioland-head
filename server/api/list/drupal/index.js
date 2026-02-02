@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
 
         // Merge context and query, with query taking precedence for locale-related params
         // This ensures client-provided locale (from i18n) is used when available
-        return useContentTypeIndex({ ...ctx, ...query });
+        return useContentTypeIndex(event, { ...ctx, ...query });
     }
     catch (e) {
         passError(event, e);

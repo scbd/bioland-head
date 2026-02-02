@@ -15,7 +15,7 @@ export default cachedEventHandler(async (event) => {
             passError(event, e);
         }
     },
-    externalCache
+    getExternalCacheOptions('biobridge')
 )
 
 function mapHref(obj){

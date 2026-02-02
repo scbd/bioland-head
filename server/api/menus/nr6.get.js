@@ -1,20 +1,19 @@
-export default cachedEventHandler(async (event) => {
-        try{
+export default defineCachedEventHandler(
+    async (event) => {
+        try {
             const ctx = await useRequestContext(event);
 
-            const queryString = getIndexQuery('nationalReport6', ctx) + '&' +getIndexNrFields(ctx.locale);
+            const queryString = getIndexQuery("nationalReport6", ctx) + "&" + getIndexNrFields(ctx.locale);
 
-            const resp = await $indexFetch (queryString, ctx);
+            const resp = await $indexFetch(queryString, ctx);
 
             return mapByCountry(resp, ctx);
-
-        }
-        catch (e) {
+        } catch (e) {
             passError(event, e);
         }
     },
-    externalCache
-)
+    getMenusCacheOptions('nr6-menus', true, CACHE_TTL.CBD_API_LONG)
+);
 
 function mapByCountry({ docs }, ctx){
     const countries = !ctx?.country? [ ...(ctx?.countries || [])] : [ ctx.country, ...(ctx?.countries || []) ];
