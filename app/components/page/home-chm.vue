@@ -9,7 +9,7 @@
         </div>
         <div class="row">
             
-            <div v-if="hasNews" class="col-12 pe-0 me-0 mb-4" >
+            <div  class="col-12 pe-0 me-0 mb-4" >
                 <LazySwiperNewsUpdates  :pagination="true"/>
             </div>
             <div class="col-12 pe-0 me-0 mb-4" >
@@ -29,10 +29,7 @@ const pageStore = usePageStore();
 const meStore   = useMeStore();
 const body      = computed(()=>pageStore?.page?.body);
 
-
 const columnsOfWidgetComponents = computed(() => siteStore?.theme?.homePageWidgets?.columns);
-
-const hasNews = computed(() => siteStore?.theme?.homePageWidgets?.news);
 
 </script>
 <style scoped>

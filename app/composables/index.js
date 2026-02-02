@@ -79,8 +79,8 @@ export const useGetPage = () => {
 
             return data;
         }catch(e){
-            consola.error(e, key.value)
-            consola.error(e)
+            consola.error('useGetPage', e, key.value)
+            consola.error("useGetPage", e);
             if(e.statusCode === 404 || e.statusCode === 403)
                 throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}`, fatal:true })
         

@@ -5,17 +5,13 @@
             <span v-if="isDrupalPublished" class="badge bg-success text-dark">{{t('Published')}}</span>
             <span v-if="!isDrupalPublished"  class="badge bg-danger text-dark">{{t('Unpublished')}}</span>
         </div>
-        <div v-if="isMissingTranslation" class="mb-2">
+        <!-- <div v-if="isMissingTranslation" class="mb-2">
             <h5 class="mb-0 text-nowrap">{{t('Translation')}}</h5>
             <span class="badge bg-warning text-dark">{{t('No translation available')}}</span>
-        </div>
+        </div> -->
         <div v-if="pageStore?.startDate" class="mb-2">
             <h5 class="mb-0 text-nowrap">{{t('Start Date')}}</h5>
             {{ formatDate(pageStore?.startDate)}}
-        </div>
-        <div v-if="pageStore?.endDate" class="mb-2">
-            <h5 class="mb-0 text-nowrap" >{{t('End Date')}}</h5>
-            <span >{{formatDate(pageStore?.endDate)}}</span>
         </div>
         <div v-if="!pageStore?.startDate && pageStore?.publishedOn" class="mb-2">
             <h5 class="mb-0 text-nowrap">{{t('Published on')}}</h5>

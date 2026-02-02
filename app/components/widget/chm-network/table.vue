@@ -79,7 +79,7 @@
 
     function getUrl(site, config, withProtocol=false) {
         if(!site || !config) {
-            consola.error({site, config} )
+            consola.error('table-getUrl',{site, config} )
 
             return''
         }
