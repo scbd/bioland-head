@@ -1,172 +1,196 @@
+import { camelCase } from "change-case/keys";
 /**
  * Unified Server Context Resolution
- * 
+ *
  * This is the ONLY way to get site context on the server.
  * Context is resolved once per request and cached on event.context.site
- * 
+ *
  * Locale priority: URL path > cookie > DMSM default
  */
 
-import type { H3Event } from 'h3'
-import type { SiteContext, DmsmConfig, ContextCookie } from '~/shared/types'
+import type { H3Event } from "h3";
+import type { SiteContext, DmsmConfig, ContextCookie } from "~/shared/types";
+import { getSiteSettings } from "./drupal/index.js";
 
-const DMSM_CACHE_TTL = 60 * 60 * 24 // 24 hours in seconds
-const DMSM_CACHE_BASE = 'dmsm-config'
 
-interface RequestContextOptions {
-  /** Explicit siteCode (skips host extraction) - used by context API route */
-  siteCode?: string
-  /** Explicit locale (skips path/cookie resolution) */
-  locale?: string
-}
+interface RequestContextOptions { /** Explicit siteCode (skips host extraction) - used by context API route */ siteCode?: string; /** Explicit locale (skips path/cookie resolution) */ locale?: string; }
 
 /**
  * Get site context for the current request
  * Caches result on event.context.site to avoid re-resolution
- * 
+ *
  * @param event - H3 event
  * @param options - Optional overrides for siteCode and locale (used by context API route)
  */
-export async function useRequestContext(event: H3Event, options?: RequestContextOptions): Promise<SiteContext> {
-  const { baseHost, env, multiSiteCode, locales: runtimeLocales } = useRuntimeConfig().public
-  
+export async function useRequestContext( event: H3Event, options?: RequestContextOptions ): Promise<SiteContext> {
+  const { baseHost, env, multiSiteCode, locales: runtimeLocales, } = useRuntimeConfig().public;
+
   // If explicit siteCode provided (from route params), use it directly
   // This is for the /api/context/[siteCode]/[locale] route where host may be localhost
-  const explicitSiteCode = options?.siteCode
-  const explicitLocale = options?.locale
-  
+  const explicitSiteCode = options?.siteCode;
+  const explicitLocale = options?.locale;
+
   // Create cache key based on whether we have explicit params
-  const cacheKey = explicitSiteCode ? `site-${explicitSiteCode}-${explicitLocale || 'default'}` : 'site'
-  
+  const cacheKey = explicitSiteCode ? `site-${explicitSiteCode}-${explicitLocale || "default"}` : "site"; 
+
   // Return cached context if already resolved for this request (only for non-explicit calls)
   if (!explicitSiteCode && event.context.site) {
-    return event.context.site as SiteContext
+    return event.context.site as SiteContext;
   }
 
   // 1. Extract siteCode from hostname OR use explicit value OR query params OR cookie
-  let siteCode = explicitSiteCode
+  let siteCode = explicitSiteCode;
   if (!siteCode) {
-    const rawHost = getRequestHeader(event, 'x-forwarded-host') || getRequestHeader(event, 'host') || ''
-    const host = normalizeHost(rawHost)
+    const rawHost = getRequestHeader(event, "x-forwarded-host") || getRequestHeader(event, "host") || "";
+    const host = normalizeHost(rawHost);
 
-    siteCode = extractSiteCodeFromHost(host)
+    siteCode = extractSiteCodeFromHost(host);
 
     // Fallback: try to get siteCode from query params (for internal fetches from client)
     if (!siteCode) {
-      const query = getQuery(event) as { siteCode?: string }
-      siteCode = query.siteCode || null
+      const query = getQuery(event) as { siteCode?: string };
+
+      siteCode = query.siteCode || null;
     }
 
     // Fallback: try to get siteCode from context cookie (for internal server-to-server fetches)
     if (!siteCode) {
-      siteCode = getCookieSiteCode(event)
+      siteCode = getCookieSiteCode(event);
     }
 
     if (!siteCode) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Bad Request',
-        message: `Could not derive siteCode from host: ${host || rawHost || 'unknown'}`
-      })
+        statusMessage: "Bad Request",
+        message: `Could not derive siteCode from host: ${
+          host || rawHost || "unknown"
+        }`,
+      });
     }
   }
 
   // 2. Get DMSM config (cached)
-  const config = await getCachedDmsmConfig(siteCode)
+  const config = await getCachedDmsmConfig(event,siteCode);
 
   if (!config) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Not Found',
-      message: `Site configuration not found for: ${siteCode}`
-    })
+      statusMessage: "Not Found",
+      message: `Site configuration not found for: ${siteCode}`,
+    });
   }
 
+  // Normalize locales early - 'en' must always be available for all sites
+  const siteLocales = normalizeLocales(config.locales, config.defaultLocale);
+
   // 3. Resolve locale (priority: explicit > query > path > cookie > DMSM default)
-  let locale: string
-  if (explicitLocale && explicitLocale !== 'und' && config.locales.includes(explicitLocale)) {
-    locale = explicitLocale
+  let locale: string;
+  if ( explicitLocale && explicitLocale !== "und" && siteLocales.includes(explicitLocale) ) {
+    locale = explicitLocale;
   } else {
     // Also check query params for locale (internal fetches from client include it)
-    const query = getQuery(event) as { locale?: string }
-    const queryLocale = query.locale && config.locales.includes(query.locale) ? query.locale : null
-    const pathLocale = extractLocaleFromPath(event.path, config.locales, runtimeLocales)
-    const cookieLocale = getCookieLocale(event)
-    locale = resolveLocale(queryLocale || pathLocale, cookieLocale, config.defaultLocale, config.locales)
+    const query        = getQuery(event) as { locale?: string };
+    const queryLocale  = query.locale && siteLocales.includes(query.locale) ? query.locale : null;
+    const pathLocale   = extractLocaleFromPath( event.path, siteLocales, runtimeLocales );
+    const cookieLocale = getCookieLocale(event);
+
+    locale = resolveLocale( queryLocale || pathLocale, cookieLocale, config.defaultLocale, siteLocales );
   }
 
   // 4. Build full context
-  const context = buildSiteContext({
-    siteCode,
-    locale,
-    config,
-    env,
-    multiSiteCode,
-    baseHost
-  })
+  const context = await buildSiteContext({ siteCode, locale, config, env, multiSiteCode, baseHost, event, siteLocales, });
 
   // 5. Cache on event for this request (only for non-explicit calls)
-  if (!explicitSiteCode) {
-    event.context.site = context
-  }
+  if (!explicitSiteCode)
+    event.context.site = context;
 
-  return context
+
+  return context;
 }
 
 /**
- * Get DMSM config with caching
+ * In-flight request map for deduplication (prevents thundering herd)
+ * Key: cache key, Value: pending promise
  */
-async function getCachedDmsmConfig(siteCode: string): Promise<DmsmConfig | null> {
-  const { env, multiSiteCode, dmsm } = useRuntimeConfig().public
-  const cacheKey = `${DMSM_CACHE_BASE}:${env}:${multiSiteCode}:${siteCode}`
-  const storage = useStorage('context')
+const pendingDmsmRequests = new Map<string, Promise<DmsmConfig | null>>();
 
-  // Try cache first
-  const cached = await storage.getItem<{ data: DmsmConfig; expires: number }>(cacheKey)
-  if (cached && cached.expires > Date.now()) {
-    return cached.data
-  }
+/**
+ * Get DMSM config with caching and request coalescing
+ * Uses cachedFunction for persistent cache + in-memory deduplication for concurrent requests
+ */
+const _fetchDmsmConfig = cachedFunction(
+  async (event: H3Event, siteCode: string): Promise<DmsmConfig | null> => {
+    const { env, multiSiteCode, dmsm } = useRuntimeConfig().public;
 
-  // Fetch from DMSM
-  try {
-    // DMSM API returns all sites for a multiSiteCode, not individual sites
-    const uri = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}`
-    const response = await $fetch<{sites: Record<string, DmsmConfig>}>(uri)
-    
-    // Extract the specific site config
-    const data = response.sites?.[siteCode]
-    
-    if (!data) {
-      consola.error(`Site ${siteCode} not found in DMSM config for ${env}/${multiSiteCode}`)
-      return null
+    try {
+      // DMSM API returns all sites for a multiSiteCode, not individual sites
+      const uri  = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}/${encodeURIComponent(siteCode)}`;
+      const data = await $fetch<DmsmConfig>(uri);
+
+      if (!data) {
+        consola.error( `Site ${siteCode} not found in DMSM config for ${env}/${multiSiteCode}`, );
+        return null;
+      }
+
+      return data;
+    } catch (e) {
+      consola.error(`Failed to fetch DMSM config for ${siteCode}:`, e);
+      return null;
     }
+  },
+  {
+    maxAge: CACHE_TTL.FIVE_MINUTES, // 5 minutes cache
+    name: "get-dmsm-config",
+    group: "context",
+    getKey: (event: H3Event, siteCode: string) => {
+      const { env, multiSiteCode } = useRuntimeConfig().public;
+      return `${multiSiteCode}:${siteCode}`;
+    }
+  },
+);
 
-    // Cache the result
-    await storage.setItem(cacheKey, {
-      data,
-      expires: Date.now() + (DMSM_CACHE_TTL * 1000)
-    })
+/**
+ * Get DMSM config with request coalescing to prevent thundering herd
+ * If a request is already in-flight for this siteCode, wait for it instead of starting a new one
+ */
+async function getCachedDmsmConfig(event: H3Event, siteCode: string): Promise<DmsmConfig | null> {
+  const { env, multiSiteCode } = useRuntimeConfig().public;
+  const cacheKey = `${multiSiteCode}:${siteCode}`;
 
-    return data
-  } catch (e) {
-    consola.error(`Failed to fetch DMSM config for ${siteCode}:`, e)
-    return null
+  // Check if there's already a request in-flight for this key
+  const pending = pendingDmsmRequests.get(cacheKey);
+  if (pending) {
+    return pending;
   }
+
+  // Start new request and track it
+  const promise = _fetchDmsmConfig(event, siteCode)
+    .finally(() => {
+      // Clean up after completion (success or failure)
+      pendingDmsmRequests.delete(cacheKey);
+    });
+
+  pendingDmsmRequests.set(cacheKey, promise);
+
+  return promise;
 }
 
 /**
  * Extract siteCode from hostname (e.g., "be.localhost" -> "be")
  */
-function extractSiteCodeFromHost(host: string): string | null {
-  if (!host) return null
+export function extractSiteCodeFromHost(host: string): string | null {
+  if (!host) return null;
 
   // Ignore common non-multisite hosts.
   // These can happen for internal/self fetches or when an upstream proxy strips Host.
-  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return null
-  if (host.startsWith('[')) return null // IPv6 literal like [::]
+  if (host === "localhost" || host === "127.0.0.1" || host === "::1")
+    return null;
 
-  const parts = host.split('.')
-  return parts.length > 1 ? parts[0] : null
+  if (host.startsWith("[")) return null; // IPv6 literal like [::]
+
+  const parts = host.split(".");
+
+  return parts.length > 1 ? parts[0] : null;
 }
 
 /**
@@ -176,55 +200,53 @@ function extractSiteCodeFromHost(host: string): string | null {
  * - trim whitespace
  */
 function normalizeHost(rawHost: string): string {
-  if (!rawHost) return ''
+  if (!rawHost) return "";
 
   // x-forwarded-host can be a comma-separated list; first is the original host.
-  const first = rawHost.split(',')[0]?.trim() || ''
+  const first = rawHost.split(",")[0]?.trim() || "";
 
   // Strip port if present (avoid breaking subdomain extraction)
   // Keep IPv6 literals untouched (they start with '[').
-  if (first.startsWith('[')) return first
+  if (first.startsWith("[")) return first;
 
-  return first.replace(/:\d+$/, '')
+  return first.replace(/:\d+$/, "");
 }
 
 /**
  * Extract locale from URL path (e.g., "/es/page" -> "es")
  */
-function extractLocaleFromPath(
-  path: string,
-  siteLocales: string[],
-  runtimeLocales: Array<{ code: string }>
-): string | null {
-  if (!path) return null
+function extractLocaleFromPath( path: string, siteLocales: string[], runtimeLocales: Array<{ code: string }> ): string | null {
+  if (!path) return null;
 
-  const pathParts = path.split('/')
-  const potentialLocale = pathParts[1]
+  const pathParts = path.split("/");
+  const potentialLocale = pathParts[1];
 
-  if (!potentialLocale) return null
+  if (!potentialLocale) return null;
 
   // Check against site-specific locales first
   if (siteLocales?.includes(potentialLocale)) {
-    return potentialLocale
+    return potentialLocale;
   }
 
   // Fallback to runtime locales
-  const validCodes = runtimeLocales?.map(l => l.code) || []
-  return validCodes.includes(potentialLocale) ? potentialLocale : null
+  const validCodes = runtimeLocales?.map((l) => l.code) || [];
+
+  return validCodes.includes(potentialLocale) ? potentialLocale : null;
 }
 
 /**
  * Get siteCode from context cookie (for internal server-to-server fetches)
  */
-function getCookieSiteCode(event: H3Event): string | null {
+export function getCookieSiteCode(event: H3Event): string | null {
   try {
-    const { context: cookieStr } = parseCookies(event)
-    if (!cookieStr) return null
+    const { context: cookieStr } = parseCookies(event);
+    if (!cookieStr) return null;
 
-    const cookie = JSON.parse(decodeURIComponent(cookieStr)) as Partial<ContextCookie>
-    return cookie.siteCode || null
+    const cookie = JSON.parse( decodeURIComponent(cookieStr) ) as Partial<ContextCookie>;
+
+    return cookie.siteCode || null;
   } catch {
-    return null
+    return null;
   }
 }
 
@@ -233,78 +255,67 @@ function getCookieSiteCode(event: H3Event): string | null {
  */
 function getCookieLocale(event: H3Event): string | null {
   try {
-    const { context: cookieStr } = parseCookies(event)
-    if (!cookieStr) return null
+    const { context: cookieStr } = parseCookies(event);
+    if (!cookieStr) return null;
 
-    const cookie = JSON.parse(decodeURIComponent(cookieStr)) as Partial<ContextCookie>
-    return cookie.locale || null
+    const cookie = JSON.parse( decodeURIComponent(cookieStr) ) as Partial<ContextCookie>;
+
+    return cookie.locale || null;
   } catch {
-    return null
+    return null;
   }
 }
 
 /**
  * Resolve final locale with priority: path > cookie > default
  */
-function resolveLocale(
-  pathLocale: string | null,
-  cookieLocale: string | null,
-  defaultLocale: string,
-  siteLocales: string[]
-): string {
+function resolveLocale( pathLocale: string | null, cookieLocale: string | null, defaultLocale: string, siteLocales: string[] ): string {
   // Path locale has highest priority
-  if (pathLocale && siteLocales.includes(pathLocale)) {
-    return pathLocale
-  }
+  if (pathLocale && siteLocales.includes(pathLocale))
+    return pathLocale;
+
 
   // Cookie locale if valid for this site
   if (cookieLocale && siteLocales.includes(cookieLocale)) {
-    return cookieLocale
+    return cookieLocale;
   }
 
   // Fall back to DMSM default
-  return defaultLocale
+  return defaultLocale;
 }
 
 /**
  * Build full SiteContext from resolved values
  */
-async function buildSiteContext(params: {
-  siteCode: string
-  locale: string
-  config: DmsmConfig
-  env: string
-  multiSiteCode: string
-  baseHost: string
-}): Promise<SiteContext> {
-  const { siteCode, locale, config, env, multiSiteCode, baseHost } = params
+async function buildSiteContext(params: { siteCode: string; locale: string; config: DmsmConfig; env: string; multiSiteCode: string; baseHost: string; event: H3Event; siteLocales: string[]; }): Promise<SiteContext> {
+  const { siteCode, locale, config, env, multiSiteCode, baseHost, event, siteLocales } = params;
 
-  const hasRedirect = env === 'production' && config.redirect
-  const host = hasRedirect ? `https://${config.redirect}` : `https://${siteCode}.${baseHost}`
-  const pathPrefix = `/${locale}`
-  const localizedHost = `${host}${pathPrefix}`
+  const hasRedirect   = env === "production" && config.redirect;
+  const host          = hasRedirect ? `https://${config.redirect}` : `https://${siteCode}.${baseHost}`;
+  const pathPrefix    = `/${locale}`;
+  const localizedHost = `${host}${pathPrefix}`;
 
   // Index locale for CBD index API (only UN languages)
-  const indexLocale = ['en', 'ar', 'es', 'fr', 'ru', 'zh'].includes(locale)
-    ? locale.toUpperCase()
-    : 'EN'
+  const indexLocale = ["en", "ar", "es", "fr", "ru", "zh"].includes(locale) ? locale.toUpperCase() : "EN";
 
   // Normalize countries array
-  const countries = normalizeCountries(config.country, config.countries)
+  const countries = normalizeCountries(config.country, config.countries);
 
   // Detect BCH site
-  const isBchSite = baseHost.includes('bch') || 
-                    host.includes('biosafety') || 
-                    host.includes('bsl')
+  const isBchSite = baseHost.includes("bch") || host.includes("biosafety") || host.includes("bsl");
 
   // Fetch site settings from Drupal (siteName + homePath in one call)
-  let siteName: string | undefined
-  let homePath: string | undefined
+  let siteName: string | undefined;
+  let homePath: string | undefined;
   try {
-    const settings = await getSiteSettings({ siteCode, locale, config, host, localizedHost })
-    siteName = settings.siteName
-    homePath = settings.homePath
+    const settings = await getSiteSettings({  siteCode,  locale,  config,  host,  localizedHost, env, multiSiteCode, }, event);
+
+    siteName = settings.siteName;
+    homePath = settings.homePath;
+    
+    consola.info(`Fetched site settings for ${siteCode} (${locale})`, settings);
   } catch (e) {
+    consola.error(`Failed to fetch site settings for ${siteCode} (${locale}):`, e);
     // Non-critical - continue without site settings
   }
 
@@ -315,7 +326,7 @@ async function buildSiteContext(params: {
     env,
     locale,
     defaultLocale: config.defaultLocale,
-    locales: config.locales,
+    locales: siteLocales,
     indexLocale,
     host,
     localizedHost,
@@ -326,36 +337,58 @@ async function buildSiteContext(params: {
     isBchSite,
     siteName,
     homePath,
-    config
-  }
+    config,
+    biolandSettings: config?.runTime?.biolandSettings? camelCase(config.runTime.biolandSettings, 7) || {} : {} ,
+  };
+  if(config?.runTime?.biolandSettings)config.runTime.biolandSettings = camelCase(config.runTime.biolandSettings, 7);
+ 
+}
+
+/**
+ * Normalize locales to always include 'en'
+ * English is required for all sites as the fallback language
+ */
+function normalizeLocales(locales: string[], defaultLocale: string): string[] {
+  const result = new Set(locales || []);
+  
+  // Always include English as fallback
+  result.add('en');
+  
+  // Ensure defaultLocale is included
+  if (defaultLocale) result.add(defaultLocale);
+  
+  return [...result];
 }
 
 /**
  * Normalize countries from config
  */
 function normalizeCountries(country?: string, countries?: string[]): string[] {
-  const result: string[] = []
+  const result: string[] = [];
 
-  if (country) result.push(country)
-  if (countries?.length) result.push(...countries)
+  if (country) result.push(country);
+  if (countries?.length) result.push(...countries);
 
-  return [...new Set(result)].filter(c => c && c !== 'undefined')
+  return [...new Set(result)].filter((c) => c && c !== "undefined");
 }
 
 /**
  * Get country code from context (random if multiple)
  */
-export function getCountryCode(ctx: { country?: string; countries?: string[] }): string {
-  if (ctx.country) return ctx.country
+export function getCountryCode(ctx: {
+  country?: string;
+  countries?: string[];
+}): string {
+  if (ctx.country) return ctx.country;
 
   if (!ctx.countries?.length) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Bad Request',
-      message: 'No country or countries provided by context'
-    })
+      statusMessage: "Bad Request",
+      message: "No country or countries provided by context",
+    });
   }
 
-  const index = Math.floor(Math.random() * ctx.countries.length)
-  return ctx.countries[index]
+  const index = Math.floor(Math.random() * ctx.countries.length);
+  return ctx.countries[index];
 }

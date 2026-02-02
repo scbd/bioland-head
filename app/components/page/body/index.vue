@@ -82,9 +82,7 @@
 
                 </div>
                 <div class="col-12 col-md-9">
-                    <ClientOnly>
-                        <LazySwiperMedia id="page-body-attachments-swiper" :slides="pageStore?.media" type="media"/>
-                    </ClientOnly>
+                    <LazySwiperMedia id="page-body-attachments-swiper" :slides="pageStore?.media" type="media"/>
                 </div>
             </div>
             <div id="page-body-national-targets" v-if="pageStore?.tags?.nt7?.length" class="row mt-3">
@@ -92,9 +90,7 @@
                     <h2 id="page-body-national-targets-heading" :style="pageTypeStyle" class="side-heading text-nowrap">{{t('National Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.nt7.length}})</span></h2>
                 </div>
                 <div class="col-12 col-md-9">
-                    <ClientOnly>
-                        <LazySwiperGbf id="page-body-national-targets-swiper" :slides="pageStore?.tags?.nt7" type="nt7"/>
-                    </ClientOnly>
+                    <LazySwiperGbf id="page-body-national-targets-swiper" :slides="pageStore?.tags?.nt7" type="nt7"/>
                 </div>
             </div>
             <div id="page-body-gbf-targets" v-if="pageStore?.tags?.gbfTargets?.length" class="row mt-3">
@@ -102,9 +98,7 @@
                     <h2 id="page-body-gbf-targets-heading" :style="pageTypeStyle" class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.gbfTargets.length}})</span></h2>
                 </div>
                 <div class="col-12 col-md-9">
-                    <ClientOnly>
-                        <LazySwiperGbf id="page-body-gbf-targets-swiper" :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
-                    </ClientOnly>
+                    <LazySwiperGbf id="page-body-gbf-targets-swiper" :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
                 </div>
             </div>
 
