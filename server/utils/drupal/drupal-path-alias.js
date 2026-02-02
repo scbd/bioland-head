@@ -4,7 +4,7 @@
  * @param {Object} ctx - The request context
  * @returns {Object} Object containing alias lookup functions
  */
-export const usePathAlias = (ctx) => ({ getByNodeId:getByNodeId(ctx), getByMediaId:getByMediaId(ctx), getByTermId:getByTermId (ctx), getByAlias:getByAlias(ctx) })
+// export const usePathAlias = (ctx) => ({ getByNodeId:getByNodeId(ctx), getByMediaId:getByMediaId(ctx), getByTermId:getByTermId (ctx), getByAlias:getByAlias(ctx) })
 
 /**
  * Get path alias for a node by its ID
@@ -71,7 +71,7 @@ export function getAliasByPath (ctx){
                                 const params = getSearchParamsByAlias(path)
 
                                 // return params
-                                const $http = await useDrupalLogin(ctx.identifier);
+                                const $http = await useDrupalLogin(ctx.identifier || ctx.siteCode);
 
                                 const uri =  `${ctx.localizedHost}/jsonapi/path_alias/path_alias`
 
@@ -103,7 +103,7 @@ function getByAlias (ctx){
                                 const params = getSearchParamsByAlias(path)
 
                                 // return params
-                                const $http = await useDrupalLogin(ctx.identifier);
+                                const $http = await useDrupalLogin(ctx.identifier || ctx.siteCode);
 
                                 const uri =  `${ctx.localizedHost}/jsonapi/path_alias/path_alias`
 
@@ -129,12 +129,12 @@ function getByAlias (ctx){
  * @param {string} [ctx.locale='en'] - The locale code
  * @returns {Function} Async function (type, nodeId, all?) => alias data or array of alias data
  */
-function getById ({ identifier, localizedHost, locale } ){
+function getById ({ identifier, siteCode, localizedHost, locale } ){
     return async (type,nodeId, all=false) => {
                             try {
 
                                 const params  = getSearchParams(type, nodeId, locale)
-                                const $http = await useDrupalLogin(identifier);
+                                const $http = await useDrupalLogin(identifier || siteCode);
 
                                 const uri =  `${localizedHost}/jsonapi/path_alias/path_alias`
 
@@ -216,7 +216,7 @@ function getSearchParamsByAlias(alias){
  */
 export async function mapAliasByLocale(ctx, type, id){
 
-    const homePath = await getSiteDefinedHome(ctx);
+    const homePath = ctx?.homePath || '/taxonomies/term/20'
     const isHomePath = homePath === `/${type}/${id}`; 
 
     const languages = await getById(ctx)(type, id, true)
