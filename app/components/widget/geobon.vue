@@ -45,7 +45,7 @@
         </template>
 
         <!-- Actual content after hydration and data loads -->
-        <div v-else-if="!error && !countError&& count && showWidget && record">
+        <div v-else-if="!error && !countError && count.count && showWidget && record">
             <div class="text-capitalize">
                 <h4 :style="style" class="bm-3">{{t('GEO BON')}}</h4>
             </div>
@@ -80,7 +80,6 @@
                 <LazyIcon v-if="link.external" name="external-link" class="arrow" />
             </div>
         </div>
-        <!-- Nothing shown on error (display:none behavior) -->
     </div>
 </template>
 <script setup>
@@ -100,7 +99,7 @@
         hasHydrated.value = true;
     });
 
-    const showWidget     = computed(()=> !siteStore?.config?.hideHomePageWidgets?.geobon);
+    const showWidget     = computed(()=> siteStore?.biolandSettings?.homeWidgets?.geobonWidget?.enable);
     const { bgStyle, style, colorStyle, linkStyle} = useTheme();
 
     const links = ref([])
@@ -112,12 +111,44 @@
     links.value.push( { name: t('EBV Data Portal'),       to: { path: `https://portal.geobon.org/home?country=${countryCode}` }, external: true  });
 
     const query      = clone({ ...siteStore.params });
-    const { data:count, status:countStatus, error:countError } =  await useLazyFetch(`/api/list/geobon/count`, {  method: 'GET',query,key: 'geobon-count', getCachedData });
+    
+    // Always fetch - backend returns 404 if no data, preventing warnings
+    const { data:count, status:countStatus, error:countError } = await useLazyFetch(`/api/list/geobon/count`, {  
+        method: 'GET',
+        query,
+        key: 'geobon-count', 
+        getCachedData
+    });
 
-    const index = computed(()=> randomArrayIndexTimeBased(Number(count.value)));
+    const index = computed(()=> randomArrayIndexTimeBased(Number(count?.value?.count)));
+    const fetchOptions = { method: 'GET', query, key: 'geobon', getCachedData };
+    const { data:record, status, error } = await useLazyFetch(`/api/list/geobon/${index.value}`, fetchOptions);
 
-    const { data:record, status, error} =  await useLazyFetch(`/api/list/geobon/${index.value}`, {  method: 'GET',query, key: 'geobon', getCachedData });
+
     const loading = computed(()=> countStatus.value === 'pending' || status.value === 'pending');
+
+    // Error logging (client-side only)
+    if (process.client) {
+        watch([error, countError], () => {
+            if (countError.value) {
+                console.error('[GEO BON Widget] Count API Error:', {
+                    error: countError.value,
+                    message: countError.value?.message,
+                    statusCode: countError.value?.statusCode,
+                    data: countError.value?.data
+                });
+            }
+            if (error.value) {
+                console.error('[GEO BON Widget] Record API Error:', {
+                    error: error.value,
+                    message: error.value?.message,
+                    statusCode: error.value?.statusCode,
+                    data: error.value?.data,
+                    index: index.value
+                });
+            }
+        }, { immediate: true });
+    }
 
     const imgUri        = computed(() => record?.value?.id? `https://portal.geobon.org/data/upload/${record?.value?.id}/${record?.value?.file}` : ''); 
     const hasImg        = computed(() => !!imgUri.value);

@@ -129,9 +129,9 @@ function mapCommentUserData(ctx){
         const { uri } = user_picture || {};
         const img = { alt:displayName, src: host+uri?.url };
 
-        if(uri?.url)return { id, displayName,  mail, img, uid:meta.drupal_internal__target_id  }
+        if(uri?.url)return { id, displayName,  mail, img, uid:meta?.drupal_internal__target_id  }
 
-        return { id, displayName, mail,uid:meta.drupal_internal__target_id   }
+        return { id, displayName, mail,uid:meta?.drupal_internal__target_id   }
     }
 }
 

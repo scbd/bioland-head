@@ -95,34 +95,34 @@ export const useDocumentHelpers = (passedContentRecord, {passedType} = {}) => {
     const { t }      = useI18n();
     const localePath = useLocalePath();
 
-    const  record        = unref(passedContentRecord);
-    const  recordExists  = computed(()=> record?.title)
-    const  tags          = computed(()=> record?.tags);
-    const isNotification = computed(()=> record?.schema === 'Notification');
+    const  record        = computed(() => unref(passedContentRecord));
+    const  recordExists  = computed(()=> record.value?.title)
+    const  tags          = computed(()=> record.value?.tags);
+    const isNotification = computed(()=> record.value?.schema?.toLowerCase() === 'notification');
 
-    if(isNotification.value) record.href = 'https://www.cbd.int' + record.url; 
+    if(isNotification.value) record.value.href = 'https://www.cbd.int' + record.value.url; 
 
     const  external      = computed(()=> {
                                         if (isNotification.value) return true;
-                                        if (record?.href?.startsWith("https://")) return true;
-                                        if(record?.realms?.length) return true;
+                                        if (record.value?.href?.startsWith("https://")) return true;
+                                        if(record.value?.realms?.length) return true;
 
                                         return false;
                                     });
 
-    const goTo = computed(() => unref(external)? record.href : localePath(record.href));
+    const goTo = computed(() => unref(external)? record.value.href : localePath(record.value.href));
 
     const type = computed(()=> { 
         let  typeText = ''
-        if(record?.fieldTypePlacement?.name) 
-            return  record?.fieldTypePlacement?.name;
+        if(record.value?.fieldTypePlacement?.name) 
+            return  record.value?.fieldTypePlacement?.name;
 
 
-        if(record?.schema)
-            typeText += t(record?.schema);
+        if(record.value?.schema)
+            typeText += t(record.value?.schema);
         if(unref(passedType)) 
             typeText+= t(unref(passedType));
-        if(record?.realms?.length)
+        if(record.value?.realms?.length)
             typeText += t('from the secretariat');
     
         return typeText

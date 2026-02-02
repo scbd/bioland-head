@@ -18,10 +18,12 @@ export const $indexFetch = async (queryString) => {
 };
 
 // UN official languages supported by most CBD index content
-export const getIndexLocale = (locale) => ['en', 'ar', 'es', 'fr', 'ru', 'zh'].includes(locale)? locale.toLocaleUpperCase() : 'EN';
+export const getIndexLocale = (locale) => ['en', 'ar', 'es', 'fr', 'ru', 'zh'].includes(locale?.toLowerCase())? locale?.toLocaleUpperCase() : 'EN';
 
 // ORT (Online Reporting Tool) schemas support all locales - use actual locale uppercase
 const ortSchemas = ['nationalTarget7', 'nationalTarget7Mapping'];
+// Schemas that can exist in multiple realms (CHM + ORT) and should search both
+const multiRealmSchemas = ['nbsap'];
 export const getOrtIndexLocale = (locale) => locale?.toLocaleUpperCase() || 'EN';
 
 // Get the appropriate index locale based on schemas being queried
@@ -154,11 +156,33 @@ export const normalizeIndexKeys = (obj) => {
     return {...obj, ...newObj, tags};
 }
 
-export const getAllBySchemas = defineCachedFunction((ctx, schemas, countries=[]) => queryScbdIndex ({ ...ctx, schemas, countries,rowsPerPage: 5000 }),{
-    maxAge: 60 * 60 * 60 * 24 * 30,
-    getKey:(ctx, schemas, countries=[]) => `${ctx.env}-${ctx.multiSiteCode}-${ctx.siteCode}-${ctx.locale}-${JSON.stringify(schemas||[])}-${JSON.stringify(countries||[])}`,
-    base:'external'
-});
+export const getAllBySchemas = defineCachedFunction(
+    (ctx, schemas, countries = []) => queryScbdIndex({ ...ctx, schemas, countries, rowsPerPage: 5000 }),
+    {
+        ...getListCacheOptions('get-all-by-schemas'),
+        getKey: (ctx) => `${ctx.multiSiteCode}-${ctx.siteCode}-${ctx.locale}${toSortedKebab(ctx.schemas)}${toSortedKebab(ctx.countries)}`
+    }
+);
+
+/**
+ * Converts an array to a kebab-case string, sorted alphabetically.
+ * Values remain unchanged, joined with `-` between each value.
+ * 
+ * @param {Array} arr - Array of values (schemas or countries)
+ * @returns {string} Sorted kebab-case string starting with `-` if non-empty, empty string if array is empty
+ * @example
+ * toSortedKebab(['zebra', 'apple', 'banana']) // returns '-apple-banana-zebra'
+ * toSortedKebab([]) // returns ''
+ * toSortedKebab(['single']) // returns '-single'
+ */
+export const toSortedKebab = (arr = []) => {
+    if (!arr) return '';
+    if (typeof arr === 'string') return `-${arr}`;
+    if (!arr.length) return '';
+    
+    return '-' + [...arr].sort((a, b) => String(a).localeCompare(String(b))).join('-');
+};
+
 
 /**
  * Query the SCBD (Secretariat of the Convention on Biological Diversity) index API
@@ -190,7 +214,7 @@ export const queryScbdIndex = async (ctx, queryBody={}, isBch = false, isAbs = f
     try {
         const { response, facet_counts: facetCounts } = await $fetch(uri,  $fetchBaseOptions({ mode: 'cors' , method:'post', body, headers: {'Content-Type': 'application/json'}}));
 
-        response.data  = response.docs.map(normalizeIndexKeys)//.filter(({ title, summary })=> (title && summary));
+        response.data  = response.docs.map(normalizeIndexKeys)
         response.count = response.numFound;
 
         delete response.docs;
@@ -217,7 +241,7 @@ const filterSchemas = (schemas) => (s)=> schemas.includes(s);
 
 function getAllQuery(ctx){
     const cbdSchemas   = [ 'news', 'notification', 'statement', 'meeting', 'pressRelease']
-    const chmSchemas   = [ 'nationalTarget7Mapping','nationalTarget7','focalPoint','resource', 'organization', 'capacityBuildingInitiative', 'contact', 'database'];
+    const chmSchemas   = [ 'nbsap','nationalTarget7Mapping','nationalTarget7','nationalReport6','focalPoint','resource', 'organization', 'capacityBuildingInitiative', 'contact', 'database'];
     const abschSchemas = [ 'modelContractualClause', 'communityProtocol', 'absNationalReport', 'absCheckpointCommunique', 'absCheckpoint', 'database', 'absPermit', 'absNationalModelContractualClause', 'absProcedure', 'measure', 'authority', 'focalPoint' ];
     const bchSchemas   = [ 'biosafetyLaw', 'biosafetyDecision', 'nationalRiskAssessment', 'database', 'nationalReport', 'biosafetyExpert','authority', 'supplementaryAuthority',   'cpbNationalReport4', 'cpbNationalReport3', 'cpbNationalReport2',  'biosafetyNews', 'independentRiskAssessment', 'organism', 'dnaSequence', 'modifiedOrganism', 'laboratoryDetection' ];
     const allSchemas   = Array.from(new Set([ ...chmSchemas, ...abschSchemas, ...bchSchemas ]));
@@ -229,12 +253,41 @@ function getAllQuery(ctx){
 
     const schemas                 = Array.isArray(passedSchemas)? passedSchemas : passedSchemas? [ passedSchemas ] : '';
     
-    // Auto-detect ORT schemas and include ORT realm when needed
+    // Auto-detect ORT schemas and multi-realm schemas
     const hasOrtSchemas = schemas?.length ? schemas.some(s => ortSchemas.includes(s)) : false;
+    const hasMultiRealmSchemas = schemas?.length ? schemas.some(s => multiRealmSchemas.includes(s)) : false;
+    
+    // Auto-detect realms based on schemas when multiple schemas from different realms are detected
+    // This handles cases like searching for Laws & Regulations across ABS and BCH realms
     let realms = Array.isArray(passedRealms) ? [...passedRealms] : passedRealms ? [passedRealms] : [];
     
-    // If ORT schemas are being queried and ORT realm is not already included, add it
-    if (hasOrtSchemas && realms.length && !realms.some(r => r.toLowerCase() === 'ort')) {
+    // When no realms explicitly passed, auto-detect from schemas
+    if (!realms.length && schemas?.length) {
+        const hasAbsSchemas = schemas.some(s => abschSchemas.includes(s));
+        const hasBchSchemas = schemas.some(s => bchSchemas.includes(s));
+        const hasChmSchemas = schemas.some(s => chmSchemas.includes(s));
+        
+        // Only auto-set realms if schemas span multiple realms (excluding shared schemas like 'database', 'focalPoint', 'authority')
+        const sharedSchemas = ['database', 'focalPoint', 'authority', 'contact'];
+        const uniqueAbsSchemas = schemas.filter(s => abschSchemas.includes(s) && !sharedSchemas.includes(s));
+        const uniqueBchSchemas = schemas.filter(s => bchSchemas.includes(s) && !sharedSchemas.includes(s));
+        const uniqueChmSchemas = schemas.filter(s => chmSchemas.includes(s));
+        
+        // If schemas uniquely span multiple realms, explicitly set those realms
+        const detectedRealms = [];
+        if (uniqueAbsSchemas.length) detectedRealms.push('ABS');
+        if (uniqueBchSchemas.length) detectedRealms.push('BCH');
+        if (uniqueChmSchemas.length || hasOrtSchemas) detectedRealms.push('CHM');
+        if (hasOrtSchemas || hasMultiRealmSchemas) detectedRealms.push('ORT');
+        
+        // Apply detected realms if we found schemas from multiple different realms
+        if (detectedRealms.length > 1) {
+            realms = detectedRealms;
+        }
+    }
+    
+    // If ORT schemas or multi-realm schemas are being queried and ORT realm is not already included, add it
+    if ((hasOrtSchemas || hasMultiRealmSchemas) && realms.length && !realms.some(r => r.toLowerCase() === 'ort')) {
         realms = [...realms, 'ORT'];
     }
     const filters                 = Array.isArray(passedFilters)? passedFilters : passedFilters? [ passedFilters ] : '';
@@ -258,14 +311,13 @@ function getAllQuery(ctx){
     const isBchRealm = realms?.length ? realms.some(r => r.toLowerCase() === 'bch') : false;
     const schemaTypeFilter = (isBchSite && isBchRealm) ? '{!tag=schemaType}(schemaType_s:scbd OR schemaType_s:reference)' : '';
 
-    // For ORT realm, sort by uniqueIdentifier_s first to group national targets logically
-    const isOrtRealm = realms?.length ? realms.some(r => r.toLowerCase() === 'ort') : false;
-    const sortOrder = isOrtRealm ? "uniqueIdentifier_s asc, updatedDate_dt desc" : "updatedDate_dt desc";
+    // For multi-realm schemas (nbsap) and ORT schemas, sort by uniqueIdentifier_s to group logically
+    const sortOrder = (hasOrtSchemas || hasMultiRealmSchemas) ? "uniqueIdentifier_s desc, updatedDate_dt desc" : "updatedDate_dt desc";
 
     // Optimize field list for ORT schemas (nationalTarget7) - only fields actually used by components
     // Components use: identifier, title (multilingual), summary (multilingual), url, 
     // globalTargetAlignment_ss (GBF targets), globalTargetAlignment_REL_ss (SDGs), countryRegions_ss (country ownership)
-    const ortFieldList = `identifier_s, uniqueIdentifier_s, title_${textLocale}_s, title_EN_s, title_s, summary_${textLocale}_s, summary_EN_s, summary_s, url_ss, globalTargetAlignment_ss, globalTargetAlignment_REL_ss, countryRegions_ss, realm_ss, schema_s`;
+    const ortFieldList = `identifier_s, uniqueIdentifier_s, title_${textLocale}_s, title_EN_s, title_s, summary_${textLocale}_s, summary_EN_s, summary_s, url_ss, globalTargetAlignment_ss, globalTargetAlignment_REL_ss, countryRegions_ss, realm_ss, schema_s,government_${textLocale}_s,government_s`;
     
     // Full field list for non-ORT schemas
     const fullFieldList = `id, realm_ss, updatedDate_dt, createdDate_dt, identifier_s, uniqueIdentifier_s, url_ss, government_s, schema_${textLocale}_s, schema_s, schemaSort_i, sort1_i, sort2_i, sort3_i, sort4_i, _revision_i, summary_${textLocale}_s, summary_s, symbol_s, startDate_dt, endDate_dt, eventCity_s, government_${textLocale}_s, government_s, title_${textLocale}_s, title_s, type_${textLocale}_s, type_s, meta1_${textLocale}_txt, meta1_txt, meta2_${textLocale}_txt, meta2_txt, meta3_${textLocale}_txt, meta3_txt, meta4_${textLocale}_txt, meta4_txt, meta5_${textLocale}_txt, meta5_txt, eventCountry_C${textLocale}_s, eventCountry_s, globalTargetAlignment_ss, globalTargetAlignment_REL_ss, countryRegions_ss`;
@@ -362,8 +414,9 @@ export function getAllBchQuery(ctx = {}){
     return JSON.stringify(query);
 }
 
-function getQ({ freeText, from, to }){
-    let q = freeText? `(((uniqueIdentifier_t:(${freeText})^6) OR (government_EN_t:(${freeText})^5.5) OR (countryRegions_EN_txt:(${freeText})^5) OR (title_EN_t:(${freeText})^4) OR (summary_EN_t:(${freeText})^3) OR (schema_EN_t:(${freeText})^2) OR (text_EN_txt:(${freeText})^1)))` : '';
+function getQ({ freeText, from, to, locale:passedLocale }) {
+    const textLocale = getIndexLocale(passedLocale);
+    let q = freeText? `(((uniqueIdentifier_t:(${freeText})^6) OR (government_${textLocale}_t:(${freeText})^5.5) OR (countryRegions_${textLocale}_txt:(${freeText})^5) OR (title_${textLocale}_t:(${freeText})^4) OR (summary_${textLocale}_t:(${freeText})^3) OR (schema_${textLocale}_t:(${freeText})^2) OR (text_${textLocale}_txt:(${freeText})^1)))` : '';
 
     const toTime = !to? DateTime.now().toFormat('yyyy\-MM\-dd'): cleanTime(to);
 
