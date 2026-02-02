@@ -174,7 +174,7 @@ All tests should pass, verifying:
 ### Context cookie not set
 - Check middleware is running on the test URL
 - Verify cookie is not being blocked by test configuration
-- Check `/api/context/` endpoint is responding correctly
+- Check `/api/` endpoint is responding correctly
 
 ## Notes
 
