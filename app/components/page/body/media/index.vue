@@ -25,6 +25,7 @@
             </div>
 
             <div id="page-body-media-content" class="col-12 col-md-9">
+                <LazyPageBodyTabs id="page-body-media-tabs" v-if="showEdit"/>
                 <h2 id="page-body-media-title" class="data-body mb-0 text-break" >{{ pageStore?.title}}</h2>
 
                 <hr class="mt-1">
@@ -75,10 +76,13 @@
     const   pageStore      = usePageStore();
     const   siteStore      = useSiteStore();
     const   isDocument     = computed(()=> pageStore?.isMediaDocument );
+    const   meStore        = useMeStore();
 
     const { pageTypeStyle } = useTheme();
 
     const { downloadUrl, imageSrc, imgHeight, imgWidth, iconName, iconColor} = useMediaRecord(pageStore.page);
+
+    const showEdit = computed( ()=> meStore?.showEdit   )  
 </script>
 
 <style lang="scss" scoped>

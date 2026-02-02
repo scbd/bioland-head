@@ -4,7 +4,7 @@
             v-if="showWarning" 
             id="system-page-warning"
             data-testid="system-page-warning"
-            class="alert alert-warning alert-dismissible fade show d-flex align-items-start mb-3" 
+            class="alert alert-warning alert-dismissible fade show d-flex align-items-start m-3 mt-2" 
             role="alert"
         >
             <Icon name="info" :size="1.5" class="me-3 flex-shrink-0 mt-1" />

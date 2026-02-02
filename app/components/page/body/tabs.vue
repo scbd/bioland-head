@@ -1,12 +1,12 @@
 <template>
-    <div id="page-body-tabs-container" v-if="!hideTabsForRestrictedPage">
+    <div id="page-body-tabs-container" v-if="!hideTabsForRestrictedPage" :class="{'mt-1':siteStore.isHomePage }">
         <!-- System page warning for users without edit permissions -->
         <LazyPageBodySystemPageWarning />
         
-        <div id="page-body-tabs" class="tabs mb-3">
+        <div id="page-body-tabs" class="tabs">
             <ul id="page-body-tabs-nav" class="nav nav-tabs" >
             <li class="nav-item" id="page-body-tabs-view">
-                <span id="page-body-tabs-view-label" data-testid="page-tab-view" :style="getStyle()" class="nav-link text-capitalize" :class="{ 'disabled-tab-view': isDisabledTab }" :title="isDisabledTab ? t('systemPageDisabled') : ''">{{t('View')}}</span> 
+                <span id="page-body-tabs-view-label" data-testid="page-tab-view" :style="getStyle()" class="nav-link text-capitalize" :title="isDisabledTab ? t('systemPageDisabled') : ''">{{t('View')}}</span> 
             </li>
             <li v-if="meStore.isContentManager || isContributorCanEdit" class="nav-item">
                 <span v-if="isDisabledTab" id="page-body-tabs-edit-disabled" data-testid="page-tab-edit" data-disabled="true" class="nav-link text-capitalize disabled-tab" :title="t('systemPageDisabled')">
