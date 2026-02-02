@@ -46,7 +46,7 @@
 
                       <ul class="nav">
                           <li v-for="(aChildMenu,index) in creditsMenus" :key="index" class="nav-item">
-                              <LazyPageMenuLink v-bind="{...aChildMenu}" :localize="true"/>
+                              <LazyPageMenuLink v-bind="{...aChildMenu, href: safeLocalePath(aChildMenu.href)}" :localize="false"/>
                           </li>
                       </ul>
                       <div v-if="meStore.showEditMenu" class="position-relative" style="min-width:3rem;">
@@ -67,10 +67,14 @@
         const menuStore = useMenusStore();
         const siteStore = useSiteStore ();
         const route     = useRoute();
+        const { safeLocalePath } = useSafeLocalePath();
         const { footer: menus, footerCredits: creditsMenus } = storeToRefs(menuStore);
         const { style,  headerLinkStyle } = useTheme();
         const { t  }                      = useI18n();
 
+        // Note: Schema generation moved to schema-org.js composable
+        // to avoid reactive loops. The footer schema is generated
+        // lazily when usePageSchemaOrg() calls getFooterSchemaSync()
 
         const editUrl = (name)=> {
             const menuName = name || 'footer'
