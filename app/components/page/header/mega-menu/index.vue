@@ -3,7 +3,16 @@
         <div id="page-header-mega-menu-wrapper" class="cont-x">
             <nav id="page-header-mega-menu-nav" class="navbar nav bg-dark w-100 pt-0">
                 <ul id="page-header-mega-menu-nav-list" class="nav ">
-                    <li @click.stop="toggle(index, aMenu)" v-for="(aMenu,index) in menus" :id="`page-header-mega-menu-nav-item-${index}`" :ref="el => refElements.push(el)" :key="index" :style="loginStyle(aMenu)" class="nav-item text-nowrap"  >
+                    <li 
+                        v-for="(aMenu,index) in menus" 
+                        :id="`page-header-mega-menu-nav-item-${index}`" 
+                        :ref="el => refElements.push(el)" 
+                        :key="index" 
+                        :style="loginStyle(aMenu)" 
+                        class="nav-item text-nowrap"
+                        @mouseenter="handleMouseEnter(index, aMenu)"
+                        @mouseleave="handleMouseLeave(index, $event)"
+                    >
                         <NuxtLink  v-if="showMenu(aMenu)" :class="menuClass(aMenu)" class="nav-link" :to="aMenu.href" :title="aMenu.title"  >
                             {{aMenu.title}} 
                         </NuxtLink>
@@ -12,7 +21,14 @@
                         
                         <PageHeaderMegaMenuLogin v-if="aMenu.class?.includes('login')" :aMenu="aMenu" :show="toggles[index]" v-click-outside="unToggle"/>
 
-                        <LazyPageHeaderMegaMenuDropDown v-if="toggles[index]" :menus="aMenu.children" :parent-id="`page-header-mega-menu-nav-item-${index}`" v-click-outside="unToggle"/>
+                        <LazyPageHeaderMegaMenuDropDown 
+                            v-if="toggles[index]" 
+                            :menus="aMenu.children" 
+                            :parent-id="`page-header-mega-menu-nav-item-${index}`" 
+                            v-click-outside="unToggle"
+                            @mouseenter="cancelCloseTimer(index)"
+                            @mouseleave="handleDropdownLeave(index, $event)"
+                        />
                     </li>
                 </ul>
             </nav>
@@ -21,10 +37,13 @@
 </template>
 <script setup>
         import { useElementBounding } from '@vueuse/core';
+        import { debounce } from '@/utils';
 
         const spacers   = ref(undefined);
         const spacersY  = ref([]);
         const toggles   = ref([]);
+        const closeTimers = ref({});
+        const pendingIndex = ref(null);
         const menuStore = useMenusStore();
         const siteStore = useSiteStore();
         const me        = useMeStore();
@@ -35,6 +54,8 @@
         const eventBus   = useEventBus();
         const hasNationalTargets7 = computed(()=> Object.keys(nt7.value).length)
 
+        const CLOSE_DELAY = 150; // ms delay before closing to allow moving to dropdown
+        const OPEN_DELAY = 100;  // ms delay before opening to reduce flicker
 
         function showMenu(menu){
           if(menu.class?.includes('login')) return false
@@ -63,14 +84,17 @@
                                                             stop();
                                                             }, { immediate: true });
 
-
         onMounted(() => { 
             eventBus.on('openMenu', (index) => {
                 toggles.value[index] = true ;
                 triggerRef(toggles);
                 setTimeout(() => refElements.value[index]? refElements.value[index].click() : null, 100);
               });
-            
+        });
+
+        onBeforeUnmount(() => {
+            // Clear all timers on unmount
+            Object.values(closeTimers.value).forEach(timer => clearTimeout(timer));
         });
 
 
@@ -83,6 +107,64 @@
       return reactive({
         'background-color': siteStore.primaryColor
       });
+    }
+
+    function handleMouseEnter(index, aMenu = {}) {
+        if (index === 0) return;
+        if (isLogin(aMenu) && !me.isAuthenticated) return;
+
+        // Cancel any pending close timer for this menu
+        cancelCloseTimer(index);
+        
+        // Store the pending index and debounce the open
+        pendingIndex.value = index;
+        debouncedOpen(index);
+    }
+
+    const debouncedOpen = debounce((index) => {
+        // Only open if this is still the pending menu
+        if (pendingIndex.value !== index) return;
+        
+        // Close other menus and open this one
+        for (let i = 0; i < toggles.value.length; i++) {
+            if (i !== index) {
+                toggles.value[i] = false;
+            }
+        }
+        toggles.value[index] = true;
+    }, OPEN_DELAY);
+
+    function handleMouseLeave(index, event) {
+        // Clear pending if leaving before debounce fires
+        if (pendingIndex.value === index) {
+            pendingIndex.value = null;
+        }
+        
+        // Start a timer to close the menu
+        // This gives time for the mouse to move to the dropdown
+        closeTimers.value[index] = setTimeout(() => {
+            toggles.value[index] = false;
+        }, CLOSE_DELAY);
+    }
+
+    function handleDropdownLeave(index, event) {
+        const relatedTarget = event.relatedTarget;
+        const parentLi = document.getElementById(`page-header-mega-menu-nav-item-${index}`);
+        
+        // If moving back to the parent menu item, don't close
+        if (parentLi && parentLi.contains(relatedTarget)) {
+            return;
+        }
+
+        // Close the dropdown
+        toggles.value[index] = false;
+    }
+
+    function cancelCloseTimer(index) {
+        if (closeTimers.value[index]) {
+            clearTimeout(closeTimers.value[index]);
+            closeTimers.value[index] = null;
+        }
     }
     
     function toggle(index, aMenu ={}){

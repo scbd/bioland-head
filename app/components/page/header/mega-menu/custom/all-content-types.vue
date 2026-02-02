@@ -14,12 +14,21 @@
     </div>
 </template>
 <script setup>
-    const { t        } = useI18n    ();
+    const { t, locale } = useI18n    ();
     const   route      = useRoute   ();
     const   siteStore  = useSiteStore();
     const   menuStore  = useMenusStore();
     const   props              = defineProps({ menu: Object });
-    const { menu } = toRefs(props);
+    const { menu: passedMenu } = toRefs(props);
+    const systemPage    = menuStore.getSystemPageById(21);
+    const aliasPath     = systemPage?.aliases && systemPage?.aliases[locale.value]? systemPage?.aliases[locale.value] : `/taxonomy/term/${systemPageTidConstants.SEARCH}`;
+
+    const { menu } = useMenuOverride(passedMenu, {
+        defaultTitle: () => t('Content Types'),
+        defaultHref: aliasPath,
+        baseClasses: ['main-nav-sub-heading', 'arrow']
+    });
+
     const   isTop      = computed(()=>(!siteStore.biolandSettings?.megaMenu?.contentTypes?.position || siteStore.biolandSettings?.megaMenu?.contentTypes?.position === 'top'));
 
 

@@ -1,7 +1,7 @@
 <template>
     
     <div id="page-header-mega-menu-login">
-        <NuxtLink v-if="!isAuthenticated" id="page-header-mega-menu-login-link" class="nav-link text-white" :to="loginUrl" :title="aMenu.title" >
+        <NuxtLink v-if="!isAuthenticated" id="page-header-mega-menu-login-link" class="nav-link text-white" :to="loginUrl" :title="aMenu.title" :external="true">
             <span v-if="!isAuthenticated"> {{aMenu.title}} </span>
         </NuxtLink>
         <button v-if="isAuthenticated" id="page-header-mega-menu-login-btn" class="nav-link text-white" :to="loginUrl" :title="aMenu.title" >
@@ -46,19 +46,26 @@
                                 <div v-if="meStore.user?.img?.src" id="page-header-mega-menu-login-user-avatar">
                                     <LazyAvatar :user="meStore.user"  :size="150"/>
                                 </div>
-                                <div id="page-header-mega-menu-login-user-name" class="my-1">
+                                <div id="page-header-mega-menu-login-user-name" class="my-1 text-center">
                                     <span>{{meStore.user?.displayName}}</span>
                                 </div>
-                                <div id="page-header-mega-menu-login-user-actions" class="w-100 d-flex  justify-content-around align-items-center ">
-                                    <!-- @click="doLogOut()" -->
-                                    <a id="page-header-mega-menu-login-logout-link" class="nav-link text-black" :href="logOutUrl" >
-                                        <LazyIcon name="lock" color="#000000" :size="1.5" class="me-1"/> {{t('Logout')}}
-                                    </a>
-
-                                    <button v-if="meStore.canEditMenu" id="page-header-mega-menu-login-edit-toggle" class="nav-link text-black" @click="meStore.toggleEditMode()">
-                                            <LazyIcon :name="meStore.editMode? 'toggle-on' : 'toggle-off'" color="#000000" :size="1" class="me-1"/> {{t('Edit Mode')}}
+                                
+                                <div id="page-header-mega-menu-login-user-actions" class="w-100 d-flex  login-user-actions justify-content-around align-items-center ">
+                                    <button v-if="meStore.canEditMenu" id="page-header-mega-menu-clear-cache" class="nav-link text-black text-nowrap" @click="clearCache()">
+                                            <LazyIcon name="cache" color="#000000" :size="1.5" class="me-1"/> {{t('Clear Cache')}}
+                                    </button>
+                                    <button v-if="meStore.canEditMenu" id="page-header-mega-menu-login-edit-toggle" class="nav-link text-black text-nowrap" @click="meStore.toggleEditMode()">
+                                            <LazyIcon :name="meStore.editMode? 'toggle-on' : 'toggle-off'" color="#000000" :size="1.5" class="me-1"/> {{t('Edit Mode')}}
                                     </button>
 
+                                </div>
+                            </div>
+                            <div class="d-flex  justify-content center align-items-center flex-column ">
+                                <div id="page-header-mega-menu-login-user-actions" class="w-100 d-flex  justify-content-around align-items-center ">
+                                    <!-- @click="doLogOut()" -->
+                                    <a id="page-header-mega-menu-login-logout-link" class="nav-link text-black text-nowrap" :href="logOutUrl" >
+                                        <LazyIcon name="lock" color="#000000" :size="1.5" class="me-1"/> {{t('Logout')}}
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -103,6 +110,11 @@
 
     const { data, status, error, refresh } =  await useFetch(`${siteStore.localizedHost}/system/menu/account/linkset`, {  method: 'GET', headers, key: 'logout-url', getCachedData });
 
+    const clearCache = () => {
+        const timestamp = Math.floor(Date.now() / 1000);
+        reloadNuxtApp({ path: `${route.path}?seachain-taisce=${timestamp}` });
+    };
+
     const logOutUrl = computed(() => { 
 
         const menus       = data?.value?.linkset[0]?.item || []
@@ -124,7 +136,10 @@
 }
 .menu-section{
     border-right: 2px solid rgb(0, 0, 0, .2);
-    // margin-bottom: 4rem;
+}
+.login-user-actions{
+    border-top: 2px solid rgb(0, 0, 0, .2);
+    // padding: 0.5rem 1rem 0.5rem 1rem;
 }
 .menu-section:last-child{
     border-right: none;

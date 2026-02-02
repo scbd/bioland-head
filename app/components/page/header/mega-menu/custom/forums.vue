@@ -31,17 +31,24 @@
 <script setup>
     import clone from 'lodash.clonedeep';
 
+    const { t, locale } = useI18n();
     const   siteStore   = useSiteStore ();
     const   menuStore   = useMenusStore();
     const   localePath  = useLocalePath();
     const   props              = defineProps({ menu: Object });
     const { menu: passedMenu } = toRefs(props);
     const   bgStyle     = reactive({ 'background-color': siteStore.primaryColor })
-    const   aMenu       = computed(() => clone(unref(passedMenu)));
-    const   menu        = aMenu;
-    const   drupalMenus = computed(()=>aMenu.value?.children || []);
+    const systemPage    = menuStore.getSystemPageById(24);
+    const aliasPath     = systemPage?.aliases && systemPage?.aliases[locale.value]? systemPage?.aliases[locale.value] : `/taxonomy/term/${systemPageTidConstants.FORUMS}`;
+
+    const { menu } = useMenuOverride(passedMenu, {
+        defaultTitle: () => t('Discussion Forum'),
+        defaultHref: aliasPath,
+        baseClasses: ['main-nav-sub-heading', 'arrow']
+    });
+
+    const   drupalMenus = computed(()=>menu.value?.children || []);
     const   isTop       = computed(()=>(!siteStore.biolandSettings?.megaMenu?.forums?.position || siteStore.biolandSettings?.megaMenu?.forums?.position === 'top'));
-    const { t, locale } = useI18n();
     const children      = computed(() => { return menuStore.forums; });
 
     function getHref(topic){

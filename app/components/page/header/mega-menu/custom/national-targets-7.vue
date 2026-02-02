@@ -5,7 +5,7 @@
         <LazyPageHeaderMegaMenuCustomCountryTab v-slot="slotProps" :menu="menus" >
             <Transition :name="slotProps.fadeName">
                 <section v-if="slotProps.hide" id="page-header-mega-menu-custom-national-targets-7-content">
-                    <section v-for="(aChild,j) in children" :id="`page-header-mega-menu-custom-national-targets-7-child-${j}`" :key="j">
+                    <section v-if="isTop" v-for="(aChild,j) in children" :id="`page-header-mega-menu-custom-national-targets-7-child-${j}`" :key="j">
                         <p >
                             <LazyPageHeaderMegaMenuLink :title="aChild.title" :menu="aChild" />
                         </p>
@@ -14,6 +14,11 @@
                     <div id="page-header-mega-menu-custom-national-targets-7-cards" class="d-flex justify-content-start" >
                         <LazyCardsNt7 class="mx-2" :id="`page-header-mega-menu-custom-national-targets-7-card-${j}`" :record="aChild" :no-flag="true" v-for="(aChild,j) in menus[slotProps.country]" :key="j"/>
                     </div>
+                    <section v-if="!isTop" v-for="(aChild,j) in children" :id="`page-header-mega-menu-custom-national-targets-7-child-${j}`" :key="`top-${j}`">
+                        <p >
+                            <LazyPageHeaderMegaMenuLink :title="aChild.title" :menu="aChild" />
+                        </p>
+                    </section>
                 </section>
             </Transition>
         </LazyPageHeaderMegaMenuCustomCountryTab>
@@ -23,6 +28,7 @@
     import clone from 'lodash.clonedeep';
 
     const { t, locale } = useI18n();
+    const siteStore     = useSiteStore();
     const menusStore    = useMenusStore();
     const menus         = computed(() => menusStore.nt7);
     const { safeLocalePath } = useSafeLocalePath();
@@ -42,6 +48,7 @@
 
     const aMenu     = clone(unref(passedMenu));
     const children  = aMenu?.children || [];
+    const isTop     = computed(()=>(!siteStore.biolandSettings?.megaMenu?.nationalTargets7?.position || siteStore.biolandSettings?.megaMenu?.nationalTargets7?.position === 'top'));
     
 </script>
 
