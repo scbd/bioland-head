@@ -1,26 +1,48 @@
 
-export const useContentTypeMenus = async (ctx) => {
+
+export const useContentTypeMenus = async (ctx, bypassMultiplier = true) => {
     try {
         await useDrupalLogin(ctx.siteCode);
 
-        return makeTypeMap(await getAllContentTypeMenus(ctx), ctx);
+        return makeTypeMap(await getAllContentTypeMenus(ctx, bypassMultiplier), ctx);
     }
     catch (e) {
    
-        consola.fail('useContentTypeMenus - upstream failure', e);
+        consola.error('useContentTypeMenus - upstream failure', e);
 
 
         return {};
     }
 }
 
-async function getContentMenus (ctx, drupalInternalId) {
-    const   lengthMap               = { 2:3, 3:3, 4:6, 5:3, 8:7, 9:7, 10:6, 11:7, 12:3, 16:6 };
+/**
+ * Gets the maximum menu length for a content type from biolandSettings.
+ * 
+ * @param {Object} ctx - The request context containing biolandSettings
+ * @param {number|string} drupalInternalId - The Drupal internal ID of the content type
+ * @returns {number} The maximum number of menu items (default: 6)
+ */
+function getContentTypeMenuLength(ctx, drupalInternalId) {
+    const contentTypeSettings = ctx.biolandSettings?.megaMenu?.contentTypeMenus;
+
+    if (!contentTypeSettings) {
+        consola.error('getContentTypeMenuLength - missing biolandSettings.megaMenu.contentTypeMenus, using default length of 6');
+        return 6;
+    }
+    
+    const lengthMap = Object.fromEntries(
+        Object.entries(contentTypeSettings).map(([key, config]) => [key, config.maxMenus])
+    );
+    
+    return lengthMap[drupalInternalId] || 6;
+}
+
+async function getContentMenus (ctx, drupalInternalId, bypassMultiplier = true) {
     const { localizedHost, locale } = ctx;
 
-    const length         = lengthMap[drupalInternalId] || 20
+    const length         = getContentTypeMenuLength(ctx, drupalInternalId)
     const langcodeFilter = getLangcodeFilterParams(locale)
-    const filters        = `${getTypeFilterParams({ drupalInternalId })}${langcodeFilter}${getSortParams()}${getPaginationParams({rowsPerPage:length})}`
+    const filters        = `${getTypeFilterParams({ drupalInternalId })}${langcodeFilter}${getSortParams()}${getPaginationParams({rowsPerPage:length, bypassMultiplier})}`
     const uri            = `${localizedHost}/jsonapi/index/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image${filters}`
     const method         = 'get';
     const headers        = { 'Content-Type': 'application/json' }
@@ -242,9 +264,9 @@ function mapThumbNails(ctx){
     }
 }
 
-async function getAllContentTypeMenus(ctx){
+async function getAllContentTypeMenus(ctx, bypassMultiplier = true){
 
-    // consola.info('getAllContentTypeMenus - locale:', ctx.locale, 'localizedHost:', ctx.localizedHost);
+    //consola.warn('getAllContentTypeMenus - locale:', ctx.locale, 'localizedHost:', ctx.localizedHost);
 
     const isEnglish = ctx.locale === 'en';
     const terms     = isEnglish? await getTerms(ctx) : await Promise.all([getEnglishTerms(ctx), getTerms(ctx)]).then(([en, xx])=> [...en, ...xx]);
@@ -260,7 +282,7 @@ async function getAllContentTypeMenus(ctx){
 
     for(const term of dedupedTerms){
         // Always fetch content for all terms - localizedHost handles locale filtering
-        const aRequest = getContentMenus(ctx, term.drupalInternalId)
+        const aRequest = getContentMenus(ctx, term.drupalInternalId, bypassMultiplier)
             .then(({ data, count }) => ({ ...term, data, count }))
             .catch((e) => {
                 const { logAll, logServerOutRequests } = useRuntimeConfig().public || {}
