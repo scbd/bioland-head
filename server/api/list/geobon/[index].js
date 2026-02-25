@@ -8,6 +8,7 @@ export default defineCachedEventHandler(async (event) => {
     
             body.append('action', 'fetch_data');
             body.append("country", isPlainObject(country) ? country?.name: country);
+            body.append('code', getCountryCode(ctx).toUpperCase())
 
             const headers =  { "Accept": "application/json", 'User-Agent': `Mozilla/5.0 (compatible; BiolandHead/1.0; +${ctx.host})`}
             const data    = ( await $fetch(`https://portal.geobon.org/bioland/fetch-data.php`, $fetchBaseOptions({  method: 'POST', body, headers,  mode: 'cors' }))).replaceAll(/\n/g,'');
@@ -15,7 +16,8 @@ export default defineCachedEventHandler(async (event) => {
             const dataObject = parseJson(data);
 
             dataObject.data  = dataObject.data.map((r)=>{
-                r.ecosystemType = r.ecosystem_type.split(',').map(e=>e.trim());
+                if(r.ecosystem_type)
+                    r.ecosystemType = r.ecosystem_type.split(',').map(e=>e.trim());
                 return r
             });
 

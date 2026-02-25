@@ -13,7 +13,7 @@ import type { SiteContext, DmsmConfig, ContextCookie } from "~/shared/types";
 import { getSiteSettings } from "./drupal/index.js";
 
 
-interface RequestContextOptions { /** Explicit siteCode (skips host extraction) - used by context API route */ siteCode?: string; /** Explicit locale (skips path/cookie resolution) */ locale?: string; }
+interface RequestContextOptions { /** Explicit siteCode (skips host extraction) - used by context API route */ siteCode?: string; /** Explicit locale (skips path/cookie resolution) */ locale?: string; /** Bypass DMSM config cache - forces fresh fetch from DMSM API */ bypassCache?: boolean; }
 
 /**
  * Get site context for the current request
@@ -69,8 +69,8 @@ export async function useRequestContext( event: H3Event, options?: RequestContex
     }
   }
 
-  // 2. Get DMSM config (cached)
-  const config = await getCachedDmsmConfig(event,siteCode);
+  // 2. Get DMSM config (cached unless bypassed)
+  const config = await getCachedDmsmConfig(event, siteCode, options?.bypassCache);
 
   if (!config) {
     throw createError({
@@ -115,34 +115,40 @@ export async function useRequestContext( event: H3Event, options?: RequestContex
 const pendingDmsmRequests = new Map<string, Promise<DmsmConfig | null>>();
 
 /**
+ * Core DMSM fetch logic - shared by cached and direct fetch paths
+ */
+async function fetchDmsmConfigCore(siteCode: string): Promise<DmsmConfig | null> {
+  const { env, multiSiteCode, dmsm } = useRuntimeConfig().public;
+
+  try {
+    const uri = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}/${encodeURIComponent(siteCode)}`;
+    const data = await $fetch<DmsmConfig>(uri);
+
+    if (!data) {
+      consola.error(`Site ${siteCode} not found in DMSM config for ${env}/${multiSiteCode}`);
+      return null;
+    }
+
+    return data;
+  } catch (e) {
+    consola.error(`Failed to fetch DMSM config for ${siteCode}:`, e);
+    return null;
+  }
+}
+
+/**
  * Get DMSM config with caching and request coalescing
  * Uses cachedFunction for persistent cache + in-memory deduplication for concurrent requests
  */
 const _fetchDmsmConfig = cachedFunction(
-  async (event: H3Event, siteCode: string): Promise<DmsmConfig | null> => {
-    const { env, multiSiteCode, dmsm } = useRuntimeConfig().public;
-
-    try {
-      // DMSM API returns all sites for a multiSiteCode, not individual sites
-      const uri  = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}/${encodeURIComponent(siteCode)}`;
-      const data = await $fetch<DmsmConfig>(uri);
-
-      if (!data) {
-        consola.error( `Site ${siteCode} not found in DMSM config for ${env}/${multiSiteCode}`, );
-        return null;
-      }
-
-      return data;
-    } catch (e) {
-      consola.error(`Failed to fetch DMSM config for ${siteCode}:`, e);
-      return null;
-    }
+  async (_event: H3Event, siteCode: string): Promise<DmsmConfig | null> => {
+    return fetchDmsmConfigCore(siteCode);
   },
   {
     maxAge: CACHE_TTL.FIVE_MINUTES, // 5 minutes cache
     name: "get-dmsm-config",
     group: "context",
-    getKey: (event: H3Event, siteCode: string) => {
+    getKey: (_event: H3Event, siteCode: string) => {
       const { env, multiSiteCode } = useRuntimeConfig().public;
       return `${multiSiteCode}:${siteCode}`;
     }
@@ -152,8 +158,15 @@ const _fetchDmsmConfig = cachedFunction(
 /**
  * Get DMSM config with request coalescing to prevent thundering herd
  * If a request is already in-flight for this siteCode, wait for it instead of starting a new one
+ * @param bypassCache - If true, skips cache and fetches directly from DMSM API
  */
-async function getCachedDmsmConfig(event: H3Event, siteCode: string): Promise<DmsmConfig | null> {
+async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypassCache?: boolean): Promise<DmsmConfig | null> {
+  // Bypass cache if requested - fetch directly without caching or coalescing
+  if (bypassCache) {
+    consola.debug(`Bypassing DMSM cache for siteCode: ${siteCode}`);
+    return fetchDmsmConfigCore(siteCode);
+  }
+
   const { env, multiSiteCode } = useRuntimeConfig().public;
   const cacheKey = `${multiSiteCode}:${siteCode}`;
 

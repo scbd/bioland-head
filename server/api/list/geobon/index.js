@@ -1,5 +1,5 @@
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
         try{
             const ctx     = await useRequestContext(event);
             const country = await getCountryName(event, getCountryCode(ctx));
@@ -8,6 +8,7 @@ export default defineEventHandler(async (event) => {
     
             body.append('action', 'fetch_data');
             body.append('country', country);
+            body.append('code', getCountryCode(ctx).toUpperCase())
 
             const headers =  { "Accept": "application/json" }
             const data    = ( await $fetch(`https://portal.geobon.org/bioland/fetch-data.php`, $fetchBaseOptions({  method: 'POST', body,headers,  mode: 'cors' }))).replaceAll(/\n/g,'');

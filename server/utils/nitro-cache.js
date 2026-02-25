@@ -29,7 +29,7 @@ export async function clearSiteCache(event, options = {}) {
     let siteCode = options.siteCode;
     
     if (!multiSiteCode || !siteCode) {
-        const ctx = await useRequestContext(event);
+        const ctx = await useRequestContext(event, { bypassCache: true });
         multiSiteCode = multiSiteCode || ctx.multiSiteCode;
         siteCode = siteCode || ctx.siteCode;
     }

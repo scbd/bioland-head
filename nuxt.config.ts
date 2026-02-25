@@ -166,7 +166,6 @@ export default defineNuxtConfig({
       // Pre-bundle dependencies to avoid multiple reloads during dev startup
       include: [
         "string-strip-html",
-        "@unhead/schema-org/vue",
         // Dependencies discovered at runtime that cause reloads
         "click-outside-vue3",
         "lodash.isplainobject",
