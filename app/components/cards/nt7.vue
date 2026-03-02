@@ -5,7 +5,7 @@
             <div v-if="hasCountries"  class="text-center mb-2">
                 <p class="h5 mb-1 text-muted">{{t(countryCode)}}</p>
                 <NuxtLink  v-if="hasCountries && !noFlag" class="me-1" :to="`https://www.cbd.int/countries/?country=${countryCode}`" target="_blank" external>
-                    <NuxtImg :alt="`${t(countryCode)}'s flag'`" :title="`${t(countryCode)}'s flag'`" :src="`https://www.cbd.int/images/flags/96/flag-${countryCode}-96.png`"  class="flag"/>
+                    <NuxtImg :alt="`${t(countryCode)}'s flag'`" :title="`${t(countryCode)}'s flag'`" :src="getFlagUrl(countryCode)"  class="flag"/>
                 </NuxtLink>
 
    

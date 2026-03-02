@@ -110,7 +110,7 @@ export const useSiteStore = defineStore('site', {
 
             if(config?.logo)  return config.logo;
         
-            if(hasCountry) return `https://www.cbd.int/images/flags/96/flag-${hasCountry}-96.png`
+            if(hasCountry) return getFlagUrl(hasCountry)
         
             return 'https://seed.chm-cbd.net/sites/default/files/images/country/flag/xx.png'
         },
