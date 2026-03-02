@@ -108,6 +108,7 @@ export default defineNuxtConfig({
     // '@nuxt/scripts',
     "@dargmuesli/nuxt-cookie-control",
     "@nuxt/scripts",
+    "@nuxtjs/critters",
     // DISABLED: nuxt-schema-org auto-generates workTranslation from all i18n locales
     // We now manually generate Schema.org JSON-LD in composables/schema-org.js
     // "nuxt-schema-org",
@@ -121,6 +122,12 @@ export default defineNuxtConfig({
   //   identity: { type: 'WebSite' },
   // },
   cookieControl,
+  critters: {
+    config: {
+      preload: 'swap',      // Use font-display: swap for preloaded fonts
+      inlineFonts: false,   // Don't inline Google Fonts (they have their own caching)
+    },
+  },
   piniaPersistedstate: {
     cookieOptions: { sameSite: "strict" },
     storage: "cookies",

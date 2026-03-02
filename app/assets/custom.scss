@@ -74,7 +74,7 @@ $utilities: map-merge(
 @import "bootstrap/scss/navbar";
 @import "bootstrap/scss/card";
 // @import "bootstrap/scss/accordion";
-@import "bootstrap/scss/breadcrumb";
+// @import "bootstrap/scss/breadcrumb"; // Removed: breadcrumbs use custom CSS, not Bootstrap's .breadcrumb component
 @import "bootstrap/scss/pagination";
 @import "bootstrap/scss/badge";
 @import "bootstrap/scss/alert";
