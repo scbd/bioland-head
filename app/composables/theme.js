@@ -5,9 +5,16 @@ export function useTheme(record){
     const siteStore = useSiteStore (nuxtApp.$pinia);
 
     const primaryColorStyle   = reactive({ 'color': siteStore.primaryColor, 'border-top': `${siteStore.primaryColor} .5rem solid`});
-    const badgePrimaryStyle   = reactive({ 'background-color': siteStore.primaryColor })
 
-    const badgeSecondaryStyle = reactive({ 'background-color': siteStore.secondaryColor }) 
+    const badgePrimaryStyle = computed(() => ({
+      'background-color': siteStore.primaryColor,
+      'color': contrastTextColor(siteStore.primaryColor)
+    }))
+
+    const badgeSecondaryStyle = computed(() => ({
+      'background-color': siteStore.secondaryColor,
+      'color': contrastTextColor(siteStore.secondaryColor)
+    }))
     const bgStyle             = reactive({ 'background-color': siteStore.secondaryColor });
     const c2Style             = reactive({ 'color': siteStore?.theme?.color?.secondaryTextOver });
 
