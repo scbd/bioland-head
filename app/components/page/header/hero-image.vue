@@ -1,5 +1,24 @@
 <template>
-    <div id="page-header-hero-image" ref="heroContainer" data-testid="hero-image" :style="backgroundStyles" :class="{'un3-hero':hasHeroImage, 'hero-image':hasHeroImage, 'no-hero':!hasHeroImage, 'dev-site': isDevSite }"  >
+    <div id="page-header-hero-image" ref="heroContainer" data-testid="hero-image" :class="{'un3-hero':hasHeroImage, 'hero-image':hasHeroImage, 'no-hero':!hasHeroImage, 'dev-site': isDevSite }">
+
+        <!-- LCP hero image — discoverable by browser preload scanner -->
+        <NuxtPicture
+            v-if="heroImageUrl"
+            :src="heroImageUrl"
+            :img-attrs="{ class: 'hero-img', fetchpriority: 'high', alt: heroImageAlt }"
+            height="750"
+            fit="cover"
+            :quality="20"
+            sizes="100vw sm:552px md:992px lg:1330px xl:1600px"
+            format="webp,avif"
+            preload
+            loading="eager"
+        />
+
+        <!-- Gradient overlays replicate the former CSS background-blend-mode layers -->
+        <div v-if="heroImageUrl" class="hero-tint"    :style="tintStyle"></div>
+        <div v-if="heroImageUrl" class="hero-overlay"  :style="overlayStyle"></div>
+
         <slot></slot>
         
         <div v-if="hasHeroImage" id="page-header-hero-image-content" class="container text-white">
@@ -52,29 +71,34 @@
     // Check both data availability AND that host is properly initialized
     const isHostReady      = computed(() => siteStore.host && !siteStore.host.includes('undefined'));
     const hasHeroImage     = computed(() => isHostReady.value && (pageStore?.page?.hasHeroImage || pageStore?.heroImage?.fieldMediaImage?.uri?.url));
-    const img              = useImage();
     const isDevSite        = computed(()=> !siteStore?.config?.published || siteStore?.config?.hasBl1);
     const hi               = computed(() => pageStore.heroImage);
 
-    const backgroundStyles = computed(() => {
-
-        if(!hasHeroImage.value || !pageStore?.heroImage?.fieldMediaImage?.uri?.url) return {}
-
-        // Guard against undefined host during SSR before context is fully resolved
-        if(!siteStore.host || siteStore.host.includes('undefined')) return {}
-
-        const imgOptions = { 
-                                height : 750,
-                                fit    : 'cover',
-                                quality: 20,
-                                format : ['webp', 'avif', 'jpeg', 'jpg', 'png','gif'],
-                                sizes  : "100vw sm:552px md:992px lg:1330px xl:1600px"
-                            };
-
-        const imgSrc = img(siteStore.host+pageStore.heroImage.fieldMediaImage.uri.url, imgOptions);
-
-        return getBackgroundStyles(imgSrc);
+    // --- Hero image URL / alt (extracted for <NuxtPicture>) ---
+    const heroImageUrl = computed(() => {
+        if (!hasHeroImage.value || !pageStore?.heroImage?.fieldMediaImage?.uri?.url) return ''
+        if (!siteStore.host || siteStore.host.includes('undefined')) return ''
+        return siteStore.host + pageStore.heroImage.fieldMediaImage.uri.url
     })
+
+    const heroImageAlt = computed(() => {
+        return pageStore?.heroImage?.fieldMediaImage?.meta?.alt || ''
+    })
+
+    // --- Gradient overlays (replicate former background-blend-mode layers) ---
+    const hexToRgb = hex => hex?.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i,(m, r, g, b) => '#' + r + r + g + g + b + b)
+                            ?.substring(1)?.match(/.{2}/g)
+                            ?.map(x => parseInt(x, 16))?.join(', ');
+
+    // Color tint — blends with the image via mix-blend-mode: color
+    const tintStyle = computed(() => ({
+        background: `linear-gradient(0deg, rgb(${hexToRgb(siteStore?.theme?.hero?.primary[1])}) 0%, rgb(${hexToRgb(siteStore?.theme?.hero?.primary[0])}) 100%)`
+    }))
+
+    // Normal overlays — dark top vignette + left-side primary fade
+    const overlayStyle = computed(() => ({
+        background: `linear-gradient(rgba(0, 0, 0, 0.33) 0%, rgba(0, 0, 0, 0) 100%), linear-gradient(90deg, rgb(${hexToRgb(siteStore?.theme?.hero?.primary[0])}) 0%, rgba(${hexToRgb(siteStore?.theme?.hero?.primary[0])}, 0) 100%)`
+    }))
 
     function editUrl() {
         return pageStore?.isHomePage? editUrlHomePage() : editUrlDirect();
@@ -88,16 +112,6 @@
         const menuName =  hi.value?.drupalInternalMid;
 
         return  `${siteStore.host}/media/${menuName}/edit?destination=${encodeURIComponent(route.path)}`;
-    }
-
-    const hexToRgb = hex => hex?.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i,(m, r, g, b) => '#' + r + r + g + g + b + b)
-                            ?.substring(1)?.match(/.{2}/g)
-                            ?.map(x => parseInt(x, 16))?.join(', ');
-
-    function getBackgroundStyles(url) {
-        return reactive({    
-            'background-image': `linear-gradient(rgba(0, 0, 0, 0.33) 0%, rgba(0, 0, 0, 0) 100%), linear-gradient(90deg, rgb(${hexToRgb(siteStore?.theme?.hero?.primary[0])}) 0%, rgba(${hexToRgb(siteStore?.theme?.hero?.primary[0])}, 0) 100%), linear-gradient(0deg, rgb(${hexToRgb(siteStore?.theme?.hero?.primary[1])}) 0%, rgb(${hexToRgb(siteStore?.theme?.hero?.primary[0])}) 100%), url(${url})`
-        })
     }
 </script>
 
@@ -127,43 +141,59 @@ section {
 .no-hero{
     margin-top: 2rem;;
 }
+
+/* --- Hero image layout (LCP-optimised) --- */
 .hero-image {
-    /* top: 0; */
-    /* z-index: -2; */
-    /* min-height: 472px; */
-    /* max-height: 472px; */
+    position: relative;
+    overflow: hidden;
     width: 100vw;
     margin-top: 1.5rem;
     padding-top: 1rem;
-    background-size: cover !important;
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-position: center, center, center center, center;
-    background-color:lightgray;
-    background-blend-mode: normal, normal, color, normal;
+    background-color: lightgray;
 
     @media (max-width: 991.98px) {
-        animation: scrollBackground ease-in-out 120s infinite;
-    }
-
-    /* @media (max-aspect-ratio: 4/3) {
-        height: 100vh;
-    } */
-
-    /* @media (min-width: 1600px) {
-        filter: blur(1px);
-    } */
-}
-
-/* .hero-image {
-   width: 100vw;
-   max-height: 472px;
-} */
-
-@media (max-width: 991.98px) {
-    .hero-image {
         margin-top: 4rem;
     }
+}
+
+/* <NuxtPicture> renders a <picture> wrapper — stretch it and its <img> */
+.hero-image :deep(picture) {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.hero-image :deep(.hero-img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Color-tint layer (mix-blend-mode replicates former background-blend-mode: color) */
+.hero-tint {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    mix-blend-mode: color;
+}
+
+/* Dark-top + left-fade gradients (normal blending) */
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+}
+
+/* Ensure slotted content (title-search, mega-menu) sits above overlays */
+.hero-image :slotted(*) {
+    position: relative;
+    z-index: 3;
+}
+
+/* Hero text content sits above overlays */
+#page-header-hero-image-content {
+    position: relative;
+    z-index: 3;
 }
 
 .hero-placeholder {
