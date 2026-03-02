@@ -151,13 +151,11 @@ export const usePageStore = defineStore('page', {
         
             if(!heroImages.length) return undefined;
         
-            // Use hour-based selection instead of minute-based for SSR stability
-            // This ensures server and client render the same hero image during hydration
-            const now = new Date();
-            const hourOfDay = now.getHours();
-            const picIndex = Math.floor((hourOfDay / 24) * heroImages.length);
+            // SSR-stable index: useState freezes the server-chosen value in the
+            // Nuxt payload so the client hydrates with the same hero image.
+            const picIndex = useSsrStableIndex(`hero-${heroImages.length}`, heroImages.length);
 
-            return heroImages[picIndex];
+            return heroImages[picIndex.value];
         },
 
         typeName(){ 

@@ -97,8 +97,8 @@
 
     function getCountry(){
         const { countries, country:c } = siteStore.params;
-        const   countryIndex           = randomArrayIndexTimeBased(countries.length);
-        const   country                = (countries[countryIndex] || c)?.toLowerCase();
+        const   countryIndex           = useSsrStableIndex(`gbif-country-${countries?.length}`, countries?.length);
+        const   country                = (countries[countryIndex.value] || c)?.toLowerCase();
         const   gbifWidget             = siteStore?.biolandSettings?.homeWidgets?.gbifWidget;
 
         if (!gbifWidget?.countries?.[country])
