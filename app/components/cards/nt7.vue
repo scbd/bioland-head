@@ -3,7 +3,7 @@
 
         <div class="card-body mb-1" style="max-height: 300px; overflow:hidden;">
             <div v-if="hasCountries"  class="text-center mb-2">
-                <h5 class="mb-1 text-muted">{{t(countryCode)}}</h5>
+                <p class="h5 mb-1 text-muted">{{t(countryCode)}}</p>
                 <NuxtLink  v-if="hasCountries && !noFlag" class="me-1" :to="`https://www.cbd.int/countries/?country=${countryCode}`" target="_blank" external>
                     <NuxtImg :alt="`${t(countryCode)}'s flag'`" :title="`${t(countryCode)}'s flag'`" :src="`https://www.cbd.int/images/flags/96/flag-${countryCode}-96.png`"  class="flag"/>
                 </NuxtLink>
@@ -11,9 +11,9 @@
    
             </div>
 
-            <h5 class="card-title  mb-2 " style="font-size: 1.3rem;">
+            <p class="card-title h5 mb-2" style="font-size: 1.3rem;">
                 <NuxtLink :to="url" :style="colorStyle" :external="true" target="_blank">{{smartTruncate(title, 100, locale)}}</NuxtLink>
-            </h5>
+            </p>
             <p class="card-text">{{smartTruncate(summary, 250, locale)}}</p>
 
         </div>

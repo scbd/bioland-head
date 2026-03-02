@@ -13,9 +13,12 @@
                         @mouseenter="handleMouseEnter(index, aMenu)"
                         @mouseleave="handleMouseLeave(index, $event)"
                     >
-                        <NuxtLink  v-if="showMenu(aMenu)" :class="menuClass(aMenu)" class="nav-link" :to="aMenu.href" :title="aMenu.title"  >
+                        <NuxtLink v-if="showMenu(aMenu) && aMenu.href" :class="menuClass(aMenu)" class="nav-link" :to="aMenu.href" :title="aMenu.title"  >
                             {{aMenu.title}} 
                         </NuxtLink>
+                        <button v-else-if="showMenu(aMenu)" :class="menuClass(aMenu)" class="nav-link btn-unstyled" type="button" :title="aMenu.title">
+                            {{aMenu.title}}
+                        </button>
 
                         <span v-if="showMenu(aMenu)" ref="spacers" :class="{ 'opacity-0': isLastSpacer(index) }" class="spacer"></span>
                         
@@ -202,6 +205,16 @@
 
 <style lang="scss" scoped>
 @import "@/assets/scss/variables.scss";
+
+.btn-unstyled {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    text-align: inherit;
+    color: inherit;
+}
 
 .dropdown-toggle::after {
     display: none;

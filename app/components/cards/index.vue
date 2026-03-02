@@ -9,19 +9,19 @@
             <NuxtLink :to="goTo" :aria-label="record.title" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
         </div>
         <div class="card-body mb-1" style="max-height: 300px; overflow:hidden;">
-            <h6 class="card-subtitle text-muted mb-2" :class="{'text-center': isFromTheBCH}"><span :style="isFromTheBCH ? colorStyle : undefined">{{type}}</span> {{schema}}</h6>
-            <h5 class="card-title  mb-2">
+            <p class="card-subtitle h6 text-muted mb-2" :class="{'text-center': isFromTheBCH}"><span :style="isFromTheBCH ? colorStyle : undefined">{{type}}</span> {{schema}}</p>
+            <p class="card-title h5 mb-2">
                 <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''">{{record.title}}</NuxtLink>
-            </h5>
+            </p>
             <p class="card-text">{{trunc(record.summary)}}</p>
 
         </div>
         <div class="card-footer d-flex flex-wrap align-items-center">
-            <h6 class="card-subtitle text-center mb-2 w-100">
+            <p class="card-subtitle h6 text-center mb-2 w-100">
                 <span class="fw-lighter text-small text-muted text-uppercase fs-6">{{ dateLabel }}</span>
                 <br> 
                 <span class="fw-bolder">{{dateFormat(displayDate)}} </span>
-            </h6>
+            </p>
 
             <span v-show="record?.eventCity" class="badge me-1" :style="badgePrimaryStyle"> {{record?.eventCity || ''}}</span>
             <span v-show="record?.eventCountry?.symbol" class="badge me-1" :style="badgeSecondaryStyle"> {{ record?.eventCountry?.symbol ? t(record.eventCountry.symbol) : '' }}</span>

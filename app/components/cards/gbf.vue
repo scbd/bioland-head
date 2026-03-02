@@ -5,18 +5,18 @@
             
         </div>
         <div class="card-body">
-            <h5 class="card-title  mb-3">{{name}}</h5>
+            <p class="card-title h5 mb-3">{{name}}</p>
 
             <p class="card-text">{{trunc(record.description)}}
                 
             </p>
         </div>
         <div class="card-footer">
-            <h6 class="card-subtitle my-2 ">
+            <p class="card-subtitle h6 my-2">
                 <NuxtLink  :style="arrowFill" :to="getGbfUrl()" :title="name" external target="_blank">
                     {{t('View more')}} <LazyIcon   :style="arrowFill"  name="arrow-right" class="arrow" />
                 </NuxtLink>
-            </h6>
+            </p>
         </div>
     </div>
 </template>
