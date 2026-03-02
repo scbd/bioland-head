@@ -18,7 +18,7 @@
 
         </div>
         <div v-if="gbfTargets.length" class="card-footer text-center text-nowrap pt-2">
-            <NuxtLink class="me-1 lh-lg" v-for="(aTarget,i) in gbfTargets" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
+            <NuxtLink class="me-1 lh-lg" v-for="(aTarget,i) in gbfTargets" :key="i"  :to="getGbfUrl(aTarget.identifier)" :aria-label="`GBF Target ${aTarget.identifier}`" target="_blank" external>
                 <LazyGbfIcon :identifier="aTarget.identifier" size="lg"/>
             </NuxtLink>
         </div>

@@ -3,10 +3,10 @@
         <!-- Sticky/Promote indicators - TEST: showing all without auth -->
 
         <div v-if="hasOwnImage" :style="backgroundStyles" class="cit bg-light">
-            <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
+            <NuxtLink :to="goTo" :aria-label="record.title" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
         </div>
         <div v-else :style="backgroundStyles" class="cit bg-light">
-            <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
+            <NuxtLink :to="goTo" :aria-label="record.title" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
         </div>
         <div class="card-body mb-1" style="max-height: 300px; overflow:hidden;">
             <h6 class="card-subtitle text-muted mb-2" :class="{'text-center': isFromTheBCH}"><span :style="isFromTheBCH ? colorStyle : undefined">{{type}}</span> {{schema}}</h6>
@@ -30,7 +30,7 @@
             </template>
 
             <template v-for="(aTarget,i) in gbfTagsList" :key="i">
-                <NuxtLink class="me-1 mb-1" :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
+                <NuxtLink class="me-1 mb-1" :to="getGbfUrl(aTarget.identifier)" :aria-label="`GBF Target ${aTarget.identifier}`" target="_blank" external>
                     <LazyGbfIcon :identifier="aTarget.identifier" size="xs"/>
                 </NuxtLink>
             </template>

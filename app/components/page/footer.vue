@@ -26,7 +26,7 @@
                       <NuxtLink class="logo navbar-btn link-light " to="https://www.un.org/" :title="t('United Nations')" target="_blank" external>
                         <div class="d-flex align-items-center py-2">
 
-                          <NuxtImg  class="un-logo" src="/images/UN_emblem_blue.svg" />
+                          <NuxtImg  class="un-logo" src="/images/UN_emblem_blue.svg" :alt="t('United Nations emblem')" width="72" height="96" />
 
                           <div class="d-flex flex-column ms-1 ">
                             <span class=" un-text lh-1 link-light text-capitalize">{{t('united')}}</span>
@@ -37,7 +37,7 @@
                       </NuxtLink>
                       <div class="d-flex align-items-center">
                         <NuxtLink  to="https://www.cbd.int" :title="t('United Nations')" target="_blank" external>
-                            <NuxtImg  class="sublogo  me-2" src="/images/cbd-logo-white.svg" />
+                            <NuxtImg  class="sublogo  me-2" src="/images/cbd-logo-white.svg" :alt="t('Convention on Biological Diversity logo')" width="48" height="48" />
                         </NuxtLink>
                         <NuxtLink  class="navbar-brand link-light" to="https://www.cbd.int" :title="t('Convention on Biological Diversity')" target="_blank" external>{{t('Convention on')}}<br/>{{t('Biological Diversity')}}</NuxtLink>
                       </div>
