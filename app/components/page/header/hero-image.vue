@@ -51,7 +51,7 @@
                     </div>
                 </div>
                 <div v-else class="col-12 d-flex justify-content-end align-items-center mt-2">
-                    <p class="placeholder-glow mb-0"><span class="placeholder hero-placeholder hero-placeholder-dark" style="width: 120px; height: 1em;"></span></p>
+                    <p v-if="hi?.fieldCredits" class="placeholder-glow mb-0"><span class="placeholder hero-placeholder hero-placeholder-dark" style="width: 120px; height: 1em;"></span></p>
                 </div>
             </div>
         </div>
