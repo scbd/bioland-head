@@ -160,13 +160,32 @@ export default defineNuxtConfig({
       strictMessage: false,
     },
   },
+    devServer: {
+    // https: httpsConfig,
+    port: parseInt(process.env.NUXT_PORT || '3330'),
+    host: 'localhost'
+  },
   vite: {
+    plugins: [{
+      name: 'bioland-hmr-port',
+      enforce: 'post',
+      config() {
+        return {
+          server: {
+            hmr: {
+              protocol: 'ws',
+              host: 'localhost',
+              port: 3331,
+            },
+          },
+        };
+      },
+    }],
     server: {
       hmr: {
         protocol: "ws",
         host: "localhost",
-        // Use random port to avoid conflicts with multiple dev servers
-        // Setting to true lets Vite auto-select an available port
+        port: 3331,
       },
     },
     optimizeDeps: {
