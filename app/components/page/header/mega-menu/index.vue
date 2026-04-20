@@ -225,6 +225,7 @@
 }   
 .mega{
     min-height: 50px;
+    z-index: 10;
 }
 .cont-x {
     

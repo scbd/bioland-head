@@ -19,7 +19,9 @@
         <div v-if="heroImageUrl" class="hero-tint"    :style="tintStyle"></div>
         <div v-if="heroImageUrl" class="hero-overlay"  :style="overlayStyle"></div>
 
-        <slot></slot>
+        <div class="hero-slot-content">
+            <slot></slot>
+        </div>
         
         <div v-if="hasHeroImage" id="page-header-hero-image-content" class="container text-white">
             <div class="row pb-1 position-relative ">
@@ -145,7 +147,8 @@ section {
 /* --- Hero image layout (LCP-optimised) --- */
 .hero-image {
     position: relative;
-    overflow: hidden;
+    overflow-x: clip;
+    overflow-y: visible;
     width: 100vw;
     margin-top: 1.5rem;
     padding-top: 1rem;
@@ -184,13 +187,13 @@ section {
     z-index: 2;
 }
 
-/* Ensure slotted content (title-search, mega-menu) sits above overlays */
-.hero-image :slotted(*) {
+/* Ensure slotted content (title-search, mega-menu) sits above overlays AND hero text */
+.hero-slot-content {
     position: relative;
-    z-index: 3;
+    z-index: 4;
 }
 
-/* Hero text content sits above overlays */
+/* Hero text content sits above overlays but below mega-menu dropdown */
 #page-header-hero-image-content {
     position: relative;
     z-index: 3;

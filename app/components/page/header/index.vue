@@ -25,5 +25,6 @@
 <style lang="scss" scoped>
 header {
     position: relative;
+    z-index: 100;
 }
 </style>

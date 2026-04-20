@@ -57,8 +57,8 @@
                 </span>
                 <span v-if="isBiosafetySite" id="page-header-title-search-desktop-biosafety-links" class="navbar-subbrand ps-2">
                     <NuxtLink class="navbar-subbrand text-nowrap" :class="{ hero: hasHeroImage }" to="https://www.cbd.int/" :aria-label="t('Secretariat of the Convention on Biological Diversity')"  >
-                        <span class="w-500">{{t('Cartagena Protocol on Biosafety')}}</span><br/>
-                    </NuxtLink>
+                        <span class="w-500">{{t('Cartagena Protocol on Biosafety')}}</span>
+                    </NuxtLink><br/>
                     <NuxtLink class="navbar-subbrand" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int/" :aria-label="t('Clearing House Mechanism')" >
                         <span class="fw-lighter">{{t('National Biosafety Clearing-House')}}</span>
                     </NuxtLink>
@@ -108,7 +108,7 @@
                     </NuxtLink>
                      <NuxtLink v-if="isBiosafetySite" class="navbar-subbrand text-nowrap" :class="{ hero: hasHeroImage }" to="https://www.cbd.int/" :aria-label="t('Secretariat of the Convention on Biological Diversity')"  >
                         <span class="fs-5 fw-lighter">{{t('Cartagena Protocol on Biosafety')}} &nbsp;</span>
-                    </NuxtLink>
+                    </NuxtLink><br v-if="isBiosafetySite"/>
                     <NuxtLink v-if="isBiosafetySite" class="navbar-subbrand" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int/" :aria-label="t('Clearing House Mechanism')" >
                         <span class="fs-5 fw-lighter text-nowrap">{{t('National Biosafety Clearing-House')}}</span>
                     </NuxtLink>
@@ -173,7 +173,7 @@
         else
             await router.push({ path:localePath(searchPath.value), query: { freeText: value } });
 
-        this.queryText='';
+        queryText.value='';
     }
 </script>
 
