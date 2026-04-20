@@ -48,18 +48,18 @@
                     </svg>
                 </NuxtLink>
                 <span v-if="!isBiosafetySite" id="page-header-title-search-desktop-cbd-links" class="navbar-subbrand ps-2">
-                    <NuxtLink class="navbar-subbrand text-nowrap" :class="{ hero: hasHeroImage }" to="https://www.cbd.int/" :aria-label="t('Secretariat of the Convention on Biological Diversity')"  >
+                    <NuxtLink class="navbar-subbrand text-nowrap" :class="{ hero: hasHeroImage }" to="https://www.cbd.int" :aria-label="t('Secretariat of the Convention on Biological Diversity')"  >
                         <span class="w-500">{{t('Convention on Biological Diversity')}}</span><br/>
                     </NuxtLink>
-                    <NuxtLink class="navbar-subbrand" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int/" :aria-label="t('Clearing House Mechanism')" >
+                    <NuxtLink class="navbar-subbrand" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int" :aria-label="t('Clearing House Mechanism')" >
                         <span class="fw-lighter">{{t('Clearing House Mechanism')}}</span>
                     </NuxtLink>
                 </span>
                 <span v-if="isBiosafetySite" id="page-header-title-search-desktop-biosafety-links" class="navbar-subbrand ps-2">
-                    <NuxtLink class="navbar-subbrand text-nowrap" :class="{ hero: hasHeroImage }" to="https://www.cbd.int/" :aria-label="t('Secretariat of the Convention on Biological Diversity')"  >
+                    <NuxtLink class="navbar-subbrand text-nowrap" :class="{ hero: hasHeroImage }" to="https://bch.cbd.int/protocol" :aria-label="t('Secretariat of the Convention on Biological Diversity')"  >
                         <span class="w-500">{{t('Cartagena Protocol on Biosafety')}}</span>
                     </NuxtLink><br/>
-                    <NuxtLink class="navbar-subbrand" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int/" :aria-label="t('Clearing House Mechanism')" >
+                    <NuxtLink class="navbar-subbrand" :class="{ hero: hasHeroImage }" to="https://bch.cbd.int" :aria-label="t('Clearing House Mechanism')" >
                         <span class="fw-lighter">{{t('National Biosafety Clearing-House')}}</span>
                     </NuxtLink>
                 </span>
@@ -106,7 +106,7 @@
                     <NuxtLink v-if="!isBiosafetySite" class="navbar-subbrand" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int/" :aria-label="t('Clearing House Mechanism')" >
                         <span class="fs-5 fw-lighter text-nowrap">{{t('Clearing House Mechanism')}}</span>
                     </NuxtLink>
-                     <NuxtLink v-if="isBiosafetySite" class="navbar-subbrand text-nowrap" :class="{ hero: hasHeroImage }" to="https://www.cbd.int/" :aria-label="t('Secretariat of the Convention on Biological Diversity')"  >
+                    <NuxtLink v-if="isBiosafetySite" class="navbar-subbrand text-nowrap" :class="{ hero: hasHeroImage }" to="https://www.cbd.int/" :aria-label="t('Secretariat of the Convention on Biological Diversity')"  >
                         <span class="fs-5 fw-lighter">{{t('Cartagena Protocol on Biosafety')}} &nbsp;</span>
                     </NuxtLink><br v-if="isBiosafetySite"/>
                     <NuxtLink v-if="isBiosafetySite" class="navbar-subbrand" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int/" :aria-label="t('Clearing House Mechanism')" >
