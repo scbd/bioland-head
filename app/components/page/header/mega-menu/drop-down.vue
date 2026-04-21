@@ -59,7 +59,7 @@
         const siteStore  = useSiteStore();
         const menuStore  = useMenusStore();
         const meStore    = useMeStore();
-        const isPublishedSite  = computed(()=> !siteStore?.config?.published);
+        const isPublishedSite  = computed(()=> siteStore?.config?.published);
         const maxColumns = computed(()=> siteStore.config?.runTime?.theme?.megaMenu?.maxColumns || 5);
         const viewport   = useViewport();
         const isMobile   = computed(() => !['lg','xl', 'xxl'].includes(viewport.breakpoint.value));
