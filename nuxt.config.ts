@@ -267,8 +267,12 @@ export default defineNuxtConfig({
   //   transpile: ['@atlaskit/adf-schema','@atlaskit/editor-prosemirror']
   // },
   compatibilityDate: "2024-09-08",
-  alias: {
-    "typesense-instantsearch-adapter":
-      "typesense-instantsearch-adapter/src/TypesenseInstantsearchAdapter.js",
+  typescript: {
+    tsConfig: {
+      compilerOptions: {
+        baseUrl: ".",
+        ignoreDeprecations: "6.0",
+      },
+    },
   },
 });
