@@ -2,9 +2,9 @@
 
 export const useContentTypeMenus = async (ctx, bypassMultiplier = true) => {
     try {
-        await useDrupalLogin(ctx.siteCode);
+        const session = await useDrupalLogin(ctx.siteCode).catch(() => null);
 
-        return makeTypeMap(await getAllContentTypeMenus(ctx, bypassMultiplier), ctx);
+        return makeTypeMap(await getAllContentTypeMenus(ctx, bypassMultiplier, session), ctx);
     }
     catch (e) {
    
@@ -37,7 +37,7 @@ function getContentTypeMenuLength(ctx, drupalInternalId) {
     return lengthMap[drupalInternalId] || 6;
 }
 
-async function getContentMenus (ctx, drupalInternalId, bypassMultiplier = true) {
+async function getContentMenus (ctx, drupalInternalId, bypassMultiplier = true, session = null) {
     const { localizedHost, locale } = ctx;
 
     const length         = getContentTypeMenuLength(ctx, drupalInternalId)
@@ -49,7 +49,14 @@ async function getContentMenus (ctx, drupalInternalId, bypassMultiplier = true) 
 
 
     try {
-        const { data, meta } = await $fetch(uri, $fetchBaseOptions({ method, headers }))
+        let data, meta;
+
+        if (session) {
+            const res = await session.get(uri).set(headers);
+            ({ data, meta } = res.body);
+        } else {
+            ({ data, meta } = await $fetch(uri, $fetchBaseOptions({ method, headers })));
+        }
 
         return { data: data?.map(mapThumbNails(ctx)), count: meta?.count }
     }
@@ -264,7 +271,7 @@ function mapThumbNails(ctx){
     }
 }
 
-async function getAllContentTypeMenus(ctx, bypassMultiplier = true){
+async function getAllContentTypeMenus(ctx, bypassMultiplier = true, session = null){
 
     //consola.warn('getAllContentTypeMenus - locale:', ctx.locale, 'localizedHost:', ctx.localizedHost);
 
@@ -278,28 +285,30 @@ async function getAllContentTypeMenus(ctx, bypassMultiplier = true){
     
     // consola.info('getAllContentTypeMenus - dedupedTerms count:', dedupedTerms.length);
 
-    const requests  = [];
+    const CONCURRENCY = 3;
+    const result      = [];
 
-    for(const term of dedupedTerms){
-        // Always fetch content for all terms - localizedHost handles locale filtering
-        const aRequest = getContentMenus(ctx, term.drupalInternalId, bypassMultiplier)
-            .then(({ data, count }) => ({ ...term, data, count }))
-            .catch((e) => {
-                const { logAll, logServerOutRequests } = useRuntimeConfig().public || {}
-                if (logAll || logServerOutRequests) {
-                    consola.warn('getAllContentTypeMenus - term fetch failure', {
-                        drupalInternalId: term.drupalInternalId,
-                        error: e
+    for (let i = 0; i < dedupedTerms.length; i += CONCURRENCY) {
+        const batch = dedupedTerms.slice(i, i + CONCURRENCY);
+        const batchResults = await Promise.all(
+            batch.map(term =>
+                getContentMenus(ctx, term.drupalInternalId, bypassMultiplier, session)
+                    .then(({ data, count }) => ({ ...term, data, count }))
+                    .catch((e) => {
+                        const { logAll, logServerOutRequests } = useRuntimeConfig().public || {}
+                        if (logAll || logServerOutRequests) {
+                            consola.warn('getAllContentTypeMenus - term fetch failure', {
+                                drupalInternalId: term.drupalInternalId,
+                                error: e
+                            })
+                        }
+
+                        return { ...term, data: [], count: 0 }
                     })
-                }
-
-                return { ...term, data: [], count: 0 }
-            })
-
-        requests.push(aRequest);
+            )
+        );
+        result.push(...batchResults);
     }
-
-    const result = await Promise.all(requests);
 
   //  consola.warn('getAllContentTypeMenus - final result count:', result.length, 'with data:', result.filter(r => r.data?.length > 0).length);
     return result
