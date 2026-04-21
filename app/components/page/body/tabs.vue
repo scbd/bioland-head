@@ -48,11 +48,6 @@
                     {{t('Translate')}} 
                 </NuxtLink>
             </li>
-            <!-- <li v-if="(meStore.isSiteManager || meStore.isScbdStaff) && canAutoTranslate && !isRestrictedPage" class="nav-item">
-                <NuxtLink id="page-body-tabs-auto-translate-link" :style="getStyleActive()" :to="baseUrl+'/auto-translate-form'+returnUrl " class="nav-link text-capitalize" external>
-                    {{t('Auto Translate')}}
-                </NuxtLink>
-            </li> -->
         </ul>
         </div>
     </div>
@@ -65,7 +60,6 @@
     const   meStore    = useMeStore();
     const   pageStore  = usePageStore();
     const   siteStore  = useSiteStore();
-    const   canAutoTranslate = computed(()=> siteStore?.config?.runTime?.theme?.canAutoTranslate);
 
     // Per-user cookie key (must match system-page-warning.vue)
     const userKey    = computed(() => meStore.userID || meStore.email || 'anon');
