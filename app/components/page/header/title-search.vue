@@ -17,7 +17,7 @@
             <div id="page-header-title-search-mobile-brand" class="brand-small">
                 <NuxtLink class="me-0 pe-0 navbar-brand-small fw-bold" :to="localePath(`/`)" :aria-label="t('Home')" >
                     {{name}}
-                </NuxtLink><br/>
+                </NuxtLink>
                 <NuxtLink v-if="!isBiosafetySite"  class="navbar-subbrand-small" :class="{ hero: hasHeroImage }" to="https://chm.cbd.int/" :aria-label="t('Clearing House Mechanism')" >
                     <span >{{t('Biodiversity CHM')}}</span>
                 </NuxtLink>
