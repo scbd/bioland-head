@@ -46,18 +46,24 @@
     const { t }        = useI18n();
     const meStore      = useMeStore();
     const pageStore    = usePageStore();
-    
-    // Cookie to remember "don't show again" preference
-    // Expires in 1 year
-    const hideWarningCookie = useCookie('hideSystemPageWarning', {
-        maxAge: 60 * 60 * 24 * 365, // 1 year
-        default: () => false,
-        watch: true
+
+    // Per-user cookie key so the preference is tied to the logged-in user.
+    // Falls back to a generic key for anonymous users.
+    const userKey       = computed(() => meStore.userID || meStore.email || 'anon');
+    const cookieName    = computed(() => `hideSystemPageWarning_${userKey.value}`);
+
+    // Cookie to remember "don't show again" preference (1 year, site-wide path)
+    const hideWarningCookie = useCookie(cookieName.value, {
+        maxAge  : 60 * 60 * 24 * 365, // 1 year
+        path    : '/',
+        sameSite: 'lax',
+        default : () => false,
+        watch   : true
     });
-    
+
     // Local state for the session dismissal
     const sessionDismissed = ref(false);
-    const dontShowAgain    = ref(false);
+    const dontShowAgain    = ref(hideWarningCookie.value === true || hideWarningCookie.value === 'true');
     
     // Determine if this is a system page or content type page that user cannot edit
     const isRestrictedPage = computed(() => {

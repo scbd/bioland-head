@@ -48,11 +48,11 @@
                     {{t('Translate')}} 
                 </NuxtLink>
             </li>
-            <li v-if="(meStore.isSiteManager || meStore.isScbdStaff) && canAutoTranslate && !isRestrictedPage" class="nav-item">
+            <!-- <li v-if="(meStore.isSiteManager || meStore.isScbdStaff) && canAutoTranslate && !isRestrictedPage" class="nav-item">
                 <NuxtLink id="page-body-tabs-auto-translate-link" :style="getStyleActive()" :to="baseUrl+'/auto-translate-form'+returnUrl " class="nav-link text-capitalize" external>
                     {{t('Auto Translate')}}
                 </NuxtLink>
-            </li>
+            </li> -->
         </ul>
         </div>
     </div>
@@ -67,10 +67,17 @@
     const   siteStore  = useSiteStore();
     const   canAutoTranslate = computed(()=> siteStore?.config?.runTime?.theme?.canAutoTranslate);
 
+    // Per-user cookie key (must match system-page-warning.vue)
+    const userKey    = computed(() => meStore.userID || meStore.email || 'anon');
+    const cookieName = computed(() => `hideSystemPageWarning_${userKey.value}`);
+
     // Cookie to check if user chose to hide system page warning
-    const hideWarningCookie = useCookie('hideSystemPageWarning', {
-        default: () => false,
-        watch: true
+    const hideWarningCookie = useCookie(cookieName.value, {
+        maxAge  : 60 * 60 * 24 * 365, // 1 year
+        path    : '/',
+        sameSite: 'lax',
+        default : () => false,
+        watch   : true
     });
 
     // System pages and content type pages have restricted editing
