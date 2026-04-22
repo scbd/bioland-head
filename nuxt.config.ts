@@ -9,7 +9,7 @@ const css   =   [ '~/assets/custom.scss', 'vue-final-modal/style.css' ]
 const resolveLogLevel = () => {
   const envValue = process.env.NUXT_PUBLIC_LOG_LEVEL?.trim().toUpperCase();
   if (envValue && Object.prototype.hasOwnProperty.call(LOG_LEVEL, envValue)) {
-    return LOG_LEVEL[envValue];
+    return LOG_LEVEL[envValue as keyof typeof LOG_LEVEL];
   }
 
   return LOG_LEVEL.TRACE;
@@ -121,6 +121,7 @@ export default defineNuxtConfig({
   //   host: () => undefined,
   //   identity: { type: 'WebSite' },
   // },
+  // @ts-expect-error - cookie-control config types are looser than module's expected types
   cookieControl,
   critters: {
     config: {
@@ -142,6 +143,7 @@ export default defineNuxtConfig({
     fallbackBreakpoint: "lg",
   },
   i18n: {
+    // @ts-expect-error - locales array shape is broader than typed LocaleObject
     locales,
     debug: false,
     defaultLocale: "en",
@@ -154,6 +156,7 @@ export default defineNuxtConfig({
     langDir: "locales",
     strategy: "prefix",
     bundle: {
+      // @ts-expect-error - option exists at runtime but not in current types
       optimizeTranslationDirective: false,
     },
     compilation: {
