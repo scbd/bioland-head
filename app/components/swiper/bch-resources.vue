@@ -23,6 +23,7 @@
             <NuxtLink :to="resourcesLink" class="t float-end text-bold fs-5" :style="linkStyle">{{ t('View more resources') }} <LazyIcon name="arrow-right" class="arrow" /></NuxtLink>
         </div>
         <div class="position-relative mt-1" style="min-height:250px;">
+            <LazySwiperButton direction="left" :swiper-ref="swiperRef" />
             <swiper-container
                 :loop="slides?.length > 3"
                 :slidesPerView="slidePerView"
@@ -58,7 +59,7 @@ const { t } = useI18n();
 const props = defineProps({
     pagination: { type: Boolean, default: false },
     arrows: { type: Boolean, default: true },
-    leftArrow: { type: Boolean, default: false },
+    leftArrow: { type: Boolean, default: true },
     hideArrowsCount: { type: Number, default: 4 },
 });
 

@@ -23,7 +23,7 @@
             <NuxtLink v-if="hasMore" :to="newsLink" class="t float-end text-bold fs-5" :style="linkStyle">{{t('View more') + ' ' + title}} <LazyIcon name="arrow-right" class="arrow" /></NuxtLink>
         </div>
         <div class="position-relative mt-0" style="min-height:250px;">
-            <LazySwiperButton v-if="isStartIndex && hasMore && leftArrow" direction="left" :swiper-ref="swiperRef" />
+            <LazySwiperButton v-if="hasMore && leftArrow" direction="left" :swiper-ref="swiperRef" />
             <swiper-container
                 :loop="slides?.length > 3"
                 :slidesPerView="slidePerView"
