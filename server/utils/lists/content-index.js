@@ -106,6 +106,7 @@ function mapData(event,ctx){
         await Promise.all(promises);
 
         for (const key in results.data) {
+            await backfillAttachments(ctx, results.data[key], 'node', 'content');
             const { drupal_internal__nid:dnid, type, title, tags, path, field_type_placement,field_attachments, field_start_date, field_published, changed, created, sticky, promote, id, body, field_migrated, field_order, } = results.data[key];
 
             if(body?.value) body.summary = body.summary || stripHtml(body?.value).result.substring(0, 400);
@@ -287,7 +288,7 @@ function getLanguageFilterParams({ locale }){
     if(!locale) return '';
 
     const drupalLocale = mapLocaleToDrupal(locale);
-    
+
     return `&filter[language]=${encodeURIComponent(drupalLocale)}`;
 }
 

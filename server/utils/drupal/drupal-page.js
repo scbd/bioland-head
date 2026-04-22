@@ -91,15 +91,21 @@ export async function getPageDates(ctx){
 
 
 export async function getPageThumb(ctx){
-    const { localizedHost }       = ctx;
-    const { uuid, type, bundle }  = await getPageIdentifiers(ctx);
+    // Resolve menu-thumb identifiers against the default-language host.
+    // field_attachments is not translatable, and many menu hrefs are EN-only
+    // aliases that won't resolve under the active localized host (e.g. /es/...).
+    const sourceHost              = sourceLangHost(ctx);
+    const defaultCtx              = { ...ctx, localizedHost: sourceHost };
+    const { uuid, type, bundle }  = await getPageIdentifiers(defaultCtx);
 
-    const query    = getSearchParams(ctx, type, bundle, 'field_attachments');
-    const uri      = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}/field_attachments`;
+    if (!uuid) return '/images/no-image.png';
+
+    const query    = getSearchParams(defaultCtx, type, bundle, 'field_attachments');
+    const uri      = `${sourceHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}/field_attachments`;
 
     const { data } = await $fetch(uri, $fetchBaseOptions({ query }));
 
-    return getThumbFiles(data,  ctx)
+    return getThumbFiles(data,  { ...ctx, localizedHost: sourceHost })
 }
 function getLocalizationFromPath(ctx, path){
 
@@ -275,6 +281,9 @@ async function getThumbFiles(data,  {localizedHost, host }){
 
 function mapData(event,ctx){
     return async (document)=>{
+        const [docType, docBundle] = (document?.type || 'node--content').split('--');
+        await backfillAttachments(ctx, document, docType || 'node', docBundle || 'content');
+
         const promises = [];
 
         if(document?.field_attachments?.length)
@@ -344,5 +353,68 @@ function setMediaImageSearchParams(search){
 function setMediaDocumentSearchParams(search){
     search['include'] = 'field_media_image,field_media_document';
     
+}
+
+// Backfills field_attachments (and nested media file refs) from the source-language
+// translation. Translated media entities often have `field_media_image` /
+// `field_media_document` left empty even though the field is not translatable;
+// we re-fetch them against the un-prefixed host (default language) and patch in.
+// No-op when the doc is the source translation.
+export async function backfillAttachments(ctx, doc, type = 'node', bundle = 'content') {
+    if (!doc || doc.default_langcode) return doc;
+    if (!doc.id) return doc;
+
+    const sourceHost = sourceLangHost(ctx);
+
+    // 1. If field_attachments array is missing/empty, pull it from the source translation.
+    if (!Array.isArray(doc.field_attachments) || !doc.field_attachments.length) {
+        const uri = `${sourceHost}/jsonapi/${type}/${bundle}/${doc.id}/field_attachments`;
+        const query = { jsonapi_include: 1, include: 'field_media_image,thumbnail,field_media_document' };
+
+        try {
+            const { data } = await $fetch(uri, $fetchBaseOptions({ query }));
+            if (Array.isArray(data) && data.length) doc.field_attachments = data;
+        } catch { /* leave doc untouched */ }
+    }
+
+    // 2. For each attachment, if its file reference is empty, refetch the media
+    //    entity from the default-language host and patch the missing fields.
+    if (Array.isArray(doc.field_attachments) && doc.field_attachments.length) {
+        await Promise.all(doc.field_attachments.map((att) => backfillMediaFiles(sourceHost, att)));
+    }
+
+    return doc;
+}
+
+function sourceLangHost(ctx) {
+    // Drupal source-language for all bioland sites is `en`. Note this is NOT
+    // the same as ctx.defaultLocale (the site's default UI locale, e.g. `es`
+    // for Guatemala) — translations of media entities often leave file
+    // references empty, so we must fetch from the EN translation explicitly.
+    return `${ctx?.host}/en`;
+}
+
+async function backfillMediaFiles(sourceHost, media) {
+    if (!media || !media.id || !media.type) return;
+
+    const [, mediaBundle] = media.type.split('--');
+    if (!mediaBundle) return;
+
+    const needsImage = !media.field_media_image?.uri?.url;
+    const needsDoc   = mediaBundle === 'document' && !media.field_media_document?.uri?.url;
+
+    if (!needsImage && !needsDoc) return;
+
+    const include = ['field_media_image', 'thumbnail', 'field_media_document'].join(',');
+    const uri     = `${sourceHost}/jsonapi/media/${mediaBundle}/${media.id}`;
+    const query   = { jsonapi_include: 1, include };
+
+    try {
+        const { data } = await $fetch(uri, $fetchBaseOptions({ query }));
+        if (!data) return;
+        if (needsImage && data.field_media_image?.uri?.url) media.field_media_image = data.field_media_image;
+        if (needsDoc   && data.field_media_document?.uri?.url) media.field_media_document = data.field_media_document;
+        if (!media.thumbnail?.uri?.url && data.thumbnail?.uri?.url) media.thumbnail = data.thumbnail;
+    } catch { /* leave attachment untouched */ }
 }
 

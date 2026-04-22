@@ -42,11 +42,16 @@ export const usePageStore = defineStore('page', {
         setMainMenuSchemaOrg(schema){
             this.mainMenuSchemaOrg = schema;
         },
-        mapImage({  name,fieldMediaImage, drupalInternalMid, path, filename, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage }){
+        mapImage({  name,fieldMediaImage, thumbnail, drupalInternalMid, path, filename, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage }){
             const siteStore = useSiteStore();
-            const alt       = fieldMediaImage?.meta?.alt|| name || filename || '';
-            const src       = `${siteStore.host}${fieldMediaImage?.uri?.url}`;
-        
+            // Translated media entities often leave field_media_image empty even
+            // though the field is non-translatable. For media--image, Drupal's
+            // auto-populated `thumbnail` points at the same source file, so use
+            // it as a fallback to keep images visible across all locales.
+            const file      = fieldMediaImage?.uri?.url ? fieldMediaImage : thumbnail;
+            const alt       = file?.meta?.alt || fieldMediaImage?.meta?.alt || name || filename || '';
+            const src       = file?.uri?.url ? `${siteStore.host}${file.uri.url}` : undefined;
+
             return { name, url:path?.alias, alt, drupalInternalMid, src, fieldCaption, title, created, changed, fieldPublished, fieldWidth, fieldHeight, fieldMime, fieldSize, mediaImage}
         },
         mapDocumentImage({ uri, meta, created, changed, filename:name }){

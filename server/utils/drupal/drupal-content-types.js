@@ -58,7 +58,7 @@ async function getContentMenus (ctx, drupalInternalId, bypassMultiplier = true, 
             ({ data, meta } = await $fetch(uri, $fetchBaseOptions({ method, headers })));
         }
 
-        return { data: data?.map(mapThumbNails(ctx)), count: meta?.count }
+        return { data: await Promise.all((data || []).map(mapThumbNails(ctx))), count: meta?.count }
     }
     catch (e) {
         consola.error('getContentMenus - upstream failure', { drupalInternalId, uri });
@@ -133,7 +133,7 @@ function getTypeFilterParams({ drupalInternalId, drupalInternalIds }){
  */
 function getLangcodeFilterParams(locale) {
     if (!locale) return '';
-    
+
     return `&filter[language][value]=${encodeURIComponent(locale)}`;
 }
 
@@ -186,7 +186,8 @@ function isInCountry(countries, country, doc){
 }
 
 function mapThumbNails(ctx){
-    return (document)=>{
+    return async (document)=>{
+      await backfillAttachments(ctx, document, 'node', 'content');
       const isArray = Array.isArray(document?.field_attachments);
       const attachments = isArray
         ? document?.field_attachments?.filter(
