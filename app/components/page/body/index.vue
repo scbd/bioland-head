@@ -31,6 +31,7 @@
                 </div>
 
                 <LazyPageMediaFileDetails id="page-body-media-file-details-desktop" v-if="isImageOrVideo || isDocument" :vertical="true" />
+                <LazyPageBodyTagsDate id="page-body-tags-date-side-desktop" class="mt-3 w-100" />
             </div>
 
             <div id="page-body-content" class="col-12 col-md-9">
@@ -48,17 +49,17 @@
                         <NuxtImg id="page-body-media-img" v-if="pageStore?.image?.src" format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
                         <LazyPageBodyMediaYouTube id="page-body-media-you-tube" v-if="pageStore?.isVideo" :url="pageStore?.video?.fieldMediaOembedVideo" :title="pageStore?.video?.name || pageStore?.media?.title"/>
                     </div>
-                    <LazyPageBodyTagsDate id="page-body-tags-date-media" class="mt-2" />
+                    <!-- <LazyPageBodyTagsDate id="page-body-tags-date-media" class="mt-2" /> -->
                 </div>
 
                 <div id="page-body-body-layout" class="d-md-flex"  >
-                    <div v-if="!isImageOrVideo" class="d-md-none align-self-start" > 
+                    <!-- <div v-if="!isImageOrVideo" class="d-md-none align-self-start" > 
                         <LazyPageBodyTagsDate id="page-body-tags-date-mobile" /> 
-                    </div>
+                    </div> -->
                     <div class="align-self-start w-100">
-                        <div v-if="!isImageOrVideo"class="d-none d-md-block" > 
+                        <!-- <div v-if="!isImageOrVideo"class="d-none d-md-block" > 
                             <LazyPageBodyTagsDate id="page-body-tags-date-desktop" /> 
-                        </div>
+                        </div> -->
                         <div id="page-body-body" :style="pageTypeStyle" v-if="pageStore?.body" v-html="sanitizedBody"></div>
                     </div>
                 </div>
@@ -72,7 +73,7 @@
 
                 <NuxtImg id="page-body-image-mobile-img" format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
 
-                <LazyPageBodyTagsDate id="page-body-tags-date-image-mobile" />
+                <LazyPageBodyTagsDate id="page-body-tags-date-image-mobile" class="w-100 ms-5 px-5"/>
             </div>
         </div>
             
