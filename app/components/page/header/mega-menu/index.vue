@@ -13,10 +13,10 @@
                         @mouseenter="handleMouseEnter(index, aMenu)"
                         @mouseleave="handleMouseLeave(index, $event)"
                     >
-                        <NuxtLink v-if="showMenu(aMenu) && aMenu.href" :class="menuClass(aMenu)" class="nav-link" :to="aMenu.href" :title="aMenu.title"  >
+                        <NuxtLink v-if="showMenu(aMenu) && aMenu.href && !hasDropdown(aMenu)" :class="menuClass(aMenu)" class="nav-link" :to="aMenu.href" :title="aMenu.title" >
                             {{aMenu.title}} 
                         </NuxtLink>
-                        <button v-else-if="showMenu(aMenu)" :class="menuClass(aMenu)" class="nav-link btn-unstyled" type="button" :title="aMenu.title">
+                        <button v-else-if="showMenu(aMenu)" :class="menuClass(aMenu)" class="nav-link btn-unstyled" type="button" :title="aMenu.title" @click.prevent.stop>
                             {{aMenu.title}}
                         </button>
 
@@ -28,7 +28,7 @@
                             v-if="toggles[index]" 
                             :menus="aMenu.children" 
                             :parent-id="`page-header-mega-menu-nav-item-${index}`" 
-                            v-click-outside="unToggle"
+                            v-click-outside="(e) => onDropdownClickOutside(index, e)"
                             @mouseenter="cancelCloseTimer(index)"
                             @mouseleave="handleDropdownLeave(index, $event)"
                         />
@@ -170,6 +170,23 @@
         }
     }
     
+    function hasDropdown(aMenu){
+        return Array.isArray(aMenu?.children) && aMenu.children.length > 0;
+    }
+
+    function onMenuClick(aMenu, event){
+        if (hasDropdown(aMenu)) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    }
+
+    function onDropdownClickOutside(index, event){
+        const parentLi = document.getElementById(`page-header-mega-menu-nav-item-${index}`);
+        if (parentLi && parentLi.contains(event?.target)) return;
+        toggles.value[index] = false;
+    }
+
     function toggle(index, aMenu ={}){
 
       if(index===0) return;
