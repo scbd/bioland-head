@@ -1,5 +1,5 @@
 <template>
-    <div v-if="isMobile" id="page-header-title-search-mobile" class="w-100 small-header position-fixed top-0 start-0 justify-content-start align-items-center  d-flex flex-row   d-md-none">
+    <div v-if="isMobile" id="page-header-title-search-mobile" :class="{ 'mt-2': hasTempTopHeader, 'pt-1': hasTempTopHeader }" class="w-100 small-header position-fixed top-0 start-0 justify-content-start align-items-center  d-flex flex-row   d-md-none">
     
             <NuxtLink id="page-header-title-search-mobile-home-link" class="me-0" :to="localePath(`/`)" :aria-label="t('Home')"  >
                 <NuxtImg  :alt="name" height="64" width="100%" format="webp" :src="logo" class="small-header-logo m-2 me-1"/>
@@ -143,7 +143,9 @@
     const route        = useRoute();
     const isMobile     = computed(()=> !!!viewport?.isGreaterThan('sm'));
     const hasHeroImage = computed(() => pageStore.page.hasHeroImage );
-
+    const isDevSite    = computed(()=> !siteStore?.config?.published);
+    const isBl2Staging = computed(()=> siteStore?.config?.hasBl1);
+    const hasTempTopHeader = computed(()=> isBl2Staging.value || isDevSite.value);
     //isSearch
 
     const { t, locale  }         = useI18n();

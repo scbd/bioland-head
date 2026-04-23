@@ -1,13 +1,13 @@
 <template>
     <div id="breadCrumbs" :style="style" class="d-flex justify-content-between my-1 px-1" :class="{ 'mt-4 mb-2 ': isMobile && !count, 'mt-4 mb-3 mx-3': isMobile && count }">
         <span class="align-self-center" id="breadCrumbLinks">
-            <span class="text-nowrap">
+            <span class="breadcrumb-segment">
                 <NuxtLink :style="style" class="fw-bold" :to="localePath('/')">
                     {{t('National CHM')}}
                 </NuxtLink>
                 <span>&nbsp; <LazyIcon name="triangle-right"/> &nbsp;</span>
             </span>
-            <span class="text-nowrap" v-for="(aCrumb,index) in crumbs" :key="index">
+            <span class="breadcrumb-segment" v-for="(aCrumb,index) in crumbs" :key="index">
                 <NuxtLink :style="style" @click="(event)=>openMenu(aCrumb, event)" v-if="!isSelf(aCrumb.href)" :to="aCrumb.href? localePath(aCrumb.href) : '#'"  >
                     {{aCrumb.title}}
                 </NuxtLink>
@@ -274,5 +274,28 @@
 <style scoped>
 a{
     color: var(--bs-primary);
+}
+
+#breadCrumbs {
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+}
+
+#breadCrumbLinks {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.breadcrumb-segment {
+    white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+    #breadCrumbLinks {
+        flex-basis: 100%;
+    }
 }
 </style>
