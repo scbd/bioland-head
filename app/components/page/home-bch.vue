@@ -17,6 +17,8 @@
                         :hideArrowsCount="3"
                         :schemas="[44, 5, 45, 46, 47]"
                         :title="$t('National Biosafety Framework')"
+                        :mobileSlidesOffsetBefore="40"
+                        :slidesOffsetBefore="20"
                     />
                 </section>
 
@@ -56,5 +58,11 @@ const hasNews = computed(() => siteStore?.theme?.homePageWidgets?.news);
     .border-col{
         border-right: none !important;
     }
+}
+
+/* Add 20px x-axis padding to cards for the National Biosafety Framework swiper only */
+#home-bch-national-biosafety-framework :deep(swiper-slide) {
+    padding-left: 20px;
+    padding-right: 20px;
 }
 </style>

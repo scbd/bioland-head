@@ -197,6 +197,10 @@ section {
 #page-header-hero-image-content {
     position: relative;
     z-index: 3;
+
+    @media (max-width: 767.98px) {
+        padding-top: 40px;
+    }
 }
 
 .hero-placeholder {

@@ -30,6 +30,7 @@
                 :spaceBetween="spaceBetween"
                 :pagination="{ clickable: true }"
                 :modules="modules"
+                :slides-offset-before="slidesOffsetBefore"
                 @swiper="onSwiper"
                 ref="swiperRef"
             >
@@ -79,8 +80,9 @@ const hideArrows   = computed(()=> (viewport.breakpoint.value === 'lg' || viewpo
 const slidePerView = computed(()=> {
     if(rowElWidth.value > 1600 ) return 3;
     if(rowElWidth.value > 990 ) return 2;
+    if(rowElWidth.value >= 768) return 2;
 
-    return 2
+    return 1
 });
 
 const spaceBetween = computed(()=> {
@@ -93,6 +95,9 @@ const spaceBetween = computed(()=> {
 
     return 5
 });
+
+// Indent first slide on md+ only (Bootstrap md breakpoint = 768px)
+const slidesOffsetBefore = computed(()=> rowElWidth.value >= 768 ? 20 : 20);
 
 const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ id:systemPageTidConstants.SEARCH, locale:unref(locale)}), query:{ schemas:[2,3, 49]}}));
 
@@ -154,6 +159,11 @@ const placeholderCount = computed(() => hasHydrated.value ? slidePerView.value :
     transition: 0.3s;
     width       : 1em;
     height      : 1em;
+}
+
+swiper-slide {
+    padding-left: 20px;
+    padding-right: 20px;
 }
 </style>
 

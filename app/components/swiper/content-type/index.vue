@@ -30,6 +30,7 @@
                 :spaceBetween="spaceBetween"
                 :pagination="{ clickable: true }"
                 :modules="modules"
+                :slides-offset-before="computedSlidesOffsetBefore"
                 ref="swiperRef"
             >
                 <swiper-slide :class="{ 'mb-4': pagination }" v-for="slide in slides" :key="slide">
@@ -76,8 +77,10 @@ const props = defineProps({
                             limit:  { type: Number, default: 20 },
                             schemas:      { type: Array, default: () => [] },
                             title:      { type: String },
+                            mobileSlidesOffsetBefore: { type: Number, default: 0 },
+                            slidesOffsetBefore:       { type: Number, default: 0 },
                         });
-const { pagination, arrows, leftArrow ,  hideArrowsCount, limit, title:passedTitle, schemas } = toRefs(props);
+const { pagination, arrows, leftArrow ,  hideArrowsCount, limit, title:passedTitle, schemas, mobileSlidesOffsetBefore, slidesOffsetBefore } = toRefs(props);
 
 const title = computed(() => passedTitle?.value || schemaIdsToTitle(schemas?.value) || t('Latest Records'));
 
@@ -93,11 +96,14 @@ const hideArrows   = computed(()=> (viewport.breakpoint.value === 'lg' || viewpo
 const slidePerView = computed(()=> {
     if(rowElWidth.value > 1600 ) return 3;
     if(rowElWidth.value > 990 ) return 2;
+    if(rowElWidth.value >= 768) return 2;
 
-    return 2
+    return 1
 });
 
 const hasMore = computed(()=> slides.value.length > slidePerView.value);
+
+const computedSlidesOffsetBefore = computed(()=> rowElWidth.value < 768 ? mobileSlidesOffsetBefore.value : slidesOffsetBefore.value);
 const spaceBetween = computed(()=> {
 
     if(slidePerView.value == 4 ) return 10;

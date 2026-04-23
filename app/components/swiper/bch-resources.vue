@@ -30,6 +30,7 @@
                 :spaceBetween="spaceBetween"
                 :pagination="{ clickable: true }"
                 :modules="modules"
+                :slides-offset-before="slidesOffsetBefore"
                 @swiper="onSwiper"
                 ref="swiperRef"
             >
@@ -85,7 +86,8 @@ const hideArrows = computed(() =>
 const slidePerView = computed(() => {
     if (rowElWidth.value > 1600) return 3;
     if (rowElWidth.value > 990) return 2;
-    return 2;
+    if (rowElWidth.value >= 768) return 2;
+    return 1;
 });
 
 const spaceBetween = computed(() => {
@@ -94,6 +96,9 @@ const spaceBetween = computed(() => {
     if (slidePerView.value === 3) return 5;
     return 5;
 });
+
+// Indent first slide on md+ only (Bootstrap md breakpoint = 768px)
+const slidesOffsetBefore = computed(() => (rowElWidth.value >= 768 ? 20 : 20));
 
 // Link to resources search page with BCH resource schemas
 // Schemas: 15=resource, 48=capacityBuildingInitiative, 43=organism, 16=modifiedOrganism, 6=dnaSequence, 12=laboratoryDetection
@@ -166,5 +171,10 @@ const placeholderCount = computed(() => (hasHydrated.value ? slidePerView.value 
     transition: 0.3s;
     width: 1em;
     height: 1em;
+}
+
+swiper-slide {
+    padding-left: 20px;
+    padding-right: 20px;
 }
 </style>
