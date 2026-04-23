@@ -4,7 +4,8 @@
             <div class="row">
                 <div class="col-sm-5 d-flex align-items-center">
                     <NuxtLink v-if="!isBiosafetySite" class="navbar-brand" to="https://www.cbd.int" external target="_blank">{{t('Welcome to the Convention on Biological Diversity CHM Network')}}</NuxtLink>
-                    <NuxtLink v-if="isBiosafetySite" class="navbar-brand" to="https://www.cbd.int" external target="_blank">{{t('Welcome to the Cartagena Protocol on Biosafety Network')}}</NuxtLink>
+
+                    <span v-if="isBiosafetySite">&nbsp;</span>
                 </div>
 
                 <div v-if="!(limitedMenus.length > 1) && pageLoaded" id="page-header-language-bar-single" class="col-sm-7 d-flex justify-content-end">
