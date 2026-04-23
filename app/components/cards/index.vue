@@ -9,7 +9,16 @@
             <NuxtLink :to="goTo" :aria-label="record.title" style="color:black;"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
         </div>
         <div class="card-body mb-1" style="max-height: 300px; overflow:hidden;">
-            <p class="card-subtitle h6 text-muted mb-2" :class="{'text-center': isFromTheBCH}"><span :style="isFromTheBCH ? colorStyle : undefined">{{type}}</span> {{schema}}</p>
+            <p class="card-subtitle h6 text-muted mb-2" :class="{'text-center': isFromTheBCH}">
+                <template v-if="isFromTheBCH">
+                    <span>{{ schema }}</span>
+                    <br>
+                    <span :style="colorStyle">{{ type }}</span>
+                </template>
+                <template v-else>
+                    <span>{{ type }}</span> {{ schema }}
+                </template>
+            </p>
             <p class="card-title h5 mb-2">
                 <NuxtLink :to="goTo" style="color:black;"  :external="external" :target="external? '_blank': ''">{{record.title}}</NuxtLink>
             </p>
@@ -25,21 +34,24 @@
 
             <span v-show="record?.eventCity" class="badge me-1" :style="badgePrimaryStyle"> {{record?.eventCity || ''}}</span>
             <span v-show="record?.eventCountry?.symbol" class="badge me-1" :style="badgeSecondaryStyle"> {{ record?.eventCountry?.symbol ? t(record.eventCountry.symbol) : '' }}</span>
-            <template v-for="(aCountry,i) in countriesList" :key="i">
+            <template v-for="(aCountry,i) in visibleCountries" :key="i">
                 <span class="badge me-1 mb-1" :style="badgeSecondaryStyle"> {{ t(aCountry.identifier) }}</span>
             </template>
+            <button v-if="countriesList.length > 3" type="button" class="badge me-1 mb-1 border-0" :style="badgeSecondaryStyle" @click="toggleExpanded('countries')">{{ expanded.countries ? '−' : '…' }}</button>
 
-            <template v-for="(aTarget,i) in gbfTagsList" :key="i">
+            <template v-for="(aTarget,i) in visibleGbfTags" :key="i">
                 <NuxtLink class="me-1 mb-1" :to="getGbfUrl(aTarget.identifier)" :aria-label="`GBF Target ${aTarget.identifier}`" target="_blank" external>
                     <LazyGbfIcon :identifier="aTarget.identifier" size="xs"/>
                 </NuxtLink>
             </template>
+            <button v-if="gbfTagsList.length > 3" type="button" class="badge me-1 mb-1 border-0" :style="badgeSecondaryStyle" @click="toggleExpanded('gbf')">{{ expanded.gbf ? '−' : '…' }}</button>
 
-            <template v-for="(aSdg,i) in sdgsList" :key="i">
+            <template v-for="(aSdg,i) in visibleSdgs" :key="i">
                 <NuxtLink class="me-1 mb-1" :to="aSdg.url" target="_blank" external>
                     <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
                 </NuxtLink>
             </template>
+            <button v-if="sdgsList.length > 3" type="button" class="badge me-1 mb-1 border-0" :style="badgeSecondaryStyle" @click="toggleExpanded('sdgs')">{{ expanded.sdgs ? '−' : '…' }}</button>
         
             <span class="ms-auto" style="z-index: 10;">
                 <ClientOnly>
@@ -118,6 +130,12 @@
     const countriesList = computed(() => record?.value?.tags?.countries || []);
     const gbfTagsList = computed(() => gbfTags.value || []);
     const sdgsList = computed(() => record?.value?.tags?.sdgs || []);
+
+    const expanded = reactive({ countries: false, gbf: false, sdgs: false });
+    const toggleExpanded = (key) => { expanded[key] = !expanded[key]; };
+    const visibleCountries = computed(() => expanded.countries ? countriesList.value : countriesList.value.slice(0, 3));
+    const visibleGbfTags = computed(() => expanded.gbf ? gbfTagsList.value : gbfTagsList.value.slice(0, 3));
+    const visibleSdgs = computed(() => expanded.sdgs ? sdgsList.value : sdgsList.value.slice(0, 3));
 
 //consola.warn(record.value);
 </script>
