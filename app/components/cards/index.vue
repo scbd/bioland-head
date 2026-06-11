@@ -126,7 +126,7 @@
         siteStore?.isPromoteAndStickyPublic && (record?.value?.sticky || record?.value?.promote)
     );
 
-    // SSR-safe array computeds to ensure consistent DOM structure
+    // SSR-safe array computed to ensure consistent DOM structure
     const countriesList = computed(() => record?.value?.tags?.countries || []);
     const gbfTagsList = computed(() => gbfTags.value || []);
     const sdgsList = computed(() => record?.value?.tags?.sdgs || []);
