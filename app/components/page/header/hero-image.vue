@@ -31,8 +31,8 @@
                     </NuxtLink>
                 </div>
                 
-                <!-- Description: placeholder or actual content -->
-                <div v-if="hasHydrated " v-html="htmlSanitize(hi?.fieldDescription?.value)" class="mt-3 text-light">
+                <!-- Description: editor inline styles must not override the hero's white-on-image theming -->
+                <div v-if="hasHydrated " v-html="htmlSanitize(hi?.fieldDescription?.value, { FORBID_ATTR: ['style'] })" class="mt-3 text-light">
                 </div>
                 <div v-else class="col-12" style="max-height: 250px;">
                     <!-- 3 large lighter lines (0.9 alpha) -->
