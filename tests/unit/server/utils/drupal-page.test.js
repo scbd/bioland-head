@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { backfillAttachments, getSearchParams } from '../../../../server/utils/drupal/drupal-page.js'
 
 // Test the isAliasPath helper function logic
 // Note: These tests verify the logic patterns since the actual function is private
@@ -83,6 +84,110 @@ describe('drupal-page utilities', () => {
       // Redirect should NOT happen when locales differ
       const shouldRedirect = canonicalLocale === requestedLocale;
       expect(shouldRedirect).toBe(false);
+    });
+  });
+
+  describe('getSearchParams media includes', () => {
+    const ctx = {};
+
+    it('includes field_media_image for a standalone media--hero page', () => {
+      // Without this include the hero file reference has no uri.url and the page
+      // renders blank.
+      const search = getSearchParams(ctx, 'media', 'hero');
+      expect(search.include).toContain('field_media_image');
+    });
+
+    it('includes field_media_image for a media--image page', () => {
+      const search = getSearchParams(ctx, 'media', 'image');
+      expect(search.include).toContain('field_media_image');
+    });
+
+    it('includes both file fields for a media--document page', () => {
+      const search = getSearchParams(ctx, 'media', 'document');
+      expect(search.include).toContain('field_media_image');
+      expect(search.include).toContain('field_media_document');
+    });
+
+    it('requests no file include for a media--remote_video page', () => {
+      // remote_video carries an oembed URL + thumbnail, not field_media_image —
+      // including it returns 405.
+      const search = getSearchParams(ctx, 'media', 'remote_video');
+      expect(search.include).toBeUndefined();
+    });
+  });
+
+  describe('backfillAttachments media handling', () => {
+    let calls;
+
+    beforeEach(() => {
+      calls = [];
+      // Capture every JSON:API request the backfill helpers attempt.
+      globalThis.$fetch = vi.fn(async (uri, opts) => {
+        calls.push({ uri, query: opts?.query });
+        return { data: null };
+      });
+      // Pass options straight through so the recorded query reflects the include list.
+      globalThis.$fetchBaseOptions = vi.fn((opts = {}) => opts);
+    });
+
+    afterEach(() => {
+      delete globalThis.$fetch;
+      delete globalThis.$fetchBaseOptions;
+    });
+
+    const ctx = { host: 'https://gt.bsl.staging.cbd.int' };
+
+    it('does not request field_attachments for a standalone media entity (the 405 case)', async () => {
+      // A media--remote_video page has no field_attachments relationship; requesting
+      // /jsonapi/media/remote_video/<id>/field_attachments returned 405.
+      const doc = { id: 'uuid-remote-video', type: 'media--remote_video' };
+
+      const result = await backfillAttachments(ctx, doc, 'media', 'remote_video');
+
+      expect(result).toBe(doc);
+      expect(globalThis.$fetch).not.toHaveBeenCalled();
+    });
+
+    it('skips a remote_video attachment instead of requesting field_media_document', async () => {
+      const doc = {
+        id: 'uuid-node',
+        type: 'node--content',
+        field_attachments: [{ id: 'rv-1', type: 'media--remote_video' }],
+      };
+
+      await backfillAttachments(ctx, doc, 'node', 'content');
+
+      // remote_video carries neither field_media_image nor field_media_document.
+      expect(globalThis.$fetch).not.toHaveBeenCalled();
+    });
+
+    it('keeps requesting field_media_document for a document attachment', async () => {
+      const doc = {
+        id: 'uuid-node',
+        type: 'node--content',
+        field_attachments: [{ id: 'doc-1', type: 'media--document' }],
+      };
+
+      await backfillAttachments(ctx, doc, 'node', 'content');
+
+      const docCall = calls.find((c) => c.uri.includes('/jsonapi/media/document/'));
+      expect(docCall).toBeDefined();
+      expect(docCall.query.include).toContain('field_media_document');
+    });
+
+    it('does not request field_media_document for an image attachment', async () => {
+      const doc = {
+        id: 'uuid-node',
+        type: 'node--content',
+        field_attachments: [{ id: 'img-1', type: 'media--image' }],
+      };
+
+      await backfillAttachments(ctx, doc, 'node', 'content');
+
+      const imgCall = calls.find((c) => c.uri.includes('/jsonapi/media/image/'));
+      expect(imgCall).toBeDefined();
+      expect(imgCall.query.include).toContain('field_media_image');
+      expect(imgCall.query.include).not.toContain('field_media_document');
     });
   });
 });

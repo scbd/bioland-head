@@ -328,16 +328,18 @@ function mapData(event,ctx){
 //     return map
 // }
 
-function getSearchParams(ctx, type, bundle, prop){
+export function getSearchParams(ctx, type, bundle, prop){
     const search = {jsonapi_include: 1};
 
     if(type === 'taxonomy_term' && bundle === 'system_pages') search['include'] = 'field_attachments,field_attachments.field_media_image,field_search,parent';
     if(type === 'node' && bundle === 'forum')setNodeForumSearchParams(search);
     if(type === 'node' && bundle === 'content' && !prop)  setContentSearchParams(search);
-    if(type === 'media' &&  ['image', 'document'].includes(bundle))  setMediaImageSearchParams(search);
+    // hero carries field_media_image too — without it a standalone media--hero
+    // page returns an unresolved file reference (no uri.url) and renders blank.
+    if(type === 'media' &&  ['image', 'document', 'hero'].includes(bundle))  setMediaImageSearchParams(search);
     if(type === 'media' &&  ['document'].includes(bundle))  setMediaDocumentSearchParams(search);
     if(prop === 'field_attachments') search['include'] = 'thumbnail';
-    
+
     return search;
 }
 function setNodeForumSearchParams(search){
@@ -363,6 +365,12 @@ function setMediaDocumentSearchParams(search){
 export async function backfillAttachments(ctx, doc, type = 'node', bundle = 'content') {
     if (!doc || doc.default_langcode) return doc;
     if (!doc.id) return doc;
+
+    // Only node / taxonomy_term entities carry a `field_attachments` relationship.
+    // Media bundles (image, document, remote_video, hero) do not, so requesting
+    // `/jsonapi/media/<bundle>/<id>/field_attachments` returns 405 — there is
+    // nothing to backfill when the page itself is a standalone media entity.
+    if (type === 'media') return doc;
 
     const sourceHost = sourceLangHost(ctx);
 
@@ -400,14 +408,22 @@ async function backfillMediaFiles(sourceHost, media) {
     const [, mediaBundle] = media.type.split('--');
     if (!mediaBundle) return;
 
-    const needsImage = !media.field_media_image?.uri?.url;
-    const needsDoc   = mediaBundle === 'document' && !media.field_media_document?.uri?.url;
+    // `field_media_image` exists on image / document / hero; `field_media_document`
+    // only on document. remote_video carries neither (oembed URL + thumbnail), so
+    // including those fields against it returns 405 — skip it entirely.
+    const hasImageField = ['image', 'document', 'hero'].includes(mediaBundle);
+    const hasDocField   = mediaBundle === 'document';
+
+    const needsImage = hasImageField && !media.field_media_image?.uri?.url;
+    const needsDoc   = hasDocField   && !media.field_media_document?.uri?.url;
 
     if (!needsImage && !needsDoc) return;
 
-    const include = ['field_media_image', 'thumbnail', 'field_media_document'].join(',');
+    const include = ['field_media_image', 'thumbnail'];
+    if (hasDocField) include.push('field_media_document');
+
     const uri     = `${sourceHost}/jsonapi/media/${mediaBundle}/${media.id}`;
-    const query   = { jsonapi_include: 1, include };
+    const query   = { jsonapi_include: 1, include: include.join(',') };
 
     try {
         const { data } = await $fetch(uri, $fetchBaseOptions({ query }));
