@@ -29,8 +29,8 @@
                           <NuxtImg  class="un-logo" src="/images/UN_emblem_blue.svg" :alt="t('United Nations emblem')" width="72" height="96" />
 
                           <div class="d-flex flex-column ms-1 ">
-                            <span class=" un-text lh-1 link-light text-capitalize">{{t('united')}}</span>
-                            <span class="un-text lh-1 link-light text-capitalize">{{t('nations')}}</span>
+                            <span class=" un-text lh-1 link-light text-capitalize">{{t('United Nations')}}</span>
+                            <!-- <span class="un-text lh-1 link-light text-capitalize">{{t('Nations')}}</span> -->
                           </div>
                         </div>
                           
@@ -39,7 +39,7 @@
                         <NuxtLink  to="https://www.cbd.int" :title="t('United Nations')" target="_blank" external>
                             <NuxtImg  class="sublogo  me-2" src="/images/cbd-logo-white.svg" :alt="t('Convention on Biological Diversity logo')" width="48" height="48" />
                         </NuxtLink>
-                        <NuxtLink  class="navbar-brand link-light" to="https://www.cbd.int" :title="t('Convention on Biological Diversity')" target="_blank" external>{{t('Convention on')}}<br/>{{t('Biological Diversity')}}</NuxtLink>
+                        <NuxtLink  class="navbar-brand link-light" to="https://www.cbd.int" :title="t('Convention on Biological Diversity')" target="_blank" external>{{t('Convention on Biological Diversity')}}</NuxtLink>
                       </div>
                   </div>
                   <div class="col-12 col-sm-4 d-flex justify-content-end">
@@ -113,6 +113,7 @@
   }
   .un-text {
     font-size: 2rem;
+    width: min-content;   // forces "United" / "Nations" onto two lines
   }
 .footer-sitemap li {
   font-size: 0.875rem;
@@ -160,6 +161,8 @@
     line-height: 1.1rem;
     text-decoration: none;
     padding: 0;
+    white-space: normal;   // override Bootstrap's .navbar-brand nowrap
+    max-width: 9.5rem;     // narrow enough to break into two lines
   }
 
   .nav-item > .nav-link {
