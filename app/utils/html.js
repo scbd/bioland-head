@@ -8,7 +8,7 @@ DOMPurify.addHook('uponSanitizeElement', (node, data)=>
   {
     if (data.tagName !== 'iframe') return node;
 
-    if(node.getAttribute("src")?.includes('youtube.com')) {
+    if(/youtube\.com|player\.vimeo\.com/.test(node.getAttribute("src") || '')) {
       node.removeAttribute("height");
       node.removeAttribute("width");
       node.setAttribute("style", "aspect-ratio: 16 / 9; width: 100%;");

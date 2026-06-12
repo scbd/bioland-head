@@ -47,7 +47,7 @@
                     
                 </div>
 
-                <LazyPageBodyMediaYouTube id="page-body-media-you-tube" v-if="pageStore?.isMediaRemoteVideo" :url="pageStore?.page?.fieldMediaOembedVideo" :title="pageStore?.page?.name || pageStore?.page?.title"/>
+                <LazyPageBodyMediaRemoteVideo id="page-body-media-remote-video" v-if="pageStore?.isMediaRemoteVideo" :url="pageStore?.page?.fieldMediaOembedVideo" :title="pageStore?.page?.name || pageStore?.page?.title"/>
 
                 <div id="page-body-media-file-details-mobile" class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
                     

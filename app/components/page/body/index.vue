@@ -47,7 +47,7 @@
                 <div id="page-body-media" v-if="isImageOrVideo" class="d-flex flex-row justify-content-end" >
                     <div class="align-self-start w-100">
                         <NuxtImg id="page-body-media-img" v-if="pageStore?.image?.src" format="webp" :height="pageStore?.image?.fieldHeight"  :width="pageStore?.image?.fieldWidth" :alt="pageStore?.image?.alt" :src="pageStore?.image?.src" class="img-fluid mt-0 mb-1 w-100"/>
-                        <LazyPageBodyMediaYouTube id="page-body-media-you-tube" v-if="pageStore?.isVideo" :url="pageStore?.video?.fieldMediaOembedVideo" :title="pageStore?.video?.name || pageStore?.media?.title"/>
+                        <LazyPageBodyMediaRemoteVideo id="page-body-media-remote-video" v-if="pageStore?.isVideo" :url="pageStore?.video?.fieldMediaOembedVideo" :title="pageStore?.video?.name || pageStore?.media?.title"/>
                     </div>
                 </div>
 
