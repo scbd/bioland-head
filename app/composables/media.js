@@ -26,14 +26,17 @@ export const useMediaRecord = (passedMediaRecord) => {
         return localPath(record?.path?.path);
     });
 
-    const iconName  = computed(()=> getDocumentIcon(record?.fieldMediaDocument?.uri?.url || imageSrc.value).name);
-    const iconColor = computed(()=> getDocumentIcon(record?.fieldMediaDocument?.uri?.url || imageSrc.value).color);
+    const mime      = computed(()=> record?.fieldMediaDocument?.filemime || record?.fieldMediaDocument?.fieldMime || record?.fieldMime
+                                 || record?.fieldMediaImage?.filemime    || record?.fieldMediaImage?.fieldMime || '');
+    const iconName  = computed(()=> getDocumentIcon(record?.fieldMediaDocument?.uri?.url || imageSrc.value, mime.value).name);
+    const iconColor = computed(()=> getDocumentIcon(record?.fieldMediaDocument?.uri?.url || imageSrc.value, mime.value).color);
 
     return {
         descriptionTruncated,
         tags,
         imageSrc,
         linkTo,
+        mime,
         iconName,
         iconColor,
         downloadUrl,

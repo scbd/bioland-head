@@ -24,9 +24,9 @@
                         <span>{{media.fieldWidth}} {{t('px')}}</span>
                 </div> 
                 <div v-if="media.fieldMime || media.filemime" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
-                        <h5 >{{t('Mime Type')}}</h5>
-                        <span>{{media.fieldMime || media.filemime}}</span>
-                </div> 
+                        <h5 >{{t('File Type')}}</h5>
+                        <span class="text-break" :title="media.fieldMime || media.filemime">{{mimeLabel}}</span>
+                </div>
         <div v-if="media.fieldSize || media.filesize" :class="{ 'flex-column mb-1': vertical }" class="d-flex ">
                 <h5 >{{t('File Size')}}</h5>
                 <span>{{fileSize(media.fieldSize || media.filesize)}}</span>
@@ -69,6 +69,13 @@ const media = computed(()=> {
         }
 return {}
 });
+
+        const mimeLabel = computed(()=> {
+                const raw       = media.value.fieldMime || media.value.filemime;
+                const { label } = getDocumentIcon('', raw);
+
+                return label? t(label) : raw;
+        });
 
         function fileSize(size){
                 return prettyBytes(Number(size), { locale: locale.value });

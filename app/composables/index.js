@@ -1,7 +1,16 @@
 import { DateTime } from 'luxon'           ;
 import   clone      from 'lodash.clonedeep';
 import   mitt       from 'mitt'            ;
-import { lookup   } from 'mrmime'          ;
+import { lookup, mimes } from 'mrmime'     ;
+
+// mrmime ships only web-essential types; register the Office formats it lacks
+Object.assign(mimes, {
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    xls : 'application/vnd.ms-excel',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ppt : 'application/vnd.ms-powerpoint',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+});
 
 // Create a new event bus using mitt
 const eventBus = mitt();
@@ -132,16 +141,23 @@ export const useDocumentHelpers = (passedContentRecord, {passedType} = {}) => {
 
 }
 
-export function getDocumentIcon(uri){
-    const mime = lookup(uri);
+export function getDocumentIcon(uri, passedMime){
+    const mime = (passedMime || lookup(uri) || '').toLowerCase();
 
-    if(mime?.includes('pdf'))      return { name: 'document-file-pdf', color: '#f40f02' };
-    if(mime?.includes('word'))     return { name: 'document-file-docx', color: '#00A4EF' };
-    if(mime?.includes('excel'))    return { name: 'document-file-xlsx', color: '#fadff2f' };
-    if(mime?.includes('ppt'))      return  { name: 'document-file-pptx', color: '#C13B1B' };
-    if(mime?.includes('image'))    return  { name: 'file-image-o', color: '#C13B1B' };
+    if(mime.includes('pdf'))                                         return { name: 'document-file-pdf',  color: '#f40f02', label: 'PDF Document' };
+    if(mime.includes('word'))                                        return { name: 'document-file-docx', color: '#2B579A', label: 'Word Document' };
+    if(mime.includes('excel')      || mime.includes('spreadsheet'))  return { name: 'document-file-xlsx', color: '#217346', label: 'Excel Spreadsheet' };
+    if(mime.includes('csv'))                                         return { name: 'document-file-xlsx', color: '#217346', label: 'CSV File' };
+    if(mime.includes('powerpoint') || mime.includes('presentation')) return { name: 'document-file-ppt',  color: '#D24726', label: 'PowerPoint Presentation' };
+    if(mime.includes('zip')        || mime.includes('compressed'))   return { name: 'document-file-zip',  color: '#222222', label: 'ZIP Archive' };
+    if(mime.includes('image')){
+        const format = (mime.split('/')[1] || '').replace('svg+xml', 'svg').toUpperCase();
 
-    return { name: 'document-file-txt', color: '#222222' };
+        return { name: 'file-image-o', color: '#C13B1B', label: format? `${format} Image` : 'Image' };
+    }
+    if(mime.startsWith('text'))                                      return { name: 'document-file-txt',  color: '#222222', label: 'Text Document' };
+
+    return { name: 'document-file-txt', color: '#222222', label: '' };
 }
 
 

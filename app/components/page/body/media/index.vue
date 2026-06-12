@@ -17,7 +17,7 @@
                 <div id="page-body-media-preview" class="d-flex justify-content-center text-center">
 
                     <NuxtImg id="page-body-media-preview-img" v-if="imageSrc && !pageStore?.isMediaImage" :alt="pageStore?.image?.alt" :src="imageSrc" format="webp" :width="imgWidth" :height="imgHeight" class="card-img-top i-top"/>
-                    <LazyIcon v-if="(!imageSrc || pageStore?.isMediaImage) && !pageStore?.isMediaRemoteVideo" :name="iconName" :color="iconColor" :size="8" class="card-img-top i-top"/>
+                    <LazyMediaDocIcon v-if="(!imageSrc || pageStore?.isMediaImage) && !pageStore?.isMediaRemoteVideo" :mime="mime" :uri="imageSrc || downloadUrl" :size="8" class="card-img-top i-top"/>
                     <LazyIcon v-if="!imageSrc && pageStore?.isMediaRemoteVideo" :name="'video'" :color="siteStore.primaryColor" :size="8" />
                 </div>
 
@@ -37,8 +37,8 @@
                     <div class="d-none d-md-block flex-fill"><LazyPageBodyTagsDate id="page-body-media-tags-date-desktop" /></div>
                 </div>
 
-                <div id="page-body-media-document" class="d-md-flex" v-if="isDocument">
-                    <object id="page-body-media-document-object" :data="downloadUrl" type="application/pdf" style="width:100%;min-height:150vh;">
+                <div id="page-body-media-document" class="d-md-flex" :class="{ 'justify-content-end': !isPdf }" v-if="isDocument">
+                    <object v-if="isPdf" id="page-body-media-document-object" :data="downloadUrl" type="application/pdf" style="width:100%;min-height:150vh;">
                         <embed id="page-body-media-document-embed" :src="downloadUrl" type="application/pdf">
                             <p class="text-wrap">This browser does not support PDFs. Please download the PDF to view it: <a id="page-body-media-document-download-link" :href="downloadUrl">Download PDF</a>.</p>
                         </embed>
@@ -80,7 +80,9 @@
 
     const { pageTypeStyle } = useTheme();
 
-    const { downloadUrl, imageSrc, imgHeight, imgWidth, iconName, iconColor} = useMediaRecord(pageStore.page);
+    const { downloadUrl, imageSrc, imgHeight, imgWidth, mime } = useMediaRecord(pageStore.page);
+
+    const isPdf = computed(()=> mime.value?.includes('pdf') || downloadUrl?.toLowerCase()?.endsWith('.pdf'));
 
     const showEdit = computed( ()=> meStore?.showEdit   )  
 </script>
