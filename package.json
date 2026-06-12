@@ -8,7 +8,7 @@
     "dev-open": "rm -rf .data && nuxt cleanup && nuxt dev --open --host be.localhost",
     "dev-open-bsl": "rm -rf .data && nuxt cleanup && nuxt dev --open --host seed.localhost ",
     "stg-open-bsl-e2e": "rm -rf .data && nuxt cleanup && nuxt dev --open --host seed.localhost --port 3330",
-        "stg-open-bsl-gt": "rm -rf .data && nuxt cleanup && nuxt dev --open --host gt.localhost --port 3330",
+    "stg-open-bsl-gt": "rm -rf .data && nuxt cleanup && nuxt dev --open --host gt.localhost --port 3330",
     "generate": "nuxt generate",
     "preview": "nuxt preview --open",
     "postinstall": "nuxt prepare",
