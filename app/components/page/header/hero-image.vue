@@ -1,5 +1,5 @@
 <template>
-    <div id="page-header-hero-image" ref="heroContainer" data-testid="hero-image" :class="{'un3-hero':hasHeroImage, 'hero-image':hasHeroImage, 'no-hero':!hasHeroImage, 'dev-site': isDevSite }">
+    <div :id="rootId" ref="heroContainer" data-testid="hero-image" :class="{'un3-hero':hasHeroImage, 'hero-image':hasHeroImage, 'no-hero':!hasHeroImage, 'dev-site': isDevSite && !inline, 'hero-inline': inline }">
 
         <!-- LCP hero image — discoverable by browser preload scanner -->
         <NuxtPicture
@@ -23,7 +23,7 @@
             <slot></slot>
         </div>
         
-        <div v-if="hasHeroImage" id="page-header-hero-image-content" class="container text-white">
+        <div v-if="hasHeroImage" :id="contentId" :class="inline ? 'container-fluid text-white' : 'container text-white'">
             <div class="row pb-1 position-relative ">
                 <div v-if="meStore.showEdit && meStore.isContentManager && hasHydrated " class="position-absolute text-end bottom-50" style="min-width:3rem;">
                     <NuxtLink :to="editUrl()" type="button" class="btn btn btn-light btn-sm mt-1">
@@ -60,31 +60,46 @@
 </template>
 <script setup>
 
+    // `hero` lets the component render a specific media--hero record (e.g. a
+    // standalone hero media page rendered in the body); `inline` switches from
+    // the full-bleed page-top layout to a contained, in-flow layout.
+    const props = defineProps({
+        hero:   { type: Object,  default: null  },
+        inline: { type: Boolean, default: false },
+    });
+
     const heroContainer    = ref(null);
     const meStore          = useMeStore();
     const siteStore        = useSiteStore();
     const pageStore        = usePageStore();
     const route            = useRoute();
-    
+
     // Track hydration state
     const hasHydrated      = ref(false);
     onMounted(() => { hasHydrated.value = true; });
-    
+
+    // Distinct DOM ids when an inline hero coexists with the page-top hero.
+    const rootId           = computed(() => props.inline ? 'page-body-media-hero'         : 'page-header-hero-image');
+    const contentId        = computed(() => props.inline ? 'page-body-media-hero-content' : 'page-header-hero-image-content');
+
+    // Hero source: an explicit record (inline) or the page's chosen hero (top).
+    const hi               = computed(() => props.hero || pageStore.heroImage);
+
     // Check both data availability AND that host is properly initialized
     const isHostReady      = computed(() => siteStore.host && !siteStore.host.includes('undefined'));
-    const hasHeroImage     = computed(() => isHostReady.value && (pageStore?.page?.hasHeroImage || pageStore?.heroImage?.fieldMediaImage?.uri?.url));
+    const hasHeroImage     = computed(() => isHostReady.value && (pageStore?.page?.hasHeroImage || hi.value?.fieldMediaImage?.uri?.url));
     const isDevSite        = computed(()=> !siteStore?.config?.published || siteStore?.config?.hasBl1);
-    const hi               = computed(() => pageStore.heroImage);
 
     // --- Hero image URL / alt (extracted for <NuxtPicture>) ---
     const heroImageUrl = computed(() => {
-        if (!hasHeroImage.value || !pageStore?.heroImage?.fieldMediaImage?.uri?.url) return ''
+        const url = hi.value?.fieldMediaImage?.uri?.url
+        if (!hasHeroImage.value || !url) return ''
         if (!siteStore.host || siteStore.host.includes('undefined')) return ''
-        return siteStore.host + pageStore.heroImage.fieldMediaImage.uri.url
+        return siteStore.host + url
     })
 
     const heroImageAlt = computed(() => {
-        return pageStore?.heroImage?.fieldMediaImage?.meta?.alt || ''
+        return hi.value?.fieldMediaImage?.meta?.alt || ''
     })
 
     // --- Gradient overlays (replicate former background-blend-mode layers) ---
@@ -172,6 +187,19 @@ section {
     object-fit: cover;
 }
 
+/* Inline variant — contained within the page body instead of full-bleed.
+   Higher specificity (.hero-image.hero-inline) beats the page-top margins. */
+.hero-image.hero-inline {
+    width: 100%;
+    margin-top: 0;
+    border-radius: 0.25rem;
+    overflow: hidden;
+    min-height: clamp(220px, 28vw, 380px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
 /* Color-tint layer (mix-blend-mode replicates former background-blend-mode: color) */
 .hero-tint {
     position: absolute;
@@ -194,10 +222,14 @@ section {
 }
 
 /* Hero text content sits above overlays but below mega-menu dropdown */
-#page-header-hero-image-content {
+#page-header-hero-image-content,
+#page-body-media-hero-content {
     position: relative;
     z-index: 3;
+}
 
+/* Mobile padding clears the fixed navbar — page-top hero only */
+#page-header-hero-image-content {
     @media (max-width: 767.98px) {
         padding-top: 40px;
     }

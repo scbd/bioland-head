@@ -61,6 +61,12 @@
 
 const media = computed(()=> {
 
+        if(pageStore.isMediaHero){
+                // A media--hero entity carries its image metadata directly
+                // (field_height/width/mime/size live on the media, not the file).
+                const { name, fieldCaption, fieldHeight, fieldWidth, fieldMime, fieldSize, created, changed } = pageStore.page;
+                return { name, fieldCaption, fieldHeight, fieldWidth, fieldMime, fieldSize, created, changed, fieldPublished:pageStore.publishedOn };
+        }
         if(pageStore.isImage || pageStore.isMediaImage) return {...pageStore.image, fieldPublished:pageStore.publishedOn};
         if(pageStore.isVideo || pageStore.isMediaRemoteVideo) return { ...pageStore.video, fieldPublished:pageStore.publishedOn};
         if(pageStore.isDocument || pageStore.isMediaDocument) {

@@ -16,7 +16,7 @@
                 <h2 id="page-body-media-type-desktop" :style="pageTypeStyle" class="page-type">{{typeLabel}} <span class="fs-4 fw-light">({{t('media')}})</span></h2>
                 <div id="page-body-media-preview" class="d-flex justify-content-center text-center">
 
-                    <NuxtImg id="page-body-media-preview-img" v-if="imageSrc && !pageStore?.isMediaImage" :alt="pageStore?.image?.alt" :src="imageSrc" format="webp" :width="imgWidth" :height="imgHeight" class="card-img-top i-top"/>
+                    <NuxtImg id="page-body-media-preview-img" v-if="imageSrc && !pageStore?.isMediaImage" :alt="pageStore?.image?.alt || pageStore?.page?.name" :src="imageSrc" format="webp" :width="imgWidth" :height="imgHeight" class="card-img-top img-fluid i-top"/>
                     <LazyMediaDocIcon v-if="(!imageSrc || pageStore?.isMediaImage) && !pageStore?.isMediaRemoteVideo" :mime="mime" :uri="imageSrc || downloadUrl" :size="8" class="card-img-top i-top"/>
                     <LazyIcon v-if="!imageSrc && pageStore?.isMediaRemoteVideo" :name="'video'" :color="siteStore.primaryColor" :size="8" />
                 </div>
@@ -30,6 +30,8 @@
                 <h2 id="page-body-media-title" class="data-body mb-0 text-break" >{{ pageStore?.title}}</h2>
 
                 <hr class="mt-1">
+
+                <LazyPageHeaderHeroImage v-if="pageStore?.isMediaHero" :hero="pageStore?.page" inline class="mb-1" />
 
                 <div id="page-body-media-image" class="d-md-flex  flex-row justify-content-end" v-if="pageStore?.isMediaImage && pageStore?.mediaImage?.src" >
                     <NuxtLink id="page-body-media-image-link" :to="pageStore?.mediaImage?.src" target="_blank" external>
