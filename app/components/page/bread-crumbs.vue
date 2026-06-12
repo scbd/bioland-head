@@ -3,7 +3,7 @@
         <span class="align-self-center" id="breadCrumbLinks">
             <span class="breadcrumb-segment">
                 <NuxtLink :style="style" class="fw-bold" :to="localePath('/')">
-                   <span v-if="isBiosafetySite">{{t('National CHM')}}</span> 
+                   <span v-if="!isBiosafetySite">{{t('National CHM')}}</span> 
                    <span v-else>{{t('Home')}}</span>
                 </NuxtLink>
                 <span>&nbsp; <LazyIcon name="triangle-right"/> &nbsp;</span>
