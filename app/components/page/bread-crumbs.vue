@@ -3,7 +3,8 @@
         <span class="align-self-center" id="breadCrumbLinks">
             <span class="breadcrumb-segment">
                 <NuxtLink :style="style" class="fw-bold" :to="localePath('/')">
-                    {{t('National CHM')}}
+                   <span v-if="isBiosafetySite">{{t('National CHM')}}</span> 
+                   <span v-else>{{t('Home')}}</span>
                 </NuxtLink>
                 <span>&nbsp; <LazyIcon name="triangle-right"/> &nbsp;</span>
             </span>
@@ -30,6 +31,9 @@
 <script setup>
     const { style, badgePrimaryStyle } = useTheme();
     const { t, locale }    = useI18n();
+    const siteStore = useSiteStore();
+
+    const { isBiosafetySite }  = storeToRefs(siteStore);
     const   props          = defineProps({ count: { type: Number } });
     const { count }        = toRefs(props);
     const   isMobile       = isMobileFn();
@@ -38,13 +42,11 @@
     const   pageStore      = usePageStore();
     const   contentTypeId  = computed(()=> pageStore?.typeId);
     const   menusStore     = useMenusStore();
-    const   isInDynamicMenu = computed(()=> menusStore.isInDynamicContentMenu(pageStore.page.drupalInternalNid,contentTypeId.value, locale));
 
-    const   inMenu        = ref(menusStore.isInMainMenu(route.path) || menusStore.isInMainMenu(parentPath()) );//|| menusStore.isInMainMenuByContentTypeId(contentTypeId.value)
     const   eventBus      = useEventBus();
     const   crumbs        = computed(makeCrumb);
     const { showBl1Link } = useRuntimeConfig().public;
-    const { schemaOnly } = route?.query || {};
+    const { schemaOnly }  = route?.query || {};
 
     function isSelf(href){ return href === route.path; };
 
