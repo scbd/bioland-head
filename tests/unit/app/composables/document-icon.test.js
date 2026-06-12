@@ -69,11 +69,33 @@ describe('getDocumentIcon', () => {
       ['image/jpeg',  'JPEG Image'],
       ['image/png',   'PNG Image'],
       ['image/svg+xml', 'SVG Image'],
+      ['image/heic',  'HEIC Image'],
+      ['image/x-icon', 'ICO Image'],
+      ['image/vnd.microsoft.icon', 'ICO Image'],
       ['text/plain',  'Text Document'],
       ['text/csv',    'CSV File'],
-      ['application/zip', 'ZIP Archive']
+      ['text/html',   'HTML Document'],
+      ['application/json', 'JSON File'],
+      ['application/xml',  'XML File'],
+      ['application/zip', 'ZIP Archive'],
+      ['application/vnd.rar', 'RAR Archive'],
+      ['application/x-rar-compressed', 'RAR Archive'],
+      ['application/rtf', 'RTF Document']
     ])('labels %s as %s', (mime, label) => {
       expect(getDocumentIcon('', mime).label).toBe(label)
+    })
+
+    it.each([
+      ['application/vnd.oasis.opendocument.text',         'document-file-doc', 'ODT Document'],
+      ['application/vnd.oasis.opendocument.spreadsheet',  'document-file-xls', 'ODS Spreadsheet'],
+      ['application/vnd.oasis.opendocument.presentation', 'document-file-ppt', 'ODP Presentation']
+    ])('maps OpenDocument mime %s to %s / %s', (mime, name, label) => {
+      expect(getDocumentIcon('', mime)).toMatchObject({ name, label })
+    })
+
+    it('maps OpenDocument extensions via uri fallback', () => {
+      expect(getDocumentIcon('/files/report.odt').label).toBe('ODT Document')
+      expect(getDocumentIcon('/files/data.ods').label).toBe('ODS Spreadsheet')
     })
   })
 
