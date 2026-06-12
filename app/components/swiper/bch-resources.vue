@@ -20,7 +20,7 @@
     <ClientOnly v-else-if="slides?.length">
         <div class="col-12 mt-3 mb-0">
             <h3 :style="headerStyle">{{ t('Resources') }}</h3>
-            <NuxtLink :to="resourcesLink" class="t float-end text-bold fs-5" :style="linkStyle">{{ t('View more resources') }} <LazyIcon name="arrow-right" class="arrow" /></NuxtLink>
+            <NuxtLink :to="resourcesLink" class="t float-end text-bold fs-5" :style="linkStyle">{{ t('View more') }} <LazyIcon name="arrow-right" class="arrow" /></NuxtLink>
         </div>
         <div class="position-relative mt-1" style="min-height:250px;">
             <LazySwiperButton direction="left" :swiper-ref="swiperRef" />
