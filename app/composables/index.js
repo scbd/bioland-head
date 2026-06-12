@@ -3,13 +3,18 @@ import   clone      from 'lodash.clonedeep';
 import   mitt       from 'mitt'            ;
 import { lookup, mimes } from 'mrmime'     ;
 
-// mrmime ships only web-essential types; register the Office formats it lacks
+// mrmime ships only web-essential types; register the Office/document formats it lacks
 Object.assign(mimes, {
     docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     xls : 'application/vnd.ms-excel',
     xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     ppt : 'application/vnd.ms-powerpoint',
-    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    odt : 'application/vnd.oasis.opendocument.text',
+    ods : 'application/vnd.oasis.opendocument.spreadsheet',
+    odp : 'application/vnd.oasis.opendocument.presentation',
+    rtf : 'application/rtf',
+    rar : 'application/vnd.rar'
 });
 
 // Create a new event bus using mitt
@@ -145,16 +150,24 @@ export function getDocumentIcon(uri, passedMime){
     const mime = (passedMime || lookup(uri) || '').toLowerCase();
 
     if(mime.includes('pdf'))                                         return { name: 'document-file-pdf',  color: '#f40f02', label: 'PDF Document' };
+    if(mime.includes('opendocument.text'))                           return { name: 'document-file-doc',  color: '#2B579A', label: 'ODT Document' };
+    if(mime.includes('opendocument.spreadsheet'))                    return { name: 'document-file-xls',  color: '#217346', label: 'ODS Spreadsheet' };
+    if(mime.includes('opendocument.presentation'))                   return { name: 'document-file-ppt',  color: '#D24726', label: 'ODP Presentation' };
     if(mime.includes('word'))                                        return { name: 'document-file-docx', color: '#2B579A', label: 'Word Document' };
+    if(mime.includes('rtf'))                                         return { name: 'document-file-doc',  color: '#2B579A', label: 'RTF Document' };
     if(mime.includes('excel')      || mime.includes('spreadsheet'))  return { name: 'document-file-xlsx', color: '#217346', label: 'Excel Spreadsheet' };
     if(mime.includes('csv'))                                         return { name: 'document-file-xlsx', color: '#217346', label: 'CSV File' };
     if(mime.includes('powerpoint') || mime.includes('presentation')) return { name: 'document-file-ppt',  color: '#D24726', label: 'PowerPoint Presentation' };
+    if(mime.includes('rar'))                                         return { name: 'document-file-zip',  color: '#222222', label: 'RAR Archive' };
     if(mime.includes('zip')        || mime.includes('compressed'))   return { name: 'document-file-zip',  color: '#222222', label: 'ZIP Archive' };
     if(mime.includes('image')){
-        const format = (mime.split('/')[1] || '').replace('svg+xml', 'svg').toUpperCase();
+        const format = (mime.split('/')[1] || '').replace('svg+xml', 'svg').replace('vnd.microsoft.icon', 'ico').replace('x-icon', 'ico').toUpperCase();
 
         return { name: 'file-image-o', color: '#C13B1B', label: format? `${format} Image` : 'Image' };
     }
+    if(mime.includes('html'))                                        return { name: 'document-file-txt',  color: '#222222', label: 'HTML Document' };
+    if(mime.includes('json'))                                        return { name: 'document-file-txt',  color: '#222222', label: 'JSON File' };
+    if(mime.includes('xml'))                                         return { name: 'document-file-txt',  color: '#222222', label: 'XML File' };
     if(mime.startsWith('text'))                                      return { name: 'document-file-txt',  color: '#222222', label: 'Text Document' };
 
     return { name: 'document-file-txt', color: '#222222', label: '' };

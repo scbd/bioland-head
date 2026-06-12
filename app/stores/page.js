@@ -143,7 +143,10 @@ export const usePageStore = defineStore('page', {
 
         },
         mediaTypeName(){
-            return this?.page?.type?.replace('media--', '');
+            const name = this?.page?.type?.replace('media--', '').replaceAll('_', ' ') || '';
+
+            // Title-case so the result matches the i18n keys ('Document', 'Image', 'Remote Video')
+            return name.replace(/\b\w/g, (char)=> char.toUpperCase());
         },
         isTaxonomyPage(){
             return this?.page?.type?.startsWith('taxonomy_term--');
