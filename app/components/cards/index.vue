@@ -144,8 +144,10 @@
 // .cit{ height: 232px !important; }
 
 .card {
-    width: 350px;
+    width: 100%;
+    max-width: 350px;
     height: 600px !important;
+    margin-inline: auto;
 }
 
 @media (max-width: 991px) {

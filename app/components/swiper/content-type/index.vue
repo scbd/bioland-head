@@ -94,8 +94,8 @@ const viewport     = useViewport();
 const hideArrows   = computed(()=> (viewport.breakpoint.value === 'lg' || viewport.breakpoint.value === 'xl'|| viewport.breakpoint.value === 'xxl')? slides.value.length > hideArrowsCount.value : slides.value.length > 1  );
 
 const slidePerView = computed(()=> {
-    if(rowElWidth.value > 1600 ) return 3;
-    if(rowElWidth.value > 990 ) return 2;
+    // 3-up once the header's horizontal menu appears (Bootstrap lg / viewport md = 992px) — BL-802
+    if(rowElWidth.value >= 992 ) return 3;
     if(rowElWidth.value >= 768) return 2;
 
     return 1
@@ -107,10 +107,6 @@ const computedSlidesOffsetBefore = computed(()=> rowElWidth.value < 768 ? mobile
 const spaceBetween = computed(()=> {
 
     if(slidePerView.value == 4 ) return 10;
-
-    if(slidePerView.value == 3 && rowElWidth.value < 1350 && rowElWidth.value >=990) return 100;
-
-    if(slidePerView.value == 3) return 5;
 
     return 5
 });
