@@ -65,3 +65,37 @@ export function mapLocaleToDrupal(awsLocale) {
 
   return mapping[awsLocale] || awsLocale.toLowerCase()
 }
+
+/**
+ * Drupal langcode candidates for an app locale.
+ *
+ * Bioland sites are not consistent about Chinese/Filipino langcodes: a site's
+ * content may be stored under the app code ('zh', 'tl') OR its Drupal variant
+ * ('zh-hans', 'fil'). Returning both lets a JSON:API language filter match
+ * regardless of which prefix a given site uses.
+ *
+ * @param {string} locale - App locale code (e.g. 'zh', 'tl', 'en')
+ * @returns {string[]} Unique candidate Drupal langcodes (e.g. ['zh', 'zh-hans'])
+ */
+export function getDrupalLangcodeCandidates(locale) {
+  if (!locale) return []
+
+  return [...new Set([locale, mapLocaleToDrupal(locale)])]
+}
+
+/**
+ * Build a JSON:API language filter matching any Drupal langcode variant for an
+ * app locale. Uses the IN operator so app locale 'zh' matches content stored
+ * under either 'zh' or 'zh-hans'.
+ *
+ * @param {string} locale - App locale code
+ * @returns {string} Query string fragment (prefixed with '&'), or '' when no locale
+ */
+export function buildDrupalLanguageFilter(locale) {
+  const langcodes = getDrupalLangcodeCandidates(locale)
+
+  if (!langcodes.length) return ''
+
+  return '&filter[language][operator]=IN' +
+    langcodes.map((code) => `&filter[language][value][]=${encodeURIComponent(code)}`).join('')
+}

@@ -41,7 +41,7 @@ async function getContentMenus (ctx, drupalInternalId, bypassMultiplier = true, 
     const { localizedHost, locale } = ctx;
 
     const length         = getContentTypeMenuLength(ctx, drupalInternalId)
-    const langcodeFilter = getLangcodeFilterParams(locale)
+    const langcodeFilter = buildDrupalLanguageFilter(locale)
     const filters        = `${getTypeFilterParams({ drupalInternalId })}${langcodeFilter}${getSortParams()}${getPaginationParams({rowsPerPage:length, bypassMultiplier})}`
     const uri            = `${localizedHost}/jsonapi/index/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image${filters}`
     const method         = 'get';
@@ -122,19 +122,6 @@ function getTypeFilterParams({ drupalInternalId, drupalInternalIds }){
 
 
     return  filterQueryString;
-}
-
-/**
- * Builds the langcode filter query string parameters for Drupal JSON:API content requests.
- * Filters content to only return items matching the specified locale.
- * 
- * @param {string} locale - The locale to filter by (e.g., 'en', 'fr', 'es')
- * @returns {string} URL-encoded query string for langcode filter (prefixed with `&`)
- */
-function getLangcodeFilterParams(locale) {
-    if (!locale) return '';
-
-    return `&filter[language][value]=${encodeURIComponent(locale)}`;
 }
 
 function makeTypeMap(data, ctx){

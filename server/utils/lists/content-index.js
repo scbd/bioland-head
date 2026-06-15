@@ -285,11 +285,7 @@ function getQuestString(ctx){
 }
 
 function getLanguageFilterParams({ locale }){
-    if(!locale) return '';
-
-    const drupalLocale = mapLocaleToDrupal(locale);
-
-    return `&filter[language]=${encodeURIComponent(drupalLocale)}`;
+    return buildDrupalLanguageFilter(locale);
 }
 
 function getTypeFilterParams({ drupalInternalId, drupalInternalIds }){
