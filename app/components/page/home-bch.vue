@@ -9,7 +9,7 @@
         </div>
         <div class="row my-4">
             <div   class="col-12 border-col">
-                <section id="home-bch-national-biosafety-framework" data-testid="home-bch-national-biosafety-framework">
+                <section v-if="isNbfEnabled" id="home-bch-national-biosafety-framework" data-testid="home-bch-national-biosafety-framework">
                     <SwiperContentType
                         :pagination="true"
                         :arrows="true"
@@ -22,11 +22,11 @@
                     />
                 </section>
 
-                <section id="home-bch-news" data-testid="home-bch-news">
+                <section v-if="isBchNewsEnabled" id="home-bch-news" data-testid="home-bch-news">
                     <SwiperBchNews :pagination="true"/>
                 </section>
 
-                <section id="home-bch-resources" data-testid="home-bch-resources">
+                <section v-if="isBchResourcesEnabled" id="home-bch-resources" data-testid="home-bch-resources">
                     <SwiperBchResources :pagination="true"/>
                 </section>
 
@@ -42,10 +42,9 @@ const pageStore = usePageStore();
 const meStore   = useMeStore();
 const body      = computed(()=>pageStore?.page?.body);
 
-const columnsOfWidgetComponents = computed(() => siteStore?.theme?.homePageWidgets?.columns);
-
-const hasNews = computed(() => siteStore?.theme?.homePageWidgets?.news);
-
+const isNbfEnabled        = computed(() => siteStore?.biolandSettings?.homeWidgets?.nbfWidget?.enable ?? true);
+const isBchNewsEnabled    = computed(() => siteStore?.biolandSettings?.homeWidgets?.bchNewsWidget?.enable ?? true);
+const isBchResourcesEnabled = computed(() => siteStore?.biolandSettings?.homeWidgets?.bchResourcesWidget?.enable ?? true);
 </script>
 <style scoped>
 .border-col{
