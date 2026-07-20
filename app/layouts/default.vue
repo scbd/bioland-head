@@ -177,19 +177,22 @@ h1 {
 }
 
 h3 {
-  display: inline-block;
+  display: block;
+  width: fit-content;
   border-bottom: .25rem solid var(--bs-primary);
   margin-bottom: 3rem;
 }
 
 h4 {
-  display: inline-block;
+  display: block;
+  width: fit-content;
   border-bottom: .25rem solid var(--bs-primary);
   margin-bottom: 1.5rem;
 }
 
 h5.lead {
-  display: inline-block;
+  display: block;
+  width: fit-content;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.25rem;
