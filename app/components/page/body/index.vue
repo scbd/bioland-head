@@ -53,7 +53,7 @@
 
                 <div id="page-body-body-layout" class="d-md-flex"  >
                     <div class="align-self-start w-100 ">
-                        <div v-if="!isImageOrVideo && !isBiosafetySite"class="d-none d-md-block debug" > 
+                        <div v-if="!isImageOrVideo && !isBiosafetySite"class="d-none d-md-block" > 
                             <LazyPageBodyTagsDate id="page-body-tags-date-desktop" /> 
                         </div>
                         <div id="page-body-body" :style="pageTypeStyle" v-if="pageStore?.body" v-html="sanitizedBody"></div>

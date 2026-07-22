@@ -22,7 +22,7 @@
 
                         <span v-if="showMenu(aMenu)" ref="spacers" :class="{ 'opacity-0': isLastSpacer(index) }" class="spacer"></span>
                         
-                        <PageHeaderMegaMenuLogin v-if="aMenu.class?.includes('login')" :aMenu="aMenu" :show="toggles[index]" v-click-outside="unToggle"/>
+                        <PageHeaderMegaMenuLogin v-if="aMenu.class?.includes('login')" :aMenu="aMenu" :show="toggles[index]" v-click-outside="(e) => onDropdownClickOutside(index, e)"/>
 
                         <LazyPageHeaderMegaMenuDropDown 
                             v-if="toggles[index]" 
