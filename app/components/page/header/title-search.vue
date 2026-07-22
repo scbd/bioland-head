@@ -215,6 +215,17 @@
 .scbd-logo.hero{
     stroke:var(--bs-white);
 }
+/* Large-name layout only: let a long title wrap within its column instead of
+   inheriting Bootstrap's .navbar-brand `white-space: nowrap`, which made it
+   overflow the brand column and overlap the search box. min-width:0 lets the
+   flex column shrink so the text can actually wrap. Font sizes are unchanged;
+   names that already fit on one line are unaffected. */
+#page-header-title-search-large-brand-links{
+    min-width: 0;
+}
+#page-header-title-search-large-brand-home{
+    white-space: normal;
+}
 .line{
     border-right: 1px solid rgba(84,84,84,1);
 }
