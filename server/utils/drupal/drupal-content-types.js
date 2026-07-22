@@ -42,7 +42,7 @@ async function getContentMenus (ctx, drupalInternalId, bypassMultiplier = true, 
 
     const length         = getContentTypeMenuLength(ctx, drupalInternalId)
     const langcodeFilter = buildDrupalLanguageFilter(locale)
-    const filters        = `${getTypeFilterParams({ drupalInternalId })}${langcodeFilter}${getSortParams()}${getPaginationParams({rowsPerPage:length, bypassMultiplier})}`
+    const filters        = `${getTypeFilterParams({ drupalInternalId })}${getStatusFilterParams()}${langcodeFilter}${getSortParams()}${getPaginationParams({rowsPerPage:length, bypassMultiplier})}`
     const uri            = `${localizedHost}/jsonapi/index/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image${filters}`
     const method         = 'get';
     const headers        = { 'Content-Type': 'application/json' }
@@ -105,6 +105,25 @@ function getSortParams(){
     sortQueryString += `&sort[sort-changed][direction]=${encodeURIComponent(direction)}`
 
     return sortQueryString;
+}
+
+/**
+ * Builds the published-status filter for content menu queries.
+ *
+ * Menus are derived from the JSON:API content index, which returns both
+ * published and unpublished nodes by default. Menu links must only point at
+ * published pages, so restrict the result set to status = 1.
+ *
+ * @returns {string} URL-encoded query string for the status filter (prefixed with `&`)
+ */
+function getStatusFilterParams(){
+    let filterQueryString = '';
+
+    filterQueryString += `&filter[status][condition][path]=status`;
+    filterQueryString += `&filter[status][condition][operator]=%3D`;
+    filterQueryString += `&filter[status][condition][value]=1`;
+
+    return filterQueryString;
 }
 
 function getTypeFilterParams({ drupalInternalId, drupalInternalIds }){
