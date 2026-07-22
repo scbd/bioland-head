@@ -22,7 +22,7 @@
 
                         <span v-if="showMenu(aMenu)" ref="spacers" :class="{ 'opacity-0': isLastSpacer(index) }" class="spacer"></span>
                         
-                        <PageHeaderMegaMenuLogin v-if="aMenu.class?.includes('login')" :aMenu="aMenu" :show="toggles[index]" v-click-outside="unToggle"/>
+                        <PageHeaderMegaMenuLogin v-if="aMenu.class?.includes('login')" :aMenu="aMenu" :show="toggles[index]" v-click-outside="(e) => onLoginClickOutside(index, e)"/>
 
                         <LazyPageHeaderMegaMenuDropDown 
                             v-if="toggles[index]" 
@@ -182,6 +182,14 @@
     }
 
     function onDropdownClickOutside(index, event){
+        const parentLi = document.getElementById(`page-header-mega-menu-nav-item-${index}`);
+        if (parentLi && parentLi.contains(event?.target)) return;
+        toggles.value[index] = false;
+    }
+
+    function onLoginClickOutside(index, event){
+        if (!toggles.value[index]) return;
+
         const parentLi = document.getElementById(`page-header-mega-menu-nav-item-${index}`);
         if (parentLi && parentLi.contains(event?.target)) return;
         toggles.value[index] = false;
