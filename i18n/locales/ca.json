@@ -1066,5 +1066,12 @@
   "SVG Image": "SVG Image",
   "AVIF Image": "AVIF Image",
   "BMP Image": "BMP Image",
-  "TIFF Image": "TIFF Image"
+  "TIFF Image": "TIFF Image",
+  "cookie-control-decline": "Rebutjar",
+  "cookie-control-declineAll": "Restableix les preferències",
+  "cookie-control-accept": "Accepta-ho tot",
+  "cookie-name-bl2": "Context de Bioland",
+  "cookie-name-ga": "Google Analytics",
+  "cookie-description-bl2": "Aquestes cookies emmagatzemen el context de l'eina Bioland. Una instància de codi serveix per a molts llocs web. El context ajuda a diferenciar entre els diferents llocs web. A més, unes galetes per quan inicieu sessió per mantenir la vostra sessió. Finalment, traducció i visualització de la mida del port per ajudar l'eina al servidor. Aquestes cookies són necessàries per a la funcionalitat del lloc web.",
+  "cookie-description-ga": "Cookie utilitzada per comprendre com s'utilitza el lloc web."
 }

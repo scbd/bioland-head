@@ -1066,5 +1066,12 @@
   "SVG Image": "SVG Image",
   "AVIF Image": "AVIF Image",
   "BMP Image": "BMP Image",
-  "TIFF Image": "TIFF Image"
+  "TIFF Image": "TIFF Image",
+  "cookie-control-decline": "Odbij",
+  "cookie-control-declineAll": "Poništi postavke",
+  "cookie-control-accept": "Prihvati sve",
+  "cookie-name-bl2": "Bioland kontekst",
+  "cookie-name-ga": "Google analitika",
+  "cookie-description-bl2": "Ovi kolačići pohranjuju kontekst alata Bioland. Jedna instanca koda služi mnogim web stranicama. Kontekst pomaže razlikovati različite web stranice. Dalje kolačići za prijavu kako biste zadržali sesiju. Na kraju prijevod i prikaz veličine porta za pomoć alatu na poslužitelju. Ovi kolačići su neophodni za funkcionalnost web stranice.",
+  "cookie-description-ga": "Kolačić koji se koristi za razumijevanje načina na koji se stranica koristi."
 }

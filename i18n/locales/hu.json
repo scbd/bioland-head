@@ -1066,5 +1066,12 @@
   "SVG Image": "SVG Image",
   "AVIF Image": "AVIF Image",
   "BMP Image": "BMP Image",
-  "TIFF Image": "TIFF Image"
+  "TIFF Image": "TIFF Image",
+  "cookie-control-decline": "Elutasít",
+  "cookie-control-declineAll": "Visszaállítás",
+  "cookie-control-accept": "Fogadja el az egészet",
+  "cookie-name-bl2": "Bioland kontextus",
+  "cookie-name-ga": "Google Analytics",
+  "cookie-description-bl2": "Ezek a cookie-k tárolják a Bioland eszköz kontextusát. Egy kódpéldány sok webhelyre szolgál. A kontextus segít megkülönböztetni a különböző webhelyek között. Továbbá sütik a munkamenet fenntartása érdekében bejelentkezéskor. Végül a portméret fordítása és megtekintése az eszköz kiszolgálón való segítése érdekében. Ezek a cookie-k szükségesek a weboldal működéséhez.",
+  "cookie-description-ga": "A weboldal használatának megértéséhez használt süti."
 }

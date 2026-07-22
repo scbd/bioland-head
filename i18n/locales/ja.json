@@ -1066,5 +1066,12 @@
   "SVG Image": "SVG Image",
   "AVIF Image": "AVIF Image",
   "BMP Image": "BMP Image",
-  "TIFF Image": "TIFF Image"
+  "TIFF Image": "TIFF Image",
+  "cookie-control-decline": "拒否",
+  "cookie-control-declineAll": "設定をリセット",
+  "cookie-control-accept": "[すべて承認]",
+  "cookie-name-bl2": "バイオランドコンテキスト",
+  "cookie-name-ga": "グーグルアナリティクス",
+  "cookie-description-bl2": "これらのクッキーは、Bioland ツールのコンテキストを保存します。1 つのコードインスタンスで複数の Web サイトに対応します。コンテキストは、さまざまな Web サイトを区別するのに役立ちます。さらに、ログイン時にセッションを維持するためのクッキーもあります。最後に、サーバー上のツールを助けるためにポートサイズを変換して表示します。これらのクッキーはウェブサイトの機能に必要です。",
+  "cookie-description-ga": "サイトがどのように使用されているかを理解するために使用されるCookie。"
 }

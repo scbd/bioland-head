@@ -1065,6 +1065,12 @@
   "Biosafety Organization": "Biosafety Organization",
   "Laboratory for detection and identification of LMOs": "Laboratory for detection and identification of LMOs",
   "What's New": "What's New",
-  "Drupal Status": "Drupal Status"
-  
+  "Drupal Status": "Drupal Status",
+  "cookie-control-decline": "Decline",
+  "cookie-control-declineAll": "Reset Preferences",
+  "cookie-control-accept": "Accept All",
+  "cookie-name-bl2": "Bioland Context",
+  "cookie-name-ga": "Google Analytics",
+  "cookie-description-bl2": "These cookies store the context for the Bioland tool. One code instance caters to many websites. The context cookie helps to differentiate between the different websites. Further, cookies for when you login to keep your session. Lastly translation and view port size to assist the tool on the server. These cookies are necessary for the functionality of the website.",
+  "cookie-description-ga": "Cookie used to understand how the site is used."
 }

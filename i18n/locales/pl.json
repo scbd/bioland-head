@@ -1066,5 +1066,12 @@
   "SVG Image": "SVG Image",
   "AVIF Image": "AVIF Image",
   "BMP Image": "BMP Image",
-  "TIFF Image": "TIFF Image"
+  "TIFF Image": "TIFF Image",
+  "cookie-control-decline": "Odrzuć",
+  "cookie-control-declineAll": "Resetuj preferencje",
+  "cookie-control-accept": "Zaakceptuj wszystko",
+  "cookie-name-bl2": "Kontekst Bioland",
+  "cookie-name-ga": "Google Analytics",
+  "cookie-description-bl2": "Te pliki cookie przechowują kontekst narzędzia Bioland. Jedna instancja kodu obsługuje wiele witryn internetowych. Kontekst pomaga rozróżnić różne strony internetowe. Dalsze pliki cookie dotyczące logowania się, aby utrzymać sesję. Wreszcie przetłumacz i wyświetl rozmiar portu, aby pomóc narzędziu na serwerze. Te pliki cookie są niezbędne do funkcjonowania strony internetowej.",
+  "cookie-description-ga": "Plik cookie używany do zrozumienia, w jaki sposób witryna jest używana."
 }

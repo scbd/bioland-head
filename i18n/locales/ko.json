@@ -1066,5 +1066,12 @@
   "SVG Image": "SVG Image",
   "AVIF Image": "AVIF Image",
   "BMP Image": "BMP Image",
-  "TIFF Image": "TIFF Image"
+  "TIFF Image": "TIFF Image",
+  "cookie-control-decline": "거부",
+  "cookie-control-declineAll": "설정 재설정",
+  "cookie-control-accept": "모두 수락",
+  "cookie-name-bl2": "바이오랜드 컨텍스트",
+  "cookie-name-ga": "구글 애널리틱스",
+  "cookie-description-bl2": "이 쿠키는 Bioland 도구의 컨텍스트를 저장합니다.하나의 코드 인스턴스는 많은 웹 사이트에 적합합니다.컨텍스트는 서로 다른 웹 사이트를 구별하는 데 도움이 됩니다.또한 세션을 유지하기 위해 로그인할 때 사용할 수 있는 쿠키도 있습니다.마지막으로 서버의 도구를 지원하기 위한 변환 및 뷰 포트 크기.이러한 쿠키는 웹 사이트 기능에 필요합니다.",
+  "cookie-description-ga": "사이트 사용 방식을 이해하는 데 사용되는 쿠키입니다."
 }

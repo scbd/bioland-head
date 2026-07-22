@@ -1068,5 +1068,12 @@
   "SVG Image": "SVG 图像",
   "AVIF Image": "AVIF 图像",
   "BMP Image": "BMP 图像",
-  "TIFF Image": "TIFF 图像"
+  "TIFF Image": "TIFF 图像",
+  "cookie-control-decline": "拒绝",
+  "cookie-control-declineAll": "重置偏好设置",
+  "cookie-control-accept": "全部接受",
+  "cookie-name-bl2": "Bioland 背景",
+  "cookie-name-ga": "谷歌分析",
+  "cookie-description-bl2": "这些 cookie 存储了 Bioland 工具的上下文。一个代码实例可以满足许多网站的需求。上下文有助于区分不同的网站。此外，还有一个用于在登录时保持会话的 cookie。最后是转换和查看端口大小以帮助服务器上的工具。这些 Cookie 是网站正常运行所必需的。",
+  "cookie-description-ga": "Cookie 用于了解网站的使用方式。"
 }

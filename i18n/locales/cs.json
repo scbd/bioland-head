@@ -1066,5 +1066,12 @@
   "SVG Image": "SVG Image",
   "AVIF Image": "AVIF Image",
   "BMP Image": "BMP Image",
-  "TIFF Image": "TIFF Image"
+  "TIFF Image": "TIFF Image",
+  "cookie-control-decline": "Odmítnout",
+  "cookie-control-declineAll": "Obnovit předvolby",
+  "cookie-control-accept": "Přijmout vše",
+  "cookie-name-bl2": "Kontext Bioland",
+  "cookie-name-ga": "Google Analytics",
+  "cookie-description-bl2": "Tyto soubory cookie ukládají kontext nástroje Bioland. Jedna instance kódu vyhovuje mnoha webům. Kontext pomáhá rozlišovat mezi různými webovými stránkami. Dále soubory cookie pro přihlášení k udržení relace. Nakonec překlad a zobrazení velikosti portu pro pomoc nástroji na serveru. Tyto soubory cookie jsou nezbytné pro funkčnost webových stránek.",
+  "cookie-description-ga": "Soubor cookie slouží k pochopení toho, jak je web používán."
 }

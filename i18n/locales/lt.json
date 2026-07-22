@@ -1066,5 +1066,12 @@
   "SVG Image": "SVG Image",
   "AVIF Image": "AVIF Image",
   "BMP Image": "BMP Image",
-  "TIFF Image": "TIFF Image"
+  "TIFF Image": "TIFF Image",
+  "cookie-control-decline": "Atsisakyti",
+  "cookie-control-declineAll": "Atstatyti nuostatas",
+  "cookie-control-accept": "Priimkite visus",
+  "cookie-name-bl2": "“Bioland” kontekstas",
+  "cookie-name-ga": "“Google Analytics”",
+  "cookie-description-bl2": "Šie slapukai saugo “Bioland” įrankio kontekstą. Vienas kodo egzempliorius skirtas daugeliui svetainių. Kontekstas padeda atskirti skirtingas svetaines. Be to, slapukai, skirti prisijungiant, kad išlaikytumėte sesiją. Galiausiai vertimas ir peržiūrėti prievado dydį, kad padėtų įrankį serveryje. Šie slapukai yra būtini svetainės funkcionavimui.",
+  "cookie-description-ga": "Slapukas naudojamas norint suprasti, kaip svetainė naudojama."
 }

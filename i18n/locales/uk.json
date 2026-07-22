@@ -1066,5 +1066,12 @@
   "SVG Image": "SVG Image",
   "AVIF Image": "AVIF Image",
   "BMP Image": "BMP Image",
-  "TIFF Image": "TIFF Image"
+  "TIFF Image": "TIFF Image",
+  "cookie-control-decline": "Відхилити",
+  "cookie-control-declineAll": "Скинути налаштування",
+  "cookie-control-accept": "Прийняти все",
+  "cookie-name-bl2": "Біолендський контекст",
+  "cookie-name-ga": "Гугл Аналітика",
+  "cookie-description-bl2": "Ці файли cookie зберігають контекст інструменту Bioland. Один екземпляр коду обслуговує багато веб-сайтів. Контекст допомагає розрізняти різні веб-сайти. Далі файли cookie для входу, щоб зберегти сеанс. Нарешті, переклад і перегляд розміру порту для допомоги інструменту на сервері. Ці файли cookie необхідні для функціональності веб-сайту.",
+  "cookie-description-ga": "Файл cookie використовується для розуміння того, як використовується сайт."
 }

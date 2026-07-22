@@ -1066,5 +1066,12 @@
   "SVG Image": "SVG Image",
   "AVIF Image": "AVIF Image",
   "BMP Image": "BMP Image",
-  "TIFF Image": "TIFF Image"
+  "TIFF Image": "TIFF Image",
+  "cookie-control-decline": "Rədd et",
+  "cookie-control-declineAll": "Sıfırla",
+  "cookie-control-accept": "Hamısını qəbul edin",
+  "cookie-name-bl2": "Bioland konteksti",
+  "cookie-name-ga": "Google Analytics",
+  "cookie-description-bl2": "Bu kukilər Bioland alətinin kontekstini saxlayır. Bir kod nümunəsi bir çox veb saytlara xidmət edir. Kontekst müxtəlif veb saytları fərqləndirməyə kömək edir. Sessiyanızı davam etdirmək üçün daxil olduğunuz zaman əlavə kukilər. Nəhayət, serverdəki alətə kömək etmək üçün port ölçüsünü tərcümə edin və baxın. Bu kukilər veb saytın funksionallığı üçün zəruridir.",
+  "cookie-description-ga": "Saytın necə istifadə olunduğunu anlamaq üçün istifadə olunan kuki."
 }

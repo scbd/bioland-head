@@ -1066,5 +1066,12 @@
   "SVG Image": "SVG Image",
   "AVIF Image": "AVIF Image",
   "BMP Image": "BMP Image",
-  "TIFF Image": "TIFF Image"
+  "TIFF Image": "TIFF Image",
+  "cookie-control-decline": "Hylkää",
+  "cookie-control-declineAll": "Palauta asetukset",
+  "cookie-control-accept": "Hyväksy kaikki",
+  "cookie-name-bl2": "Bioland-konteksti",
+  "cookie-name-ga": "Googlen analytiikka",
+  "cookie-description-bl2": "Nämä evästeet tallentavat Bioland-työkalun kontekstin. Yksi koodi-ilmentymä palvelee monia verkkosivustoja. Konteksti auttaa erottamaan eri verkkosivustot. Lisäksi evästeet, kun kirjaudut sisään istuntosi säilyttämiseksi. Lopuksi käännös ja näytä portin koko palvelimen työkalun avuksi. Nämä evästeet ovat välttämättömiä verkkosivuston toimivuuden kannalta.",
+  "cookie-description-ga": "Eväste, jota käytetään ymmärtämään, miten sivustoa käytetään."
 }

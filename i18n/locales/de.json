@@ -1066,5 +1066,12 @@
   "SVG Image": "SVG Image",
   "AVIF Image": "AVIF Image",
   "BMP Image": "BMP Image",
-  "TIFF Image": "TIFF Image"
+  "TIFF Image": "TIFF Image",
+  "cookie-control-decline": "Ablehnen",
+  "cookie-control-declineAll": "Einstellungen zurücksetzen",
+  "cookie-control-accept": "Alles akzeptieren",
+  "cookie-name-bl2": "Bioland-Kontext",
+  "cookie-name-ga": "Google Analytics",
+  "cookie-description-bl2": "Diese Cookies speichern den Kontext für das Bioland-Tool. Eine Codeinstanz eignet sich für viele Websites. Der Kontext hilft dabei, zwischen den verschiedenen Websites zu unterscheiden. Außerdem ein Cookie, wenn Sie sich anmelden, um Ihre Sitzung aufrechtzuerhalten. Schließlich die Übersetzung und die Portgröße der Anzeige, um das Tool auf dem Server zu unterstützen. Diese Cookies sind für die Funktionalität der Website erforderlich.",
+  "cookie-description-ga": "Cookie, der verwendet wird, um zu verstehen, wie die Website genutzt wird."
 }
