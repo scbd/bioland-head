@@ -42,13 +42,13 @@
     function makeMenu(data,t, name, passedCountry, passedLocale){
         const locale  = unLocales.includes(passedLocale.toLocaleLowerCase())? passedLocale.toLocaleLowerCase() : 'en';
         const country = Array.isArray(passedCountry)? passedCountry.map((c)=>`&country=${c}`).join('')  : `&country=${passedCountry}`;
-        const schemas = ['measure', 'absProcedure', 'absNationalModelContractualClause', 'absPermit', 'database', 'absCheckpoint'];
+        const schemas = ['absNationalReport','measure', 'authority','absProcedure', 'absNationalModelContractualClause', 'absPermit',  'absCheckpoint', 'absCheckpointCommunique','communityProtocol','capacityBuildingInitiative','resource',];
         const menus   = [];
 
-        for (const schemaName in data) {
-            const isDatabase = schemaName === 'database';
+        for (const schemaName of schemas) {
+            if(!data[schemaName]) continue;
 
-            if(!schemas.includes(schemaName)) continue;
+            const isDatabase = schemaName === 'database';
 
             menus.push({
                             title: isDatabase? t(schemaName+`-abs`) : t(schemaName),

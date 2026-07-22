@@ -66,7 +66,25 @@ function makeObject(facetsArray=[], { country, countries, locale }){
         facets[schemaName] = { count, href };
     }
 
+    mergeNationalReports(facets, { country, countries, locale });
+
     return facets
+}
+
+// Combine absNationalReport + absNationalReport1 into a single absNationalReport entry:
+// count is the sum of both, href searches both schemas.
+function mergeNationalReports(facets, { country, countries, locale }){
+    const primary   = facets.absNationalReport;
+    const secondary = facets.absNationalReport1;
+
+    if(!primary && !secondary) return;
+
+    const count = (primary?.count || 0) + (secondary?.count || 0);
+    const href  = getUrl('absNationalReport', locale, country, countries)
+                    .replace('schema=absNationalReport', 'schema=absNationalReport&schema=absNationalReport1');
+
+    facets.absNationalReport = { count, href };
+    delete facets.absNationalReport1;
 }
 
 
