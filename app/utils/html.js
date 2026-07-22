@@ -25,8 +25,8 @@ DOMPurify.addHook('uponSanitizeElement', (node, data)=>
   
 
 export const hasBchEmbed = (html) => {
-  const bchEmbedRegex = /<div\b(?=[^>]*\bclass=["'][^"']*scbd-chm-embed[^"']*["'])(?=[^>]*\bdata-type=["']chm-search-result["'])[^>]*>/i;
-  
+  const bchEmbedRegex = /<div\b[^>]*\bclass=["'][^"']*scbd-chm-embed[^"']*["'][^>]*>/i;
+
   return bchEmbedRegex.test(html);
 };
 
