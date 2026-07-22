@@ -18,6 +18,7 @@ export default [
   "tt.bsl.staging.cbd.int",
   "co.bsl.staging.cbd.int",
   "e2e.bsl.staging.cbd.int",
+  "kpb.bsl.staging.cbd.int",
   "han-demo.bl2.chm-cbd.net",
   "demo.bl2.chm-cbd.net",
   "training.bl2.chm-cbd.net",

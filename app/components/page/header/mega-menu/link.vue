@@ -142,6 +142,17 @@
     hyphens: manual;
 }
 
+// Force a uniform thumbnail box regardless of whether IPX cover-cropped the
+// source. `.img-fluid` alone leaves height:auto, so an un-processed source
+// (non-allow-listed domain, SVG, cache miss) renders at its native ratio and
+// the cards end up mismatched. object-fit crops client-side as a guarantee.
+.card .card-img{
+    width: 100%;
+    aspect-ratio: 102 / 64;
+    height: auto;
+    object-fit: cover;
+}
+
 .child-link .text-wrap,
 .child-link .text-nowrap{
     word-break: inherit;
