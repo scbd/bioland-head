@@ -19,6 +19,7 @@ const getUrl = (schemaName, passedLocale='en', passedCountry, countries) => {
             pressRelease                     : `https://absch.cbd.int/${locale}/search?currentPage=1&schema=pressRelease${country}`,
             meeting                          : `https://absch.cbd.int/${locale}/search?currentPage=1&schema=meeting${country}`,
             absNationalReport                : `https://absch.cbd.int/${locale}/search?currentPage=1&schema=absNationalReport${country}`,
+            absNationalReport1               : `https://absch.cbd.int/${locale}/search?currentPage=1&schema=absNationalReport1${country}`,
             capacityBuildingInitiative       : `https://absch.cbd.int/${locale}/search?currentPage=1&schema=capacityBuildingInitiative${country}`,
             absCheckpoint                    : `https://absch.cbd.int/${locale}/search?currentPage=1&schema=absCheckpoint${country}`,
             database                         : `https://absch.cbd.int/${locale}/search?currentPage=1&schema=database${country}`,
@@ -66,14 +67,16 @@ function makeObject(facetsArray=[], { country, countries, locale }){
         facets[schemaName] = { count, href };
     }
 
-    mergeNationalReports(facets, { country, countries, locale });
+    addConsolidatedNationalReports(facets, { country, countries, locale });
 
     return facets
 }
 
-// Combine absNationalReport + absNationalReport1 into a single absNationalReport entry:
-// count is the sum of both, href searches both schemas.
-function mergeNationalReports(facets, { country, countries, locale }){
+// Expose a consolidated national-reports entry under a synthetic schema key
+// (`absNationalReports`) that sums absNationalReport + absNationalReport1 and links to a
+// search covering both. The two real entries are left intact so they can still render
+// individually; this fake schema is kept for reuse later (it is not shown by default).
+function addConsolidatedNationalReports(facets, { country, countries, locale }){
     const primary   = facets.absNationalReport;
     const secondary = facets.absNationalReport1;
 
@@ -83,8 +86,7 @@ function mergeNationalReports(facets, { country, countries, locale }){
     const href  = getUrl('absNationalReport', locale, country, countries)
                     .replace('schema=absNationalReport', 'schema=absNationalReport&schema=absNationalReport1');
 
-    facets.absNationalReport = { count, href };
-    delete facets.absNationalReport1;
+    facets.absNationalReports = { count, href };
 }
 
 

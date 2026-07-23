@@ -42,7 +42,10 @@
     function makeMenu(data,t, name, passedCountry, passedLocale){
         const locale  = unLocales.includes(passedLocale.toLocaleLowerCase())? passedLocale.toLocaleLowerCase() : 'en';
         const country = Array.isArray(passedCountry)? passedCountry.map((c)=>`&country=${c}`).join('')  : `&country=${passedCountry}`;
-        const schemas = ['absNationalReport','measure', 'authority','absProcedure', 'absNationalModelContractualClause', 'absPermit',  'absCheckpoint', 'absCheckpointCommunique','communityProtocol','capacityBuildingInitiative','resource',];
+        // Order mirrors the ABS Clearing-House search schema array (absch.cbd.int/search?schema=...):
+        // focalPoint, authority, measure, absProcedure, absNationalModelContractualClause,
+        // absPermit, database, absCheckpoint, absCheckpointCommunique, then the two national reports.
+        const schemas = ['focalPoint', 'authority', 'measure', 'absProcedure', 'absNationalModelContractualClause', 'absPermit', 'database', 'absCheckpoint', 'absCheckpointCommunique', 'absNationalReport1', 'absNationalReport'];
         const menus   = [];
 
         for (const schemaName of schemas) {
