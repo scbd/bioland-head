@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <circle cx="200" cy="200" r="186" fill="none" stroke="#f7f2ec" stroke-width="14"></circle>
+  <g fill="#f7f2ec" font-family="Georgia, &#39;Times New Roman&#39;, serif" font-weight="bold" font-size="88" text-anchor="middle">
+    <text x="200" y="140">KI</text>
+    <text x="200" y="240">PA</text>
+    <text x="200" y="340">BiC</text>
+  </g>
+</svg>
