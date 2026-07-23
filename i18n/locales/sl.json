@@ -1074,6 +1074,6 @@
   "cookie-control-accept": "Sprejmi vse",
   "cookie-name-bl2": "Bioland kontekst",
   "cookie-name-ga": "Google Analytics",
-  "cookie-description-bl2": "Ti piškotki shranjujejo kontekst orodja Bioland. En primer kode je namenjen številnim spletnim mestom. Kontekst pomaga razlikovati med različnimi spletnimi mesti. Nadalje piškotki za prijavo, da ohranite svojo sejo. Nazadnje prevajanje in ogled velikosti vrat za pomoč orodju na strežniku. Ti piškotki so potrebni za delovanje spletne strani.",
-  "cookie-description-ga": "Piškotek, ki se uporablja za razumevanje, kako se spletno mesto uporablja."
+  "cookie-description-bl2": "Ti piškotki so nujni in vedno vklopljeni — spletno mesto brez njih ne more delovati. Zapomnijo si, katero spletno mesto si ogledujete, vaš jezik, velikost vašega zaslona in odločitve o piškotkih, ki jih sprejmete tukaj. Če se prijavite, poskrbijo tudi, da ostanete prijavljeni.",
+  "cookie-description-ga": "Te izbirne piškotke nastavi Google Analytics. Merijo, kako obiskovalci uporabljajo spletno mesto — na primer, katere strani si ogledujejo — da ga lahko izboljšamo. Spletno mesto deluje normalno tudi brez njih."
 }

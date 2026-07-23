@@ -1074,6 +1074,6 @@
   "cookie-control-accept": "Accepta-ho tot",
   "cookie-name-bl2": "Context de Bioland",
   "cookie-name-ga": "Google Analytics",
-  "cookie-description-bl2": "Aquestes cookies emmagatzemen el context de l'eina Bioland. Una instància de codi serveix per a molts llocs web. El context ajuda a diferenciar entre els diferents llocs web. A més, unes galetes per quan inicieu sessió per mantenir la vostra sessió. Finalment, traducció i visualització de la mida del port per ajudar l'eina al servidor. Aquestes cookies són necessàries per a la funcionalitat del lloc web.",
-  "cookie-description-ga": "Cookie utilitzada per comprendre com s'utilitza el lloc web."
+  "cookie-description-bl2": "Aquestes cookies són essencials i sempre estan actives: el lloc web no pot funcionar sense elles. Recorden quin lloc web esteu veient, el vostre idioma, la mida de la pantalla i les opcions de cookies que trieu aquí. Si inicieu sessió, també us mantenen la sessió iniciada.",
+  "cookie-description-ga": "Aquestes cookies opcionals les estableix Google Analytics. Mesuren com els visitants utilitzen el lloc web (per exemple, quines pàgines es visualitzen) perquè el puguem millorar. El lloc web funciona amb normalitat sense elles."
 }

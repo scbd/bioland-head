@@ -1076,6 +1076,6 @@
   "cookie-control-accept": "全部接受",
   "cookie-name-bl2": "Bioland 背景",
   "cookie-name-ga": "谷歌分析",
-  "cookie-description-bl2": "这些 cookie 存储了 Bioland 工具的上下文。一个代码实例可以满足许多网站的需求。上下文有助于区分不同的网站。此外，还有一个用于在登录时保持会话的 cookie。最后是转换和查看端口大小以帮助服务器上的工具。这些 Cookie 是网站正常运行所必需的。",
-  "cookie-description-ga": "Cookie 用于了解网站的使用方式。"
+  "cookie-description-bl2": "这些 Cookie 是必需的，并且始终开启——没有它们，本网站将无法运行。它们会记住您正在查看的是哪个网站、您的语言、您的屏幕大小，以及您在此处做出的 Cookie 选择。如果您登录，它们还会让您保持登录状态。",
+  "cookie-description-ga": "这些可选 Cookie 由谷歌分析设置。它们用于衡量访问者如何使用本网站——例如浏览了哪些页面——以便我们加以改进。即使没有它们，本网站也能正常运行。"
 }

@@ -1074,6 +1074,6 @@
   "cookie-control-accept": "Fogadja el az egészet",
   "cookie-name-bl2": "Bioland kontextus",
   "cookie-name-ga": "Google Analytics",
-  "cookie-description-bl2": "Ezek a cookie-k tárolják a Bioland eszköz kontextusát. Egy kódpéldány sok webhelyre szolgál. A kontextus segít megkülönböztetni a különböző webhelyek között. Továbbá sütik a munkamenet fenntartása érdekében bejelentkezéskor. Végül a portméret fordítása és megtekintése az eszköz kiszolgálón való segítése érdekében. Ezek a cookie-k szükségesek a weboldal működéséhez.",
-  "cookie-description-ga": "A weboldal használatának megértéséhez használt süti."
+  "cookie-description-bl2": "Ezek a cookie-k nélkülözhetetlenek, és mindig be vannak kapcsolva — a weboldal nélkülük nem működik. Megjegyzik, hogy éppen melyik weboldalt nézi, a nyelvét, a képernyőméretét, valamint az itt megadott cookie-beállításait. Ha bejelentkezik, arról is gondoskodnak, hogy bejelentkezve maradjon.",
+  "cookie-description-ga": "Ezeket a nem kötelező cookie-kat a Google Analytics helyezi el. Azt mérik, hogyan használják a látogatók a weboldalt — például mely oldalakat tekintik meg —, hogy javíthassuk azt. A weboldal nélkülük is rendesen működik."
 }

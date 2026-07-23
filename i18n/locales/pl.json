@@ -1074,6 +1074,6 @@
   "cookie-control-accept": "Zaakceptuj wszystko",
   "cookie-name-bl2": "Kontekst Bioland",
   "cookie-name-ga": "Google Analytics",
-  "cookie-description-bl2": "Te pliki cookie przechowują kontekst narzędzia Bioland. Jedna instancja kodu obsługuje wiele witryn internetowych. Kontekst pomaga rozróżnić różne strony internetowe. Dalsze pliki cookie dotyczące logowania się, aby utrzymać sesję. Wreszcie przetłumacz i wyświetl rozmiar portu, aby pomóc narzędziu na serwerze. Te pliki cookie są niezbędne do funkcjonowania strony internetowej.",
-  "cookie-description-ga": "Plik cookie używany do zrozumienia, w jaki sposób witryna jest używana."
+  "cookie-description-bl2": "Te pliki cookie są niezbędne i zawsze włączone — strona internetowa nie może bez nich działać. Zapamiętują, którą stronę internetową przeglądasz, Twój język, rozmiar ekranu oraz wybory dotyczące plików cookie, których tu dokonujesz. Jeśli się zalogujesz, dbają również o to, abyś pozostał zalogowany.",
+  "cookie-description-ga": "Te opcjonalne pliki cookie są ustawiane przez Google Analytics. Mierzą, w jaki sposób odwiedzający korzystają ze strony internetowej — na przykład, które strony są wyświetlane — abyśmy mogli ją ulepszać. Strona internetowa działa normalnie bez nich."
 }

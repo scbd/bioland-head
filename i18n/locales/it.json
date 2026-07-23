@@ -1074,6 +1074,6 @@
   "cookie-control-accept": "Accetta tutto",
   "cookie-name-bl2": "Contesto Bioland",
   "cookie-name-ga": "Google Analytics",
-  "cookie-description-bl2": "Questi cookie memorizzano il contesto dello strumento Bioland. Un'istanza di codice è adatta a molti siti Web. Il contesto aiuta a distinguere tra i diversi siti Web. Inoltre un cookie per quando effettui il login per mantenere la sessione. Infine, traduci e visualizza le dimensioni della porta per facilitare lo strumento sul server. Questi cookie sono necessari per la funzionalità del sito web.",
-  "cookie-description-ga": "Cookie utilizzato per capire come viene utilizzato il sito."
+  "cookie-description-bl2": "Questi cookie sono essenziali e sempre attivi — il sito Web non può funzionare senza di essi. Ricordano quale sito Web stai visualizzando, la tua lingua, le dimensioni dello schermo e le scelte sui cookie che effettui qui. Se accedi, ti mantengono anche connesso.",
+  "cookie-description-ga": "Questi cookie opzionali vengono impostati da Google Analytics. Misurano come i visitatori utilizzano il sito Web — ad esempio, quali pagine vengono visualizzate — in modo da poterlo migliorare. Il sito Web funziona normalmente senza di essi."
 }

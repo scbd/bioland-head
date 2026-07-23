@@ -1074,6 +1074,6 @@
   "cookie-control-accept": "Hyväksy kaikki",
   "cookie-name-bl2": "Bioland-konteksti",
   "cookie-name-ga": "Googlen analytiikka",
-  "cookie-description-bl2": "Nämä evästeet tallentavat Bioland-työkalun kontekstin. Yksi koodi-ilmentymä palvelee monia verkkosivustoja. Konteksti auttaa erottamaan eri verkkosivustot. Lisäksi evästeet, kun kirjaudut sisään istuntosi säilyttämiseksi. Lopuksi käännös ja näytä portin koko palvelimen työkalun avuksi. Nämä evästeet ovat välttämättömiä verkkosivuston toimivuuden kannalta.",
-  "cookie-description-ga": "Eväste, jota käytetään ymmärtämään, miten sivustoa käytetään."
+  "cookie-description-bl2": "Nämä evästeet ovat välttämättömiä ja aina käytössä — verkkosivusto ei toimi ilman niitä. Ne muistavat, mitä verkkosivustoa katselet, kielesi, näytön koon ja tässä tekemäsi evästevalinnat. Jos kirjaudut sisään, ne pitävät sinut myös kirjautuneena.",
+  "cookie-description-ga": "Nämä valinnaiset evästeet asettaa Googlen analytiikka. Ne mittaavat, miten kävijät käyttävät verkkosivustoa — esimerkiksi mitä sivuja katsotaan — jotta voimme parantaa sitä. Verkkosivusto toimii normaalisti ilman niitä."
 }

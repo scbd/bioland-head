@@ -1074,6 +1074,6 @@
   "cookie-control-accept": "Tümünü Kabul Et",
   "cookie-name-bl2": "Bioland Bağlamı",
   "cookie-name-ga": "Google Analiz",
-  "cookie-description-bl2": "Bu çerezler, Bioland aracının bağlamını depolar. Bir kod örneği birçok web sitesine hitap eder. Bağlam, farklı web siteleri arasında ayrım yapmaya yardımcı olur. Ayrıca oturumunuzu sürdürmek için giriş yaptığınız zaman için bir çerez. Son olarak sunucudaki araca yardımcı olmak için çeviri ve bağlantı noktası boyutunu görüntüleyin. Bu çerezler, web sitesinin işlevselliği için gereklidir.",
-  "cookie-description-ga": "Sitenin nasıl kullanıldığını anlamak için kullanılan çerez."
+  "cookie-description-bl2": "Bu çerezler zorunludur ve her zaman etkindir — web sitesi bunlar olmadan çalışamaz. Hangi web sitesini görüntülediğinizi, dilinizi, ekran boyutunuzu ve burada yaptığınız çerez tercihlerini hatırlarlar. Oturum açarsanız, oturumunuzu da açık tutarlar.",
+  "cookie-description-ga": "Bu isteğe bağlı çerezler Google Analiz tarafından yerleştirilir. Ziyaretçilerin web sitesini nasıl kullandığını — örneğin hangi sayfaların görüntülendiğini — ölçerler; böylece siteyi iyileştirebiliriz. Web sitesi bunlar olmadan da normal şekilde çalışır."
 }

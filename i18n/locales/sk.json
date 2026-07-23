@@ -1074,6 +1074,6 @@
   "cookie-control-accept": "Prijmite všetko",
   "cookie-name-bl2": "Kontext Bioland",
   "cookie-name-ga": "Google Analytics",
-  "cookie-description-bl2": "Tieto súbory cookie ukladajú kontext nástroja Bioland. Jedna inštancia kódu slúži na mnoho webových stránok. Kontext pomáha rozlišovať medzi rôznymi webovými stránkami. Ďalej súbory cookie pre prihlásenie, aby ste si udržali reláciu. Nakoniec preklad a zobrazenie veľkosti portu na pomoc nástroju na serveri. Tieto súbory cookie sú nevyhnutné pre funkčnosť webovej stránky.",
-  "cookie-description-ga": "Súbor cookie slúži na pochopenie toho, ako sa stránka používa."
+  "cookie-description-bl2": "Tieto súbory cookie sú nevyhnutné a vždy zapnuté — bez nich webová stránka nemôže fungovať. Zapamätajú si, ktorú webovú stránku si prezeráte, váš jazyk, veľkosť vašej obrazovky a voľby súborov cookie, ktoré tu urobíte. Ak sa prihlásite, udržia vás aj prihlásených.",
+  "cookie-description-ga": "Tieto voliteľné súbory cookie nastavuje Google Analytics. Merajú, ako návštevníci používajú webovú stránku — napríklad ktoré stránky sa zobrazujú — aby sme ju mohli zlepšiť. Webová stránka bez nich funguje normálne."
 }

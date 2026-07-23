@@ -1074,6 +1074,6 @@
   "cookie-control-accept": "Priimkite visus",
   "cookie-name-bl2": "“Bioland” kontekstas",
   "cookie-name-ga": "“Google Analytics”",
-  "cookie-description-bl2": "Šie slapukai saugo “Bioland” įrankio kontekstą. Vienas kodo egzempliorius skirtas daugeliui svetainių. Kontekstas padeda atskirti skirtingas svetaines. Be to, slapukai, skirti prisijungiant, kad išlaikytumėte sesiją. Galiausiai vertimas ir peržiūrėti prievado dydį, kad padėtų įrankį serveryje. Šie slapukai yra būtini svetainės funkcionavimui.",
-  "cookie-description-ga": "Slapukas naudojamas norint suprasti, kaip svetainė naudojama."
+  "cookie-description-bl2": "Šie slapukai yra būtini ir visada įjungti — be jų svetainė negali veikti. Jie įsimena, kurią svetainę žiūrite, jūsų kalbą, ekrano dydį ir čia jūsų atliktus pasirinkimus dėl slapukų. Jei prisijungiate, jie taip pat išlaiko jus prisijungusius.",
+  "cookie-description-ga": "Šiuos pasirenkamus slapukus nustato “Google Analytics”. Jie matuoja, kaip lankytojai naudojasi svetaine — pavyzdžiui, kurie puslapiai peržiūrimi — kad galėtume ją tobulinti. Be jų svetainė veikia įprastai."
 }

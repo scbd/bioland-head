@@ -4,6 +4,6 @@
   "cookie-control-accept": "Godta alle",
   "cookie-name-bl2": "Bioland Kontekst",
   "cookie-name-ga": "Google Analytics",
-  "cookie-description-bl2": "Disse informasjonskapslene lagrer konteksten for Bioland-verktøyet. Én kodeforekomst henvender seg til mange nettsteder. Konteksten hjelper til med å skille mellom de forskjellige nettstedene. Videre en informasjonskapsel for når du logger inn for å beholde økten. Til slutt oversettelse og visning av portstørrelse for å hjelpe verktøyet på serveren. Disse informasjonskapslene er nødvendige for funksjonaliteten til nettstedet.",
-  "cookie-description-ga": "Informasjonskapsel brukes til å forstå hvordan nettstedet brukes."
+  "cookie-description-bl2": "Disse informasjonskapslene er nødvendige og alltid på — nettstedet kan ikke fungere uten dem. De husker hvilket nettsted du ser på, språket ditt, skjermstørrelsen din og valgene du gjør for informasjonskapsler her. Hvis du logger inn, holder de deg også innlogget.",
+  "cookie-description-ga": "Disse valgfrie informasjonskapslene settes av Google Analytics. De måler hvordan besøkende bruker nettstedet — for eksempel hvilke sider som vises — slik at vi kan forbedre det. Nettstedet fungerer som normalt uten dem."
 }
