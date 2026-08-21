@@ -80,7 +80,8 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
         evict(LOGIN_FAILURE_BACKOFF_MS);
       }
 
-      consola.error('DrupalAuth.login: ', uri, { name, status: e?.status });
+      // A timeout carries no HTTP status, only a code - log whichever exists
+      consola.error('DrupalAuth.login: ', uri, { name, status: e?.status ?? e?.code });
 
       throw createError({ statusCode: 503, statusMessage: 'Drupal login unavailable', data: { siteCode, reason: 'login-failed' }, cause: e });
     })

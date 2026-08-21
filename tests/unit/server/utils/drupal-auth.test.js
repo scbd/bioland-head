@@ -8,15 +8,24 @@ const postCalls = []
 let loginShouldFail = false
 let timeoutSpy = () => {}
 
+// When set, the next login hangs until the test settles it by hand, so an
+// eviction timer can be made to fire while a login is still in flight.
+let deferNext = false
+const deferred = []
+
 vi.mock('superagent', () => {
   const agent = () => {
     const request = {
       set:       () => request,
       send:      () => request,
       timeout:   (opts) => { timeoutSpy(opts); return request },
-      redirects: () => loginShouldFail
-        ? Promise.reject(Object.assign(new Error('Forbidden'), { status: 403 }))
-        : Promise.resolve({ status: 200 }),
+      redirects: () => {
+        if (deferNext) return new Promise((resolve, reject) => deferred.push({ resolve, reject }))
+
+        return loginShouldFail
+          ? Promise.reject(Object.assign(new Error('Forbidden'), { status: 403 }))
+          : Promise.resolve({ status: 200 })
+      },
     }
 
     return {
@@ -37,7 +46,9 @@ async function importFresh () {
 describe('useDrupalLogin', () => {
   beforeEach(() => {
     postCalls.length  = 0
+    deferred.length   = 0
     loginShouldFail   = false
+    deferNext         = false
     timeoutSpy        = () => {}
 
     globalThis.useRuntimeConfig = () => ({
@@ -211,6 +222,48 @@ describe('useDrupalLogin', () => {
       loginShouldFail = false
       await expect(useDrupalLogin('seed')).resolves.toBeDefined()
       expect(postCalls).toHaveLength(3)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('a superseded entry\'s eviction timer never discards the live session that replaced it', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const useDrupalLogin = await importFresh()
+
+      // t=0: a failure arms a 10-minute eviction on entry A
+      loginShouldFail = true
+      await expect(useDrupalLogin('seed')).rejects.toMatchObject({ statusCode: 503 })
+
+      // t=9:59: one failure is under the backoff threshold, so this caller starts a
+      // real login. It is held in flight deliberately.
+      await vi.advanceTimersByTimeAsync(1000 * 60 * 10 - 1000)
+
+      deferNext = true
+      const orphaned = useDrupalLogin('seed').catch(() => 'rejected')
+      deferNext = false
+
+      // t=10:01: entry A's eviction fires, so the in-flight login is now orphaned
+      await vi.advanceTimersByTimeAsync(2000)
+
+      // The orphaned login fails, arming a fresh 10-minute timer on the orphaned entry
+      deferred.pop().reject(Object.assign(new Error('Forbidden'), { status: 403 }))
+      await expect(orphaned).resolves.toBe('rejected')
+
+      // A new caller gets a brand new entry and a real session
+      loginShouldFail = false
+      const live = await useDrupalLogin('seed')
+      expect(postCalls).toHaveLength(3)
+
+      // t=20:01: the orphan's stale timer fires. It must not delete the successor.
+      await vi.advanceTimersByTimeAsync(1000 * 60 * 10 + 2000)
+
+      const stillCached = await useDrupalLogin('seed')
+
+      expect(postCalls).toHaveLength(3)
+      expect(stillCached).toBe(live)
     } finally {
       vi.useRealTimers()
     }
