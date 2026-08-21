@@ -31,11 +31,15 @@ async function _getSiteSettings (ctx) {
 
     const resp = await $fetch(uri, $fetchBaseOptions({query}))
     const name = resp?.data?.name
-    
-    return {
+
+    const settings = {
         siteName: name === '_' ? '' : name,
         homePath: resp?.data?.page_front
     }
+
+    consola.info(`Fetched site settings for ${ctx.siteCode} (${ctx.locale})`, settings);
+
+    return settings
 }
 
 /**
