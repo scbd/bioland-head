@@ -6,6 +6,8 @@ const $http = {};
 const SESSION_TTL_MS                = 1000 * 60 * 30;
 const LOGIN_FAILURE_BACKOFF_MS      = 1000 * 60 * 10;
 const LOGIN_FAILURES_BEFORE_BACKOFF = 2;
+const LOGIN_RESPONSE_TIMEOUT_MS     = 1000 * 10;
+const LOGIN_DEADLINE_MS             = 1000 * 15;
 
 const login = async (uri, name, pass) => {
   const saAgent = SA.agent();
@@ -13,6 +15,9 @@ const login = async (uri, name, pass) => {
   await saAgent.post(uri)
           .set('Content-Type', 'application/json')
           .send(JSON.stringify({ name, pass }))
+          // A stalled (rather than rejecting) Drupal would otherwise never settle this
+          // promise, so the failure counter and backoff below would never engage.
+          .timeout({ response: LOGIN_RESPONSE_TIMEOUT_MS, deadline: LOGIN_DEADLINE_MS })
           .redirects(3);
 
   return saAgent;
@@ -30,7 +35,9 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
 
   const evict = (delay) => {
     clearTimeout(entry.evictTimer);
-    entry.evictTimer = setTimeout(() => delete $http[cacheId], delay);
+    // Only drop the slot if it still holds THIS entry - a timer armed by an entry that
+    // has since been replaced must not delete its successor's live session.
+    entry.evictTimer = setTimeout(() => { if($http[cacheId] === entry) delete $http[cacheId]; }, delay);
     entry.evictTimer.unref?.();
   };
 
@@ -49,21 +56,29 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
   // in a later microtask, so `promise` is always initialised by the time they read it.
   const promise = login(uri, name, pass)
     .then((saAgent) => {
-      entry.agent     = saAgent;
-      entry.failedAt  = undefined;
-      entry.failCount = 0;
+      // A forceNew login may have replaced this slot while we were in flight; never
+      // overwrite the newer session's bookkeeping.
+      if(entry.promise === promise){
+        entry.agent     = saAgent;
+        entry.failedAt  = undefined;
+        entry.failCount = 0;
 
-      evict(SESSION_TTL_MS);
+        evict(SESSION_TTL_MS);
+      }
 
       return saAgent;
     })
     .catch((e) => {
-      entry.agent     = undefined;
+      // Count every failure for flood protection, even from a superseded login
       entry.failedAt  = Date.now();
       entry.failCount = (entry.failCount || 0) + 1;
 
-      // Evict the failed entry so an unknown siteCode cannot accumulate forever
-      evict(LOGIN_FAILURE_BACKOFF_MS);
+      if(entry.promise === promise){
+        entry.agent = undefined;
+
+        // Evict the failed entry so an unknown siteCode cannot accumulate forever
+        evict(LOGIN_FAILURE_BACKOFF_MS);
+      }
 
       consola.error('DrupalAuth.login: ', uri, { name, status: e?.status });
 

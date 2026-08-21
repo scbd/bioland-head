@@ -6,12 +6,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 const postCalls = []
 let loginShouldFail = false
+let timeoutSpy = () => {}
 
 vi.mock('superagent', () => {
   const agent = () => {
     const request = {
       set:       () => request,
       send:      () => request,
+      timeout:   (opts) => { timeoutSpy(opts); return request },
       redirects: () => loginShouldFail
         ? Promise.reject(Object.assign(new Error('Forbidden'), { status: 403 }))
         : Promise.resolve({ status: 200 }),
@@ -36,6 +38,7 @@ describe('useDrupalLogin', () => {
   beforeEach(() => {
     postCalls.length  = 0
     loginShouldFail   = false
+    timeoutSpy        = () => {}
 
     globalThis.useRuntimeConfig = () => ({
       apiUser:     'api-user@example.test',
@@ -161,6 +164,56 @@ describe('useDrupalLogin', () => {
     // A later failure starts counting from zero again rather than tripping backoff at once
     loginShouldFail = true
     await expect(useDrupalLogin('seed', true)).rejects.toMatchObject({ data: { reason: 'login-failed' } })
+  })
+
+  it('keeps siteCode out of the HTTP status line', async () => {
+    const useDrupalLogin = await importFresh()
+
+    loginShouldFail = true
+
+    // siteCode is Host-derived, so it belongs in error data, never the status line
+    await expect(useDrupalLogin('seed')).rejects.toMatchObject({
+      statusMessage: 'Drupal login unavailable',
+      data:          { siteCode: 'seed' },
+    })
+  })
+
+  it('sets a request timeout so a stalled Drupal still trips the backoff', async () => {
+    const useDrupalLogin = await importFresh()
+
+    let timeoutOpts
+
+    timeoutSpy = (opts) => { timeoutOpts = opts }
+
+    await useDrupalLogin('seed')
+
+    expect(timeoutOpts).toMatchObject({ response: expect.any(Number), deadline: expect.any(Number) })
+  })
+
+  it('evicts a failed entry so a retry after the window starts clean', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const useDrupalLogin = await importFresh()
+
+      loginShouldFail = true
+
+      await expect(useDrupalLogin('seed')).rejects.toMatchObject({ statusCode: 503 })
+      await expect(useDrupalLogin('seed')).rejects.toMatchObject({ statusCode: 503 })
+
+      // Backoff engaged - no further network calls
+      await expect(useDrupalLogin('seed')).rejects.toMatchObject({ data: { reason: 'failure-backoff' } })
+      expect(postCalls).toHaveLength(2)
+
+      // Past the backoff window the failed entry is gone, so Drupal is tried again
+      await vi.advanceTimersByTimeAsync(1000 * 60 * 10 + 1)
+
+      loginShouldFail = false
+      await expect(useDrupalLogin('seed')).resolves.toBeDefined()
+      expect(postCalls).toHaveLength(3)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('never logs the password', async () => {
