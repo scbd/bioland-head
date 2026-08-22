@@ -7,6 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 const postCalls = []
 let loginShouldFail = false
 let timeoutSpy = () => {}
+let redirectsSpy = () => {}
 
 // When set, the next login hangs until the test settles it by hand, so an
 // eviction timer can be made to fire while a login is still in flight.
@@ -19,7 +20,9 @@ vi.mock('superagent', () => {
       set:       () => request,
       send:      () => request,
       timeout:   (opts) => { timeoutSpy(opts); return request },
-      redirects: () => {
+      redirects: (hops) => {
+        redirectsSpy(hops)
+
         if (deferNext) return new Promise((resolve, reject) => deferred.push({ resolve, reject }))
 
         return loginShouldFail
@@ -43,6 +46,12 @@ async function importFresh () {
   return (await import('../../../../server/utils/drupal/drupal-auth.js')).useDrupalLogin
 }
 
+async function importModule () {
+  vi.resetModules()
+
+  return await import('../../../../server/utils/drupal/drupal-auth.js')
+}
+
 describe('useDrupalLogin', () => {
   beforeEach(() => {
     postCalls.length  = 0
@@ -50,6 +59,7 @@ describe('useDrupalLogin', () => {
     loginShouldFail   = false
     deferNext         = false
     timeoutSpy        = () => {}
+    redirectsSpy      = () => {}
 
     globalThis.useRuntimeConfig = () => ({
       apiUser:     'api-user@example.test',
@@ -252,13 +262,16 @@ describe('useDrupalLogin', () => {
       deferred.pop().reject(Object.assign(new Error('Forbidden'), { status: 403 }))
       await expect(orphaned).resolves.toBe('rejected')
 
-      // A new caller gets a brand new entry and a real session
+      // t=15:01: a new caller gets a brand new entry and a real session. Staggered so its
+      // own TTL outlives the orphan's timer rather than expiring at the same instant.
+      await vi.advanceTimersByTimeAsync(1000 * 60 * 5)
+
       loginShouldFail = false
       const live = await useDrupalLogin('seed')
       expect(postCalls).toHaveLength(3)
 
-      // t=20:01: the orphan's stale timer fires. It must not delete the successor.
-      await vi.advanceTimersByTimeAsync(1000 * 60 * 10 + 2000)
+      // t=20:03: the orphan's stale timer fires. It must not delete the successor.
+      await vi.advanceTimersByTimeAsync(1000 * 60 * 5 + 2000)
 
       const stillCached = await useDrupalLogin('seed')
 
@@ -279,6 +292,158 @@ describe('useDrupalLogin', () => {
     const logged = JSON.stringify(globalThis.consola.error.mock.calls)
 
     expect(logged).not.toContain('stub-pass')
-    expect(logged).toContain('api-user@example.test')
+    expect(logged).not.toContain('api-user@example.test')
+  })
+
+  it('never follows a redirect on the credential-bearing login POST', async () => {
+    const useDrupalLogin = await importFresh()
+
+    const hops = []
+    redirectsSpy = (n) => hops.push(n)
+
+    await useDrupalLogin('seed')
+
+    expect(hops).toEqual([0])
+  })
+
+  it('re-logs in once the session TTL expires', async () => {
+    vi.useFakeTimers()
+
+    try {
+      const useDrupalLogin = await importFresh()
+
+      const first = await useDrupalLogin('seed')
+      expect(postCalls).toHaveLength(1)
+
+      // Just inside the 10 minute TTL - still the same session
+      await vi.advanceTimersByTimeAsync(1000 * 60 * 10 - 1000)
+      expect(await useDrupalLogin('seed')).toBe(first)
+      expect(postCalls).toHaveLength(1)
+
+      // Past it - the entry is evicted and the next caller logs in again
+      await vi.advanceTimersByTimeAsync(2000)
+
+      const second = await useDrupalLogin('seed')
+
+      expect(postCalls).toHaveLength(2)
+      expect(second).not.toBe(first)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('forceNew mints a new session even when a healthy one is cached', async () => {
+    const useDrupalLogin = await importFresh()
+
+    const first  = await useDrupalLogin('seed')
+    const second = await useDrupalLogin('seed', true)
+
+    expect(postCalls).toHaveLength(2)
+    expect(second).not.toBe(first)
+
+    // The refreshed session is what later callers get
+    expect(await useDrupalLogin('seed')).toBe(second)
+    expect(postCalls).toHaveLength(2)
+  })
+
+  it('a superseded failure cannot 503 callers while a live session is cached', async () => {
+    const useDrupalLogin = await importFresh()
+
+    await useDrupalLogin('seed')
+
+    // Two refreshes held in flight, then a third that wins the slot and succeeds.
+    deferNext = true
+    const first  = useDrupalLogin('seed', true).catch(() => 'rejected')
+    deferNext = true
+    const second = useDrupalLogin('seed', true).catch(() => 'rejected')
+    deferNext = false
+
+    const live = await useDrupalLogin('seed', true)
+
+    // Both superseded logins now fail, taking failCount to the backoff threshold even
+    // though the slot holds a healthy session.
+    deferred.pop().reject(Object.assign(new Error('Forbidden'), { status: 403 }))
+    deferred.pop().reject(Object.assign(new Error('Forbidden'), { status: 403 }))
+
+    expect(await first).toBe('rejected')
+    expect(await second).toBe('rejected')
+
+    // A plain caller must get that session, not a failure-backoff 503
+    expect(await useDrupalLogin('seed')).toBe(live)
+  })
+
+  it('preserves the underlying error as the 503 cause', async () => {
+    const useDrupalLogin = await importFresh()
+
+    loginShouldFail = true
+
+    await expect(useDrupalLogin('seed')).rejects.toMatchObject({
+      statusCode: 503,
+      cause:      expect.objectContaining({ status: 403 }),
+    })
+  })
+
+  it('backs off pod-wide once enough sites fail, not just per site', async () => {
+    const useDrupalLogin = await importFresh()
+
+    loginShouldFail = true
+
+    // One failure each across five distinct sites - no single site reaches its own
+    // two-failure threshold, but the shared IP has now failed five times.
+    for (const site of ['a', 'b', 'c', 'd', 'e'])
+      await expect(useDrupalLogin(site)).rejects.toMatchObject({ statusCode: 503 })
+
+    expect(postCalls).toHaveLength(5)
+
+    // A sixth, untouched site is refused without a network call
+    await expect(useDrupalLogin('f')).rejects.toMatchObject({
+      statusCode: 503,
+      data:       { reason: 'global-failure-backoff' },
+    })
+
+    expect(postCalls).toHaveLength(5)
+  })
+
+  it('reopens the pod-wide breaker on any successful login', async () => {
+    const useDrupalLogin = await importFresh()
+
+    loginShouldFail = true
+
+    for (const site of ['a', 'b', 'c', 'd'])
+      await expect(useDrupalLogin(site)).rejects.toMatchObject({ statusCode: 503 })
+
+    loginShouldFail = false
+    await useDrupalLogin('good')
+
+    // Four failures were banked, but the success cleared them - a fresh site still tries
+    loginShouldFail = true
+    await expect(useDrupalLogin('h')).rejects.toMatchObject({
+      statusCode: 503,
+      data:       { reason: 'login-failed' },
+    })
+
+    expect(postCalls).toHaveLength(6)
+  })
+
+  describe('invalidateDrupalSession', () => {
+    it('drops the cached session so the next caller re-logs in', async () => {
+      const { useDrupalLogin, invalidateDrupalSession } = await importModule()
+
+      const first = await useDrupalLogin('seed')
+
+      expect(invalidateDrupalSession('seed')).toBe(true)
+
+      const second = await useDrupalLogin('seed')
+
+      expect(postCalls).toHaveLength(2)
+      expect(second).not.toBe(first)
+    })
+
+    it('is a no-op for an unknown or missing siteCode', async () => {
+      const { invalidateDrupalSession } = await importModule()
+
+      expect(invalidateDrupalSession()).toBe(false)
+      expect(invalidateDrupalSession('never-logged-in')).toBe(false)
+    })
   })
 })
