@@ -43,15 +43,17 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
     entry.evictTimer.unref?.();
   };
 
-  // Drupal flood control blocks the IP on repeated failures - back off instead of hammering.
-  // Checked even for forceNew so no retry path can re-trigger the flood block.
-  if((entry.failCount || 0) >= LOGIN_FAILURES_BEFORE_BACKOFF && (Date.now() - entry.failedAt) < LOGIN_FAILURE_BACKOFF_MS)
-    throw createError({ statusCode: 503, statusMessage: 'Drupal login unavailable', data: { siteCode, reason: 'failure-backoff' } });
-
+  // A live session always wins over a backoff window - a failed refresh must never take
+  // down a tenant that still holds a usable agent.
   if(!forceNew){
     if(entry.agent)   return entry.agent;
     if(entry.promise) return entry.promise;
   }
+
+  // Drupal flood control blocks the IP on repeated failures - back off instead of hammering.
+  // Checked even for forceNew so no retry path can re-trigger the flood block.
+  if((entry.failCount || 0) >= LOGIN_FAILURES_BEFORE_BACKOFF && (Date.now() - entry.failedAt) < LOGIN_FAILURE_BACKOFF_MS)
+    throw createError({ statusCode: 503, statusMessage: 'Drupal login unavailable', data: { siteCode, reason: 'failure-backoff' } });
 
   // Bookkeeping and error wrapping hang off the stored promise, so deduped concurrent
   // callers get the same 503 contract as the caller that created it. Every callback runs
