@@ -77,7 +77,9 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
       entry.failedAt  = Date.now();
       entry.failCount = (entry.failCount || 0) + 1;
 
-      if(entry.promise === promise){
+      // Only the entry that still owns the slot is worth evicting - an orphaned entry's
+      // timer could never pass the identity guard in evict() anyway.
+      if($http[cacheId] === entry && entry.promise === promise){
         entry.agent = undefined;
 
         // Evict the failed entry so an unknown siteCode cannot accumulate forever
