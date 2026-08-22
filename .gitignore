@@ -52,6 +52,9 @@ playwright/.auth
 # Agent temp files (checkpoints, drafts)
 .github/agents-temp/*
 !.github/agents-temp/README.md
+.agents/temp*
+# .agents/worktrees holds live git worktrees - never git clean -fdx here
+.agents/worktrees/
 .playwright-mcp
 
 .claude

@@ -171,13 +171,17 @@ async function getMenusFromApiPager ({ siteCode,identifier, pathPreFix, pathAlia
         const { links, data } = body
 
 
-        if(nextUri(links)) return [ ...data, ...await getMenusFromApiPager({ siteCode,identifier, pathPreFix, pathAlias:paths, localizedHost }, nextUri(links)) ]
+        if(nextUri(links)) return [ ...data, ...await getMenusFromApiPager({ siteCode,identifier, pathPreFix, pathAlias, localizedHost }, nextUri(links)) ]
 
 
         return data
     }
     catch(e){
         consola.error('Menus.getMenusFromApiPager - recursive', e)
+
+        // Callers spread this into an array literal, so undefined would throw a TypeError
+        // straight back into a swallowing catch and blank the whole menu.
+        return []
     }
 }
 

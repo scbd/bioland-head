@@ -325,8 +325,6 @@ async function buildSiteContext(params: { siteCode: string; locale: string; conf
 
     siteName = settings.siteName;
     homePath = settings.homePath;
-    
-    consola.info(`Fetched site settings for ${siteCode} (${locale})`, settings);
   } catch (e) {
     consola.error(`Failed to fetch site settings for ${siteCode} (${locale}):`, e);
     // Non-critical - continue without site settings
