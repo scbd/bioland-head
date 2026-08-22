@@ -18,7 +18,9 @@ const login = async (uri, name, pass) => {
           // A stalled (rather than rejecting) Drupal would otherwise never settle this
           // promise, so the failure counter and backoff below would never engage.
           .timeout({ response: LOGIN_RESPONSE_TIMEOUT_MS, deadline: LOGIN_DEADLINE_MS })
-          .redirects(3);
+          // Superagent preserves method AND body across 307/308, so a redirect here would
+          // hand the shared api credentials to whoever answers for the new host.
+          .redirects(0);
 
   return saAgent;
 }
