@@ -37,7 +37,7 @@ async function _getSiteSettings (ctx) {
         homePath: resp?.data?.page_front
     }
 
-    consola.info(`Fetched site settings for ${ctx.siteCode} (${ctx.locale})`, settings);
+    consola.debug(`Fetched site settings for ${ctx.siteCode} (${ctx.locale})`, settings);
 
     return settings
 }
