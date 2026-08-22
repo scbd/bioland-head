@@ -3,7 +3,10 @@ import SA  from 'superagent';
 // cacheId -> { agent, promise, evictTimer, failedAt, failCount }
 const $http = {};
 
-const SESSION_TTL_MS                = 1000 * 60 * 30;
+// Nothing re-validates a cached cookie, so this is the worst-case window a session
+// Drupal already invalidated (restart, cache clear, session GC) keeps 403ing callers.
+// Keep it short enough to self-heal; invalidateDrupalSession() below is the fast path.
+const SESSION_TTL_MS                = 1000 * 60 * 10;
 const LOGIN_FAILURE_BACKOFF_MS      = 1000 * 60 * 10;
 const LOGIN_FAILURES_BEFORE_BACKOFF = 2;
 const LOGIN_RESPONSE_TIMEOUT_MS     = 1000 * 10;
@@ -31,6 +34,23 @@ const login = async (uri, name, pass) => {
           .redirects(0);
 
   return saAgent;
+}
+
+// Drop a cached session immediately, for callers that see a downstream 401/403 rather
+// than waiting out SESSION_TTL_MS. The next useDrupalLogin() re-logs in.
+export const invalidateDrupalSession = (siteCode) => {
+  if(!siteCode) return false;
+
+  const { multiSiteCode } = useRuntimeConfig().public;
+  const cacheId           = `${multiSiteCode}-${siteCode}`;
+  const entry             = $http[cacheId];
+
+  if(!entry?.agent) return false;
+
+  clearTimeout(entry.evictTimer);
+  delete $http[cacheId];
+
+  return true;
 }
 
 export const useDrupalLogin = async (siteCode, forceNew = false) => {
