@@ -9,6 +9,14 @@ const LOGIN_FAILURES_BEFORE_BACKOFF = 2;
 const LOGIN_RESPONSE_TIMEOUT_MS     = 1000 * 10;
 const LOGIN_DEADLINE_MS             = 1000 * 15;
 
+// Drupal applies flood control per SOURCE IP, and every tenant on this pod shares one.
+// The per-entry backoff below is therefore not enough on its own: with N tenants live, an
+// already-blocked IP would still absorb LOGIN_FAILURES_BEFORE_BACKOFF * N attempts per
+// window. This pod-wide breaker is what actually stops the hammering.
+const GLOBAL_FAILURES_BEFORE_BACKOFF = 5;
+
+const $global = { failedAt: undefined, failCount: 0 };
+
 const login = async (uri, name, pass) => {
   const saAgent = SA.agent();
 
@@ -51,7 +59,10 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
   }
 
   // Drupal flood control blocks the IP on repeated failures - back off instead of hammering.
-  // Checked even for forceNew so no retry path can re-trigger the flood block.
+  // Both gates are checked even for forceNew so no retry path can re-trigger the block.
+  if($global.failCount >= GLOBAL_FAILURES_BEFORE_BACKOFF && (Date.now() - $global.failedAt) < LOGIN_FAILURE_BACKOFF_MS)
+    throw createError({ statusCode: 503, statusMessage: 'Drupal login unavailable', data: { siteCode, reason: 'global-failure-backoff' } });
+
   if((entry.failCount || 0) >= LOGIN_FAILURES_BEFORE_BACKOFF && (Date.now() - entry.failedAt) < LOGIN_FAILURE_BACKOFF_MS)
     throw createError({ statusCode: 503, statusMessage: 'Drupal login unavailable', data: { siteCode, reason: 'failure-backoff' } });
 
@@ -67,6 +78,10 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
         entry.failedAt  = undefined;
         entry.failCount = 0;
 
+        // Any success proves the IP is not blocked, so the pod-wide breaker reopens.
+        $global.failedAt  = undefined;
+        $global.failCount = 0;
+
         evict(SESSION_TTL_MS);
       }
 
@@ -76,6 +91,9 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
       // Count every failure for flood protection, even from a superseded login
       entry.failedAt  = Date.now();
       entry.failCount = (entry.failCount || 0) + 1;
+
+      $global.failedAt  = entry.failedAt;
+      $global.failCount = $global.failCount + 1;
 
       // Only the entry that still owns the slot is worth evicting - an orphaned entry's
       // timer could never pass the identity guard in evict() anyway.
