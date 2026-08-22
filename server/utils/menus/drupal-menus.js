@@ -178,6 +178,10 @@ async function getMenusFromApiPager ({ siteCode,identifier, pathPreFix, pathAlia
     }
     catch(e){
         consola.error('Menus.getMenusFromApiPager - recursive', e)
+
+        // Callers spread this into an array literal, so undefined would throw a TypeError
+        // straight back into a swallowing catch and blank the whole menu.
+        return []
     }
 }
 
