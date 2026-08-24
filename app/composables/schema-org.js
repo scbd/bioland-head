@@ -1149,7 +1149,7 @@ export function useMainMenuSchemaOrg() {
             );
 
             if (validSections.length) {
-                const maxColumns = siteStore.config?.runTime?.theme?.megaMenu?.maxColumns || 5;
+                const maxColumns = siteStore.theme.megaMenu.maxColumns;
                 const rows = organizeSectionsIntoRows(validSections, maxColumns);
                 
                 const sectionSchemas = [];
