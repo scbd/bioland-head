@@ -11,8 +11,10 @@ import { getE2EBaseURL } from './e2e-targets'
  *
  * ## Method
  *
- * The site config is fetched from dmsm by the Nitro server, so the spec intercepts that response
- * and injects an author-shaped `biolandSettings.theme` into it. Two runs against the same route:
+ * `app/plugins/site.js` fetches `/api/context/{siteCode}/{locale}` and hands the response straight
+ * to `siteStore.initialize`. That plugin runs on the CLIENT as well as during SSR, so the browser
+ * makes that request and Playwright can intercept it. The spec injects an author-shaped
+ * `biolandSettings.theme` into that response. Two runs against the same route:
  *
  *   1. Baseline, no interception — capture what the site renders today.
  *   2. Injected — assert the authored leaves changed and the unauthored leaves did not.
@@ -21,28 +23,55 @@ import { getE2EBaseURL } from './e2e-targets'
  * network theme evolves. No live site carries an authored theme today, so run 1 is by definition
  * the fall-through render.
  *
+ * ## Two defects this spec was rewritten to fix (BL-886 gate, first ever execution)
+ *
+ * 1. **It injected into the wrong key.** The original fixture wrote
+ *    `config.runTime.biolandSettings.theme`. `app/stores/site.js` deliberately does NOT read the
+ *    theme from there (see the comment above its `theme` getter) — it reads the top-level
+ *    `biolandSettings` handed through `initialize`. Nothing the old fixture wrote could ever have
+ *    reached the page.
+ *
+ * 2. **The fixture colour collided with the tenant.** It authored `#7b6f82`, which is the target
+ *    tenant's OWN live primary. That hid defect 1 entirely: `toContain(authored)` passed
+ *    trivially because the page painted that colour with nothing injected. The spec could not
+ *    tell an injected value from a baseline one, so it proved nothing about the feature it exists
+ *    to prove.
+ *
+ * Three things keep that from recurring:
+ *
+ *   - The fixture uses a synthetic sentinel colour no brand palette would carry.
+ *   - The spec ASSERTS the sentinel is absent from the baseline render before asserting it took
+ *     effect, so a future tenant-theme change fails loudly rather than silently hollowing the
+ *     spec out again.
+ *   - The fixture authors `color.primary` ONLY. `color.secondary` is deliberately left unauthored
+ *     so there is an observable fall-through leaf. Authoring both colours, as the original did,
+ *     left the fall-through half of the test name with nothing to observe.
+ *
  * ## Header caveat
  *
  * When fulfilling with a modified body, the inherited `content-encoding` and `content-length`
  * headers are dropped. Re-using them ships a plain-JSON body labelled gzip with the wrong length,
  * which fails behind a gzip proxy while passing locally. See `stripBodyHeaders`.
- *
- * ## Run status
- *
- * Authored under p02-01. p03-01 (local verification gate) owns running it: this branch has no
- * running stack to point `getE2EBaseURL()` at, so the run is deferred there. `yarn test:e2e --list`
- * must enumerate it cleanly from here.
  */
 
 test.use({
   baseURL: getE2EBaseURL(),
 })
 
-/** Author-shaped theme, post-camelCase — the shape context-unified.ts hands to the app. */
+/**
+ * Author-shaped theme, post-camelCase — the shape context-unified.ts hands to the app.
+ *
+ * `color.primary` is a synthetic sentinel, not a plausible brand colour, so it cannot coincide
+ * with whatever the target tenant already paints. `color.secondary` is intentionally ABSENT: it is
+ * the fall-through leaf this spec observes.
+ */
 const AUTHORED_THEME = {
-  color   : { primary: '#7b6f82', secondary: '#889262' },
+  color   : { primary: '#ff00e7' },
   megaMenu: { maxColumns: 4 },
 }
+
+/** The context payload the site plugin initialises the store from. */
+const CONTEXT_ROUTE = '**/api/context/**'
 
 /**
  * Headers that describe the ORIGINAL body and must not be carried onto a modified one.
@@ -52,6 +81,22 @@ const stripBodyHeaders = (headers: Record<string, string>) =>
   Object.fromEntries(
     Object.entries(headers).filter(([name]) => !['content-encoding', 'content-length'].includes(name.toLowerCase())),
   )
+
+/** Intercept the context response and hand `mutate` the parsed payload to edit in place. */
+const interceptContext = (page: any, mutate: (context: any) => void) =>
+  page.route(CONTEXT_ROUTE, async (route: any) => {
+    const response = await route.fetch()
+    const context  = await response.json()
+
+    mutate(context)
+
+    await route.fulfill({
+      status     : response.status(),
+      headers    : stripBodyHeaders(response.headers()),
+      contentType: 'application/json',
+      body       : JSON.stringify(context),
+    })
+  })
 
 /**
  * Theme colours as actually rendered.
@@ -83,6 +128,10 @@ const toRgb = (hex: string) => {
 
 test.describe('biolandSettings.theme precedence', () => {
 
+  // Each spec loads the route twice against a `nuxt dev` server, so the first compile alone can
+  // outrun Playwright's 30s default. This is slowness, not flake — the waits stay deterministic.
+  test.describe.configure({ timeout: 120_000 })
+
   test('an authored theme wins on its own leaves and falls through on the rest', async ({ page }) => {
     // ---- Run 1: baseline. No site on the fleet authors a theme, so this is the fall-through render.
     await page.goto('/', { waitUntil: 'networkidle' })
@@ -90,36 +139,36 @@ test.describe('biolandSettings.theme precedence', () => {
     const baseline = await readThemeVars(page)
 
     expect(baseline.primary.length, 'baseline must expose a primary colour to compare against').toBeGreaterThan(0)
+    expect(baseline.background.length, 'baseline must expose a background colour to compare against').toBeGreaterThan(0)
 
-    // ---- Run 2: inject an authored theme into the site config response.
-    await page.route('**/config/**', async (route) => {
-      const response = await route.fetch()
-      const config   = await response.json()
+    // ---- Fixture guard. If the tenant already paints the sentinel, every assertion below would be
+    // satisfied by the baseline alone and the spec would prove nothing. Fail here, loudly, instead.
+    expect(baseline.primary, 'fixture primary collides with the tenant rendered primary — pick another sentinel')
+      .not.toContain(AUTHORED_THEME.color.primary)
+    expect(baseline.background, 'fixture primary collides with a rendered background — pick another sentinel')
+      .not.toContain(toRgb(AUTHORED_THEME.color.primary))
 
-      config.runTime = config.runTime || {}
-      config.runTime.biolandSettings = {
-        ...(config.runTime.biolandSettings || {}),
-        theme: AUTHORED_THEME,
-      }
-
-      await route.fulfill({
-        status     : response.status(),
-        headers    : stripBodyHeaders(response.headers()),
-        contentType: 'application/json',
-        body       : JSON.stringify(config),
-      })
+    // ---- Run 2: inject an authored theme into the context response.
+    await interceptContext(page, (context) => {
+      context.biolandSettings = { ...(context.biolandSettings || {}), theme: AUTHORED_THEME }
     })
 
     await page.goto('/', { waitUntil: 'networkidle' })
 
     const themed = await readThemeVars(page)
 
-    // Authored leaves win: the authored primary is what the page now paints with.
-    expect(themed.primary).toContain(AUTHORED_THEME.color.primary)
-    expect(themed.primary).not.toEqual(baseline.primary)
+    // Authored leaf wins: the sentinel primary is what the page now paints with. Because the guard
+    // above proved the baseline did not carry it, this can only have come from the injection —
+    // neutralise the authored leg and this assertion fails.
+    expect(themed.primary, 'the authored primary did not reach the rendered page')
+      .toContain(AUTHORED_THEME.color.primary)
+    expect(themed.primary, 'the themed render is indistinguishable from the baseline')
+      .not.toEqual(baseline.primary)
 
-    // And the authored secondary reaches the backgrounds `bgStyle` drives.
-    expect(themed.background).toContain(toRgb(AUTHORED_THEME.color.secondary))
+    // Unauthored leaf falls through: `color.secondary` was never authored, so every background the
+    // tenant painted at baseline — the secondary `bgStyle` drives among them — must still be there.
+    expect(themed.background, 'an unauthored secondary should have fallen through to the tenant value')
+      .toEqual(expect.arrayContaining(baseline.background))
   })
 
   test('a site with no authored theme renders exactly as it does today', async ({ page }) => {
@@ -128,20 +177,9 @@ test.describe('biolandSettings.theme precedence', () => {
     const before = await readThemeVars(page)
 
     // biolandSettings present but carrying no `theme` key — the whole fleet's current state.
-    await page.route('**/config/**', async (route) => {
-      const response = await route.fetch()
-      const config   = await response.json()
-
-      config.runTime = config.runTime || {}
-      config.runTime.biolandSettings = { ...(config.runTime.biolandSettings || {}) }
-      delete config.runTime.biolandSettings.theme
-
-      await route.fulfill({
-        status     : response.status(),
-        headers    : stripBodyHeaders(response.headers()),
-        contentType: 'application/json',
-        body       : JSON.stringify(config),
-      })
+    await interceptContext(page, (context) => {
+      context.biolandSettings = { ...(context.biolandSettings || {}) }
+      delete context.biolandSettings.theme
     })
 
     await page.goto('/', { waitUntil: 'networkidle' })
