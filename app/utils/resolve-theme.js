@@ -52,8 +52,7 @@
  * network leg. A whole-object merge would blank out every key the site did not restate.
  *
  * Groups the resolver does not know about pass through untouched, so callers reading keys outside
- * the contract (for example `color.secondaryTextOver`, `homePageWidgets.columns`,
- * `megaMenu.forums`) keep working.
+ * the contract (for example `color.secondaryTextOver`, `homePageWidgets.news`) keep working.
  *
  * ## Presence, not truthiness — with three validated leaves
  *
@@ -114,17 +113,24 @@ const THEME_DEFAULTS = Object.freeze({
     megaMenu: { maxColumns: 5 }        // was hardcoded as `|| 5` at schema-org.js:1152 and drop-down.vue:63
 });
 
-/** Contract groups that must always exist on the result so callers cannot crash on a missing group. */
-const CONTRACT_GROUPS = Object.freeze(['color', 'backGround', 'hero', 'megaMenu', 'i18n', 'homePageWidgets']);
-
 /** Contract leaves, per group, that must always be own properties of the result. */
 const CONTRACT_LEAVES = Object.freeze({
-    color     : ['primary', 'secondary'],
-    backGround: ['secondary'],
-    hero      : ['primary'],
-    megaMenu  : ['maxColumns', 'maxRowsPerColumn', 'horizontalCardMax', 'forums'],
-    i18n      : ['maxLangBeforeWrap']
+    color          : ['primary', 'secondary'],
+    backGround     : ['secondary'],
+    hero           : ['primary'],
+    megaMenu       : ['maxColumns', 'maxRowsPerColumn', 'horizontalCardMax', 'forums'],
+    i18n           : ['maxLangBeforeWrap'],
+    homePageWidgets: ['columns']
 });
+
+/**
+ * Contract groups that must always exist on the result so callers cannot crash on a missing group.
+ *
+ * Derived from `CONTRACT_LEAVES` rather than listed separately, so the two can never drift. Every
+ * contract group therefore has at least one contract leaf, which is what guarantees the group is
+ * always built by the leaf path below and never falls to `resolveOpaqueGroup`.
+ */
+const CONTRACT_GROUPS = Object.freeze(Object.keys(CONTRACT_LEAVES));
 
 const isPresent = value => value !== undefined && value !== null;
 
@@ -135,11 +141,22 @@ const isUsableColor = value => typeof value === 'string' && value.trim() !== '';
 const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(value) >= 1;
 
 /**
+ * The home page renders one grid column per entry of `homePageWidgets.columns`
+ * (`v-for="(column, i) in columnsOfWidgetComponents"` in `page/home-chm.vue`). Vue's `v-for` over a
+ * *number* renders that many nodes and over a *string* iterates per character, so an authored
+ * `columns: 50000000` would hang or OOM the home page, SSR included. Only an array is a usable
+ * column list; anything else falls through to the next leg.
+ */
+const isUsableColumnList = value => Array.isArray(value);
+
+/**
  * Per-leaf validators — the deliberate exceptions to the presence rule.
  *
- * A leaf earns a validator only when BOTH hold: its pre-refactor read used `||` (so falsy values
+ * A leaf earns a validator when BOTH hold: its pre-refactor read used `||` (so falsy values
  * already fell through and no live site can be relying on one), and a falsy-but-present value
- * produces a broken render rather than a meaningful setting. That is exactly three leaves:
+ * produces a broken render rather than a meaningful setting. That is three leaves — plus one
+ * type guard, `homePageWidgets.columns`, which is here because a wrong-typed value is a render
+ * DoS rather than merely a broken setting (see `isUsableColumnList`).
  *
  * - `color.primary`   — was `|| '#009edb'` at site.js:140. `''` voids every `solid ${primary}`
  *                       border and `background: ${primary}` declaration that consumes it.
@@ -148,6 +165,9 @@ const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(va
  * - `megaMenu.maxColumns` — was `|| 5` at schema-org.js:1152 and drop-down.vue:63. `0` makes
  *                       `organizeSectionsIntoRows` collapse every section into one unbounded row
  *                       (`Math.min(span, 0) === 0`, so the wrap branch never fires).
+ * - `homePageWidgets.columns` — not a `||` case: it is a type guard against a non-array authored
+ *                       value reaching a `v-for`, which Vue would iterate numerically or per
+ *                       character. See `isUsableColumnList`.
  *
  * Explicitly NOT validated, with reasons:
  * - `backGround.secondary` — its old read had no `||`, so `''` was already passed through and
@@ -160,8 +180,9 @@ const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(va
  *   contract note in the header comment for the *unset* case.
  */
 const LEAF_VALIDATORS = Object.freeze({
-    color   : { primary: isUsableColor, secondary: isUsableColor },
-    megaMenu: { maxColumns: isUsableColumnCount }
+    color          : { primary: isUsableColor, secondary: isUsableColor },
+    megaMenu       : { maxColumns: isUsableColumnCount },
+    homePageWidgets: { columns: isUsableColumnList }
 });
 
 const isPlainObject = value => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -170,8 +191,9 @@ const isPlainObject = value => typeof value === 'object' && value !== null && !A
  * Keys that alias the prototype chain. The authored leg is untrusted editor input, and these are
  * dropped before any key is used as a lookup index or copied onto the result.
  *
- * This is a security control, not a tidiness rule. On the unguarded resolver each of these is a
- * hard crash, which for a theme read on every page is a total render failure:
+ * This is a security control, not a tidiness rule. `__proto__` and `constructor` are live vectors:
+ * on the unguarded resolver each is a hard crash, which for a theme read on every page is a total
+ * render failure.
  *
  * - `{ megaMenu: { __proto__: {...} } }` — `LEAF_VALIDATORS.megaMenu['__proto__']` resolves up the
  *   prototype chain to `Object.prototype`, which is truthy but not callable, so the validator call
@@ -180,14 +202,31 @@ const isPlainObject = value => typeof value === 'object' && value !== null && !A
  *   likewise resolves to an inherited value, and spreading it throws `TypeError: ... is not
  *   iterable`, so the `|| []` fallback never fires.
  *
- * Filtering the keys out of the group and leaf unions closes both, and keeps a hostile key from
- * being written onto the result even where the lookup would not have thrown.
+ * `'prototype'` causes no crash of its own — `CONTRACT_LEAVES['prototype']` and
+ * `LEAF_VALIDATORS[group]?.['prototype']` are both `undefined` on a plain object, since plain
+ * objects do not inherit a `prototype` property. It is kept as defence in depth only.
+ *
+ * The guard is load-bearing rather than belt-and-braces because the camelCase pass upstream does
+ * not neutralise these keys: `change-case/keys` rewrites a *top-level* `__proto__` to `proto`, but
+ * leaves `constructor` verbatim at every depth, leaves `__proto__` verbatim below the top level,
+ * and stops converting at depth 7 — so hostile keys still reach this resolver.
+ *
+ * Filtering the keys out of the group and leaf unions closes both live vectors, and keeps a
+ * hostile key from being written onto the result even where the lookup would not have thrown.
  */
 const DANGEROUS_KEYS = Object.freeze(['__proto__', 'constructor', 'prototype']);
 
 const isSafeKey = key => !DANGEROUS_KEYS.includes(key);
 
-/** Own, prototype-safe keys of a plain object. */
+/**
+ * Own, prototype-safe keys of a plain object.
+ *
+ * Note: keys arrive already camelCased by `server/utils/context-unified.ts`, and that conversion is
+ * lossy — `back_ground` and `backGround` both become `backGround`, so one silently overwrites the
+ * other with no error. It is a correctness wart, not a privilege boundary: an editor can only
+ * collide onto a key they could have authored directly, so nothing is reachable that was not
+ * already. Left as-is deliberately — erroring here would be a contract change.
+ */
 const safeKeys = object => Object.keys(object).filter(isSafeKey);
 
 /** Deep clone of JSON-shaped data. Keeps the result free of live references into the input config. */
@@ -232,6 +271,9 @@ const collectLeaves = (legs, group) => [...new Set([
  * whole-object getter kept `theme.foo = {}`, and a caller doing `theme.foo.bar` without an optional
  * chain must not start throwing. Any plain object reaching here is empty by construction, since a
  * non-empty one would have produced leaves.
+ *
+ * Only ever reached for a NON-contract group: every contract group has contract leaves, so it is
+ * always built by the leaf path instead.
  */
 const resolveOpaqueGroup = (legs, group) => {
     for (const leg of legs) {
@@ -239,8 +281,6 @@ const resolveOpaqueGroup = (legs, group) => {
 
         if (isPresent(value)) return cloneValue(value);
     }
-
-    return undefined;
 };
 
 /**
@@ -269,7 +309,6 @@ export function resolveTheme(config, authoredTheme) {
             const opaque = resolveOpaqueGroup(legs, group);
 
             if (isPresent(opaque)) resolved[group] = opaque;
-            else if (CONTRACT_GROUPS.includes(group)) resolved[group] = {};
 
             continue;
         }
