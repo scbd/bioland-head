@@ -9,12 +9,41 @@
  *
  * ## Precedence (leg order, highest first)
  *
- *   1. site `config.theme`
- *   2. `config.runTime.theme` (the network-level theme)
- *   3. code defaults (below)
+ *   1. `biolandSettings.theme` (Drupal-authored, per-site)
+ *   2. site `config.theme`
+ *   3. `config.runTime.theme` (the network-level theme)
+ *   4. code defaults (below)
  *
- * NOTE: p02-01 adds the `biolandSettings.theme` leg *in front* of `config.theme`. The leg list in
- * `resolveTheme` is the seam for that change — add the leg, change nothing else.
+ * Leg 1 is the Drupal editor's authored theme, added by p02-01 (BL-885). It is passed in by the
+ * caller rather than read off `config`, because the only camelCased copy of `biolandSettings` the
+ * app may rely on is `siteStore.biolandSettings` — see "Input keys are post-camelCase" below.
+ *
+ * ## Absence is fall-through, never an error
+ *
+ * `biolandSettings` is attached best-effort by dmsm, which swallows Drupal errors, and no site
+ * carries an authored theme until an editor saves one. So the authored leg is absent far more
+ * often than not: `undefined`, `null`, a `biolandSettings` with no `theme` key, and an empty
+ * `theme` object all mean "this leg supplies nothing" and leave every leaf to the legs below.
+ * An unseeded site therefore resolves byte-identically to the three-leg result. This also covers
+ * the accepted flicker in ADR 0012: a Drupal blip drops the key for one cache window and the site
+ * briefly reverts to fallback branding. That is accepted behaviour, not a condition to throw on.
+ *
+ * ## Input keys are post-camelCase (depth 7)
+ *
+ * Drupal authors snake_case (`back_ground.secondary`, `mega_menu.max_rows_per_column`). dmsm
+ * passes those through unchanged — its SQL is an exact match on `name = 'bioland.settings'` and it
+ * assigns the whole config object without touching keys. The head does all case conversion, in
+ * `server/utils/context-unified.ts`, which camelCases to depth 7 into the `biolandSettings` field
+ * of the unified context. That transformed copy reaches the app as `siteStore.biolandSettings`.
+ * This resolver therefore sees `backGround`, never `back_ground`, and every fixture asserts the
+ * transformed shape.
+ *
+ * ## Untrusted input
+ *
+ * The authored leg is a row from a Drupal database that site editors can write. Keys that alias
+ * the prototype chain (`__proto__`, `constructor`, `prototype`) are dropped at both the group and
+ * the leaf level — see `isSafeKey`. They are dropped for every leg, not just the authored one,
+ * since a leg's trust level is not the resolver's to assume.
  *
  * ## Merge rule: per-leaf, not per-object
  *
@@ -73,6 +102,9 @@
  * a caller mutating the resolved theme cannot corrupt the shared site config.
  *
  * @param {object|null|undefined} config - the site config (`siteStore.config`).
+ * @param {object|null|undefined} authoredTheme - the Drupal-authored theme, i.e.
+ *   `siteStore.biolandSettings?.theme`, already camelCased to depth 7. Absent for every site that
+ *   has never had a theme saved, which today is the entire fleet.
  * @returns {object} the resolved theme. Never null, never throws.
  */
 
@@ -134,10 +166,34 @@ const LEAF_VALIDATORS = Object.freeze({
 
 const isPlainObject = value => typeof value === 'object' && value !== null && !Array.isArray(value);
 
+/**
+ * Keys that alias the prototype chain. The authored leg is untrusted editor input, and these are
+ * dropped before any key is used as a lookup index or copied onto the result.
+ *
+ * This is a security control, not a tidiness rule. On the unguarded resolver each of these is a
+ * hard crash, which for a theme read on every page is a total render failure:
+ *
+ * - `{ megaMenu: { __proto__: {...} } }` — `LEAF_VALIDATORS.megaMenu['__proto__']` resolves up the
+ *   prototype chain to `Object.prototype`, which is truthy but not callable, so the validator call
+ *   throws `TypeError: isUsable is not a function`.
+ * - `{ __proto__: {...} }` / `{ constructor: {...} }` at the top level — `CONTRACT_LEAVES[group]`
+ *   likewise resolves to an inherited value, and spreading it throws `TypeError: ... is not
+ *   iterable`, so the `|| []` fallback never fires.
+ *
+ * Filtering the keys out of the group and leaf unions closes both, and keeps a hostile key from
+ * being written onto the result even where the lookup would not have thrown.
+ */
+const DANGEROUS_KEYS = Object.freeze(['__proto__', 'constructor', 'prototype']);
+
+const isSafeKey = key => !DANGEROUS_KEYS.includes(key);
+
+/** Own, prototype-safe keys of a plain object. */
+const safeKeys = object => Object.keys(object).filter(isSafeKey);
+
 /** Deep clone of JSON-shaped data. Keeps the result free of live references into the input config. */
 const cloneValue = (value) => {
     if (Array.isArray(value))    return value.map(cloneValue);
-    if (isPlainObject(value))    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, cloneValue(v)]));
+    if (isPlainObject(value))    return Object.fromEntries(safeKeys(value).map(k => [k, cloneValue(value[k])]));
 
     return value;
 };
@@ -162,12 +218,12 @@ const resolveLeaf = (legs, group, leaf) => {
 };
 
 /** Union of the group names any leg defines, plus every contract group. */
-const collectGroups = legs => [...new Set([...CONTRACT_GROUPS, ...legs.flatMap(leg => Object.keys(leg || {}))])];
+const collectGroups = legs => [...new Set([...CONTRACT_GROUPS, ...legs.flatMap(leg => safeKeys(leg || {}))])];
 
 /** Union of the leaf names any leg defines under `group`, plus that group's contract leaves. */
 const collectLeaves = (legs, group) => [...new Set([
     ...(CONTRACT_LEAVES[group] || []),
-    ...legs.flatMap(leg => (isPlainObject(leg?.[group]) ? Object.keys(leg[group]) : []))
+    ...legs.flatMap(leg => (isPlainObject(leg?.[group]) ? safeKeys(leg[group]) : []))
 ])];
 
 /**
@@ -199,8 +255,8 @@ const resolveHeroPrimary = (authored, color) => {
     return [0, 1].map(i => (isPresent(source[i]) ? source[i] : derived[i]));
 };
 
-export function resolveTheme(config) {
-    const legs = [config?.theme, config?.runTime?.theme, THEME_DEFAULTS].filter(isPlainObject);
+export function resolveTheme(config, authoredTheme) {
+    const legs = [authoredTheme, config?.theme, config?.runTime?.theme, THEME_DEFAULTS].filter(isPlainObject);
 
     const resolved = {};
 

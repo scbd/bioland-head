@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { resolveTheme } from '../../../../app/utils/resolve-theme'
 
+import effectiveValues from './fixtures/theme-effective-values.json'
+
 /**
  * Value-preservation suite for the canonical theme resolver.
  *
@@ -397,5 +399,325 @@ describe('resolveTheme', () => {
                 else expect(theme.hero.primary).toEqual([theme.color.primary, theme.color.secondary])
             })
         }
+    })
+})
+
+/**
+ * ============================================================================================
+ * p02-01 (BL-885) — the `biolandSettings.theme` activation leg.
+ *
+ * Leg order becomes: authored > site config.theme > runTime.theme > code defaults.
+ *
+ * This is the MERGE pin — the second of the two depths this task keeps separate. It exercises the
+ * resolver's per-leaf rule against already-camelCased input and never touches the depth-7
+ * transform; that is pinned independently in
+ * tests/unit/server/utils/bioland-settings-camel-case.test.ts.
+ *
+ * Every key below is post-camelCase. A snake_case theme key in this file is a defect.
+ * ============================================================================================
+ */
+describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
+
+    const siteConfig = { runTime: { theme: networkTheme } }
+
+    describe('precedence — an authored leaf outranks every leg below it', () => {
+
+        it('beats the network runTime.theme', () => {
+            const theme = resolveTheme(siteConfig, { color: { primary: '#7b6f82' } })
+
+            expect(theme.color.primary).toBe('#7b6f82')
+        })
+
+        it('beats the site config.theme', () => {
+            const config = { theme: { color: { primary: '#111111' } }, runTime: { theme: networkTheme } }
+            const theme  = resolveTheme(config, { color: { primary: '#7b6f82' } })
+
+            expect(theme.color.primary).toBe('#7b6f82')
+        })
+
+        it('beats the code defaults', () => {
+            // No site theme, no network theme — THEME_DEFAULTS would supply #009edb / maxColumns 5.
+            const theme = resolveTheme({}, { color: { primary: '#7b6f82' }, megaMenu: { maxColumns: 2 } })
+
+            expect(theme.color.primary).toBe('#7b6f82')
+            expect(theme.megaMenu.maxColumns).toBe(2)
+        })
+
+        it('outranks all three at once on the same leaf', () => {
+            const config = { theme: { color: { primary: '#222222' } }, runTime: { theme: networkTheme } }
+            const theme  = resolveTheme(config, { color: { primary: '#7b6f82' } })
+
+            expect(theme.color.primary).toBe('#7b6f82')
+            expect(theme.color.primary).not.toBe(networkTheme.color.primary)
+        })
+    })
+
+    describe('per-leaf merge — authoring one leaf never wipes its siblings', () => {
+
+        it('an authored color.primary leaves color.secondary on the network leg', () => {
+            const theme = resolveTheme(siteConfig, { color: { primary: '#7b6f82' } })
+
+            expect(theme.color.primary).toBe('#7b6f82')
+            expect(theme.color.secondary).toBe(networkTheme.color.secondary)
+        })
+
+        it('an authored color group leaves every other group on the network leg', () => {
+            const theme = resolveTheme(siteConfig, { color: { primary: '#7b6f82' } })
+
+            expect(theme.backGround.secondary).toBe(networkTheme.backGround.secondary)
+            expect(theme.megaMenu.maxRowsPerColumn).toBe(networkTheme.megaMenu.maxRowsPerColumn)
+            expect(theme.i18n.maxLangBeforeWrap).toBe(networkTheme.i18n.maxLangBeforeWrap)
+            expect(theme.homePageWidgets.columns).toEqual(networkTheme.homePageWidgets.columns)
+        })
+
+        it('passes non-contract leaves through from the lower leg', () => {
+            const theme = resolveTheme(siteConfig, { color: { primary: '#7b6f82' } })
+
+            // Live key, read at app/composables/theme.js:19 but absent from the ratified authored
+            // list. The per-leaf union carries it through untouched.
+            expect(theme.color.secondaryTextOver).toBe(networkTheme.color.secondaryTextOver)
+            expect(theme.text.primary).toBe(networkTheme.text.primary)
+        })
+
+        it('accepts a non-contract leaf when the author does supply one', () => {
+            const theme = resolveTheme(siteConfig, { color: { secondaryTextOver: '#000000' } })
+
+            expect(theme.color.secondaryTextOver).toBe('#000000')
+            expect(theme.color.primary).toBe(networkTheme.color.primary)
+        })
+    })
+
+    describe('absence is fall-through, never a throw', () => {
+
+        const absent: [string, any][] = [
+            ['undefined (no biolandSettings at all)', undefined],
+            ['null', null],
+            ['an empty theme object', {}],
+            ['a non-object scalar', 'nonsense'],
+            ['an array', []]
+        ]
+
+        for (const [label, authored] of absent) {
+            it(`resolves identically to the three-leg baseline when the authored leg is ${label}`, () => {
+                expect(() => resolveTheme(siteConfig, authored)).not.toThrow()
+
+                // Byte-identical to p01-01's output — the unseeded fleet renders exactly as today.
+                expect(resolveTheme(siteConfig, authored)).toEqual(resolveTheme(siteConfig))
+            })
+        }
+
+        it('does not throw when BOTH the config and the authored leg are missing', () => {
+            expect(() => resolveTheme(undefined, undefined)).not.toThrow()
+            expect(resolveTheme(undefined, undefined)).toEqual(resolveTheme(undefined))
+        })
+
+        it('falls through leaf by leaf, not group by group, when only part is authored', () => {
+            const theme = resolveTheme(siteConfig, { megaMenu: { maxColumns: 2 } })
+
+            expect(theme.megaMenu.maxColumns).toBe(2)
+            expect(theme.megaMenu.forums).toBe(networkTheme.megaMenu.forums)
+            expect(theme.megaMenu.horizontalCardMax).toBe(networkTheme.megaMenu.horizontalCardMax)
+        })
+    })
+
+    describe('empty is not authority', () => {
+
+        it('an empty authored group does not blank a populated lower group', () => {
+            const theme = resolveTheme(siteConfig, { color: {}, megaMenu: {} })
+
+            expect(theme.color.primary).toBe(networkTheme.color.primary)
+            expect(theme.color.secondary).toBe(networkTheme.color.secondary)
+            expect(theme.megaMenu.maxColumns).toBe(networkTheme.megaMenu.maxColumns)
+        })
+
+        it('and the reverse — an empty LOWER group does not blank a populated authored group', () => {
+            const config = { theme: { color: {} }, runTime: { theme: { color: {} } } }
+            const theme  = resolveTheme(config, { color: { primary: '#7b6f82', secondary: '#889262' } })
+
+            expect(theme.color.primary).toBe('#7b6f82')
+            expect(theme.color.secondary).toBe('#889262')
+        })
+
+        it('an authored group of only empty groups is a whole-object no-op', () => {
+            expect(resolveTheme(siteConfig, { color: {}, backGround: {}, i18n: {} }))
+                .toEqual(resolveTheme(siteConfig))
+        })
+    })
+
+    describe('falsy-but-meaningful authored values survive (presence, not truthiness)', () => {
+
+        it('keeps an authored maxRowsPerColumn of 0 instead of falling through to 6', () => {
+            const theme = resolveTheme(siteConfig, { megaMenu: { maxRowsPerColumn: 0 } })
+
+            expect(theme.megaMenu.maxRowsPerColumn).toBe(0)
+        })
+
+        it('keeps an authored forums of false instead of falling through to true', () => {
+            const theme = resolveTheme(siteConfig, { megaMenu: { forums: false } })
+
+            expect(theme.megaMenu.forums).toBe(false)
+        })
+
+        it('keeps an authored backGround.secondary of empty string — its old read had no ||', () => {
+            const theme = resolveTheme(siteConfig, { backGround: { secondary: '' } })
+
+            expect(theme.backGround.secondary).toBe('')
+        })
+    })
+
+    describe('LEAF_VALIDATORS still apply to the authored leg — unusable falls through', () => {
+
+        it('an authored empty color.primary falls through to the network value', () => {
+            const theme = resolveTheme(siteConfig, { color: { primary: '   ' } })
+
+            expect(theme.color.primary).toBe(networkTheme.color.primary)
+        })
+
+        it('an authored non-string color.secondary falls through to the network value', () => {
+            const theme = resolveTheme(siteConfig, { color: { secondary: 42 } })
+
+            expect(theme.color.secondary).toBe(networkTheme.color.secondary)
+        })
+
+        it('an authored megaMenu.maxColumns of 0 falls through — 0 collapses the grid', () => {
+            const theme = resolveTheme(siteConfig, { megaMenu: { maxColumns: 0 } })
+
+            expect(theme.megaMenu.maxColumns).toBe(networkTheme.megaMenu.maxColumns)
+        })
+
+        it('falls through only the unusable leaf, keeping its usable siblings', () => {
+            const theme = resolveTheme(siteConfig, { color: { primary: '', secondary: '#889262' } })
+
+            expect(theme.color.primary).toBe(networkTheme.color.primary)
+            expect(theme.color.secondary).toBe('#889262')
+        })
+    })
+
+    describe('hero — derived only when absent from every source', () => {
+
+        it('derives from the AUTHORED colors when no leg authors a hero', () => {
+            const config = { runTime: { theme: { color: networkTheme.color } } }
+            const theme  = resolveTheme(config, { color: { primary: '#7b6f82', secondary: '#889262' } })
+
+            expect(theme.hero.primary).toEqual(['#7b6f82', '#889262'])
+        })
+
+        it('preserves an authored hero.primary[1] of #CBB279 rather than re-deriving it', () => {
+            const theme = resolveTheme(siteConfig, {
+                color: { primary: '#7b6f82', secondary: '#889262' },
+                hero : { primary: ['#7b6f82', '#CBB279'] }
+            })
+
+            expect(theme.hero.primary).toEqual(['#7b6f82', '#CBB279'])
+        })
+
+        it('fills only the missing slot of a partially authored hero', () => {
+            const theme = resolveTheme(siteConfig, {
+                color: { primary: '#7b6f82', secondary: '#889262' },
+                hero : { primary: [null, '#CBB279'] }
+            })
+
+            expect(theme.hero.primary).toEqual(['#7b6f82', '#CBB279'])
+        })
+    })
+
+    describe('untrusted input — prototype-aliasing keys are dropped', () => {
+
+        /**
+         * Non-vacuous by construction. Each payload below THROWS on the unguarded resolver, so the
+         * assertions genuinely distinguish guarded from unguarded. Verified on the pre-guard tree:
+         *
+         *   { megaMenu: { __proto__ } }  -> TypeError: isUsable is not a function
+         *        LEAF_VALIDATORS.megaMenu['__proto__'] inherits Object.prototype: truthy, not callable.
+         *   { __proto__ } at top level   -> TypeError: (CONTRACT_LEAVES[group] || []) is not iterable
+         *        CONTRACT_LEAVES['__proto__'] inherits Object.prototype, so `|| []` never fires.
+         *   { constructor } at top level -> same TypeError.
+         *
+         * The payloads are nested under real, resolvable keys and every case asserts on a resolved
+         * leaf, so a guard that merely stopped the throw without still resolving would also fail.
+         */
+        const hostile = (json: string) => JSON.parse(json)
+
+        it('survives a __proto__ leaf nested under a known group, and still resolves', () => {
+            const theme = resolveTheme(siteConfig, hostile('{"megaMenu":{"__proto__":{"polluted":"yes"},"maxColumns":4}}'))
+
+            expect(theme.megaMenu.maxColumns).toBe(4)
+            expect(theme.megaMenu).not.toHaveProperty('__proto__')
+            expect(({} as any).polluted).toBeUndefined()
+        })
+
+        it('survives a constructor leaf nested under a known group, and still resolves', () => {
+            const theme = resolveTheme(siteConfig, hostile('{"megaMenu":{"constructor":{"polluted":"yes"},"maxColumns":4}}'))
+
+            expect(theme.megaMenu.maxColumns).toBe(4)
+            expect(Object.prototype.hasOwnProperty.call(theme.megaMenu, 'constructor')).toBe(false)
+        })
+
+        it('survives a top-level __proto__ group, and still resolves the real groups', () => {
+            const theme = resolveTheme(siteConfig, hostile('{"__proto__":{"polluted":"yes"},"color":{"primary":"#7b6f82"}}'))
+
+            expect(theme.color.primary).toBe('#7b6f82')
+            expect(({} as any).polluted).toBeUndefined()
+        })
+
+        it('survives a top-level constructor group, and still resolves the real groups', () => {
+            const theme = resolveTheme(siteConfig, hostile('{"constructor":{"polluted":"yes"},"color":{"primary":"#7b6f82"}}'))
+
+            expect(theme.color.primary).toBe('#7b6f82')
+            expect(Object.prototype.hasOwnProperty.call(theme, 'constructor')).toBe(false)
+        })
+
+        it('survives a prototype key nested deeper, inside a cloned value', () => {
+            const theme = resolveTheme(siteConfig, hostile('{"homePageWidgets":{"news":{"prototype":{"polluted":"yes"},"on":true}}}'))
+
+            expect(theme.homePageWidgets.news).toEqual({ on: true })
+            expect(({} as any).polluted).toBeUndefined()
+        })
+
+        it('drops hostile keys on the lower legs too — trust level is not assumed per leg', () => {
+            const config = { runTime: { theme: hostile('{"megaMenu":{"__proto__":{"p":1},"maxColumns":3}}') } }
+
+            expect(() => resolveTheme(config, undefined)).not.toThrow()
+            expect(resolveTheme(config, undefined).megaMenu.maxColumns).toBe(3)
+        })
+    })
+
+    describe('effective-value fixture cases', () => {
+        const fixture = effectiveValues as any
+
+        for (const testCase of fixture.cases) {
+            it(testCase.name, () => {
+                const config: any = { runTime: { theme: fixture.networkTheme } }
+
+                if (testCase.siteTheme) config.theme = testCase.siteTheme
+
+                const theme = resolveTheme(config, testCase.authoredTheme)
+
+                for (const [path, expected] of Object.entries(testCase.expected)) {
+                    if (path.startsWith('_comment')) continue
+                    const actual = path.split('.').reduce((node: any, key) => node?.[key], theme)
+
+                    expect(actual, `${testCase.name} -> ${path}`).toEqual(expected)
+                }
+            })
+        }
+
+        it('contains no snake_case theme key — head fixtures are post-camelCase only', () => {
+            expect(JSON.stringify(fixture.cases)).not.toMatch(/"[a-z]+(_[a-z]+)+"\s*:/)
+        })
+    })
+
+    describe('result is never aliased to the authored input', () => {
+
+        it('mutating the resolved theme cannot corrupt the authored settings', () => {
+            const authored: any = { color: { primary: '#7b6f82' }, homePageWidgets: { columns: [['panorama']] } }
+            const theme         = resolveTheme(siteConfig, authored)
+
+            theme.color.primary = '#000000'
+            theme.homePageWidgets.columns[0].push('gbif')
+
+            expect(authored.color.primary).toBe('#7b6f82')
+            expect(authored.homePageWidgets.columns).toEqual([['panorama']])
+        })
     })
 })
