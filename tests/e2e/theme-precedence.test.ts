@@ -47,6 +47,23 @@ import { getE2EBaseURL } from './e2e-targets'
  *     so there is an observable fall-through leaf. Authoring both colours, as the original did,
  *     left the fall-through half of the test name with nothing to observe.
  *
+ * ## Why the fixture does not also author `megaMenu.maxColumns`
+ *
+ * An earlier draft of this fixture authored `megaMenu.maxColumns: 4` alongside the colour, but
+ * nothing observed it - inert fixture data that would still pass if the resolver stopped honouring
+ * `maxColumns` entirely. It was dropped rather than asserted: `maxColumns` has no CSS-variable or
+ * inline-style projection (see `useTheme` / `app/composables/theme.js`) - its only DOM effect is
+ * structural, in `app/components/page/header/mega-menu/drop-down.vue`, where it caps how many
+ * `.menu-section` elements get bin-packed into each `.mm-row`. That dropdown is `v-if`-gated
+ * behind a top-level nav toggle, so it is absent from the page until a specific menu item is
+ * opened, and whether 4 vs. the default 5 columns produces a different row count depends on that
+ * menu's live section count - data this spec does not control and would have to separately
+ * intercept and fabricate to make the assertion reliably discriminating. Doing that would assert on
+ * invented menu data instead of the real page, and the only way to read the result is counting
+ * elements by selector, which is exactly the DOM-structure coupling this suite avoids. `color.primary`
+ * already proves the per-leaf merge reaches the page; a second, harder-to-land leaf on a different
+ * contract group is not worth that cost.
+ *
  * ## Header caveat
  *
  * When fulfilling with a modified body, the inherited `content-encoding` and `content-length`
@@ -66,8 +83,7 @@ test.use({
  * the fall-through leaf this spec observes.
  */
 const AUTHORED_THEME = {
-  color   : { primary: '#ff00e7' },
-  megaMenu: { maxColumns: 4 },
+  color: { primary: '#ff00e7' },
 }
 
 /** The context payload the site plugin initialises the store from. */
