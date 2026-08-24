@@ -48,7 +48,9 @@
     const limitedMenus    = ref([]);
     const otherMenus      = ref([]);
     const viewport        = useViewport();
-    const limit           = ref(siteStore.maxLangBeforeWrap);
+    // An unset maxLangBeforeWrap means "never wrap". Feeding undefined straight into the splice()
+    // calls below silently emptied the entire language menu, so fall back to "show everything".
+    const limit           = ref(siteStore.maxLangBeforeWrap ?? Number.MAX_SAFE_INTEGER);
     const query           = computed(()=> route.query);
     const isBiosafetySite = computed(()=> siteStore?.isBiosafetySite);
 
