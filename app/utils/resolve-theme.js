@@ -26,11 +26,29 @@
  * the contract (for example `color.secondaryTextOver`, `homePageWidgets.columns`,
  * `megaMenu.forums`) keep working.
  *
- * ## Presence, not truthiness
+ * ## Presence, not truthiness — with three validated leaves
  *
  * A leg supplies a leaf when that leaf is present (`!== undefined && !== null`), not when it is
  * truthy. `maxRowsPerColumn: 0` means "unlimited" and must not fall through to the next leg, and
  * an unset `maxLangBeforeWrap` must stay distinguishable from an authored `0`.
+ *
+ * Three leaves are the exception, because their pre-refactor reads used `||` AND a falsy-but-present
+ * value breaks the render rather than meaning something. See `LEAF_VALIDATORS`. For those, a leg
+ * supplies the leaf only when the value is also *usable*; otherwise it falls through to the next leg
+ * exactly as the old `||` chain did. Every other leaf keeps the plain presence rule, including
+ * `backGround.secondary`, whose old read had no `||` at all — `''` was preserved before this
+ * refactor and is preserved now.
+ *
+ * ## `i18n.maxLangBeforeWrap` is deliberately left unset
+ *
+ * The resolver returns `undefined` when no leg authors it. It does NOT invent a "never wrap"
+ * sentinel, because there was no such value before this refactor — the old code fed `undefined`
+ * straight into `Array.prototype.splice`, whose return value is the *removed* elements, so an unset
+ * `maxLangBeforeWrap` really did render an empty language bar. That was a bug, not a value worth
+ * preserving, and inventing a replacement default here would violate the totality rule below.
+ * **Contract: the caller owns the unset behaviour.** `language-bar.vue` supplies
+ * `?? Number.MAX_SAFE_INTEGER` ("show everything"); any future consumer must make the same choice
+ * explicitly rather than passing `undefined` into an arithmetic or slicing API.
  *
  * ## Hero rule
  *
@@ -78,6 +96,42 @@ const CONTRACT_LEAVES = Object.freeze({
 
 const isPresent = value => value !== undefined && value !== null;
 
+/** A colour a browser can actually apply. `''` interpolated into a style declaration voids it. */
+const isUsableColor = value => typeof value === 'string' && value.trim() !== '';
+
+/** A column count that yields at least one column. `0` collapses the mega-menu grid to nothing. */
+const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(value) >= 1;
+
+/**
+ * Per-leaf validators — the deliberate exceptions to the presence rule.
+ *
+ * A leaf earns a validator only when BOTH hold: its pre-refactor read used `||` (so falsy values
+ * already fell through and no live site can be relying on one), and a falsy-but-present value
+ * produces a broken render rather than a meaningful setting. That is exactly three leaves:
+ *
+ * - `color.primary`   — was `|| '#009edb'` at site.js:140. `''` voids every `solid ${primary}`
+ *                       border and `background: ${primary}` declaration that consumes it.
+ * - `color.secondary` — was `||` (no final default) at site.js:143. Same failure mode, and
+ *                       `hero.primary` derives its second slot from it.
+ * - `megaMenu.maxColumns` — was `|| 5` at schema-org.js:1152 and drop-down.vue:63. `0` makes
+ *                       `organizeSectionsIntoRows` collapse every section into one unbounded row
+ *                       (`Math.min(span, 0) === 0`, so the wrap branch never fires).
+ *
+ * Explicitly NOT validated, with reasons:
+ * - `backGround.secondary` — its old read had no `||`, so `''` was already passed through and
+ *   rendered. `backGround.primary: ''` demonstrably occurs in the live network theme; rejecting it
+ *   would be the regression, not the fix.
+ * - `megaMenu.maxRowsPerColumn` / `horizontalCardMax` / `forums` — no `||` in the old reads, and
+ *   `0` is a meaningful value ("unlimited") that must not fall through.
+ * - `i18n.maxLangBeforeWrap` — `0` and `''` both mean "wrap immediately"; the language bar degrades
+ *   gracefully (every language moves into the overflow dropdown) rather than breaking. See the
+ *   contract note in the header comment for the *unset* case.
+ */
+const LEAF_VALIDATORS = Object.freeze({
+    color   : { primary: isUsableColor, secondary: isUsableColor },
+    megaMenu: { maxColumns: isUsableColumnCount }
+});
+
 const isPlainObject = value => typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /** Deep clone of JSON-shaped data. Keeps the result free of live references into the input config. */
@@ -88,12 +142,20 @@ const cloneValue = (value) => {
     return value;
 };
 
-/** First leg that supplies this group leaf wins. Presence, not truthiness. */
+/**
+ * First leg that supplies this group leaf wins. Presence, not truthiness — except for the leaves in
+ * `LEAF_VALIDATORS`, which must also be usable or they fall through to the next leg.
+ */
 const resolveLeaf = (legs, group, leaf) => {
+    const isUsable = LEAF_VALIDATORS[group]?.[leaf];
+
     for (const leg of legs) {
         const value = isPlainObject(leg?.[group]) ? leg[group][leaf] : undefined;
 
-        if (isPresent(value)) return cloneValue(value);
+        if (!isPresent(value))            continue;
+        if (isUsable && !isUsable(value)) continue;
+
+        return cloneValue(value);
     }
 
     return undefined;
@@ -109,14 +171,17 @@ const collectLeaves = (legs, group) => [...new Set([
 ])];
 
 /**
- * A non-group key (a scalar or array sitting directly on the theme, not a nested object).
- * Resolved as a single leaf so unknown shapes still pass through.
+ * A theme key with no leaves to merge — a scalar or array sitting directly on the theme, or an
+ * object every leg left empty. Resolved whole so unknown shapes still pass through: the old
+ * whole-object getter kept `theme.foo = {}`, and a caller doing `theme.foo.bar` without an optional
+ * chain must not start throwing. Any plain object reaching here is empty by construction, since a
+ * non-empty one would have produced leaves.
  */
-const resolveScalarGroup = (legs, group) => {
+const resolveOpaqueGroup = (legs, group) => {
     for (const leg of legs) {
         const value = leg?.[group];
 
-        if (isPresent(value) && !isPlainObject(value)) return cloneValue(value);
+        if (isPresent(value)) return cloneValue(value);
     }
 
     return undefined;
@@ -142,11 +207,12 @@ export function resolveTheme(config) {
     for (const group of collectGroups(legs)) {
         const leaves = collectLeaves(legs, group);
 
-        // A key no leg defines as an object (e.g. a stray scalar on the theme) passes through as-is.
+        // A key with nothing to merge (a stray scalar, or an object every leg left empty) passes
+        // through as-is rather than being dropped off the result.
         if (!leaves.length) {
-            const scalar = resolveScalarGroup(legs, group);
+            const opaque = resolveOpaqueGroup(legs, group);
 
-            if (isPresent(scalar)) resolved[group] = scalar;
+            if (isPresent(opaque)) resolved[group] = opaque;
             else if (CONTRACT_GROUPS.includes(group)) resolved[group] = {};
 
             continue;
@@ -160,5 +226,3 @@ export function resolveTheme(config) {
 
     return resolved;
 }
-
-export default resolveTheme;

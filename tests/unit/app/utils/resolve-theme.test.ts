@@ -191,8 +191,8 @@ describe('resolveTheme', () => {
             expect(theme.megaMenu.maxRowsPerColumn).not.toBe(6)
         })
 
-        it('keeps an authored maxColumns of 0 instead of falling back to the default 5', () => {
-            expect(resolveTheme({ theme: { megaMenu: { maxColumns: 0 } } } as any).megaMenu.maxColumns).toBe(0)
+        it('distinguishes an unset maxRowsPerColumn from an authored 0', () => {
+            expect(resolveTheme({ theme: { megaMenu: {} } } as any).megaMenu.maxRowsPerColumn).toBeUndefined()
         })
 
         it('distinguishes an unset maxLangBeforeWrap from an authored 0', () => {
@@ -207,12 +207,83 @@ describe('resolveTheme', () => {
         })
     })
 
+    // The three leaves whose old reads used `||` AND whose falsy values break the render.
+    // Contract: a falsy-but-present value falls through to the next leg, exactly as `||` did.
+    describe('validated leaves', () => {
+        describe('megaMenu.maxColumns', () => {
+            it('never resolves to a value that would collapse the grid', () => {
+                for (const authored of [0, '', null, -3]) {
+                    const theme = resolveTheme({ theme: { megaMenu: { maxColumns: authored } } } as any)
+
+                    expect(Number(theme.megaMenu.maxColumns)).toBeGreaterThanOrEqual(1)
+                }
+            })
+
+            it('falls through an unusable site value to the network leg, not straight to the default', () => {
+                const theme = resolveTheme(withRunTime({ megaMenu: { maxColumns: 4 } }, { megaMenu: { maxColumns: 0 } }) as any)
+
+                expect(theme.megaMenu.maxColumns).toBe(4)
+            })
+
+            it('falls back to the code default of 5 when no leg supplies a usable value', () => {
+                expect(resolveTheme({ theme: { megaMenu: { maxColumns: 0 } } } as any).megaMenu.maxColumns).toBe(5)
+            })
+
+            it('keeps a usable authored value, including a numeric string', () => {
+                expect(resolveTheme({ theme: { megaMenu: { maxColumns: 3 } } } as any).megaMenu.maxColumns).toBe(3)
+                expect(resolveTheme({ theme: { megaMenu: { maxColumns: '4' } } } as any).megaMenu.maxColumns).toBe('4')
+            })
+        })
+
+        describe('color.primary / color.secondary', () => {
+            it('falls through an empty-string primary to the network leg', () => {
+                const theme = resolveTheme(withRunTime({ color: { primary: '#123456' } }, { color: { primary: '' } }) as any)
+
+                expect(theme.color.primary).toBe('#123456')
+            })
+
+            it('falls back to the code default when no leg supplies a usable primary', () => {
+                expect(resolveTheme({ theme: { color: { primary: '   ' } } } as any).color.primary).toBe('#009edb')
+            })
+
+            it('falls through an empty-string secondary to the network leg', () => {
+                const theme = resolveTheme(withRunTime({ color: { secondary: '#abcdef' } }, { color: { secondary: '' } }) as any)
+
+                expect(theme.color.secondary).toBe('#abcdef')
+            })
+
+            it('never derives a hero slot from an unusable colour', () => {
+                const theme = resolveTheme({ theme: { color: { primary: '', secondary: '' } } } as any)
+
+                expect(theme.hero.primary[0]).toBe('#009edb')
+                expect(theme.hero.primary).toHaveLength(2)
+            })
+        })
+    })
+
     describe('tolerates malformed theme data', () => {
         it('passes a scalar sitting directly on the theme through untouched', () => {
             const theme = resolveTheme({ theme: { version: 3, tags: ['a', 'b'] } } as any)
 
             expect(theme.version).toBe(3)
             expect(theme.tags).toEqual(['a', 'b'])
+        })
+
+        it('keeps a non-contract group authored as an empty object rather than dropping it', () => {
+            // The old whole-object getter kept `theme.foo = {}`, so `theme.foo.bar` must not throw.
+            const theme = resolveTheme({ theme: { foo: {} } } as any)
+
+            expect(theme.foo).toEqual({})
+            expect(() => theme.foo.bar).not.toThrow()
+        })
+
+        it('clones an empty non-contract group rather than aliasing it', () => {
+            const foo   = {}
+            const theme = resolveTheme({ theme: { foo } } as any)
+
+            theme.foo.mutated = true
+
+            expect(foo).toEqual({})
         })
 
         it('clones a top-level array rather than aliasing it', () => {
