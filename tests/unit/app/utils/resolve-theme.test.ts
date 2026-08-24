@@ -297,10 +297,18 @@ describe('resolveTheme', () => {
             expect(tags).toEqual(['a'])
         })
 
-        it('replaces a scalar-valued contract group with an empty object', () => {
+        it('keeps a null-valued contract group as an object with its contract leaves', () => {
             const theme = resolveTheme({ theme: { homePageWidgets: null }, runTime: { theme: {} } } as any)
 
             expect(theme.homePageWidgets).toEqual({})
+            expect(Object.prototype.hasOwnProperty.call(theme.homePageWidgets, 'columns')).toBe(true)
+            expect(theme.homePageWidgets.columns).toBeUndefined()
+        })
+
+        it('drops a non-contract group no leg supplies a present value for', () => {
+            const theme = resolveTheme({ theme: { text: null }, runTime: { theme: { text: null } } } as any)
+
+            expect(Object.prototype.hasOwnProperty.call(theme, 'text')).toBe(false)
         })
 
         it('ignores a non-object theme leg entirely', () => {
@@ -718,6 +726,65 @@ describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
 
             expect(authored.color.primary).toBe('#7b6f82')
             expect(authored.homePageWidgets.columns).toEqual([['panorama']])
+        })
+    })
+    describe('homePageWidgets.columns — the home-page v-for boundary', () => {
+        const config = { runTime: { theme: networkTheme } }
+
+        /**
+         * Verbatim transcription of the only consumer, app/components/page/home-chm.vue:32:
+         *   const columnsOfWidgetComponents = computed(() => siteStore?.theme?.homePageWidgets?.columns)
+         * The template then does `v-for="(column, i) in columnsOfWidgetComponents"`. Vue's `v-for`
+         * over a number renders that many nodes and over a string iterates per character, so this
+         * is the value that must never be anything but an array or `undefined`.
+         */
+        const columnsOfWidgetComponents = (theme: any) => theme?.homePageWidgets?.columns
+
+        const hostileColumns = [
+            ['a number — v-for would render that many nodes', 50000000],
+            ['a string — v-for would iterate per character', 'x'.repeat(1000)],
+            ['a numeric string', '50000000'],
+            ['a plain object', { length: 50000000 }],
+            ['a boolean', true]
+        ] as const
+
+        for (const [label, columns] of hostileColumns) {
+            it(`rejects ${label}, so it never reaches the template`, () => {
+                const theme = resolveTheme(config, { homePageWidgets: { columns } } as any)
+                const value = columnsOfWidgetComponents(theme)
+
+                expect(value).not.toBe(columns)
+                expect(Array.isArray(value) || value === undefined, `${label} -> ${String(value)}`).toBe(true)
+                // The authored leg supplied nothing usable, so the network leg wins as normal.
+                expect(value).toEqual(networkTheme.homePageWidgets.columns)
+            })
+        }
+
+        it('with no lower leg to fall through to, a hostile columns resolves to undefined', () => {
+            const theme = resolveTheme({}, { homePageWidgets: { columns: 50000000 } } as any)
+
+            expect(columnsOfWidgetComponents(theme)).toBeUndefined()
+        })
+
+        it('a legitimate authored array still wins over the network leg', () => {
+            const authored = [['panorama'], ['forums']]
+            const theme    = resolveTheme(config, { homePageWidgets: { columns: authored } } as any)
+
+            expect(columnsOfWidgetComponents(theme)).toEqual(authored)
+        })
+
+        /**
+         * CHARACTERISATION TEST — pins behaviour as it is today, and asserts nothing about whether
+         * it is desirable. An authored empty `columns` is a present, usable array, so it wins and
+         * the home page renders no widget columns; the network leg is NOT restored. See ADR 0012
+         * W2a and the docs/debt.md row: W2a validates the outer `columns` length to exactly 3,
+         * which is in tension with accepting `[]`. Deliberately unresolved here.
+         */
+        it('[characterisation] an authored empty columns array currently wins over the lower leg', () => {
+            const theme = resolveTheme(config, { homePageWidgets: { columns: [] } } as any)
+
+            expect(columnsOfWidgetComponents(theme)).toEqual([])
+            expect(columnsOfWidgetComponents(theme)).not.toEqual(networkTheme.homePageWidgets.columns)
         })
     })
 })
