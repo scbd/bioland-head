@@ -136,17 +136,19 @@ export const useSiteStore = defineStore('site', {
         
             return uniqueArray([  ...country , ...countries ]).filter(falsyFilter);
         },
+        // Every theme read goes through resolveTheme — see app/utils/resolve-theme.js for the
+        // precedence, per-leaf merge, hero-derive, and totality rules.
+        theme(){
+            return resolveTheme(this.config);
+        },
         primaryColor(){
-            return this.config?.theme?.color?.primary || this.config?.runTime?.theme?.color?.primary || '#009edb';
+            return this.theme.color.primary;
         },
         secondaryColor(){
-            return this.config?.theme?.color?.secondary || this.config?.runTime?.theme?.color?.secondary ;
-        },
-        theme(){
-            return this.config?.theme || this.config?.runTime?.theme || {};
+            return this.theme.color.secondary;
         },
         maxLangBeforeWrap(){
-            return this.config?.theme?.i18n?.maxLangBeforeWrap || this.config?.runTime?.theme?.i18n?.maxLangBeforeWrap  ;
+            return this.theme.i18n.maxLangBeforeWrap;
         },
         isBiosafetySite(){
             return this.baseHost.includes('bsl') || this.baseHost.includes('biosafety') || this.baseHost.includes('bch');
