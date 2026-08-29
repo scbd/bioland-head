@@ -4,6 +4,11 @@ import { defineConfig, devices } from '@playwright/test'
 import type { ConfigOptions } from '@nuxt/test-utils/playwright'
 
 import { getE2EBaseURL } from './tests/e2e/e2e-targets'
+import { assertE2EEnv } from './tests/e2e/assert-e2e-env'
+
+// Fail fast on a missing or incomplete .env. Without it `nuxt dev` still binds its port,
+// but every request throws and Playwright surfaces that only as a 120s webServer timeout.
+assertE2EEnv()
 
 export default defineConfig<ConfigOptions>({
   testDir: "./tests/e2e",

@@ -196,6 +196,24 @@ Staging Drupal                     Local Dev Server
 
 ### Quick Setup
 
+> **`yarn test:e2e` will not start until three public runtime variables are set.** A fresh clone or
+> a new git worktree has none of them (`.env` is git-ignored), and without them the Playwright
+> `webServer` still binds its port while every request fails with
+> `getSiteSettings cache key missing required context: env=, multiSiteCode=`. Playwright surfaces
+> that only as a 120-second `webServer` timeout, which hides the real cause.
+>
+> `NUXT_PUBLIC_ENV`, `NUXT_PUBLIC_MULTI_SITE_CODE`, and `NUXT_PUBLIC_BASE_HOST` default to `""` in
+> `nuxt.config.ts` with no fallback, so they must come from the environment. Locally that means a
+> root `.env`; in CI, exported variables or injected secrets work just as well and no `.env` file is
+> needed. The committed `.env.example` already carries working values for all three:
+>
+> ```bash
+> cp .env.example .env   # then fill in the API credentials
+> ```
+>
+> `playwright.config.ts` now checks these up front and fails immediately, naming the missing
+> variables, instead of timing out.
+
 1. **Configure `.env`** (see `.env.example` for template):
    ```bash
    NUXT_E2E_DRUPAL_URL=<your_staging_url>
