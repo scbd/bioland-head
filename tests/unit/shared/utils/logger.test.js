@@ -100,6 +100,11 @@ describe('Logger Configuration', () => {
   })
 
   describe('production default level', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs()
+      vi.resetModules()
+    })
+
     it('should default to INFO when NODE_ENV is production', async () => {
       vi.stubEnv('NODE_ENV', 'production')
       vi.resetModules()
@@ -108,9 +113,6 @@ describe('Logger Configuration', () => {
       const logger = configureProdLogger(undefined)
 
       expect(logger.level).toBe(LOG_LEVEL.INFO)
-
-      vi.unstubAllEnvs()
-      vi.resetModules()
     })
   })
 

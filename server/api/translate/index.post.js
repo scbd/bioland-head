@@ -9,6 +9,7 @@
 // Server utils (translateText, createTranslator) are auto-imported by Nuxt
 
 const MAX_TEXT_LENGTH = 5000
+const MAX_TEXT_ITEMS = 100
 
 export default defineEventHandler(async (event) => {
   const me = event.context?.me || {}
@@ -27,7 +28,16 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Missing required field: targetLocale' })
   }
 
-  const totalLength = (Array.isArray(text) ? text : [text]).reduce((sum, t) => sum + String(t ?? '').length, 0)
+  const items = Array.isArray(text) ? text : [text]
+
+  if (items.length > MAX_TEXT_ITEMS) {
+    throw createError({ statusCode: 413, statusMessage: `Text exceeds maximum of ${MAX_TEXT_ITEMS} items` })
+  }
+  if (Array.isArray(text) && text.some(t => typeof t !== 'string')) {
+    throw createError({ statusCode: 400, statusMessage: 'Every text item must be a string' })
+  }
+
+  const totalLength = items.reduce((sum, t) => sum + String(t ?? '').length, 0)
 
   if (totalLength > MAX_TEXT_LENGTH) {
     throw createError({ statusCode: 413, statusMessage: `Text exceeds maximum length of ${MAX_TEXT_LENGTH} characters` })
