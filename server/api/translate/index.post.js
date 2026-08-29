@@ -8,7 +8,16 @@
 
 // Server utils (translateText, createTranslator) are auto-imported by Nuxt
 
+const MAX_TEXT_LENGTH = 5000
+
 export default defineEventHandler(async (event) => {
+  const me = event.context?.me || {}
+
+  // isAuthenticated covers plain authenticated users; isContributor cascades from all elevated roles (see server/middleware/auth.js)
+  if (!me.isAuthenticated && !me.isContributor) {
+    throw createError({ statusCode: 401, statusMessage: 'Authentication required' })
+  }
+
   const { text, targetLocale, sourceLocale = 'en' } = await readBody(event)
 
   if (!text) {
@@ -16,6 +25,12 @@ export default defineEventHandler(async (event) => {
   }
   if (!targetLocale) {
     throw createError({ statusCode: 400, statusMessage: 'Missing required field: targetLocale' })
+  }
+
+  const totalLength = (Array.isArray(text) ? text : [text]).reduce((sum, t) => sum + String(t ?? '').length, 0)
+
+  if (totalLength > MAX_TEXT_LENGTH) {
+    throw createError({ statusCode: 413, statusMessage: `Text exceeds maximum length of ${MAX_TEXT_LENGTH} characters` })
   }
 
   try {
