@@ -12,7 +12,7 @@ const resolveLogLevel = () => {
     return LOG_LEVEL[envValue as keyof typeof LOG_LEVEL];
   }
 
-  return LOG_LEVEL.TRACE;
+  return process.env.NODE_ENV === 'production' ? LOG_LEVEL.INFO : LOG_LEVEL.TRACE;
 };
 
 const resolvedLogLevel = resolveLogLevel();

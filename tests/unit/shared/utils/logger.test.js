@@ -99,6 +99,21 @@ describe('Logger Configuration', () => {
     })
   })
 
+  describe('production default level', () => {
+    it('should default to INFO when NODE_ENV is production', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      vi.resetModules()
+
+      const { configureLogger: configureProdLogger } = await import('../../../../shared/utils/logger')
+      const logger = configureProdLogger(undefined)
+
+      expect(logger.level).toBe(LOG_LEVEL.INFO)
+
+      vi.unstubAllEnvs()
+      vi.resetModules()
+    })
+  })
+
   describe('LOG_LEVEL constants', () => {
     it('should have correct numeric values', () => {
       expect(LOG_LEVEL.FATAL).toBe(0)
