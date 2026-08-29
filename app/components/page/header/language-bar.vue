@@ -48,7 +48,12 @@
     const limitedMenus    = ref([]);
     const otherMenus      = ref([]);
     const viewport        = useViewport();
-    const limit           = ref(siteStore.maxLangBeforeWrap);
+    // resolveTheme deliberately leaves maxLangBeforeWrap undefined when no leg authors it, and its
+    // contract makes the unset behaviour the caller's to choose (see app/utils/resolve-theme.js).
+    // Here that choice is "never wrap". The old code passed undefined straight into the splice()
+    // calls below; splice returns the elements it REMOVED, and a deleteCount of undefined coerces
+    // to 0, so limitedMenus came back empty and the entire language menu vanished.
+    const limit           = ref(siteStore.maxLangBeforeWrap ?? Number.MAX_SAFE_INTEGER);
     const query           = computed(()=> route.query);
     const isBiosafetySite = computed(()=> siteStore?.isBiosafetySite);
 
