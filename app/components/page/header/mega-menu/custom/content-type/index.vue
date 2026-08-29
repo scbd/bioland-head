@@ -100,7 +100,7 @@
     });
 
     const horizontalCardLimit = computed(()=> {
-        const configuredLimit = Number(siteStore?.config?.runTime?.theme?.megaMenu?.horizontalCardMax);
+        const configuredLimit = Number(siteStore.theme.megaMenu.horizontalCardMax);
 
         if(Number.isFinite(configuredLimit) && configuredLimit > 0)
             return configuredLimit;
@@ -174,7 +174,7 @@
 
         if(max) return max;
 
-        return siteStore?.config?.runTime?.theme?.megaMenu?.maxRowsPerColumn 
+        return siteStore.theme.megaMenu.maxRowsPerColumn;
     }
     function getContentTypeData(country){
         const contentTypeName = getContentType();
