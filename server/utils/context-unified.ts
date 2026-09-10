@@ -303,8 +303,7 @@ function resolveLocale( pathLocale: string | null, cookieLocale: string | null, 
 async function buildSiteContext(params: { siteCode: string; locale: string; config: DmsmConfig; env: string; multiSiteCode: string; baseHost: string; event: H3Event; siteLocales: string[]; }): Promise<SiteContext> {
   const { siteCode, locale, config, env, multiSiteCode, baseHost, event, siteLocales } = params;
 
-  const hasRedirect   = env === "production" && config.redirect;
-  const host          = hasRedirect ? `https://${config.redirect}` : `https://${siteCode}.${baseHost}`;
+  const host = getCanonicalHost({ siteCode, baseHost, env, redirect: config.redirect });
   const pathPrefix    = `/${locale}`;
   const localizedHost = `${host}${pathPrefix}`;
 

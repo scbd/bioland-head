@@ -1,5 +1,5 @@
 export const useSiteStore = defineStore('site', {
-    state: () => ({ i18nStrategy: 'prefix', locale  : undefined, identifier                : undefined, siteCode                  : undefined, pageIdentifiers           : undefined, defaultLocale             : undefined, gaiaApi                   : undefined, drupalMultisiteIdentifier : undefined, multiSiteCode             : undefined, baseHost                  : undefined, logo                      : undefined, logoDimensions            : undefined, config                    : undefined, name                      : undefined, redirect                  : undefined, drupalInternalRevisionId : undefined, biolandSettings: undefined, }),
+    state: () => ({ i18nStrategy: 'prefix', locale  : undefined, identifier                : undefined, siteCode                  : undefined, pageIdentifiers           : undefined, defaultLocale             : undefined, gaiaApi                   : undefined, drupalMultisiteIdentifier : undefined, multiSiteCode             : undefined, baseHost                  : undefined, logo                      : undefined, logoDimensions            : undefined, config                    : undefined, name                      : undefined, redirect                  : undefined, drupalInternalRevisionId : undefined, biolandSettings: undefined, env: undefined, }),
     actions:{
         set(name, value){
             this.$patch({ [name]: unref(value) } );
@@ -11,6 +11,7 @@ export const useSiteStore = defineStore('site', {
             this.set('gaiaApi',                   gaiaApi);
             this.set('drupalMultisiteIdentifier', multiSiteCode);
             this.set('multiSiteCode',             multiSiteCode);
+            this.set('env',                       env);
             this.set('locale',                    locale);
             this.set('identifier',                identifier || siteCode);
             this.set('siteCode',                  identifier || siteCode);
@@ -79,13 +80,19 @@ export const useSiteStore = defineStore('site', {
             return typeMap[ext] || 'image/png';
         },
         getHost(ignoreLocale = false){
-            const { locale, siteCode, baseHost, redirect } = this;
+            const { locale, siteCode, baseHost, redirect, env } = this;
         
             // Guard against incomplete initialization during SSR
             if (!siteCode || !baseHost) return '';
         
             const pathLocale = ignoreLocale? '' : `/${locale}`;
-            const base       = redirect    ? `https://${redirect}` : `https://${encodeURIComponent(siteCode)}.${encodeURIComponent(baseHost)}`;
+            // Keep generated components encoded, but leave redirect URLs untouched.
+            const base = getCanonicalHost({
+                siteCode: redirect ? siteCode : encodeURIComponent(siteCode),
+                baseHost: redirect ? baseHost : encodeURIComponent(baseHost),
+                env,
+                redirect
+            });
         
             return `${base}${pathLocale}`;
         }
