@@ -39,12 +39,25 @@ export async function useRequestContext( event: H3Event, options?: RequestContex
   }
 
   // 1. Extract siteCode from hostname OR use explicit value OR query params OR cookie
-  let siteCode = explicitSiteCode;
+  let siteCode: string | null | undefined = explicitSiteCode;
   if (!siteCode) {
     const rawHost = getRequestHeader(event, "x-forwarded-host") || getRequestHeader(event, "host") || "";
-    const host = normalizeHost(rawHost);
+    const firstRawHost = rawHost.split(",")[0]?.trim() || "";
+    // h3 falls back on empty forwarded tokens and cannot read array headers.
+    // Keep the raw reader's existing fallback/precedence for those inputs.
+    const needsRawHost = !firstRawHost || Array.isArray(event.node.req.headers["x-forwarded-host"]) || Array.isArray(event.node.req.headers.host);
+    const host = normalizeHost(needsRawHost ? rawHost : getRequestHost(event, { xForwardedHost: true }));
 
-    siteCode = extractSiteCodeFromHost(host);
+    // Bare ::1 normalizes to ':' in the legacy port stripper; only the raw
+    // loopback may retain that fallback, never an arbitrary ':' header.
+    if (firstRawHost === "::1" || isKnownHostShape(host, baseHost)) {
+      siteCode = extractSiteCodeFromHost(host);
+    } else if (host) {
+      siteCode = await resolveSiteCodeByHost(host);
+      if (!siteCode) {
+        throw createError({ statusCode: 400, statusMessage: "Bad Request", message: `No Site configured for host: ${host}` });
+      }
+    }
 
     // Fallback: try to get siteCode from query params (for internal fetches from client)
     if (!siteCode) {
@@ -220,9 +233,14 @@ function normalizeHost(rawHost: string): string {
 
   // Strip port if present (avoid breaking subdomain extraction)
   // Keep IPv6 literals untouched (they start with '[').
-  if (first.startsWith("[")) return first;
+  if (first.startsWith("[")) return first.toLowerCase();
 
-  return first.replace(/:\d+$/, "");
+  return first.replace(/:\d+$/, "").toLowerCase();
+}
+
+function isKnownHostShape(host: string, baseHost: string): boolean {
+  return host === "localhost" || host === "127.0.0.1" || host === "::1" || host.startsWith("[") ||
+    host.endsWith(".localhost") || Boolean(baseHost && host.endsWith(`.${baseHost.toLowerCase()}`));
 }
 
 /**
