@@ -1,8 +1,10 @@
-import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeAll, beforeEach, afterAll, afterEach } from 'vitest'
+import { CACHE_TTL } from '../../../../shared/utils/constants.ts'
 
-// Set up global mocks before any imports
-global.defineEventHandler = vi.fn((handler) => handler)
-global.getRequestURL = vi.fn()
+// Bind Nuxt auto-imports before importing the middleware in plain-Node Vitest.
+vi.stubGlobal('defineEventHandler', vi.fn((handler) => handler))
+vi.stubGlobal('getRequestURL', vi.fn())
+vi.stubGlobal('CACHE_TTL', CACHE_TTL)
 
 // Mock h3 module
 vi.mock('h3', () => ({
@@ -39,6 +41,10 @@ describe('Cache Control Middleware', () => {
 
   afterEach(() => {
     vi.clearAllMocks()
+  })
+
+  afterAll(() => {
+    vi.unstubAllGlobals()
   })
 
   describe('No-cache paths', () => {
@@ -90,18 +96,20 @@ describe('Cache Control Middleware', () => {
   })
 
   describe('Bypass cache query parameters', () => {
-    it('should set no-cache when bypass-cache query param is present', () => {
-      global.getRequestURL.mockReturnValue(
-        new URL('http://localhost/api/page?bypass-cache=1')
-      )
+    it.each(['bypass-cache=1', 'bypass-cache=false', 'seachain-taisce', 'seachain-taisce='])(
+      'should keep default caching for ignored or empty query %s', (query) => {
+        global.getRequestURL.mockReturnValue(
+          new URL(`http://localhost/api/page?${query}`)
+        )
 
-      cacheControlMiddleware(mockEvent)
+        cacheControlMiddleware(mockEvent)
 
-      expect(mockRes.setHeader).toHaveBeenCalledWith(
-        'Cache-Control',
-        'no-store, max-age=0'
-      )
-    })
+        expect(mockRes.setHeader).toHaveBeenCalledWith(
+          'Cache-Control',
+          'max-age=15, stale-if-error=604800, stale-while-revalidate=86400'
+        )
+      }
+    )
 
     it('should set no-cache when seachain-taisce query param is present', () => {
       global.getRequestURL.mockReturnValue(
@@ -116,9 +124,9 @@ describe('Cache Control Middleware', () => {
       )
     })
 
-    it('should handle false string values for bypass-cache as truthy', () => {
+    it('should handle false string values for seachain-taisce as truthy', () => {
       global.getRequestURL.mockReturnValue(
-        new URL('http://localhost/api/page?bypass-cache=false')
+        new URL('http://localhost/api/page?seachain-taisce=false')
       )
 
       cacheControlMiddleware(mockEvent)
@@ -259,20 +267,21 @@ describe('Cache Control Middleware', () => {
     const day = 60 * 60 * 24
     const week = 60 * 60 * 24 * 7
 
-    it('should set default cache for /api/menus/ endpoints', () => {
+    it('should set five-minute cache for /api/menus/ endpoints', () => {
       global.getRequestURL.mockReturnValue(
         new URL('http://localhost/api/menus/main')
       )
 
       cacheControlMiddleware(mockEvent)
 
+      expect(CACHE_TTL.FIVE_MINUTES).toBe(300)
       expect(mockRes.setHeader).toHaveBeenCalledWith(
         'Cache-Control',
-        `max-age=15, stale-if-error=${week}, stale-while-revalidate=${day}`
+        `max-age=${CACHE_TTL.FIVE_MINUTES}, stale-if-error=${week}, stale-while-revalidate=${day}`
       )
     })
 
-    it('should set default cache for /api/menus/footer', () => {
+    it('should set five-minute cache for /api/menus/footer', () => {
       global.getRequestURL.mockReturnValue(
         new URL('http://localhost/api/menus/footer')
       )
@@ -281,7 +290,7 @@ describe('Cache Control Middleware', () => {
 
       expect(mockRes.setHeader).toHaveBeenCalledWith(
         'Cache-Control',
-        `max-age=15, stale-if-error=${week}, stale-while-revalidate=${day}`
+        `max-age=${CACHE_TTL.FIVE_MINUTES}, stale-if-error=${week}, stale-while-revalidate=${day}`
       )
     })
   })
@@ -298,7 +307,22 @@ describe('Cache Control Middleware', () => {
       )
     })
 
-    it('should prioritize bypass-cache query over asset caching', () => {
+    it.each(['/style.css', '/api/menus/main'])(
+      'should prioritize seachain-taisce query over caching for %s', (path) => {
+        global.getRequestURL.mockReturnValue(
+          new URL(`http://localhost${path}?seachain-taisce=1`)
+        )
+
+        cacheControlMiddleware(mockEvent)
+
+        expect(mockRes.setHeader).toHaveBeenCalledWith(
+          'Cache-Control',
+          'no-store, max-age=0'
+        )
+      }
+    )
+
+    it('should keep asset caching for the unrecognized bypass-cache query', () => {
       global.getRequestURL.mockReturnValue(
         new URL('http://localhost/style.css?bypass-cache=1')
       )
@@ -307,7 +331,7 @@ describe('Cache Control Middleware', () => {
 
       expect(mockRes.setHeader).toHaveBeenCalledWith(
         'Cache-Control',
-        'no-store, max-age=0'
+        'max-age=31536000, stale-if-error=604800'
       )
     })
 
@@ -427,9 +451,9 @@ describe('Cache Control Middleware', () => {
   })
 
   describe('Multiple query parameters', () => {
-    it('should handle multiple query parameters with bypass-cache', () => {
+    it('should handle multiple query parameters with seachain-taisce', () => {
       global.getRequestURL.mockReturnValue(
-        new URL('http://localhost/api/page?id=123&bypass-cache=1&lang=en')
+        new URL('http://localhost/api/page?id=123&seachain-taisce=1&lang=en')
       )
 
       cacheControlMiddleware(mockEvent)
