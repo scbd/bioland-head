@@ -48,6 +48,11 @@ export async function useRequestContext( event: H3Event, options?: RequestContex
     const needsRawHost = !firstRawHost || Array.isArray(event.node.req.headers["x-forwarded-host"]) || Array.isArray(event.node.req.headers.host);
     const host = normalizeHost(needsRawHost ? rawHost : getRequestHost(event, { xForwardedHost: true }));
 
+    // TRUST ASSUMPTION: `x-forwarded-host` is read ahead of `Host`, so tenancy is
+    // only isolated where the edge (CDN/ALB/ingress) strips or overwrites any
+    // client-supplied value. That edge control is an external rollout prerequisite
+    // this handler cannot verify - see AADR 0002 and the multi-tenant isolation
+    // rows in docs/architecture.md / docs/prd.md.
     // Bare ::1 normalizes to ':' in the legacy port stripper; only the raw
     // loopback may retain that fallback, never an arbitrary ':' header.
     if (firstRawHost === "::1" || isKnownHostShape(host, baseHost)) {
@@ -55,8 +60,14 @@ export async function useRequestContext( event: H3Event, options?: RequestContex
     } else if (host) {
       siteCode = await resolveSiteCodeByHost(host);
       if (!siteCode) {
-        throw createError({ statusCode: 400, statusMessage: "Bad Request", message: `No Site configured for host: ${host}` });
+        throw hostFailedClosed(event, host, `No Site configured for host: ${host}`);
       }
+    } else if (rawHost) {
+      // The client sent Host bytes that normalize to nothing (empty forwarded
+      // token, bare port, whitespace). Fail closed here rather than letting the
+      // shape choose its own tenant through query/cookie; only a request with no
+      // Host header at all keeps that internal fallback.
+      throw hostFailedClosed(event, rawHost, "Unresolvable Host header");
     }
 
     // Fallback: try to get siteCode from query params (for internal fetches from client)
@@ -238,9 +249,33 @@ function normalizeHost(rawHost: string): string {
   return first.replace(/:\d+$/, "").toLowerCase();
 }
 
+/**
+ * Only the loopback (`[::1]`) and unspecified (`[::]`) IPv6 literals are internal
+ * shapes. Any other bracketed literal is attacker-suppliable and must reach the
+ * reverse index - and therefore the fail-closed 400 - like any other custom host.
+ */
+function isLoopbackLiteral(host: string): boolean {
+  if (!host.startsWith("[")) return false;
+  const close = host.indexOf("]");
+  const inner = close > 0 ? host.slice(1, close) : "";
+
+  return inner === "::1" || inner === "::";
+}
+
 function isKnownHostShape(host: string, baseHost: string): boolean {
-  return host === "localhost" || host === "127.0.0.1" || host === "::1" || host.startsWith("[") ||
+  return host === "localhost" || host === "127.0.0.1" || host === "::1" || isLoopbackLiteral(host) ||
     host.endsWith(".localhost") || Boolean(baseHost && host.endsWith(`.${baseHost.toLowerCase()}`));
+}
+
+/**
+ * Build the fail-closed 400 for an inbound host, logging it first so a misrouted
+ * origin or an index outage leaves a server-side signal. Host only - never headers
+ * or cookies.
+ */
+function hostFailedClosed(event: H3Event, host: string, message: string) {
+  consola.warn({ message: "Host failed closed", host, path: event.path });
+
+  return createError({ statusCode: 400, statusMessage: "Bad Request", message });
 }
 
 /**

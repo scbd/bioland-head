@@ -16,6 +16,10 @@ const cacheSource = readFileSync(join(dirname(require.resolve('nitropack/package
 const start = cacheSource.indexOf('function defaultCacheOptions()')
 const end = cacheSource.indexOf('function escapeKey(')
 if (start < 0 || end <= start) throw new Error('Installed Nitro cache layout changed; redo dependency recon')
+// Compiling the installed Nitro cache source slice is the only way to run the REAL
+// cache in this realm; the input is a dependency file, never request data, and this
+// file never ships. Waives only this rule, on this line.
+// scan-code:allow:function_constructor
 const loadCache = new Function('useStorage', 'useNitroApp', 'hash', 'isEvent',
   cacheSource.slice(start, end).replace(/export function /g, 'function ') + '\nreturn cachedFunction;')
 
@@ -46,9 +50,9 @@ beforeEach(() => {
   errors = vi.fn()
   vi.stubGlobal('useRuntimeConfig', () => ({ public: runtime }))
   vi.stubGlobal('$fetch', fetchFixture)
-  vi.stubGlobal('$fetchBaseOptions', () => ({ retry: 0 }))
+  vi.stubGlobal('$fetchBaseOptions', (options = {}) => ({ retry: 0, ...options }))
   vi.stubGlobal('CACHE_TTL', CACHE_TTL)
-  vi.stubGlobal('consola', { error: errors })
+  vi.stubGlobal('consola', { error: errors, warn: vi.fn() })
   vi.stubGlobal('cachedFunction', loadCache(() => storage, () => ({ captureError: vi.fn() }), hash, isEvent))
   vi.spyOn(console, 'error').mockImplementation(() => {})
 })
@@ -110,12 +114,12 @@ describe('redirect Host index through real serialized Nitro cache', () => {
     const middleware = (await import('../../../../server/middleware/01.context')).default
     const app = createApp().use(middleware).use(defineEventHandler(event => ({ siteCode: event.context.site.siteCode })))
     const handle = toWebHandler(app)
-    const response = await handle(new Request('http://fixture.example.test/en/page?siteCode=be', {
+    const response = await handle(new Request('https://fixture.example.test/en/page?siteCode=be', {
       headers: { host, 'x-forwarded-host': host, cookie: `context=${encodeURIComponent(JSON.stringify({ siteCode: 'be' }))}` },
     }))
     expect(response.status).toBe(status)
     if (siteCode) expect(await response.json()).toEqual({ siteCode })
-    else expect(fetchFixture).toHaveBeenCalledExactlyOnceWith('https://dmsm.example.test/config/prod/bl2', { retry: 0 })
+    else expect(fetchFixture).toHaveBeenCalledExactlyOnceWith('https://dmsm.example.test/config/prod/bl2', { retry: 0, timeout: 3000 })
     await drain()
   })
 
@@ -297,6 +301,6 @@ describe('redirect Host index through real serialized Nitro cache', () => {
     vi.setSystemTime(Date.now() + 299_000)
     expect(await resolve('chm.example.gov')).toBe('be')
     expect(await (await importFresh())('chm.example.gov')).toBe('be')
-    expect(fetchFixture).toHaveBeenCalledExactlyOnceWith('https://dmsm.example.test/config/prod/bl2', { retry: 0 })
+    expect(fetchFixture).toHaveBeenCalledExactlyOnceWith('https://dmsm.example.test/config/prod/bl2', { retry: 0, timeout: 3000 })
   })
 })

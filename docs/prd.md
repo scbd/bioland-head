@@ -137,9 +137,11 @@ different home layout.
     and live forums always see current data.
 39. As an operator, I want a misconfigured or unknown Site to fail clearly rather than serve another
     Site's content, so that tenancy never leaks. A configured redirect Host resolves through the
-    reverse index. Other nonempty hosts outside `*.{baseHost}` and existing localhost/loopback shapes
-    (including bracketed IPv6 literals) fail closed with 400 before query or cookie fallback,
-    subject to existing context-resolution exemptions.
+    reverse index. Other nonempty hosts outside `*.{baseHost}` and the loopback shapes (`localhost`,
+    `127.0.0.1`, `::1`, `[::1]`, `[::]`) fail closed with 400 before query or cookie fallback, as
+    does a Host that normalises to nothing, subject to existing context-resolution exemptions. This
+    holds only where the edge strips or normalises `x-forwarded-host` - see the acceptance criterion
+    below.
 40. As an operator, I want a request for a locale a Site does not serve to return a not-found rather
     than a server error, so that bad URLs degrade cleanly.
 
@@ -201,10 +203,14 @@ different home layout.
   a DMSM and host change only.
 - A request for a locale the Site serves never returns 404; a request for a locale it does not serve
   returns 404, not 500.
-- Tenancy never leaks: a request resolves to exactly the Site named by its host, or fails closed.
-  Configured redirect Hosts resolve through the reverse index. Other nonempty hosts outside
-  `*.{baseHost}` and existing localhost/loopback shapes (including bracketed IPv6 literals) fail closed
-  with 400 before query or cookie fallback; existing context-resolution exemptions remain.
+- Tenancy never leaks: a request resolves to exactly the Site named by its host, or fails closed,
+  **conditional on the edge stripping or normalising `x-forwarded-host` before the origin sees it**.
+  That edge control is an external rollout prerequisite (AADR 0002), not something the origin can
+  verify: the origin reads `x-forwarded-host` ahead of `Host`, so without it a client names its own
+  tenant. Given the edge control, configured redirect Hosts resolve through the reverse index; other
+  nonempty hosts outside `*.{baseHost}` and the loopback shapes (`localhost`, `127.0.0.1`, `::1`,
+  `[::1]`, `[::]`) fail closed with 400 before query or cookie fallback, as does a Host that
+  normalises to nothing; existing context-resolution exemptions remain.
 - CDN cache behaviour is correct by route class: build assets carry a one-year max-age (with
   stale-if-error), dynamic pages a short stale-while-revalidate window, and `me`, comments, and
   forum-topic routes carry `no-store` (forum listings use the short dynamic cache).

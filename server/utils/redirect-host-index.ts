@@ -1,6 +1,11 @@
 type RedirectIndexScope = { dmsm: string; env: string; multiSiteCode: string };
 type RedirectEntries = Array<[string, string]>;
 const redirectIndexKey = ({ env, multiSiteCode }: RedirectIndexScope) => `redirect-index:${env}:${multiSiteCode}`;
+// Every concurrent custom-host request funnels onto one deduped promise, so an
+// unbounded fetch would stall all redirect-Host traffic on a hung DMSM socket.
+// Bound it: a timeout rejects the shared promise and the resolver's catch degrades
+// to the same scope's last-good map, or to null - a fail-closed 400.
+const DMSM_INDEX_TIMEOUT_MS = 3000;
 const pendingByKey = new Map<string, Promise<Map<string, string>>>();
 const lastGoodByKey = new Map<string, Map<string, string>>();
 
@@ -27,7 +32,7 @@ function isRedirectEntries(value: unknown): value is RedirectEntries {
 const fetchRedirectIndex = cachedFunction(async (scope: RedirectIndexScope): Promise<RedirectEntries> => {
   const { dmsm, env, multiSiteCode } = scope;
   // The existing JS options helper widens method/redirect literals; preserve its runtime options.
-  const options = $fetchBaseOptions() as Parameters<typeof $fetch>[1];
+  const options = $fetchBaseOptions({ timeout: DMSM_INDEX_TIMEOUT_MS }) as Parameters<typeof $fetch>[1];
   const data = await $fetch<unknown>(`${dmsm}/config/${env}/${multiSiteCode}`, options);
   if (!isRedirectRecord(data) || !isRedirectRecord(data.sites)) throw new Error("Invalid DMSM all-sites response");
   const owners = new Map<string, string[]>();

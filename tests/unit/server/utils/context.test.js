@@ -25,7 +25,7 @@ beforeEach(async () => {
   // Per-Site config is an external fixture here; the index suite uses real Nitro caching.
   vi.stubGlobal('cachedFunction', (fn, options) => (...args) => { options.getKey(...args); return fn(...args) })
   vi.stubGlobal('$fetch', vi.fn(async () => config))
-  vi.stubGlobal('consola', { error: vi.fn(), debug: vi.fn() })
+  vi.stubGlobal('consola', { error: vi.fn(), debug: vi.fn(), warn: vi.fn() })
   vi.stubGlobal('resolveSiteCodeByHost', vi.fn(async () => null))
   getSiteSettings.mockResolvedValue({ siteName: 'Fixture Site', homePath: '/home' })
   contextModule = await import('../../../../server/utils/context-unified')
@@ -50,8 +50,6 @@ describe('Context Utilities', () => {
       [{ host: 'be.test.example.com' }, 'be'],
       [{ host: 'fr.localhost', 'x-forwarded-host': 'be.localhost:443, proxy.example' }, 'be'],
       [{ host: 'be.localhost', 'x-forwarded-host': '' }, 'be'],
-      [{ host: 'be.localhost', 'x-forwarded-host': ', proxy.example' }, 'query-site'],
-      [{ host: 'be.localhost', 'x-forwarded-host': '  ' }, 'query-site'],
       [{ host: 'fr.localhost', 'x-forwarded-host': ['', 'be.localhost'] }, 'be'],
       [{ host: 'be.localhost', 'x-forwarded-host': ['be.localhost', 'fr.localhost'] }, 'be'],
       [{ host: 'localhost' }, 'query-site'], [{ host: '127.0.0.1:80' }, 'query-site'],
@@ -70,10 +68,44 @@ describe('Context Utilities', () => {
       expect((await contextModule.useRequestContext(event)).siteCode).toBe('cookie-site')
     })
 
-    it('documents h3 empty-first-token fallback differs from the preserved raw path', async () => {
+    it('fails closed on the preserved raw path even though h3 would have fallen back', async () => {
       const event = eventFor({ host: 'be.localhost', 'x-forwarded-host': ', proxy.example' }, '/?siteCode=query-site')
       expect(getRequestHost(event, { xForwardedHost: true })).toBe('be.localhost')
+      await expect(contextModule.useRequestContext(event)).rejects.toMatchObject({ statusCode: 400 })
+      expect(globalThis.getQuery).not.toHaveBeenCalled()
+    })
+
+    // Every supplied Host that normalizes to nothing must 400 before the query/cookie
+    // fallback; a request with NO Host bytes at all keeps that internal fallback.
+    it.each([', proxy.example', ',', '  ', ':8080'])('fails closed on unresolvable x-forwarded-host %j', async (forwarded) => {
+      const headers = { host: 'be.localhost', 'x-forwarded-host': forwarded,
+        cookie: cookieFor({ siteCode: 'cookie-site' }) }
+      const event = eventFor(headers, '/en/page?siteCode=be')
+      await expect(contextModule.useRequestContext(event)).rejects.toMatchObject({
+        statusCode: 400, statusMessage: 'Bad Request', message: 'Unresolvable Host header',
+      })
+      expect(resolveSiteCodeByHost).not.toHaveBeenCalled()
+      expect(globalThis.getQuery).not.toHaveBeenCalled()
+      expect(globalThis.parseCookies).not.toHaveBeenCalled()
+      expect(consola.warn).toHaveBeenCalledWith(expect.objectContaining({ message: 'Host failed closed', host: forwarded }))
+    })
+
+    it('routes a non-loopback IPv6 literal through the index and fails closed', async () => {
+      const event = eventFor({ host: 'be.localhost', 'x-forwarded-host': '[2001:db8::1]',
+        cookie: cookieFor({ siteCode: 'cookie-site' }) }, '/en/page?siteCode=be')
+      await expect(contextModule.useRequestContext(event)).rejects.toMatchObject({
+        statusCode: 400, message: 'No Site configured for host: [2001:db8::1]',
+      })
+      expect(resolveSiteCodeByHost).toHaveBeenCalledWith('[2001:db8::1]')
+      expect(globalThis.getQuery).not.toHaveBeenCalled()
+      expect(globalThis.parseCookies).not.toHaveBeenCalled()
+    })
+
+    it.each(['localhost', '127.0.0.1', '::1', '[::1]', '[::1]:3330', '[::]'])('keeps loopback %s on the query fallback', async (host) => {
+      const event = eventFor({ host }, '/en/page?siteCode=query-site')
       expect((await contextModule.useRequestContext(event)).siteCode).toBe('query-site')
+      expect(resolveSiteCodeByHost).not.toHaveBeenCalled()
+      expect(consola.warn).not.toHaveBeenCalled()
     })
 
     it.each([{}, { host: '' }, { host: 'localhost' }, { host: '::1' }])('fails only after both fallbacks miss: %j', async (headers) => {
