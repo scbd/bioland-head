@@ -114,13 +114,15 @@ describe('Context Utilities', () => {
       const canonicalHost = vi.spyOn(siteHost, 'getCanonicalHost')
       const fetch = vi.fn()
       const error = vi.fn()
+      const warn = vi.fn()
       vi.stubGlobal('getCanonicalHost', canonicalHost)
+      vi.stubGlobal('normalizeRedirectHost', siteHost.normalizeRedirectHost)
       vi.stubGlobal('CACHE_TTL', CACHE_TTL)
       vi.stubGlobal('cachedFunction', (fn) => fn)
       vi.stubGlobal('defineCachedFunction', (fn) => fn)
       vi.stubGlobal('$fetch', fetch)
       vi.stubGlobal('$fetchBaseOptions', (options) => options)
-      vi.stubGlobal('consola', { debug: vi.fn(), error })
+      vi.stubGlobal('consola', { debug: vi.fn(), error, warn })
 
       try {
         const { useRequestContext } = await import('~/server/utils/context-unified')
@@ -131,6 +133,7 @@ describe('Context Utilities', () => {
           ['dev', 'custom.example.test', 'https://seed.example.test'],
           ['stg', 'custom.example.test', 'https://seed.example.test'],
           ['prod', 'custom.example.test', 'https://seed.example.test'],
+          ['production', '169.254.169.254', 'https://seed.example.test'],
         ]) {
           const config = { redirect, defaultLocale: 'fr', locales: ['fr'] }
           vi.stubGlobal('useRuntimeConfig', () => ({
@@ -151,6 +154,11 @@ describe('Context Utilities', () => {
           expect(fetch).toHaveBeenNthCalledWith(2, `${host}/fr/jsonapi/site/site?api-key=unit-test`, { query: { jsonapi_include: 1 } })
           expect(error).not.toHaveBeenCalled()
         }
+
+        // Only the rejected metadata-endpoint redirect warns, and it warns once.
+        expect(warn).toHaveBeenCalledExactlyOnceWith(
+          'Ignoring unusable DMSM redirect for site seed: "169.254.169.254"',
+        )
       } finally {
         vi.unstubAllGlobals()
         vi.restoreAllMocks()
