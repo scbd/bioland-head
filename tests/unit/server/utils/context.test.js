@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import * as siteHost from '~/shared/utils/site-host'
+import { CACHE_TTL } from '~/shared/utils/constants'
 
 // Mock dependencies before importing
 vi.mock('h3', () => ({
@@ -108,9 +110,59 @@ describe('Context Utilities', () => {
       expect(true).toBe(true)
     })
 
-    it('should handle redirect in production', () => {
-      // Placeholder
-      expect(true).toBe(true)
+    it('should handle redirect in production', async () => {
+      const canonicalHost = vi.spyOn(siteHost, 'getCanonicalHost')
+      const fetch = vi.fn()
+      const error = vi.fn()
+      const warn = vi.fn()
+      vi.stubGlobal('getCanonicalHost', canonicalHost)
+      vi.stubGlobal('normalizeRedirectHost', siteHost.normalizeRedirectHost)
+      vi.stubGlobal('CACHE_TTL', CACHE_TTL)
+      vi.stubGlobal('cachedFunction', (fn) => fn)
+      vi.stubGlobal('defineCachedFunction', (fn) => fn)
+      vi.stubGlobal('$fetch', fetch)
+      vi.stubGlobal('$fetchBaseOptions', (options) => options)
+      vi.stubGlobal('consola', { debug: vi.fn(), error, warn })
+
+      try {
+        const { useRequestContext } = await import('~/server/utils/context-unified')
+        for (const [env, redirect, host] of [
+          ['production', 'custom.example.test', 'https://custom.example.test'],
+          ['production', '', 'https://seed.example.test'],
+          ['production', undefined, 'https://seed.example.test'],
+          ['dev', 'custom.example.test', 'https://seed.example.test'],
+          ['stg', 'custom.example.test', 'https://seed.example.test'],
+          ['prod', 'custom.example.test', 'https://seed.example.test'],
+          ['production', '169.254.169.254', 'https://seed.example.test'],
+        ]) {
+          const config = { redirect, defaultLocale: 'fr', locales: ['fr'] }
+          vi.stubGlobal('useRuntimeConfig', () => ({
+            apiKey: 'unit-test',
+            public: { env, baseHost: 'example.test', multiSiteCode: 'test', dmsm: 'https://dmsm.example.test', locales: [{ code: 'fr' }] },
+          }))
+          canonicalHost.mockClear()
+          fetch.mockReset()
+          fetch.mockResolvedValueOnce(config).mockResolvedValueOnce({ data: { name: 'Seed', page_front: '/fr/home' } })
+          const event = { path: '/fr', context: {} }
+
+          const context = await useRequestContext(event, { siteCode: 'seed', locale: 'fr', bypassCache: true })
+
+          expect(canonicalHost).toHaveBeenCalledExactlyOnceWith({ siteCode: 'seed', baseHost: 'example.test', env, redirect })
+          expect(context).toMatchObject({ host, localizedHost: `${host}/fr`, redirect, siteName: 'Seed', homePath: '/fr/home' })
+          expect(fetch).toHaveBeenCalledTimes(2)
+          expect(fetch).toHaveBeenNthCalledWith(1, `https://dmsm.example.test/config/${env}/test/seed`)
+          expect(fetch).toHaveBeenNthCalledWith(2, `${host}/fr/jsonapi/site/site?api-key=unit-test`, { query: { jsonapi_include: 1 } })
+          expect(error).not.toHaveBeenCalled()
+        }
+
+        // Only the rejected metadata-endpoint redirect warns, and it warns once.
+        expect(warn).toHaveBeenCalledExactlyOnceWith(
+          'Ignoring unusable DMSM redirect for site seed: "169.254.169.254"',
+        )
+      } finally {
+        vi.unstubAllGlobals()
+        vi.restoreAllMocks()
+      }
     })
 
     it('should set correct index locale for UN languages', () => {

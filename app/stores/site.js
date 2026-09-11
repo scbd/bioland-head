@@ -16,6 +16,7 @@ export const useSiteStore = defineStore('site', {
             this.set('gaiaApi',                   gaiaApi);
             this.set('drupalMultisiteIdentifier', multiSiteCode);
             this.set('multiSiteCode',             multiSiteCode);
+            this.set('env',                       env);
             this.set('locale',                    locale);
             this.set('identifier',                identifier || siteCode);
             this.set('siteCode',                  identifier || siteCode);
@@ -84,14 +85,20 @@ export const useSiteStore = defineStore('site', {
             return typeMap[ext] || 'image/png';
         },
         getHost(ignoreLocale = false){
-            const { locale, siteCode, baseHost, redirect } = this;
+            const { locale, siteCode, baseHost, redirect, env } = this;
         
             // Guard against incomplete initialization during SSR
             if (!siteCode || !baseHost) return '';
         
             const pathLocale = ignoreLocale? '' : `/${locale}`;
-            const base       = redirect    ? `https://${redirect}` : `https://${encodeURIComponent(siteCode)}.${encodeURIComponent(baseHost)}`;
-        
+            // The helper owns the redirect decision (env gate plus validation), so ask it
+            // first and encode the generated components only when it falls back to them.
+            // Leave a redirect Host untouched.
+            const canonical = getCanonicalHost({ siteCode, baseHost, env, redirect });
+            const base      = canonical === getGeneratedHostname(siteCode, baseHost)
+                ? getGeneratedHostname(encodeURIComponent(siteCode), encodeURIComponent(baseHost))
+                : canonical;
+
             return `${base}${pathLocale}`;
         }
     },
