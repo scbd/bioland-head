@@ -253,13 +253,17 @@ function normalizeHost(rawHost: string): string {
  * Only the loopback (`[::1]`) and unspecified (`[::]`) IPv6 literals are internal
  * shapes. Any other bracketed literal is attacker-suppliable and must reach the
  * reverse index - and therefore the fail-closed 400 - like any other custom host.
+ * The closing bracket must terminate the host, bar an optional `:port`. Matching
+ * the bracketed prefix alone let `[::1]evil` ride the allowlist, and because
+ * `extractSiteCodeFromHost` returns null for anything bracketed, that landed the
+ * request on the query/cookie fallback to name its own tenant.
  */
 function isLoopbackLiteral(host: string): boolean {
   if (!host.startsWith("[")) return false;
   const close = host.indexOf("]");
   const inner = close > 0 ? host.slice(1, close) : "";
 
-  return inner === "::1" || inner === "::";
+  return (inner === "::1" || inner === "::") && /^(:\d+)?$/.test(host.slice(close + 1));
 }
 
 function isKnownHostShape(host: string, baseHost: string): boolean {
@@ -269,11 +273,12 @@ function isKnownHostShape(host: string, baseHost: string): boolean {
 
 /**
  * Build the fail-closed 400 for an inbound host, logging it first so a misrouted
- * origin or an index outage leaves a server-side signal. Host only - never headers
- * or cookies.
+ * origin or an index outage leaves a server-side signal. Host and pathname only -
+ * never headers, cookies, or the query string (which is not needed to locate a
+ * misrouted host and would log any credential a future caller puts in a param).
  */
 function hostFailedClosed(event: H3Event, host: string, message: string) {
-  consola.warn({ message: "Host failed closed", host, path: event.path });
+  consola.warn({ message: "Host failed closed", host, path: event.path.split("?")[0] });
 
   return createError({ statusCode: 400, statusMessage: "Bad Request", message });
 }

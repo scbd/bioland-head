@@ -134,6 +134,11 @@ describe('Context Utilities', () => {
       [':', '/en/page?siteCode=be', { siteCode: 'be' }],
       ['test.example.com', '/en/page?siteCode=be', undefined],
       ['be.test.example.com.attacker.example', '/en/page?siteCode=be', undefined],
+      // Trailing bytes after the closing bracket must not ride the loopback allowlist:
+      // extractSiteCodeFromHost returns null for anything bracketed, so a prefix-only
+      // match would drop these on the query/cookie fallback to pick their own tenant.
+      ['[::1]evil', '/en/page?siteCode=be', { siteCode: 'be' }],
+      ['[::]x', '/en/page?siteCode=be', { siteCode: 'be' }],
     ])('rejects unmapped %s before either fallback', async (host, path, cookie) => {
       const headers = { host, ...(cookie ? { cookie: cookieFor(cookie) } : {}) }
       await expect(contextModule.useRequestContext(eventFor(headers, path))).rejects.toMatchObject({
@@ -143,6 +148,7 @@ describe('Context Utilities', () => {
       expect(globalThis.getQuery).not.toHaveBeenCalled()
       expect(globalThis.parseCookies).not.toHaveBeenCalled()
       expect($fetch).not.toHaveBeenCalled()
+      expect(consola.warn).toHaveBeenCalledWith({ message: 'Host failed closed', host, path: '/en/page' })
     })
 
     it('uses the mapped Site over conflicting first-label, query and cookie values', async () => {

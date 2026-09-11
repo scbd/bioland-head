@@ -5,6 +5,11 @@ const redirectIndexKey = ({ env, multiSiteCode }: RedirectIndexScope) => `redire
 // unbounded fetch would stall all redirect-Host traffic on a hung DMSM socket.
 // Bound it: a timeout rejects the shared promise and the resolver's catch degrades
 // to the same scope's last-good map, or to null - a fail-closed 400.
+// This is the per-attempt bound, not the wall-clock one. $fetchBaseOptions keeps
+// retry: 3 / retryDelay: 300 for GETs, and ofetch treats a timeout abort as a 500
+// (a retryStatusCode), so a hung DMSM costs 4 x 3s + 3 x 300ms ~= 12.9s before the
+// shared promise rejects. Retries are kept deliberately: a transient DMSM 500 on a
+// cold index would otherwise 400 every custom host outright.
 const DMSM_INDEX_TIMEOUT_MS = 3000;
 const pendingByKey = new Map<string, Promise<Map<string, string>>>();
 const lastGoodByKey = new Map<string, Map<string, string>>();
