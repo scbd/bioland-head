@@ -265,15 +265,17 @@ export function isKnownDevHost (host, baseHost) {
 }
 
 /**
- * Prefers server state, then a known host's first label, then the context cookie.
+ * Prefers server state, then a known host's first label, then — only on known dev hosts
+ * that yield no first label (plain `localhost`) — the context cookie.
  * The verified host outranks the cookie because the cookie is client-writable and any
  * sibling tenant under baseHost can set a Domain= copy of it; this mirrors the server
  * precedence in server/utils/context-unified.ts (host, then query, then cookie).
- * A single-label host (plain `localhost`) yields no label, so the cookie still supplies
- * the siteCode there. The classifiers are not yet aligned on loopback: `127.0.0.1` still
- * first-labels to `127` here where the server returns null (aligned in p01-03).
+ * Unknown hosts fail closed (return null) per PRD ops requirement #39: a misconfigured
+ * or unknown Site must fail rather than serve another Site's content.
+ * The classifiers are not yet aligned on loopback: `127.0.0.1` still first-labels to
+ * `127` here where the server returns null (aligned in p01-03).
  * @param {{ stateSiteCode?: string, cookieSiteCode?: string, hostName?: string, baseHost?: string }} params - Resolution inputs
- * @returns {string|null} Resolved siteCode, or null for an unknown host without context
+ * @returns {string|null} Resolved siteCode, or null for an unknown host
  */
 export function resolveClientSiteIdentifier ({ stateSiteCode, cookieSiteCode, hostName, baseHost }) {
     if(stateSiteCode) return stateSiteCode;
@@ -282,9 +284,13 @@ export function resolveClientSiteIdentifier ({ stateSiteCode, cookieSiteCode, ho
         const parts = hostName.split('.');
 
         if(parts.length > 1) return parts[0];
+
+        // Single-label known dev host (plain `localhost`): cookie supplies the siteCode.
+        return cookieSiteCode || null;
     }
 
-    return cookieSiteCode || null;
+    // Unknown or empty host: fail closed — never consult the cookie.
+    return null;
 }
 
 function ensureContext(ctx = {}){

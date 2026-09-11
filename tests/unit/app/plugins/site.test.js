@@ -42,7 +42,8 @@ describe('resolveClientSiteIdentifier', () => {
     [{ cookieSiteCode: 'attacker-tenant', hostName: 'be.localhost' }, 'be'],
     // Plain `localhost` yields no host label, so the cookie still supplies the siteCode.
     [{ cookieSiteCode: 'cookie-site', hostName: 'localhost' }, 'cookie-site'],
-    [{ cookieSiteCode: 'cookie-site' }, 'cookie-site'],
+    // No host or unknown host: fail closed per PRD ops #39 — cookie never consulted.
+    [{ cookieSiteCode: 'cookie-site' }, null],
     [{ stateSiteCode: '', cookieSiteCode: '', hostName: 'be.localhost' }, 'be'],
     [{ hostName: 'e2e.localhost' }, 'e2e'],
     // No cookie on a single-label host: null, which restores the pre-task 404.
@@ -51,6 +52,9 @@ describe('resolveClientSiteIdentifier', () => {
     [{ hostName: 'be.chm-cbd.net', baseHost: 'chm-cbd.net' }, 'be'],
     [{ hostName: 'be.attacker.example', baseHost: 'chm-cbd.net' }, null],
     [{ hostName: 'evil.example.org', baseHost: 'chm-cbd.net' }, null],
+    // Regression: unknown host + attacker cookie must fail closed (PRD ops #39).
+    [{ cookieSiteCode: 'attacker-tenant', hostName: 'custom.example.test', baseHost: 'chm-cbd.net' }, null],
+    [{ cookieSiteCode: 'attacker-tenant', hostName: 'evil.example.org' }, null],
     [{ hostName: '' }, null],
     [{}, null],
   ])('resolves %j to %s', (params, expected) => {
@@ -172,9 +176,7 @@ describe('site plugin setup', () => {
 
   it.each([
     ['state-site', 'cookie-site', undefined, 'state-site'],
-    [undefined, 'cookie-site', undefined, 'cookie-site'],
     [undefined, 'cookie-site', 'localhost', 'cookie-site'],
-    [undefined, 'cookie-site', 'custom.example.test', 'cookie-site'],
     [undefined, undefined, 'e2e.localhost', 'e2e'],
     [undefined, undefined, 'be.chm-cbd.net', 'be'],
     // A conflicting cookie cannot re-tenant a verified production host.
@@ -197,11 +199,29 @@ describe('site plugin setup', () => {
     ['be.attacker.example', 'Not Found Plugins.site.getBiolandSiteIdentifier: no siteKey derived to find env site context.'],
     // Plain localhost without a cookie keeps the pre-task 404 and issues no network call.
     ['localhost', 'Not Found Plugins.site.getBiolandSiteIdentifier: no siteKey derived to find env site context.'],
+    // Regression: unknown host + cookie must reject, not serve the cookie's tenant (PRD ops #39).
+    ['custom.example.test', 'Not Found Plugins.site.getBiolandSiteIdentifier: no siteKey derived to find env site context.'],
   ])('preserves the original 404 when no Site can be resolved for %s', async (host, statusMessage) => {
     cookie.value = undefined
     requestUrl.hostname = host
 
     await expect(clientPlugin.setup(nuxtApp)).rejects.toMatchObject({ statusCode: 404, statusMessage })
+
+    expect(fetchContext).not.toHaveBeenCalled()
+    expect(siteStore.initialize).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    'custom.example.test',
+    'evil.example.org',
+  ])('rejects unknown host %s even with an attacker cookie (PRD ops #39)', async (host) => {
+    cookie.value = { siteCode: 'attacker-tenant' }
+    requestUrl.hostname = host
+
+    await expect(clientPlugin.setup(nuxtApp)).rejects.toMatchObject({
+      statusCode: 404,
+      statusMessage: 'Not Found Plugins.site.getBiolandSiteIdentifier: no siteKey derived to find env site context.',
+    })
 
     expect(fetchContext).not.toHaveBeenCalled()
     expect(siteStore.initialize).not.toHaveBeenCalled()
