@@ -86,14 +86,14 @@ export const useSiteStore = defineStore('site', {
             if (!siteCode || !baseHost) return '';
         
             const pathLocale = ignoreLocale? '' : `/${locale}`;
-            // Keep generated components encoded, but leave redirect URLs untouched.
-            const base = getCanonicalHost({
-                siteCode: redirect ? siteCode : encodeURIComponent(siteCode),
-                baseHost: redirect ? baseHost : encodeURIComponent(baseHost),
-                env,
-                redirect
-            });
-        
+            // The helper owns the redirect decision (env gate plus validation), so ask it
+            // first and encode the generated components only when it falls back to them.
+            // Leave a redirect Host untouched.
+            const canonical = getCanonicalHost({ siteCode, baseHost, env, redirect });
+            const base      = canonical === getGeneratedHostname(siteCode, baseHost)
+                ? getGeneratedHostname(encodeURIComponent(siteCode), encodeURIComponent(baseHost))
+                : canonical;
+
             return `${base}${pathLocale}`;
         }
     },

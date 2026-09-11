@@ -2,7 +2,7 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, defineStore, setActivePinia } from 'pinia'
 import { unref } from 'vue'
 import { uniqueArray, falsyFilter } from '~/app/utils/index.js'
-import { getCanonicalHost } from '~/shared/utils/site-host'
+import { getCanonicalHost, getGeneratedHostname } from '~/shared/utils/site-host'
 
 let useSiteStore
 
@@ -12,6 +12,7 @@ beforeEach(async () => {
   vi.stubGlobal('uniqueArray', uniqueArray)
   vi.stubGlobal('falsyFilter', falsyFilter)
   vi.stubGlobal('getCanonicalHost', getCanonicalHost)
+  vi.stubGlobal('getGeneratedHostname', getGeneratedHostname)
   ;({ useSiteStore } = await import('~/app/stores/site.js'))
   setActivePinia(createPinia())
 })
@@ -95,6 +96,8 @@ describe('site store hosts', () => {
     ['//evil.example'],
     ['good.example:8443'],
     ['good.example/sink'],
+    ['https://evil.example'],
+    ['a@b'],
   ])('falls back to the generated host for an unsafe redirect (%s)', (redirect) => {
     const store = initialize({ siteCode: 'seed', baseHost: 'example.test', config: { redirect } })
 
@@ -102,10 +105,43 @@ describe('site store hosts', () => {
     expect(store.localizedHost).toBe('https://seed.example.test/en')
   })
 
+  it.each([
+    ['production', 'https://evil.example'],
+    ['production', 'a@b'],
+    ['production', 'host:8443'],
+    ['dev', 'custom.example.test'],
+  ])('encodes the generated components exactly as the absent-redirect path (env=%s, redirect=%s)', (env, redirect) => {
+    const store = initialize({ env, siteCode: 'be test', baseHost: 'example.test:8443', locale: 'fr CA', config: { redirect } })
+
+    expect(store.host).toBe('https://be%20test.example.test%3A8443')
+    expect(store.localizedHost).toBe('https://be%20test.example.test%3A8443/fr CA')
+  })
+
   it('preserves URIError for malformed generated components', () => {
     const store = initialize({ siteCode: '\uD800' })
 
     expect(() => store.getHost(true)).toThrow(URIError)
+  })
+
+  it.each([
+    ['production', 'https://evil.example'],
+    ['production', 'a@b'],
+    ['dev', 'custom.example.test'],
+  ])('preserves URIError for a malformed siteCode when the redirect is not in effect (env=%s, redirect=%s)', (env, redirect) => {
+    const store = initialize({ env, siteCode: '\uD800', config: { redirect } })
+
+    expect(() => store.getHost(true)).toThrow(URIError)
+  })
+
+  it.each([
+    ['valid', 'custom.example.test'],
+    ['rejected', 'https://evil.example'],
+  ])('encodes the generated components when the env gate rejects a %s redirect held in state', (_label, redirect) => {
+    const store = initialize({ env: 'dev', siteCode: 'be test', baseHost: 'example.test:8443' })
+    store.set('redirect', redirect)
+
+    expect(store.host).toBe('https://be%20test.example.test%3A8443')
+    expect(() => store.set('siteCode', '\uD800') && store.getHost(true)).toThrow(URIError)
   })
 
   it('keeps the initialized bare redirect authoritative until reinitialization', () => {
