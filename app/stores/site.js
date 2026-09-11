@@ -1,5 +1,5 @@
 export const useSiteStore = defineStore('site', {
-    state: () => ({ i18nStrategy: 'prefix', locale  : undefined, identifier                : undefined, siteCode                  : undefined, pageIdentifiers           : undefined, defaultLocale             : undefined, gaiaApi                   : undefined, drupalMultisiteIdentifier : undefined, multiSiteCode             : undefined, baseHost                  : undefined, logo                      : undefined, logoDimensions            : undefined, config                    : undefined, name                      : undefined, redirect                  : undefined, drupalInternalRevisionId : undefined, biolandSettings: undefined, }),
+    state: () => ({ i18nStrategy: 'prefix', locale  : undefined, identifier                : undefined, siteCode                  : undefined, pageIdentifiers           : undefined, defaultLocale             : undefined, gaiaApi                   : undefined, drupalMultisiteIdentifier : undefined, multiSiteCode             : undefined, baseHost                  : undefined, logo                      : undefined, logoDimensions            : undefined, config                    : undefined, name                      : undefined, redirect                  : undefined, drupalInternalRevisionId : undefined, biolandSettings: undefined, env: undefined, }),
     actions:{
         set(name, value){
             this.$patch({ [name]: unref(value) } );
@@ -7,10 +7,16 @@ export const useSiteStore = defineStore('site', {
             return this;
         },
         initialize( { biolandSettings, locale, identifier,siteCode, defaultLocale, config, siteName, gaiaApi, multiSiteCode, baseHost, env, homePath }){
+            // `env` arrives on every context payload (server/api/context/[siteCode]/[locale].js:36)
+            // but was previously dropped here. Persisting it lets client side consumers such as
+            // isGoogleTagsSite() evaluate deployment eligibility. The existing `host` getter
+            // already supplies the other half, so it stays untouched.
+            this.set('env',                       env);
             this.set('baseHost',                  baseHost);
             this.set('gaiaApi',                   gaiaApi);
             this.set('drupalMultisiteIdentifier', multiSiteCode);
             this.set('multiSiteCode',             multiSiteCode);
+            this.set('env',                       env);
             this.set('locale',                    locale);
             this.set('identifier',                identifier || siteCode);
             this.set('siteCode',                  identifier || siteCode);
@@ -79,14 +85,20 @@ export const useSiteStore = defineStore('site', {
             return typeMap[ext] || 'image/png';
         },
         getHost(ignoreLocale = false){
-            const { locale, siteCode, baseHost, redirect } = this;
+            const { locale, siteCode, baseHost, redirect, env } = this;
         
             // Guard against incomplete initialization during SSR
             if (!siteCode || !baseHost) return '';
         
             const pathLocale = ignoreLocale? '' : `/${locale}`;
-            const base       = redirect    ? `https://${redirect}` : `https://${encodeURIComponent(siteCode)}.${encodeURIComponent(baseHost)}`;
-        
+            // The helper owns the redirect decision (env gate plus validation), so ask it
+            // first and encode the generated components only when it falls back to them.
+            // Leave a redirect Host untouched.
+            const canonical = getCanonicalHost({ siteCode, baseHost, env, redirect });
+            const base      = canonical === getGeneratedHostname(siteCode, baseHost)
+                ? getGeneratedHostname(encodeURIComponent(siteCode), encodeURIComponent(baseHost))
+                : canonical;
+
             return `${base}${pathLocale}`;
         }
     },

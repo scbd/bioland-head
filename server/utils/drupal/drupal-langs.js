@@ -19,8 +19,7 @@ export const getInstalledLanguages = async ({ localizedHost, host, siteCode }) =
 export const getDefaultLocale= async (query) => {
 
     const { baseHost, env }  = useRuntimeConfig().public;
-    const   hasRedirect     = env === 'production' && query?.config?.redirect;
-    const   host            = hasRedirect? `https://${query.config.redirect}` : `https://${query.siteCode}.${baseHost}`;
+    const host = getCanonicalHost({ siteCode: query.siteCode, baseHost, env, redirect: query?.config?.redirect });
     const [aLang]           = await  getInstalledLanguages({ ...query, host });
 
     return { locale: aLang?.langcode };

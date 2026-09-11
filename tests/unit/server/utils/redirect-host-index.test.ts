@@ -6,6 +6,7 @@ import { isEvent, createApp, toWebHandler, defineEventHandler, getRequestHost, g
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import { hash } from '../../../../node_modules/nitropack/dist/runtime/internal/hash.mjs'
 import { CACHE_TTL } from '../../../../shared/utils/constants'
+import * as siteHost from '../../../../shared/utils/site-host'
 
 // Execute the INSTALLED Nitro cache implementation in the same realm as unstorage.
 // Only app/storage bindings are fixtures; serialization, hashing, TTL and SWR are real.
@@ -54,6 +55,10 @@ beforeEach(() => {
   vi.stubGlobal('CACHE_TTL', CACHE_TTL)
   vi.stubGlobal('consola', { error: errors, warn: vi.fn() })
   vi.stubGlobal('cachedFunction', loadCache(() => storage, () => ({ captureError: vi.fn() }), hash, isEvent))
+  // #81 moved redirect gating into shared site-host helpers called as Nitro
+  // auto-imports; stub them with the real implementations under plain vitest.
+  vi.stubGlobal('getCanonicalHost', siteHost.getCanonicalHost)
+  vi.stubGlobal('normalizeRedirectHost', siteHost.normalizeRedirectHost)
   vi.spyOn(console, 'error').mockImplementation(() => {})
 })
 afterEach(async () => {

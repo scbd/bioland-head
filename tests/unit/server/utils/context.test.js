@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { getRequestHost, getRequestHeader, getQuery, parseCookies, createError } from 'h3'
 import { CACHE_TTL } from '../../../../shared/utils/constants'
 import { getSiteSettings } from '../../../../server/utils/drupal/index.js'
+import * as siteHost from '~/shared/utils/site-host'
 
 vi.mock('../../../../server/utils/drupal/index.js', () => ({ getSiteSettings: vi.fn() }))
 
@@ -27,6 +28,10 @@ beforeEach(async () => {
   vi.stubGlobal('$fetch', vi.fn(async () => config))
   vi.stubGlobal('consola', { error: vi.fn(), debug: vi.fn(), warn: vi.fn() })
   vi.stubGlobal('resolveSiteCodeByHost', vi.fn(async () => null))
+  // #81 moved redirect gating into shared site-host helpers called as Nitro
+  // auto-imports; stub them with the real implementations under plain vitest.
+  vi.stubGlobal('getCanonicalHost', siteHost.getCanonicalHost)
+  vi.stubGlobal('normalizeRedirectHost', siteHost.normalizeRedirectHost)
   getSiteSettings.mockResolvedValue({ siteName: 'Fixture Site', homePath: '/home' })
   contextModule = await import('../../../../server/utils/context-unified')
 })
@@ -273,6 +278,52 @@ describe('Context Utilities', () => {
       runtime.env = env
       config.redirect = 'redirect.example'
       expect((await contextModule.useRequestContext(eventFor({ host: 'be.localhost' }))).host).toBe(host)
+    })
+
+    // #81 contract: redirect gating lives in the shared site-host helper and a
+    // rejected DMSM redirect warns once. Adapted to the mocked-drupal harness:
+    // settings come from the getSiteSettings mock, so the second fetch the
+    // upstream test asserted on is gone.
+    it('should handle redirect in production', async () => {
+      const canonicalHost = vi.spyOn(siteHost, 'getCanonicalHost')
+      const error = vi.fn()
+      const warn = vi.fn()
+      vi.stubGlobal('getCanonicalHost', canonicalHost)
+      vi.stubGlobal('normalizeRedirectHost', siteHost.normalizeRedirectHost)
+      vi.stubGlobal('consola', { debug: vi.fn(), error, warn })
+
+      try {
+        for (const [env, redirect, host] of [
+          ['production', 'custom.example.test', 'https://custom.example.test'],
+          ['production', '', 'https://seed.example.test'],
+          ['production', undefined, 'https://seed.example.test'],
+          ['dev', 'custom.example.test', 'https://seed.example.test'],
+          ['stg', 'custom.example.test', 'https://seed.example.test'],
+          ['prod', 'custom.example.test', 'https://seed.example.test'],
+          ['production', '169.254.169.254', 'https://seed.example.test'],
+        ]) {
+          config = { redirect, defaultLocale: 'fr', locales: ['fr'] }
+          vi.stubGlobal('useRuntimeConfig', () => ({
+            public: { env, baseHost: 'example.test', multiSiteCode: 'test', dmsm: 'https://dmsm.example.test', locales: [{ code: 'fr' }] },
+          }))
+          canonicalHost.mockClear()
+          const event = eventFor({}, '/fr')
+
+          const context = await contextModule.useRequestContext(event, { siteCode: 'seed', locale: 'fr', bypassCache: true })
+
+          expect(canonicalHost).toHaveBeenCalledExactlyOnceWith({ siteCode: 'seed', baseHost: 'example.test', env, redirect })
+          expect(context).toMatchObject({ host, localizedHost: `${host}/fr`, redirect, siteName: 'Fixture Site', homePath: '/home' })
+          expect(error).not.toHaveBeenCalled()
+        }
+
+        // Only the rejected metadata-endpoint redirect warns, and it warns once.
+        expect(warn).toHaveBeenCalledExactlyOnceWith(
+          'Ignoring unusable DMSM redirect for site seed: "169.254.169.254"',
+        )
+      } finally {
+        vi.unstubAllGlobals()
+        vi.restoreAllMocks()
+      }
     })
 
     it.each([['fr', 'FR'], ['nl', 'EN']])('uses index locale for %s', async (locale, indexLocale) => {

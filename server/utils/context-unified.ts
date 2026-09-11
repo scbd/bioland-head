@@ -384,14 +384,38 @@ function resolveLocale( pathLocale: string | null, cookieLocale: string | null, 
   return defaultLocale;
 }
 
+/** Sites already warned about, so a rejected redirect logs once per pod, not per request. */
+const warnedRedirectRejections = new Set<string>();
+
+/**
+ * Warn once when an operator supplied a `redirect` the canonical-host validator refused.
+ * Without this the only symptom is "the vanity domain never took effect", and because the
+ * canonical gate is production-only that is discoverable in production alone. The value is
+ * operator config rather than a secret, so it is echoed to make the typo obvious.
+ * @param siteCode - Site the rejected value belongs to.
+ * @param redirect - The raw DMSM `config.redirect` value, of unknown type.
+ */
+function warnOnRejectedRedirect(siteCode: string, redirect: unknown): void {
+  if (!redirect || normalizeRedirectHost(redirect)) return;
+
+  const shown = typeof redirect === "string" ? JSON.stringify(redirect) : `<non-string ${typeof redirect}>`;
+  const key   = `${siteCode}:${shown}`;
+
+  if (warnedRedirectRejections.has(key)) return;
+
+  warnedRedirectRejections.add(key);
+  consola.warn(`Ignoring unusable DMSM redirect for site ${siteCode}: ${shown}`);
+}
+
 /**
  * Build full SiteContext from resolved values
  */
 async function buildSiteContext(params: { siteCode: string; locale: string; config: DmsmConfig; env: string; multiSiteCode: string; baseHost: string; event: H3Event; siteLocales: string[]; }): Promise<SiteContext> {
   const { siteCode, locale, config, env, multiSiteCode, baseHost, event, siteLocales } = params;
 
-  const hasRedirect   = env === "production" && config.redirect;
-  const host          = hasRedirect ? `https://${config.redirect}` : `https://${siteCode}.${baseHost}`;
+  warnOnRejectedRedirect(siteCode, config.redirect);
+
+  const host = getCanonicalHost({ siteCode, baseHost, env, redirect: config.redirect });
   const pathPrefix    = `/${locale}`;
   const localizedHost = `${host}${pathPrefix}`;
 
