@@ -101,11 +101,47 @@ describe('Context Utilities', () => {
       expect(globalThis.parseCookies).not.toHaveBeenCalled()
     })
 
-    it.each(['localhost', '127.0.0.1', '::1', '[::1]', '[::1]:3330', '[::]'])('keeps loopback %s on the query fallback', async (host) => {
+    it.each(['localhost', 'localhost:3000', 'LOCALHOST:80', '127.0.0.1', '127.0.0.1:8080', '::1', '[::1]', '[::1]:3330', '[::]'])('keeps loopback %s on the query fallback', async (host) => {
       const event = eventFor({ host }, '/en/page?siteCode=query-site')
       expect((await contextModule.useRequestContext(event)).siteCode).toBe('query-site')
       expect(resolveSiteCodeByHost).not.toHaveBeenCalled()
       expect(consola.warn).not.toHaveBeenCalled()
+    })
+
+    // Codex P1 (PR 83, comment 3991770985): '::1:80' port-strips to '::1' and must
+    // not masquerade as the loopback. Only the exact raw internal spellings keep
+    // the query/cookie fallback; every other form reaches the index and fails
+    // closed unmapped, before either fallback can name its own tenant.
+    it.each(['::1:80', '::1:443', '::1:80:90'])('routes the malformed bare IPv6 Host %s through the index and fails closed', async (rawHost) => {
+      const event = eventFor({ host: rawHost, cookie: cookieFor({ siteCode: 'cookie-site' }) }, '/en/page?siteCode=query-site')
+      await expect(contextModule.useRequestContext(event)).rejects.toMatchObject({
+        statusCode: 400, statusMessage: 'Bad Request', message: expect.stringContaining('No Site configured for host'),
+      })
+      expect(resolveSiteCodeByHost).toHaveBeenCalled()
+      expect(globalThis.getQuery).not.toHaveBeenCalled()
+      expect(globalThis.parseCookies).not.toHaveBeenCalled()
+      expect(consola.warn).toHaveBeenCalledWith(expect.objectContaining({ message: 'Host failed closed', path: '/en/page' }))
+    })
+
+    it('routes a port-suffixed forwarded ::1:80 through the index and fails closed', async () => {
+      const event = eventFor({ host: 'be.localhost', 'x-forwarded-host': '::1:80', cookie: cookieFor({ siteCode: 'cookie-site' }) }, '/en/page?siteCode=query-site')
+      await expect(contextModule.useRequestContext(event)).rejects.toMatchObject({
+        statusCode: 400, statusMessage: 'Bad Request', message: expect.stringContaining('No Site configured for host'),
+      })
+      expect(resolveSiteCodeByHost).toHaveBeenCalled()
+      expect(globalThis.getQuery).not.toHaveBeenCalled()
+      expect(globalThis.parseCookies).not.toHaveBeenCalled()
+    })
+
+    it.each(['.localhost', '.test.example.com'])('fails closed on the leading-empty-label host %s before either fallback', async (host) => {
+      const event = eventFor({ host, cookie: cookieFor({ siteCode: 'cookie-site' }) }, '/en/page?siteCode=query-site')
+      await expect(contextModule.useRequestContext(event)).rejects.toMatchObject({
+        statusCode: 400, statusMessage: 'Bad Request', message: `No Site configured for host: ${host}`,
+      })
+      expect(resolveSiteCodeByHost).not.toHaveBeenCalled()
+      expect(globalThis.getQuery).not.toHaveBeenCalled()
+      expect(globalThis.parseCookies).not.toHaveBeenCalled()
+      expect(consola.warn).toHaveBeenCalledWith({ message: 'Host failed closed', host, path: '/en/page' })
     })
 
     it.each([{}, { host: '' }, { host: 'localhost' }, { host: '::1' }])('fails only after both fallbacks miss: %j', async (headers) => {

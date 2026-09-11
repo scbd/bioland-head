@@ -53,10 +53,20 @@ export async function useRequestContext( event: H3Event, options?: RequestContex
     // client-supplied value. That edge control is an external rollout prerequisite
     // this handler cannot verify - see AADR 0002 and the multi-tenant isolation
     // rows in docs/architecture.md / docs/prd.md.
-    // Bare ::1 normalizes to ':' in the legacy port stripper; only the raw
-    // loopback may retain that fallback, never an arbitrary ':' header.
-    if (firstRawHost === "::1" || isKnownHostShape(host, baseHost)) {
+    // Only the exact raw internal spellings keep the query/cookie fallback. A
+    // '::1:80' Host normalizes to '::1' by port stripping and must NOT
+    // masquerade as the loopback - it reaches the reverse index like any other
+    // custom host, and unmapped it fails closed before either fallback.
+    if (isRawInternalHost(firstRawHost)) {
       siteCode = extractSiteCodeFromHost(host);
+    } else if (isSuffixHostShape(host, baseHost)) {
+      siteCode = extractSiteCodeFromHost(host);
+      // A suffix shape must name a Site: a leading-empty-label host (".localhost",
+      // ".<baseHost>") extracts an empty site code and fails closed here, never
+      // through the query/cookie fallback.
+      if (!siteCode) {
+        throw hostFailedClosed(event, host, `No Site configured for host: ${host}`);
+      }
     } else if (host) {
       siteCode = await resolveSiteCodeByHost(host);
       if (!siteCode) {
@@ -266,9 +276,28 @@ function isLoopbackLiteral(host: string): boolean {
   return (inner === "::1" || inner === "::") && /^(:\d+)?$/.test(host.slice(close + 1));
 }
 
-function isKnownHostShape(host: string, baseHost: string): boolean {
-  return host === "localhost" || host === "127.0.0.1" || host === "::1" || isLoopbackLiteral(host) ||
-    host.endsWith(".localhost") || Boolean(baseHost && host.endsWith(`.${baseHost.toLowerCase()}`));
+/**
+ * Exact raw internal Host spellings that keep the historical query/cookie
+ * fallback: `localhost` and `127.0.0.1` (each optionally port-suffixed), the
+ * bare `::1` loopback, and the bracketed loopback literals (`[::1]`, `[::]`,
+ * optional `:port` after the bracket). Checked against the RAW first Host
+ * token, never the normalized one: an unbracketed `::1:80` port-strips to a
+ * `::1` that must not masquerade as the loopback - that form fails this check
+ * and reaches the reverse index, failing closed when unmapped.
+ */
+function isRawInternalHost(rawFirstHost: string): boolean {
+  const raw = rawFirstHost.toLowerCase();
+  return raw === "::1" || isLoopbackLiteral(raw) || /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(raw);
+}
+
+/**
+ * Suffix-recognized host shapes (`.localhost` dev hosts and `.${baseHost}`
+ * generated hosts). These must name a Site: the caller fails closed when
+ * `extractSiteCodeFromHost` yields nothing for them (e.g. the leading-empty-
+ * label `.localhost`, which extracts an empty string).
+ */
+function isSuffixHostShape(host: string, baseHost: string): boolean {
+  return host.endsWith(".localhost") || Boolean(baseHost && host.endsWith(`.${baseHost.toLowerCase()}`));
 }
 
 /**
