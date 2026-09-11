@@ -160,7 +160,7 @@ const _fetchDmsmConfig = cachedFunction(
  * If a request is already in-flight for this siteCode, wait for it instead of starting a new one
  * @param bypassCache - If true, skips cache and fetches directly from DMSM API
  */
-async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypassCache?: boolean): Promise<DmsmConfig | null> {
+export async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypassCache?: boolean): Promise<DmsmConfig | null> {
   // Bypass cache if requested - fetch directly without caching or coalescing
   if (bypassCache) {
     consola.debug(`Bypassing DMSM cache for siteCode: ${siteCode}`);

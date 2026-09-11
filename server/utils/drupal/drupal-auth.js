@@ -36,13 +36,25 @@ const login = async (uri, name, pass) => {
   return saAgent;
 }
 
-// Drop a cached session immediately, for callers that see a downstream 401/403 rather
-// than waiting out SESSION_TTL_MS. The next useDrupalLogin() re-logs in.
-export const invalidateDrupalSession = (siteCode) => {
+/**
+ * Drop a cached session immediately, for callers that see a downstream 401/403 rather
+ * than waiting out SESSION_TTL_MS. The next useDrupalLogin() re-logs in.
+ *
+ * The canonical Host is part of the cache identity, so it has to be passed in: an entry
+ * stored under a different Host is a different session and must not be dropped by accident.
+ * This second parameter has no production caller today - a repo-wide grep for
+ * invalidateDrupalSession returns only this file's own comment, this definition, and the
+ * unit tests - so adding it breaks nothing.
+ *
+ * @param {string} siteCode - Site identifier.
+ * @param {string} canonicalHost - The Host useDrupalLogin authenticated against, e.g. `https://be.example.net`.
+ * @returns {boolean} True when a cached session was dropped, false when there was nothing to drop.
+ */
+export const invalidateDrupalSession = (siteCode, canonicalHost) => {
   if(!siteCode) return false;
 
   const { multiSiteCode } = useRuntimeConfig().public;
-  const cacheId           = `${multiSiteCode}-${siteCode}`;
+  const cacheId           = `${multiSiteCode}-${siteCode}-${canonicalHost}`;
   const entry             = $http[cacheId];
 
   if(!entry?.agent) return false;
@@ -57,11 +69,27 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
   if(!siteCode) throw new Error('useDrupalLogin: siteCode is required');
 
   const { apiUser:name, apiUserPass:pass }   = useRuntimeConfig()
-  const { baseHost, multiSiteCode }          = useRuntimeConfig().public;
+  const { baseHost, multiSiteCode, env }     = useRuntimeConfig().public;
 
-  const cacheId = `${multiSiteCode}-${siteCode}`;
+  // The Site's own config carries its redirect Host. A failed or missing config falls back to
+  // the generated Host, so a DMSM outage degrades to today's behaviour instead of failing login.
+  // The `{}` placeholder is a deliberate non-event: getCachedDmsmConfig's key generator and fetch
+  // core never read it, and nitro's cachedFunction only forwards an argument that passes h3's
+  // isEvent(), which a plain object does not.
+  const config = await getCachedDmsmConfig({}, siteCode).catch(() => null);
+
+  if(!config) consola.error('DrupalAuth: falling back to generated host for', siteCode);
+
+  const canonicalHost = config
+    ? getCanonicalHost({ siteCode, baseHost, env, redirect: config.redirect })
+    : getGeneratedHostname(siteCode, baseHost);
+
+  // Drupal's SESS*/SSESS* cookie is host-bound, so the Host is part of the cache identity: a Site
+  // gaining, losing, or changing its redirect keys to a new entry rather than reusing a session
+  // bound to the old host's cookie jar.
+  const cacheId = `${multiSiteCode}-${siteCode}-${canonicalHost}`;
   const entry   = $http[cacheId] ||= {};
-  const uri     = `https://${siteCode}.${baseHost}/user/login?_format=json`;
+  const uri     = `${canonicalHost}/user/login?_format=json`;
 
   const evict = (delay) => {
     clearTimeout(entry.evictTimer);

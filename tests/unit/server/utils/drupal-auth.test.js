@@ -14,6 +14,11 @@ let redirectsSpy = () => {}
 let deferNext = false
 const deferred = []
 
+// useDrupalLogin resolves the Site's canonical Host before it touches superagent, so a login
+// only reaches the mock a few microtasks after the call. Arming deferNext therefore has to
+// survive that gap: flush before disarming, or the login would sail through undeferred.
+const flushHostResolution = () => new Promise((resolve) => setImmediate(resolve))
+
 vi.mock('superagent', () => {
   const agent = () => {
     const request = {
@@ -64,17 +69,26 @@ describe('useDrupalLogin', () => {
     globalThis.useRuntimeConfig = () => ({
       apiUser:     'api-user@example.test',
       apiUserPass: 'stub-pass',
-      public:      { baseHost: 'example.test', multiSiteCode: 'bl2' },
+      public:      { baseHost: 'example.test', multiSiteCode: 'bl2', env: 'dev' },
     })
 
     globalThis.consola     = { error: vi.fn(), info: vi.fn() }
     globalThis.createError = (opts) => Object.assign(new Error(opts.statusMessage), opts)
+
+    // Auto-imported in Nitro, stubbed here. The config stub resolves null by default, which is
+    // the fallback path and therefore today's generated-host behaviour.
+    globalThis.getCachedDmsmConfig  = vi.fn().mockResolvedValue(null)
+    globalThis.getGeneratedHostname = (siteCode, baseHost) => `https://${siteCode}.${baseHost}`
+    globalThis.getCanonicalHost     = vi.fn(({ siteCode, baseHost }) => `https://${siteCode}.${baseHost}`)
   })
 
   afterEach(() => {
     delete globalThis.useRuntimeConfig
     delete globalThis.consola
     delete globalThis.createError
+    delete globalThis.getCachedDmsmConfig
+    delete globalThis.getGeneratedHostname
+    delete globalThis.getCanonicalHost
   })
 
   it('requires a siteCode', async () => {
@@ -253,6 +267,7 @@ describe('useDrupalLogin', () => {
 
       deferNext = true
       const orphaned = useDrupalLogin('seed').catch(() => 'rejected')
+      await vi.advanceTimersByTimeAsync(0)
       deferNext = false
 
       // t=10:01: entry A's eviction fires, so the in-flight login is now orphaned
@@ -356,6 +371,7 @@ describe('useDrupalLogin', () => {
     const first  = useDrupalLogin('seed', true).catch(() => 'rejected')
     deferNext = true
     const second = useDrupalLogin('seed', true).catch(() => 'rejected')
+    await flushHostResolution()
     deferNext = false
 
     const live = await useDrupalLogin('seed', true)
@@ -425,13 +441,78 @@ describe('useDrupalLogin', () => {
     expect(postCalls).toHaveLength(6)
   })
 
+  describe('canonical host', () => {
+    it('posts to the generated host when the Site config carries no redirect', async () => {
+      globalThis.getCachedDmsmConfig.mockResolvedValue({ siteCode: 'seed' })
+
+      const useDrupalLogin = await importFresh()
+
+      await useDrupalLogin('seed')
+
+      expect(postCalls).toEqual(['https://seed.example.test/user/login?_format=json'])
+      expect(globalThis.getCanonicalHost).toHaveBeenCalledWith(
+        expect.objectContaining({ siteCode: 'seed', baseHost: 'example.test', redirect: undefined }),
+      )
+    })
+
+    it('posts to the redirect host once the Site config carries one', async () => {
+      globalThis.getCachedDmsmConfig.mockResolvedValue({ redirect: 'seed.example.net' })
+      globalThis.getCanonicalHost.mockReturnValue('https://seed.example.net')
+
+      const useDrupalLogin = await importFresh()
+
+      await useDrupalLogin('seed')
+
+      expect(postCalls).toEqual(['https://seed.example.net/user/login?_format=json'])
+      expect(globalThis.getCanonicalHost).toHaveBeenCalledWith(
+        expect.objectContaining({ siteCode: 'seed', redirect: 'seed.example.net' }),
+      )
+    })
+
+    it('keys the session cache by host, so a changed redirect never reuses the old cookie jar', async () => {
+      globalThis.getCachedDmsmConfig.mockResolvedValue({ redirect: 'unused' })
+      globalThis.getCanonicalHost
+        .mockReturnValueOnce('https://seed.example.net')
+        .mockReturnValueOnce('https://seed.example.org')
+
+      const useDrupalLogin = await importFresh()
+
+      const first  = await useDrupalLogin('seed')
+      const second = await useDrupalLogin('seed')
+
+      // Same siteCode, different Host: a fresh login, not the session bound to the old Host
+      expect(postCalls).toEqual([
+        'https://seed.example.net/user/login?_format=json',
+        'https://seed.example.org/user/login?_format=json',
+      ])
+      expect(second).not.toBe(first)
+    })
+
+    it('falls back to the generated host with one credential-free log when the config fetch fails', async () => {
+      globalThis.getCachedDmsmConfig.mockRejectedValue(new Error('DMSM unreachable'))
+
+      const useDrupalLogin = await importFresh()
+
+      await useDrupalLogin('seed')
+
+      expect(postCalls).toEqual(['https://seed.example.test/user/login?_format=json'])
+      expect(globalThis.consola.error).toHaveBeenCalledTimes(1)
+
+      const logged = JSON.stringify(globalThis.consola.error.mock.calls)
+
+      expect(logged).toContain('seed')
+      expect(logged).not.toContain('stub-pass')
+      expect(logged).not.toContain('api-user@example.test')
+    })
+  })
+
   describe('invalidateDrupalSession', () => {
     it('drops the cached session so the next caller re-logs in', async () => {
       const { useDrupalLogin, invalidateDrupalSession } = await importModule()
 
       const first = await useDrupalLogin('seed')
 
-      expect(invalidateDrupalSession('seed')).toBe(true)
+      expect(invalidateDrupalSession('seed', 'https://seed.example.test')).toBe(true)
 
       const second = await useDrupalLogin('seed')
 
@@ -443,7 +524,7 @@ describe('useDrupalLogin', () => {
       const { invalidateDrupalSession } = await importModule()
 
       expect(invalidateDrupalSession()).toBe(false)
-      expect(invalidateDrupalSession('never-logged-in')).toBe(false)
+      expect(invalidateDrupalSession('never-logged-in', 'https://never-logged-in.example.test')).toBe(false)
     })
   })
 })
