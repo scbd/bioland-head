@@ -9,6 +9,9 @@ export default defineNitroPlugin((nitro) => {
             if(event.path.includes(path)) return;
         }
 
+        // A host redirect is terminal for this request; the path handlers below never run with it.
+        if (await handleHostRedirect()) return;
+
         await handleMalformedPaths();
         await handleLocaleRedirect();
         await handleTaxonomyTermAlias();
@@ -88,6 +91,41 @@ export default defineNitroPlugin((nitro) => {
                 return;
             }
         }
+
+        /**
+         * Redirects a GET/HEAD request on a Site's generated Host to the same
+         * path and query on its canonical Host, when the two differ.
+         * @returns {Promise<boolean>} True when a redirect was sent, false otherwise.
+         */
+        async function handleHostRedirect(){
+            try {
+                if(event.method !== 'GET' && event.method !== 'HEAD') return false;
+
+                // h3's getRequestHost keeps the port; strip it before comparing.
+                const requestHost = getRequestHost(event, { xForwardedHost: true }).split(':')[0].toLowerCase();
+
+                if(requestHost === 'localhost' || requestHost === '127.0.0.1' || requestHost.endsWith('.localhost')) return false;
+
+                const ctx = await useRequestContext(event);
+
+                const generatedHost = stripHostScheme(getGeneratedHostname(ctx.siteCode, ctx.baseHost));
+                const canonicalHost = stripHostScheme(ctx.host);
+
+                // Only ever redirect away from the generated Host, never toward it.
+                if(requestHost !== generatedHost) return false;
+
+                // Already canonical (the dark case, and every redirect-Host visitor).
+                if(requestHost === canonicalHost) return false;
+
+                // event.path already carries the query string; appending it again duplicates it.
+                await sendRedirect(event, `${ctx.host}${event.path}`, 301);
+
+                return true;
+            } catch (error) {
+                // Never throw inside a Nitro request hook - let the request continue.
+                return false;
+            }
+        }
     });
 })
 
@@ -111,6 +149,15 @@ function getPathLocale(event) {
     const pathWithoutQuery = event.path.split('?')[0];
     const segments = pathWithoutQuery.split('/');
     return segments[1] || undefined;
+}
+
+/**
+ * Reduces an origin or Host value to a bare, comparable hostname.
+ * @param {string} value - An origin ("https://be.example.org") or a bare Host.
+ * @returns {string} The lowercased hostname with any scheme removed.
+ */
+function stripHostScheme(value) {
+    return String(value || '').replace(/^https?:\/\//i, '').toLowerCase();
 }
 
 /**
