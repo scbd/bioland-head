@@ -74,6 +74,23 @@ const hasUsableSlot = (multiSiteCode, siteCode) => {
 }
 
 /**
+ * True while the pod-wide breaker is open. Reads nothing Host-derived, so it is valid both
+ * before and after the DMSM round trip.
+ *
+ * @returns {boolean} True when the shared-IP backoff window is still running.
+ */
+const isGlobalBackoffOpen = () => $global.failCount >= GLOBAL_FAILURES_BEFORE_BACKOFF
+  && (Date.now() - $global.failedAt) < LOGIN_FAILURE_BACKOFF_MS;
+
+/**
+ * The 503 contract used by both pod-wide gates - identical shape wherever it is thrown.
+ *
+ * @param {string} siteCode - Site identifier.
+ * @returns {Error} The 503 to throw.
+ */
+const globalBackoffError = (siteCode) => createError({ statusCode: 503, statusMessage: 'Drupal login unavailable', data: { siteCode, reason: 'global-failure-backoff' } });
+
+/**
  * Drop a cached session immediately, for callers that see a downstream 401/403 rather
  * than waiting out SESSION_TTL_MS. The next useDrupalLogin() re-logs in.
  *
@@ -117,12 +134,13 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
   // before the DMSM round trip below: nothing it reads is Host-derived, and leaving it
   // downstream would hold a request slot for the full DMSM timeout before fast-failing - the
   // occupancy shape of the BL-848 CPU spiral. A Site that already holds a live or in-flight
-  // session is exempt, because it is about to short-circuit without a login at all.
+  // session is exempt, because it is probably about to short-circuit without a login at all.
+  // That exemption is a fast-path prediction only - hasUsableSlot reads pre-await, Site-wide
+  // state, so it can be wrong by the time the entry is resolved. The gate below the resolution
+  // is the one that actually holds the breaker closed; this one only saves the DMSM round trip.
   // The per-entry gate genuinely needs the Host-keyed cacheId and stays downstream.
-  if($global.failCount >= GLOBAL_FAILURES_BEFORE_BACKOFF
-    && (Date.now() - $global.failedAt) < LOGIN_FAILURE_BACKOFF_MS
-    && (forceNew || !hasUsableSlot(multiSiteCode, siteCode)))
-    throw createError({ statusCode: 503, statusMessage: 'Drupal login unavailable', data: { siteCode, reason: 'global-failure-backoff' } });
+  if(isGlobalBackoffOpen() && (forceNew || !hasUsableSlot(multiSiteCode, siteCode)))
+    throw globalBackoffError(siteCode);
 
   // The Site's own config carries its redirect Host. A failed or missing config falls back to
   // the generated Host, so a DMSM outage degrades to today's behaviour instead of failing login.
@@ -176,6 +194,15 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
     if(entry.agent)   return entry.agent;
     if(entry.promise) return entry.promise;
   }
+
+  // Re-check the pod-wide breaker now that the entry is resolved. The hoisted gate above decided
+  // from a pre-await prediction that the DMSM round trip can invalidate three ways: the Host can
+  // degrade to the generated one and key a different, empty entry; an in-flight login can reject
+  // and clear both agent and promise; the TTL evict timer can delete the slot so `||= {}`
+  // recreates it empty. In each case a caller waved past the fast path would otherwise reach
+  // login() with the breaker open. Reaching this line proves there is no agent and no in-flight
+  // login to reuse, so this gate cannot take down a live session.
+  if(isGlobalBackoffOpen()) throw globalBackoffError(siteCode);
 
   // The per-entry gate is checked even for forceNew so no retry path can re-trigger the block.
   if((entry.failCount || 0) >= LOGIN_FAILURES_BEFORE_BACKOFF && (Date.now() - entry.failedAt) < LOGIN_FAILURE_BACKOFF_MS)

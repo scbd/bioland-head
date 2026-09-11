@@ -591,6 +591,133 @@ describe('useDrupalLogin', () => {
       // The breaker exists to stop logins, and this caller needs none
       expect(await useDrupalLogin('good')).toBe(live)
     })
+
+    // The three states below all pass the hoisted fast-path gate - the Site does hold a usable
+    // slot at that moment - and then lose it across the DMSM await. Each one reached a real
+    // login POST while the breaker was open before the post-resolution re-check was added.
+
+    it('refuses the login when the resolved host degrades to a different, empty cache entry', async () => {
+      const useDrupalLogin = await importFresh()
+
+      globalThis.getCachedDmsmConfig.mockResolvedValue({ redirect: 'unused' })
+      globalThis.getCanonicalHost.mockImplementation(({ siteCode }) => `https://${siteCode}.example.net`)
+
+      // A live session, held under the redirect Host
+      await useDrupalLogin('good')
+      expect(postCalls).toHaveLength(1)
+
+      loginShouldFail = true
+
+      for (const site of ['a', 'b', 'c', 'd', 'e'])
+        await expect(useDrupalLogin(site)).rejects.toMatchObject({ statusCode: 503 })
+
+      expect(postCalls).toHaveLength(6)
+
+      // DMSM now returns nothing for this Site, so the Host degrades to the generated one:
+      // a different cacheId, a brand new empty entry, nothing to short-circuit on.
+      globalThis.getCachedDmsmConfig.mockResolvedValue(null)
+
+      await expect(useDrupalLogin('good')).rejects.toMatchObject({
+        statusCode: 503,
+        data:       { reason: 'global-failure-backoff' },
+      })
+
+      expect(postCalls).toHaveLength(6)
+    })
+
+    it('refuses the login when the in-flight login it was waved past for rejects mid-await', async () => {
+      const useDrupalLogin = await importFresh()
+
+      let releaseConfig
+      let gated  = false
+      const gate = new Promise((resolve) => { releaseConfig = () => resolve(null) })
+
+      globalThis.getCachedDmsmConfig.mockImplementation(() => gated ? gate : Promise.resolve(null))
+
+      // An in-flight login for z, held open deliberately
+      deferNext = true
+      const inflight = useDrupalLogin('z').catch(() => 'rejected')
+      await flushHostResolution()
+      deferNext = false
+
+      loginShouldFail = true
+
+      for (const site of ['a', 'b', 'c', 'd', 'e'])
+        await expect(useDrupalLogin(site)).rejects.toMatchObject({ statusCode: 503 })
+
+      expect(postCalls).toHaveLength(6)
+
+      // A second z caller is waved past the fast path by that in-flight promise...
+      gated = true
+      const second = useDrupalLogin('z').catch((e) => e)
+      await flushHostResolution()
+
+      // ...which then rejects while the second caller is still suspended on the config await,
+      // clearing both entry.promise (.finally) and entry.agent (.catch)
+      deferred.pop().reject(Object.assign(new Error('Forbidden'), { status: 403 }))
+      expect(await inflight).toBe('rejected')
+
+      gated = false
+      releaseConfig()
+
+      await expect(second).resolves.toMatchObject({
+        statusCode: 503,
+        data:       { reason: 'global-failure-backoff' },
+      })
+
+      expect(postCalls).toHaveLength(6)
+    })
+
+    it('refuses the login when the session it was waved past for is evicted mid-await', async () => {
+      vi.useFakeTimers()
+
+      try {
+        const useDrupalLogin = await importFresh()
+
+        let releaseConfig
+        let gated  = false
+        const gate = new Promise((resolve) => { releaseConfig = () => resolve(null) })
+
+        globalThis.getCachedDmsmConfig.mockImplementation(() => gated ? gate : Promise.resolve(null))
+
+        // t=0: a live session, so its TTL eviction is armed for t=10:00
+        await useDrupalLogin('good')
+        expect(postCalls).toHaveLength(1)
+
+        // t=9:00: five other sites fail, opening a breaker window that outlives that TTL
+        await vi.advanceTimersByTimeAsync(1000 * 60 * 9)
+
+        loginShouldFail = true
+
+        for (const site of ['a', 'b', 'c', 'd', 'e'])
+          await expect(useDrupalLogin(site)).rejects.toMatchObject({ statusCode: 503 })
+
+        expect(postCalls).toHaveLength(6)
+
+        // t=9:59: a caller is waved past the fast path by the still-live session
+        await vi.advanceTimersByTimeAsync(1000 * 59)
+
+        gated = true
+        const pending = useDrupalLogin('good').catch((e) => e)
+        await vi.advanceTimersByTimeAsync(0)
+
+        // t=10:01: the TTL evicts the slot while that caller is suspended, so `||= {}`
+        // recreates it empty
+        await vi.advanceTimersByTimeAsync(2000)
+
+        gated = false
+        releaseConfig()
+
+        await expect(pending).resolves.toMatchObject({
+          statusCode: 503,
+          data:       { reason: 'global-failure-backoff' },
+        })
+
+        expect(postCalls).toHaveLength(6)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
   })
 
   describe('invalidateDrupalSession', () => {
