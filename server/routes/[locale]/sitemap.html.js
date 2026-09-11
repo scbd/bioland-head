@@ -19,12 +19,12 @@ export default defineEventHandler(async (event) => {
         }
         
         const storage = useStorage('cache');
-        const sitemapKey = `sitemaps/${ctx.multiSiteCode}-${ctx.siteCode}-${locale}.html`;
+        const sitemapKey = `sitemaps/${ctx.multiSiteCode}-${ctx.siteCode}-${new URL(ctx.host).host}-${locale}.html`;
         let sitemap = await storage.getItem(sitemapKey);
         
         // Generate default sitemap on-demand if not found
         if (!sitemap) {
-            const baseUrl = `https://${ctx.siteCode}.bl2.chm-cbd.net`;
+            const baseUrl = ctx.host;
             sitemap = `<!DOCTYPE html>
 <html lang="${locale}">
 <head>
