@@ -101,24 +101,31 @@ export default defineNitroPlugin((nitro) => {
             try {
                 if(event.method !== 'GET' && event.method !== 'HEAD') return false;
 
-                // h3's getRequestHost keeps the port; strip it before comparing.
-                const requestHost = getRequestHost(event, { xForwardedHost: true }).split(':')[0].toLowerCase();
+                // Every value below goes through the same normaliser; comparing two
+                // differently-normalised hosts is what turns this guard into a 301 loop.
+                const requestHost = toComparableHost(getRequestHost(event, { xForwardedHost: true }));
 
-                if(requestHost === 'localhost' || requestHost === '127.0.0.1' || requestHost.endsWith('.localhost')) return false;
+                if(LOOPBACK_HOSTS.has(requestHost) || requestHost.endsWith('.localhost')) return false;
 
                 const ctx = await useRequestContext(event);
 
-                const generatedHost = stripHostScheme(getGeneratedHostname(ctx.siteCode, ctx.baseHost));
-                const canonicalHost = stripHostScheme(ctx.host);
+                const generatedHost = toComparableHost(getGeneratedHostname(ctx.siteCode, ctx.baseHost));
+                const canonicalHost = toComparableHost(ctx.host);
 
                 // Only ever redirect away from the generated Host, never toward it.
-                if(requestHost !== generatedHost) return false;
+                if(!requestHost || requestHost !== generatedHost) return false;
+
+                // The canonical Host comes from operator free text; if it does not
+                // normalise to a hostname, send nothing rather than a broken Location.
+                if(!canonicalHost) return false;
 
                 // Already canonical (the dark case, and every redirect-Host visitor).
                 if(requestHost === canonicalHost) return false;
 
+                // Rebuild the origin from the normalised host, so a scheme- or port-bearing
+                // `redirect` value can never leak into the Location header.
                 // event.path already carries the query string; appending it again duplicates it.
-                await sendRedirect(event, `${ctx.host}${event.path}`, 301);
+                await sendRedirect(event, `https://${canonicalHost}${event.path}`, 301);
 
                 return true;
             } catch (error) {
@@ -151,13 +158,45 @@ function getPathLocale(event) {
     return segments[1] || undefined;
 }
 
+/** Hosts that are never multisite Hosts, so never worth a canonical redirect. */
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
+
 /**
- * Reduces an origin or Host value to a bare, comparable hostname.
- * @param {string} value - An origin ("https://be.example.org") or a bare Host.
- * @returns {string} The lowercased hostname with any scheme removed.
+ * Reduces a Host header, an origin, or an operator-supplied `redirect` value to one
+ * comparable hostname: first x-forwarded-host entry, no scheme, no userinfo, no path,
+ * no port, no trailing dot, lowercased, bracketed IPv6 literals preserved.
+ *
+ * Both sides of every host comparison in this file must come from this function -
+ * two normalisers disagreeing about one request is what produces a 301 loop.
+ *
+ * Its comma/port/IPv6 handling must stay in step with `normalizeHost` in
+ * server/utils/context-unified.ts, which derives `siteCode` from the same header.
+ * That helper is module-private there, so the behaviour is mirrored, not shared.
+ *
+ * @param {string} value - A raw Host header, an origin, or a configured redirect host.
+ * @returns {string} The comparable hostname, or '' when no sane hostname can be derived.
  */
-function stripHostScheme(value) {
-    return String(value || '').replace(/^https?:\/\//i, '').toLowerCase();
+function toComparableHost(value) {
+    // x-forwarded-host is legitimately a comma-separated list; the first entry is the original Host.
+    const first = String(value ?? '').split(',')[0].trim();
+
+    // `redirect` free text may carry a scheme, and getCanonicalHost prefixes another.
+    const withoutScheme = first.replace(/^(?:https?:\/\/)+/i, '');
+    const hostOnly = withoutScheme.split('/')[0].split('@').pop().trim().toLowerCase();
+
+    // Bracketed IPv6 literal ("[::1]:3000"): keep the brackets, drop any port.
+    if(hostOnly.startsWith('[')) {
+        const closingBracket = hostOnly.indexOf(']');
+        return closingBracket > 1 ? hostOnly.slice(0, closingBracket + 1) : '';
+    }
+
+    // Bare IPv6 literal ("::1"): it cannot carry a port unbracketed, so keep it whole.
+    if(hostOnly.indexOf(':') !== hostOnly.lastIndexOf(':')) return hostOnly;
+
+    const bare = hostOnly.replace(/:\d+$/, '').replace(/\.$/, '');
+
+    // Anything still holding a scheme, port, credential, space or empty label is not a hostname.
+    return /^[a-z0-9_-]+(?:\.[a-z0-9_-]+)*$/.test(bare) ? bare : '';
 }
 
 /**

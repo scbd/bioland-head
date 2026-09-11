@@ -129,6 +129,110 @@ describe('server/plugins/locale request hook', () => {
         301,
       )
     })
+
+    it('redirects a HEAD request exactly once, like a GET', async () => {
+      await requestHook(makeEvent('/en/news', 'HEAD'))
+
+      expect(mockSendRedirect).toHaveBeenCalledTimes(1)
+      expect(mockSendRedirect).toHaveBeenCalledWith(
+        expect.anything(),
+        `https://${REDIRECT_HOST}/en/news`,
+        301,
+      )
+    })
+
+    it('takes the first entry of a comma-separated x-forwarded-host, like normalizeHost does', async () => {
+      mockGetRequestHost.mockReturnValue(`${GENERATED_HOST}, edge.internal`)
+
+      await requestHook(makeEvent('/en/news'))
+
+      expect(mockSendRedirect).toHaveBeenCalledTimes(1)
+      expect(mockSendRedirect).toHaveBeenCalledWith(
+        expect.anything(),
+        `https://${REDIRECT_HOST}/en/news`,
+        301,
+      )
+    })
+  })
+
+  // Every case here is a `redirect` value an operator can type into DMSM free text.
+  // Each must either 301 exactly once to a well-formed Location, or not redirect at
+  // all - never emit a target that normalises back to the request Host (a 301 loop).
+  describe('hostile redirect values cannot produce a loop or a malformed Location', () => {
+    it('does not redirect when the canonical host differs from generated only by a default port', async () => {
+      mockUseRequestContext.mockResolvedValue(makeContext(`https://${GENERATED_HOST}:443`))
+
+      await requestHook(makeEvent('/en/news'))
+
+      expect(mockSendRedirect).not.toHaveBeenCalled()
+    })
+
+    it('does not redirect when the canonical host differs from generated only by case', async () => {
+      mockUseRequestContext.mockResolvedValue(makeContext(`https://${GENERATED_HOST.toUpperCase()}`))
+
+      await requestHook(makeEvent('/en/news'))
+
+      expect(mockSendRedirect).not.toHaveBeenCalled()
+    })
+
+    it('does not redirect when the canonical host differs from generated only by a trailing dot', async () => {
+      mockUseRequestContext.mockResolvedValue(makeContext(`https://${GENERATED_HOST}.`))
+
+      await requestHook(makeEvent('/en/news'))
+
+      expect(mockSendRedirect).not.toHaveBeenCalled()
+    })
+
+    it('emits a single well-formed Location when the redirect value already carried a scheme', async () => {
+      // getCanonicalHost prefixes `https://` blindly, so `redirect=https://host` arrives doubled.
+      mockUseRequestContext.mockResolvedValue(makeContext(`https://https://${REDIRECT_HOST}`))
+
+      await requestHook(makeEvent('/en/news'))
+
+      expect(mockSendRedirect).toHaveBeenCalledTimes(1)
+      expect(mockSendRedirect).toHaveBeenCalledWith(
+        expect.anything(),
+        `https://${REDIRECT_HOST}/en/news`,
+        301,
+      )
+    })
+
+    it('emits a single well-formed Location for a bracketed IPv6 canonical host with a port', async () => {
+      mockUseRequestContext.mockResolvedValue(makeContext('https://[2001:db8::1]:8443'))
+
+      await requestHook(makeEvent('/en/news'))
+
+      expect(mockSendRedirect).toHaveBeenCalledTimes(1)
+      expect(mockSendRedirect).toHaveBeenCalledWith(
+        expect.anything(),
+        'https://[2001:db8::1]/en/news',
+        301,
+      )
+    })
+
+    it('drops a port and a path from an over-specified canonical host', async () => {
+      mockUseRequestContext.mockResolvedValue(makeContext(`https://${REDIRECT_HOST}:8443/some/path`))
+
+      await requestHook(makeEvent('/en/news'))
+
+      expect(mockSendRedirect).toHaveBeenCalledTimes(1)
+      expect(mockSendRedirect).toHaveBeenCalledWith(
+        expect.anything(),
+        `https://${REDIRECT_HOST}/en/news`,
+        301,
+      )
+    })
+
+    it.each(['https:// not a host', 'https://', 'https://[::'])(
+      'sends nothing when the canonical host %s cannot be normalised',
+      async (host) => {
+        mockUseRequestContext.mockResolvedValue(makeContext(host))
+
+        await requestHook(makeEvent('/en/news'))
+
+        expect(mockSendRedirect).not.toHaveBeenCalled()
+      },
+    )
   })
 
   describe('requests that must never be host-redirected', () => {
@@ -163,16 +267,21 @@ describe('server/plugins/locale request hook', () => {
       expect(mockUseRequestContext).not.toHaveBeenCalled()
     })
 
-    it.each(['localhost', '127.0.0.1', 'foo.localhost'])(
-      'never host-redirects %s',
-      async (host) => {
-        mockGetRequestHost.mockReturnValue(host)
+    it.each([
+      'localhost',
+      '127.0.0.1',
+      'foo.localhost',
+      'localhost:3000',
+      '::1',
+      '[::1]',
+      '[::1]:3000',
+    ])('never host-redirects %s', async (host) => {
+      mockGetRequestHost.mockReturnValue(host)
 
-        await requestHook(makeEvent('/en/news'))
+      await requestHook(makeEvent('/en/news'))
 
-        expect(mockSendRedirect).not.toHaveBeenCalled()
-      },
-    )
+      expect(mockSendRedirect).not.toHaveBeenCalled()
+    })
 
     it('does not redirect when the request host is neither generated nor canonical', async () => {
       mockGetRequestHost.mockReturnValue('cdn.example.org')
@@ -188,6 +297,32 @@ describe('server/plugins/locale request hook', () => {
       })
 
       await expect(requestHook(makeEvent('/en/news'))).resolves.toBeUndefined()
+      expect(mockSendRedirect).not.toHaveBeenCalled()
+    })
+
+    it('degrades to the existing handlers when the context rejects, rather than aborting the hook', async () => {
+      // Only the host handler's own resolution fails; the later handlers must still get their turn.
+      mockUseRequestContext
+        .mockRejectedValueOnce(new Error('dmsm down'))
+        .mockResolvedValue(makeContext(`https://${GENERATED_HOST}`))
+
+      await expect(requestHook(makeEvent('/'))).resolves.toBeUndefined()
+
+      // Host handler, malformed-path handler, locale handler - the taxonomy handler
+      // returns before resolving context on a non-taxonomy path.
+      expect(mockUseRequestContext).toHaveBeenCalledTimes(3)
+      expect(mockSendRedirect).toHaveBeenCalledTimes(1)
+      expect(mockSendRedirect).toHaveBeenCalledWith(expect.anything(), '/en', 301)
+    })
+
+    it('resolves without redirecting when every context resolution rejects', async () => {
+      mockUseRequestContext.mockRejectedValue(new Error('dmsm down'))
+
+      await expect(requestHook(makeEvent('/'))).resolves.toBeUndefined()
+
+      // A call count of 3 proves each handler was reached and degraded on its own,
+      // rather than the hook aborting at the first rejection.
+      expect(mockUseRequestContext).toHaveBeenCalledTimes(3)
       expect(mockSendRedirect).not.toHaveBeenCalled()
     })
   })

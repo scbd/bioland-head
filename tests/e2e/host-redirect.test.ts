@@ -2,14 +2,20 @@ import { expect, test } from '@nuxt/test-utils/playwright'
 
 import { getE2EBaseURL } from './e2e-targets'
 
-// The e2e target Site has no `redirect` configured, so its canonical Host equals
-// its generated Host and the 301 in server/plugins/locale.js must stay dormant.
+// Scope note, so this spec is not read as coverage it does not provide.
+//
+// The Playwright target is `e2e.localhost:3330` (tests/e2e/e2e-targets.ts), and
+// `handleHostRedirect` in server/plugins/locale.js bails on any `.localhost` Host
+// before it compares anything. This test therefore pins only that the 301 stays
+// dormant on the local target - it would still pass if the canonical/generated
+// comparison were broken. The comparison itself is covered by the unit spec at
+// tests/unit/server/plugins/locale.test.ts.
 //
 // The positive case - a request on the generated Host actually 301ing to a
-// different canonical Host - needs a fixture Site with `redirect` set (a DMSM
-// stub or a dedicated dev Site config, per index.md prerequisite 1). That
-// fixture does not exist yet, so the positive case is exercised by p03-01 and
-// is deliberately absent here.
+// different canonical Host - needs a non-loopback fixture Site with `redirect`
+// set (a DMSM stub or a dedicated dev Site config, per index.md prerequisite 1).
+// That fixture does not exist yet, so the positive case is exercised by p03-01
+// and is deliberately absent here.
 
 test.use({
   baseURL: getE2EBaseURL(),
