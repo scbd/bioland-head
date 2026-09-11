@@ -84,10 +84,22 @@ describe('site store hosts', () => {
   })
 
   it('does not encode generated components when a redirect is selected', () => {
-    const store = initialize({ siteCode: '\uD800', baseHost: '\uD800', config: { redirect: 'CUSTOM.test/a path%20' } })
+    const store = initialize({ siteCode: '\uD800', baseHost: '\uD800', config: { redirect: 'CUSTOM.test' } })
 
-    expect(store.host).toBe('https://CUSTOM.test/a path%20')
-    expect(store.localizedHost).toBe('https://CUSTOM.test/a path%20/en')
+    expect(store.host).toBe('https://custom.test')
+    expect(store.localizedHost).toBe('https://custom.test/en')
+  })
+
+  it.each([
+    ['good.example@evil.example'],
+    ['//evil.example'],
+    ['good.example:8443'],
+    ['good.example/sink'],
+  ])('falls back to the generated host for an unsafe redirect (%s)', (redirect) => {
+    const store = initialize({ siteCode: 'seed', baseHost: 'example.test', config: { redirect } })
+
+    expect(store.host).toBe('https://seed.example.test')
+    expect(store.localizedHost).toBe('https://seed.example.test/en')
   })
 
   it('preserves URIError for malformed generated components', () => {
