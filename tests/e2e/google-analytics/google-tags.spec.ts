@@ -36,6 +36,7 @@ interface ContextOverrides {
   env?: string
   multiSiteCode?: string
   baseHost?: string
+  published?: boolean
 }
 
 type DataLayerEntry = unknown[] | Record<string, unknown>
@@ -97,8 +98,11 @@ async function installPageRecorder (page: Page): Promise<void> {
  * Intercept the client context re-fetch so the site eligibility inputs and the configured tag IDs
  * are under the test's control, and stub every Google endpoint so no real request is made.
  *
- * `siteStore.host` is derived (`https://${siteCode}.${baseHost}`), so the host half of the gate is
- * steered through `baseHost` rather than through the payload's own `host` field.
+ * The gate no longer compares the dmsm-configured host (`context-unified.ts` always builds it as
+ * `<siteCode>.bl2.chm-cbd.net`, never the public template) — it compares the browser's own
+ * hostname against the template plus `config.published`, so eligibility here is steered through
+ * `baseHost` (for the browser-visible host, via `ELIGIBLE_BASE_URL`) and `overrides.published`
+ * (for the dmsm `published` flag), not through the payload's own `host` field.
  */
 async function installRoutes (page: Page, overrides: ContextOverrides = {}): Promise<void> {
   await page.route('**/api/context/**', async (route) => {
@@ -119,6 +123,10 @@ async function installRoutes (page: Page, overrides: ContextOverrides = {}): Pro
         env: overrides.env ?? 'prod',
         multiSiteCode: overrides.multiSiteCode ?? 'bl2',
         baseHost: overrides.baseHost ?? ELIGIBLE_BASE_HOST,
+        config: {
+          ...(payload.config ?? {}),
+          published: overrides.published ?? true,
+        },
         biolandSettings: {
           ...(payload.biolandSettings ?? {}),
           googleAnalyticsIds: CONFIGURED_TAG_IDS,
@@ -379,6 +387,18 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
     // evaluated synchronously off the mocked `/api/context/**` response, not off that unrelated
     // background traffic, so nothing about this assertion needs network quiescence.
     await page.waitForLoadState('load')
+
+    await expect(googleScripts(page)).toHaveCount(0)
+    expect(await readDataLayer(page)).toEqual([])
+  })
+
+  test('(g0) an unpublished site loads nothing even with consent and a matching browser host', async ({ context, page }) => {
+    await seedConsentCookies(context, ELIGIBLE_BASE_URL)
+    await installPageRecorder(page)
+    await installRoutes(page, { published: false })
+
+    await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+    await page.waitForLoadState('networkidle')
 
     await expect(googleScripts(page)).toHaveCount(0)
     expect(await readDataLayer(page)).toEqual([])

@@ -38,14 +38,16 @@ export interface GoogleTagIds {
  * The slice of site context the eligibility gate reads.
  *
  * Every field is optional so a partially hydrated store fails closed rather than throwing.
- * `host` is the store's existing `host` getter value, an HTTPS origin such as
- * `https://mysite.chm-cbd.net`.
+ * `published` is the dmsm config's own `published` boolean (`siteStore.config.published`).
+ * `redirect` is the site's configured redirect alias, a bare hostname, when dmsm has one
+ * (`siteStore.config.redirect`); today no prod site has one.
  */
 export interface GoogleTagSiteContext {
     env?: string;
     multiSiteCode?: string;
     siteCode?: string;
-    host?: string;
+    published?: boolean;
+    redirect?: string;
 }
 
 /**
@@ -61,14 +63,14 @@ export const GOOGLE_TAG_HOSTS: Record<string, (siteCode: string) => string> = {
 };
 
 /**
- * Reduces `site.host` to a bare, lower cased hostname suitable for an exact comparison.
+ * Reduces a candidate host to a bare, lower cased hostname suitable for an exact comparison.
  *
- * The store's `host` getter returns an HTTPS origin, but the documented site context API does not
- * guarantee one in every case, so an already bare hostname is accepted too. Anything else fails
- * closed with `null`: a non HTTPS scheme, embedded credentials, an explicit port, a non root path,
- * a query or a fragment, or a bare string still carrying `/`, `@`, or `:`. That rejects host
- * confusable input such as `evil.test/real.chm-cbd.net` or a userinfo trick instead of quietly
- * accepting it.
+ * Used for the browser's `window.location.hostname` and for a site's configured `redirect`
+ * alias. Both are expected to already be bare hostnames, but an HTTPS origin is accepted too so a
+ * store getter that includes the scheme still normalises. Anything else fails closed with `null`:
+ * a non HTTPS scheme, embedded credentials, an explicit port, a non root path, a query or a
+ * fragment, or a bare string still carrying `/`, `@`, or `:`. That rejects host confusable input
+ * such as `evil.test/real.chm-cbd.net` or a userinfo trick instead of quietly accepting it.
  */
 function normalizeGoogleTagHost(rawHost: unknown): string | null {
     if (typeof rawHost !== 'string' || rawHost.length === 0) return null;
@@ -103,7 +105,7 @@ function normalizeGoogleTagHost(rawHost: unknown): string | null {
 /**
  * Decides whether the current site is allowed to run Google tags at all.
  *
- * Four conditions, all required, all failing closed:
+ * Five conditions, all required, all failing closed:
  *
  * 1. `env` is `prod`, compared case insensitively. `prod` is the runtime token this deployment
  *    actually emits.
@@ -111,39 +113,45 @@ function normalizeGoogleTagHost(rawHost: unknown): string | null {
  *    `hasOwnProperty`, never a bare index, so a crafted `multiSiteCode` of `constructor` or
  *    `__proto__` cannot resolve to a prototype method and false positive. Adding a multisite is
  *    adding a template to that map and nothing else.
- * 3. The normalised configured `host` equals that multisite's template applied to `siteCode`,
- *    compared case insensitively and exactly. There is no `.bl2.chm-cbd.net` expansion and no
- *    suffix match.
- * 4. `browserHost`, the hostname the visitor's browser is actually on, equals the same template.
- *    Conditions 1 to 3 are all derived from the dmsm config, so on their own a reverse proxy
- *    forwarding `Host: <site>.chm-cbd.net` would load the tenant's real tags on an attacker
- *    origin. The browser hostname is the one input that proxy cannot forge for the visitor. It is
- *    an argument rather than a `window` read so this module stays pure and unit testable;
- *    `app/plugins/google-tags.client.ts` passes `window.location.hostname`.
+ * 3. `published` is strictly `true`. dmsm's own publish flag, not truthiness of some other field:
+ *    a string `'true'`, `1`, or a missing value all fail closed.
+ * 4. `browserHost`, the hostname the visitor's browser is actually on, equals either that
+ *    multisite's template applied to `siteCode` (`<siteCode>.chm-cbd.net`, compared case
+ *    insensitively) or the site's normalised `redirect` alias, when it has one.
  *
- * A missing or non string `env`, `multiSiteCode`, or `siteCode`, or a configured or browser host
- * that does not normalise, returns `false`.
+ * There is deliberately no comparison against the dmsm-configured host: `context-unified.ts`
+ * always builds it as `${siteCode}.${baseHost}` (today `<siteCode>.bl2.chm-cbd.net`), so it can
+ * never equal the public template and would make the gate impossible to pass. The browser
+ * hostname is what actually gates eligibility now; it is an argument rather than a `window` read
+ * so this module stays pure and unit testable, and `app/plugins/google-tags.client.ts` passes
+ * `window.location.hostname`.
+ *
+ * A missing or non string `env`, `multiSiteCode`, or `siteCode`, a `published` that is not
+ * strictly `true`, or a browser host that matches neither the template nor a normalised
+ * `redirect`, returns `false`.
  */
 export function isGoogleTagsSite(site?: GoogleTagSiteContext | null, browserHost?: string | null): boolean {
     if (!site || typeof site !== 'object') return false;
 
-    const { env, multiSiteCode, siteCode, host } = site;
+    const { env, multiSiteCode, siteCode, published, redirect } = site;
 
     if (typeof env !== 'string' || typeof multiSiteCode !== 'string' || typeof siteCode !== 'string') return false;
     if (env.toLowerCase() !== 'prod') return false;
+    if (published !== true) return false;
 
     const multiSiteKey = multiSiteCode.toLowerCase();
 
     if (!Object.prototype.hasOwnProperty.call(GOOGLE_TAG_HOSTS, multiSiteKey)) return false;
 
     const expectedHost = GOOGLE_TAG_HOSTS[multiSiteKey]!(siteCode).toLowerCase();
-    const configuredHost = normalizeGoogleTagHost(host);
-
-    if (configuredHost === null || configuredHost !== expectedHost) return false;
-
     const actualBrowserHost = normalizeGoogleTagHost(browserHost);
 
-    return actualBrowserHost !== null && actualBrowserHost === expectedHost;
+    if (actualBrowserHost === null) return false;
+    if (actualBrowserHost === expectedHost) return true;
+
+    const redirectAlias = normalizeGoogleTagHost(redirect);
+
+    return redirectAlias !== null && actualBrowserHost === redirectAlias;
 }
 
 /**
