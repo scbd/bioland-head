@@ -1,11 +1,11 @@
 export default defineEventHandler(async (event) => {
     try{
-        const {dmsm    } =useRuntimeConfig().public;
+        const {dmsm, multiSiteCode } =useRuntimeConfig().public;
 
         const [d, s, p] = await Promise.all([
-            $fetch(`${dmsm}/config/dev/bl2`, $fetchBaseOptions()),
-            $fetch(`${dmsm}/config/stg/bl2`, $fetchBaseOptions()),
-            $fetch(`${dmsm}/config/prod/bl2`, $fetchBaseOptions())
+            $fetch(`${dmsm}/config/dev/${multiSiteCode}`, $fetchBaseOptions()),
+            $fetch(`${dmsm}/config/stg/${multiSiteCode}`, $fetchBaseOptions()),
+            $fetch(`${dmsm}/config/prod/${multiSiteCode}`, $fetchBaseOptions())
         ])
 
 
@@ -20,13 +20,20 @@ export default defineEventHandler(async (event) => {
         const { dev:devPassed, stg:stgPassed, prod:prodPassed } = data;
 
 
-        for (const env  of [devPassed, stgPassed, prodPassed]) {
-            const scbd = { name: 'SCBD sites', sites: [], config: env.config };
-            const published = { name: 'Published sites', sites: [] , config: env.config };
-            const prePublished = { name: 'Pre-Published sites', sites: [], config: env.config  };
+        for (const [envToken, envPassed]  of [['dev', devPassed], ['stg', stgPassed], ['prod', prodPassed]]) {
+            const scbd = { name: 'SCBD sites', sites: [], config: envPassed.config };
+            const published = { name: 'Published sites', sites: [] , config: envPassed.config };
+            const prePublished = { name: 'Pre-Published sites', sites: [], config: envPassed.config  };
 
-            for (const siteCode in env.sites) {
-                const site = env.sites[siteCode];
+            for (const siteCode in envPassed.sites) {
+                const site = envPassed.sites[siteCode];
+
+                // `site.host` is this Site's canonical absolute origin (scheme + hostname, no path).
+                // It stays the generated Host `https://<siteCode>.<baseHost>` until DMSM supplies a
+                // per-Site `redirect` hostname and the env gate flips to the real `prod` token, so
+                // every value computed here today is byte-identical to the formula it replaces.
+                site.host = getCanonicalHost({ siteCode: site.siteCode, baseHost: envPassed.config?.baseHost, env: envToken, redirect: site.redirect });
+
                 if (site.scbd){
                     scbd.sites.push(site);
                     continue;

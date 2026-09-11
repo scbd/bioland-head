@@ -1,10 +1,32 @@
 /**
  * Sitemap HTML Route
- * 
+ *
  * Serves sitemap.html from Nitro storage
  * Accessible at /{locale}/sitemap.html (e.g., /en/sitemap.html, /fr/sitemap.html)
  * Generates default sitemap on-demand if not found
  */
+
+// HTML-escape a value before it lands in an attribute (CWE-79 defense).
+function htmlEscape(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// `ctx.host` is normally an absolute URL, but a DMSM `redirect` that already carries a scheme (or
+// any other malformed value) makes `new URL()` throw. Fall back to a safe key segment instead of
+// letting the whole route 500.
+function safeHostKeySegment(host) {
+    try {
+        return new URL(host).host;
+    } catch {
+        return 'invalid-host';
+    }
+}
+
 export default defineEventHandler(async (event) => {
     try {
         const locale = getRouterParam(event, 'locale');
@@ -19,12 +41,12 @@ export default defineEventHandler(async (event) => {
         }
         
         const storage = useStorage('cache');
-        const sitemapKey = `sitemaps/${ctx.multiSiteCode}-${ctx.siteCode}-${locale}.html`;
+        const sitemapKey = `sitemaps/${ctx.multiSiteCode}-${ctx.siteCode}-${safeHostKeySegment(ctx.host)}-${locale}.html`;
         let sitemap = await storage.getItem(sitemapKey);
-        
+
         // Generate default sitemap on-demand if not found
         if (!sitemap) {
-            const baseUrl = `https://${ctx.siteCode}.bl2.chm-cbd.net`;
+            const baseUrl = htmlEscape(ctx.host);
             sitemap = `<!DOCTYPE html>
 <html lang="${locale}">
 <head>

@@ -39,12 +39,46 @@ export async function useRequestContext( event: H3Event, options?: RequestContex
   }
 
   // 1. Extract siteCode from hostname OR use explicit value OR query params OR cookie
-  let siteCode = explicitSiteCode;
+  let siteCode: string | null | undefined = explicitSiteCode;
   if (!siteCode) {
     const rawHost = getRequestHeader(event, "x-forwarded-host") || getRequestHeader(event, "host") || "";
-    const host = normalizeHost(rawHost);
+    const firstRawHost = rawHost.split(",")[0]?.trim() || "";
+    // h3 falls back on empty forwarded tokens and cannot read array headers.
+    // Keep the raw reader's existing fallback/precedence for those inputs.
+    const needsRawHost = !firstRawHost || Array.isArray(event.node.req.headers["x-forwarded-host"]) || Array.isArray(event.node.req.headers.host);
+    const host = normalizeHost(needsRawHost ? rawHost : getRequestHost(event, { xForwardedHost: true }));
 
-    siteCode = extractSiteCodeFromHost(host);
+    // TRUST ASSUMPTION: `x-forwarded-host` is read ahead of `Host`, so tenancy is
+    // only isolated where the edge (CDN/ALB/ingress) strips or overwrites any
+    // client-supplied value. That edge control is an external rollout prerequisite
+    // this handler cannot verify - see AADR 0002 and the multi-tenant isolation
+    // rows in docs/architecture.md / docs/prd.md.
+    // Only the exact raw internal spellings keep the query/cookie fallback. A
+    // '::1:80' Host normalizes to '::1' by port stripping and must NOT
+    // masquerade as the loopback - it reaches the reverse index like any other
+    // custom host, and unmapped it fails closed before either fallback.
+    if (isRawInternalHost(firstRawHost)) {
+      siteCode = extractSiteCodeFromHost(host);
+    } else if (isSuffixHostShape(host, baseHost)) {
+      siteCode = extractSiteCodeFromHost(host);
+      // A suffix shape must name a Site: a leading-empty-label host (".localhost",
+      // ".<baseHost>") extracts an empty site code and fails closed here, never
+      // through the query/cookie fallback.
+      if (!siteCode) {
+        throw hostFailedClosed(event, host, `No Site configured for host: ${host}`);
+      }
+    } else if (host) {
+      siteCode = await resolveSiteCodeByHost(host);
+      if (!siteCode) {
+        throw hostFailedClosed(event, host, `No Site configured for host: ${host}`);
+      }
+    } else if (rawHost) {
+      // The client sent Host bytes that normalize to nothing (empty forwarded
+      // token, bare port, whitespace). Fail closed here rather than letting the
+      // shape choose its own tenant through query/cookie; only a request with no
+      // Host header at all keeps that internal fallback.
+      throw hostFailedClosed(event, rawHost, "Unresolvable Host header");
+    }
 
     // Fallback: try to get siteCode from query params (for internal fetches from client)
     if (!siteCode) {
@@ -220,9 +254,62 @@ function normalizeHost(rawHost: string): string {
 
   // Strip port if present (avoid breaking subdomain extraction)
   // Keep IPv6 literals untouched (they start with '[').
-  if (first.startsWith("[")) return first;
+  if (first.startsWith("[")) return first.toLowerCase();
 
-  return first.replace(/:\d+$/, "");
+  return first.replace(/:\d+$/, "").toLowerCase();
+}
+
+/**
+ * Only the loopback (`[::1]`) and unspecified (`[::]`) IPv6 literals are internal
+ * shapes. Any other bracketed literal is attacker-suppliable and must reach the
+ * reverse index - and therefore the fail-closed 400 - like any other custom host.
+ * The closing bracket must terminate the host, bar an optional `:port`. Matching
+ * the bracketed prefix alone let `[::1]evil` ride the allowlist, and because
+ * `extractSiteCodeFromHost` returns null for anything bracketed, that landed the
+ * request on the query/cookie fallback to name its own tenant.
+ */
+function isLoopbackLiteral(host: string): boolean {
+  if (!host.startsWith("[")) return false;
+  const close = host.indexOf("]");
+  const inner = close > 0 ? host.slice(1, close) : "";
+
+  return (inner === "::1" || inner === "::") && /^(:\d+)?$/.test(host.slice(close + 1));
+}
+
+/**
+ * Exact raw internal Host spellings that keep the historical query/cookie
+ * fallback: `localhost` and `127.0.0.1` (each optionally port-suffixed), the
+ * bare `::1` loopback, and the bracketed loopback literals (`[::1]`, `[::]`,
+ * optional `:port` after the bracket). Checked against the RAW first Host
+ * token, never the normalized one: an unbracketed `::1:80` port-strips to a
+ * `::1` that must not masquerade as the loopback - that form fails this check
+ * and reaches the reverse index, failing closed when unmapped.
+ */
+function isRawInternalHost(rawFirstHost: string): boolean {
+  const raw = rawFirstHost.toLowerCase();
+  return raw === "::1" || isLoopbackLiteral(raw) || /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(raw);
+}
+
+/**
+ * Suffix-recognized host shapes (`.localhost` dev hosts and `.${baseHost}`
+ * generated hosts). These must name a Site: the caller fails closed when
+ * `extractSiteCodeFromHost` yields nothing for them (e.g. the leading-empty-
+ * label `.localhost`, which extracts an empty string).
+ */
+function isSuffixHostShape(host: string, baseHost: string): boolean {
+  return host.endsWith(".localhost") || Boolean(baseHost && host.endsWith(`.${baseHost.toLowerCase()}`));
+}
+
+/**
+ * Build the fail-closed 400 for an inbound host, logging it first so a misrouted
+ * origin or an index outage leaves a server-side signal. Host and pathname only -
+ * never headers, cookies, or the query string (which is not needed to locate a
+ * misrouted host and would log any credential a future caller puts in a param).
+ */
+function hostFailedClosed(event: H3Event, host: string, message: string) {
+  consola.warn({ message: "Host failed closed", host, path: event.path.split("?")[0] });
+
+  return createError({ statusCode: 400, statusMessage: "Bad Request", message });
 }
 
 /**

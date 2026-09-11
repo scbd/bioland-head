@@ -7,6 +7,11 @@ export const useSiteStore = defineStore('site', {
             return this;
         },
         initialize( { biolandSettings, locale, identifier,siteCode, defaultLocale, config, siteName, gaiaApi, multiSiteCode, baseHost, env, homePath }){
+            // `env` arrives on every context payload (server/api/context/[siteCode]/[locale].js:36)
+            // but was previously dropped here. Persisting it lets client side consumers such as
+            // isGoogleTagsSite() evaluate deployment eligibility. The existing `host` getter
+            // already supplies the other half, so it stays untouched.
+            this.set('env',                       env);
             this.set('baseHost',                  baseHost);
             this.set('gaiaApi',                   gaiaApi);
             this.set('drupalMultisiteIdentifier', multiSiteCode);
