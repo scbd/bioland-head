@@ -79,7 +79,7 @@
     });
 
     function getUrl(site, config, withProtocol=false) {
-        if(!site || !config) {
+        if(!site || (!site.host && !config)) {
             consola.error('table-getUrl',{site, config} )
 
             return''

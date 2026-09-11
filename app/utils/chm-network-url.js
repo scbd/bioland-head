@@ -8,14 +8,15 @@
  * @param {{ siteCode?: string, host?: string }} site - Site entry from `/api/chm-network`.
  * @param {{ baseHost?: string }} config - The section's DMSM config.
  * @param {boolean} [withProtocol] - Keep the `https://` scheme when true, strip it when false.
- * @returns {string} The Site URL, or an empty string when `site` or `config` is missing.
+ * @returns {string} The Site URL, or an empty string when `site` is missing, or when both
+ *   `site.host` and `config` are missing.
  */
 export function getChmNetworkSiteUrl(site, config, withProtocol = false) {
-  if (!site || !config) return '';
-
-  const proto = withProtocol ? 'https://' : '';
+  if (!site || (!site.host && !config)) return '';
 
   if (site.host) return withProtocol ? site.host : site.host.replace(/^https?:\/\//, '');
+
+  const proto = withProtocol ? 'https://' : '';
 
   return `${proto}${site.siteCode}.${config.baseHost}`;
 }

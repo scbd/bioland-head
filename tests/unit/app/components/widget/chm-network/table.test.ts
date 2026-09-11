@@ -42,4 +42,11 @@ describe('chm-network table getUrl', () => {
     expect(getChmNetworkSiteUrl({ siteCode: 'be' }, undefined)).toBe('')
     expect(getChmNetworkSiteUrl(undefined, undefined, true)).toBe('')
   })
+
+  it('prefers site.host over an absent config, so a missing DMSM config does not blank the row', () => {
+    expect(getChmNetworkSiteUrl({ siteCode: 'be', host: 'https://be.bl2.chm-cbd.net' }, undefined, true))
+      .toBe('https://be.bl2.chm-cbd.net')
+    expect(getChmNetworkSiteUrl({ siteCode: 'be', host: 'https://be.bl2.chm-cbd.net' }, undefined))
+      .toBe('be.bl2.chm-cbd.net')
+  })
 })

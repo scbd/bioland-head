@@ -99,6 +99,46 @@ describe('server/routes/[locale] sitemaps', () => {
     await expect(htmlHandler({})).resolves.toBe('<cached-html/>')
   })
 
+  it('escapes a hostile ctx.host so it cannot break out of the xml <loc> element', async () => {
+    ctx.host = 'https://evil.test"><injected>&pwn'
+
+    const body = await xmlHandler({})
+
+    expect(body).not.toContain('<injected>')
+    expect(body).toContain('&lt;injected&gt;')
+    expect(body).toContain('&amp;pwn')
+  })
+
+  it('escapes a hostile ctx.host so it cannot break out of the html href attribute', async () => {
+    ctx.host = 'https://evil.test"><script>alert(1)</script>'
+
+    const body = await htmlHandler({})
+
+    expect(body).not.toContain('<script>alert(1)</script>')
+    expect(body).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
+  })
+
+  it('serves the xml sitemap instead of a 500 when ctx.host cannot be parsed as a URL', async () => {
+    ctx.host = 'not a valid host with spaces'
+
+    const body = await xmlHandler({})
+
+    expect(body).toContain('<loc>not a valid host with spaces/en</loc>')
+    expect(store.has('sitemaps/bl2-be-invalid-host-en.xml')).toBe(true)
+  })
+
+  it('serves the html sitemap instead of a 500 when ctx.host cannot be parsed as a URL', async () => {
+    ctx.host = 'not a valid host with spaces'
+
+    const body = await htmlHandler({})
+
+    expect(body).toContain('href="not a valid host with spaces/en"')
+    expect(store.has('sitemaps/bl2-be-invalid-host-en.html')).toBe(true)
+  })
+
+  // Pre-existing: the 404 thrown at each route's own locale check is caught by that route's outer
+  // catch and re-thrown as a generic 500 ('Failed to load sitemap'). This test characterises that
+  // existing defect rather than endorsing it -- fixing the swallowed 404 is out of scope here.
   it('rejects an unsupported locale on both routes', async () => {
     routerParam = 'de'
 
