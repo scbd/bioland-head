@@ -36,6 +36,17 @@ export interface DmsmConfig {
 }
 
 /**
+ * Drupal `bioland.settings`, passed through whole by dmsm and camelCased to depth 7 on the way
+ * through `buildSiteContext`, so the Drupal key `google_analytics_ids` arrives as
+ * `googleAnalyticsIds`. The bag is an unfiltered passthrough of site editable config, so treat
+ * every value in it as untrusted input: read the one field you need by name, never spread it.
+ * Only the fields this app consumes are typed; the index signature keeps the rest addressable.
+ */
+export interface BiolandSettings extends Record<string, unknown> {
+  googleAnalyticsIds?: string
+}
+
+/**
  * Full site context resolved on server and hydrated to client
  */
 export interface SiteContext {
@@ -68,6 +79,9 @@ export interface SiteContext {
 
   // Full DMSM config for advanced use
   config?: DmsmConfig
+
+  // Drupal bioland.settings, camelCased to depth 7. Only the fields we consume are typed.
+  biolandSettings?: BiolandSettings
 }
 
 /**

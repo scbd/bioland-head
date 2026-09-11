@@ -74,6 +74,12 @@ export const optional = [
         //     '/terms-use': 'Terms of Service',
         // },
 
-        targetCookieIds: ['ga_', 'ga_*'], // the cookies set by this module
+        // The real cookie names GA4, Google Ads and Campaign Manager write, matching the prefixes
+        // app/plugins/google-tags.client.ts purges on revoke, so the visitor-facing list is the
+        // truth rather than a subset. cookie-control deletes by exact name only
+        // (CookieControl.vue:345-347 -> removeCookie -> useCookie(name).value = undefined,
+        // methods.js:8), so the `*` entries are disclosure only: isCookieIdVisible prints this
+        // list to the visitor, and the plugin purges each real cookie on revoke.
+        targetCookieIds: ['_ga', '_gid', '_gat', '_ga_*', '_gac_*', '_gcl_*'],
     },
 ];
