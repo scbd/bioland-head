@@ -301,17 +301,42 @@ function resolveLocale( pathLocale: string | null, cookieLocale: string | null, 
 const warnedRedirectRejections = new Set<string>();
 
 /**
+ * Render a rejected redirect safely for logging: drops userinfo, tokens, and query/fragment.
+ * An operator-supplied DMSM `config.redirect` might contain credentials or userinfo
+ * (e.g. `user:password@example.com`), which must never be echoed into production logs.
+ * @param redirect - The raw DMSM `config.redirect` value, of unknown type.
+ * @returns A credential-safe string representation for logging.
+ */
+function sanitizeRejectedRedirect(redirect: unknown): string {
+  if (typeof redirect !== "string") return `<non-string ${typeof redirect}>`;
+
+  try {
+    const parsed = new URL(redirect.includes("://") ? redirect : `https://${redirect}`);
+    if (parsed.username || parsed.password) {
+      return `<userinfo-redacted>@${parsed.hostname}`;
+    }
+    const safe = `${parsed.hostname}${parsed.pathname === "/" ? "" : parsed.pathname}`;
+    return JSON.stringify(safe);
+  } catch {
+    if (redirect.includes("@")) {
+      return "<userinfo-redacted>";
+    }
+    return JSON.stringify(redirect);
+  }
+}
+
+/**
  * Warn once when an operator supplied a `redirect` the canonical-host validator refused.
  * Without this the only symptom is "the vanity domain never took effect", and because the
  * canonical gate is production-only that is discoverable in production alone. The value is
- * operator config rather than a secret, so it is echoed to make the typo obvious.
+ * sanitized before logging so embedded credentials (e.g. userinfo) are never leaked to logs.
  * @param siteCode - Site the rejected value belongs to.
  * @param redirect - The raw DMSM `config.redirect` value, of unknown type.
  */
 function warnOnRejectedRedirect(siteCode: string, redirect: unknown): void {
   if (!redirect || normalizeRedirectHost(redirect)) return;
 
-  const shown = typeof redirect === "string" ? JSON.stringify(redirect) : `<non-string ${typeof redirect}>`;
+  const shown = sanitizeRejectedRedirect(redirect);
   const key   = `${siteCode}:${shown}`;
 
   if (warnedRedirectRejections.has(key)) return;
