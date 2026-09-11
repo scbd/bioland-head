@@ -111,6 +111,8 @@ const ACCEPTED = [
   ['well-formed A-label', 'xn--80ak6aa92e.example', 'xn--80ak6aa92e.example'],
   ['well-formed A-label (bucher)', 'xn--bcher-kva.example', 'xn--bcher-kva.example'],
   ['well-formed A-label (emoji)', 'xn--ls8h.example', 'xn--ls8h.example'],
+  ['well-formed A-label TLD', 'site.xn--p1ai', 'site.xn--p1ai'],
+  ['well-formed A-label host and TLD', 'xn--80ak6aa92e.xn--p1ai', 'xn--80ak6aa92e.xn--p1ai'],
   ['63-character label', `${'a'.repeat(63)}.example`, `${'a'.repeat(63)}.example`],
   ['253 characters exactly', AT_253, AT_253],
 ]

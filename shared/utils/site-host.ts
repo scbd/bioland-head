@@ -27,15 +27,15 @@
 const BARE_HOSTNAME = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/
 
 /**
- * A vanity domain's final label is always alphabetic. Requiring it kills every
- * IPv4 notation the URL parser understands — dotted (`127.0.0.1`,
- * `169.254.169.254`, `0.0.0.0`), short form (`1.1`, `1.2.3`), hex
- * (`0x7f.0.0.1`), octal (`0177.0.0.1`) and decimal (`2130706433.1`) — plus
- * junk like `a.1`, `999.999` and `1.2.3.4.5`, without shipping an address
- * parser. IPv6 in either bracketed or bare form is already outside
- * `BARE_HOSTNAME`.
+ * A vanity domain's final label is either alphabetic or an internationalized
+ * domain name (IDN) A-label (`xn--…`). Requiring this kills every IPv4 notation
+ * the URL parser understands — dotted (`127.0.0.1`, `169.254.169.254`, `0.0.0.0`),
+ * short form (`1.1`, `1.2.3`), hex (`0x7f.0.0.1`), octal (`0177.0.0.1`) and
+ * decimal (`2130706433.1`) — plus junk like `a.1`, `999.999` and `1.2.3.4.5`,
+ * without shipping an address parser. IPv6 in either bracketed or bare form is
+ * already outside `BARE_HOSTNAME`.
  */
-const ALPHABETIC_TLD = /^[a-z]{2,}$/
+const VALID_TLD = /^(?:[a-z]{2,}|xn--[a-z0-9-]+)$/
 
 /** Maximum total length of a DNS name in presentation form. */
 const MAX_HOSTNAME_LENGTH = 253
@@ -89,7 +89,7 @@ export function normalizeRedirectHost(redirect?: unknown): string | null {
 
   if (parsed.href !== `https://${candidate}/`) return null
 
-  return ALPHABETIC_TLD.test(candidate.slice(candidate.lastIndexOf(".") + 1)) ? candidate : null
+  return VALID_TLD.test(candidate.slice(candidate.lastIndexOf(".") + 1)) ? candidate : null
 }
 
 /**
