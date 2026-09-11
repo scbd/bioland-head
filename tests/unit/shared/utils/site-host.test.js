@@ -41,6 +41,7 @@ describe('getCanonicalHost', () => {
     ['a.b.c.example.test'],
     ['xn--80ak6aa92e.example'],
     ['site-1.example.test'],
+    ['example.xn--p1ai'],
   ])('uses a bare redirect hostname (%s)', (redirect) => {
     expect(canonical(redirect)).toBe(`https://${redirect}`)
   })
@@ -114,6 +115,8 @@ const ACCEPTED = [
   ['well-formed A-label TLD', 'site.xn--p1ai', 'site.xn--p1ai'],
   ['well-formed A-label host and TLD', 'xn--80ak6aa92e.xn--p1ai', 'xn--80ak6aa92e.xn--p1ai'],
   ['63-character label', `${'a'.repeat(63)}.example`, `${'a'.repeat(63)}.example`],
+  ['well-formed A-label in final position (punycode TLD)', 'example.xn--p1ai', 'example.xn--p1ai'],
+  ['well-formed A-label in final position (china TLD)', 'example.xn--fiqs8s', 'example.xn--fiqs8s'],
   ['253 characters exactly', AT_253, AT_253],
 ]
 

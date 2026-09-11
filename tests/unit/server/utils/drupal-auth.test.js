@@ -14,6 +14,11 @@ let redirectsSpy = () => {}
 let deferNext = false
 const deferred = []
 
+// useDrupalLogin resolves the Site's canonical Host before it touches superagent, so a login
+// only reaches the mock a few microtasks after the call. Arming deferNext therefore has to
+// survive that gap: flush before disarming, or the login would sail through undeferred.
+const flushHostResolution = () => new Promise((resolve) => setImmediate(resolve))
+
 vi.mock('superagent', () => {
   const agent = () => {
     const request = {
@@ -64,17 +69,26 @@ describe('useDrupalLogin', () => {
     globalThis.useRuntimeConfig = () => ({
       apiUser:     'api-user@example.test',
       apiUserPass: 'stub-pass',
-      public:      { baseHost: 'example.test', multiSiteCode: 'bl2' },
+      public:      { baseHost: 'example.test', multiSiteCode: 'bl2', env: 'dev' },
     })
 
-    globalThis.consola     = { error: vi.fn(), info: vi.fn() }
+    globalThis.consola     = { error: vi.fn(), warn: vi.fn(), info: vi.fn() }
     globalThis.createError = (opts) => Object.assign(new Error(opts.statusMessage), opts)
+
+    // Auto-imported in Nitro, stubbed here. The config stub resolves null by default, which is
+    // the fallback path and therefore today's generated-host behaviour.
+    globalThis.getCachedDmsmConfig  = vi.fn().mockResolvedValue(null)
+    globalThis.getGeneratedHostname = (siteCode, baseHost) => `https://${siteCode}.${baseHost}`
+    globalThis.getCanonicalHost     = vi.fn(({ siteCode, baseHost }) => `https://${siteCode}.${baseHost}`)
   })
 
   afterEach(() => {
     delete globalThis.useRuntimeConfig
     delete globalThis.consola
     delete globalThis.createError
+    delete globalThis.getCachedDmsmConfig
+    delete globalThis.getGeneratedHostname
+    delete globalThis.getCanonicalHost
   })
 
   it('requires a siteCode', async () => {
@@ -253,6 +267,7 @@ describe('useDrupalLogin', () => {
 
       deferNext = true
       const orphaned = useDrupalLogin('seed').catch(() => 'rejected')
+      await vi.advanceTimersByTimeAsync(0)
       deferNext = false
 
       // t=10:01: entry A's eviction fires, so the in-flight login is now orphaned
@@ -356,6 +371,7 @@ describe('useDrupalLogin', () => {
     const first  = useDrupalLogin('seed', true).catch(() => 'rejected')
     deferNext = true
     const second = useDrupalLogin('seed', true).catch(() => 'rejected')
+    await flushHostResolution()
     deferNext = false
 
     const live = await useDrupalLogin('seed', true)
@@ -425,13 +441,292 @@ describe('useDrupalLogin', () => {
     expect(postCalls).toHaveLength(6)
   })
 
+  describe('canonical host', () => {
+    it('posts to the generated host when the Site config carries no redirect', async () => {
+      globalThis.getCachedDmsmConfig.mockResolvedValue({ siteCode: 'seed' })
+
+      const useDrupalLogin = await importFresh()
+
+      await useDrupalLogin('seed')
+
+      expect(postCalls).toEqual(['https://seed.example.test/user/login?_format=json'])
+      expect(globalThis.getCanonicalHost).toHaveBeenCalledWith(
+        expect.objectContaining({ siteCode: 'seed', baseHost: 'example.test', redirect: undefined }),
+      )
+    })
+
+    it('posts to the redirect host once the Site config carries one', async () => {
+      globalThis.getCachedDmsmConfig.mockResolvedValue({ redirect: 'seed.example.net' })
+      globalThis.getCanonicalHost.mockReturnValue('https://seed.example.net')
+
+      const useDrupalLogin = await importFresh()
+
+      await useDrupalLogin('seed')
+
+      expect(postCalls).toEqual(['https://seed.example.net/user/login?_format=json'])
+      expect(globalThis.getCanonicalHost).toHaveBeenCalledWith(
+        expect.objectContaining({ siteCode: 'seed', redirect: 'seed.example.net' }),
+      )
+    })
+
+    it('keys the session cache by host, so a changed redirect never reuses the old cookie jar', async () => {
+      globalThis.getCachedDmsmConfig.mockResolvedValue({ redirect: 'unused' })
+      globalThis.getCanonicalHost
+        .mockReturnValueOnce('https://seed.example.net')
+        .mockReturnValueOnce('https://seed.example.org')
+
+      const useDrupalLogin = await importFresh()
+
+      const first  = await useDrupalLogin('seed')
+      const second = await useDrupalLogin('seed')
+
+      // Same siteCode, different Host: a fresh login, not the session bound to the old Host
+      expect(postCalls).toEqual([
+        'https://seed.example.net/user/login?_format=json',
+        'https://seed.example.org/user/login?_format=json',
+      ])
+      expect(second).not.toBe(first)
+    })
+
+    it('falls back to the generated host with one credential-free log when the config fetch fails', async () => {
+      globalThis.getCachedDmsmConfig.mockRejectedValue(new Error('DMSM unreachable'))
+
+      const useDrupalLogin = await importFresh()
+
+      await useDrupalLogin('seed')
+
+      expect(postCalls).toEqual(['https://seed.example.test/user/login?_format=json'])
+      expect(globalThis.consola.error).toHaveBeenCalledTimes(1)
+
+      const logged = JSON.stringify(globalThis.consola.error.mock.calls)
+
+      expect(logged).toContain('seed')
+      expect(logged).not.toContain('stub-pass')
+      expect(logged).not.toContain('api-user@example.test')
+    })
+
+    it('logs the fallback at warn level so an unconfigured site does not emit two ERROR lines', async () => {
+      globalThis.getCachedDmsmConfig.mockResolvedValue(null)
+
+      const useDrupalLogin = await importFresh()
+
+      await useDrupalLogin('seed')
+
+      // context-unified.ts already logs the missing site at error level; this one is a warn
+      expect(globalThis.consola.error).not.toHaveBeenCalled()
+      expect(globalThis.consola.warn).toHaveBeenCalledTimes(1)
+      expect(postCalls).toEqual(['https://seed.example.test/user/login?_format=json'])
+    })
+
+    it('never logs a login URI carrying userinfo in full', async () => {
+      globalThis.getCachedDmsmConfig.mockResolvedValue({ redirect: 'u:p@evil.example' })
+      globalThis.getCanonicalHost.mockReturnValue('https://u:p@evil.example')
+
+      const useDrupalLogin = await importFresh()
+
+      loginShouldFail = true
+
+      await expect(useDrupalLogin('seed')).rejects.toMatchObject({ statusCode: 503 })
+
+      const logged = JSON.stringify(globalThis.consola.error.mock.calls)
+
+      // The Host and path survive for triage; the userinfo, scheme and query never appear
+      expect(logged).toContain('evil.example/user/login')
+      expect(logged).not.toContain('u:p@')
+      expect(logged).not.toContain('https://u:p@evil.example/user/login?_format=json')
+      expect(logged).not.toContain('_format=json')
+      expect(logged).not.toContain('stub-pass')
+    })
+
+    it('falls back to the siteCode rather than the raw URI when the login URI will not parse', async () => {
+      globalThis.getCachedDmsmConfig.mockResolvedValue({ redirect: 'unused' })
+      globalThis.getCanonicalHost.mockReturnValue('https://u:p@ ')
+
+      const useDrupalLogin = await importFresh()
+
+      loginShouldFail = true
+
+      await expect(useDrupalLogin('seed')).rejects.toMatchObject({ statusCode: 503 })
+
+      const logged = JSON.stringify(globalThis.consola.error.mock.calls)
+
+      expect(logged).toContain('site:seed')
+      expect(logged).not.toContain('u:p@')
+    })
+  })
+
+  describe('pod-wide breaker ordering', () => {
+    it('fails fast on an open breaker without awaiting the DMSM config fetch', async () => {
+      const useDrupalLogin = await importFresh()
+
+      loginShouldFail = true
+
+      for (const site of ['a', 'b', 'c', 'd', 'e'])
+        await expect(useDrupalLogin(site)).rejects.toMatchObject({ statusCode: 503 })
+
+      // A config fetch that never settles would hang the call if the gate sat downstream of it
+      globalThis.getCachedDmsmConfig.mockImplementation(() => new Promise(() => {}))
+
+      const callsBefore = globalThis.getCachedDmsmConfig.mock.calls.length
+
+      await expect(useDrupalLogin('f')).rejects.toMatchObject({
+        statusCode: 503,
+        data:       { reason: 'global-failure-backoff' },
+      })
+
+      expect(globalThis.getCachedDmsmConfig.mock.calls).toHaveLength(callsBefore)
+      expect(postCalls).toHaveLength(5)
+    })
+
+    it('still serves a live session to a site that has one while the breaker is open', async () => {
+      const useDrupalLogin = await importFresh()
+
+      const live = await useDrupalLogin('good')
+
+      loginShouldFail = true
+
+      for (const site of ['a', 'b', 'c', 'd', 'e'])
+        await expect(useDrupalLogin(site)).rejects.toMatchObject({ statusCode: 503 })
+
+      // The breaker exists to stop logins, and this caller needs none
+      expect(await useDrupalLogin('good')).toBe(live)
+    })
+
+    // The three states below all pass the hoisted fast-path gate - the Site does hold a usable
+    // slot at that moment - and then lose it across the DMSM await. Each one reached a real
+    // login POST while the breaker was open before the post-resolution re-check was added.
+
+    it('refuses the login when the resolved host degrades to a different, empty cache entry', async () => {
+      const useDrupalLogin = await importFresh()
+
+      globalThis.getCachedDmsmConfig.mockResolvedValue({ redirect: 'unused' })
+      globalThis.getCanonicalHost.mockImplementation(({ siteCode }) => `https://${siteCode}.example.net`)
+
+      // A live session, held under the redirect Host
+      await useDrupalLogin('good')
+      expect(postCalls).toHaveLength(1)
+
+      loginShouldFail = true
+
+      for (const site of ['a', 'b', 'c', 'd', 'e'])
+        await expect(useDrupalLogin(site)).rejects.toMatchObject({ statusCode: 503 })
+
+      expect(postCalls).toHaveLength(6)
+
+      // DMSM now returns nothing for this Site, so the Host degrades to the generated one:
+      // a different cacheId, a brand new empty entry, nothing to short-circuit on.
+      globalThis.getCachedDmsmConfig.mockResolvedValue(null)
+
+      await expect(useDrupalLogin('good')).rejects.toMatchObject({
+        statusCode: 503,
+        data:       { reason: 'global-failure-backoff' },
+      })
+
+      expect(postCalls).toHaveLength(6)
+    })
+
+    it('refuses the login when the in-flight login it was waved past for rejects mid-await', async () => {
+      const useDrupalLogin = await importFresh()
+
+      let releaseConfig
+      let gated  = false
+      const gate = new Promise((resolve) => { releaseConfig = () => resolve(null) })
+
+      globalThis.getCachedDmsmConfig.mockImplementation(() => gated ? gate : Promise.resolve(null))
+
+      // An in-flight login for z, held open deliberately
+      deferNext = true
+      const inflight = useDrupalLogin('z').catch(() => 'rejected')
+      await flushHostResolution()
+      deferNext = false
+
+      loginShouldFail = true
+
+      for (const site of ['a', 'b', 'c', 'd', 'e'])
+        await expect(useDrupalLogin(site)).rejects.toMatchObject({ statusCode: 503 })
+
+      expect(postCalls).toHaveLength(6)
+
+      // A second z caller is waved past the fast path by that in-flight promise...
+      gated = true
+      const second = useDrupalLogin('z').catch((e) => e)
+      await flushHostResolution()
+
+      // ...which then rejects while the second caller is still suspended on the config await,
+      // clearing both entry.promise (.finally) and entry.agent (.catch)
+      deferred.pop().reject(Object.assign(new Error('Forbidden'), { status: 403 }))
+      expect(await inflight).toBe('rejected')
+
+      gated = false
+      releaseConfig()
+
+      await expect(second).resolves.toMatchObject({
+        statusCode: 503,
+        data:       { reason: 'global-failure-backoff' },
+      })
+
+      expect(postCalls).toHaveLength(6)
+    })
+
+    it('refuses the login when the session it was waved past for is evicted mid-await', async () => {
+      vi.useFakeTimers()
+
+      try {
+        const useDrupalLogin = await importFresh()
+
+        let releaseConfig
+        let gated  = false
+        const gate = new Promise((resolve) => { releaseConfig = () => resolve(null) })
+
+        globalThis.getCachedDmsmConfig.mockImplementation(() => gated ? gate : Promise.resolve(null))
+
+        // t=0: a live session, so its TTL eviction is armed for t=10:00
+        await useDrupalLogin('good')
+        expect(postCalls).toHaveLength(1)
+
+        // t=9:00: five other sites fail, opening a breaker window that outlives that TTL
+        await vi.advanceTimersByTimeAsync(1000 * 60 * 9)
+
+        loginShouldFail = true
+
+        for (const site of ['a', 'b', 'c', 'd', 'e'])
+          await expect(useDrupalLogin(site)).rejects.toMatchObject({ statusCode: 503 })
+
+        expect(postCalls).toHaveLength(6)
+
+        // t=9:59: a caller is waved past the fast path by the still-live session
+        await vi.advanceTimersByTimeAsync(1000 * 59)
+
+        gated = true
+        const pending = useDrupalLogin('good').catch((e) => e)
+        await vi.advanceTimersByTimeAsync(0)
+
+        // t=10:01: the TTL evicts the slot while that caller is suspended, so `||= {}`
+        // recreates it empty
+        await vi.advanceTimersByTimeAsync(2000)
+
+        gated = false
+        releaseConfig()
+
+        await expect(pending).resolves.toMatchObject({
+          statusCode: 503,
+          data:       { reason: 'global-failure-backoff' },
+        })
+
+        expect(postCalls).toHaveLength(6)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+  })
+
   describe('invalidateDrupalSession', () => {
     it('drops the cached session so the next caller re-logs in', async () => {
       const { useDrupalLogin, invalidateDrupalSession } = await importModule()
 
       const first = await useDrupalLogin('seed')
 
-      expect(invalidateDrupalSession('seed')).toBe(true)
+      expect(invalidateDrupalSession('seed', 'https://seed.example.test')).toBe(true)
 
       const second = await useDrupalLogin('seed')
 
@@ -443,7 +738,21 @@ describe('useDrupalLogin', () => {
       const { invalidateDrupalSession } = await importModule()
 
       expect(invalidateDrupalSession()).toBe(false)
-      expect(invalidateDrupalSession('never-logged-in')).toBe(false)
+      expect(invalidateDrupalSession('never-logged-in', 'https://never-logged-in.example.test')).toBe(false)
+    })
+
+    it('throws rather than silently missing when the canonical host is omitted', async () => {
+      const { useDrupalLogin, invalidateDrupalSession } = await importModule()
+
+      const first = await useDrupalLogin('seed')
+
+      // Returning false here would be indistinguishable from "nothing to drop", leaving the
+      // session live for the rest of its TTL with no signal to the 401/403 recovery caller
+      expect(() => invalidateDrupalSession('seed')).toThrow('canonicalHost is required')
+
+      // and the session it failed to address is provably still cached
+      expect(await useDrupalLogin('seed')).toBe(first)
+      expect(postCalls).toHaveLength(1)
     })
   })
 })

@@ -301,6 +301,7 @@ describe('Context Utilities', () => {
           ['stg', 'custom.example.test', 'https://seed.example.test'],
           ['prod', 'custom.example.test', 'https://seed.example.test'],
           ['production', '169.254.169.254', 'https://seed.example.test'],
+          ['production', 'user:password@example.com', 'https://seed.example.test'],
         ]) {
           config = { redirect, defaultLocale: 'fr', locales: ['fr'] }
           vi.stubGlobal('useRuntimeConfig', () => ({
@@ -316,10 +317,15 @@ describe('Context Utilities', () => {
           expect(error).not.toHaveBeenCalled()
         }
 
-        // Only the rejected metadata-endpoint redirect warns, and it warns once.
-        expect(warn).toHaveBeenCalledExactlyOnceWith(
+        // Rejected redirects warn once, and userinfo credentials are redacted.
+        expect(warn).toHaveBeenCalledTimes(2)
+        expect(warn).toHaveBeenCalledWith(
           'Ignoring unusable DMSM redirect for site seed: "169.254.169.254"',
         )
+        expect(warn).toHaveBeenCalledWith(
+          'Ignoring unusable DMSM redirect for site seed: <userinfo-redacted>@example.com',
+        )
+        expect(warn).not.toHaveBeenCalledWith(expect.stringContaining('password'))
       } finally {
         vi.unstubAllGlobals()
         vi.restoreAllMocks()
