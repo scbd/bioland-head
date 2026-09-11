@@ -102,7 +102,13 @@ export default defineNitroPlugin((nitro) => {
                 if(event.method !== 'GET' && event.method !== 'HEAD') return false;
 
                 // Every value below goes through the same normaliser; comparing two
-                // differently-normalised hosts is what turns this guard into a 301 loop.
+                // differently-normalised hosts is what turns this guard into a redirect loop.
+                //
+                // TRUST ASSUMPTION: `x-forwarded-host` is read ahead of `Host`, so the
+                // cross-host redirect below is only safe where the edge (CDN/ALB/ingress)
+                // strips or overwrites any client-supplied value. That edge control is an
+                // external rollout prerequisite this handler cannot verify - see AADR 0002
+                // and the multi-tenant isolation rows in docs/architecture.md / docs/prd.md.
                 const requestHost = toComparableHost(getRequestHost(event, { xForwardedHost: true }));
 
                 if(LOOPBACK_HOSTS.has(requestHost) || requestHost.endsWith('.localhost')) return false;
@@ -125,7 +131,11 @@ export default defineNitroPlugin((nitro) => {
                 // Rebuild the origin from the normalised host, so a scheme- or port-bearing
                 // `redirect` value can never leak into the Location header.
                 // event.path already carries the query string; appending it again duplicates it.
-                await sendRedirect(event, `https://${canonicalHost}${event.path}`, 301);
+                //
+                // Deliberately 302, not 301: a permanent redirect is cached by browsers
+                // indefinitely, so a wrong target would survive a deploy or a DMSM fix with
+                // no server-side recovery. This becomes 301 once a pilot Site has run clean.
+                await sendRedirect(event, `https://${canonicalHost}${event.path}`, 302);
 
                 return true;
             } catch (error) {
@@ -167,7 +177,7 @@ const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
  * no port, no trailing dot, lowercased, bracketed IPv6 literals preserved.
  *
  * Both sides of every host comparison in this file must come from this function -
- * two normalisers disagreeing about one request is what produces a 301 loop.
+ * two normalisers disagreeing about one request is what produces a redirect loop.
  *
  * Its comma/port/IPv6 handling must stay in step with `normalizeHost` in
  * server/utils/context-unified.ts, which derives `siteCode` from the same header.

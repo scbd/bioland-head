@@ -79,7 +79,7 @@ describe('server/plugins/locale request hook', () => {
       expect(mockSendRedirect).toHaveBeenCalledWith(
         expect.anything(),
         `https://${REDIRECT_HOST}/`,
-        301,
+        302,
       )
     })
 
@@ -90,7 +90,7 @@ describe('server/plugins/locale request hook', () => {
       expect(mockSendRedirect).toHaveBeenCalledWith(
         expect.anything(),
         `https://${REDIRECT_HOST}/zz/news`,
-        301,
+        302,
       )
     })
 
@@ -101,7 +101,7 @@ describe('server/plugins/locale request hook', () => {
       expect(mockSendRedirect).toHaveBeenCalledWith(
         expect.anything(),
         `https://${REDIRECT_HOST}/en/taxonomy/term/123`,
-        301,
+        302,
       )
       expect(mockGetTermAliasById).not.toHaveBeenCalled()
     })
@@ -113,7 +113,7 @@ describe('server/plugins/locale request hook', () => {
       expect(mockSendRedirect).toHaveBeenCalledWith(
         expect.anything(),
         `https://${REDIRECT_HOST}/en/news?page=2&sort=asc`,
-        301,
+        302,
       )
     })
 
@@ -126,7 +126,7 @@ describe('server/plugins/locale request hook', () => {
       expect(mockSendRedirect).toHaveBeenCalledWith(
         expect.anything(),
         `https://${REDIRECT_HOST}/en/news`,
-        301,
+        302,
       )
     })
 
@@ -137,7 +137,7 @@ describe('server/plugins/locale request hook', () => {
       expect(mockSendRedirect).toHaveBeenCalledWith(
         expect.anything(),
         `https://${REDIRECT_HOST}/en/news`,
-        301,
+        302,
       )
     })
 
@@ -150,14 +150,14 @@ describe('server/plugins/locale request hook', () => {
       expect(mockSendRedirect).toHaveBeenCalledWith(
         expect.anything(),
         `https://${REDIRECT_HOST}/en/news`,
-        301,
+        302,
       )
     })
   })
 
   // Every case here is a `redirect` value an operator can type into DMSM free text.
-  // Each must either 301 exactly once to a well-formed Location, or not redirect at
-  // all - never emit a target that normalises back to the request Host (a 301 loop).
+  // Each must either 302 exactly once to a well-formed Location, or not redirect at
+  // all - never emit a target that normalises back to the request Host (a redirect loop).
   describe('hostile redirect values cannot produce a loop or a malformed Location', () => {
     it('does not redirect when the canonical host differs from generated only by a default port', async () => {
       mockUseRequestContext.mockResolvedValue(makeContext(`https://${GENERATED_HOST}:443`))
@@ -193,7 +193,7 @@ describe('server/plugins/locale request hook', () => {
       expect(mockSendRedirect).toHaveBeenCalledWith(
         expect.anything(),
         `https://${REDIRECT_HOST}/en/news`,
-        301,
+        302,
       )
     })
 
@@ -206,7 +206,7 @@ describe('server/plugins/locale request hook', () => {
       expect(mockSendRedirect).toHaveBeenCalledWith(
         expect.anything(),
         'https://[2001:db8::1]/en/news',
-        301,
+        302,
       )
     })
 
@@ -219,7 +219,7 @@ describe('server/plugins/locale request hook', () => {
       expect(mockSendRedirect).toHaveBeenCalledWith(
         expect.anything(),
         `https://${REDIRECT_HOST}/en/news`,
-        301,
+        302,
       )
     })
 

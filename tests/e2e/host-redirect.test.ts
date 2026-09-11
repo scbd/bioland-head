@@ -6,12 +6,12 @@ import { getE2EBaseURL } from './e2e-targets'
 //
 // The Playwright target is `e2e.localhost:3330` (tests/e2e/e2e-targets.ts), and
 // `handleHostRedirect` in server/plugins/locale.js bails on any `.localhost` Host
-// before it compares anything. This test therefore pins only that the 301 stays
+// before it compares anything. This test therefore pins only that the 302 stays
 // dormant on the local target - it would still pass if the canonical/generated
 // comparison were broken. The comparison itself is covered by the unit spec at
 // tests/unit/server/plugins/locale.test.ts.
 //
-// The positive case - a request on the generated Host actually 301ing to a
+// The positive case - a request on the generated Host actually 302ing to a
 // different canonical Host - needs a non-loopback fixture Site with `redirect`
 // set (a DMSM stub or a dedicated dev Site config, per index.md prerequisite 1).
 // That fixture does not exist yet, so the positive case is exercised by p03-01
