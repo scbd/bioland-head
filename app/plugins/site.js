@@ -265,18 +265,26 @@ export function isKnownDevHost (host, baseHost) {
 }
 
 /**
- * Prefers server state, then the context cookie, then a known host's first label.
- * The server classifier in server/utils/context-unified.ts (p01-03) must match these shapes.
+ * Prefers server state, then a known host's first label, then the context cookie.
+ * The verified host outranks the cookie because the cookie is client-writable and any
+ * sibling tenant under baseHost can set a Domain= copy of it; this mirrors the server
+ * precedence in server/utils/context-unified.ts (host, then query, then cookie).
+ * A single-label host (plain `localhost`) yields no label, so the cookie still supplies
+ * the siteCode there. The classifiers are not yet aligned on loopback: `127.0.0.1` still
+ * first-labels to `127` here where the server returns null (aligned in p01-03).
  * @param {{ stateSiteCode?: string, cookieSiteCode?: string, hostName?: string, baseHost?: string }} params - Resolution inputs
  * @returns {string|null} Resolved siteCode, or null for an unknown host without context
  */
 export function resolveClientSiteIdentifier ({ stateSiteCode, cookieSiteCode, hostName, baseHost }) {
     if(stateSiteCode) return stateSiteCode;
-    if(cookieSiteCode) return cookieSiteCode;
 
-    if(!isKnownDevHost(hostName, baseHost)) return null;
+    if(isKnownDevHost(hostName, baseHost)) {
+        const parts = hostName.split('.');
 
-    return hostName.split('.')[0];
+        if(parts.length > 1) return parts[0];
+    }
+
+    return cookieSiteCode || null;
 }
 
 function ensureContext(ctx = {}){

@@ -36,12 +36,17 @@ describe('resolveClientSiteIdentifier', () => {
   it.each([
     [{ stateSiteCode: 'state-site', cookieSiteCode: 'cookie-site', hostName: 'be.chm-cbd.net', baseHost: 'chm-cbd.net' }, 'state-site'],
     [{ stateSiteCode: 'state-site' }, 'state-site'],
-    [{ stateSiteCode: null, cookieSiteCode: 'cookie-site', hostName: 'be.chm-cbd.net', baseHost: 'chm-cbd.net' }, 'cookie-site'],
+    // The verified host outranks the client-writable cookie on every multi-label host.
+    [{ stateSiteCode: null, cookieSiteCode: 'cookie-site', hostName: 'be.chm-cbd.net', baseHost: 'chm-cbd.net' }, 'be'],
+    [{ cookieSiteCode: 'attacker-tenant', hostName: 'be.chm-cbd.net', baseHost: 'chm-cbd.net' }, 'be'],
+    [{ cookieSiteCode: 'attacker-tenant', hostName: 'be.localhost' }, 'be'],
+    // Plain `localhost` yields no host label, so the cookie still supplies the siteCode.
     [{ cookieSiteCode: 'cookie-site', hostName: 'localhost' }, 'cookie-site'],
     [{ cookieSiteCode: 'cookie-site' }, 'cookie-site'],
     [{ stateSiteCode: '', cookieSiteCode: '', hostName: 'be.localhost' }, 'be'],
     [{ hostName: 'e2e.localhost' }, 'e2e'],
-    [{ hostName: 'localhost' }, 'localhost'],
+    // No cookie on a single-label host: null, which restores the pre-task 404.
+    [{ hostName: 'localhost' }, null],
     [{ hostName: '127.0.0.1' }, '127'],
     [{ hostName: 'be.chm-cbd.net', baseHost: 'chm-cbd.net' }, 'be'],
     [{ hostName: 'be.attacker.example', baseHost: 'chm-cbd.net' }, null],
@@ -161,7 +166,8 @@ describe('site plugin setup', () => {
     await serverPlugin.setup(nuxtApp)
 
     expect(states.get('siteCode').value).toBeUndefined()
-    expect(fetchContext).toHaveBeenCalledWith('/api/context/cookie-site/en')
+    // State unset, so the verified host (be.localhost) resolves the tenant, not the cookie.
+    expect(fetchContext).toHaveBeenCalledWith('/api/context/be/en')
   })
 
   it.each([
@@ -171,6 +177,8 @@ describe('site plugin setup', () => {
     [undefined, 'cookie-site', 'custom.example.test', 'cookie-site'],
     [undefined, undefined, 'e2e.localhost', 'e2e'],
     [undefined, undefined, 'be.chm-cbd.net', 'be'],
+    // A conflicting cookie cannot re-tenant a verified production host.
+    [undefined, 'other-tenant', 'be.chm-cbd.net', 'be'],
   ])('client resolves state=%s cookie=%s host=%s before fetching %s', async (state, cookieCode, host, expected) => {
     if (state) states.set('siteCode', ref(state))
     cookie.value = cookieCode ? { siteCode: cookieCode } : undefined
@@ -187,6 +195,8 @@ describe('site plugin setup', () => {
   it.each([
     [undefined, 'Not Found Plugins.site.getBiolandSiteIdentifier: no host derived to find env site context.'],
     ['be.attacker.example', 'Not Found Plugins.site.getBiolandSiteIdentifier: no siteKey derived to find env site context.'],
+    // Plain localhost without a cookie keeps the pre-task 404 and issues no network call.
+    ['localhost', 'Not Found Plugins.site.getBiolandSiteIdentifier: no siteKey derived to find env site context.'],
   ])('preserves the original 404 when no Site can be resolved for %s', async (host, statusMessage) => {
     cookie.value = undefined
     requestUrl.hostname = host
