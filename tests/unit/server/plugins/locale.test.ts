@@ -259,12 +259,19 @@ describe('server/plugins/locale request hook', () => {
       expect(mockGetRequestHost).not.toHaveBeenCalled()
     })
 
-    it('does not host-redirect /api paths - the skip-path loop wins first', async () => {
-      await requestHook(makeEvent('/api/context/be/en'))
+    it.each([
+      ['/api/context/be/en'],
+      ['/en/apiary'],
+      ['/en/news?next=/api/login'],
+    ])('redirects paths containing skip substrings (%s) before path skips run', async (path) => {
+      await requestHook(makeEvent(path))
 
-      expect(mockSendRedirect).not.toHaveBeenCalled()
-      expect(mockGetRequestHost).not.toHaveBeenCalled()
-      expect(mockUseRequestContext).not.toHaveBeenCalled()
+      expect(mockSendRedirect).toHaveBeenCalledTimes(1)
+      expect(mockSendRedirect).toHaveBeenCalledWith(
+        expect.anything(),
+        `https://${REDIRECT_HOST}${path}`,
+        302,
+      )
     })
 
     it.each([
@@ -351,6 +358,12 @@ describe('server/plugins/locale request hook', () => {
       await requestHook(makeEvent('/en/taxonomy/term/123'))
 
       expect(mockSendRedirect).toHaveBeenCalledWith(expect.anything(), '/en/news/topic', 301)
+    })
+
+    it('skips locale handling for skipPaths like /api when no host redirect applies', async () => {
+      await requestHook(makeEvent('/api/context/be/en'))
+
+      expect(mockSendRedirect).not.toHaveBeenCalled()
     })
   })
 })

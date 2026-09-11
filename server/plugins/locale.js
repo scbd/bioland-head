@@ -2,15 +2,15 @@ export default defineNitroPlugin((nitro) => {
     
     nitro.hooks.hook("request", async (event) => {
 
+        // A host redirect is terminal for this request; the path handlers below never run with it.
+        if (await handleHostRedirect()) return;
+
         const skipPaths = ['/_i18n','/_ipx','/api','/__nuxt_error','/_nuxt','/sites','/images','/favicon.ico','/.well-known','/fonts.googleapis.com','/.well-known/appspecific'];
 
         // Check if path should be skipped
         for(let path of skipPaths) {
             if(event.path.includes(path)) return;
         }
-
-        // A host redirect is terminal for this request; the path handlers below never run with it.
-        if (await handleHostRedirect()) return;
 
         await handleMalformedPaths();
         await handleLocaleRedirect();
