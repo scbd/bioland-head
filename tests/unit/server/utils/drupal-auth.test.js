@@ -72,7 +72,7 @@ describe('useDrupalLogin', () => {
       public:      { baseHost: 'example.test', multiSiteCode: 'bl2', env: 'dev' },
     })
 
-    globalThis.consola     = { error: vi.fn(), info: vi.fn() }
+    globalThis.consola     = { error: vi.fn(), warn: vi.fn(), info: vi.fn() }
     globalThis.createError = (opts) => Object.assign(new Error(opts.statusMessage), opts)
 
     // Auto-imported in Nitro, stubbed here. The config stub resolves null by default, which is
@@ -504,6 +504,93 @@ describe('useDrupalLogin', () => {
       expect(logged).not.toContain('stub-pass')
       expect(logged).not.toContain('api-user@example.test')
     })
+
+    it('logs the fallback at warn level so an unconfigured site does not emit two ERROR lines', async () => {
+      globalThis.getCachedDmsmConfig.mockResolvedValue(null)
+
+      const useDrupalLogin = await importFresh()
+
+      await useDrupalLogin('seed')
+
+      // context-unified.ts already logs the missing site at error level; this one is a warn
+      expect(globalThis.consola.error).not.toHaveBeenCalled()
+      expect(globalThis.consola.warn).toHaveBeenCalledTimes(1)
+      expect(postCalls).toEqual(['https://seed.example.test/user/login?_format=json'])
+    })
+
+    it('never logs a login URI carrying userinfo in full', async () => {
+      globalThis.getCachedDmsmConfig.mockResolvedValue({ redirect: 'u:p@evil.example' })
+      globalThis.getCanonicalHost.mockReturnValue('https://u:p@evil.example')
+
+      const useDrupalLogin = await importFresh()
+
+      loginShouldFail = true
+
+      await expect(useDrupalLogin('seed')).rejects.toMatchObject({ statusCode: 503 })
+
+      const logged = JSON.stringify(globalThis.consola.error.mock.calls)
+
+      // The Host and path survive for triage; the userinfo, scheme and query never appear
+      expect(logged).toContain('evil.example/user/login')
+      expect(logged).not.toContain('u:p@')
+      expect(logged).not.toContain('https://u:p@evil.example/user/login?_format=json')
+      expect(logged).not.toContain('_format=json')
+      expect(logged).not.toContain('stub-pass')
+    })
+
+    it('falls back to the siteCode rather than the raw URI when the login URI will not parse', async () => {
+      globalThis.getCachedDmsmConfig.mockResolvedValue({ redirect: 'unused' })
+      globalThis.getCanonicalHost.mockReturnValue('https://u:p@ ')
+
+      const useDrupalLogin = await importFresh()
+
+      loginShouldFail = true
+
+      await expect(useDrupalLogin('seed')).rejects.toMatchObject({ statusCode: 503 })
+
+      const logged = JSON.stringify(globalThis.consola.error.mock.calls)
+
+      expect(logged).toContain('site:seed')
+      expect(logged).not.toContain('u:p@')
+    })
+  })
+
+  describe('pod-wide breaker ordering', () => {
+    it('fails fast on an open breaker without awaiting the DMSM config fetch', async () => {
+      const useDrupalLogin = await importFresh()
+
+      loginShouldFail = true
+
+      for (const site of ['a', 'b', 'c', 'd', 'e'])
+        await expect(useDrupalLogin(site)).rejects.toMatchObject({ statusCode: 503 })
+
+      // A config fetch that never settles would hang the call if the gate sat downstream of it
+      globalThis.getCachedDmsmConfig.mockImplementation(() => new Promise(() => {}))
+
+      const callsBefore = globalThis.getCachedDmsmConfig.mock.calls.length
+
+      await expect(useDrupalLogin('f')).rejects.toMatchObject({
+        statusCode: 503,
+        data:       { reason: 'global-failure-backoff' },
+      })
+
+      expect(globalThis.getCachedDmsmConfig.mock.calls).toHaveLength(callsBefore)
+      expect(postCalls).toHaveLength(5)
+    })
+
+    it('still serves a live session to a site that has one while the breaker is open', async () => {
+      const useDrupalLogin = await importFresh()
+
+      const live = await useDrupalLogin('good')
+
+      loginShouldFail = true
+
+      for (const site of ['a', 'b', 'c', 'd', 'e'])
+        await expect(useDrupalLogin(site)).rejects.toMatchObject({ statusCode: 503 })
+
+      // The breaker exists to stop logins, and this caller needs none
+      expect(await useDrupalLogin('good')).toBe(live)
+    })
   })
 
   describe('invalidateDrupalSession', () => {
@@ -525,6 +612,20 @@ describe('useDrupalLogin', () => {
 
       expect(invalidateDrupalSession()).toBe(false)
       expect(invalidateDrupalSession('never-logged-in', 'https://never-logged-in.example.test')).toBe(false)
+    })
+
+    it('throws rather than silently missing when the canonical host is omitted', async () => {
+      const { useDrupalLogin, invalidateDrupalSession } = await importModule()
+
+      const first = await useDrupalLogin('seed')
+
+      // Returning false here would be indistinguishable from "nothing to drop", leaving the
+      // session live for the rest of its TTL with no signal to the 401/403 recovery caller
+      expect(() => invalidateDrupalSession('seed')).toThrow('canonicalHost is required')
+
+      // and the session it failed to address is provably still cached
+      expect(await useDrupalLogin('seed')).toBe(first)
+      expect(postCalls).toHaveLength(1)
     })
   })
 })

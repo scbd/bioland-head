@@ -37,21 +37,63 @@ const login = async (uri, name, pass) => {
 }
 
 /**
+ * Render a login URI for a log line: Host and path only.
+ *
+ * The Host is operator-supplied (DMSM `config.redirect`), so the raw URI is never safe to log -
+ * a value carrying userinfo (`u:p@host`) would put a credential into an error-level line. The
+ * userinfo, port, query and fragment are dropped here; an unparseable URI degrades to the
+ * siteCode rather than falling back to the raw string.
+ *
+ * @param {string} uri - The login URI.
+ * @param {string} siteCode - Site identifier, used when the URI will not parse.
+ * @returns {string} A credential-free `host/path` rendering.
+ */
+const logSafeTarget = (uri, siteCode) => {
+  try {
+    const { hostname, pathname } = new URL(uri);
+
+    return `${hostname}${pathname}`;
+  } catch {
+    return `site:${siteCode}`;
+  }
+}
+
+/**
+ * True when this Site already holds a slot that useDrupalLogin would short-circuit on - a live
+ * agent or an in-flight login. The Host is not resolved yet at the pod-wide gate, so every
+ * Host-keyed slot for the Site is probed instead of a single cacheId.
+ *
+ * @param {string} multiSiteCode - Multisite identifier.
+ * @param {string} siteCode - Site identifier.
+ * @returns {boolean} True when a cached or in-flight session exists for the Site.
+ */
+const hasUsableSlot = (multiSiteCode, siteCode) => {
+  const prefix = `${multiSiteCode}-${siteCode}-`;
+
+  return Object.keys($http).some((id) => id.startsWith(prefix) && ($http[id].agent || $http[id].promise));
+}
+
+/**
  * Drop a cached session immediately, for callers that see a downstream 401/403 rather
  * than waiting out SESSION_TTL_MS. The next useDrupalLogin() re-logs in.
  *
  * The canonical Host is part of the cache identity, so it has to be passed in: an entry
  * stored under a different Host is a different session and must not be dropped by accident.
- * This second parameter has no production caller today - a repo-wide grep for
- * invalidateDrupalSession returns only this file's own comment, this definition, and the
- * unit tests - so adding it breaks nothing.
+ * A missing Host therefore throws rather than computing a key that cannot match - returning
+ * false would be indistinguishable from "there was nothing to drop", which would leave a
+ * compromised session live for the rest of SESSION_TTL_MS with no signal. This second
+ * parameter has no production caller today - a repo-wide grep for invalidateDrupalSession
+ * returns only this file's own comment, this definition, and the unit tests - so requiring
+ * it breaks nothing.
  *
  * @param {string} siteCode - Site identifier.
  * @param {string} canonicalHost - The Host useDrupalLogin authenticated against, e.g. `https://be.example.net`.
+ * @throws {Error} When canonicalHost is missing.
  * @returns {boolean} True when a cached session was dropped, false when there was nothing to drop.
  */
 export const invalidateDrupalSession = (siteCode, canonicalHost) => {
   if(!siteCode) return false;
+  if(!canonicalHost) throw new Error('invalidateDrupalSession: canonicalHost is required');
 
   const { multiSiteCode } = useRuntimeConfig().public;
   const cacheId           = `${multiSiteCode}-${siteCode}-${canonicalHost}`;
@@ -71,14 +113,43 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
   const { apiUser:name, apiUserPass:pass }   = useRuntimeConfig()
   const { baseHost, multiSiteCode, env }     = useRuntimeConfig().public;
 
+  // Drupal flood control blocks the IP on repeated failures, so the pod-wide gate is checked
+  // before the DMSM round trip below: nothing it reads is Host-derived, and leaving it
+  // downstream would hold a request slot for the full DMSM timeout before fast-failing - the
+  // occupancy shape of the BL-848 CPU spiral. A Site that already holds a live or in-flight
+  // session is exempt, because it is about to short-circuit without a login at all.
+  // The per-entry gate genuinely needs the Host-keyed cacheId and stays downstream.
+  if($global.failCount >= GLOBAL_FAILURES_BEFORE_BACKOFF
+    && (Date.now() - $global.failedAt) < LOGIN_FAILURE_BACKOFF_MS
+    && (forceNew || !hasUsableSlot(multiSiteCode, siteCode)))
+    throw createError({ statusCode: 503, statusMessage: 'Drupal login unavailable', data: { siteCode, reason: 'global-failure-backoff' } });
+
   // The Site's own config carries its redirect Host. A failed or missing config falls back to
   // the generated Host, so a DMSM outage degrades to today's behaviour instead of failing login.
   // The `{}` placeholder is a deliberate non-event: getCachedDmsmConfig's key generator and fetch
   // core never read it, and nitro's cachedFunction only forwards an argument that passes h3's
   // isEvent(), which a plain object does not.
-  const config = await getCachedDmsmConfig({}, siteCode).catch(() => null);
+  //
+  // This resolves the Host independently of buildSiteContext's ctx.host (context-unified.ts),
+  // which useDrupalLogin cannot reach - it takes no event and its signature is fixed by its
+  // callers. Both read the same coalesced, 5-minute-cached DMSM config, so they agree on the
+  // normal path. They can diverge in three bounded windows: a config fetch that fails for one
+  // and not the other, a useRequestContext({ bypassCache: true }) caller, and a cache expiry
+  // between the two reads within one request. Divergence is not a leak - superagent's cookie
+  // jar is Host-scoped, so the session is simply not sent to the other Host - but it does
+  // reinstate a 403 and spend an attempt against the pod-wide breaker above. The fallback is
+  // therefore deliberately the same generated Host that context-unified degrades to.
+  const config = await getCachedDmsmConfig({}, siteCode).catch((e) => {
+    // fetchDmsmConfigCore already logs (and returns null for) both a missing Site and a failed
+    // fetch, so a rejection reaching here is the one failure it did not account for.
+    consola.error('DrupalAuth: DMSM config lookup failed for', siteCode, { reason: e?.message });
 
-  if(!config) consola.error('DrupalAuth: falling back to generated host for', siteCode);
+    return null;
+  });
+
+  // Benign on its own - the Site is simply not in DMSM, which context-unified.ts already logged
+  // at error level. Warn so one unconfigured Site does not emit two ERROR lines per login.
+  if(!config) consola.warn('DrupalAuth: falling back to generated host for', siteCode);
 
   const canonicalHost = config
     ? getCanonicalHost({ siteCode, baseHost, env, redirect: config.redirect })
@@ -106,11 +177,7 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
     if(entry.promise) return entry.promise;
   }
 
-  // Drupal flood control blocks the IP on repeated failures - back off instead of hammering.
-  // Both gates are checked even for forceNew so no retry path can re-trigger the block.
-  if($global.failCount >= GLOBAL_FAILURES_BEFORE_BACKOFF && (Date.now() - $global.failedAt) < LOGIN_FAILURE_BACKOFF_MS)
-    throw createError({ statusCode: 503, statusMessage: 'Drupal login unavailable', data: { siteCode, reason: 'global-failure-backoff' } });
-
+  // The per-entry gate is checked even for forceNew so no retry path can re-trigger the block.
   if((entry.failCount || 0) >= LOGIN_FAILURES_BEFORE_BACKOFF && (Date.now() - entry.failedAt) < LOGIN_FAILURE_BACKOFF_MS)
     throw createError({ statusCode: 503, statusMessage: 'Drupal login unavailable', data: { siteCode, reason: 'failure-backoff' } });
 
@@ -152,8 +219,10 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
         evict(LOGIN_FAILURE_BACKOFF_MS);
       }
 
-      // A timeout carries no HTTP status, only a code - log whichever exists
-      consola.error('DrupalAuth.login: ', uri, { status: e?.status ?? e?.code });
+      // A timeout carries no HTTP status, only a code - log whichever exists. The target is
+      // logged Host-and-path only, never the raw URI, so an operator-supplied Host carrying
+      // userinfo can never put a credential into this line.
+      consola.error('DrupalAuth.login: ', logSafeTarget(uri, siteCode), { status: e?.status ?? e?.code });
 
       throw createError({ statusCode: 503, statusMessage: 'Drupal login unavailable', data: { siteCode, reason: 'login-failed' }, cause: e });
     })
