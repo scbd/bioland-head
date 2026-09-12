@@ -3,7 +3,8 @@ import type { ConsolaInstance } from 'consola';
 import { LOG_LEVEL } from './constants';
 import type { LogLevelConfig, ConfiguredLogger } from '#shared/types/logger';
 
-const DEFAULT_LEVEL = LOG_LEVEL.TRACE;
+// INFO in production, TRACE elsewhere (process.env.NODE_ENV is statically replaced in client bundles)
+const DEFAULT_LEVEL = process.env.NODE_ENV === 'production' ? LOG_LEVEL.INFO : LOG_LEVEL.TRACE;
 
 /**
  * Configures the global Consola logger with the specified logging level.
