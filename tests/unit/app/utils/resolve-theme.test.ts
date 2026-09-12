@@ -639,10 +639,10 @@ describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
          * colour string may occupy an authored slot; anything else falls through to the derived
          * colour for that slot.
          */
-        const hexToRgb = (hex: unknown) => (hex as any)?.replace?.(
+        const hexToRgb = (hex: unknown) => (hex as any)?.replace(
             /^#?([a-f\d])([a-f\d])([a-f\d])$/i,
             (_m: string, r: string, g: string, b: string) => '#' + r + r + g + g + b + b
-        )
+        )?.substring(1)?.match(/.{2}/g)?.map((x: string) => parseInt(x, 16))?.join(', ')
 
         const hostileSlots = [
             ['a number', 42],
@@ -662,6 +662,7 @@ describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
                 expect(theme.hero.primary[0]).not.toBe(slot)
                 expect(theme.hero.primary[0]).toBe('#7b6f82')
                 expect(theme.hero.primary[1]).toBe('#ffffff')
+                if (typeof slot !== 'string') expect(() => hexToRgb(slot)).toThrow(TypeError)
                 expect(() => hexToRgb(theme.hero.primary[0])).not.toThrow()
                 expect(typeof theme.hero.primary[0]).toBe('string')
                 expect((theme.hero.primary[0] as string).trim()).not.toBe('')
