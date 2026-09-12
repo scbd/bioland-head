@@ -3,6 +3,7 @@ import { createPinia, defineStore, setActivePinia } from 'pinia'
 import { unref } from 'vue'
 import { uniqueArray, falsyFilter } from '~/app/utils/index.js'
 import { getCanonicalHost, getGeneratedHostname } from '~/shared/utils/site-host'
+import { isGoogleTagsSite } from '~/shared/utils/google-tags'
 
 let useSiteStore
 
@@ -28,6 +29,31 @@ function initialize(overrides = {}) {
   })
   return store
 }
+
+describe('site store publication', () => {
+  it('drops SSR publication when a fresh config omits it on the same store', () => {
+    const store = initialize({
+      env: 'prod', multiSiteCode: 'bl2',
+      config: { published: true, defaultLocale: 'en', locales: ['en'] },
+      biolandSettings: { googleAnalyticsIds: 'G-TEST1234567' },
+    })
+    const eligible = () => isGoogleTagsSite({ ...store.$state, published: store.config?.published }, 'seed.chm-cbd.net')
+    expect(eligible()).toBe(true)
+
+    const freshConfig = { defaultLocale: 'fr', locales: ['en', 'fr'] }
+    store.initialize({
+      env: 'prod', multiSiteCode: 'bl2', siteCode: 'seed', baseHost: 'example.test',
+      locale: 'fr', config: freshConfig,
+    })
+
+    expect(store.config).toEqual(freshConfig)
+    expect(store.config.published).toBeUndefined()
+    expect(eligible()).toBe(false)
+    expect(store.defaultLocale).toBe('fr')
+    expect(store.localizedHost).toBe('https://seed.example.test/fr')
+    expect(store.biolandSettings.googleAnalyticsIds).toBe('G-TEST1234567')
+  })
+})
 
 describe('site store hosts', () => {
   it.each([

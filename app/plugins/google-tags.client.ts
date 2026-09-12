@@ -4,9 +4,10 @@
  * Two gates, both required, both re-evaluated on every change:
  *
  * - **Site eligibility** via the shared site gate in `shared/utils/google-tags.ts`: the deployment
- *   is `prod`, the multisite has a host template in `GOOGLE_TAG_HOSTS` (today only `bl2`), and both
- *   the site's configured host and the hostname the browser is actually on are exactly that
- *   template applied to its `siteCode`. No env var, no kill switch.
+ *   is `prod`, the multisite has a host template in `GOOGLE_TAG_HOSTS` (today only `bl2`), dmsm
+ *   marks the site `published`, and the hostname the browser is actually on is either that
+ *   template applied to its `siteCode` or the site's configured `redirect` alias. No env var, no
+ *   kill switch.
  * - **Visitor consent** via `useCookieControl().cookiesEnabledIds` containing `ga`. Every consent
  *   action in the module funnels through one writer (`CookieControl.vue setCookies`), which sets
  *   `cookiesEnabledIds`, so watching that ref catches grant, per category revoke, and decline all.
@@ -152,7 +153,8 @@ export default defineNuxtPlugin({
             env: siteStore.env,
             multiSiteCode: siteStore.multiSiteCode,
             siteCode: siteStore.siteCode,
-            host: siteStore.host,
+            published: siteStore.config?.published,
+            redirect: siteStore.config?.redirect,
         }, window.location.hostname));
 
         const consent = computed(() => Boolean(cookiesEnabledIds.value?.includes('ga')));
