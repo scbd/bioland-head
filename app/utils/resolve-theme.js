@@ -114,14 +114,21 @@ const THEME_DEFAULTS = Object.freeze({
     megaMenu: { maxColumns: 5 }        // was hardcoded as `|| 5` at schema-org.js:1152 and drop-down.vue:63
 });
 
+/**
+ * Freeze a null-prototype map so lookups never inherit Object.prototype names
+ * (`toString`, `valueOf`, `hasOwnProperty`, …). A plain-object table lets those
+ * names resolve to inherited functions and crash collectLeaves / resolveLeaf.
+ */
+const freezeOwnMap = (entries) => Object.freeze(Object.assign(Object.create(null), entries));
+
 /** Contract leaves, per group, that must always be own properties of the result. */
-const CONTRACT_LEAVES = Object.freeze({
-    color          : ['primary', 'secondary'],
-    backGround     : ['secondary'],
-    hero           : ['primary'],
-    megaMenu       : ['maxColumns', 'maxRowsPerColumn', 'horizontalCardMax', 'forums'],
-    i18n           : ['maxLangBeforeWrap'],
-    homePageWidgets: ['columns']
+const CONTRACT_LEAVES = freezeOwnMap({
+    color          : Object.freeze(['primary', 'secondary']),
+    backGround     : Object.freeze(['secondary']),
+    hero           : Object.freeze(['primary']),
+    megaMenu       : Object.freeze(['maxColumns', 'maxRowsPerColumn', 'horizontalCardMax', 'forums']),
+    i18n           : Object.freeze(['maxLangBeforeWrap']),
+    homePageWidgets: Object.freeze(['columns'])
 });
 
 /**
@@ -215,41 +222,26 @@ const isUsableColumnList = value =>
  * - `megaMenu.maxRowsPerColumn` / `horizontalCardMax` / `forums` — no `||` in the old reads, and
  *   `0` is a meaningful value ("unlimited") that must not fall through.
  */
-const LEAF_VALIDATORS = Object.freeze({
-    color          : { primary: isUsableColor, secondary: isUsableColor },
-    megaMenu       : { maxColumns: isUsableColumnCount },
-    homePageWidgets: { columns: isUsableColumnList },
-    i18n           : { maxLangBeforeWrap: isUsableLanguageLimit }
+const LEAF_VALIDATORS = freezeOwnMap({
+    color          : freezeOwnMap({ primary: isUsableColor, secondary: isUsableColor }),
+    megaMenu       : freezeOwnMap({ maxColumns: isUsableColumnCount }),
+    homePageWidgets: freezeOwnMap({ columns: isUsableColumnList }),
+    i18n           : freezeOwnMap({ maxLangBeforeWrap: isUsableLanguageLimit })
 });
 
 const isPlainObject = value => typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
- * Keys that alias the prototype chain. The authored leg is untrusted editor input, and these are
- * dropped before any key is used as a lookup index or copied onto the result.
+ * Keys that must never be copied onto the result (pollution / confusing own props).
  *
- * This is a security control, not a tidiness rule. `__proto__` and `constructor` are live vectors:
- * on the unguarded resolver each is a hard crash, which for a theme read on every page is a total
- * render failure.
+ * Table-lookup crashes for *any* Object.prototype name (`toString`, `valueOf`, …) are closed by
+ * the null-prototype `CONTRACT_LEAVES` / `LEAF_VALIDATORS` maps above — a three-key denylist alone
+ * is not enough for those lookups. This list only strips the classic pollution aliases from
+ * cloned output; benign opaque keys such as a top-level `toString` group still pass through.
  *
- * - `{ megaMenu: { __proto__: {...} } }` — `LEAF_VALIDATORS.megaMenu['__proto__']` resolves up the
- *   prototype chain to `Object.prototype`, which is truthy but not callable, so the validator call
- *   throws `TypeError: isUsable is not a function`.
- * - `{ __proto__: {...} }` / `{ constructor: {...} }` at the top level — `CONTRACT_LEAVES[group]`
- *   likewise resolves to an inherited value, and spreading it throws `TypeError: ... is not
- *   iterable`, so the `|| []` fallback never fires.
- *
- * `'prototype'` causes no crash of its own — `CONTRACT_LEAVES['prototype']` and
- * `LEAF_VALIDATORS[group]?.['prototype']` are both `undefined` on a plain object, since plain
- * objects do not inherit a `prototype` property. It is kept as defence in depth only.
- *
- * The guard is load-bearing rather than belt-and-braces because the camelCase pass upstream does
- * not neutralise these keys: `change-case/keys` rewrites a *top-level* `__proto__` to `proto`, but
- * leaves `constructor` verbatim at every depth, leaves `__proto__` verbatim below the top level,
- * and stops converting at depth 7 — so hostile keys still reach this resolver.
- *
- * Filtering the keys out of the group and leaf unions closes both live vectors, and keeps a
- * hostile key from being written onto the result even where the lookup would not have thrown.
+ * The camelCase pass upstream does not neutralise these keys: `change-case/keys` rewrites a
+ * *top-level* `__proto__` to `proto`, but leaves `constructor` verbatim at every depth, leaves
+ * `__proto__` verbatim below the top level, and stops converting at depth 7.
  */
 const DANGEROUS_KEYS = Object.freeze(['__proto__', 'constructor', 'prototype']);
 
