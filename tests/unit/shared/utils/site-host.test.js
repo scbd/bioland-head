@@ -42,6 +42,15 @@ describe('getCanonicalHost', () => {
     expect(canonical('custom.example.gov', 'dev')).toBe(GENERATED)
   })
 
+  it('guards optional baseHost when redirect is set in prod', () => {
+    expect(getCanonicalHost({ siteCode: 'seed', env: 'prod', redirect: 'custom.example.gov' }))
+      .toBe('https://custom.example.gov')
+    expect(getCanonicalHost({ siteCode: 'seed', baseHost: undefined, env: 'prod', redirect: 'custom.example.gov' }))
+      .toBe('https://custom.example.gov')
+    expect(getCanonicalHost({ siteCode: 'seed', baseHost: undefined, env: 'prod' }))
+      .toBe('https://seed.')
+  })
+
   it.each([
     ['prod', 'custom.example.gov', 'https://custom.example.gov'],
     ['prod', '', GENERATED],

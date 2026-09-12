@@ -111,17 +111,17 @@ export function normalizeRedirectHost(redirect?: unknown): string | null {
  */
 export function getCanonicalHost(params: {
   siteCode: string
-  baseHost: string
+  baseHost?: string
   env: string
   redirect?: string
 }): string {
   const redirectHost =
     params.env === "prod" || params.env === "production" ? normalizeRedirectHost(params.redirect) : null
-  if (!redirectHost) return getGeneratedHostname(params.siteCode, params.baseHost)
+  if (!redirectHost) return getGeneratedHostname(params.siteCode, params.baseHost ?? '')
 
-  const base = params.baseHost.toLowerCase()
-  if (base && redirectHost.endsWith(`.${base}`) && redirectHost !== `${params.siteCode.toLowerCase()}.${base}`) {
-    return getGeneratedHostname(params.siteCode, params.baseHost)
+  const base = (params.baseHost ?? '').toLowerCase()
+  if (base && redirectHost.endsWith(`.${base}`) && redirectHost !== `${(params.siteCode ?? '').toLowerCase()}.${base}`) {
+    return getGeneratedHostname(params.siteCode, params.baseHost ?? '')
   }
 
   return `https://${redirectHost}`
