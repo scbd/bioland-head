@@ -18,7 +18,7 @@ export default defineConfig<ConfigOptions>({
   // Fail fast on missing or incomplete env vars before nuxt dev starts, while allowing
   // existing healthy servers to be reused when reuseExistingServer is active.
   webServer: {
-    command: 'node ./tests/e2e/assert-e2e-env.ts && yarn nuxt dev --host e2e.localhost --port 3330',
+    command: 'node ./tests/e2e/assert-e2e-env.mjs && yarn nuxt dev --host e2e.localhost --port 3330',
     url: 'http://e2e.localhost:3330',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000, // 2 minutes for server to start and warm up

@@ -13,7 +13,7 @@ const REQUIRED_VARS = [
   'NUXT_PUBLIC_ENV',
   'NUXT_PUBLIC_MULTI_SITE_CODE',
   'NUXT_PUBLIC_BASE_HOST',
-] as const
+]
 
 const ENV_PATH = fileURLToPath(new URL('../../.env', import.meta.url))
 const EXAMPLE_PATH = fileURLToPath(new URL('../../.env.example', import.meta.url))
@@ -35,7 +35,7 @@ const EXAMPLE_PATH = fileURLToPath(new URL('../../.env.example', import.meta.url
  *
  * Never prints a value — variable names only.
  */
-export function assertE2EEnv (): void {
+export function assertE2EEnv () {
   // Playwright's own process does not load .env; Nuxt does that for the dev server.
   // Load it here purely so the check below can see the values. Absent is fine — the
   // variables may already be exported by the shell or injected by a CI secret store.
@@ -54,7 +54,7 @@ export function assertE2EEnv (): void {
   )
 }
 
-if (process.argv[1] && (path.resolve(process.argv[1]) === fileURLToPath(import.meta.url) || path.resolve(process.argv[1]) === import.meta.filename)) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   assertE2EEnv()
 }
 
