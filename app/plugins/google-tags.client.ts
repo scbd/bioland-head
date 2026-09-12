@@ -171,6 +171,20 @@ export default defineNuxtPlugin({
             // `onBeforeGtagStart` never fires when no `G-`/`AW-`/`DC-`/`UA-` ID is configured.
             ensureGtag()('set', cookieParams);
 
+            // Recover from a transient eligibility/ID loss without configuring tags twice.
+            if (!loaded && configured.size) {
+                const win = window as unknown as GoogleTagWindow;
+
+                for (const id of gtag) {
+                    if (configured.has(id) && ANALYTICS_TAG_ID_PATTERN.test(id)) win[`ga-disable-${id}`] = false;
+                }
+
+                ensureGtag()('consent', 'update', {
+                    analytics_storage: 'granted',
+                    ...DENIED_AD_CONSENT,
+                });
+            }
+
             if (gtag.length) {
                 const analytics = useScriptGoogleAnalytics({
                     // `src` rather than `id` on purpose: given an `id`, the registry's own

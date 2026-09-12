@@ -489,32 +489,55 @@ test.describe('BL-946: publication and redirect eligibility', () => {
     })
   }
 
-  test('a refetch omitting publication silences already-loaded tags without reloading', async ({ context, page }) => {
-    const overrides: ContextOverrides = { published: true }
-    await seedConsentCookies(context, ELIGIBLE_BASE_URL)
-    await installPageRecorder(page)
-    await installRoutes(page, overrides)
+  for (const published of [false, undefined]) {
+    test(`a refetch restoring publication after ${published} resumes tags without duplication or reload`, async ({ context, page }) => {
+      const overrides: ContextOverrides = { published: true }
+      await seedConsentCookies(context, ELIGIBLE_BASE_URL)
+      await installPageRecorder(page)
+      await installRoutes(page, overrides)
 
-    await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
-    await waitForSiteInitialization(page)
-    await expect(googleScripts(page)).toHaveCount(2)
+      await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+      await waitForSiteInitialization(page)
+      await expect(googleScripts(page)).toHaveCount(2)
+      const scriptsBefore = await googleScripts(page).elementHandles()
 
-    overrides.published = undefined
-    // Use the real site plugin's locale-refetch path, retaining the same hydrated store.
-    await page.evaluate(async () => {
-      const nuxt = (document.querySelector('#__nuxt') as NuxtRoot | null)?.__vue_app__?.$nuxt
-      if (!nuxt) throw new Error('Nuxt is not initialized')
-      await nuxt.callHook('i18n:beforeLocaleSwitch', { oldLocale: 'en', newLocale: 'fr' })
+      overrides.published = published
+      // Use the real site plugin's locale-refetch path, retaining the same hydrated store.
+      await page.evaluate(async () => {
+        const nuxt = (document.querySelector('#__nuxt') as NuxtRoot | null)?.__vue_app__?.$nuxt
+        if (!nuxt) throw new Error('Nuxt is not initialized')
+        await nuxt.callHook('i18n:beforeLocaleSwitch', { oldLocale: 'en', newLocale: 'fr' })
+      })
+
+      await expect.poll(() => page.evaluate(id => (
+        (window as unknown as Record<string, unknown>)[`ga-disable-${id}`]
+      ), GTAG_ID)).toBe(true)
+      expect(await readDataLayer(page)).toContainEqual(['consent', 'update', {
+        analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
+      }])
+
+      overrides.published = true
+      await page.evaluate(async () => {
+        const nuxt = (document.querySelector('#__nuxt') as NuxtRoot | null)?.__vue_app__?.$nuxt
+        if (!nuxt) throw new Error('Nuxt is not initialized')
+        await nuxt.callHook('i18n:beforeLocaleSwitch', { oldLocale: 'fr', newLocale: 'en' })
+      })
+
+      for (const id of [GTAG_ID, LEGACY_ID]) {
+        await expect.poll(() => page.evaluate(tagId => (
+          (window as unknown as Record<string, unknown>)[`ga-disable-${tagId}`]
+        ), id)).toBe(false)
+      }
+      const entries = await readDataLayer(page)
+      expect(entries.filter(entry => Array.isArray(entry) && entry[0] === 'consent' && entry[1] === 'update').at(-1)).toEqual([
+        'consent', 'update', {
+          analytics_storage: 'granted', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
+        },
+      ])
+      for (const id of [GTAG_ID, LEGACY_ID, ADS_ID]) expect(countConfigCalls(entries, id)).toBe(1)
+      await expect(googleScripts(page)).toHaveCount(2)
+      for (const script of scriptsBefore) expect(await script.evaluate(element => element.isConnected)).toBe(true)
+      expect(await readLoadCount(page)).toBe(1)
     })
-
-    await expect.poll(() => page.evaluate(id => (
-      (window as unknown as Record<string, unknown>)[`ga-disable-${id}`]
-    ), GTAG_ID)).toBe(true)
-    const entries = await readDataLayer(page)
-    expect(entries).toContainEqual(['consent', 'update', {
-      analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
-    }])
-    expect(countConfigCalls(entries, GTAG_ID)).toBe(1)
-    expect(await readLoadCount(page)).toBe(1)
-  })
+  }
 })
