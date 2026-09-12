@@ -861,6 +861,33 @@ describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
         })
 
         /**
+         * Inner-loop DoS: home-chm.vue does `v-for="widgetName in column"`. Vue treats a numeric
+         * `column` as a range, so an authored `columns: [50000000]` (outer array passes the old
+         * Array.isArray guard) would attempt tens of millions of widget mounts.
+         */
+        const hostileColumnEntries = [
+            ['a numeric column entry — inner v-for would render that many nodes', [50000000]],
+            ['a mixed list with one numeric entry', [['panorama'], 50000000]],
+            ['a string column entry — inner v-for would iterate per character', ['x'.repeat(1000)]],
+            ['a plain-object column entry', [{ length: 50000000 }]],
+            ['a non-string widget name inside an otherwise-shaped column', [['panorama', 42]]],
+            ['an empty-string widget name', [['']]],
+            ['too many outer columns', Array.from({ length: 33 }, () => ['panorama'])],
+            ['too many widgets in one column', [Array.from({ length: 33 }, () => 'panorama')]]
+        ] as const
+
+        for (const [label, columns] of hostileColumnEntries) {
+            it(`rejects ${label}, so it never reaches the template`, () => {
+                const theme = resolveTheme(config, { homePageWidgets: { columns } } as any)
+                const value = columnsOfWidgetComponents(theme)
+
+                expect(value).not.toBe(columns)
+                expect(Array.isArray(value) || value === undefined, `${label} -> ${String(value)}`).toBe(true)
+                expect(value).toEqual(networkTheme.homePageWidgets.columns)
+            })
+        }
+
+        /**
          * CHARACTERISATION TEST — pins behaviour as it is today, and asserts nothing about whether
          * it is desirable. An authored empty `columns` is a present, usable array, so it wins and
          * the home page renders no widget columns; the network leg is NOT restored. See ADR 0012
