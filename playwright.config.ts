@@ -4,11 +4,6 @@ import { defineConfig, devices } from '@playwright/test'
 import type { ConfigOptions } from '@nuxt/test-utils/playwright'
 
 import { getE2EBaseURL } from './tests/e2e/e2e-targets'
-import { assertE2EEnv } from './tests/e2e/assert-e2e-env'
-
-// Fail fast on a missing or incomplete .env. Without it `nuxt dev` still binds its port,
-// but every request throws and Playwright surfaces that only as a 120s webServer timeout.
-assertE2EEnv()
 
 export default defineConfig<ConfigOptions>({
   testDir: "./tests/e2e",
@@ -19,9 +14,11 @@ export default defineConfig<ConfigOptions>({
   workers: process.env.CI ? 1 : undefined,
   reporter: [["list"], ["html", { outputFolder: "./.playwright-report", open: "never" }]],
   
-  // Auto-start dev server before running tests
+  // Auto-start dev server before running tests.
+  // Fail fast on missing or incomplete env vars before nuxt dev starts, while allowing
+  // existing healthy servers to be reused when reuseExistingServer is active.
   webServer: {
-    command: 'yarn nuxt dev --host e2e.localhost --port 3330',
+    command: 'node ./tests/e2e/assert-e2e-env.ts && yarn nuxt dev --host e2e.localhost --port 3330',
     url: 'http://e2e.localhost:3330',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000, // 2 minutes for server to start and warm up
