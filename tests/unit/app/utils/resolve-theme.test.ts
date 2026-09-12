@@ -688,6 +688,34 @@ describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
             expect(() => resolveTheme(config, undefined)).not.toThrow()
             expect(resolveTheme(config, undefined).megaMenu.maxColumns).toBe(3)
         })
+
+        /**
+         * The three-key denylist is not enough. Any other Object.prototype name still reaches
+         * CONTRACT_LEAVES[group] / LEAF_VALIDATORS[group][leaf] as an inherited lookup and crashes
+         * the page render. Own-property (or null-prototype) table access closes the class; benign
+         * opaque keys like a top-level `toString` group must still pass through.
+         */
+        it('survives a top-level toString group via own-property contract lookup, and preserves it as opaque', () => {
+            const theme = resolveTheme(siteConfig, hostile('{"toString":{"label":"x"},"color":{"primary":"#7b6f82"}}'))
+
+            expect(theme.color.primary).toBe('#7b6f82')
+            expect(theme.toString).toEqual({ label: 'x' })
+        })
+
+        it('survives a top-level valueOf group via own-property contract lookup', () => {
+            const theme = resolveTheme(siteConfig, hostile('{"valueOf":{"label":"x"},"color":{"primary":"#7b6f82"}}'))
+
+            expect(theme.color.primary).toBe('#7b6f82')
+            expect(theme.valueOf).toEqual({ label: 'x' })
+        })
+
+        it('survives a megaMenu.valueOf leaf via own-property validator lookup, and still resolves', () => {
+            const theme = resolveTheme(siteConfig, hostile('{"megaMenu":{"valueOf":"x","maxColumns":4}}'))
+
+            expect(theme.megaMenu.maxColumns).toBe(4)
+            expect(Object.prototype.hasOwnProperty.call(theme.megaMenu, 'valueOf')).toBe(true)
+            expect(theme.megaMenu.valueOf).toBe('x')
+        })
     })
 
     describe('effective-value fixture cases', () => {
