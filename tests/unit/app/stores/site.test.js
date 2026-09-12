@@ -22,7 +22,7 @@ afterEach(() => vi.unstubAllGlobals())
 function initialize(overrides = {}) {
   const store = useSiteStore()
   store.initialize({
-    locale: 'en', siteCode: 'seed', baseHost: 'example.test', env: 'production',
+    locale: 'en', siteCode: 'seed', baseHost: 'example.test', env: 'prod',
     multiSiteCode: 'test', config: { defaultLocale: 'en', locales: ['en', 'fr'] },
     ...overrides,
   })
@@ -31,12 +31,12 @@ function initialize(overrides = {}) {
 
 describe('site store hosts', () => {
   it.each([
-    ['production', 'custom.example.test', 'https://custom.example.test', 'custom.example.test'],
-    ['production', '', 'https://seed.example.test', ''],
-    ['production', undefined, 'https://seed.example.test', ''],
+    ['prod', 'custom.example.test', 'https://custom.example.test', 'custom.example.test'],
+    ['prod', '', 'https://seed.example.test', ''],
+    ['prod', undefined, 'https://seed.example.test', ''],
     ['dev', 'custom.example.test', 'https://seed.example.test', ''],
     ['stg', 'custom.example.test', 'https://seed.example.test', ''],
-    ['prod', 'custom.example.test', 'https://seed.example.test', ''],
+    ['production', 'custom.example.test', 'https://seed.example.test', ''],
   ])('initializes env=%s, redirect=%s without changing host or bare redirect', (env, redirect, host, bareRedirect) => {
     const store = initialize({ env, config: { redirect, defaultLocale: 'en', locales: ['en', 'fr'] } })
 

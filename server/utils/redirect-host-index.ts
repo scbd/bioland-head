@@ -19,7 +19,7 @@ function isRedirectRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isRedirectHostname(value: unknown): value is string {
-  return typeof value === "string" && value.length > 0 && !/[:/\s]/.test(value);
+  return typeof value === "string" && normalizeRedirectHost(value) === value;
 }
 
 function isRedirectEntries(value: unknown): value is RedirectEntries {
@@ -45,11 +45,11 @@ const fetchRedirectIndex = cachedFunction(async (scope: RedirectIndexScope): Pro
     if (!siteCode || !isRedirectRecord(site)) throw new Error("Invalid DMSM Site record");
     const { redirect } = site;
     if (redirect === undefined || redirect === "") continue;
-    if (!isRedirectHostname(redirect)) {
+    const host = normalizeRedirectHost(redirect);
+    if (!host) {
       consola.error({ message: "Invalid redirect Host", siteCode, redirect });
       continue;
     }
-    const host = redirect.toLowerCase();
     owners.set(host, [...(owners.get(host) || []), siteCode]);
   }
   const index = new Map<string, string>();

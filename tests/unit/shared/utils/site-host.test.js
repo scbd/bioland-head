@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { getCanonicalHost, getGeneratedHostname, normalizeRedirectHost } from '~/shared/utils/site-host'
 
 const GENERATED = 'https://seed.example.test'
-const canonical = (redirect, env = 'production') =>
+const canonical = (redirect, env = 'prod') =>
   getCanonicalHost({ siteCode: 'seed', baseHost: 'example.test', env, redirect })
 
 describe('getGeneratedHostname', () => {
@@ -19,15 +19,28 @@ describe('getGeneratedHostname', () => {
 })
 
 describe('getCanonicalHost', () => {
+  // Three explicit gate-outcome cases (p03-01):
+  it('env=prod with redirect set returns the redirect Host', () => {
+    expect(canonical('custom.example.test', 'prod')).toBe('https://custom.example.test')
+  })
+
+  it('env=prod with no redirect returns the generated Host', () => {
+    expect(canonical(undefined, 'prod')).toBe(GENERATED)
+  })
+
+  it('env=dev with redirect set returns the generated Host (gate stays closed)', () => {
+    expect(canonical('custom.example.test', 'dev')).toBe(GENERATED)
+  })
+
   it.each([
-    ['production', 'custom.example.test', 'https://custom.example.test'],
-    ['production', '', GENERATED],
-    ['production', undefined, GENERATED],
+    ['prod', 'custom.example.test', 'https://custom.example.test'],
+    ['prod', '', GENERATED],
+    ['prod', undefined, GENERATED],
     ['dev', 'custom.example.test', GENERATED],
     ['stg', 'custom.example.test', GENERATED],
-    ['prod', 'custom.example.test', GENERATED],
+    ['production', 'custom.example.test', GENERATED],
     ['Production', 'custom.example.test', GENERATED],
-  ])('preserves the literal gate for env=%s, redirect=%s', (env, redirect, expected) => {
+  ])('gate outcome for env=%s, redirect=%s', (env, redirect, expected) => {
     expect(canonical(redirect, env)).toBe(expected)
   })
 

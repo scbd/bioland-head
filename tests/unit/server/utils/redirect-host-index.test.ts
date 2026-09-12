@@ -110,7 +110,7 @@ describe('redirect Host index through real serialized Nitro cache', () => {
     for (const [name, fn] of Object.entries({ defineEventHandler, getRequestHost, getRequestHeader, getQuery, parseCookies, createError })) vi.stubGlobal(name, fn)
     vi.stubGlobal('resolveSiteCodeByHost', resolve)
     fetchFixture.mockImplementation(async (url) => {
-      if (url === 'https://dmsm.example.test/config/prod/bl2') return payload()
+      if (url === 'https://dmsm.example.test/config/prod/bl2') return payload('be', 'Chm.Example.Gov.')
       if (url === 'https://dmsm.example.test/config/prod/bl2/be') return { locales: ['en'], defaultLocale: 'en' }
       throw new Error('Unexpected fixture URL')
     })
@@ -207,7 +207,7 @@ describe('redirect Host index through real serialized Nitro cache', () => {
     expect(await resolve('chm.example.gov')).toBe('be')
   })
 
-  it.each([{}, null, 'invalid', [null], [['chm.example.gov']], [['chm.example.gov', 'bad', 'extra']], [['chm.example.gov', 4]], [['chm.example.gov', '']], [['', 'bad']], [['CHM.EXAMPLE.GOV', 'bad']], [['bad.example:443', 'bad']], [['chm.example.gov', 'bad'], ['chm.example.gov', 'other']]])('validates the entire persisted tuple representation before rehydration: %j', async (value) => {
+  it.each([{}, null, 'invalid', [null], [['chm.example.gov']], [['chm.example.gov', 'bad', 'extra']], [['chm.example.gov', 4]], [['chm.example.gov', '']], [['', 'bad']], [['CHM.EXAMPLE.GOV', 'bad']], [['chm.example.gov.', 'bad']], [['bad.example:443', 'bad']], [['chm.example.gov', 'bad'], ['chm.example.gov', 'other']]])('validates the entire persisted tuple representation before rehydration: %j', async (value) => {
     const resolve = await importFresh()
     expect(await resolve('chm.example.gov')).toBe('be')
     await drain()
@@ -268,6 +268,29 @@ describe('redirect Host index through real serialized Nitro cache', () => {
     Object.assign(runtime, { env: 'stg', multiSiteCode: 'bsl' })
     await expect(resolve('chm.example.gov')).resolves.toBeNull()
     await expect(restarted('chm.example.gov')).resolves.toBeNull()
+  })
+
+  it('resolves the canonical hostname of an accepted trailing-dot redirect', async () => {
+    const redirect = 'Chm.Example.Gov.'
+    fetchFixture.mockResolvedValue(payload('be', redirect))
+    const resolve = await importFresh()
+    const canonical = new URL(siteHost.getCanonicalHost({ siteCode: 'be', baseHost: 'generated.example.test', env: 'prod', redirect })).hostname
+
+    expect(await resolve(canonical)).toBe('be')
+    await drain()
+    expect(await (await importFresh())(canonical)).toBe('be')
+  })
+
+  it('rejects equivalent trailing-dot owners instead of selecting another Site', async () => {
+    const redirect = 'Chm.Example.Gov.'
+    fetchFixture.mockResolvedValue({ sites: { be: { redirect }, fr: { redirect: 'chm.example.gov' } } })
+    const resolve = await importFresh()
+    const canonical = new URL(siteHost.getCanonicalHost({ siteCode: 'be', baseHost: 'generated.example.test', env: 'prod', redirect })).hostname
+
+    expect(await resolve(canonical)).toBeNull()
+    await drain()
+    expect(await (await importFresh())(canonical)).toBeNull()
+    expect(errors).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ host: canonical, siteCodes: ['be', 'fr'] }))
   })
 
   it.each(['https://bad.example', 'bad.example/path', 'bad.example:443', ' bad.example', 'bad. example', 'bad.example\n', 123, false, null, {}, ['bad.example']])('drops and logs invalid redirect %j without losing valid Sites', async (redirect) => {
