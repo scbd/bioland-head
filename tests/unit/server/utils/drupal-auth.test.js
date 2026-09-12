@@ -771,7 +771,7 @@ describe('useDrupalLogin', () => {
       })
       // Exercise the real shared gate in both environments, not a copied implementation.
       globalThis.getCanonicalHost = getCanonicalHost
-      globalThis.getCachedDmsmConfig.mockResolvedValue({ redirect: 'chm.example.test' })
+      globalThis.getCachedDmsmConfig.mockResolvedValue({ redirect: 'chm.example.gov' })
 
       const useDrupalLogin = await importFresh()
       const devAgent = await useDrupalLogin('seed')
@@ -788,7 +788,7 @@ describe('useDrupalLogin', () => {
 
       // A new POST must have fired - the old dev-env cookie jar must NOT have been reused
       expect(postCalls).toHaveLength(2)
-      expect(postCalls[1]).toBe('https://chm.example.test/user/login?_format=json')
+      expect(postCalls[1]).toBe('https://chm.example.gov/user/login?_format=json')
       // The prod agent is a distinct object from the dev agent
       expect(prodAgent).not.toBe(devAgent)
     })

@@ -97,6 +97,12 @@ export function normalizeRedirectHost(redirect?: unknown): string | null {
  * valid bare hostname; otherwise returns the generated Host.
  * An unusable `redirect` falls back to the generated Host, matching the
  * existing "no usable DMSM config" degradation rather than throwing.
+ *
+ * A redirect under `.${baseHost}` that is not this Site's own generated host is
+ * also unusable: inbound suffix routing resolves `*.${baseHost}` via
+ * `extractSiteCodeFromHost` before the reverse index, so Site A's redirect of
+ * `site-b.${baseHost}` would become Site A's canonical origin while traffic to
+ * that hostname always lands on Site B.
  * @param params - Site code, base host, environment and optional bare redirect hostname.
  * @returns The redirect HTTPS Host in prod, otherwise the generated Host.
  */
@@ -107,6 +113,12 @@ export function getCanonicalHost(params: {
   redirect?: string
 }): string {
   const redirectHost = params.env === "prod" ? normalizeRedirectHost(params.redirect) : null
+  if (!redirectHost) return getGeneratedHostname(params.siteCode, params.baseHost)
 
-  return redirectHost ? `https://${redirectHost}` : getGeneratedHostname(params.siteCode, params.baseHost)
+  const base = params.baseHost.toLowerCase()
+  if (base && redirectHost.endsWith(`.${base}`) && redirectHost !== `${params.siteCode.toLowerCase()}.${base}`) {
+    return getGeneratedHostname(params.siteCode, params.baseHost)
+  }
+
+  return `https://${redirectHost}`
 }

@@ -294,12 +294,12 @@ describe('Context Utilities', () => {
 
       try {
         for (const [env, redirect, host] of [
-          ['prod', 'custom.example.test', 'https://custom.example.test'],
+          ['prod', 'custom.example.gov', 'https://custom.example.gov'],
           ['prod', '', 'https://seed.example.test'],
           ['prod', undefined, 'https://seed.example.test'],
-          ['dev', 'custom.example.test', 'https://seed.example.test'],
-          ['stg', 'custom.example.test', 'https://seed.example.test'],
-          ['production', 'custom.example.test', 'https://seed.example.test'],
+          ['dev', 'custom.example.gov', 'https://seed.example.test'],
+          ['stg', 'custom.example.gov', 'https://seed.example.test'],
+          ['production', 'custom.example.gov', 'https://seed.example.test'],
           ['prod', '169.254.169.254', 'https://seed.example.test'],
           ['prod', 'user:password@example.com', 'https://seed.example.test'],
         ]) {

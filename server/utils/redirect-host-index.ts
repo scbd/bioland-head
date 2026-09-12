@@ -40,6 +40,7 @@ const fetchRedirectIndex = cachedFunction(async (scope: RedirectIndexScope): Pro
   const options = $fetchBaseOptions({ timeout: DMSM_INDEX_TIMEOUT_MS }) as Parameters<typeof $fetch>[1];
   const data = await $fetch<unknown>(`${dmsm}/config/${env}/${multiSiteCode}`, options);
   if (!isRedirectRecord(data) || !isRedirectRecord(data.sites)) throw new Error("Invalid DMSM all-sites response");
+  const baseHost = String(useRuntimeConfig().public.baseHost || "").toLowerCase();
   const owners = new Map<string, string[]>();
   for (const [siteCode, site] of Object.entries(data.sites)) {
     if (!siteCode || !isRedirectRecord(site)) throw new Error("Invalid DMSM Site record");
@@ -48,6 +49,12 @@ const fetchRedirectIndex = cachedFunction(async (scope: RedirectIndexScope): Pro
     const host = normalizeRedirectHost(redirect);
     if (!host) {
       consola.error({ message: "Invalid redirect Host", siteCode, redirect });
+      continue;
+    }
+    // Same rule as getCanonicalHost: a redirect under `.${baseHost}` that is not
+    // this Site's generated host aliases another tenant's suffix-routed origin.
+    if (baseHost && host.endsWith(`.${baseHost}`) && host !== `${siteCode.toLowerCase()}.${baseHost}`) {
+      consola.error({ message: "Redirect aliases generated Host", siteCode, redirect, host });
       continue;
     }
     owners.set(host, [...(owners.get(host) || []), siteCode]);

@@ -46,7 +46,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(new Date('2026-09-10T00:00:00Z'))
   storage = createStorage()
-  runtime = { env: 'prod', multiSiteCode: 'bl2', dmsm: 'https://dmsm.example.test' }
+  runtime = { env: 'prod', multiSiteCode: 'bl2', dmsm: 'https://dmsm.example.test', baseHost: 'generated.example.test' }
   fetchFixture = vi.fn().mockResolvedValue(payload())
   errors = vi.fn()
   vi.stubGlobal('useRuntimeConfig', () => ({ public: runtime }))
@@ -291,6 +291,26 @@ describe('redirect Host index through real serialized Nitro cache', () => {
     await drain()
     expect(await (await importFresh())(canonical)).toBeNull()
     expect(errors).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ host: canonical, siteCodes: ['be', 'fr'] }))
+  })
+
+  it('rejects a redirect that aliases another Site\'s generated Host', async () => {
+    fetchFixture.mockResolvedValue({
+      sites: {
+        be: { redirect: 'fr.generated.example.test' },
+        fr: { redirect: 'chm.example.gov' },
+        valid: { redirect: 'unique.example' },
+      },
+    })
+    const resolve = await importFresh()
+
+    expect(await resolve('fr.generated.example.test')).toBeNull()
+    expect(await resolve('chm.example.gov')).toBe('fr')
+    expect(await resolve('unique.example')).toBe('valid')
+    expect(errors).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+      message: 'Redirect aliases generated Host',
+      siteCode: 'be',
+      host: 'fr.generated.example.test',
+    }))
   })
 
   it.each(['https://bad.example', 'bad.example/path', 'bad.example:443', ' bad.example', 'bad. example', 'bad.example\n', 123, false, null, {}, ['bad.example']])('drops and logs invalid redirect %j without losing valid Sites', async (redirect) => {
