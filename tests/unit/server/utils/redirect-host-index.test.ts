@@ -293,6 +293,43 @@ describe('redirect Host index through real serialized Nitro cache', () => {
     expect(errors).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ host: canonical, siteCodes: ['be', 'fr'] }))
   })
 
+  describe.each(['prod', 'production'])('localhost aliases in env=%s', (env) => {
+    it.each(['other.localhost', 'OTHER.LOCALHOST', 'OtHeR.LoCaLhOsT.', 'nested.other.localhost'])('never indexes %s on fetch, restart or outage fallback', async (redirect) => {
+      runtime.env = env
+      fetchFixture.mockResolvedValue({ sites: { ...payload().sites, seed: { redirect } } })
+      const resolve = await importFresh()
+      const alias = redirect.toLowerCase().replace(/\.$/, '')
+
+      expect(await resolve(alias)).toBeNull()
+      expect(await resolve('chm.example.gov')).toBe('be')
+      await drain()
+      const restarted = await importFresh()
+      expect(await restarted(alias)).toBeNull()
+      expect(await restarted('chm.example.gov')).toBe('be')
+      vi.spyOn(storage, 'getItem').mockRejectedValue(new Error('Fixture cache unavailable'))
+      fetchFixture.mockRejectedValue(new Error('Fixture DMSM unavailable'))
+      expect(await restarted(alias)).toBeNull()
+      expect(await restarted('chm.example.gov')).toBe('be')
+    })
+
+    it('rejects persisted localhost aliases rather than rehydrating an old mapping', async () => {
+      runtime.env = env
+      const resolve = await importFresh()
+      expect(await resolve('chm.example.gov')).toBe('be')
+      await drain()
+      const key = (await storage.getKeys())[0]
+      const entry = await storage.getItem<Record<string, unknown>>(key)
+      await storage.setItem(key, { ...entry, value: [['chm.example.gov', 'be'], ['other.localhost', 'seed']] })
+      fetchFixture.mockRejectedValue(new Error('Fixture DMSM unavailable'))
+      const restarted = await importFresh()
+
+      expect(await restarted('other.localhost')).toBeNull()
+      expect(await restarted('chm.example.gov')).toBeNull()
+      expect(await resolve('other.localhost')).toBeNull()
+      expect(await resolve('chm.example.gov')).toBe('be')
+    })
+  })
+
   it('rejects a redirect that aliases another Site\'s generated Host', async () => {
     fetchFixture.mockResolvedValue({
       sites: {

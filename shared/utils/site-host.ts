@@ -77,6 +77,9 @@ export function normalizeRedirectHost(redirect?: unknown): string | null {
 
   const candidate = redirect.toLowerCase().replace(/\.$/, "")
 
+  // Localhost is loopback and suffix-routed independently of the configured base host.
+  if (candidate === "localhost" || candidate.endsWith(".localhost")) return null
+
   if (!candidate || candidate.length > MAX_HOSTNAME_LENGTH || !BARE_HOSTNAME.test(candidate)) return null
 
   let parsed: URL
