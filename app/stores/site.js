@@ -25,7 +25,7 @@ export const useSiteStore = defineStore('site', {
             this.set('config', config);
             this.set('logo',   this.getLogoUri);
             this.set('name',   siteName);
-            this.set('redirect', env === 'production'? config?.redirect || '' : '');
+            this.set('redirect', env === 'prod'? config?.redirect || '' : '');
             this.set('homePath', homePath);
 
             if(biolandSettings)

@@ -42,7 +42,6 @@ const MAX_HOSTNAME_LENGTH = 253
 
 /**
  * Build the generated Host without encoding its components.
- * The canonical redirect gate stays literal `production` until p03-01.
  * @param siteCode - Site identifier.
  * @param baseHost - Multisite base hostname.
  * @returns The generated HTTPS Host.
@@ -93,11 +92,13 @@ export function normalizeRedirectHost(redirect?: unknown): string | null {
 }
 
 /**
- * Compute the canonical Host; the gate stays literal `production` until p03-01.
+ * Compute the canonical Host for a Site.
+ * Returns the redirect HTTPS Host when `env === 'prod'` and `redirect` is a
+ * valid bare hostname; otherwise returns the generated Host.
  * An unusable `redirect` falls back to the generated Host, matching the
  * existing "no usable DMSM config" degradation rather than throwing.
  * @param params - Site code, base host, environment and optional bare redirect hostname.
- * @returns The redirect HTTPS Host in production, otherwise the generated Host.
+ * @returns The redirect HTTPS Host in prod, otherwise the generated Host.
  */
 export function getCanonicalHost(params: {
   siteCode: string
@@ -105,7 +106,7 @@ export function getCanonicalHost(params: {
   env: string
   redirect?: string
 }): string {
-  const redirectHost = params.env === "production" ? normalizeRedirectHost(params.redirect) : null
+  const redirectHost = params.env === "prod" ? normalizeRedirectHost(params.redirect) : null
 
   return redirectHost ? `https://${redirectHost}` : getGeneratedHostname(params.siteCode, params.baseHost)
 }

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { getCanonicalHost } from '../../../../shared/utils/site-host'
 
 // server/utils/drupal/drupal-auth.js relies on Nuxt auto-imports (useRuntimeConfig,
 // consola, createError) and on superagent. Both are stubbed here so the login
@@ -753,6 +754,43 @@ describe('useDrupalLogin', () => {
       // and the session it failed to address is provably still cached
       expect(await useDrupalLogin('seed')).toBe(first)
       expect(postCalls).toHaveLength(1)
+    })
+  })
+
+  describe('cache-identity regression (p03-01 token flip, objection O27)', () => {
+    // Proves: a Drupal login cached under the generated-host identity (env=dev, gate closed)
+    // is NOT reused once the mocked runtime flips to env=prod with a redirect set.
+    // The session cache is keyed by canonical host; the flip changes the key, so the old
+    // cookie jar never reaches Drupal on the canonical (redirect) host.
+    it('does not reuse a dev-env generated-host session after flipping to prod+redirect', async () => {
+      // Phase 1: login under dev - redirect configured, but the gate stays closed.
+      globalThis.useRuntimeConfig = () => ({
+        apiUser:     'api-user@example.test',
+        apiUserPass: 'stub-pass',
+        public:      { baseHost: 'example.test', multiSiteCode: 'bl2', env: 'dev' },
+      })
+      // Exercise the real shared gate in both environments, not a copied implementation.
+      globalThis.getCanonicalHost = getCanonicalHost
+      globalThis.getCachedDmsmConfig.mockResolvedValue({ redirect: 'chm.example.test' })
+
+      const useDrupalLogin = await importFresh()
+      const devAgent = await useDrupalLogin('seed')
+      expect(postCalls).toEqual(['https://seed.example.test/user/login?_format=json'])
+
+      // Phase 2: flip runtime to prod + redirect set; canonical host is now the redirect host
+      globalThis.useRuntimeConfig = () => ({
+        apiUser:     'api-user@example.test',
+        apiUserPass: 'stub-pass',
+        public:      { baseHost: 'example.test', multiSiteCode: 'bl2', env: 'prod' },
+      })
+
+      const prodAgent = await useDrupalLogin('seed')
+
+      // A new POST must have fired - the old dev-env cookie jar must NOT have been reused
+      expect(postCalls).toHaveLength(2)
+      expect(postCalls[1]).toBe('https://chm.example.test/user/login?_format=json')
+      // The prod agent is a distinct object from the dev agent
+      expect(prodAgent).not.toBe(devAgent)
     })
   })
 })

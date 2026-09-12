@@ -26,12 +26,12 @@ afterEach(() => {
 
 describe('getDefaultLocale', () => {
   it.each([
-    ['production', 'custom.example.test', 'https://custom.example.test'],
-    ['production', '', 'https://seed.example.test'],
-    ['production', undefined, 'https://seed.example.test'],
+    ['prod', 'custom.example.test', 'https://custom.example.test'],
+    ['prod', '', 'https://seed.example.test'],
+    ['prod', undefined, 'https://seed.example.test'],
     ['dev', 'custom.example.test', 'https://seed.example.test'],
     ['stg', 'custom.example.test', 'https://seed.example.test'],
-    ['prod', 'custom.example.test', 'https://seed.example.test'],
+    ['production', 'custom.example.test', 'https://seed.example.test'],
   ])('preserves the language URL for env=%s, redirect=%s', async (env, redirect, host) => {
     runtime.public.env = env
 
@@ -46,6 +46,7 @@ describe('getDefaultLocale', () => {
   })
 
   it('retains the caller localizedHost rather than substituting the computed host', async () => {
+    runtime.public.env = 'prod'
     await getDefaultLocale({ siteCode: 'seed', config: { redirect: 'custom.example.test' }, localizedHost: 'https://language-source.example.test/fr' })
 
     expect(get).toHaveBeenCalledExactlyOnceWith('https://language-source.example.test/fr/jsonapi/configurable_language/configurable_language')

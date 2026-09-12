@@ -274,7 +274,7 @@ describe('Context Utilities', () => {
       expect((await contextModule.useRequestContext(eventFor({ host: `be.${baseHost}` }))).isBchSite).toBe(true)
     })
 
-    it.each([['prod', 'https://be.test.example.com'], ['production', 'https://redirect.example']])('preserves the literal production redirect gate in %s', async (env, host) => {
+    it.each([['prod', 'https://redirect.example'], ['production', 'https://be.test.example.com']])('gate opens on prod and stays closed on %s', async (env, host) => {
       runtime.env = env
       config.redirect = 'redirect.example'
       expect((await contextModule.useRequestContext(eventFor({ host: 'be.localhost' }))).host).toBe(host)
@@ -284,7 +284,7 @@ describe('Context Utilities', () => {
     // rejected DMSM redirect warns once. Adapted to the mocked-drupal harness:
     // settings come from the getSiteSettings mock, so the second fetch the
     // upstream test asserted on is gone.
-    it('should handle redirect in production', async () => {
+    it('handles redirect in prod (real token after p03-01 flip)', async () => {
       const canonicalHost = vi.spyOn(siteHost, 'getCanonicalHost')
       const error = vi.fn()
       const warn = vi.fn()
@@ -294,14 +294,14 @@ describe('Context Utilities', () => {
 
       try {
         for (const [env, redirect, host] of [
-          ['production', 'custom.example.test', 'https://custom.example.test'],
-          ['production', '', 'https://seed.example.test'],
-          ['production', undefined, 'https://seed.example.test'],
+          ['prod', 'custom.example.test', 'https://custom.example.test'],
+          ['prod', '', 'https://seed.example.test'],
+          ['prod', undefined, 'https://seed.example.test'],
           ['dev', 'custom.example.test', 'https://seed.example.test'],
           ['stg', 'custom.example.test', 'https://seed.example.test'],
-          ['prod', 'custom.example.test', 'https://seed.example.test'],
-          ['production', '169.254.169.254', 'https://seed.example.test'],
-          ['production', 'user:password@example.com', 'https://seed.example.test'],
+          ['production', 'custom.example.test', 'https://seed.example.test'],
+          ['prod', '169.254.169.254', 'https://seed.example.test'],
+          ['prod', 'user:password@example.com', 'https://seed.example.test'],
         ]) {
           config = { redirect, defaultLocale: 'fr', locales: ['fr'] }
           vi.stubGlobal('useRuntimeConfig', () => ({
@@ -318,6 +318,7 @@ describe('Context Utilities', () => {
         }
 
         // Rejected redirects warn once, and userinfo credentials are redacted.
+        // These warns fire only when env=prod (gate open) and the value is invalid.
         expect(warn).toHaveBeenCalledTimes(2)
         expect(warn).toHaveBeenCalledWith(
           'Ignoring unusable DMSM redirect for site seed: "169.254.169.254"',
