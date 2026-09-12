@@ -197,11 +197,6 @@ describe('resolveTheme', () => {
             expect(resolveTheme({ theme: { megaMenu: {} } } as any).megaMenu.maxRowsPerColumn).toBeUndefined()
         })
 
-        it('distinguishes an unset maxLangBeforeWrap from an authored 0', () => {
-            expect(resolveTheme({ theme: { i18n: {} } } as any).i18n.maxLangBeforeWrap).toBeUndefined()
-            expect(resolveTheme({ theme: { i18n: { maxLangBeforeWrap: 0 } } } as any).i18n.maxLangBeforeWrap).toBe(0)
-        })
-
         it('keeps an authored empty-string backGround.secondary rather than inheriting', () => {
             const theme = resolveTheme(withRunTime(networkTheme, { backGround: { secondary: '' } }) as any)
 
@@ -209,9 +204,28 @@ describe('resolveTheme', () => {
         })
     })
 
-    // The three leaves whose old reads used `||` AND whose falsy values break the render.
+    // The four leaves whose old reads used `||` AND whose falsy values break the render.
     // Contract: a falsy-but-present value falls through to the next leg, exactly as `||` did.
     describe('validated leaves', () => {
+        describe('i18n.maxLangBeforeWrap', () => {
+            it('falls through an unusable site value to the network leg', () => {
+                for (const authored of [0, '', false, null, -1]) {
+                    const theme = resolveTheme(withRunTime({ i18n: { maxLangBeforeWrap: 6 } }, { i18n: { maxLangBeforeWrap: authored } }) as any)
+
+                    expect(theme.i18n.maxLangBeforeWrap).toBe(6)
+                }
+            })
+
+            it('leaves maxLangBeforeWrap undefined when no leg supplies a usable value', () => {
+                expect(resolveTheme({ theme: { i18n: { maxLangBeforeWrap: 0 } } } as any).i18n.maxLangBeforeWrap).toBeUndefined()
+            })
+
+            it('keeps a usable authored value, including a numeric string', () => {
+                expect(resolveTheme({ theme: { i18n: { maxLangBeforeWrap: 3 } } } as any).i18n.maxLangBeforeWrap).toBe(3)
+                expect(resolveTheme({ theme: { i18n: { maxLangBeforeWrap: '4' } } } as any).i18n.maxLangBeforeWrap).toBe('4')
+            })
+        })
+
         describe('megaMenu.maxColumns', () => {
             it('never resolves to a value that would collapse the grid', () => {
                 for (const authored of [0, '', null, -3]) {

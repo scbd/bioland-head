@@ -54,13 +54,12 @@
  * Groups the resolver does not know about pass through untouched, so callers reading keys outside
  * the contract (for example `color.secondaryTextOver`, `homePageWidgets.news`) keep working.
  *
- * ## Presence, not truthiness — with three validated leaves
+ * ## Presence, not truthiness — with four validated leaves
  *
  * A leg supplies a leaf when that leaf is present (`!== undefined && !== null`), not when it is
- * truthy. `maxRowsPerColumn: 0` means "unlimited" and must not fall through to the next leg, and
- * an unset `maxLangBeforeWrap` must stay distinguishable from an authored `0`.
+ * truthy. `maxRowsPerColumn: 0` means "unlimited" and must not fall through to the next leg.
  *
- * Three leaves are the exception, because their pre-refactor reads used `||` AND a falsy-but-present
+ * Four leaves are the exception, because their pre-refactor reads used `||` AND a falsy-but-present
  * value breaks the render rather than meaning something. See `LEAF_VALIDATORS`. For those, a leg
  * supplies the leaf only when the value is also *usable*; otherwise it falls through to the next leg
  * exactly as the old `||` chain did. Every other leaf keeps the plain presence rule, including
@@ -149,6 +148,9 @@ const isUsableColor = value => typeof value === 'string' && value.trim() !== '';
 /** A column count that yields at least one column. `0` collapses the mega-menu grid to nothing. */
 const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(value) >= 1;
 
+/** A language limit that renders at least one language. `0` empties the menu and hides the bar. */
+const isUsableLanguageLimit = value => typeof value !== 'boolean' && Number.isFinite(Number(value)) && Number(value) >= 1;
+
 /**
  * Hard ceilings for `homePageWidgets.columns`. Real themes use three outer columns and a handful
  * of widget names each; these caps sit well above that while blocking editor-authored payloads that
@@ -194,7 +196,7 @@ const isUsableColumnList = value =>
  *
  * A leaf earns a validator when BOTH hold: its pre-refactor read used `||` (so falsy values
  * already fell through and no live site can be relying on one), and a falsy-but-present value
- * produces a broken render rather than a meaningful setting. That is three leaves — plus one
+ * produces a broken render rather than a meaningful setting. That is four leaves — plus one
  * type guard, `homePageWidgets.columns`, which is here because a wrong-typed value is a render
  * DoS rather than merely a broken setting (see `isUsableColumnList`).
  *
@@ -209,6 +211,9 @@ const isUsableColumnList = value =>
  *                       value, or an array whose entries are not bounded widget-name arrays,
  *                       reaching a `v-for` that Vue would iterate numerically or per character.
  *                       See `isUsableColumnList`.
+ * - `i18n.maxLangBeforeWrap` — was `||` at site.js:151. `0`, `''`, or `false` empties `limitedMenus`
+ *                       and leaves `otherMenus` hidden behind the `limitedMenus.length > 1` gate
+ *                       at language-bar.vue:18, causing all language selectors to vanish.
  *
  * Explicitly NOT validated, with reasons:
  * - `backGround.secondary` — its old read had no `||`, so `''` was already passed through and
@@ -216,14 +221,12 @@ const isUsableColumnList = value =>
  *   would be the regression, not the fix.
  * - `megaMenu.maxRowsPerColumn` / `horizontalCardMax` / `forums` — no `||` in the old reads, and
  *   `0` is a meaningful value ("unlimited") that must not fall through.
- * - `i18n.maxLangBeforeWrap` — `0` and `''` both mean "wrap immediately"; the language bar degrades
- *   gracefully (every language moves into the overflow dropdown) rather than breaking. See the
- *   contract note in the header comment for the *unset* case.
  */
 const LEAF_VALIDATORS = freezeOwnMap({
     color          : freezeOwnMap({ primary: isUsableColor, secondary: isUsableColor }),
     megaMenu       : freezeOwnMap({ maxColumns: isUsableColumnCount }),
-    homePageWidgets: freezeOwnMap({ columns: isUsableColumnList })
+    homePageWidgets: freezeOwnMap({ columns: isUsableColumnList }),
+    i18n           : freezeOwnMap({ maxLangBeforeWrap: isUsableLanguageLimit })
 });
 
 const isPlainObject = value => typeof value === 'object' && value !== null && !Array.isArray(value);
