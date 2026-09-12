@@ -26,13 +26,12 @@
  * the contract (for example `color.secondaryTextOver`, `homePageWidgets.columns`,
  * `megaMenu.forums`) keep working.
  *
- * ## Presence, not truthiness — with three validated leaves
+ * ## Presence, not truthiness — with four validated leaves
  *
  * A leg supplies a leaf when that leaf is present (`!== undefined && !== null`), not when it is
- * truthy. `maxRowsPerColumn: 0` means "unlimited" and must not fall through to the next leg, and
- * an unset `maxLangBeforeWrap` must stay distinguishable from an authored `0`.
+ * truthy. `maxRowsPerColumn: 0` means "unlimited" and must not fall through to the next leg.
  *
- * Three leaves are the exception, because their pre-refactor reads used `||` AND a falsy-but-present
+ * Four leaves are the exception, because their pre-refactor reads used `||` AND a falsy-but-present
  * value breaks the render rather than meaning something. See `LEAF_VALIDATORS`. For those, a leg
  * supplies the leaf only when the value is also *usable*; otherwise it falls through to the next leg
  * exactly as the old `||` chain did. Every other leaf keeps the plain presence rule, including
@@ -102,12 +101,15 @@ const isUsableColor = value => typeof value === 'string' && value.trim() !== '';
 /** A column count that yields at least one column. `0` collapses the mega-menu grid to nothing. */
 const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(value) >= 1;
 
+/** A language limit that renders at least one language. `0` empties the menu and hides the bar. */
+const isUsableLanguageLimit = value => typeof value !== 'boolean' && Number.isFinite(Number(value)) && Number(value) >= 1;
+
 /**
  * Per-leaf validators — the deliberate exceptions to the presence rule.
  *
  * A leaf earns a validator only when BOTH hold: its pre-refactor read used `||` (so falsy values
  * already fell through and no live site can be relying on one), and a falsy-but-present value
- * produces a broken render rather than a meaningful setting. That is exactly three leaves:
+ * produces a broken render rather than a meaningful setting. That is exactly four leaves:
  *
  * - `color.primary`   — was `|| '#009edb'` at site.js:140. `''` voids every `solid ${primary}`
  *                       border and `background: ${primary}` declaration that consumes it.
@@ -116,6 +118,9 @@ const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(va
  * - `megaMenu.maxColumns` — was `|| 5` at schema-org.js:1152 and drop-down.vue:63. `0` makes
  *                       `organizeSectionsIntoRows` collapse every section into one unbounded row
  *                       (`Math.min(span, 0) === 0`, so the wrap branch never fires).
+ * - `i18n.maxLangBeforeWrap` — was `||` at site.js:151. `0`, `''`, or `false` empties `limitedMenus`
+ *                       and leaves `otherMenus` hidden behind the `limitedMenus.length > 1` gate
+ *                       at language-bar.vue:18, causing all language selectors to vanish.
  *
  * Explicitly NOT validated, with reasons:
  * - `backGround.secondary` — its old read had no `||`, so `''` was already passed through and
@@ -123,13 +128,11 @@ const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(va
  *   would be the regression, not the fix.
  * - `megaMenu.maxRowsPerColumn` / `horizontalCardMax` / `forums` — no `||` in the old reads, and
  *   `0` is a meaningful value ("unlimited") that must not fall through.
- * - `i18n.maxLangBeforeWrap` — `0` and `''` both mean "wrap immediately"; the language bar degrades
- *   gracefully (every language moves into the overflow dropdown) rather than breaking. See the
- *   contract note in the header comment for the *unset* case.
  */
 const LEAF_VALIDATORS = Object.freeze({
     color   : { primary: isUsableColor, secondary: isUsableColor },
-    megaMenu: { maxColumns: isUsableColumnCount }
+    megaMenu: { maxColumns: isUsableColumnCount },
+    i18n    : { maxLangBeforeWrap: isUsableLanguageLimit }
 });
 
 const isPlainObject = value => typeof value === 'object' && value !== null && !Array.isArray(value);
