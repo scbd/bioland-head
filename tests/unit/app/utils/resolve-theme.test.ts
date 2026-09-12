@@ -629,6 +629,64 @@ describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
         })
     })
 
+    describe('hero.primary slots — hexToRgb boundary', () => {
+        /**
+         * Verbatim transcription of the consumers:
+         *   app/components/page/header/hero-image.vue:106
+         *   app/components/cards/media/hero.vue:60
+         *     const hexToRgb = hex => hex?.replace(...)
+         * A numeric or object slot throws TypeError during render (SSR included). Only a usable
+         * colour string may occupy an authored slot; anything else falls through to the derived
+         * colour for that slot.
+         */
+        const hexToRgb = (hex: unknown) => (hex as any)?.replace?.(
+            /^#?([a-f\d])([a-f\d])([a-f\d])$/i,
+            (_m: string, r: string, g: string, b: string) => '#' + r + r + g + g + b + b
+        )
+
+        const hostileSlots = [
+            ['a number', 42],
+            ['an object', { length: 1 }],
+            ['a boolean', true],
+            ['an empty string', ''],
+            ['whitespace', '   ']
+        ] as const
+
+        for (const [label, slot] of hostileSlots) {
+            it(`rejects ${label} in an authored slot so hexToRgb cannot throw`, () => {
+                const theme = resolveTheme(siteConfig, {
+                    color: { primary: '#7b6f82', secondary: '#889262' },
+                    hero : { primary: [slot, '#ffffff'] }
+                } as any)
+
+                expect(theme.hero.primary[0]).not.toBe(slot)
+                expect(theme.hero.primary[0]).toBe('#7b6f82')
+                expect(theme.hero.primary[1]).toBe('#ffffff')
+                expect(() => hexToRgb(theme.hero.primary[0])).not.toThrow()
+                expect(typeof theme.hero.primary[0]).toBe('string')
+                expect((theme.hero.primary[0] as string).trim()).not.toBe('')
+            })
+        }
+
+        it('keeps a usable authored pair over the derived colours', () => {
+            const theme = resolveTheme(siteConfig, {
+                color: { primary: '#7b6f82', secondary: '#889262' },
+                hero : { primary: ['#111111', '#222222'] }
+            })
+
+            expect(theme.hero.primary).toEqual(['#111111', '#222222'])
+        })
+
+        it('falls through only the unusable slot, keeping its usable sibling', () => {
+            const theme = resolveTheme(siteConfig, {
+                color: { primary: '#7b6f82', secondary: '#889262' },
+                hero : { primary: ['#abcdef', 99] }
+            } as any)
+
+            expect(theme.hero.primary).toEqual(['#abcdef', '#889262'])
+        })
+    })
+
     describe('untrusted input — prototype-aliasing keys are dropped', () => {
 
         /**

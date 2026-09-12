@@ -84,7 +84,9 @@
  * every leg. An authored hero passes through untouched: live prod site `be` carries
  * `hero.primary[1] = "#CBB279"`, which is not its `color.secondary`, so an always-derive rule
  * would visibly change that site. A partially authored hero keeps its authored slots and has only
- * the missing slots filled from the derived pair.
+ * the missing slots filled from the derived pair. An authored slot that is present but not a usable
+ * colour string (number, object, `''`, …) is treated like a missing slot: `hero-image.vue` and
+ * `cards/media/hero.vue` call `.replace` on each entry, so a non-string would throw during render.
  *
  * ## Totality
  *
@@ -284,7 +286,9 @@ const resolveOpaqueGroup = (legs, group) => {
 };
 
 /**
- * Derive-when-absent hero. Fills only the slots no leg authored.
+ * Derive-when-absent hero. Fills only the slots no leg authored with a usable colour string.
+ * A present-but-unusable slot (e.g. `42`) falls through to the derived colour for that index —
+ * the hero consumers call `.replace` on each entry, so a non-string is a render crash.
  * @param {Array|undefined} authored - the merged `hero.primary`, if any leg supplied one.
  * @param {object} color - the resolved color group.
  */
@@ -292,7 +296,7 @@ const resolveHeroPrimary = (authored, color) => {
     const derived = [color.primary, color.secondary];
     const source  = Array.isArray(authored) ? authored : [];
 
-    return [0, 1].map(i => (isPresent(source[i]) ? source[i] : derived[i]));
+    return [0, 1].map(i => (isUsableColor(source[i]) ? source[i] : derived[i]));
 };
 
 export function resolveTheme(config, authoredTheme) {
