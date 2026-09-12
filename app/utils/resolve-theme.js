@@ -143,13 +143,44 @@ const isUsableColor = value => typeof value === 'string' && value.trim() !== '';
 const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(value) >= 1;
 
 /**
+ * Hard ceilings for `homePageWidgets.columns`. Real themes use three outer columns and a handful
+ * of widget names each; these caps sit well above that while blocking editor-authored payloads that
+ * would expand into millions of `v-for` iterations on the home page.
+ */
+const MAX_HOME_PAGE_COLUMNS = 32;
+const MAX_WIDGETS_PER_COLUMN = 32;
+
+/**
+ * A non-empty widget name string. `page/home-page-widget-selection.vue` requires `is: String`;
+ * unknown names render an empty slot (safe), but a non-string reaches the same prop path.
+ */
+const isUsableWidgetName = value => typeof value === 'string' && value.trim() !== '';
+
+/**
+ * One home-page column: a bounded array of usable widget names. The inner
+ * `v-for="widgetName in column"` in `page/home-chm.vue` treats a *number* as a range and a
+ * *string* as characters, so a numeric/string entry is the same class of render DoS as a
+ * non-array outer `columns`.
+ */
+const isUsableColumn = value =>
+    Array.isArray(value)
+    && value.length <= MAX_WIDGETS_PER_COLUMN
+    && value.every(isUsableWidgetName);
+
+/**
  * The home page renders one grid column per entry of `homePageWidgets.columns`
  * (`v-for="(column, i) in columnsOfWidgetComponents"` in `page/home-chm.vue`). Vue's `v-for` over a
  * *number* renders that many nodes and over a *string* iterates per character, so an authored
- * `columns: 50000000` would hang or OOM the home page, SSR included. Only an array is a usable
- * column list; anything else falls through to the next leg.
+ * `columns: 50000000` would hang or OOM the home page, SSR included. The same DoS applies one level
+ * deeper: `columns: [50000000]` is an outer array (passes a bare `Array.isArray` check) but the
+ * inner `v-for="widgetName in column"` then iterates fifty million times. Only a bounded array of
+ * bounded widget-name arrays is usable; anything else falls through to the next leg. An empty
+ * outer array (`[]`) remains usable — ratified 2026-08-24, "no widgets".
  */
-const isUsableColumnList = value => Array.isArray(value);
+const isUsableColumnList = value =>
+    Array.isArray(value)
+    && value.length <= MAX_HOME_PAGE_COLUMNS
+    && value.every(isUsableColumn);
 
 /**
  * Per-leaf validators — the deliberate exceptions to the presence rule.
@@ -168,8 +199,9 @@ const isUsableColumnList = value => Array.isArray(value);
  *                       `organizeSectionsIntoRows` collapse every section into one unbounded row
  *                       (`Math.min(span, 0) === 0`, so the wrap branch never fires).
  * - `homePageWidgets.columns` — not a `||` case: it is a type guard against a non-array authored
- *                       value reaching a `v-for`, which Vue would iterate numerically or per
- *                       character. See `isUsableColumnList`.
+ *                       value, or an array whose entries are not bounded widget-name arrays,
+ *                       reaching a `v-for` that Vue would iterate numerically or per character.
+ *                       See `isUsableColumnList`.
  *
  * Explicitly NOT validated, with reasons:
  * - `backGround.secondary` — its old read had no `||`, so `''` was already passed through and
