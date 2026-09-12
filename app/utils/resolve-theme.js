@@ -274,7 +274,9 @@ const resolveLeaf = (legs, group, leaf) => {
     const isUsable = LEAF_VALIDATORS[group]?.[leaf];
 
     for (const leg of legs) {
-        const value = isPlainObject(leg?.[group]) ? leg[group][leaf] : undefined;
+        if (!Object.hasOwn(leg, group)) continue;
+
+        const value = isPlainObject(leg?.[group]) && Object.hasOwn(leg[group], leaf) ? leg[group][leaf] : undefined;
 
         if (!isPresent(value))            continue;
         if (isUsable && !isUsable(value)) continue;
@@ -291,7 +293,7 @@ const collectGroups = legs => [...new Set([...CONTRACT_GROUPS, ...legs.flatMap(l
 /** Union of the leaf names any leg defines under `group`, plus that group's contract leaves. */
 const collectLeaves = (legs, group) => [...new Set([
     ...(CONTRACT_LEAVES[group] || []),
-    ...legs.flatMap(leg => (isPlainObject(leg?.[group]) ? safeKeys(leg[group]) : []))
+    ...legs.flatMap(leg => (Object.hasOwn(leg, group) && isPlainObject(leg[group]) ? safeKeys(leg[group]) : []))
 ])];
 
 /**
@@ -306,7 +308,7 @@ const collectLeaves = (legs, group) => [...new Set([
  */
 const resolveOpaqueGroup = (legs, group) => {
     for (const leg of legs) {
-        const value = leg?.[group];
+        const value = Object.hasOwn(leg, group) ? leg[group] : undefined;
 
         if (isPresent(value)) return cloneValue(value);
     }

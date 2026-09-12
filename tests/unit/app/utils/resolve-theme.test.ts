@@ -782,6 +782,67 @@ describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
             expect(theme.valueOf).toEqual({ label: 'x' })
         })
 
+        it.each(['valueOf', 'toString', 'hasOwnProperty'])('falls through a missing Object.prototype-named %s leaf to the runtime own value', (key) => {
+            const theme = resolveTheme({
+                theme: { megaMenu: { forums: true } },
+                runTime: { theme: { megaMenu: { [key]: 'x' } } }
+            }, { megaMenu: { horizontalCardMax: 3 } })
+
+            expect(theme.megaMenu[key]).toBe('x')
+            expect(theme.megaMenu.forums).toBe(true)
+            expect(theme.megaMenu.horizontalCardMax).toBe(3)
+        })
+
+        it('ignores inherited groups when collecting and resolving leaves', () => {
+            const theme = resolveTheme({
+                theme: Object.create({
+                    megaMenu: { forums: false },
+                    text: { label: 'inherited', inheritedOnly: true }
+                }),
+                runTime: { theme: { megaMenu: { forums: true }, text: { label: 'runtime' } } }
+            })
+
+            expect(theme.text).toEqual({ label: 'runtime' })
+            expect(theme.megaMenu.forums).toBe(true)
+        })
+
+        it.each(['toString', 'valueOf', 'hasOwnProperty'])('falls through to an own opaque %s group on a lower leg', (key) => {
+            for (const value of ['x', 0, false, '', [], {}]) {
+                const theme = resolveTheme({
+                    theme: { [key]: null },
+                    runTime: { theme: { [key]: value } }
+                }, {})
+
+                expect(Object.prototype.hasOwnProperty.call(theme, key)).toBe(true)
+                expect(theme[key]).toEqual(value)
+                if (typeof value === 'object') expect(theme[key]).not.toBe(value)
+            }
+        })
+
+        it.each(['toString', 'valueOf', 'hasOwnProperty'])('preserves own authored %s groups and leaves, including falsy values', (key) => {
+            for (const value of ['x', 0, false, '', [], {}]) {
+                const theme = resolveTheme({
+                    theme: { [key]: 'site', megaMenu: { [key]: 'site' } }
+                }, { [key]: value, megaMenu: { [key]: value } })
+
+                expect(theme[key]).toEqual(value)
+                expect(theme.megaMenu[key]).toEqual(value)
+                if (typeof value === 'object') {
+                    expect(theme[key]).not.toBe(value)
+                    expect(theme.megaMenu[key]).not.toBe(value)
+                }
+            }
+        })
+
+        it.each(['toString', 'valueOf', 'hasOwnProperty'])('omits an opaque %s group when all own values are absent', (key) => {
+            const theme = resolveTheme({
+                theme: { [key]: null },
+                runTime: { theme: { [key]: undefined } }
+            }, {})
+
+            expect(Object.prototype.hasOwnProperty.call(theme, key)).toBe(false)
+        })
+
         it('survives a megaMenu.valueOf leaf via own-property validator lookup, and still resolves', () => {
             const theme = resolveTheme(siteConfig, hostile('{"megaMenu":{"valueOf":"x","maxColumns":4}}'))
 
