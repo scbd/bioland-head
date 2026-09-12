@@ -142,15 +142,6 @@ const CONTRACT_GROUPS = Object.freeze(Object.keys(CONTRACT_LEAVES));
 
 const isPresent = value => value !== undefined && value !== null;
 
-/** A colour a browser can actually apply. `''` interpolated into a style declaration voids it. */
-const isUsableColor = value => typeof value === 'string' && value.trim() !== '';
-
-/** A column count that yields at least one column. `0` collapses the mega-menu grid to nothing. */
-const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(value) >= 1;
-
-/** A language limit that renders at least one language. `0` empties the menu and hides the bar. */
-const isUsableLanguageLimit = value => typeof value !== 'boolean' && Number.isFinite(Number(value)) && Number(value) >= 1;
-
 /**
  * Hard ceilings for `homePageWidgets.columns`. Real themes use three outer columns and a handful
  * of widget names each; these caps sit well above that while blocking editor-authored payloads that
@@ -191,14 +182,21 @@ const isUsableColumnList = value =>
     && value.length <= MAX_HOME_PAGE_COLUMNS
     && value.every(isUsableColumn);
 
+/** A colour a browser can actually apply. `''` interpolated into a style declaration voids it. */
+const isUsableColor = value => typeof value === 'string' && value.trim() !== '';
+
+/** A column count that yields at least one column. `0` collapses the mega-menu grid to nothing. */
+const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(value) >= 1;
+
+/** A language limit that renders at least one language. `0` empties the menu and hides the bar. */
+const isUsableLanguageLimit = value => typeof value !== 'boolean' && Number.isFinite(Number(value)) && Number(value) >= 1;
+
 /**
  * Per-leaf validators — the deliberate exceptions to the presence rule.
  *
- * A leaf earns a validator when BOTH hold: its pre-refactor read used `||` (so falsy values
+ * A leaf earns a validator only when BOTH hold: its pre-refactor read used `||` (so falsy values
  * already fell through and no live site can be relying on one), and a falsy-but-present value
- * produces a broken render rather than a meaningful setting. That is four leaves — plus one
- * type guard, `homePageWidgets.columns`, which is here because a wrong-typed value is a render
- * DoS rather than merely a broken setting (see `isUsableColumnList`).
+ * produces a broken render rather than a meaningful setting. That is exactly four leaves:
  *
  * - `color.primary`   — was `|| '#009edb'` at site.js:140. `''` voids every `solid ${primary}`
  *                       border and `background: ${primary}` declaration that consumes it.
@@ -207,10 +205,6 @@ const isUsableColumnList = value =>
  * - `megaMenu.maxColumns` — was `|| 5` at schema-org.js:1152 and drop-down.vue:63. `0` makes
  *                       `organizeSectionsIntoRows` collapse every section into one unbounded row
  *                       (`Math.min(span, 0) === 0`, so the wrap branch never fires).
- * - `homePageWidgets.columns` — not a `||` case: it is a type guard against a non-array authored
- *                       value, or an array whose entries are not bounded widget-name arrays,
- *                       reaching a `v-for` that Vue would iterate numerically or per character.
- *                       See `isUsableColumnList`.
  * - `i18n.maxLangBeforeWrap` — was `||` at site.js:151. `0`, `''`, or `false` empties `limitedMenus`
  *                       and leaves `otherMenus` hidden behind the `limitedMenus.length > 1` gate
  *                       at language-bar.vue:18, causing all language selectors to vanish.
@@ -222,11 +216,11 @@ const isUsableColumnList = value =>
  * - `megaMenu.maxRowsPerColumn` / `horizontalCardMax` / `forums` — no `||` in the old reads, and
  *   `0` is a meaningful value ("unlimited") that must not fall through.
  */
-const LEAF_VALIDATORS = freezeOwnMap({
-    color          : freezeOwnMap({ primary: isUsableColor, secondary: isUsableColor }),
-    megaMenu       : freezeOwnMap({ maxColumns: isUsableColumnCount }),
-    homePageWidgets: freezeOwnMap({ columns: isUsableColumnList }),
-    i18n           : freezeOwnMap({ maxLangBeforeWrap: isUsableLanguageLimit })
+const LEAF_VALIDATORS = Object.freeze({
+    homePageWidgets: { columns: isUsableColumnList },
+    color   : { primary: isUsableColor, secondary: isUsableColor },
+    megaMenu: { maxColumns: isUsableColumnCount },
+    i18n    : { maxLangBeforeWrap: isUsableLanguageLimit }
 });
 
 const isPlainObject = value => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -235,7 +229,7 @@ const isPlainObject = value => typeof value === 'object' && value !== null && !A
  * Keys that must never be copied onto the result (pollution / confusing own props).
  *
  * Table-lookup crashes for *any* Object.prototype name (`toString`, `valueOf`, …) are closed by
- * the null-prototype `CONTRACT_LEAVES` / `LEAF_VALIDATORS` maps above — a three-key denylist alone
+ * null-prototype `CONTRACT_LEAVES` and own-property validator lookups — a three-key denylist alone
  * is not enough for those lookups. This list only strips the classic pollution aliases from
  * cloned output; benign opaque keys such as a top-level `toString` group still pass through.
  *
@@ -271,7 +265,8 @@ const cloneValue = (value) => {
  * `LEAF_VALIDATORS`, which must also be usable or they fall through to the next leg.
  */
 const resolveLeaf = (legs, group, leaf) => {
-    const isUsable = LEAF_VALIDATORS[group]?.[leaf];
+    const validators = Object.hasOwn(LEAF_VALIDATORS, group) ? LEAF_VALIDATORS[group] : undefined;
+    const isUsable = validators && Object.hasOwn(validators, leaf) ? validators[leaf] : undefined;
 
     for (const leg of legs) {
         const value = isPlainObject(leg?.[group]) ? leg[group][leaf] : undefined;
