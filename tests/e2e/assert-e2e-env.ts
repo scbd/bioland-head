@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs'
+import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import dotenv from 'dotenv'
@@ -52,3 +53,8 @@ export function assertE2EEnv (): void {
     `The committed .env.example already carries working values for all three.`,
   )
 }
+
+if (process.argv[1] && (path.resolve(process.argv[1]) === fileURLToPath(import.meta.url) || path.resolve(process.argv[1]) === import.meta.filename)) {
+  assertE2EEnv()
+}
+

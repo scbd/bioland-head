@@ -211,8 +211,8 @@ Staging Drupal                     Local Dev Server
 > cp .env.example .env   # then fill in the API credentials
 > ```
 >
-> `playwright.config.ts` now checks these up front and fails immediately, naming the missing
-> variables, instead of timing out.
+> The Playwright `webServer` command now checks these up front and fails immediately, naming the
+> missing variables, instead of timing out (while allowing an existing healthy server to be reused).
 
 1. **Configure `.env`** (see `.env.example` for template):
    ```bash
