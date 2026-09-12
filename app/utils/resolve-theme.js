@@ -328,8 +328,36 @@ const resolveHeroPrimary = (authored, color) => {
     return [0, 1].map(i => (isUsableColor(source[i]) ? source[i] : derived[i]));
 };
 
+const MAX_AUTHORED_THEME_DEPTH = 64;
+const MAX_AUTHORED_THEME_NODES = 10000;
+
+/** Reject oversized editor data before recursive cloning or later SSR serialization. */
+const isBoundedAuthoredTheme = theme => {
+    const stack = [{ value: theme, depth: 0 }];
+    let remaining = MAX_AUTHORED_THEME_NODES;
+
+    while (stack.length) {
+        const { value, depth } = stack.pop();
+
+        if (depth > MAX_AUTHORED_THEME_DEPTH || --remaining < 0) return false;
+        if (value === null || typeof value !== 'object') continue;
+        if (Array.isArray(value) && value.length > MAX_AUTHORED_THEME_NODES) return false;
+
+        for (const key in value) {
+            if (!Object.hasOwn(value, key)) continue;
+            if (stack.length >= remaining) return false;
+
+            stack.push({ value: value[key], depth: depth + 1 });
+        }
+    }
+
+    return true;
+};
+
 export function resolveTheme(config, authoredTheme) {
-    const legs = [authoredTheme, config?.theme, config?.runTime?.theme, THEME_DEFAULTS].filter(isPlainObject);
+    // An invalid authored leg falls through as a whole; trusted site/runtime settings remain usable.
+    const authored = isPlainObject(authoredTheme) && isBoundedAuthoredTheme(authoredTheme) ? authoredTheme : undefined;
+    const legs = [authored, config?.theme, config?.runTime?.theme, THEME_DEFAULTS].filter(isPlainObject);
 
     const resolved = {};
 
