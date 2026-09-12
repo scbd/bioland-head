@@ -22,7 +22,7 @@ afterEach(() => vi.unstubAllGlobals())
 function initialize(overrides = {}) {
   const store = useSiteStore()
   store.initialize({
-    locale: 'en', siteCode: 'seed', baseHost: 'example.test', env: 'production',
+    locale: 'en', siteCode: 'seed', baseHost: 'example.test', env: 'prod',
     multiSiteCode: 'test', config: { defaultLocale: 'en', locales: ['en', 'fr'] },
     ...overrides,
   })
@@ -31,12 +31,14 @@ function initialize(overrides = {}) {
 
 describe('site store hosts', () => {
   it.each([
-    ['production', 'custom.example.test', 'https://custom.example.test', 'custom.example.test'],
+    ['prod', 'custom.example.gov', 'https://custom.example.gov', 'custom.example.gov'],
+    ['prod', '', 'https://seed.example.test', ''],
+    ['prod', undefined, 'https://seed.example.test', ''],
+    ['production', 'custom.example.gov', 'https://custom.example.gov', 'custom.example.gov'],
     ['production', '', 'https://seed.example.test', ''],
     ['production', undefined, 'https://seed.example.test', ''],
-    ['dev', 'custom.example.test', 'https://seed.example.test', ''],
-    ['stg', 'custom.example.test', 'https://seed.example.test', ''],
-    ['prod', 'custom.example.test', 'https://seed.example.test', ''],
+    ['dev', 'custom.example.gov', 'https://seed.example.test', ''],
+    ['stg', 'custom.example.gov', 'https://seed.example.test', ''],
   ])('initializes env=%s, redirect=%s without changing host or bare redirect', (env, redirect, host, bareRedirect) => {
     const store = initialize({ env, config: { redirect, defaultLocale: 'en', locales: ['en', 'fr'] } })
 
@@ -66,11 +68,11 @@ describe('site store hosts', () => {
     ['seed', undefined],
     ['seed', ''],
   ])('guards incomplete state even with a redirect (%s, %s)', (siteCode, baseHost) => {
-    const store = initialize({ siteCode, baseHost, config: { redirect: 'custom.example.test' } })
+    const store = initialize({ siteCode, baseHost, config: { redirect: 'custom.example.gov' } })
 
     expect(store.host).toBe('')
     expect(store.localizedHost).toBe('')
-    expect(store.params.redirect).toBe('custom.example.test')
+    expect(store.params.redirect).toBe('custom.example.gov')
   })
 
   it('preserves generated component encoding and the unencoded locale suffix', () => {
@@ -109,7 +111,7 @@ describe('site store hosts', () => {
     ['production', 'https://evil.example'],
     ['production', 'a@b'],
     ['production', 'host:8443'],
-    ['dev', 'custom.example.test'],
+    ['dev', 'custom.example.gov'],
   ])('encodes the generated components exactly as the absent-redirect path (env=%s, redirect=%s)', (env, redirect) => {
     const store = initialize({ env, siteCode: 'be test', baseHost: 'example.test:8443', locale: 'fr CA', config: { redirect } })
 
@@ -126,7 +128,7 @@ describe('site store hosts', () => {
   it.each([
     ['production', 'https://evil.example'],
     ['production', 'a@b'],
-    ['dev', 'custom.example.test'],
+    ['dev', 'custom.example.gov'],
   ])('preserves URIError for a malformed siteCode when the redirect is not in effect (env=%s, redirect=%s)', (env, redirect) => {
     const store = initialize({ env, siteCode: '\uD800', config: { redirect } })
 
@@ -134,7 +136,7 @@ describe('site store hosts', () => {
   })
 
   it.each([
-    ['valid', 'custom.example.test'],
+    ['valid', 'custom.example.gov'],
     ['rejected', 'https://evil.example'],
   ])('encodes the generated components when the env gate rejects a %s redirect held in state', (_label, redirect) => {
     const store = initialize({ env: 'dev', siteCode: 'be test', baseHost: 'example.test:8443' })
@@ -145,13 +147,13 @@ describe('site store hosts', () => {
   })
 
   it('keeps the initialized bare redirect authoritative until reinitialization', () => {
-    const store = initialize({ config: { redirect: 'original.example.test' } })
-    store.config.redirect = 'changed.example.test'
+    const store = initialize({ config: { redirect: 'original.example.gov' } })
+    store.config.redirect = 'changed.example.gov'
 
-    expect(store.host).toBe('https://original.example.test')
-    expect(store.params.redirect).toBe('original.example.test')
+    expect(store.host).toBe('https://original.example.gov')
+    expect(store.params.redirect).toBe('original.example.gov')
 
-    store.initialize({ siteCode: 'seed', baseHost: 'example.test', locale: 'fr', env: 'dev', config: { redirect: 'changed.example.test' } })
+    store.initialize({ siteCode: 'seed', baseHost: 'example.test', locale: 'fr', env: 'dev', config: { redirect: 'changed.example.gov' } })
 
     expect(store.env).toBe('dev')
     expect(store.host).toBe('https://seed.example.test')

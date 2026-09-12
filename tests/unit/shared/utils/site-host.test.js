@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { getCanonicalHost, getGeneratedHostname, normalizeRedirectHost } from '~/shared/utils/site-host'
 
 const GENERATED = 'https://seed.example.test'
-const canonical = (redirect, env = 'production') =>
+const canonical = (redirect, env = 'prod') =>
   getCanonicalHost({ siteCode: 'seed', baseHost: 'example.test', env, redirect })
 
 describe('getGeneratedHostname', () => {
@@ -19,15 +19,49 @@ describe('getGeneratedHostname', () => {
 })
 
 describe('getCanonicalHost', () => {
+  // Explicit gate-outcome cases for both prod and production spellings:
+  // Vanity redirects must sit outside `.${baseHost}`: inbound suffix routing
+  // resolves `*.${baseHost}` via extractSiteCodeFromHost before the reverse index.
+  it('env=prod with redirect set returns the redirect Host', () => {
+    expect(canonical('custom.example.gov', 'prod')).toBe('https://custom.example.gov')
+  })
+
+  it('env=production with redirect set returns the redirect Host', () => {
+    expect(canonical('custom.example.gov', 'production')).toBe('https://custom.example.gov')
+  })
+
+  it('env=prod with no redirect returns the generated Host', () => {
+    expect(canonical(undefined, 'prod')).toBe(GENERATED)
+  })
+
+  it('env=production with no redirect returns the generated Host', () => {
+    expect(canonical(undefined, 'production')).toBe(GENERATED)
+  })
+
+  it('env=dev with redirect set returns the generated Host (gate stays closed)', () => {
+    expect(canonical('custom.example.gov', 'dev')).toBe(GENERATED)
+  })
+
+  it('guards optional baseHost when redirect is set in prod', () => {
+    expect(getCanonicalHost({ siteCode: 'seed', env: 'prod', redirect: 'custom.example.gov' }))
+      .toBe('https://custom.example.gov')
+    expect(getCanonicalHost({ siteCode: 'seed', baseHost: undefined, env: 'prod', redirect: 'custom.example.gov' }))
+      .toBe('https://custom.example.gov')
+    expect(getCanonicalHost({ siteCode: 'seed', baseHost: undefined, env: 'prod' }))
+      .toBe('https://seed.')
+  })
+
   it.each([
-    ['production', 'custom.example.test', 'https://custom.example.test'],
+    ['prod', 'custom.example.gov', 'https://custom.example.gov'],
+    ['prod', '', GENERATED],
+    ['prod', undefined, GENERATED],
+    ['production', 'custom.example.gov', 'https://custom.example.gov'],
     ['production', '', GENERATED],
     ['production', undefined, GENERATED],
-    ['dev', 'custom.example.test', GENERATED],
-    ['stg', 'custom.example.test', GENERATED],
-    ['prod', 'custom.example.test', GENERATED],
-    ['Production', 'custom.example.test', GENERATED],
-  ])('preserves the literal gate for env=%s, redirect=%s', (env, redirect, expected) => {
+    ['dev', 'custom.example.gov', GENERATED],
+    ['stg', 'custom.example.gov', GENERATED],
+    ['Production', 'custom.example.gov', GENERATED],
+  ])('gate outcome for env=%s, redirect=%s', (env, redirect, expected) => {
     expect(canonical(redirect, env)).toBe(expected)
   })
 
@@ -38,9 +72,9 @@ describe('getCanonicalHost', () => {
 
   it.each([
     ['evil.example'],
-    ['a.b.c.example.test'],
+    ['a.b.c.example.gov'],
     ['xn--80ak6aa92e.example'],
-    ['site-1.example.test'],
+    ['site-1.example.gov'],
     ['example.xn--p1ai'],
   ])('uses a bare redirect hostname (%s)', (redirect) => {
     expect(canonical(redirect)).toBe(`https://${redirect}`)
@@ -48,9 +82,22 @@ describe('getCanonicalHost', () => {
 
   it.each([
     ['GOOD.EXAMPLE.', 'good.example'],
-    ['Custom.Example.Test', 'custom.example.test'],
+    ['Custom.Example.Gov', 'custom.example.gov'],
   ])('normalizes case and a single trailing dot (%s)', (redirect, expected) => {
     expect(canonical(redirect)).toBe(`https://${expected}`)
+  })
+
+  it.each([
+    ['other tenant generated host', 'other.example.test'],
+    ['multi-label under baseHost', 'a.b.c.example.test'],
+    ['trailing-dot other generated host', 'Other.Example.Test.'],
+  ])('falls back when a prod redirect aliases a generated-host shape (%s)', (_label, redirect) => {
+    expect(canonical(redirect, 'prod')).toBe(GENERATED)
+  })
+
+  it('still accepts the Site\'s own generated host as an exact redirect collision', () => {
+    expect(canonical('seed.example.test', 'prod')).toBe(GENERATED)
+    expect(canonical('SEED.Example.Test.', 'prod')).toBe(GENERATED)
   })
 
   it.each([
@@ -103,9 +150,11 @@ const AT_254 = `${'a'.repeat(49)}.`.repeat(5) + 'abcd'
 
 const ACCEPTED = [
   ['ordinary vanity domain', 'evil.example', 'evil.example'],
-  ['multi-label host', 'a.b.c.example.test', 'a.b.c.example.test'],
+  // Keep vanity examples outside `.${baseHost}` (`example.test`) so canonical
+  // acceptance stays meaningful after the generated-host alias rejection.
+  ['multi-label host', 'a.b.c.example.gov', 'a.b.c.example.gov'],
   ['hyphenated label', 'go-od.example', 'go-od.example'],
-  ['digit in a non-final label', 'site-1.example.test', 'site-1.example.test'],
+  ['digit in a non-final label', 'site-1.example.gov', 'site-1.example.gov'],
   ['uppercase folded', 'GOOD.EXAMPLE', 'good.example'],
   ['mixed case folded', 'GoOd.ExAmPlE', 'good.example'],
   ['single trailing dot stripped', 'good.example.', 'good.example'],

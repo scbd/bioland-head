@@ -46,7 +46,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(new Date('2026-09-10T00:00:00Z'))
   storage = createStorage()
-  runtime = { env: 'prod', multiSiteCode: 'bl2', dmsm: 'https://dmsm.example.test' }
+  runtime = { env: 'prod', multiSiteCode: 'bl2', dmsm: 'https://dmsm.example.test', baseHost: 'generated.example.test' }
   fetchFixture = vi.fn().mockResolvedValue(payload())
   errors = vi.fn()
   vi.stubGlobal('useRuntimeConfig', () => ({ public: runtime }))
@@ -110,7 +110,7 @@ describe('redirect Host index through real serialized Nitro cache', () => {
     for (const [name, fn] of Object.entries({ defineEventHandler, getRequestHost, getRequestHeader, getQuery, parseCookies, createError })) vi.stubGlobal(name, fn)
     vi.stubGlobal('resolveSiteCodeByHost', resolve)
     fetchFixture.mockImplementation(async (url) => {
-      if (url === 'https://dmsm.example.test/config/prod/bl2') return payload()
+      if (url === 'https://dmsm.example.test/config/prod/bl2') return payload('be', 'Chm.Example.Gov.')
       if (url === 'https://dmsm.example.test/config/prod/bl2/be') return { locales: ['en'], defaultLocale: 'en' }
       throw new Error('Unexpected fixture URL')
     })
@@ -207,7 +207,7 @@ describe('redirect Host index through real serialized Nitro cache', () => {
     expect(await resolve('chm.example.gov')).toBe('be')
   })
 
-  it.each([{}, null, 'invalid', [null], [['chm.example.gov']], [['chm.example.gov', 'bad', 'extra']], [['chm.example.gov', 4]], [['chm.example.gov', '']], [['', 'bad']], [['CHM.EXAMPLE.GOV', 'bad']], [['bad.example:443', 'bad']], [['chm.example.gov', 'bad'], ['chm.example.gov', 'other']]])('validates the entire persisted tuple representation before rehydration: %j', async (value) => {
+  it.each([{}, null, 'invalid', [null], [['chm.example.gov']], [['chm.example.gov', 'bad', 'extra']], [['chm.example.gov', 4]], [['chm.example.gov', '']], [['', 'bad']], [['CHM.EXAMPLE.GOV', 'bad']], [['chm.example.gov.', 'bad']], [['bad.example:443', 'bad']], [['chm.example.gov', 'bad'], ['chm.example.gov', 'other']]])('validates the entire persisted tuple representation before rehydration: %j', async (value) => {
     const resolve = await importFresh()
     expect(await resolve('chm.example.gov')).toBe('be')
     await drain()
@@ -268,6 +268,86 @@ describe('redirect Host index through real serialized Nitro cache', () => {
     Object.assign(runtime, { env: 'stg', multiSiteCode: 'bsl' })
     await expect(resolve('chm.example.gov')).resolves.toBeNull()
     await expect(restarted('chm.example.gov')).resolves.toBeNull()
+  })
+
+  it('resolves the canonical hostname of an accepted trailing-dot redirect', async () => {
+    const redirect = 'Chm.Example.Gov.'
+    fetchFixture.mockResolvedValue(payload('be', redirect))
+    const resolve = await importFresh()
+    const canonical = new URL(siteHost.getCanonicalHost({ siteCode: 'be', baseHost: 'generated.example.test', env: 'prod', redirect })).hostname
+
+    expect(await resolve(canonical)).toBe('be')
+    await drain()
+    expect(await (await importFresh())(canonical)).toBe('be')
+  })
+
+  it('rejects equivalent trailing-dot owners instead of selecting another Site', async () => {
+    const redirect = 'Chm.Example.Gov.'
+    fetchFixture.mockResolvedValue({ sites: { be: { redirect }, fr: { redirect: 'chm.example.gov' } } })
+    const resolve = await importFresh()
+    const canonical = new URL(siteHost.getCanonicalHost({ siteCode: 'be', baseHost: 'generated.example.test', env: 'prod', redirect })).hostname
+
+    expect(await resolve(canonical)).toBeNull()
+    await drain()
+    expect(await (await importFresh())(canonical)).toBeNull()
+    expect(errors).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ host: canonical, siteCodes: ['be', 'fr'] }))
+  })
+
+  describe.each(['prod', 'production'])('localhost aliases in env=%s', (env) => {
+    it.each(['other.localhost', 'OTHER.LOCALHOST', 'OtHeR.LoCaLhOsT.', 'nested.other.localhost'])('never indexes %s on fetch, restart or outage fallback', async (redirect) => {
+      runtime.env = env
+      fetchFixture.mockResolvedValue({ sites: { ...payload().sites, seed: { redirect } } })
+      const resolve = await importFresh()
+      const alias = redirect.toLowerCase().replace(/\.$/, '')
+
+      expect(await resolve(alias)).toBeNull()
+      expect(await resolve('chm.example.gov')).toBe('be')
+      await drain()
+      const restarted = await importFresh()
+      expect(await restarted(alias)).toBeNull()
+      expect(await restarted('chm.example.gov')).toBe('be')
+      vi.spyOn(storage, 'getItem').mockRejectedValue(new Error('Fixture cache unavailable'))
+      fetchFixture.mockRejectedValue(new Error('Fixture DMSM unavailable'))
+      expect(await restarted(alias)).toBeNull()
+      expect(await restarted('chm.example.gov')).toBe('be')
+    })
+
+    it('rejects persisted localhost aliases rather than rehydrating an old mapping', async () => {
+      runtime.env = env
+      const resolve = await importFresh()
+      expect(await resolve('chm.example.gov')).toBe('be')
+      await drain()
+      const key = (await storage.getKeys())[0]
+      const entry = await storage.getItem<Record<string, unknown>>(key)
+      await storage.setItem(key, { ...entry, value: [['chm.example.gov', 'be'], ['other.localhost', 'seed']] })
+      fetchFixture.mockRejectedValue(new Error('Fixture DMSM unavailable'))
+      const restarted = await importFresh()
+
+      expect(await restarted('other.localhost')).toBeNull()
+      expect(await restarted('chm.example.gov')).toBeNull()
+      expect(await resolve('other.localhost')).toBeNull()
+      expect(await resolve('chm.example.gov')).toBe('be')
+    })
+  })
+
+  it('rejects a redirect that aliases another Site\'s generated Host', async () => {
+    fetchFixture.mockResolvedValue({
+      sites: {
+        be: { redirect: 'fr.generated.example.test' },
+        fr: { redirect: 'chm.example.gov' },
+        valid: { redirect: 'unique.example' },
+      },
+    })
+    const resolve = await importFresh()
+
+    expect(await resolve('fr.generated.example.test')).toBeNull()
+    expect(await resolve('chm.example.gov')).toBe('fr')
+    expect(await resolve('unique.example')).toBe('valid')
+    expect(errors).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+      message: 'Redirect aliases generated Host',
+      siteCode: 'be',
+      host: 'fr.generated.example.test',
+    }))
   })
 
   it.each(['https://bad.example', 'bad.example/path', 'bad.example:443', ' bad.example', 'bad. example', 'bad.example\n', 123, false, null, {}, ['bad.example']])('drops and logs invalid redirect %j without losing valid Sites', async (redirect) => {

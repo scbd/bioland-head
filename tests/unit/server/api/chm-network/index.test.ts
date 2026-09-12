@@ -98,11 +98,11 @@ describe('server/api/chm-network', () => {
     expect(byCode(result.prod.prePublished, 'gt').host).toBe('https://gt.bl2.chm-cbd.net')
   })
 
-  it('stays dark: a redirect hostname does not change the host under the literal production gate', async () => {
+  it('uses the redirect host in prod once the token matches', async () => {
     const result = await handler({})
 
     expect(byCode(result.prod.scbd, 'seed').redirect).toBe('vanity.example.test')
-    expect(byCode(result.prod.scbd, 'seed').host).toBe('https://seed.bl2.chm-cbd.net')
+    expect(byCode(result.prod.scbd, 'seed').host).toBe('https://vanity.example.test')
   })
 
   it('matches the shared canonical-host helper exactly', async () => {

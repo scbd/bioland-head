@@ -42,7 +42,6 @@ const MAX_HOSTNAME_LENGTH = 253
 
 /**
  * Build the generated Host without encoding its components.
- * The canonical redirect gate stays literal `production` until p03-01.
  * @param siteCode - Site identifier.
  * @param baseHost - Multisite base hostname.
  * @returns The generated HTTPS Host.
@@ -78,6 +77,9 @@ export function normalizeRedirectHost(redirect?: unknown): string | null {
 
   const candidate = redirect.toLowerCase().replace(/\.$/, "")
 
+  // Localhost is loopback and suffix-routed independently of the configured base host.
+  if (candidate === "localhost" || candidate.endsWith(".localhost")) return null
+
   if (!candidate || candidate.length > MAX_HOSTNAME_LENGTH || !BARE_HOSTNAME.test(candidate)) return null
 
   let parsed: URL
@@ -93,19 +95,34 @@ export function normalizeRedirectHost(redirect?: unknown): string | null {
 }
 
 /**
- * Compute the canonical Host; the gate stays literal `production` until p03-01.
+ * Compute the canonical Host for a Site.
+ * Returns the redirect HTTPS Host when `env === 'prod'` or `env === 'production'`
+ * and `redirect` is a valid bare hostname; otherwise returns the generated Host.
  * An unusable `redirect` falls back to the generated Host, matching the
  * existing "no usable DMSM config" degradation rather than throwing.
+ *
+ * A redirect under `.${baseHost}` that is not this Site's own generated host is
+ * also unusable: inbound suffix routing resolves `*.${baseHost}` via
+ * `extractSiteCodeFromHost` before the reverse index, so Site A's redirect of
+ * `site-b.${baseHost}` would become Site A's canonical origin while traffic to
+ * that hostname always lands on Site B.
  * @param params - Site code, base host, environment and optional bare redirect hostname.
- * @returns The redirect HTTPS Host in production, otherwise the generated Host.
+ * @returns The redirect HTTPS Host in prod or production, otherwise the generated Host.
  */
 export function getCanonicalHost(params: {
   siteCode: string
-  baseHost: string
+  baseHost?: string
   env: string
   redirect?: string
 }): string {
-  const redirectHost = params.env === "production" ? normalizeRedirectHost(params.redirect) : null
+  const redirectHost =
+    params.env === "prod" || params.env === "production" ? normalizeRedirectHost(params.redirect) : null
+  if (!redirectHost) return getGeneratedHostname(params.siteCode, params.baseHost ?? '')
 
-  return redirectHost ? `https://${redirectHost}` : getGeneratedHostname(params.siteCode, params.baseHost)
+  const base = (params.baseHost ?? '').toLowerCase()
+  if (base && redirectHost.endsWith(`.${base}`) && redirectHost !== `${(params.siteCode ?? '').toLowerCase()}.${base}`) {
+    return getGeneratedHostname(params.siteCode, params.baseHost ?? '')
+  }
+
+  return `https://${redirectHost}`
 }
