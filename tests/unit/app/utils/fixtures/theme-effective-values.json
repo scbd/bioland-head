@@ -1,0 +1,98 @@
+{
+  "_comment": [
+    "Input-config to expected-effective-VALUE cases for app/utils/resolve-theme.js.",
+    "Every key here is post-camelCase (depth 7). The module authors in snake case; the head",
+    "transforms it in server/utils/context-unified.ts before the resolver ever sees it, so a",
+    "snake_case theme key in this file is a defect, not a variant.",
+    "`authoredTheme` is siteStore.biolandSettings?.theme — the Drupal-authored leg, leg 1."
+  ],
+
+  "networkTheme": {
+    "color": { "primary": "#009edb", "primaryTextOver": "#ffffff", "secondary": "#16c56e", "secondaryTextOver": "#ffffff" },
+    "hero": { "primary": ["#009edb", "#16c56e"] },
+    "text": { "primary": "#222222", "secondary": "#4D4D4D" },
+    "backGround": { "primary": "", "secondary": "#F2F2F2", "tertiary": "#4D4D4D" },
+    "megaMenu": { "forums": true, "maxColumns": 5, "maxRowsPerColumn": 6, "horizontalCardMax": 3, "horizontalCardWrap": false },
+    "i18n": { "maxLangBeforeWrap": 6 },
+    "homePageWidgets": { "news": true, "columns": [["panorama", "gbif"], ["implementation"], ["forums"]] }
+  },
+
+  "cases": [
+    {
+      "name": "full-copy site — an authored theme restating every group wins outright",
+      "authoredTheme": {
+        "color": { "primary": "#7b6f82", "secondary": "#889262" },
+        "backGround": { "secondary": "#EEEEEE" },
+        "megaMenu": { "forums": true, "maxColumns": 4, "maxRowsPerColumn": 8, "horizontalCardMax": 2 },
+        "i18n": { "maxLangBeforeWrap": 4 },
+        "homePageWidgets": { "columns": [["panorama"], ["implementation"], ["forums"]] }
+      },
+      "siteTheme": null,
+      "expected": {
+        "color.primary": "#7b6f82",
+        "color.secondary": "#889262",
+        "color.secondaryTextOver": "#ffffff",
+        "backGround.secondary": "#EEEEEE",
+        "megaMenu.maxColumns": 4,
+        "megaMenu.maxRowsPerColumn": 8,
+        "megaMenu.horizontalCardMax": 2,
+        "megaMenu.forums": true,
+        "i18n.maxLangBeforeWrap": 4,
+        "_comment_hero": "NOT derived from the authored colors. The network leg authors hero.primary, and ADR 0012 derives only when hero is absent from EVERY source, so the network hero passes through. A site wanting a matching hero must author one.",
+        "hero.primary": ["#009edb", "#16c56e"]
+      }
+    },
+
+    {
+      "name": "theme-less site — no authored leg at all, renders exactly as today",
+      "authoredTheme": null,
+      "siteTheme": null,
+      "expected": {
+        "color.primary": "#009edb",
+        "color.secondary": "#16c56e",
+        "color.secondaryTextOver": "#ffffff",
+        "backGround.secondary": "#F2F2F2",
+        "megaMenu.maxColumns": 5,
+        "megaMenu.maxRowsPerColumn": 6,
+        "megaMenu.horizontalCardMax": 3,
+        "megaMenu.forums": true,
+        "i18n.maxLangBeforeWrap": 6,
+        "hero.primary": ["#009edb", "#16c56e"]
+      }
+    },
+
+    {
+      "name": "be dual-block — authored hero.primary[1] #CBB279 is preserved, never re-derived",
+      "authoredTheme": {
+        "color": { "primary": "#7b6f82", "secondary": "#889262" },
+        "hero": { "primary": ["#7b6f82", "#CBB279"] }
+      },
+      "siteTheme": null,
+      "expected": {
+        "color.primary": "#7b6f82",
+        "color.secondary": "#889262",
+        "hero.primary": ["#7b6f82", "#CBB279"],
+        "backGround.secondary": "#F2F2F2",
+        "megaMenu.maxColumns": 5,
+        "i18n.maxLangBeforeWrap": 6
+      }
+    },
+
+    {
+      "name": "bsl falsy-but-meaningful — maxRowsPerColumn 0 and forums false both survive",
+      "authoredTheme": {
+        "megaMenu": { "maxRowsPerColumn": 0, "forums": false }
+      },
+      "siteTheme": null,
+      "expected": {
+        "megaMenu.maxRowsPerColumn": 0,
+        "megaMenu.forums": false,
+        "megaMenu.maxColumns": 5,
+        "megaMenu.horizontalCardMax": 3,
+        "color.primary": "#009edb",
+        "color.secondary": "#16c56e",
+        "hero.primary": ["#009edb", "#16c56e"]
+      }
+    }
+  ]
+}

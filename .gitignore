@@ -64,3 +64,4 @@ tmp
 .playwright-mcp/
 graphify-out
 backlog.jsonl
+coverage/
