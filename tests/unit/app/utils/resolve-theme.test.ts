@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { resolveTheme } from '../../../../app/utils/resolve-theme'
 
 import effectiveValues from './fixtures/theme-effective-values.json'
-
 /**
  * Value-preservation suite for the canonical theme resolver.
  *
@@ -197,6 +196,25 @@ describe('resolveTheme', () => {
             expect(resolveTheme({ theme: { megaMenu: {} } } as any).megaMenu.maxRowsPerColumn).toBeUndefined()
         })
 
+        describe('megaMenu.maxRowsPerColumn', () => {
+            it('preserves meaningful 0 as unlimited', () => {
+                const theme = resolveTheme(withRunTime(networkTheme, { megaMenu: { maxRowsPerColumn: 0 } }) as any)
+                expect(theme.megaMenu.maxRowsPerColumn).toBe(0)
+            })
+
+            it('preserves valid positive integers and numeric strings', () => {
+                expect(resolveTheme({ theme: { megaMenu: { maxRowsPerColumn: 5 } } } as any).megaMenu.maxRowsPerColumn).toBe(5)
+                expect(resolveTheme({ theme: { megaMenu: { maxRowsPerColumn: '6' } } } as any).megaMenu.maxRowsPerColumn).toBe('6')
+            })
+
+            it('falls through invalid values to the network leg or undefined', () => {
+                for (const invalid of [-1, 'invalid', {}, [], 1.5, NaN, false, null]) {
+                    const theme = resolveTheme(withRunTime(networkTheme, { megaMenu: { maxRowsPerColumn: invalid } }) as any)
+                    expect(theme.megaMenu.maxRowsPerColumn).toBe(networkTheme.megaMenu.maxRowsPerColumn)
+                }
+            })
+        })
+
         it('keeps an authored empty-string backGround.secondary rather than inheriting', () => {
             const theme = resolveTheme(withRunTime(networkTheme, { backGround: { secondary: '' } }) as any)
 
@@ -224,6 +242,11 @@ describe('resolveTheme', () => {
                 expect(resolveTheme({ theme: { i18n: { maxLangBeforeWrap: 3 } } } as any).i18n.maxLangBeforeWrap).toBe(3)
                 expect(resolveTheme({ theme: { i18n: { maxLangBeforeWrap: '4' } } } as any).i18n.maxLangBeforeWrap).toBe('4')
             })
+
+            it('falls through safely without throwing when given an object with malformed coercion', () => {
+                const malformed = JSON.parse('{"valueOf":"x","toString":"x"}')
+                expect(resolveTheme({ theme: { i18n: { maxLangBeforeWrap: malformed } } } as any).i18n.maxLangBeforeWrap).toBeUndefined()
+            })
         })
 
         describe('megaMenu.maxColumns', () => {
@@ -235,6 +258,10 @@ describe('resolveTheme', () => {
                 }
             })
 
+            it('falls through safely without throwing when given an object with malformed coercion', () => {
+                const malformed = JSON.parse('{"valueOf":"x","toString":"x"}')
+                expect(resolveTheme({ theme: { megaMenu: { maxColumns: malformed } } } as any).megaMenu.maxColumns).toBe(5)
+            })
             it('falls through an unusable site value to the network leg, not straight to the default', () => {
                 const theme = resolveTheme(withRunTime({ megaMenu: { maxColumns: 4 } }, { megaMenu: { maxColumns: 0 } }) as any)
 
@@ -663,7 +690,12 @@ describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
             ['an object', { length: 1 }],
             ['a boolean', true],
             ['an empty string', ''],
-            ['whitespace', '   ']
+            ['whitespace', '   '],
+            ['a named color', 'red'],
+            ['untrimmed hex', ' #fff '],
+            ['invalid hex characters', '#gggggg'],
+            ['4-digit hex', '#1234'],
+            ['missing leading hash', '123456']
         ] as const
 
         for (const [label, slot] of hostileSlots) {

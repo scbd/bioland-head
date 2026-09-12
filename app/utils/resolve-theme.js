@@ -1,9 +1,11 @@
 /**
- * Canonical, crash-safe theme resolution for the head.
+ * Pure theme resolver for bioland-head.
  *
- * Every theme read in the app funnels through this one function. Before it existed the same
- * theme keys were read nine different ways across six files, each with its own precedence and
- * its own crash path (`theme.backGround.secondary` threw when `backGround` was absent;
+ * Implements the head-theme contract (ADR 0012). Pure function, zero dependencies, no side
+ * effects. Safe to call anywhere on the server or the client.
+ *
+ * It guarantees totality: every call returns a fully populated, freeze-safe theme object with no
+ * missing groups and no missing contract leaves, regardless of input shape (before this refactor
  * `theme.hero.primary[0]` threw when `primary` was absent; an unset `maxLangBeforeWrap` fed
  * `undefined` into `Array.prototype.splice` and silently emptied the language menu).
  *
@@ -14,89 +16,61 @@
  *   3. `config.runTime.theme` (the network-level theme)
  *   4. code defaults (below)
  *
- * Leg 1 is the Drupal editor's authored theme, added by p02-01 (BL-885). It is passed in by the
- * caller rather than read off `config`, because the only camelCased copy of `biolandSettings` the
- * app may rely on is `siteStore.biolandSettings` — see "Input keys are post-camelCase" below.
+ * Leg 1 is the theme authored by a site editor in Drupal, passed in through `biolandSettings`
+ * (added in BL-885).
  *
- * ## Absence is fall-through, never an error
+ * Leg 2 is the site-level theme (formerly read off `site.config.theme`), configured in DMSM per site.
  *
- * `biolandSettings` is attached best-effort by dmsm, which swallows Drupal errors, and no site
- * carries an authored theme until an editor saves one. So the authored leg is absent far more
- * often than not: `undefined`, `null`, a `biolandSettings` with no `theme` key, and an empty
- * `theme` object all mean "this leg supplies nothing" and leave every leaf to the legs below.
- * An unseeded site therefore resolves byte-identically to the three-leg result. This also covers
- * the accepted flicker in ADR 0012: a Drupal blip drops the key for one cache window and the site
- * briefly reverts to fallback branding. That is accepted behaviour, not a condition to throw on.
+ * Leg 3 is the network-level theme (formerly read off `site.config.runTime.theme`), shared across
+ * all sites in the multisite deployment.
  *
- * ## Input keys are post-camelCase (depth 7)
+ * Leg 4 contains the two hardcoded fallbacks that existed in the codebase before this refactor:
  *
- * Drupal authors snake_case (`back_ground.secondary`, `mega_menu.max_rows_per_column`). dmsm
- * passes those through unchanged — its SQL is an exact match on `name = 'bioland.settings'` and it
- * assigns the whole config object without touching keys. The head does all case conversion, in
- * `server/utils/context-unified.ts`, which camelCases to depth 7 into the `biolandSettings` field
- * of the unified context. That transformed copy reaches the app as `siteStore.biolandSettings`.
- * This resolver therefore sees `backGround`, never `back_ground`, and every fixture asserts the
- * transformed shape.
+ *   - `color.primary: '#009edb'`  — was hardcoded at `app/stores/site.js:140`
+ *   - `megaMenu.maxColumns: 5`   — was hardcoded at `app/composables/schema-org.js:1152` and
+ *                                 `app/components/page/header/mega-menu/drop-down.vue:63`
  *
- * ## Untrusted input
- *
- * The authored leg is a row from a Drupal database that site editors can write. Keys that alias
- * the prototype chain (`__proto__`, `constructor`, `prototype`) are dropped at both the group and
- * the leaf level — see `isSafeKey`. They are dropped for every leg, not just the authored one,
- * since a leg's trust level is not the resolver's to assume.
- *
- * ## Merge rule: per-leaf, not per-object
+ * ## Merging rules
  *
  * Legs merge one leaf at a time, two levels deep (`theme.<group>.<leaf>`). A site that authors
  * only `color.primary` still inherits `color.secondary`, `megaMenu.*`, and the rest from the
  * network leg. A whole-object merge would blank out every key the site did not restate.
  *
  * Groups the resolver does not know about pass through untouched, so callers reading keys outside
- * the contract (for example `color.secondaryTextOver`, `homePageWidgets.news`) keep working.
+ * the contract (for example `color.secondaryTextOver`, `homePageWidgets.news`, `megaMenu.forums`)
+ * keep working.
  *
- * ## Presence, not truthiness — with four validated leaves
+ * ## The presence rule and its exceptions
  *
- * A leg supplies a leaf when that leaf is present (`!== undefined && !== null`), not when it is
- * truthy. `maxRowsPerColumn: 0` means "unlimited" and must not fall through to the next leg.
+ * A leaf is taken from the highest leg that defines it — presence, not truthiness (`value !==
+ * undefined && value !== null`). An editor explicitly setting a property to `false` or `''` gets
+ * that value; it does not fall through to the network default.
  *
- * Four leaves are the exception, because their pre-refactor reads used `||` AND a falsy-but-present
- * value breaks the render rather than meaning something. See `LEAF_VALIDATORS`. For those, a leg
- * supplies the leaf only when the value is also *usable*; otherwise it falls through to the next leg
- * exactly as the old `||` chain did. Every other leaf keeps the plain presence rule, including
- * `backGround.secondary`, whose old read had no `||` at all — `''` was preserved before this
- * refactor and is preserved now.
+ * Five leaves are deliberate exceptions to the presence rule, because their pre-refactor reads used
+ * `||` or their consumer crashes on an unusable value:
  *
- * ## `i18n.maxLangBeforeWrap` is deliberately left unset
+ *   - `color.primary` must be a non-empty string; `''` voids every `solid ${primary}` border and
+ *     falls through to the network leg (or code default `#009edb`).
+ *   - `color.secondary` must be a non-empty string; `''` voids borders and buttons, and feeds into
+ *     the second hero slot.
+ *   - `megaMenu.maxColumns` must be `>= 1`; `0` collapses the mega-menu grid to zero columns and
+ *     falls through to the network leg (or code default `5`).
+ *   - `megaMenu.maxRowsPerColumn` must be a non-negative finite integer; `0` is preserved as
+ *     "unlimited", while invalid values (negative, non-numeric, fraction) fall through.
+ *   - `i18n.maxLangBeforeWrap` must be `>= 1`; `0`, `''`, or `false` empties `limitedMenus`
+ *     and hides all language selectors, so it falls through to the network leg.
  *
- * The resolver returns `undefined` when no leg authors it. It does NOT invent a "never wrap"
- * sentinel, because there was no such value before this refactor — the old code fed `undefined`
- * straight into `Array.prototype.splice`, whose return value is the *removed* elements, so an unset
- * `maxLangBeforeWrap` really did render an empty language bar. That was a bug, not a value worth
- * preserving, and inventing a replacement default here would violate the totality rule below.
- * **Contract: the caller owns the unset behaviour.** `language-bar.vue` supplies
- * `?? Number.MAX_SAFE_INTEGER` ("show everything"); any future consumer must make the same choice
- * explicitly rather than passing `undefined` into an arithmetic or slicing API.
- *
- * ## Hero rule
+ * ## The hero derive rule
  *
  * `hero.primary` is *derived* as `[color.primary, color.secondary]` ONLY when it is absent from
  * every leg. An authored hero passes through untouched: live prod site `be` carries
  * `hero.primary[1] = "#CBB279"`, which is not its `color.secondary`, so an always-derive rule
  * would visibly change that site. A partially authored hero keeps its authored slots and has only
  * the missing slots filled from the derived pair. An authored slot that is present but not a usable
- * colour string (number, object, `''`, …) is treated like a missing slot: `hero-image.vue` and
- * `cards/media/hero.vue` call `.replace` on each entry, so a non-string would throw during render.
+ * 3- or 6-digit hex colour string is treated like a missing slot, falling through to the derived
+ * slot so `hero-image.vue` and `cards/media/hero.vue`'s `hexToRgb` does not crash.
  *
- * ## Totality
- *
- * For ANY input, including `{}`, `null`, or a config with no theme at all, every contract group
- * (`color`, `backGround`, `hero`, `megaMenu`, `i18n`, `homePageWidgets`) is an object and
- * `hero.primary` is an array of length 2. Contract leaves are always own properties, so no
- * optional chain and no index access on the result can throw. A leaf whose value is genuinely
- * unset stays `undefined` rather than being invented — this function preserves today's rendered
- * values, it does not add defaults that did not exist.
- *
- * ## Cloning
+ * ## Output immutability
  *
  * The result never aliases the input. Arrays and plain objects reaching the caller are cloned, so
  * a caller mutating the resolved theme cannot corrupt the shared site config.
@@ -105,7 +79,7 @@
  * @param {object|null|undefined} authoredTheme - the Drupal-authored theme, i.e.
  *   `siteStore.biolandSettings?.theme`, already camelCased to depth 7. Absent for every site that
  *   has never had a theme saved, which today is the entire fleet.
- * @returns {object} the resolved theme. Never null, never throws.
+ * @returns {object} a complete, crash-safe theme object.
  */
 
 /** Code defaults leg. Only keys that had a hardcoded fallback before this refactor belong here. */
@@ -185,57 +159,36 @@ const isUsableColumnList = value =>
 /** A colour a browser can actually apply. `''` interpolated into a style declaration voids it. */
 const isUsableColor = value => typeof value === 'string' && value.trim() !== '';
 
+/** Restrict numeric coercion to numbers and non-empty strings so objects with throwing toString/valueOf cannot throw TypeError. */
+const isUsableNumber = value => (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) && Number.isFinite(Number(value));
+
 /** A column count that yields at least one column. `0` collapses the mega-menu grid to nothing. */
-const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(value) >= 1;
+const isUsableColumnCount = value => isUsableNumber(value) && Number(value) >= 1;
+
+/** A row count that can be passed to Array.slice(). Non-negative finite integer, where 0 is preserved as "unlimited". */
+const isUsableRowLimit = value => isUsableNumber(value) && Number.isInteger(Number(value)) && Number(value) >= 0;
 
 /** A language limit that renders at least one language. `0` empties the menu and hides the bar. */
-const isUsableLanguageLimit = value => typeof value !== 'boolean' && Number.isFinite(Number(value)) && Number(value) >= 1;
+const isUsableLanguageLimit = value => isUsableNumber(value) && Number(value) >= 1;
+
+/** Supported 3- or 6-digit hex format that hexToRgb supports. */
+const HEX_COLOR_REGEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+const isSupportedHexColor = value => typeof value === 'string' && HEX_COLOR_REGEX.test(value);
 
 /**
  * Per-leaf validators — the deliberate exceptions to the presence rule.
- *
- * A leaf earns a validator only when BOTH hold: its pre-refactor read used `||` (so falsy values
- * already fell through and no live site can be relying on one), and a falsy-but-present value
- * produces a broken render rather than a meaningful setting. That is exactly four leaves:
- *
- * - `color.primary`   — was `|| '#009edb'` at site.js:140. `''` voids every `solid ${primary}`
- *                       border and `background: ${primary}` declaration that consumes it.
- * - `color.secondary` — was `||` (no final default) at site.js:143. Same failure mode, and
- *                       `hero.primary` derives its second slot from it.
- * - `megaMenu.maxColumns` — was `|| 5` at schema-org.js:1152 and drop-down.vue:63. `0` makes
- *                       `organizeSectionsIntoRows` collapse every section into one unbounded row
- *                       (`Math.min(span, 0) === 0`, so the wrap branch never fires).
- * - `i18n.maxLangBeforeWrap` — was `||` at site.js:151. `0`, `''`, or `false` empties `limitedMenus`
- *                       and leaves `otherMenus` hidden behind the `limitedMenus.length > 1` gate
- *                       at language-bar.vue:18, causing all language selectors to vanish.
- *
- * Explicitly NOT validated, with reasons:
- * - `backGround.secondary` — its old read had no `||`, so `''` was already passed through and
- *   rendered. `backGround.primary: ''` demonstrably occurs in the live network theme; rejecting it
- *   would be the regression, not the fix.
- * - `megaMenu.maxRowsPerColumn` / `horizontalCardMax` / `forums` — no `||` in the old reads, and
- *   `0` is a meaningful value ("unlimited") that must not fall through.
  */
-const LEAF_VALIDATORS = Object.freeze({
-    homePageWidgets: { columns: isUsableColumnList },
-    color   : { primary: isUsableColor, secondary: isUsableColor },
-    megaMenu: { maxColumns: isUsableColumnCount },
-    i18n    : { maxLangBeforeWrap: isUsableLanguageLimit }
+const LEAF_VALIDATORS = freezeOwnMap({
+    homePageWidgets: freezeOwnMap({ columns: isUsableColumnList }),
+    color          : freezeOwnMap({ primary: isUsableColor, secondary: isUsableColor }),
+    megaMenu       : freezeOwnMap({ maxColumns: isUsableColumnCount, maxRowsPerColumn: isUsableRowLimit }),
+    i18n           : freezeOwnMap({ maxLangBeforeWrap: isUsableLanguageLimit })
 });
 
 const isPlainObject = value => typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
  * Keys that must never be copied onto the result (pollution / confusing own props).
- *
- * Table-lookup crashes for *any* Object.prototype name (`toString`, `valueOf`, …) are closed by
- * null-prototype `CONTRACT_LEAVES` and own-property validator lookups — a three-key denylist alone
- * is not enough for those lookups. This list only strips the classic pollution aliases from
- * cloned output; benign opaque keys such as a top-level `toString` group still pass through.
- *
- * The camelCase pass upstream does not neutralise these keys: `change-case/keys` rewrites a
- * *top-level* `__proto__` to `proto`, but leaves `constructor` verbatim at every depth, leaves
- * `__proto__` verbatim below the top level, and stops converting at depth 7.
  */
 const DANGEROUS_KEYS = Object.freeze(['__proto__', 'constructor', 'prototype']);
 
@@ -243,12 +196,6 @@ const isSafeKey = key => !DANGEROUS_KEYS.includes(key);
 
 /**
  * Own, prototype-safe keys of a plain object.
- *
- * Note: keys arrive already camelCased by `server/utils/context-unified.ts`, and that conversion is
- * lossy — `back_ground` and `backGround` both become `backGround`, so one silently overwrites the
- * other with no error. It is a correctness wart, not a privilege boundary: an editor can only
- * collide onto a key they could have authored directly, so nothing is reachable that was not
- * already. Left as-is deliberately — erroring here would be a contract change.
  */
 const safeKeys = object => Object.keys(object).filter(isSafeKey);
 
@@ -311,8 +258,7 @@ const resolveOpaqueGroup = (legs, group) => {
 
 /**
  * Derive-when-absent hero. Fills only the slots no leg authored with a usable colour string.
- * A present-but-unusable slot (e.g. `42`) falls through to the derived colour for that index —
- * the hero consumers call `.replace` on each entry, so a non-string is a render crash.
+ * A present-but-unusable slot falls through to the derived colour for that index.
  * @param {Array|undefined} authored - the merged `hero.primary`, if any leg supplied one.
  * @param {object} color - the resolved color group.
  */
@@ -320,7 +266,7 @@ const resolveHeroPrimary = (authored, color) => {
     const derived = [color.primary, color.secondary];
     const source  = Array.isArray(authored) ? authored : [];
 
-    return [0, 1].map(i => (isUsableColor(source[i]) ? source[i] : derived[i]));
+    return [0, 1].map(i => (isSupportedHexColor(source[i]) ? source[i] : derived[i]));
 };
 
 const MAX_AUTHORED_THEME_DEPTH = 64;
@@ -359,12 +305,13 @@ export function resolveTheme(config, authoredTheme) {
     for (const group of collectGroups(legs)) {
         const leaves = collectLeaves(legs, group);
 
-        // A key with nothing to merge (a stray scalar, or an object every leg left empty) passes
+        // A theme group that has no leaves in any leg (an empty object or a scalar) is copied
         // through as-is rather than being dropped off the result.
         if (!leaves.length) {
             const opaque = resolveOpaqueGroup(legs, group);
 
             if (isPresent(opaque)) resolved[group] = opaque;
+            else if (CONTRACT_GROUPS.includes(group)) resolved[group] = {};
 
             continue;
         }
@@ -372,7 +319,7 @@ export function resolveTheme(config, authoredTheme) {
         resolved[group] = Object.fromEntries(leaves.map(leaf => [leaf, resolveLeaf(legs, group, leaf)]));
     }
 
-    // Hero is the one group with a derivation rule rather than a plain default.
+    // Hero is derived when absent from every source.
     resolved.hero.primary = resolveHeroPrimary(resolved.hero.primary, resolved.color);
 
     return resolved;
