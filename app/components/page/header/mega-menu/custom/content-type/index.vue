@@ -36,6 +36,9 @@
 
 <script setup>
     import clone from 'lodash.clonedeep';
+
+    const DEFAULT_HORIZONTAL_CARD_LIMIT = 4;
+    const DEFAULT_MAX_ROWS_PER_COLUMN = 0;
     
     const  { t, locale }       = useI18n();
     const   localePath         = useLocalePath();
@@ -100,12 +103,13 @@
     });
 
     const horizontalCardLimit = computed(()=> {
-        const configuredLimit = Number(siteStore.theme.megaMenu.horizontalCardMax);
+        const value = siteStore?.theme?.megaMenu?.horizontalCardMax;
+        const configuredLimit = typeof value === 'number' || typeof value === 'string' ? Number(value) : NaN;
 
         if(Number.isFinite(configuredLimit) && configuredLimit > 0)
             return configuredLimit;
 
-        return 4;
+        return DEFAULT_HORIZONTAL_CARD_LIMIT;
     });
 
     const cardContainerClasses = computed(()=> {
@@ -174,7 +178,7 @@
 
         if(max) return max;
 
-        return siteStore.theme.megaMenu.maxRowsPerColumn;
+        return siteStore?.theme?.megaMenu?.maxRowsPerColumn ?? DEFAULT_MAX_ROWS_PER_COLUMN;
     }
     function getContentTypeData(country){
         const contentTypeName = getContentType();
