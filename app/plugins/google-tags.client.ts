@@ -4,9 +4,10 @@
  * Two gates, both required, both re-evaluated on every change:
  *
  * - **Site eligibility** via the shared site gate in `shared/utils/google-tags.ts`: the deployment
- *   is `prod`, the multisite has a host template in `GOOGLE_TAG_HOSTS` (today only `bl2`), and both
- *   the site's configured host and the hostname the browser is actually on are exactly that
- *   template applied to its `siteCode`. No env var, no kill switch.
+ *   is `prod`, the multisite has a host template in `GOOGLE_TAG_HOSTS` (today only `bl2`), dmsm
+ *   marks the site `published`, and the hostname the browser is actually on is either that
+ *   template applied to its `siteCode` or the site's configured `redirect` alias. No env var, no
+ *   kill switch.
  * - **Visitor consent** via `useCookieControl().cookiesEnabledIds` containing `ga`. Every consent
  *   action in the module funnels through one writer (`CookieControl.vue setCookies`), which sets
  *   `cookiesEnabledIds`, so watching that ref catches grant, per category revoke, and decline all.
@@ -152,13 +153,15 @@ export default defineNuxtPlugin({
             env: siteStore.env,
             multiSiteCode: siteStore.multiSiteCode,
             siteCode: siteStore.siteCode,
-            host: siteStore.host,
+            published: siteStore.config?.published,
+            redirect: siteStore.config?.redirect,
         }, window.location.hostname));
 
         const consent = computed(() => Boolean(cookiesEnabledIds.value?.includes('ga')));
         const ids = computed(() => parseGoogleTagIds(siteStore.biolandSettings?.googleAnalyticsIds));
 
         let loaded = false;
+        let revoking = false;
         const configured = new Set<string>();
 
         function load(tagIds: GoogleTagIds): void {
@@ -168,6 +171,20 @@ export default defineNuxtPlugin({
             // Before either loader: the only cookie lever a GTM only site has, since
             // `onBeforeGtagStart` never fires when no `G-`/`AW-`/`DC-`/`UA-` ID is configured.
             ensureGtag()('set', cookieParams);
+
+            // Recover from a transient eligibility/ID loss without configuring tags twice.
+            if (!loaded && configured.size) {
+                const win = window as unknown as GoogleTagWindow;
+
+                for (const id of gtag) {
+                    if (configured.has(id) && ANALYTICS_TAG_ID_PATTERN.test(id)) win[`ga-disable-${id}`] = false;
+                }
+
+                ensureGtag()('consent', 'update', {
+                    analytics_storage: 'granted',
+                    ...DENIED_AD_CONSENT,
+                });
+            }
 
             if (gtag.length) {
                 const analytics = useScriptGoogleAnalytics({
@@ -259,22 +276,27 @@ export default defineNuxtPlugin({
                 return;
             }
 
-            // Transition only. Without the `loaded` guard a visitor who never consented would be
-            // reloaded on their first page view.
-            if (!loaded) return;
-
-            loaded = false;
-
-            // Only a real consent withdrawal earns the purge and the reload. Eligibility loss or a
-            // context payload that momentarily drops the tag IDs is silenced in place instead:
-            // `app/plugins/site.js` re-initialises the store on every locale switch, so reloading
-            // there would throw the visitor out of their session over a transient response.
             if (!hasConsent) {
-                void revoke();
+                if (configured.size && !revoking) {
+                    revoking = true;
+                    loaded = false;
+                    void revoke();
+
+                    return;
+                }
+
+                if (loaded) {
+                    loaded = false;
+                    silence();
+                }
 
                 return;
             }
 
+            // Consent is still held, but tags should not load (e.g. unpublished or missing IDs).
+            if (!loaded) return;
+
+            loaded = false;
             silence();
         }, { immediate: true });
     },

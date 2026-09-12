@@ -107,29 +107,28 @@ describe('isGoogleTagsSite', () => {
     env: 'prod',
     multiSiteCode: 'bl2',
     siteCode: 'mysite',
-    host: 'https://mysite.chm-cbd.net',
+    published: true,
   }
 
   // The hostname the browser is really on. The plugin passes `window.location.hostname`.
   const BROWSER_HOST = 'mysite.chm-cbd.net'
 
-  it('passes for prod + bl2 + the exact host + a matching browser host', () => {
+  it('passes for prod + bl2 + published + a matching browser host', () => {
     expect(isGoogleTagsSite(eligible, BROWSER_HOST)).toBe(true)
-    expect(isGoogleTagsSite({ ...eligible, host: 'mysite.chm-cbd.net' }, BROWSER_HOST)).toBe(true)
   })
 
-  it('compares env, multiSiteCode and both hosts case-insensitively', () => {
+  it('compares env, multiSiteCode and the browser host case-insensitively', () => {
     expect(isGoogleTagsSite({
       env: 'PROD',
       multiSiteCode: 'BL2',
       siteCode: 'MySite',
-      host: 'MYSITE.CHM-CBD.NET',
+      published: true,
     }, 'MySite.CHM-CBD.Net')).toBe(true)
   })
 
   it('fails when the browser is on a host other than the template', () => {
-    // A reverse proxy can forward `Host: mysite.chm-cbd.net` from any origin it likes, so the
-    // configured host alone is not enough: the browser has to be on that host too.
+    // A reverse proxy can forward `Host: mysite.chm-cbd.net` from any origin it likes, so this
+    // must be the actual browser hostname, not something read from the dmsm config.
     for (const browserHost of [
       'evil.test',
       'mysite.chm-cbd.net.evil.test',
@@ -168,21 +167,56 @@ describe('isGoogleTagsSite', () => {
     }
   })
 
-  it('fails for any configured host that is not exactly the template', () => {
-    for (const host of [
-      'mysite.bl2.chm-cbd.net',
-      'wrongdomain.com',
-      'othersite.chm-cbd.net',
-      'mysite.chm-cbd.net.evil.test',
-      'evil.test/mysite.chm-cbd.net',
-      'http://mysite.chm-cbd.net',
-      'https://user:pw@mysite.chm-cbd.net',
-      'https://mysite.chm-cbd.net:8443',
-      'https://mysite.chm-cbd.net/path',
-      'https://mysite.chm-cbd.net/?a=1',
-    ]) {
-      expect(isGoogleTagsSite({ ...eligible, host }, BROWSER_HOST)).toBe(false)
+  it('fails when published is false', () => {
+    expect(isGoogleTagsSite({ ...eligible, published: false }, BROWSER_HOST)).toBe(false)
+  })
+
+  it('fails when published is missing or undefined', () => {
+    const { published: _published, ...unpublished } = eligible
+
+    expect(isGoogleTagsSite(unpublished, BROWSER_HOST)).toBe(false)
+    expect(isGoogleTagsSite({ ...eligible, published: undefined }, BROWSER_HOST)).toBe(false)
+  })
+
+  it('fails when published is a truthy non-boolean, not strictly true', () => {
+    // @ts-expect-error - malformed DMSM input must also fail closed at runtime
+    expect(isGoogleTagsSite({ ...eligible, published: 'true' }, BROWSER_HOST)).toBe(false)
+    // @ts-expect-error - malformed DMSM input must also fail closed at runtime
+    expect(isGoogleTagsSite({ ...eligible, published: 1 }, BROWSER_HOST)).toBe(false)
+  })
+
+  it('passes when published and the browser host matches the redirect alias', () => {
+    expect(isGoogleTagsSite({ ...eligible, siteCode: 'other', redirect: 'alias.example.org' }, 'alias.example.org')).toBe(true)
+  })
+
+  it('compares the redirect alias case-insensitively', () => {
+    expect(isGoogleTagsSite({ ...eligible, siteCode: 'other', redirect: 'Alias.Example.ORG' }, 'alias.example.org')).toBe(true)
+  })
+
+  it('normalises a redirect trailing dot without loosening the browser host gate', () => {
+    const site = { ...eligible, siteCode: 'other', redirect: 'Alias.Example.ORG.' }
+
+    expect(isGoogleTagsSite(site, 'alias.example.org')).toBe(true)
+    for (const browserHost of ['alias.example.org.', ' alias.example.org', 'alias.example.org/path', 'alias.example.org:8443']) {
+      expect(isGoogleTagsSite(site, browserHost)).toBe(false)
     }
+  })
+
+  it('rejects aliases outside the canonical bare-hostname contract', () => {
+    for (const redirect of ['https://alias.example.org/', 'alias.example.org:443', 'alias.example.org/path', 'alias.example.org..', 'user@alias.example.org']) {
+      expect(isGoogleTagsSite({ ...eligible, siteCode: 'other', redirect }, 'alias.example.org')).toBe(false)
+    }
+  })
+
+  it('fails when the browser host matches neither the template nor the redirect alias', () => {
+    expect(isGoogleTagsSite({ ...eligible, siteCode: 'other', redirect: 'alias.example.org' }, 'wrongdomain.com')).toBe(false)
+  })
+
+  it('rejects a confusable alias and browser host', () => {
+    expect(isGoogleTagsSite(
+      { ...eligible, siteCode: 'other', redirect: 'evil.test/real.example.gov' },
+      'evil.test/real.example.gov',
+    )).toBe(false)
   })
 
   it('fails closed on missing or non-string fields', () => {
@@ -192,7 +226,5 @@ describe('isGoogleTagsSite', () => {
     expect(isGoogleTagsSite({ ...eligible, env: undefined }, BROWSER_HOST)).toBe(false)
     expect(isGoogleTagsSite({ ...eligible, multiSiteCode: undefined }, BROWSER_HOST)).toBe(false)
     expect(isGoogleTagsSite({ ...eligible, siteCode: undefined }, BROWSER_HOST)).toBe(false)
-    expect(isGoogleTagsSite({ ...eligible, host: undefined }, BROWSER_HOST)).toBe(false)
-    expect(isGoogleTagsSite({ ...eligible, host: '' }, BROWSER_HOST)).toBe(false)
   })
 })

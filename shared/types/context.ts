@@ -22,6 +22,7 @@ export interface DmsmConfig {
   country?: string
   countries?: string[]
   redirect?: string
+  published?: boolean
   logo?: string
   theme?: {
     color?: {
