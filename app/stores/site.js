@@ -22,8 +22,9 @@ export const useSiteStore = defineStore('site', {
             this.set('redirect', env === 'production'? config?.redirect || '' : '');
             this.set('homePath', homePath);
 
-            if(biolandSettings)
-                this.set('biolandSettings', biolandSettings);
+            // Replace the settings snapshot directly so successive initializations (e.g. locale switch)
+            // cannot leave stale nested keys behind via Pinia's recursive $patch merge.
+            this.biolandSettings = biolandSettings ? unref(biolandSettings) : undefined;
             
             // Fetch logo dimensions asynchronously
             this.fetchLogoDimensions();
@@ -138,8 +139,14 @@ export const useSiteStore = defineStore('site', {
         },
         // Every theme read goes through resolveTheme — see app/utils/resolve-theme.js for the
         // precedence, per-leaf merge, hero-derive, and totality rules.
+        //
+        // The Drupal-authored theme is handed in from `this.biolandSettings`, the depth-7
+        // camelCased copy built in server/utils/context-unified.ts and passed through
+        // `initialize`. It is deliberately NOT read off `this.config.runTime.biolandSettings`:
+        // that copy is only camelCased by a statement sitting after the context builder's
+        // `return`, so it is dead code and the raw snake_case keys would not match.
         theme(){
-            return resolveTheme(this.config);
+            return resolveTheme(this.config, this.biolandSettings?.theme);
         },
         primaryColor(){
             return this.theme.color.primary;

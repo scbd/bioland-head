@@ -106,7 +106,7 @@
         const value = siteStore?.theme?.megaMenu?.horizontalCardMax;
         const configuredLimit = typeof value === 'number' || typeof value === 'string' ? Number(value) : NaN;
 
-        if(Number.isFinite(configuredLimit) && configuredLimit > 0)
+        if(Number.isInteger(configuredLimit) && configuredLimit > 0)
             return configuredLimit;
 
         return DEFAULT_HORIZONTAL_CARD_LIMIT;

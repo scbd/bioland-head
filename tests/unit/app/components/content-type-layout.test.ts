@@ -24,7 +24,7 @@ describe('content-type layout defaults at the store boundary', () => {
     expect(evaluate(rowsBody, store)).toBe(0)
   })
 
-  it.each([undefined, null, '', 'bad', 0, -1, Infinity, NaN, false, true, [], {}, JSON.parse('{"valueOf":"x","toString":"x"}')])('defaults an invalid horizontal limit %#', (limit) => {
+  it.each([undefined, null, '', 'bad', 0, -1, 0.1, 1.5, Infinity, NaN, false, true, [], {}, JSON.parse('{"valueOf":"x","toString":"x"}')])('defaults an invalid horizontal limit %#', (limit) => {
     expect(evaluate(cardBody, { theme: { megaMenu: { horizontalCardMax: limit } } })).toBe(4)
   })
 
