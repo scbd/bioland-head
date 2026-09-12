@@ -222,6 +222,11 @@ describe('resolveTheme', () => {
                 expect(resolveTheme({ theme: { i18n: { maxLangBeforeWrap: 3 } } } as any).i18n.maxLangBeforeWrap).toBe(3)
                 expect(resolveTheme({ theme: { i18n: { maxLangBeforeWrap: '4' } } } as any).i18n.maxLangBeforeWrap).toBe('4')
             })
+
+            it('falls through safely without throwing when given an object with malformed coercion', () => {
+                const malformed = JSON.parse('{"valueOf":"x","toString":"x"}')
+                expect(resolveTheme({ theme: { i18n: { maxLangBeforeWrap: malformed } } } as any).i18n.maxLangBeforeWrap).toBeUndefined()
+            })
         })
 
         describe('megaMenu.maxColumns', () => {
@@ -231,6 +236,11 @@ describe('resolveTheme', () => {
 
                     expect(Number(theme.megaMenu.maxColumns)).toBeGreaterThanOrEqual(1)
                 }
+            })
+
+            it('falls through safely without throwing when given an object with malformed coercion', () => {
+                const malformed = JSON.parse('{"valueOf":"x","toString":"x"}')
+                expect(resolveTheme({ theme: { megaMenu: { maxColumns: malformed } } } as any).megaMenu.maxColumns).toBe(5)
             })
 
             it('falls through an unusable site value to the network leg, not straight to the default', () => {

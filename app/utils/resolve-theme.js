@@ -98,11 +98,13 @@ const isPresent = value => value !== undefined && value !== null;
 /** A colour a browser can actually apply. `''` interpolated into a style declaration voids it. */
 const isUsableColor = value => typeof value === 'string' && value.trim() !== '';
 
+const isUsableNumber = value => (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) && Number.isFinite(Number(value));
+
 /** A column count that yields at least one column. `0` collapses the mega-menu grid to nothing. */
-const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(value) >= 1;
+const isUsableColumnCount = value => isUsableNumber(value) && Number(value) >= 1;
 
 /** A language limit that renders at least one language. `0` empties the menu and hides the bar. */
-const isUsableLanguageLimit = value => typeof value !== 'boolean' && Number.isFinite(Number(value)) && Number(value) >= 1;
+const isUsableLanguageLimit = value => isUsableNumber(value) && Number(value) >= 1;
 
 /**
  * Per-leaf validators — the deliberate exceptions to the presence rule.
