@@ -8,6 +8,8 @@
  * The loader lives in `app/plugins/google-tags.client.ts`.
  */
 
+import { normalizeRedirectHost } from './site-host';
+
 /**
  * The only token grammar admitted into a tag loader.
  *
@@ -65,9 +67,9 @@ export const GOOGLE_TAG_HOSTS: Record<string, (siteCode: string) => string> = {
 /**
  * Reduces a candidate host to a bare, lower cased hostname suitable for an exact comparison.
  *
- * Used for the browser's `window.location.hostname` and for a site's configured `redirect`
- * alias. Both are expected to already be bare hostnames, but an HTTPS origin is accepted too so a
- * store getter that includes the scheme still normalises. Anything else fails closed with `null`:
+ * Used for the browser's `window.location.hostname`. An HTTPS origin is accepted too so a
+ * caller that includes the scheme still normalises. Redirect aliases use the canonical
+ * `normalizeRedirectHost` contract instead. Anything else fails closed with `null`:
  * a non HTTPS scheme, embedded credentials, an explicit port, a non root path, a query or a
  * fragment, or a bare string still carrying `/`, `@`, or `:`. That rejects host confusable input
  * such as `evil.test/real.chm-cbd.net` or a userinfo trick instead of quietly accepting it.
@@ -149,7 +151,7 @@ export function isGoogleTagsSite(site?: GoogleTagSiteContext | null, browserHost
     if (actualBrowserHost === null) return false;
     if (actualBrowserHost === expectedHost) return true;
 
-    const redirectAlias = normalizeGoogleTagHost(redirect);
+    const redirectAlias = normalizeRedirectHost(redirect);
 
     return redirectAlias !== null && actualBrowserHost === redirectAlias;
 }

@@ -26,17 +26,34 @@ const DEV_URL = new URL(E2E_BASE_URL)
 const SITE_LABEL = DEV_URL.hostname.split('.')[0]
 const ELIGIBLE_HOST = `${SITE_LABEL}.${ELIGIBLE_BASE_HOST}`
 const ELIGIBLE_BASE_URL = `${DEV_URL.protocol}//${ELIGIBLE_HOST}${DEV_URL.port ? `:${DEV_URL.port}` : ''}`
+const ALIAS_HOST = 'alias.example.test'
+const ALIAS_BASE_URL = `${DEV_URL.protocol}//${ALIAS_HOST}${DEV_URL.port ? `:${DEV_URL.port}` : ''}`
 
 test.use({
   baseURL: ELIGIBLE_BASE_URL,
-  launchOptions: { args: [`--host-resolver-rules=MAP ${ELIGIBLE_HOST} ${DEV_URL.hostname}`] },
+  launchOptions: { args: [`--host-resolver-rules=MAP ${ELIGIBLE_HOST} ${DEV_URL.hostname}, MAP ${ALIAS_HOST} ${DEV_URL.hostname}`] },
 })
 
 interface ContextOverrides {
   env?: string
   multiSiteCode?: string
   baseHost?: string
-  published?: boolean
+  published?: unknown // Deliberately includes malformed/missing API values.
+  redirect?: string
+}
+
+type NuxtRoot = HTMLElement & {
+  __vue_app__?: { $nuxt?: {
+    isHydrating: boolean
+    callHook: (name: string, args: Record<string, string>) => Promise<void>
+  } }
+}
+
+async function waitForSiteInitialization (page: Page): Promise<void> {
+  // The async site plugin must finish before a zero-script assertion can prove anything.
+  await page.waitForFunction(() => (
+    (document.querySelector('#__nuxt') as NuxtRoot | null)?.__vue_app__?.$nuxt?.isHydrating === false
+  ))
 }
 
 type DataLayerEntry = unknown[] | Record<string, unknown>
@@ -100,9 +117,8 @@ async function installPageRecorder (page: Page): Promise<void> {
  *
  * The gate no longer compares the dmsm-configured host (`context-unified.ts` always builds it as
  * `<siteCode>.bl2.chm-cbd.net`, never the public template) — it compares the browser's own
- * hostname against the template plus `config.published`, so eligibility here is steered through
- * `baseHost` (for the browser-visible host, via `ELIGIBLE_BASE_URL`) and `overrides.published`
- * (for the dmsm `published` flag), not through the payload's own `host` field.
+ * hostname against the template or redirect alias plus `config.published`. The navigation URL
+ * controls the browser host; the payload's `baseHost` and `host` do not gate eligibility.
  */
 async function installRoutes (page: Page, overrides: ContextOverrides = {}): Promise<void> {
   await page.route('**/api/context/**', async (route) => {
@@ -125,7 +141,8 @@ async function installRoutes (page: Page, overrides: ContextOverrides = {}): Pro
         baseHost: overrides.baseHost ?? ELIGIBLE_BASE_HOST,
         config: {
           ...(payload.config ?? {}),
-          published: overrides.published ?? true,
+          published: Object.hasOwn(overrides, 'published') ? overrides.published : true,
+          redirect: overrides.redirect,
         },
         biolandSettings: {
           ...(payload.biolandSettings ?? {}),
@@ -215,6 +232,7 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
     await installRoutes(page)
 
     await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+    await waitForSiteInitialization(page)
 
     await expect(page.locator(
       `script[src*="googletagmanager.com/gtag/js"][src*="id=${GTAG_ID}"]`,
@@ -287,6 +305,7 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
     await installRoutes(page)
 
     await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+    await waitForSiteInitialization(page)
     await page.waitForLoadState('networkidle')
 
     await expect(googleScripts(page)).toHaveCount(0)
@@ -306,6 +325,7 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
     await installRoutes(page)
 
     await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+    await waitForSiteInitialization(page)
     await page.waitForLoadState('networkidle')
 
     await expect(googleScripts(page)).toHaveCount(0)
@@ -319,6 +339,7 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
     await installRoutes(page)
 
     await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+    await waitForSiteInitialization(page)
 
     await expect(googleScripts(page).first()).toBeAttached({ timeout: 20000 })
 
@@ -355,6 +376,7 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
     await installRoutes(page, { env: 'stg' })
 
     await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+    await waitForSiteInitialization(page)
     await page.waitForLoadState('networkidle')
 
     await expect(googleScripts(page)).toHaveCount(0)
@@ -367,29 +389,23 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
     await installRoutes(page, { multiSiteCode: 'bsl' })
 
     await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+    await waitForSiteInitialization(page)
     await page.waitForLoadState('networkidle')
 
     await expect(googleScripts(page)).toHaveCount(0)
     expect(await readDataLayer(page)).toEqual([])
   })
 
-  test('(f) a host outside the multisite template loads nothing even with consent', async ({ context, page }) => {
+  test('(f) the generated baseHost does not veto an eligible public browser host', async ({ context, page }) => {
     await seedConsentCookies(context, ELIGIBLE_BASE_URL)
     await installPageRecorder(page)
-    await installRoutes(page, { baseHost: 'wrong-domain.com' })
+    await installRoutes(page, { baseHost: 'bl2.chm-cbd.net' })
 
     await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+    await waitForSiteInitialization(page)
 
-    // `baseHost: 'wrong-domain.com'` is unreachable, and the page-content pipeline's own alias/
-    // JSON:API lookups for that host (unrelated to the google-tags plugin: `useGetPage` /
-    // `mapAliasByLocale`, per the server logs) retry against it indefinitely, so `networkidle`
-    // never settles for this scenario. `load` is enough here: the plugin's eligibility gate is
-    // evaluated synchronously off the mocked `/api/context/**` response, not off that unrelated
-    // background traffic, so nothing about this assertion needs network quiescence.
-    await page.waitForLoadState('load')
-
-    await expect(googleScripts(page)).toHaveCount(0)
-    expect(await readDataLayer(page)).toEqual([])
+    await expect(googleScripts(page)).toHaveCount(2)
+    expect(countConfigCalls(await readDataLayer(page), GTAG_ID)).toBe(1)
   })
 
   test('(g0) an unpublished site loads nothing even with consent and a matching browser host', async ({ context, page }) => {
@@ -398,6 +414,7 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
     await installRoutes(page, { published: false })
 
     await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+    await waitForSiteInitialization(page)
     await page.waitForLoadState('networkidle')
 
     await expect(googleScripts(page)).toHaveCount(0)
@@ -413,9 +430,91 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
     await installRoutes(page)
 
     await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
+    await waitForSiteInitialization(page)
     await page.waitForLoadState('networkidle')
 
     await expect(googleScripts(page)).toHaveCount(0)
     expect(await readDataLayer(page)).toEqual([])
+  })
+})
+
+test.describe('BL-946: publication and redirect eligibility', () => {
+  test.setTimeout(60000)
+
+  for (const [label, published] of [
+    ['missing', undefined], ['null', null], ['string', 'true'], ['number', 1],
+  ] as const) {
+    test(`a ${label} publication flag in the client refetch loads nothing`, async ({ context, page }) => {
+      await seedConsentCookies(context, ELIGIBLE_BASE_URL)
+      await installPageRecorder(page)
+      await installRoutes(page, { published })
+
+      await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+      await waitForSiteInitialization(page)
+
+      await expect(googleScripts(page)).toHaveCount(0)
+      expect(await readDataLayer(page)).toEqual([])
+    })
+  }
+
+  for (const redirect of [ALIAS_HOST, 'Alias.Example.TEST', 'Alias.Example.TEST.']) {
+    test(`a published site loads tags on its normalized alias ${redirect}`, async ({ context, page }) => {
+      await seedConsentCookies(context, ALIAS_BASE_URL)
+      await installPageRecorder(page)
+      await installRoutes(page, { redirect })
+
+      await page.goto(`${ALIAS_BASE_URL}${HOME_PATH}`)
+      await waitForSiteInitialization(page)
+
+      await expect(googleScripts(page)).toHaveCount(2)
+      expect(countConfigCalls(await readDataLayer(page), GTAG_ID)).toBe(1)
+    })
+  }
+
+  for (const [label, overrides] of [
+    ['unpublished', { redirect: ALIAS_HOST, published: false }],
+    ['nonmatching', { redirect: 'other.example.test' }],
+    ['noncanonical HTTPS', { redirect: `https://${ALIAS_HOST}/` }],
+  ] as const) {
+    test(`an ${label} alias loads nothing`, async ({ context, page }) => {
+      await seedConsentCookies(context, ALIAS_BASE_URL)
+      await installPageRecorder(page)
+      await installRoutes(page, overrides)
+
+      await page.goto(`${ALIAS_BASE_URL}${HOME_PATH}`)
+      await waitForSiteInitialization(page)
+
+      await expect(googleScripts(page)).toHaveCount(0)
+      expect(await readDataLayer(page)).toEqual([])
+    })
+  }
+
+  test('a refetch omitting publication silences already-loaded tags without reloading', async ({ context, page }) => {
+    const overrides: ContextOverrides = { published: true }
+    await seedConsentCookies(context, ELIGIBLE_BASE_URL)
+    await installPageRecorder(page)
+    await installRoutes(page, overrides)
+
+    await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+    await waitForSiteInitialization(page)
+    await expect(googleScripts(page)).toHaveCount(2)
+
+    overrides.published = undefined
+    // Use the real site plugin's locale-refetch path, retaining the same hydrated store.
+    await page.evaluate(async () => {
+      const nuxt = (document.querySelector('#__nuxt') as NuxtRoot | null)?.__vue_app__?.$nuxt
+      if (!nuxt) throw new Error('Nuxt is not initialized')
+      await nuxt.callHook('i18n:beforeLocaleSwitch', { oldLocale: 'en', newLocale: 'fr' })
+    })
+
+    await expect.poll(() => page.evaluate(id => (
+      (window as unknown as Record<string, unknown>)[`ga-disable-${id}`]
+    ), GTAG_ID)).toBe(true)
+    const entries = await readDataLayer(page)
+    expect(entries).toContainEqual(['consent', 'update', {
+      analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
+    }])
+    expect(countConfigCalls(entries, GTAG_ID)).toBe(1)
+    expect(await readLoadCount(page)).toBe(1)
   })
 })

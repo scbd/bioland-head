@@ -179,7 +179,9 @@ describe('isGoogleTagsSite', () => {
   })
 
   it('fails when published is a truthy non-boolean, not strictly true', () => {
+    // @ts-expect-error - malformed DMSM input must also fail closed at runtime
     expect(isGoogleTagsSite({ ...eligible, published: 'true' }, BROWSER_HOST)).toBe(false)
+    // @ts-expect-error - malformed DMSM input must also fail closed at runtime
     expect(isGoogleTagsSite({ ...eligible, published: 1 }, BROWSER_HOST)).toBe(false)
   })
 
@@ -191,11 +193,26 @@ describe('isGoogleTagsSite', () => {
     expect(isGoogleTagsSite({ ...eligible, siteCode: 'other', redirect: 'Alias.Example.ORG' }, 'alias.example.org')).toBe(true)
   })
 
+  it('normalises a redirect trailing dot without loosening the browser host gate', () => {
+    const site = { ...eligible, siteCode: 'other', redirect: 'Alias.Example.ORG.' }
+
+    expect(isGoogleTagsSite(site, 'alias.example.org')).toBe(true)
+    for (const browserHost of ['alias.example.org.', ' alias.example.org', 'alias.example.org/path', 'alias.example.org:8443']) {
+      expect(isGoogleTagsSite(site, browserHost)).toBe(false)
+    }
+  })
+
+  it('rejects aliases outside the canonical bare-hostname contract', () => {
+    for (const redirect of ['https://alias.example.org/', 'alias.example.org:443', 'alias.example.org/path', 'alias.example.org..', 'user@alias.example.org']) {
+      expect(isGoogleTagsSite({ ...eligible, siteCode: 'other', redirect }, 'alias.example.org')).toBe(false)
+    }
+  })
+
   it('fails when the browser host matches neither the template nor the redirect alias', () => {
     expect(isGoogleTagsSite({ ...eligible, siteCode: 'other', redirect: 'alias.example.org' }, 'wrongdomain.com')).toBe(false)
   })
 
-  it('runs the redirect alias through the same host normaliser, rejecting a confusable alias', () => {
+  it('rejects a confusable alias and browser host', () => {
     expect(isGoogleTagsSite(
       { ...eligible, siteCode: 'other', redirect: 'evil.test/real.example.gov' },
       'evil.test/real.example.gov',

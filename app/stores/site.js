@@ -22,7 +22,8 @@ export const useSiteStore = defineStore('site', {
             this.set('siteCode',                  identifier || siteCode);
             this.set('defaultLocale',             defaultLocale ||config?.defaultLocale);
         
-            this.set('config', config);
+            // A fresh context must not inherit publication or aliases from the previous config.
+            this.config = unref(config);
             this.set('logo',   this.getLogoUri);
             this.set('name',   siteName);
             this.set('redirect', env === 'production'? config?.redirect || '' : '');
