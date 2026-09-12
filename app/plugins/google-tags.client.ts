@@ -161,6 +161,7 @@ export default defineNuxtPlugin({
         const ids = computed(() => parseGoogleTagIds(siteStore.biolandSettings?.googleAnalyticsIds));
 
         let loaded = false;
+        let revoking = false;
         const configured = new Set<string>();
 
         function load(tagIds: GoogleTagIds): void {
@@ -275,22 +276,27 @@ export default defineNuxtPlugin({
                 return;
             }
 
-            // Transition only. Without the `loaded` guard a visitor who never consented would be
-            // reloaded on their first page view.
-            if (!loaded) return;
-
-            loaded = false;
-
-            // Only a real consent withdrawal earns the purge and the reload. Eligibility loss or a
-            // context payload that momentarily drops the tag IDs is silenced in place instead:
-            // `app/plugins/site.js` re-initialises the store on every locale switch, so reloading
-            // there would throw the visitor out of their session over a transient response.
             if (!hasConsent) {
-                void revoke();
+                if (configured.size && !revoking) {
+                    revoking = true;
+                    loaded = false;
+                    void revoke();
+
+                    return;
+                }
+
+                if (loaded) {
+                    loaded = false;
+                    silence();
+                }
 
                 return;
             }
 
+            // Consent is still held, but tags should not load (e.g. unpublished or missing IDs).
+            if (!loaded) return;
+
+            loaded = false;
             silence();
         }, { immediate: true });
     },

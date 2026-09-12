@@ -104,4 +104,15 @@ describe('Google tags publication recovery', () => {
       analytics_storage: 'denied', ...DENIED_AD_CONSENT,
     })
   })
+
+  it('purges cookies and reloads when consent is revoked while unpublished', async () => {
+    const { site, cookiesEnabledIds, reload } = await setupTags()
+    site.config = {}
+    await nextTick()
+    expect(reload).not.toHaveBeenCalled()
+
+    cookiesEnabledIds.value = []
+    await nextTick()
+    expect(reload).toHaveBeenCalledOnce()
+  })
 })
