@@ -109,12 +109,12 @@
 
     // Color tint — blends with the image via mix-blend-mode: color
     const tintStyle = computed(() => ({
-        background: `linear-gradient(0deg, rgb(${hexToRgb(siteStore?.theme?.hero?.primary[1])}) 0%, rgb(${hexToRgb(siteStore?.theme?.hero?.primary[0])}) 100%)`
+        background: `linear-gradient(0deg, rgb(${hexToRgb(siteStore.theme.hero.primary[1])}) 0%, rgb(${hexToRgb(siteStore.theme.hero.primary[0])}) 100%)`
     }))
 
     // Normal overlays — dark top vignette + left-side primary fade
     const overlayStyle = computed(() => ({
-        background: `linear-gradient(rgba(0, 0, 0, 0.33) 0%, rgba(0, 0, 0, 0) 100%), linear-gradient(90deg, rgb(${hexToRgb(siteStore?.theme?.hero?.primary[0])}) 0%, rgba(${hexToRgb(siteStore?.theme?.hero?.primary[0])}, 0) 100%)`
+        background: `linear-gradient(rgba(0, 0, 0, 0.33) 0%, rgba(0, 0, 0, 0) 100%), linear-gradient(90deg, rgb(${hexToRgb(siteStore.theme.hero.primary[0])}) 0%, rgba(${hexToRgb(siteStore.theme.hero.primary[0])}, 0) 100%)`
     }))
 
     function editUrl() {
