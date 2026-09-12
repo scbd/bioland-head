@@ -64,3 +64,5 @@ tmp
 .playwright-mcp/
 graphify-out
 backlog.jsonl
+
+nohup.out

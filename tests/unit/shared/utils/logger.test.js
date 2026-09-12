@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { configureLogger } from '../../../../shared/utils/logger'
 import { LOG_LEVEL } from '../../../../shared/utils/constants'
 import consola from 'consola'
@@ -96,6 +96,23 @@ describe('Logger Configuration', () => {
     it('should return consola instance', () => {
       const result = configureLogger(LOG_LEVEL.WARN)
       expect(result).toBe(consola)
+    })
+  })
+
+  describe('production default level', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs()
+      vi.resetModules()
+    })
+
+    it('should default to INFO when NODE_ENV is production', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      vi.resetModules()
+
+      const { configureLogger: configureProdLogger } = await import('../../../../shared/utils/logger')
+      const logger = configureProdLogger(undefined)
+
+      expect(logger.level).toBe(LOG_LEVEL.INFO)
     })
   })
 
