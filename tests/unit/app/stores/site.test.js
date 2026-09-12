@@ -34,9 +34,11 @@ describe('site store hosts', () => {
     ['prod', 'custom.example.gov', 'https://custom.example.gov', 'custom.example.gov'],
     ['prod', '', 'https://seed.example.test', ''],
     ['prod', undefined, 'https://seed.example.test', ''],
+    ['production', 'custom.example.gov', 'https://custom.example.gov', 'custom.example.gov'],
+    ['production', '', 'https://seed.example.test', ''],
+    ['production', undefined, 'https://seed.example.test', ''],
     ['dev', 'custom.example.gov', 'https://seed.example.test', ''],
     ['stg', 'custom.example.gov', 'https://seed.example.test', ''],
-    ['production', 'custom.example.gov', 'https://seed.example.test', ''],
   ])('initializes env=%s, redirect=%s without changing host or bare redirect', (env, redirect, host, bareRedirect) => {
     const store = initialize({ env, config: { redirect, defaultLocale: 'en', locales: ['en', 'fr'] } })
 

@@ -19,15 +19,23 @@ describe('getGeneratedHostname', () => {
 })
 
 describe('getCanonicalHost', () => {
-  // Three explicit gate-outcome cases (p03-01):
+  // Explicit gate-outcome cases for both prod and production spellings:
   // Vanity redirects must sit outside `.${baseHost}`: inbound suffix routing
   // resolves `*.${baseHost}` via extractSiteCodeFromHost before the reverse index.
   it('env=prod with redirect set returns the redirect Host', () => {
     expect(canonical('custom.example.gov', 'prod')).toBe('https://custom.example.gov')
   })
 
+  it('env=production with redirect set returns the redirect Host', () => {
+    expect(canonical('custom.example.gov', 'production')).toBe('https://custom.example.gov')
+  })
+
   it('env=prod with no redirect returns the generated Host', () => {
     expect(canonical(undefined, 'prod')).toBe(GENERATED)
+  })
+
+  it('env=production with no redirect returns the generated Host', () => {
+    expect(canonical(undefined, 'production')).toBe(GENERATED)
   })
 
   it('env=dev with redirect set returns the generated Host (gate stays closed)', () => {
@@ -38,9 +46,11 @@ describe('getCanonicalHost', () => {
     ['prod', 'custom.example.gov', 'https://custom.example.gov'],
     ['prod', '', GENERATED],
     ['prod', undefined, GENERATED],
+    ['production', 'custom.example.gov', 'https://custom.example.gov'],
+    ['production', '', GENERATED],
+    ['production', undefined, GENERATED],
     ['dev', 'custom.example.gov', GENERATED],
     ['stg', 'custom.example.gov', GENERATED],
-    ['production', 'custom.example.gov', GENERATED],
     ['Production', 'custom.example.gov', GENERATED],
   ])('gate outcome for env=%s, redirect=%s', (env, redirect, expected) => {
     expect(canonical(redirect, env)).toBe(expected)

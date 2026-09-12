@@ -29,9 +29,11 @@ describe('getDefaultLocale', () => {
     ['prod', 'custom.example.gov', 'https://custom.example.gov'],
     ['prod', '', 'https://seed.example.test'],
     ['prod', undefined, 'https://seed.example.test'],
+    ['production', 'custom.example.gov', 'https://custom.example.gov'],
+    ['production', '', 'https://seed.example.test'],
+    ['production', undefined, 'https://seed.example.test'],
     ['dev', 'custom.example.gov', 'https://seed.example.test'],
     ['stg', 'custom.example.gov', 'https://seed.example.test'],
-    ['production', 'custom.example.gov', 'https://seed.example.test'],
   ])('preserves the language URL for env=%s, redirect=%s', async (env, redirect, host) => {
     runtime.public.env = env
 

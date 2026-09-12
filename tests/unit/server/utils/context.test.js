@@ -274,7 +274,12 @@ describe('Context Utilities', () => {
       expect((await contextModule.useRequestContext(eventFor({ host: `be.${baseHost}` }))).isBchSite).toBe(true)
     })
 
-    it.each([['prod', 'https://redirect.example'], ['production', 'https://be.test.example.com']])('gate opens on prod and stays closed on %s', async (env, host) => {
+    it.each([
+      ['prod', 'https://redirect.example'],
+      ['production', 'https://redirect.example'],
+      ['dev', 'https://be.test.example.com'],
+      ['stg', 'https://be.test.example.com'],
+    ])('gate outcome for env=%s is %s', async (env, host) => {
       runtime.env = env
       config.redirect = 'redirect.example'
       expect((await contextModule.useRequestContext(eventFor({ host: 'be.localhost' }))).host).toBe(host)
@@ -297,9 +302,11 @@ describe('Context Utilities', () => {
           ['prod', 'custom.example.gov', 'https://custom.example.gov'],
           ['prod', '', 'https://seed.example.test'],
           ['prod', undefined, 'https://seed.example.test'],
+          ['production', 'custom.example.gov', 'https://custom.example.gov'],
+          ['production', '', 'https://seed.example.test'],
+          ['production', undefined, 'https://seed.example.test'],
           ['dev', 'custom.example.gov', 'https://seed.example.test'],
           ['stg', 'custom.example.gov', 'https://seed.example.test'],
-          ['production', 'custom.example.gov', 'https://seed.example.test'],
           ['prod', '169.254.169.254', 'https://seed.example.test'],
           ['prod', 'user:password@example.com', 'https://seed.example.test'],
         ]) {
