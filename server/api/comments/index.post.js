@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
         }
     }
     catch (e) {
-        consola.error('api/comments/post',e.data.errors[0])
+        consola.error('api/comments/post', e?.data?.errors?.[0] ?? e)
         passError(event, e);
     }
 })

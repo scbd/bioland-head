@@ -65,3 +65,4 @@ tmp
 graphify-out
 backlog.jsonl
 coverage/
+nohup.out

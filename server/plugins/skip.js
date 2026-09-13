@@ -6,7 +6,11 @@ export default defineNitroPlugin((nitro) => {
 
 
         for(let path of skipPaths)
-            if(event.path.includes(path)) return sendRedirect(event, `/${ctx.defaultLocale}`, 301);
+            if(event.path.includes(path)){
+                const { defaultLocale } = await useRequestContext(event).catch(() => ({ defaultLocale: 'en' }));
+
+                return sendRedirect(event, `/${defaultLocale}`, 301);
+            }
 
 
     });

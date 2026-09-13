@@ -22,8 +22,9 @@ export const useSiteStore = defineStore('site', {
             this.set('redirect', env === 'production'? config?.redirect || '' : '');
             this.set('homePath', homePath);
 
-            if(biolandSettings)
-                this.set('biolandSettings', biolandSettings);
+            // Replace the settings snapshot directly so successive initializations (e.g. locale switch)
+            // cannot leave stale nested keys behind via Pinia's recursive $patch merge.
+            this.biolandSettings = biolandSettings ? unref(biolandSettings) : undefined;
             
             // Fetch logo dimensions asynchronously
             this.fetchLogoDimensions();
