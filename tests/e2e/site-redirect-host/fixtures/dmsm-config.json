@@ -1,0 +1,50 @@
+{
+  "env": "prod",
+  "multiSiteCode": "bl942fixture",
+  "baseHost": "generated.example.test",
+  "siteCode": "seed",
+  "sites": {
+    "seed": {
+      "redirect": "chm.example.test",
+      "defaultLocale": "en",
+      "locales": ["en", "fr"],
+      "country": "ca",
+      "logo": "/images/no-image.png",
+      "countries": ["ca"],
+      "theme": {
+        "color": { "primary": "#006a50", "secondary": "#edf5ef", "secondaryTextOver": "#111111" },
+        "backGround": { "primary": "#ffffff", "secondary": "#edf5ef" },
+        "i18n": { "maxLangBeforeWrap": 6 }
+      },
+      "runTime": { "biolandSettings": {} }
+    }
+  },
+  "config": {},
+  "drupal": {
+    "site": { "data": { "name": "BL-942 fixture site", "page_front": "/node/1" } },
+    "page": {
+      "data": {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "type": "node--content",
+        "drupal_internal__nid": 1,
+        "title": "BL-942 fixture page",
+        "status": true,
+        "default_langcode": true,
+        "langcode": "en",
+        "body": { "value": "<p>Isolated redirect-host fixture content.</p>", "processed": "<p>Isolated redirect-host fixture content.</p>", "summary": "Isolated fixture" },
+        "field_attachments": [],
+        "field_type_placement": [],
+        "created": "2026-01-01T00:00:00Z",
+        "changed": "2026-01-01T00:00:00Z"
+      }
+    },
+    "languages": { "data": [
+      { "id": "en", "drupal_internal__id": "en", "langcode": "en", "weight": 0 },
+      { "id": "fr", "drupal_internal__id": "fr", "langcode": "fr", "weight": 1 }
+    ] },
+    "aliases": { "data": [
+      { "langcode": "en", "path": "/node/1", "alias": "" },
+      { "langcode": "fr", "path": "/node/1", "alias": "" }
+    ] }
+  }
+}

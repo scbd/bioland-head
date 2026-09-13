@@ -23,6 +23,7 @@
                         <NuxtLink v-if="meStore.isAdmin" :to="getUrl(site, section.config, true)+'/en/user/login'" target="_blank" class="text-primary me-1">
                             <LazyIcon name="drupal" :size="1.5"/>
                         </NuxtLink>
+                        <!-- Published sites only (i === 0): the legacy Bioland 1 host, a different domain from the Site's canonical Host above. Out of scope for BL-939, same rationale as page.js migratedFromLink. -->
                         <hr v-if="!i" class="mt-1 mb-1" />
                         <span v-if="!i">{{site.siteCode}}.chm-cbd.net
                             <NuxtLink :to="`https://${site.siteCode}.chm-cbd.net`" target="_blank" class="text-primary ms-3 me-1">
@@ -78,15 +79,12 @@
     });
 
     function getUrl(site, config, withProtocol=false) {
-        if(!site || !config) {
+        if(!site || (!site.host && !config)) {
             consola.error('table-getUrl',{site, config} )
 
             return''
         }
 
-        const { siteCode } = site ;
-        const { baseHost } = config ;
-        const proto = withProtocol ? 'https://' : '';
-        return `${proto}${siteCode}.${baseHost}`;
+        return getChmNetworkSiteUrl(site, config, withProtocol);
     }
 </script>

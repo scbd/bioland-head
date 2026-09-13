@@ -360,6 +360,15 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     }
   }
 
+  function isKnownDevHost(host, baseHost) {
+    if(!host) return false;
+
+    return host === 'localhost'
+      || host === '127.0.0.1'
+      || host.endsWith('.localhost')
+      || (baseHost ? host.endsWith(`.${baseHost}`) : false);
+  }
+
   /**
    * Extracts the site identifier from a hostname.
    * 
@@ -373,6 +382,10 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
    */
   function getSiteIdentifierFromHost(hostName){
     if(!hostName) return null;
+
+    const { baseHost } = useRuntimeConfig().public;
+    if(!isKnownDevHost(hostName, baseHost)) return null;
+
     const parts = hostName.split('.');
     return parts.length > 1 ? parts[0] : null;
   }

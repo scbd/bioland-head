@@ -23,9 +23,9 @@ export default defineEventHandler(async (event) => {
     // Resolve context (will be cached on event.context.site)
     await useRequestContext(event)
   } catch (e: unknown) {
-    // Don't block request on context resolution failure
-    // The specific route handler can decide how to handle missing context
     const error = e as Error & { statusCode?: number }
+    if (error.statusCode === 400) throw e
+    // Other resolution failures retain route-level handling.
     consola.warn(`Context resolution failed for ${event.path}:`, error.message)
   }
 })

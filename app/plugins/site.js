@@ -18,6 +18,13 @@ export default defineNuxtPlugin({
         
         // Context cookie - now stores minimal data: { siteCode, locale, defaultLocale }
         const context   = useCookie('context');
+        const siteCodeState = useState('siteCode', () => undefined);
+
+        if(import.meta.server) {
+            const requestEvent = useRequestEvent();
+            if(requestEvent?.context?.site?.siteCode)
+                siteCodeState.value = requestEvent.context.site.siteCode;
+        }
 
         // Safely get locale with fallback and keep a setter on hand
         let i18nLocale = ref('en');
@@ -162,7 +169,14 @@ export default defineNuxtPlugin({
         }
 
         function getBiolandSiteIdentifier () {
-            
+            const resolvedSiteCode = resolveClientSiteIdentifier({
+                stateSiteCode: siteCodeState.value,
+                cookieSiteCode: context.value?.siteCode,
+                hostName,
+                baseHost: runTime.baseHost
+            });
+
+            if(resolvedSiteCode) return resolvedSiteCode;
 
             if(!hostName)
                     throw createError({ 
@@ -170,13 +184,11 @@ export default defineNuxtPlugin({
                         statusMessage: 'Not Found Plugins.site.getBiolandSiteIdentifier: no host derived to find env site context.'
                     });
 
-            if(hostName.split('.').length <= 1)
+            if(!resolvedSiteCode)
                         throw createError({ 
                             statusCode: 404, 
                             statusMessage: 'Not Found Plugins.site.getBiolandSiteIdentifier: no siteKey derived to find env site context.'
                         });
-
-            return hostName.split('.')[0];
         }
 
         /**
@@ -235,6 +247,51 @@ export default defineNuxtPlugin({
 });
 
 
+
+/**
+ * Recognizes hosts that allow first-label siteCode resolution.
+ * The server classifier in server/utils/context-unified.ts (p01-03) must match these shapes.
+ * @param {string} host - Request hostname
+ * @param {string} baseHost - Configured base hostname
+ * @returns {boolean} Whether first-label resolution is allowed
+ */
+export function isKnownDevHost (host, baseHost) {
+    if(!host) return false;
+
+    return host === 'localhost'
+        || host === '127.0.0.1'
+        || host.endsWith('.localhost')
+        || (baseHost ? host.endsWith(`.${baseHost}`) : false);
+}
+
+/**
+ * Prefers server state, then a known host's first label, then — only on known dev hosts
+ * that yield no first label (plain `localhost`) — the context cookie.
+ * The verified host outranks the cookie because the cookie is client-writable and any
+ * sibling tenant under baseHost can set a Domain= copy of it; this mirrors the server
+ * precedence in server/utils/context-unified.ts (host, then query, then cookie).
+ * Unknown hosts fail closed (return null) per PRD ops requirement #39: a misconfigured
+ * or unknown Site must fail rather than serve another Site's content.
+ * The classifiers are not yet aligned on loopback: `127.0.0.1` still first-labels to
+ * `127` here where the server returns null (aligned in p01-03).
+ * @param {{ stateSiteCode?: string, cookieSiteCode?: string, hostName?: string, baseHost?: string }} params - Resolution inputs
+ * @returns {string|null} Resolved siteCode, or null for an unknown host
+ */
+export function resolveClientSiteIdentifier ({ stateSiteCode, cookieSiteCode, hostName, baseHost }) {
+    if(stateSiteCode) return stateSiteCode;
+
+    if(isKnownDevHost(hostName, baseHost)) {
+        const parts = hostName.split('.');
+
+        if(parts.length > 1) return parts[0];
+
+        // Single-label known dev host (plain `localhost`): cookie supplies the siteCode.
+        return cookieSiteCode || null;
+    }
+
+    // Unknown or empty host: fail closed — never consult the cookie.
+    return null;
+}
 
 function ensureContext(ctx = {}){
     const hasContext = ctx.siteCode && ctx.locale && ctx.host;
