@@ -20,6 +20,7 @@
  */
 
 import { test, expect } from '../../fixtures/auth'
+import { getTargetExpectations } from '../../expectations'
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import type { Page, TestInfo } from '@playwright/test'
@@ -27,6 +28,12 @@ import { getE2EBaseURL } from '../../e2e-targets'
 import { seedConsentCookies } from '../../helpers/seed-consent-cookies'
 
 const E2E_BASE_URL = getE2EBaseURL()
+
+const expectations = getTargetExpectations()
+
+// BL-888: expectations follow the selected tenant. Skip rather than fail where the
+// selected tenant cannot exhibit the behaviour this spec pins.
+test.skip(!expectations.isBiosafety, `target "${expectations.siteCode}" is not a Biosafety (BCH/BSL) tenant, so it renders no home-bch-resources swiper`)
 
 // Test path - BCH home page (BSL sites serve this)
 const TEST_PATH = '/'

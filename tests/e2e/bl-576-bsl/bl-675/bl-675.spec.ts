@@ -3,8 +3,11 @@ import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 
 import { getE2EBaseURL } from '../../e2e-targets'
+import { getTargetExpectations } from '../../expectations'
 
 const E2E_BASE_URL = getE2EBaseURL()
+
+const expectations = getTargetExpectations()
 
 /**
  * BL-675: BSL Content Types Display
@@ -169,6 +172,7 @@ test.describe('BL-675: BSL Content Types Display', () => {
   })
 
   test('National Biosafety Framework dropdown shows BSL content types', async ({ page }, testInfo) => {
+    test.skip(!expectations.isBiosafety, `target "${expectations.siteCode}" has no National Biosafety Framework mega menu (Biosafety tenants only)`)
     const menuOpened = await openMegaMenuDropdown(page, 'National Biosafety Framework')
     expect(menuOpened, 'National Biosafety Framework menu should open').toBe(true)
     
@@ -298,6 +302,7 @@ test.describe('BL-675: BSL Content Types Display', () => {
   })
 
   test('all mega menu dropdowns render BSL content types', async ({ page }, testInfo) => {
+    test.skip(!expectations.isBiosafety, `target "${expectations.siteCode}" has no Biosafety mega menu set (Biosafety tenants only)`)
     testInfo.setTimeout(90_000)
     
     const menusToTest = [
