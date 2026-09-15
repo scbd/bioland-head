@@ -10,7 +10,7 @@
  * path, so a failing fixture says what to fix without a debugger.
  *
  * Four rejection classes, one per spec acceptance criterion 2-5:
- *   1. ENVELOPE  - missing or non-integer `version`, missing `siteCode`, missing `generated`,
+ *   1. ENVELOPE  - missing, non-integer or non-positive `version`, missing `siteCode`, missing `generated`,
  *                  missing `config`.
  *   2. SITE NAME - missing or empty `config.systemSite.name` (Drupal `system.site`), or a missing
  *                  `config.systemDate.timezone.default` (Drupal `system.date`).
@@ -120,8 +120,8 @@ export function validateDrupalConfigDocument(doc: unknown): {
   }
 
   // 1. Envelope.
-  if (!Number.isInteger(doc.version))
-    errors.push("version: missing or not an integer");
+  if (typeof doc.version !== "number" || !Number.isInteger(doc.version) || doc.version < 1)
+    errors.push("version: missing or not an integer >= 1");
 
   if (typeof doc.siteCode !== "string" || doc.siteCode.length === 0)
     errors.push("siteCode: missing or empty");

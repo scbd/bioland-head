@@ -42,7 +42,7 @@ describe("site-config contract: the four rejection classes", () => {
     const result = validateDrupalConfigDocument(doc);
 
     expect(result.valid).toBe(false);
-    expect(result.errors).toContain("version: missing or not an integer");
+    expect(result.errors).toContain("version: missing or not an integer >= 1");
   });
 
   it("rejects a missing system.site name", () => {
@@ -150,6 +150,23 @@ describe("site-config contract: every never-ship key is rejected", () => {
 });
 
 describe("site-config contract: envelope edge cases", () => {
+  it.each([0, -1, -42, 1.5, "1", null, true, NaN, Infinity])(
+    "rejects invalid version %s",
+    (version) => {
+      const result = validateDrupalConfigDocument({ ...loadExample(), version });
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.startsWith("version:"))).toBe(true);
+    },
+  );
+
+  it.each([1, 2, 42])("accepts positive integer version %s", (version) => {
+    expect(validateDrupalConfigDocument({ ...loadExample(), version })).toEqual({
+      valid: true,
+      errors: [],
+    });
+  });
+
   it("rejects a non-object document", () => {
     expect(validateDrupalConfigDocument(null).valid).toBe(false);
     expect(validateDrupalConfigDocument("{}").valid).toBe(false);

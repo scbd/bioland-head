@@ -192,7 +192,7 @@ today, and the successor must keep a head-side allowlist for the same reason.
 - The module MUST emit camelCase keys. `google_analytics_ids` MUST arrive as `googleAnalyticsIds`.
   A snake_case top-level key in the document is a contract violation.
 - The document MUST carry an integer `version`, starting at `1`. A consumer MUST reject a document
-  with a missing or non-integer `version` rather than guess.
+  with a missing, non-integer or non-positive `version` rather than guess.
 - The document MUST carry `siteCode` and an ISO-8601 `generated` timestamp.
 - Per-language site names go under `config.systemSite.translations.{langcode}.name`.
 - The response MUST be cache-tagged so a config save invalidates it.
