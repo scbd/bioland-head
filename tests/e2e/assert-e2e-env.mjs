@@ -4,16 +4,17 @@ import { fileURLToPath } from 'node:url'
 
 import dotenv from 'dotenv'
 
+import { REQUIRED_PUBLIC_CONFIG_ENV_VARS } from '../../shared/utils/required-public-config.js'
+
 /**
  * Public runtime-config values that `nuxt.config.ts` deliberately defaults to `""`.
  * They can only arrive from the environment, and the server context resolver
  * (`server/utils/context-unified.ts`) needs all three to build a cache key.
+ *
+ * Shared with the Nitro startup guard (`server/plugins/00.assert-public-runtime-config.ts`)
+ * so the two checks cannot drift apart.
  */
-const REQUIRED_VARS = [
-  'NUXT_PUBLIC_ENV',
-  'NUXT_PUBLIC_MULTI_SITE_CODE',
-  'NUXT_PUBLIC_BASE_HOST',
-]
+const REQUIRED_VARS = REQUIRED_PUBLIC_CONFIG_ENV_VARS
 
 const ENV_PATH = fileURLToPath(new URL('../../.env', import.meta.url))
 const EXAMPLE_PATH = fileURLToPath(new URL('../../.env.example', import.meta.url))

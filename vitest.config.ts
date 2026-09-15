@@ -17,7 +17,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '~': resolve(__dirname, '.'),
-      '~/': resolve(__dirname, './')
+      '~/': resolve(__dirname, './'),
+      // Nuxt's built-in alias for the shared/ layer, mirrored so specs can import
+      // modules that use it (e.g. server/plugins/00.assert-public-runtime-config.ts).
+      '#shared': resolve(__dirname, './shared')
     }
   }
 })
