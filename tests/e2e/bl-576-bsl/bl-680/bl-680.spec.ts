@@ -4,6 +4,7 @@ import path from 'node:path'
 
 import { getE2EBaseURL } from '../../e2e-targets'
 import { seedConsentCookies } from '../../helpers/seed-consent-cookies'
+import { getTargetExpectations, targetServesLocales } from '../../expectations'
 
 const E2E_BASE_URL = getE2EBaseURL()
 
@@ -30,7 +31,10 @@ interface NavItemInfo {
   hasChildren: boolean
 }
 
-const LOCALE_CODES = ['en', 'fr', 'es', 'ar', 'ru', 'zh']
+const expectations = getTargetExpectations()
+
+// BL-888: the locale set follows the selected tenant instead of the Biosafety one.
+const LOCALE_CODES = expectations.locales
 
 async function writeEvidenceScreenshot(page: Page, testInfo: TestInfo, basename: string): Promise<string> {
   const dir = path.join(process.cwd(), '.test-results', 'BL-680')
@@ -293,6 +297,7 @@ test.describe('BL-680: Mega Menu Link Locale Prefix Verification', () => {
   })
 
   test('Scenario 2: Multi-Language Verification (French)', async ({ page }, testInfo) => {
+    test.skip(!targetServesLocales('fr'), `target "${expectations.siteCode}" does not serve French`)
     testInfo.setTimeout(90_000)
 
     // Switch to French
@@ -354,6 +359,7 @@ test.describe('BL-680: Mega Menu Link Locale Prefix Verification', () => {
   })
 
   test('navigation from mega menu works correctly', async ({ page }, testInfo) => {
+    test.skip(!expectations.megaMenuHasInternalLinks, `target "${expectations.siteCode}" mega menu carries no locale-prefixed internal links`)
     testInfo.setTimeout(90_000)
 
     // Get available menus

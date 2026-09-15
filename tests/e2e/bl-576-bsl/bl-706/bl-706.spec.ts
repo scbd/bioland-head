@@ -4,8 +4,11 @@ import path from 'node:path'
 
 import { getE2EBaseURL } from '../../e2e-targets'
 import { seedConsentCookies } from '../../helpers/seed-consent-cookies'
+import { getTargetExpectations } from '../../expectations'
 
 const E2E_BASE_URL = getE2EBaseURL()
+
+const expectations = getTargetExpectations()
 
 /**
  * BL-706: Hero Image SSR Context Fix
@@ -82,6 +85,7 @@ test.describe('BL-706: Hero Image SSR Context Fix', () => {
   })
 
   test('hero image renders on first SSR load without context cookie', async ({ page, context }, testInfo) => {
+    test.skip(!expectations.hasHeroBackgroundImage, `target "${expectations.siteCode}" configures no hero image, so the hero carries no background-image`)
     testInfo.setTimeout(60_000)
 
     // Clear all cookies EXCEPT consent cookies to simulate first-time visitor
@@ -147,6 +151,7 @@ test.describe('BL-706: Hero Image SSR Context Fix', () => {
   })
 
   test('hero image stable during hydration (no flash or change)', async ({ page, context }, testInfo) => {
+    test.skip(!expectations.hasHeroBackgroundImage, `target "${expectations.siteCode}" configures no hero image, so the hero carries no background-image`)
     testInfo.setTimeout(60_000)
 
     // Clear context cookie to test SSR path

@@ -2,10 +2,18 @@ import { test, expect, type Page, type TestInfo } from '@playwright/test'
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { getE2EBaseURL } from '../../e2e-targets'
+import { getTargetExpectations } from '../../expectations'
 import { seedConsentCookies } from '../../helpers/seed-consent-cookies'
 
 // Use seed.localhost which is configured as a biosafety site for testing BCH-specific widget
 const E2E_BASE_URL = getE2EBaseURL()
+
+const expectations = getTargetExpectations()
+
+// BL-888: expectations follow the selected tenant. Skip rather than fail where the
+// selected tenant cannot exhibit the behaviour this spec pins.
+test.skip(!expectations.isBiosafety, `target "${expectations.siteCode}" is not a Biosafety (BCH/BSL) tenant, so it renders no National Biosafety Framework widget`)
+
 const BCH_HOME_PATH = '/en'
 
 const DESKTOP_VIEWPORT = { width: 1920, height: 1080 }

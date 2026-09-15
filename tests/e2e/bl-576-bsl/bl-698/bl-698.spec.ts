@@ -3,8 +3,11 @@ import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 
 import { getE2EBaseURL } from '../../e2e-targets'
+import { getTargetExpectations } from '../../expectations'
 
 const E2E_BASE_URL = getE2EBaseURL()
+
+const expectations = getTargetExpectations()
 
 /**
  * BL-698: Mega Menu "View More" Counts - BSL Site Verification
@@ -129,6 +132,7 @@ test.describe('BL-698: Mega Menu View More Counts - BSL Site', () => {
   })
 
   test('National Biosafety Framework dropdown has no View More (content below threshold)', async ({ page }, testInfo) => {
+    test.skip(!expectations.isBiosafety, `target "${expectations.siteCode}" has no National Biosafety Framework mega menu (Biosafety tenants only)`)
     const menuOpened = await openMegaMenuDropdown(page, 'National Biosafety Framework')
     expect(menuOpened, 'Menu dropdown should open').toBe(true)
     
@@ -145,6 +149,7 @@ test.describe('BL-698: Mega Menu View More Counts - BSL Site', () => {
   })
 
   test('Resources dropdown has no View More (content below threshold)', async ({ page }, testInfo) => {
+    test.skip(!expectations.isBiosafety, `target "${expectations.siteCode}" does not carry the Biosafety content counts this threshold check pins`)
     const menuOpened = await openMegaMenuDropdown(page, 'Resources')
     expect(menuOpened, 'Resources menu dropdown should open').toBe(true)
     
@@ -177,6 +182,7 @@ test.describe('BL-698: Mega Menu View More Counts - BSL Site', () => {
   })
 
   test('Useful Links dropdown has no View More (content below threshold)', async ({ page }, testInfo) => {
+    test.skip(!expectations.isBiosafety, `target "${expectations.siteCode}" has no Useful Links mega menu (Biosafety tenants only)`)
     const menuOpened = await openMegaMenuDropdown(page, 'Useful Links')
     expect(menuOpened, 'Useful Links menu dropdown should open').toBe(true)
     
@@ -189,6 +195,7 @@ test.describe('BL-698: Mega Menu View More Counts - BSL Site', () => {
   })
 
   test('all mega menu dropdowns verified without View More', async ({ page }, testInfo) => {
+    test.skip(!expectations.isBiosafety, `target "${expectations.siteCode}" has no Biosafety mega menu set (Biosafety tenants only)`)
     testInfo.setTimeout(90_000)
     
     const menus = [

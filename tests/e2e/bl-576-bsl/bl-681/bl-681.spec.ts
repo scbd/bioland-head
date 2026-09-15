@@ -4,8 +4,15 @@ import path from 'node:path'
 
 import { getE2EBaseURL } from '../../e2e-targets'
 import { seedConsentCookies } from '../../helpers/seed-consent-cookies'
+import { getTargetExpectations, targetServesLocales } from '../../expectations'
 
 const E2E_BASE_URL = getE2EBaseURL()
+
+const expectations = getTargetExpectations()
+
+// BL-888: every test here switches the page into French or Spanish, so the spec only
+// applies to a tenant that serves both.
+test.skip(!targetServesLocales('fr', 'es'), `target "${expectations.siteCode}" does not serve both French and Spanish`)
 
 /**
  * BL-681: Facet Update on Language Switch
