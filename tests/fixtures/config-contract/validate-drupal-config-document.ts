@@ -14,13 +14,30 @@
  *                  missing `config`.
  *   2. SITE NAME - missing or empty `config.systemSite.name` (Drupal `system.site`), or a missing
  *                  `config.systemDate.timezone.default` (Drupal `system.date`).
- *   3. CASING    - a snake_case or kebab-case key anywhere under `config`. The module MUST emit
+ *   3. CASING    - a snake_case or kebab-case key anywhere in the document. The module MUST emit
  *                  camelCase, so `google_analytics_ids` arriving unconverted is a contract break.
+ *                  One exemption: the langcode level of `config.systemSite.translations`, whose
+ *                  keys are BCP-47 tags (`zh-hans`, `pt-br`, `gsw-berne`) and are legitimately
+ *                  hyphenated. See `CASING_EXEMPT_PARENTS`.
  *   4. NEVER-SHIP - any key from the § R2 list at any depth. These are credentials, infra paths and
  *                  staff PII that must never reach a browser.
+ *
+ * The walk covers the WHOLE document, not just `config`: a never-ship key parked beside the
+ * envelope (`{version, siteCode, generated, smtpCredentials: {...}, config: {...}}`) is exactly
+ * the leak this check exists to catch, so the envelope level is not a blind spot.
  */
 
-/** § R2 never-ship keys: credentials, infra paths, and staff PII. Matched at any depth. */
+/**
+ * § R2 never-ship keys: credentials, infra paths, and staff PII. Matched at any depth.
+ *
+ * This list is deliberately FAIL-CLOSED on the generic names `root`, `meta`, `drupal`, `dns`, and
+ * `auth`: they are matched by bare name at any depth, so a legitimate future key that happens to
+ * share one of those names - say a `bioland.settings.meta` holding harmless block metadata - will
+ * be rejected here. That is the intended tradeoff: a false positive costs one escalation, a false
+ * negative ships staff emails or a database DSN to a browser. If such a key appears, ESCALATE and
+ * decide the exemption in the spec (§ R2) - do not blindly rename the legitimate key, and do not
+ * quietly drop the entry from this list.
+ */
 const NEVER_SHIP_KEYS: readonly string[] = [
   "dataBase",
   "dns",
@@ -42,12 +59,22 @@ const MAX_DEPTH = 32;
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
+/**
+ * Dotted paths whose DIRECT children are keyed by something other than a camelCase identifier, and
+ * so are exempt from the casing check. Per spec § "The Drupal config document", per-language site
+ * names live at `config.systemSite.translations.{langcode}.name`, and this repo's langcodes include
+ * `zh-hans`, `zh-hant`, `pt-br`, `pt-pt`, `ta-lk` and `gsw-berne`
+ * (`server/utils/drupal/drupal-langs.js`). Only the langcode level is exempt - everything beneath it
+ * is walked normally.
+ */
+const CASING_EXEMPT_PARENTS: readonly string[] = ["config.systemSite.translations"];
+
 /** A key the module failed to camelCase: contains `_` or `-`. */
 const isWrongCased = (key: string): boolean => /[_-]/.test(key);
 
 const join = (path: string, key: string): string => (path ? `${path}.${key}` : key);
 
-/** Walks `config`, collecting casing and never-ship violations with their dotted paths. */
+/** Walks the document, collecting casing and never-ship violations with their dotted paths. */
 function walk(value: unknown, path: string, depth: number, errors: string[]): void {
   if (depth > MAX_DEPTH) {
     errors.push(`depth: document nests deeper than ${MAX_DEPTH} at "${path}"`);
@@ -61,13 +88,15 @@ function walk(value: unknown, path: string, depth: number, errors: string[]): vo
 
   if (!isPlainObject(value)) return;
 
+  const casingExempt = CASING_EXEMPT_PARENTS.includes(path);
+
   for (const [key, child] of Object.entries(value)) {
     const here = join(path, key);
 
     if (NEVER_SHIP_KEYS.includes(key))
       errors.push(`never-ship key "${key}" present at "${here}"`);
 
-    if (isWrongCased(key))
+    if (!casingExempt && isWrongCased(key))
       errors.push(`wrong-cased key "${key}" at "${here}": the document must emit camelCase`);
 
     walk(child, here, depth + 1, errors);
@@ -124,8 +153,10 @@ export function validateDrupalConfigDocument(doc: unknown): {
   if (!isPlainObject(config.biolandSettings))
     errors.push("biolandSettings: missing or not an object");
 
-  // 3 and 4. Casing and never-ship keys, at any depth under `config`.
-  walk(config, "config", 0, errors);
+  // 3 and 4. Casing and never-ship keys, at any depth in the WHOLE document - envelope level
+  // included, so a never-ship key sitting beside `config` is not invisible. `version`, `siteCode`
+  // and `generated` are scalars with camelCase names, so the walk passes straight over them.
+  walk(doc, "", 0, errors);
 
   return { valid: errors.length === 0, errors };
 }
