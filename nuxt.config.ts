@@ -247,11 +247,19 @@ export default defineNuxtConfig({
   nitro: {
     logLevel: resolvedLogLevel,
     experimental: { tasks: true },
+    // `thesaurus` (term-not-found negative cache) and `cache-clear` (dedup timestamps) must be
+    // mounted explicitly: an unmounted useStorage(name) group silently falls through to Nitro's
+    // in-memory default driver, which is ephemeral and defeats both. Sub-directories of the
+    // existing storageBase so the shared cache volume covers them with no deployment change.
     devStorage: {
-      cache: { driver: "fs", base: "./.nuxt/cache" }
+      cache: { driver: "fs", base: "./.nuxt/cache" },
+      thesaurus: { driver: "fs", base: "./.nuxt/cache/thesaurus" },
+      "cache-clear": { driver: "fs", base: "./.nuxt/cache/cache-clear" }
     },
     storage: {
-      cache: { driver: "fs", base: storageBase }
+      cache: { driver: "fs", base: storageBase },
+      thesaurus: { driver: "fs", base: `${storageBase}/thesaurus` },
+      "cache-clear": { driver: "fs", base: `${storageBase}/cache-clear` }
     },
   },
   experimental: {
