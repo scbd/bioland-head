@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 date: 2026-09-15
 deciders: [randy]
 context: system-wide
@@ -10,14 +10,14 @@ plan: config-endpoint
 
 # 0006. Degraded-mode policy when site config is unavailable
 
-A config that resolves to `null` throws 404 for every page of that site
+Today a `null` config throws 404 for every page of a site
 (`server/utils/context-unified.ts:110-116` on this branch, cited by the plan as
-`context-unified.ts:75-81`). Once
-p04-01 deletes the dmsm fallback, a registry outage is a dark deployment rather than a degraded
-one. We propose serving the last successful config from a stale-tolerant cache and degrading
-features rather than failing closed: a stale theme beats a 404.
+`context-unified.ts:75-81`). Once p04-01 deletes the dmsm fallback, a registry outage becomes a
+dark deployment. We serve the last-known-good config instead and degrade features: a stale theme
+beats a total outage. A genuinely absent site still 404s. A cold container that never cached the
+site also still 404s — an accepted residual risk.
 
-**Proposed — blocks p03-02 and p04-01.**
+**Accepted — governs p03-02 and p04-01.**
 
 See [details](details/0006.md).
 
