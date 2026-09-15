@@ -123,12 +123,54 @@ describe('sanitizeBiolandSettings', () => {
             expect(sanitized.megaMenu.forums.position).toBe('camel')
         })
 
-        it('falls back to a stable code-point order when no spelling is canonical', () => {
+        it('keeps the spelling closest to the canonical key when no spelling is canonical', () => {
             const forwards  : any = sanitizeBiolandSettings({ google_analytics_ids: 'G-SNAKE', GOOGLE_ANALYTICS_IDS: 'G-SHOUT' })
             const backwards : any = sanitizeBiolandSettings({ GOOGLE_ANALYTICS_IDS: 'G-SHOUT', google_analytics_ids: 'G-SNAKE' })
 
             expect(forwards.googleAnalyticsIds).toBe(backwards.googleAnalyticsIds)
-            expect(forwards.googleAnalyticsIds).toBe('G-SHOUT')
+            expect(forwards.googleAnalyticsIds).toBe('G-SNAKE')
+        })
+
+        /**
+         * The canonical spellings are camelCase but Drupal authors snake_case, so for these three
+         * keys no authored spelling ever equals the canonical string. A raw code-point tiebreak
+         * therefore handed the win to whichever spelling sorted lowest — uppercase and punctuation
+         * always do — letting an editor override the real key by authoring an odd spelling of it.
+         */
+        describe('snake_case keys, whose canonical spelling is never authored', () => {
+
+            it('keeps the legitimate mega_menu over a shouted MEGA_MENU', () => {
+                const forwards  : any = sanitizeBiolandSettings({ mega_menu: { LEGIT: true }, MEGA_MENU: { ATTACKER: true } })
+                const backwards : any = sanitizeBiolandSettings({ MEGA_MENU: { ATTACKER: true }, mega_menu: { LEGIT: true } })
+
+                expect(forwards).toEqual({ megaMenu: { LEGIT: true } })
+                expect(backwards).toEqual(forwards)
+            })
+
+            it('keeps google_analytics_ids over a punctuation-padded -google-analytics-ids', () => {
+                const forwards  : any = sanitizeBiolandSettings({ google_analytics_ids: 'G-LEGIT', '-google-analytics-ids': 'G-ATTACKER' })
+                const backwards : any = sanitizeBiolandSettings({ '-google-analytics-ids': 'G-ATTACKER', google_analytics_ids: 'G-LEGIT' })
+
+                expect(forwards.googleAnalyticsIds).toBe('G-LEGIT')
+                expect(backwards.googleAnalyticsIds).toBe('G-LEGIT')
+            })
+
+            it('keeps home_widgets over HOME-WIDGETS and homeWIDGETS', () => {
+                const sanitized: any = sanitizeBiolandSettings({
+                    'HOME-WIDGETS': { gbif_widget: { enable: 'shout' } },
+                    home_widgets  : { gbif_widget: { enable: 'snake' } },
+                    homeWIDGETS   : { gbif_widget: { enable: 'mixed' } }
+                })
+
+                expect(Object.keys(sanitized)).toEqual(['homeWidgets'])
+                expect(sanitized.homeWidgets.gbif_widget.enable).toBe('snake')
+            })
+
+            it('still lets the canonical spelling win outright when an editor does author it', () => {
+                const sanitized: any = sanitizeBiolandSettings({ mega_menu: { forums: 'snake' }, megaMenu: { forums: 'camel' } })
+
+                expect(sanitized.megaMenu.forums).toBe('camel')
+            })
         })
 
         it('warns naming the kept and dropped spellings, so the authoring error is visible', () => {
@@ -193,6 +235,72 @@ describe('sanitizeBiolandSettings', () => {
 
         it('survives a pathological payload without overflowing the stack', () => {
             expect(() => sanitizeBiolandSettings(nest(200_000))).not.toThrow()
+        })
+    })
+
+    /**
+     * Authored key text reaches the log, so an editor controls it: a key can carry newlines, ANSI
+     * escapes or tens of kilobytes of padding and still normalise onto an allowlisted key. Both
+     * warnings therefore escape and bound the key text. Values are never logged at all.
+     */
+    describe('log safety', () => {
+
+        /** A branch nested past MAX_DEPTH, so the truncation warning fires. */
+        const overDeep = () => {
+            let node: Record<string, unknown> = { deepest: true }
+
+            for (let i = 0; i < 40; i += 1) node = { a: node }
+
+            return node
+        }
+
+        it('escapes control characters and ANSI escapes in a duplicate-spelling warning', () => {
+            sanitizeBiolandSettings({ theme: {}, '\u001b\nTHEME': {} })
+
+            const message = String(warn.mock.calls[0]?.[0])
+
+            expect(message).not.toContain('\n')
+            expect(message).not.toContain('\u001b')
+            expect(message).toContain('\\n')
+            expect(message).toContain('\\u001b')
+        })
+
+        it('escapes control characters in a truncation warning path', () => {
+            sanitizeBiolandSettings({ theme: { '\u001b\ndeepkey': overDeep() } })
+
+            const message = String(warn.mock.calls[0]?.[0])
+
+            expect(message).not.toContain('\n')
+            expect(message).not.toContain('\u001b')
+            expect(message).toContain('\\n')
+        })
+
+        it('truncates an oversized key rather than flooding the log with it', () => {
+            sanitizeBiolandSettings({ theme: {}, [`${'-'.repeat(50_000)}theme`]: {} })
+
+            const message = String(warn.mock.calls[0]?.[0])
+
+            expect(message).toContain('...')
+            expect(message.length).toBeLessThan(400)
+        })
+
+        it('truncates an oversized key inside a truncation warning path', () => {
+            sanitizeBiolandSettings({ theme: { ['x'.repeat(50_000)]: overDeep() } })
+
+            const message = String(warn.mock.calls[0]?.[0])
+
+            expect(message.length).toBeLessThan(600)
+        })
+
+        it('never logs an authored value, only key paths', () => {
+            sanitizeBiolandSettings({ theme: { secret: 'SUPER-SECRET-VALUE' }, THEME: { secret: 'OTHER-SECRET' } })
+            sanitizeBiolandSettings({ mega_menu: overDeep() })
+
+            const messages = warn.mock.calls.map(call => String(call[0])).join(' | ')
+
+            expect(messages).not.toContain('SUPER-SECRET-VALUE')
+            expect(messages).not.toContain('OTHER-SECRET')
+            expect(messages).not.toContain('deepest')
         })
     })
 

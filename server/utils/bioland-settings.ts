@@ -112,24 +112,66 @@ function stripForbiddenKeys(
   return safe;
 }
 
+/** Longest authored key text rendered into a log line, including the quotes `JSON.stringify` adds. */
+const MAX_LOGGED_KEY_LENGTH = 80;
+
+/**
+ * Authored key text is attacker-controlled, so it is never interpolated raw into a log line: a key
+ * may carry newlines, ANSI escapes or tens of kilobytes of padding. `JSON.stringify` escapes the
+ * control characters and quotes the result; the length bound keeps one key from flooding the log.
+ */
+const forLog = (key: string): string => {
+  const escaped = JSON.stringify(key);
+
+  return escaped.length <= MAX_LOGGED_KEY_LENGTH
+    ? escaped
+    : `${escaped.slice(0, MAX_LOGGED_KEY_LENGTH)}..."`;
+};
+
+/**
+ * How far an authored spelling sits from the canonical one, as `[case mismatches, separators]`.
+ *
+ * Every spelling in a collision shares the canonical key's normalized identity, so it can differ
+ * only by letter casing and by inserted non-alphanumeric characters. Counting both is O(n) and
+ * gives the canonical spelling - and only the canonical spelling - a score of `[0, 0]`.
+ */
+const spellingDeviation = (key: string, canonical: string): [number, number] => {
+  const alphanumeric = key.replace(/[^A-Za-z0-9]/g, "");
+
+  let caseMismatches = 0;
+
+  for (let i = 0; i < canonical.length; i += 1)
+    if (alphanumeric[i] !== canonical[i]) caseMismatches += 1;
+
+  return [caseMismatches, key.length - alphanumeric.length];
+};
+
 /**
  * Deterministic precedence between two authored spellings of the SAME allowlisted key.
  *
  * Duplicate spellings are an authoring error, but they must not resolve by luck: the raw payload is
  * parsed JSON, so iterating it would make the survivor depend on the order Drupal happened to
- * serialise the row in. Precedence is therefore, in order:
- *   1. the allowlist's own canonical spelling, which is unambiguously the intended key;
- *   2. otherwise the lowest by UTF-16 code-point order - arbitrary, but stable across payloads.
+ * serialise the row in. Nor may they resolve in the attacker's favour - Drupal authors snake_case
+ * (`mega_menu`) while the allowlist is camelCase (`megaMenu`), so an "is it the canonical string?"
+ * test never fires for the real key and a raw code-point tiebreak hands the win to whichever
+ * spelling sorts lowest, which uppercase and punctuation (`MEGA_MENU`, `-mega-menu`) always do.
  *
+ * Precedence is therefore the spelling CLOSEST to the canonical key, in order:
+ *   1. fewest letters cased differently from the canonical spelling;
+ *   2. then fewest separator characters, so added punctuation never wins;
+ *   3. then the lowest by UTF-16 code-point order - arbitrary, but stable across payloads, and
+ *      reached only between spellings that deviate from the canonical key by exactly as much.
+ *
+ * The canonical spelling itself scores `[0, 0]`, uniquely, so it still wins outright when authored.
  * Whichever loses is dropped and named in a warning, never silently merged.
  */
 const compareSpellings =
   (canonical: string) =>
   (a: string, b: string): number => {
-    if (a === canonical) return -1;
-    if (b === canonical) return 1;
+    const [aCase, aSeparators] = spellingDeviation(a, canonical);
+    const [bCase, bSeparators] = spellingDeviation(b, canonical);
 
-    return a < b ? -1 : a > b ? 1 : 0;
+    return aCase - bCase || aSeparators - bSeparators || (a < b ? -1 : a > b ? 1 : 0);
   };
 
 /**
@@ -184,7 +226,7 @@ export function sanitizeBiolandSettings(raw: unknown): Record<string, unknown> {
 
     if (discarded.length)
       consola.warn(
-        `[bioland.settings] "${canonical}" was authored ${spellings.length} times; kept "${winner!.key}" and dropped ${discarded.map((entry) => `"${entry.key}"`).join(", ")}. Remove the duplicate spellings in Drupal.`,
+        `[bioland.settings] "${canonical}" was authored ${spellings.length} times; kept ${forLog(winner!.key)} and dropped ${discarded.map((entry) => forLog(entry.key)).join(", ")}. Remove the duplicate spellings in Drupal.`,
       );
 
     sanitized[canonical] = stripForbiddenKeys(winner!.value, 1, canonical, truncation);
@@ -192,7 +234,7 @@ export function sanitizeBiolandSettings(raw: unknown): Record<string, unknown> {
 
   if (truncation.count)
     consola.warn(
-      `[bioland.settings] dropped ${truncation.count} branch(es) nested deeper than ${MAX_DEPTH}. Paths: ${truncation.paths.join(", ")}${truncation.count > truncation.paths.length ? ", ..." : ""}`,
+      `[bioland.settings] dropped ${truncation.count} branch(es) nested deeper than ${MAX_DEPTH}. Paths: ${truncation.paths.map(forLog).join(", ")}${truncation.count > truncation.paths.length ? ", ..." : ""}`,
     );
 
   return sanitized;
