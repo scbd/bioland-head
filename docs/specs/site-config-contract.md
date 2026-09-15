@@ -193,7 +193,12 @@ today, and the successor must keep a head-side allowlist for the same reason.
   A snake_case top-level key in the document is a contract violation.
 - The document MUST carry an integer `version`, starting at `1`. A consumer MUST reject a document
   with a missing, non-integer or non-positive `version` rather than guess.
-- The document MUST carry `siteCode` and an ISO-8601 `generated` timestamp.
+- The document MUST carry `siteCode` and an ISO-8601 `generated` timestamp. The wire format is
+  `YYYY-MM-DDTHH:mm:ss` with optional fractional seconds (`.` followed by one or more digits),
+  followed by `Z` or a numeric offset (`±HH:mm` or `±HHmm`). Calendar dates MUST exist, including
+  Gregorian leap-year rules; hours are `00`–`23`, minutes and seconds `00`–`59` (also for offset
+  hours/minutes respectively). Date-only, timezone-less and locale-dependent date strings are not
+  wire timestamps. The example uses UTC; offsets and sub-millisecond fractions remain valid.
 - Per-language site names go under `config.systemSite.translations.{langcode}.name`.
 - The response MUST be cache-tagged so a config save invalidates it.
 - The api key MUST travel in a request header, never `?api-key=`.

@@ -104,6 +104,26 @@ function walk(value: unknown, path: string, depth: number, errors: string[]): vo
 }
 
 /**
+ * Check the wire timestamp, not Date.parse's implementation-dependent date grammar.
+ * Validate the written calendar date before applying any offset: Date.parse normalizes
+ * impossible dates such as February 30, and a UTC round-trip changes valid offset dates.
+ */
+function isIsoTimestamp(value: unknown): boolean {
+  if (typeof value !== "string") return false;
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})T([01]\d|2[0-3]):([0-5]\d):([0-5]\d)(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):?[0-5]\d)$/.exec(value);
+  if (!match || match[0] !== value) return false;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+  return month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth[month - 1];
+}
+
+/**
  * Validates one Drupal config document against the site-config contract.
  *
  * @param doc - the parsed document. Any shape; nothing is assumed.
@@ -126,7 +146,7 @@ export function validateDrupalConfigDocument(doc: unknown): {
   if (typeof doc.siteCode !== "string" || doc.siteCode.length === 0)
     errors.push("siteCode: missing or empty");
 
-  if (typeof doc.generated !== "string" || Number.isNaN(Date.parse(doc.generated)))
+  if (!isIsoTimestamp(doc.generated))
     errors.push("generated: missing or not an ISO-8601 timestamp");
 
   const config = doc.config;
