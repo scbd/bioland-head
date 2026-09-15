@@ -1,0 +1,12 @@
+{
+  // Typecheck-only project for Vitest's `test.typecheck` (see vitest.config.ts).
+  //
+  // The root tsconfig inherits its `include` from .nuxt/tsconfig.json, which covers app/, shared/
+  // and modules/ but NOT tests/ — so a *.test-d.ts file is never part of that program and tsc
+  // silently checks nothing in it. This project re-roots the program on the type-level specs plus
+  // the types they assert over, inheriting every compilerOption from the root config.
+  //
+  // Deliberately narrow: this is not a repo-wide typecheck gate (tracked as debt in p04-04).
+  "extends": "./tsconfig.json",
+  "include": ["tests/unit/**/*.test-d.ts", "shared/types/**/*.ts"]
+}

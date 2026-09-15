@@ -20,8 +20,9 @@ export interface ContextCookie {
  *
  * Field inventory, presence counts, and the never-ship rules are pinned in
  * docs/specs/site-config-contract.md (p01-01). This interface models the full per-site domain
- * object the successor registry read produces (per that spec's "DmsmConfig successor" table),
- * NOT only the subset a browser may see — `SiteContext`/the public projection is where the
+ * object TODAY's DMSM response produces — the shape consumers in this repo read right now — NOT
+ * the successor registry's normalized output, which narrows some fields (see `hasBl1`). It is
+ * also not only the subset a browser may see: `SiteContext`/the public projection is where the
  * public/secret split is enforced. Secret multiSite-level fields (`dataBase`, `dns`, `drupal`,
  * `auth`, `defaultSmtpCredentials`, `panoramaKey`) and PII (`meta`) are deliberately absent from
  * this type by design; they live only on `MultiSiteConfigInput` / `SiteConfigInput`
@@ -65,11 +66,22 @@ export interface DmsmConfig {
    * unconditionally as a `boolean` — but that normalization is registry/projection-side work
    * (a later phase), not a change this types-only task makes to today's runtime behavior. Do not
    * silently widen or narrow this field without also changing the runtime that produces it.
+   *
+   * At the p02-03 cutover the successor narrows this to `boolean` unconditionally (R3, and the
+   * spec's successor table at docs/specs/site-config-contract.md); until then this type tracks
+   * the pre-cutover wire, which is why it is wider than the successor table's row.
    */
   hasBl1?: boolean | string
   /** Stripped from any public payload (R2). */
   hasBl2?: boolean
 
+  /**
+   * Stripped from the unauthenticated response today — `redirect` is absent from dmsm's
+   * `publicSiteProperties` and this repo fetches the site route unauthenticated, so it is
+   * `undefined` in practice. Kept on the type because `buildSiteContext` still reads
+   * `config.redirect`; that read is dead on the public path. The successor does NOT restore it
+   * (spec allowed-difference list), so do not treat a value here as reachable.
+   */
   redirect?: string
   logo?: string
 
@@ -78,7 +90,8 @@ export interface DmsmConfig {
    * `i18n` and only two are real. THIS field is the site-level boolean (31/211 bl2 sites) — a
    * plain flag, not the wrap-threshold object. The wrap threshold lives at
    * `theme.i18n.maxLangBeforeWrap` (see `SiteTheme.i18n`). `runTime.i18n` (see `SiteRunTime.i18n`)
-   * is a third, currently-empty name that resolves to `undefined` because nothing produces it.
+   * is a third name that is `undefined` across the observed corpus only — nothing structural
+   * strips it, so p02-02 must confirm it across all three envs (R4).
    * The three are kept as separate fields under separate paths deliberately — R4 forbids unioning
    * them into one.
    */

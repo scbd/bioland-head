@@ -53,6 +53,11 @@ export interface SiteTheme {
  * `dataBaseName`, `dataBase`, `dns`, `smtpCredentials`, `cdn`, `baseHost`) is deliberately ABSENT
  * from this type, by design, per R2 of the contract spec — they must never reach a browser, and
  * this repo has no legitimate reason to read them even server-side.
+ *
+ * `country` is absent too, for a different reason: `mapRunTimeMultiSiteSite` destructures
+ * `country` off the SITE record only to fold it into `countries`, and never assigns it to the
+ * `runTime` literal. Unlike `settings` (which IS in that literal and is removed by the filter),
+ * `country` has no producer at all, so there is nothing for an `undefined`-only member to track.
  */
 export interface SiteRunTime {
   env?: string
@@ -60,15 +65,18 @@ export interface SiteRunTime {
   host?: string
   countries?: string[]
   theme?: SiteTheme
-  country?: string
   /**
-   * Always `undefined` today (R4): `runTime.i18n` reads `config.i18n`, which does not exist at
-   * the multiSite level in the observed corpus. Typed `undefined`-only rather than dropped, so a
-   * future producer of this field is a visible type change, not a silent addition. The wrap
-   * setting lives at `theme.i18n.maxLangBeforeWrap`, not here — see the collision note on
-   * `DmsmConfig.i18n`.
+   * Unobserved, NOT guaranteed absent (R4). `mapRunTimeMultiSiteSite` does destructure `i18n`
+   * off `multiSiteConfig` into the `runTime` literal, and `i18n` IS in `publicSiteProperties`,
+   * so the site-level filter passes it through — nothing structural strips it. The only reason it
+   * is undefined today is that no multiSite `config` in the observed corpus populates `i18n`,
+   * and that corpus is a single env file. Typed `unknown` rather than `undefined` because there
+   * is no typecheck gate on the producer side to make a future population a visible change.
+   * p02-02 must confirm across all three envs; if any env populates it, R4 is void and the
+   * projection must carry this field. The wrap setting lives at `theme.i18n.maxLangBeforeWrap`,
+   * not here — see the collision note on `DmsmConfig.i18n`.
    */
-  i18n?: undefined
+  i18n?: unknown
   /**
    * Always `undefined` today (R5): `settings` is allowlisted at the multiSite level but never
    * observed in the corpus, and it is not in the site-level allowlist either, so it is stripped
@@ -98,6 +106,13 @@ export interface SiteConfigInput {
   multiSiteCode: string
   name: string
   published?: boolean
+  /**
+   * Stored on every site but absent from `publicSiteProperties`, so it is stripped from the
+   * unauthenticated response and never reaches this repo today. It stays on the INPUT type
+   * because the registry read still sees it; the projection MUST NOT emit it (see the spec's
+   * allowed-difference list, which fails the parity gate if `redirect` appears on the registry
+   * side).
+   */
   redirect?: string
   logo?: string
   defaultLocale: string
@@ -120,6 +135,9 @@ export interface SiteConfigInput {
   /** Site-level flag — see the `i18n` collision note on `DmsmConfig.i18n`. */
   i18n?: boolean
   scbd?: boolean
+  /** In `publicSiteProperties`, and carried by `DmsmConfig` — present so the projection has an
+   * input field to read it from rather than deriving it. */
+  env?: string
   host?: string
   geoBonPage?: string
   description?: string
@@ -129,6 +147,14 @@ export interface SiteConfigInput {
   hasBl2?: boolean
   /** Stripped before the public projection (R2). */
   migratedFailed?: boolean
+  /**
+   * Secret (R2, never-ship). Read off the SITE record by `mapRunTimeMultiSiteSite` as the
+   * per-site override for `defaultSmtpCredentials`. It never survives into `SiteRunTime`
+   * (`smtpCredentials` is not in `publicSiteProperties`), but it is an observed per-site key, so
+   * the input type must name it for the projection to exclude it deliberately rather than by
+   * accident.
+   */
+  smtpCredentials?: Record<string, unknown>
   /**
    * PII — `{email, uid}` under both `createdBy` and `updatedBy` (R2, "never-ship"). Present here
    * only because this is the pre-filter input shape; a projection MUST NOT copy this field
