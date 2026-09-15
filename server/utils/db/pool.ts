@@ -18,7 +18,7 @@ let dbPool: import('mariadb').Pool | null = null
  * (default `i18n_cache`), and `i18nDbConnectionLimit` (default `5`) from
  * `useRuntimeConfig()`.
  */
-function getDbConfig() {
+export function getDbConfig() {
   const config = useRuntimeConfig()
   return {
     dbHost: config.i18nDbHost,
@@ -34,9 +34,9 @@ function getDbConfig() {
  * Get the shared MariaDB connection pool (singleton).
  *
  * The pool is created once from `useRuntimeConfig()` and reused across calls;
- * pass in the same `connectionLimit` (default 5) as the translation cache
- * workload, since the two share this pool. Call `closeDbPool()` to tear it
- * down and force the next call to build a fresh pool.
+ * it reads `i18nDbConnectionLimit` (default 5), shared with the translation
+ * cache workload since the two share this pool. Call `closeDbPool()` to tear
+ * it down and force the next call to build a fresh pool.
  *
  * @returns {import('mariadb').Pool}
  */
