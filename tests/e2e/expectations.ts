@@ -34,9 +34,6 @@ export interface TargetExpectations {
 
   /** Tenant configures a hero image, so the hero element carries a `background-image`. */
   hasHeroBackgroundImage: boolean
-
-  /** Tenant has node pages that render the body side image (`#page-body-side-image-img`). */
-  hasSideImages: boolean
 }
 
 const BIOSAFETY_LOCALES = ['en', 'ar', 'es', 'fr', 'ru', 'zh'] as const
@@ -49,20 +46,20 @@ const EXPECTATIONS: Record<E2ETarget, TargetExpectations> = {
     locales: BIOSAFETY_LOCALES,
     isBiosafety: true,
     hasHeroBackgroundImage: true,
-    hasSideImages: true,
   },
 
   // Second biosafety tenant, same content shape as `seed`. Its exact site title is not
   // pinned here because the tenant was not reachable to probe; the pattern is written to
   // be mutually exclusive with `seed` so a `bsl` run pointed at the seed host fails loudly
   // instead of passing on a substring match.
+  // TODO(BL-888): this pattern only pins "not seed" - replace it with the tenant's real
+  // site title once the `bsl` host can be probed.
   bsl: {
     siteCode: 'bsl',
     homeTitle: /^(?!.*Biosafety Seed \(GT\)).*Biosafety/s,
     locales: BIOSAFETY_LOCALES,
     isBiosafety: true,
     hasHeroBackgroundImage: true,
-    hasSideImages: true,
   },
 
   // Default target: the ASEAN Clearing House Mechanism tenant. A CHM site, not a
@@ -74,7 +71,6 @@ const EXPECTATIONS: Record<E2ETarget, TargetExpectations> = {
     locales: ['en', 'vi', 'th', 'lo', 'km', 'zh', 'ms'],
     isBiosafety: false,
     hasHeroBackgroundImage: false,
-    hasSideImages: false,
   },
 }
 

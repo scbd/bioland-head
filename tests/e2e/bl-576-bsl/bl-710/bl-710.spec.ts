@@ -287,8 +287,11 @@ test.describe('BL-710: Widget Card and Page Image Rendering', () => {
             console.log(`✅ Found side image on node page: ${target}`)
             console.log(`   - Src: ${src?.substring(0, 100)}...`)
             
-            expect(src).toContain('_ipx')
-            expect(src).toContain('format=webp')
+            // IPX encodes its modifiers in the URL path segment
+            // (`/_ipx/f_webp&q_60&.../<source>`), not as query parameters - so pin the
+            // `f_webp` modifier inside the `_ipx` segment. This still fails if `_ipx`
+            // rewriting stops happening, because the `/_ipx/` prefix is part of the match.
+            expect(src).toMatch(/\/_ipx\/[^/]*f_webp/)
             
             await writeEvidenceScreenshot(page, testInfo, 'side-image-node-page')
             break
