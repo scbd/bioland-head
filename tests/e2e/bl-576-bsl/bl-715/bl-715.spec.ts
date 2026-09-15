@@ -12,7 +12,6 @@
  */
 
 import { test, expect } from '../../fixtures/auth'
-import { getTargetExpectations } from '../../expectations'
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import type { Page, TestInfo } from '@playwright/test'
@@ -20,12 +19,6 @@ import { getE2EBaseURL } from '../../e2e-targets'
 import { seedConsentCookies } from '../../helpers/seed-consent-cookies'
 
 const E2E_BASE_URL = getE2EBaseURL()
-
-const expectations = getTargetExpectations()
-
-// BL-888: expectations follow the selected tenant. Skip rather than fail where the
-// selected tenant cannot exhibit the behaviour this spec pins.
-test.skip(!expectations.hasSideImages, `target "${expectations.siteCode}" has no node page that renders the body side image`)
 
 // Test pages with side images
 // Note: Tests must run against BSL target (E2E_TARGET=bsl) which has actual content
