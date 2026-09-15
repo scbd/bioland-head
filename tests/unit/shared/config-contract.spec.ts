@@ -74,6 +74,35 @@ describe("site-config contract: the four rejection classes", () => {
     ).toBe(true);
   });
 
+  it("accepts a hyphenated langcode under config.systemSite.translations", () => {
+    const doc = loadExample();
+    const config = doc.config as Record<string, Record<string, unknown>>;
+    config.systemSite.translations = {
+      "zh-hans": { name: "Example site" },
+      "pt-br": { name: "Example site" },
+      "gsw-berne": { name: "Example site" },
+    };
+
+    const result = validateDrupalConfigDocument(doc);
+
+    expect(result.errors).toEqual([]);
+    expect(result.valid).toBe(true);
+  });
+
+  it("rejects a never-ship key at the envelope level, beside config", () => {
+    const doc = loadExample();
+    doc.dataBase = {};
+
+    const result = validateDrupalConfigDocument(doc);
+
+    expect(result.valid).toBe(false);
+    expect(
+      result.errors.some(
+        (e) => e.includes('never-ship key "dataBase"') && e.includes('at "dataBase"'),
+      ),
+    ).toBe(true);
+  });
+
   it("rejects a never-ship key nested at any depth", () => {
     const doc = loadExample();
     const config = doc.config as Record<string, Record<string, unknown>>;

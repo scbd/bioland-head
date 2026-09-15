@@ -103,7 +103,6 @@ stripped before the anonymous response.
 | `multiSiteCode` | string | 211/211 | 11/11 | yes |
 | `name` | string | 211/211 | 11/11 | yes |
 | `published` | boolean | 211/211 | 11/11 | yes |
-| `redirect` | string | 211/211 | 11/11 | yes |
 | `logo` | string | 211/211 | 11/11 | yes |
 | `defaultLocale` | string | 211/211 | 11/11 | yes |
 | `locales` | string[] | 211/211 | 11/11 | yes |
@@ -121,11 +120,25 @@ stripped before the anonymous response.
 | `geoBonPage` | string | 4/211 | 0/11 | yes |
 | `description` | string | 2/211 | 0/11 | yes |
 | `aliases` | string[] | 211/211 | 11/11 | **stripped** |
+| `redirect` | string | 211/211 | 11/11 | **stripped** |
 | `hasBl2` | boolean | 98/211 | 0/11 | **stripped** |
 | `migratedFailed` | boolean | 1/211 | 0/11 | **stripped** |
 | `meta` | object | 1/211 | 0/11 | **stripped (PII)** |
+| `smtpCredentials` | object | per-site override | per-site override | **never-ship (secret)** |
 
 `site.theme` carries the same leaf shape as `config.theme` minus `canAutoTranslate`.
+
+`redirect` is stored on every site but is **absent from `publicSiteProperties`**
+(`dmsm/server/utils/config/index.js`), and bioland-head fetches the site route unauthenticated
+(`fetchDmsmConfigCore` uses a plain `$fetch`), so the route takes `readSitePublic` and `redirect`
+never reaches the head today. `buildSiteContext` nevertheless reads `config.redirect` — it is dead
+on the public path, and would start behaving differently the moment anything restores the key. See
+the allowed-difference list for the successor's decision.
+
+Site-level `smtpCredentials` is read off the **site** object by `mapRunTimeMultiSiteSite` as the
+override for `defaultSmtpCredentials`. R2's `runTime` never-ship list already catches the name, so
+there is no leak, but it is an observed per-site key and a successor type must know it exists in
+order to exclude it.
 
 ### Level 3 — derived `runTime`
 
@@ -234,13 +247,23 @@ Three things are called `i18n` and only two of them are real:
 
 - Site-level `i18n` is a **boolean** (31/211).
 - `config.theme.i18n` and `site.theme.i18n` are `{maxLangBeforeWrap: number}`.
-- `runTime.i18n` reads `config.i18n`, which **does not exist** in the observed corpus, so
-  `runTime.i18n` is `undefined` today.
+- `runTime.i18n` reads `config.i18n`, which is **not present in the observed corpus**, so
+  `runTime.i18n` is `undefined` for every site that corpus covers.
+
+**Certainty — weaker than R5, and the difference matters.** R5 holds *structurally*: `settings` is
+absent from `publicSiteProperties`, so `runTime.settings` is stripped in every env regardless of
+what any config file contains. R4 holds only *empirically*: `i18n` **is** allowlisted
+(`publicSiteProperties`) and **is** destructured into `runTime` by `mapRunTimeMultiSiteSite`, so the
+only thing making `runTime.i18n` undefined is that no observed multiSite `config` populates
+`i18n` — and the corpus is **one env file** (§ Context & Scope). If prod or dev populates
+`config.i18n`, this rule silently drops a live field.
 
 **Resolution:** keep both live names on the wire for parity. Site-level `i18n` stays a boolean at the
 site level; the wrap setting stays nested under `theme.i18n` where it already lives. The projection
-MUST NOT emit a top-level `runTime.i18n`, because nothing produces one. Renaming either is a debt
-row, not this plan's work.
+MUST NOT emit a top-level `runTime.i18n` — **gated on p02-02 confirming `config.i18n` is absent
+across all three env files.** If p02-02 finds it populated in any env, this rule is void and
+`runTime.i18n` must be carried; p02-03 takes the confirmed answer, not this corpus-derived one.
+Renaming either name is a debt row, not this plan's work.
 
 ### R5 — `config.settings` and `runTime.settings`
 
@@ -330,10 +353,19 @@ p03-01 diffs registry payload against dmsm payload. p02-10 encodes this table.
 | `biolandSettings` gains `systemSite` and `systemDate` | dmsm's SQL read cannot see them |
 | `hasBl1` string becomes boolean | R3 normalization |
 | `runTime.settings` absent on both sides | R5 — phantom on both |
-| `runTime.i18n` absent on both sides | R4 — `config.i18n` does not exist |
+| `runTime.i18n` absent on both sides | R4 — `config.i18n` unobserved in the corpus; **provisional until p02-02 confirms all three envs** |
+| `redirect` absent on both sides | stripped by `publicSiteProperties` today; the successor does **not** restore it |
 | `theme` differs on a site with a saved `bioland.settings.theme` | plan decision 8 |
 | key order, whitespace, JSON number formatting | serialization |
 | `generated` timestamp | per-response |
+
+**`redirect` — the successor's decision.** The projection MUST NOT emit `redirect`, matching
+today's stripped behavior, so parity holds on all 222 sites. Restoring it is a deliberate,
+separate change, not a side effect of the migration: `buildSiteContext` reads `config.redirect`
+and would begin acting on a value it has never received, and `redirect` is operator-supplied free
+text that the canonical-host validator already has to defend against. If a site genuinely needs a
+redirect on the public path, that is its own ticket, with the head-side behavior change reviewed
+on its own merits.
 
 **Fails the gate — no exception:**
 
@@ -341,7 +373,8 @@ p03-01 diffs registry payload against dmsm payload. p02-10 encodes this table.
 |---|---|
 | any never-ship key from R2 present on the registry side | the leak this plan exists to close |
 | a public key present under dmsm and absent under registry | a silent regression |
-| `defaultLocale`, `locales`, `host`, `redirect`, `published` differing | routing and render correctness |
+| `defaultLocale`, `locales`, `host`, `published` differing | routing and render correctness |
+| `redirect` **present** on the registry side | it is stripped today; emitting it is a behavior change, not parity |
 | `googleAnalyticsIds` absent under registry | R8 |
 | a value-shaped secret: a `-----BEGIN` block, a `mysql://` or `smtp://` URI, a high-entropy string | key-name matching misses `panoramaKey` and cannot catch a credential pasted into a benign admin field |
 
@@ -371,3 +404,7 @@ p03-01 diffs registry payload against dmsm payload. p02-10 encodes this table.
   owner and reconciles the other.
 - `config.settings` is allowlisted but never observed. Was it ever populated, or is the allowlist
   entry aspirational? p02-02 confirms across all three envs.
+- `config.i18n` is allowlisted and destructured into `runTime`, but never observed in the
+  single-env corpus. **p02-02 must confirm across all three env files**, because unlike `settings`
+  nothing structural strips it — R4's "MUST NOT emit `runTime.i18n`" is void if any env populates
+  it.
