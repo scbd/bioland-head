@@ -9,8 +9,8 @@ import { camelCase } from "change-case/keys";
  */
 
 import type { H3Event } from "h3";
-import type { SiteContext, DmsmConfig, ContextCookie } from "~/shared/types";
-import { getDmsmCacheKey } from "~/shared/types";
+import type { SiteContext, DmsmConfig, ContextCookie } from "#shared/types";
+import { getDmsmCacheKey } from "#shared/types";
 import { getSiteSettings } from "./drupal/index.js";
 import { sanitizeBiolandSettings } from "./bioland-settings";
 

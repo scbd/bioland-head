@@ -65,7 +65,7 @@ beforeEach(async () => {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('DMSM config cache keys include env (BL-967 p01-04)', () => {
-  it('does not use either bare `${multiSiteCode}:${siteCode}` literal anymore', async () => {
+  it('does not use the bare `${multiSiteCode}:${siteCode}` literal for the cachedFunction key', async () => {
     runtime.env = 'dev'
     const p1 = contextModule.getCachedDmsmConfig(eventFor() as never, 'site1')
     pendingResolvers.shift()?.({ defaultLocale: 'en', locales: ['en'] })
