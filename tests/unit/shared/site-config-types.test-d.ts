@@ -19,10 +19,14 @@ type isOptional<T, K extends keyof T> = object extends Pick<T, K> ? true : false
 /**
  * Type-level assertions for the completed config types (BL-965 / p01-02).
  *
- * There is no `typecheck` script and no `vue-tsc` in this repo (see
- * docs/specs/site-config-contract.md and phase-01/context.md) — `expectTypeOf` plus human review
- * is the whole verification for this types-only task. Every assertion here is checked entirely at
- * compile time; the `it()` bodies never execute meaningful runtime code.
+ * `expectTypeOf` is a COMPILE-TIME construct and a runtime no-op, so this file is only a real
+ * check because `vitest.config.ts` enables `test.typecheck` over the `test-d.ts` files under tests/unit.
+ * It runs under `yarn test:run`; tsc failures surface as failed tests. Do not rename this file
+ * back to `.spec.ts` — that pattern is executed by the runtime suite, where every assertion
+ * below silently passes.
+ *
+ * This is a narrow, suite-scoped gate, not the repo-wide typecheck the plan tracks as debt in
+ * p04-04.
  */
 describe("DmsmConfig: optionality per the observed corpus (docs/specs/site-config-contract.md)", () => {
   it("country is optional (208/211 present)", () => {
@@ -68,6 +72,21 @@ describe("DmsmConfig: runTime is a named SiteRunTime, not Record<string, unknown
     expectTypeOf<DmsmConfig["runTime"]>().toEqualTypeOf<SiteRunTime | undefined>();
   });
 
+  it("SiteRunTime omits the two phantoms with no producer", () => {
+    // `mapRunTimeMultiSiteSite` folds site.country into countries and never assigns country to
+    // the runTime literal, so there is nothing for an undefined-only member to track.
+    expectTypeOf<SiteRunTime>().not.toHaveProperty("country");
+    expectTypeOf<SiteRunTime>().toHaveProperty("countries");
+  });
+
+  it("i18n is unknown, not undefined — R4 is corpus-derived, not code-guaranteed", () => {
+    // i18n IS destructured into the runTime literal and IS in publicSiteProperties, so nothing
+    // structural strips it; only the observed corpus says it is absent. settings is different:
+    // it is absent from publicSiteProperties, so the filter removes it unconditionally.
+    expectTypeOf<SiteRunTime["i18n"]>().toEqualTypeOf<unknown>();
+    expectTypeOf<SiteRunTime["settings"]>().toEqualTypeOf<undefined>();
+  });
+
   it("SiteRunTime exposes only the documented public members", () => {
     expectTypeOf<SiteRunTime>().toHaveProperty("env");
     expectTypeOf<SiteRunTime>().toHaveProperty("multiSiteCode");
@@ -94,6 +113,11 @@ describe("SiteConfigInput and MultiSiteConfigInput: exported and structurally di
   it("SiteConfigInput carries per-site-only fields absent from MultiSiteConfigInput", () => {
     expectTypeOf<SiteConfigInput>().toHaveProperty("siteCode");
     expectTypeOf<SiteConfigInput>().toHaveProperty("hasBl1");
+    // env is in publicSiteProperties and on DmsmConfig, so the projection needs an input field.
+    expectTypeOf<SiteConfigInput["env"]>().toEqualTypeOf<string | undefined>();
+    // Observed per-site keys the projection must exclude deliberately (R2 never-ship).
+    expectTypeOf<SiteConfigInput>().toHaveProperty("smtpCredentials");
+    expectTypeOf<SiteConfigInput>().toHaveProperty("redirect");
     expectTypeOf<MultiSiteConfigInput>().not.toHaveProperty("siteCode");
     expectTypeOf<MultiSiteConfigInput>().not.toHaveProperty("hasBl1");
   });
