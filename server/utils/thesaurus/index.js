@@ -98,13 +98,12 @@ export const getThesaurusByKey = defineCachedFunction(
 );
 
 /**
- * Resolve a country term's localized label by identifier.
+ * Resolve a country term's localized full name by identifier.
  *
- * Callers (`server/api/list/geobon/{index,count,[index]}.js`) previously
- * received `data.name` raw — always plain English, never localized. Routed
- * through the shared sanitizer so it picks up `shortTitle` -> `title` ->
- * `name`, matching every other thesaurus call site; the returned shape is
- * still a plain string, unchanged for callers.
+ * GEO BON callers (`server/api/list/geobon/{index,count,[index]}.js`) send
+ * the country name separately from its code. Prefer the full `title`, then
+ * `name`, using the shared locale fallback without the display sanitizer's
+ * `shortTitle` preference: a country's short title can be its ISO code.
  *
  * @param {object} event - the Nitro event, forwarded to the locale resolver.
  * @param {string} identifier - the country term identifier.
@@ -125,7 +124,7 @@ export const getCountryName = defineCachedFunction(
       if (data?.status >= 400 || !data)
         throw new Error(`HTTP ${data?.status || "error"}`);
 
-      return getLocalizedName(data.shortTitle, locale) || getLocalizedName(data.title, locale) || getLocalizedName(data.name, locale);
+      return getLocalizedName(data.title, locale) || getLocalizedName(data.name, locale);
     } catch (e) {
       consola.error(
         "server/utils/thesaurus/index.js.getCountryName",
