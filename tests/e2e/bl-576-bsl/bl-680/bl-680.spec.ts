@@ -359,7 +359,6 @@ test.describe('BL-680: Mega Menu Link Locale Prefix Verification', () => {
   })
 
   test('navigation from mega menu works correctly', async ({ page }, testInfo) => {
-    test.skip(!expectations.megaMenuHasInternalLinks, `target "${expectations.siteCode}" mega menu carries no locale-prefixed internal links`)
     testInfo.setTimeout(90_000)
 
     // Get available menus

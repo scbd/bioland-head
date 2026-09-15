@@ -20,11 +20,8 @@ import path from 'node:path'
 import type { Page, TestInfo, Request } from '@playwright/test'
 import { getE2EBaseURL } from '../../e2e-targets'
 import { seedConsentCookies } from '../../helpers/seed-consent-cookies'
-import { getTargetExpectations } from '../../expectations'
 
 const E2E_BASE_URL = getE2EBaseURL()
-
-const expectations = getTargetExpectations()
 
 // Test pages
 const TEST_PATHS = {
@@ -82,7 +79,6 @@ test.describe('BL-710: Widget Card and Page Image Rendering', () => {
   test.describe('Homepage Widget Card Images', () => {
     
     test('widget cards render with optimized background images', async ({ anonymous: page }, testInfo) => {
-      test.skip(!expectations.optimizesRemoteImages, `target "${expectations.siteCode}" media host is outside nuxt.config image.domains, so remote images are not rewritten through _ipx`)
       await seedConsentCookies(page.context(), E2E_BASE_URL)
       
       // Collect image requests
@@ -136,7 +132,6 @@ test.describe('BL-710: Widget Card and Page Image Rendering', () => {
     })
     
     test('widget card images use webp format via _ipx', async ({ anonymous: page }, testInfo) => {
-      test.skip(!expectations.optimizesRemoteImages, `target "${expectations.siteCode}" media host is outside nuxt.config image.domains, so remote images are not rewritten through _ipx`)
       await seedConsentCookies(page.context(), E2E_BASE_URL)
       
       const imageRequests: Request[] = []
@@ -228,7 +223,6 @@ test.describe('BL-710: Widget Card and Page Image Rendering', () => {
   test.describe('Page Side Images', () => {
     
     test('side images render with _ipx optimization', async ({ anonymous: page }, testInfo) => {
-      test.skip(!expectations.optimizesRemoteImages, `target "${expectations.siteCode}" media host is outside nuxt.config image.domains, so remote images are not rewritten through _ipx`)
       await seedConsentCookies(page.context(), E2E_BASE_URL)
       
       const ipxRequests: string[] = []
@@ -318,7 +312,6 @@ test.describe('BL-710: Widget Card and Page Image Rendering', () => {
     })
     
     test('side images have proper dimensions and attributes', async ({ anonymous: page }, testInfo) => {
-      test.skip(!expectations.optimizesRemoteImages, `target "${expectations.siteCode}" media host is outside nuxt.config image.domains, so remote images are not rewritten through _ipx`)
       await seedConsentCookies(page.context(), E2E_BASE_URL)
       
       const ipxRequests: string[] = []
@@ -439,7 +432,6 @@ test.describe('BL-710: Widget Card and Page Image Rendering', () => {
   test.describe('Network Tab Verification', () => {
     
     test('capture network tab evidence showing _ipx and webp usage', async ({ anonymous: page }, testInfo) => {
-      test.skip(!expectations.optimizesRemoteImages, `target "${expectations.siteCode}" media host is outside nuxt.config image.domains, so remote images are not rewritten through _ipx`)
       await seedConsentCookies(page.context(), E2E_BASE_URL)
       
       const networkLog: { url: string, type: string, contentType: string | null }[] = []
