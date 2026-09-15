@@ -83,9 +83,11 @@ describe('bioland.settings depth-7 camelCase transform', () => {
      *
      * Asserts the live path still camelCases at depth 7. It matches the `biolandSettings:` object
      * literal field — the L352 form, with a colon — so the dead L354 assignment (`... =` after an
-     * `if`) can be deleted without touching this assertion.
+     * `if`) can be deleted without touching this assertion. BL-890 has since deleted that dead
+     * line, and wrapped the live call in `sanitizeBiolandSettings(...)` — the boundary allowlist —
+     * which this pin now also asserts, so the filter cannot be dropped without a failing test.
      */
-    it('camelCases at depth 7 on the returned biolandSettings field, independent of the dead line', () => {
+    it('camelCases at depth 7 on the returned biolandSettings field, after the boundary filter', () => {
         const source = readFileSync(resolve(__dirname, '../../../../server/utils/context-unified.ts'), 'utf8')
 
         const returnedField = source
@@ -93,6 +95,6 @@ describe('bioland.settings depth-7 camelCase transform', () => {
             .filter(line => /^\s*biolandSettings\s*:/.test(line))
 
         expect(returnedField).toHaveLength(1)
-        expect(returnedField[0]).toMatch(/camelCase\(\s*config\.runTime\.biolandSettings\s*,\s*7\s*\)/)
+        expect(returnedField[0]).toMatch(/camelCase\(\s*sanitizeBiolandSettings\(\s*config\?\.runTime\?\.biolandSettings\s*\)\s*,\s*7\s*\)/)
     })
 })

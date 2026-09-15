@@ -261,12 +261,20 @@ describe('Context Utilities', () => {
 
   describe('buildSiteContext', () => {
     it('builds the full context with settings and normalized runtime data', async () => {
-      config.runTime = { biolandSettings: { show_home: true } }
+      // BL-890: the builder allowlists bioland.settings, so the fixture uses a key head consumes
+      // (`home_widgets`) alongside one it does not (`show_home`, dropped at the boundary).
+      config.runTime = { biolandSettings: { home_widgets: { gbif_widget: { enable: true } }, show_home: true } }
       expect(await contextModule.useRequestContext(eventFor({ host: 'be.localhost' }))).toMatchObject({
         siteCode: 'be', identifier: 'be', env: 'dev', multiSiteCode: 'bl2', locale: 'en',
         host: 'https://be.test.example.com', localizedHost: 'https://be.test.example.com/en',
-        indexLocale: 'EN', countries: ['BE'], siteName: 'Fixture Site', homePath: '/home', biolandSettings: { showHome: true },
+        indexLocale: 'EN', countries: ['BE'], siteName: 'Fixture Site', homePath: '/home',
+        biolandSettings: { homeWidgets: { gbifWidget: { enable: true } } },
       })
+    })
+
+    it('drops a bioland.settings key head does not consume', async () => {
+      config.runTime = { biolandSettings: { show_home: true, _core: { default_config_hash: 'abc' } } }
+      expect((await contextModule.useRequestContext(eventFor({ host: 'be.localhost' }))).biolandSettings).toEqual({})
     })
 
     it.each(['bch.example', 'biosafety.example', 'bsl.example'])('detects BCH Sites using %s', async (baseHost) => {
