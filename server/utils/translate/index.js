@@ -8,7 +8,7 @@
 import crypto from 'crypto'
 import { TranslateClient, TranslateTextCommand, TranslateDocumentCommand, ListLanguagesCommand } from '@aws-sdk/client-translate'
 import { mapLocaleFromDrupal } from './locale.js'
-import { getDbPool, closeDbPool } from '../db/pool'
+import { getDbPool } from '../db/pool.ts'
 
 const SOURCE_LOCALE = 'en'
 const CACHE_KEY_MAX_LENGTH = 499
@@ -347,10 +347,3 @@ export async function translateText(text, targetLocale, sourceLocale = SOURCE_LO
 
   return translated
 }
-
-// Re-exported so any external caller of the translation module's former
-// closeDbPool surface keeps working. No external caller exists today
-// (`rg closeDbPool` finds only this re-export and its own definition in
-// ../db/pool.ts); the re-export is kept anyway so this move is provably
-// surface-preserving.
-export { closeDbPool }
