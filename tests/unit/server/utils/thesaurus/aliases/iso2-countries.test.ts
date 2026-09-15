@@ -24,11 +24,11 @@ describe('server/utils/thesaurus/aliases/iso2-countries.json', () => {
   const unmapped: string[] = Array.isArray(map._unmapped) ? map._unmapped : []
   const entries = Object.fromEntries(Object.entries(map).filter(([key]) => key !== '_unmapped'))
 
-  it('parses as JSON with non-empty string values for every mapped key', () => {
+  it('parses as JSON with lowercase ISO-2-shaped values for every mapped key', () => {
     expect(typeof map).toBe('object')
     for (const [key, value] of Object.entries(entries)) {
       expect(typeof value).toBe('string')
-      expect((value as string).length).toBeGreaterThan(0)
+      expect(value).toMatch(/^[a-z]{2}$/)
       expect(key).toMatch(/^[a-z]{2}$/)
     }
   })
@@ -90,12 +90,20 @@ describe('getGenuineIso2Keys', () => {
 })
 
 describe('buildMap', () => {
-  it('matches genuine keys against live domain identifiers case-insensitively', () => {
+  it('matches genuine keys against live domain identifiers case-insensitively by key', () => {
+    const result = buildMap(['ad', 'jp'], [
+      { identifier: 'ad', name: 'Andorra' },
+      { identifier: 'jp', name: 'Japan' }
+    ])
+    expect(result).toEqual({ ad: 'ad', jp: 'jp' })
+  })
+
+  it('rejects a matched identifier that fails the ISO-2 shape check, routing it to _unmapped rather than writing it', () => {
     const result = buildMap(['ad', 'jp'], [
       { identifier: 'AD', name: 'Andorra' },
       { identifier: 'jp', name: 'Japan' }
     ])
-    expect(result).toEqual({ ad: 'AD', jp: 'jp' })
+    expect(result).toEqual({ jp: 'jp', _unmapped: ['ad'] })
   })
 
   it('reports genuine codes with no live counterpart in _unmapped rather than dropping them', () => {

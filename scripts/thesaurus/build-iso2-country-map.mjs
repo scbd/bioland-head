@@ -38,6 +38,13 @@ const OUTPUT_FILE = path.join(REPO_ROOT, 'server/utils/thesaurus/aliases/iso2-co
 /** The exact, auditable false-positive exclusion: this key, not a generic heuristic. */
 const FALSE_POSITIVE_KEYS = new Set(['or']);
 
+/**
+ * Shape every identifier written to the committed map must satisfy: a lowercase ISO-2 code,
+ * matching the key shape it maps from. Guards against a changed or hostile API response landing
+ * arbitrary text in a file that later feeds API path segments and cache keys.
+ */
+const VALID_IDENTIFIER = /^[a-z]{2}$/;
+
 /** Block boundary shared with `p02-05`'s classifier: ordered-key indices [380, 1059] inclusive. */
 const BLOCK_START = 380;
 const BLOCK_END = 1059;
@@ -56,7 +63,12 @@ export function getGenuineIso2Keys(localeData) {
 
 /**
  * Build the { "<iso2>": "<countries-domain-identifier>" } map (plus `_unmapped` for any genuine code
- * with no live counterpart), from the genuine key list and the live `countries` domain enumeration.
+ * with no live counterpart, or whose matched identifier fails the {@link VALID_IDENTIFIER} shape
+ * check), from the genuine key list and the live `countries` domain enumeration.
+ *
+ * The lookup key is lowercased for a case-insensitive match, but the value actually written is the
+ * matched identifier only when it already satisfies the ISO-2 shape verbatim — never coerced,
+ * so a malformed or mixed-case identifier is routed to `_unmapped` rather than written silently.
  */
 export function buildMap(genuineKeys, countryTerms) {
   const byIdentifier = new Map(countryTerms.map((item) => [String(item.identifier).toLowerCase(), item]));
@@ -65,7 +77,7 @@ export function buildMap(genuineKeys, countryTerms) {
 
   for (const code of [...genuineKeys].sort()) {
     const match = byIdentifier.get(code);
-    if (match) {
+    if (match && VALID_IDENTIFIER.test(match.identifier)) {
       map[code] = match.identifier;
     } else {
       unmapped.push(code);
@@ -91,11 +103,16 @@ async function main() {
 
   const url = getApiUrl('countries');
   console.log(`Fetching live countries domain from ${url} ...`);
-  const response = await fetch(url);
+  const response = await fetch(url, { signal: AbortSignal.timeout(10_000) });
   if (!response.ok) {
     throw new Error(`countries domain fetch failed: ${response.status} ${response.statusText}`);
   }
-  const countryTerms = await response.json();
+  const MAX_RESPONSE_BYTES = 5 * 1024 * 1024; // guard against a runaway/hostile response body
+  const body = await response.text();
+  if (body.length > MAX_RESPONSE_BYTES) {
+    throw new Error(`countries domain response exceeded ${MAX_RESPONSE_BYTES} bytes; refusing to parse`);
+  }
+  const countryTerms = JSON.parse(body);
 
   const result = buildMap(genuine, countryTerms);
   const unmappedCount = Array.isArray(result._unmapped) ? result._unmapped.length : 0;
