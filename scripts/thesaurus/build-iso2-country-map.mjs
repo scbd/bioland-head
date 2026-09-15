@@ -1,7 +1,7 @@
 /**
  * Build the ISO-2 country code -> `countries` domain identifier map.
  *
- * Discovery (live, re-run to regenerate `../../server/utils/thesaurus/aliases/iso2-countries.json`):
+ * Discovery (live, re-run to regenerate `../../server/assets/thesaurus-aliases/iso2-countries.json`):
  *
  * 1. `i18n/locales/en.json` has a 680-key block at ordered-key indices [380, 1059] (the same block
  *    boundary `p02-05`'s classifier extends). Within it, 199 keys match `^[a-z]{2}$`. One of those,
@@ -33,7 +33,7 @@ import { getApiUrl } from '../../server/utils/thesaurus/config.ts';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '../..');
 const LOCALE_FILE = path.join(REPO_ROOT, 'i18n/locales/en.json');
-const OUTPUT_FILE = path.join(REPO_ROOT, 'server/utils/thesaurus/aliases/iso2-countries.json');
+const OUTPUT_FILE = path.join(REPO_ROOT, 'server/assets/thesaurus-aliases/iso2-countries.json');
 
 /** The exact, auditable false-positive exclusion: this key, not a generic heuristic. */
 const FALSE_POSITIVE_KEYS = new Set(['or']);

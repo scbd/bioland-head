@@ -6,7 +6,7 @@ import { getGenuineIso2Keys, buildMap } from '../../../../../../scripts/thesauru
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(__dirname, '../../../../../..')
-const MAP_FILE = path.join(REPO_ROOT, 'server/utils/thesaurus/aliases/iso2-countries.json')
+const MAP_FILE = path.join(REPO_ROOT, 'server/assets/thesaurus-aliases/iso2-countries.json')
 const LOCALE_FILE = path.join(REPO_ROOT, 'i18n/locales/en.json')
 
 // Captured at test-authoring time from a live scan of the [380, 1059] ordered-key block in
