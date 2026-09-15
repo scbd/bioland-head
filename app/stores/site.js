@@ -153,11 +153,11 @@ export const useSiteStore = defineStore('site', {
         // Every theme read goes through resolveTheme — see app/utils/resolve-theme.js for the
         // precedence, per-leaf merge, hero-derive, and totality rules.
         //
-        // The Drupal-authored theme is handed in from `this.biolandSettings`, the depth-7
-        // camelCased copy built in server/utils/context-unified.ts and passed through
-        // `initialize`. It is deliberately NOT read off `this.config.runTime.biolandSettings`:
-        // that copy is only camelCased by a statement sitting after the context builder's
-        // `return`, so it is dead code and the raw snake_case keys would not match.
+        // The Drupal-authored theme is handed in from `this.biolandSettings`, the allowlisted
+        // (BL-890) and depth-7 camelCased copy built in server/utils/context-unified.ts and passed
+        // through `initialize`. It is deliberately NOT read off `this.config.runTime.biolandSettings`:
+        // that copy is the raw dmsm passthrough - neither filtered nor camelCased - so its
+        // snake_case keys would not match, and nothing has vetted what is in it.
         theme(){
             return resolveTheme(this.config, this.biolandSettings?.theme);
         },
