@@ -3,7 +3,7 @@ status: proposed
 date: 2026-09-15
 deciders: [randy]
 context: system-wide
-code-path: server/utils/observability/
+code-path: server/utils/observability/  # prospective, not yet created
 origin: planning
 plan: config-endpoint
 ---
@@ -12,11 +12,12 @@ plan: config-endpoint
 
 OPS-1's verdict must be a query, and p02-09 counts `config.source.fallback` events grouped by
 `reason` with no total-read denominator, so a percentage rate is not computable from it. We
-propose an absolute count per soak window instead: 24 hours on dev, 48 on stg, 72 on prod, passing
-a slice only when `site-absent-from-registry` is zero and `registry-unreachable` is at most one.
+propose an absolute budget per soak window instead: 24 hours on dev, 48 on stg, 72 on prod, passing
+a slice only when `site-absent-from-registry` is zero and `registry-unreachable` stays at or under
+five fleet-wide with no two events inside one 5-minute window.
 
 **Proposed — blocks OPS-1.**
 
 See [details](details/0009.md).
 
-**Related:** 0006.
+**Related:** 0006, 0007, 0008.

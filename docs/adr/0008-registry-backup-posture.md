@@ -13,11 +13,11 @@ plan: config-endpoint
 `server/assets/schema.sql` creates and uses a database named `i18n_cache`, and a database named
 for a cache is what an operator truncates to reset translations. Putting the durable site registry
 there turns a routine cache reset into a config outage for every site in the deployment. We propose
-keeping the tables in `i18n_cache`, documented as non-truncatable and covered by backup, with
-p02-02's seeder as the rebuild path.
+a separate `site_registry` database on the same pool, reached by qualified table names: one grant,
+no new variables, and a structural boundary rather than a convention.
 
 **Proposed — blocks p02-01 and p04-04.**
 
 See [details](details/0008.md).
 
-**Related:** 0006, 0007.
+**Related:** 0006, 0007, 0009.
