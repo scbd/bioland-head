@@ -47,7 +47,7 @@ const REPO_ROOT = resolve(__dirname, '../..')
 const API_TERMS_BASE = 'https://api.cbd.int/api/v2013/thesaurus/terms'
 const API_DOMAINS_BASE = 'https://api.cbd.int/api/v2013/thesaurus/domains'
 const SDG_DOMAIN = 'SUSTAINABLE-DEVELOPMENT-GOALS'
-const OUTPUT_PATH = resolve(REPO_ROOT, 'server/utils/thesaurus/aliases/sdg.json')
+const OUTPUT_PATH = resolve(REPO_ROOT, 'server/assets/thesaurus-aliases/sdg.json')
 const LOCALE_PATH = resolve(REPO_ROOT, 'i18n/locales/en.json')
 
 // Polite pacing between individual term probes (domain enumeration is one

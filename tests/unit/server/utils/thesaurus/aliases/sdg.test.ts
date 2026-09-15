@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-const ALIAS_PATH = resolve(__dirname, '../../../../../../server/utils/thesaurus/aliases/sdg.json')
+const ALIAS_PATH = resolve(__dirname, '../../../../../../server/assets/thesaurus-aliases/sdg.json')
 const LOCALE_PATH = resolve(__dirname, '../../../../../../i18n/locales/en.json')
 
 const aliasMap = JSON.parse(readFileSync(ALIAS_PATH, 'utf-8'))
