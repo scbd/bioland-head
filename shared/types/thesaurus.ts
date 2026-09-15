@@ -17,7 +17,7 @@ export interface LString {
 export interface ThesaurusItem {
   identifier?: string;
   name?: LString | string;
-  title?: string;
+  title?: LString;
   shortTitle?: LString | string;
   description?: LString | string;
   narrowerTerms?: string[];
