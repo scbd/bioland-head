@@ -129,6 +129,19 @@ describe('thesaurus/index', () => {
       expect(globalThis.consola.error).toHaveBeenCalled()
     })
 
+    it('logs a generic "error" status when the fetch resolves with no data at all (no status code to report)', async () => {
+      fetchResponse = undefined
+
+      const result = await thesaurusIndex.getCountryName({}, 'ZZ')
+
+      expect(result).toBeUndefined()
+      expect(globalThis.consola.error).toHaveBeenCalledWith(
+        'server/utils/thesaurus/index.js.getCountryName',
+        '/v2013/thesaurus/terms/ZZ',
+        expect.objectContaining({ message: 'HTTP error' })
+      )
+    })
+
     it('URI-encodes the identifier', async () => {
       fetchResponse = { identifier: 'A B', name: 'A B' }
 
