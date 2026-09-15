@@ -64,22 +64,26 @@ describe('thesaurus/index', () => {
   })
 
   describe('getCountryName', () => {
-    it('returns the localized label via shortTitle -> title -> name, not the raw plain-English name', async () => {
+    it.each([
+      ['en', 'Belgium'],
+      ['fr', 'Belgique'],
+      ['de', 'Belgium']
+    ])('returns the full country name for locale=%s, not its short code', async (locale, expected) => {
       fetchResponse = {
         identifier: 'BE',
         name: 'Belgium',
         title: { en: 'Belgium', fr: 'Belgique' },
         shortTitle: { en: 'BE', fr: 'BE' }
       }
-      currentLocale = 'fr'
+      currentLocale = locale
 
       const result = await thesaurusIndex.getCountryName({}, 'BE')
 
-      expect(result).toBe('BE')
+      expect(result).toBe(expected)
       expect(fetchedUrl).toContain('/v2013/thesaurus/terms/BE')
     })
 
-    it('falls back to title when shortTitle is empty for the requested locale, still localized', async () => {
+    it('localizes the full title when shortTitle is empty', async () => {
       fetchResponse = {
         identifier: 'FR',
         name: 'France',
@@ -93,13 +97,26 @@ describe('thesaurus/index', () => {
       expect(result).toBe('Francia')
     })
 
-    it('falls back to the plain-English name only when neither multilingual field carries data', async () => {
-      fetchResponse = { identifier: 'ZZ', name: 'Plain Country' }
+    it.each([undefined, {}])('falls back to the full name when title is %s, never to the short code', async (title) => {
+      fetchResponse = { identifier: 'ZZ', name: 'Plain Country', title, shortTitle: { en: 'ZZ' } }
       currentLocale = 'de'
 
       const result = await thesaurusIndex.getCountryName({}, 'ZZ')
 
       expect(result).toBe('Plain Country')
+    })
+
+    it('falls back to the first available full title when the requested locale and English are absent', async () => {
+      fetchResponse = { identifier: 'BE', title: { fr: 'Belgique' }, shortTitle: { en: 'BE' } }
+      currentLocale = 'de'
+
+      expect(await thesaurusIndex.getCountryName({}, 'BE')).toBe('Belgique')
+    })
+
+    it('does not return a short code when no full name is available', async () => {
+      fetchResponse = { identifier: 'BE', shortTitle: { en: 'BE' } }
+
+      expect(await thesaurusIndex.getCountryName({}, 'BE')).toBeUndefined()
     })
 
     it('defaults to English when the request context carries no locale', async () => {
