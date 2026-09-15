@@ -1,5 +1,6 @@
 import { camelCase } from 'change-case/keys'
-import { describe, expect, it } from 'vitest'
+import { consola } from 'consola'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { BIOLAND_SETTINGS_ALLOWLIST, sanitizeBiolandSettings } from '~/server/utils/bioland-settings'
 
@@ -16,6 +17,11 @@ import { BIOLAND_SETTINGS_ALLOWLIST, sanitizeBiolandSettings } from '~/server/ut
  */
 describe('sanitizeBiolandSettings', () => {
 
+    let warn: ReturnType<typeof vi.spyOn>
+
+    beforeEach(() => { warn = vi.spyOn(consola, 'warn').mockImplementation(() => {}) })
+    afterEach(()  => { warn.mockRestore() })
+
     /** A realistic Drupal payload: snake_case authored keys, plus the junk dmsm hands through. */
     const authored = () => ({
         theme        : { color: { primary: '#7b6f82' }, mega_menu: { max_columns: 4, forums: false } },
@@ -30,11 +36,19 @@ describe('sanitizeBiolandSettings', () => {
 
     describe('allowlist', () => {
 
-        it('keeps every allowlisted key and drops everything else', () => {
+        it('keeps every allowlisted key, under its canonical spelling, and drops everything else', () => {
             const sanitized = sanitizeBiolandSettings(authored())
 
             expect(Object.keys(sanitized).sort())
-                .toEqual(['config', 'google_analytics_ids', 'home_widgets', 'mega_menu', 'theme'])
+                .toEqual(['config', 'googleAnalyticsIds', 'homeWidgets', 'megaMenu', 'theme'])
+        })
+
+        it('emits keys in allowlist order, not payload order, so output never depends on Drupal serialisation', () => {
+            const forwards  = sanitizeBiolandSettings({ theme: {}, config: {}, mega_menu: {} })
+            const backwards = sanitizeBiolandSettings({ mega_menu: {}, config: {}, theme: {} })
+
+            expect(Object.keys(forwards)).toEqual(Object.keys(backwards))
+            expect(Object.keys(forwards)).toEqual(['theme', 'config', 'megaMenu'])
         })
 
         it('drops the Drupal-internal keys head never consumes', () => {
@@ -52,9 +66,10 @@ describe('sanitizeBiolandSettings', () => {
         })
 
         it('matches allowlisted keys whatever separator or casing the editor used', () => {
-            const sanitized = sanitizeBiolandSettings({ 'mega-menu': { forums: true }, megaMenu: { bch: true } })
+            const sanitized = sanitizeBiolandSettings({ 'mega-menu': { forums: true } })
 
-            expect(Object.keys(sanitized).sort()).toEqual(['mega-menu', 'megaMenu'])
+            expect(Object.keys(sanitized)).toEqual(['megaMenu'])
+            expect((sanitized as any).megaMenu.forums).toBe(true)
         })
 
         it('returns an empty object for a missing or non-object payload', () => {
@@ -71,6 +86,113 @@ describe('sanitizeBiolandSettings', () => {
 
             expect(raw).toHaveProperty('_core')
             expect(raw.theme.mega_menu.max_columns).toBe(4)
+        })
+    })
+
+    /**
+     * Allowlist matching is case- and separator-insensitive, so several authored spellings of one
+     * key can all pass it. Before BL-890's follow-up they all survived sanitize and then collapsed
+     * during the depth-7 camelCase, last one winning — which meant the surviving value depended on
+     * the order Drupal happened to serialise the JSON row in. They must collapse HERE instead, to a
+     * winner that is fixed by this module and not by the payload.
+     */
+    describe('duplicate spellings of one allowlisted key', () => {
+
+        it('collapses to a single canonical key rather than surviving as siblings', () => {
+            const sanitized = sanitizeBiolandSettings({ theme: { color: { primary: '#aaa' } }, THEME: { color: { primary: '#bbb' } } })
+
+            expect(Object.keys(sanitized)).toEqual(['theme'])
+        })
+
+        it('gives precedence to the canonical spelling, whatever the payload order', () => {
+            const canonicalLast  : any = sanitizeBiolandSettings({ THEME: { color: { primary: '#bbb' } }, theme: { color: { primary: '#aaa' } } })
+            const canonicalFirst : any = sanitizeBiolandSettings({ theme: { color: { primary: '#aaa' } }, THEME: { color: { primary: '#bbb' } } })
+
+            expect(canonicalLast.theme.color.primary).toBe('#aaa')
+            expect(canonicalFirst.theme.color.primary).toBe('#aaa')
+        })
+
+        it('resolves a three-way collision to the canonical spelling', () => {
+            const sanitized: any = sanitizeBiolandSettings({
+                mega_menu  : { forums: { position: 'snake' } },
+                megaMenu   : { forums: { position: 'camel' } },
+                'MEGA-MENU': { forums: { position: 'shout' } }
+            })
+
+            expect(Object.keys(sanitized)).toEqual(['megaMenu'])
+            expect(sanitized.megaMenu.forums.position).toBe('camel')
+        })
+
+        it('falls back to a stable code-point order when no spelling is canonical', () => {
+            const forwards  : any = sanitizeBiolandSettings({ google_analytics_ids: 'G-SNAKE', GOOGLE_ANALYTICS_IDS: 'G-SHOUT' })
+            const backwards : any = sanitizeBiolandSettings({ GOOGLE_ANALYTICS_IDS: 'G-SHOUT', google_analytics_ids: 'G-SNAKE' })
+
+            expect(forwards.googleAnalyticsIds).toBe(backwards.googleAnalyticsIds)
+            expect(forwards.googleAnalyticsIds).toBe('G-SHOUT')
+        })
+
+        it('warns naming the kept and dropped spellings, so the authoring error is visible', () => {
+            sanitizeBiolandSettings({ theme: { color: {} }, THEME: { color: {} } })
+
+            expect(warn).toHaveBeenCalledTimes(1)
+            expect(warn.mock.calls[0]?.[0]).toContain('kept "theme"')
+            expect(warn.mock.calls[0]?.[0]).toContain('dropped "THEME"')
+        })
+
+        it('stays silent when every allowlisted key is authored once', () => {
+            sanitizeBiolandSettings(authored())
+
+            expect(warn).not.toHaveBeenCalled()
+        })
+    })
+
+    /**
+     * The depth bound keeps a pathological payload from blowing the stack. It is fail-closed by
+     * design, but the drop must be observable — key paths only, never authored values.
+     */
+    describe('depth bound', () => {
+
+        /** Builds `{ mega_menu: { a: { a: ... { deepest: true } } } }` nested `depth` levels below the root. */
+        const nest = (depth: number) => {
+            let node: Record<string, unknown> = { deepest: true }
+
+            for (let i = 0; i < depth; i += 1) node = { a: node }
+
+            return { mega_menu: node }
+        }
+
+        it('keeps a branch sitting exactly at the bound', () => {
+            const sanitized = sanitizeBiolandSettings(nest(30))
+
+            expect(JSON.stringify(sanitized)).toContain('deepest')
+            expect(warn).not.toHaveBeenCalled()
+        })
+
+        it('drops the over-deep branch to undefined rather than passing it through unfiltered', () => {
+            const sanitized: any = sanitizeBiolandSettings(nest(40))
+
+            let node = sanitized.megaMenu
+            // `megaMenu` itself sits at depth 1, so the 32nd `.a` is the first past MAX_DEPTH.
+            for (let i = 0; i < 32; i += 1) node = node.a
+
+            expect(node).toBeUndefined()
+            expect(JSON.stringify(sanitized)).not.toContain('deepest')
+        })
+
+        it('warns with the truncated key path and never the authored value', () => {
+            sanitizeBiolandSettings(nest(40))
+
+            expect(warn).toHaveBeenCalledTimes(1)
+
+            const message = String(warn.mock.calls[0]?.[0])
+
+            expect(message).toContain('nested deeper than 32')
+            expect(message).toContain('megaMenu.a.a.a')
+            expect(message).not.toContain('deepest')
+        })
+
+        it('survives a pathological payload without overflowing the stack', () => {
+            expect(() => sanitizeBiolandSettings(nest(200_000))).not.toThrow()
         })
     })
 
@@ -154,7 +276,7 @@ describe('sanitizeBiolandSettings', () => {
             )
 
             const sanitized: any = sanitizeBiolandSettings(raw)
-            const deep = sanitized.mega_menu.a.b.c.d.e.f.g
+            const deep = sanitized.megaMenu.a.b.c.d.e.f.g
 
             expect(deep).toEqual({ keep_me: 1 })
             expect(JSON.stringify(sanitized)).not.toContain('polluted')
@@ -166,7 +288,7 @@ describe('sanitizeBiolandSettings', () => {
                 JSON.parse('{"mega_menu":{"__proto__":{"polluted":"yes"},"forums":{"position":"top"}}}')
             )
 
-            expect(sanitized.mega_menu.forums.position).toBe('top')
+            expect(sanitized.megaMenu.forums.position).toBe('top')
         })
     })
 })

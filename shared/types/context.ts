@@ -37,14 +37,23 @@ export interface DmsmConfig {
 }
 
 /**
- * Drupal `bioland.settings`, passed through whole by dmsm and camelCased to depth 7 on the way
- * through `buildSiteContext`, so the Drupal key `google_analytics_ids` arrives as
- * `googleAnalyticsIds`. The bag is an unfiltered passthrough of site editable config, so treat
- * every value in it as untrusted input: read the one field you need by name, never spread it.
- * Only the fields this app consumes are typed; the index signature keeps the rest addressable.
+ * Drupal `bioland.settings`, passed through whole by dmsm but filtered at the head boundary by
+ * `sanitizeBiolandSettings` (see server/utils/bioland-settings.ts, BL-890) before being camelCased
+ * to depth 7 in `buildSiteContext`. Only the allowlisted top-level keys below survive, under the
+ * canonical spelling that module emits, so the Drupal key `google_analytics_ids` arrives as
+ * `googleAnalyticsIds`.
+ *
+ * The VALUES are still editor-authored and therefore still untrusted: the allowlist governs which
+ * top-level keys exist, not what is inside them. Read the one field you need by name, never spread.
+ * Keep this interface in step with BIOLAND_SETTINGS_ALLOWLIST - it is documentation of that
+ * allowlist, not an enforcement of it.
  */
-export interface BiolandSettings extends Record<string, unknown> {
+export interface BiolandSettings {
+  theme?: Record<string, unknown>
+  config?: Record<string, unknown>
   googleAnalyticsIds?: string
+  homeWidgets?: Record<string, unknown>
+  megaMenu?: Record<string, unknown>
 }
 
 /**

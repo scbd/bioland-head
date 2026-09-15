@@ -1,3 +1,5 @@
+import { consola } from "consola";
+
 /**
  * `bioland.settings` boundary filter (BL-890).
  *
@@ -15,13 +17,16 @@
  * camelCasing is NOT a defence: `change-case` rewrites a top-level `__proto__` to `proto` but
  * leaves `constructor` verbatim, and it stops at depth 7.
  *
- * So this module applies TWO passes, before any camelCasing:
- *   1. An explicit top-level ALLOWLIST of the keys head actually consumes. It fails closed - a new
- *      editor-authored key reaches no consumer until it is listed here - and it documents what
- *      head depends on.
+ * So this module applies THREE passes, before any camelCasing:
+ *   1. An explicit top-level ALLOWLIST of the keys head actually consumes, matched case- and
+ *      separator-insensitively and re-emitted under the allowlist's own canonical spelling. It
+ *      fails closed - a new editor-authored key reaches no consumer until it is listed here - and
+ *      it documents what head depends on.
  *   2. A depth-agnostic strip of `__proto__` / `constructor` / `prototype` inside the kept
  *      branches. Belt and braces on purpose: the allowlist only governs the top level, while the
  *      proven `mega_menu.__proto__` failure lives inside a key the allowlist must keep.
+ *   3. A depth bound, so a pathological payload cannot blow the stack. Anything past the bound is
+ *      dropped rather than passed through unfiltered, and the drop is logged.
  *
  * Consumer-side guards (for example the prototype-key guard in `app/utils/resolve-theme.js`) stay
  * where they are. Defence in depth is intentional.
@@ -50,19 +55,45 @@ const FORBIDDEN_KEYS = new Set(["__proto__", "constructor", "prototype"]);
  */
 const MAX_DEPTH = 32;
 
+/** How many distinct truncated paths to name in the warning before summarising by count alone. */
+const MAX_REPORTED_PATHS = 5;
+
 /** Case- and separator-insensitive key identity, so `mega_menu`, `mega-menu` and `megaMenu` match. */
 const normalizeKey = (key: string): string => key.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-const ALLOWED_KEYS = new Set(BIOLAND_SETTINGS_ALLOWLIST.map(normalizeKey));
+/** Normalized identity -> the allowlist's canonical spelling for it. */
+const CANONICAL_KEYS = new Map<string, string>(
+  BIOLAND_SETTINGS_ALLOWLIST.map((key) => [normalizeKey(key), key]),
+);
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-/** Deep copy with every forbidden key removed, at any depth and regardless of authored casing. */
-function stripForbiddenKeys(value: unknown, depth = 0): unknown {
-  if (depth > MAX_DEPTH) return undefined;
+/** Records branches dropped for exceeding `MAX_DEPTH`, so the truncation is never silent. */
+interface TruncationLog {
+  count: number;
+  paths: string[];
+}
 
-  if (Array.isArray(value)) return value.map((entry) => stripForbiddenKeys(entry, depth + 1));
+/** Deep copy with every forbidden key removed, at any depth and regardless of authored casing. */
+function stripForbiddenKeys(
+  value: unknown,
+  depth: number,
+  path: string,
+  truncation: TruncationLog,
+): unknown {
+  if (depth > MAX_DEPTH) {
+    truncation.count += 1;
+
+    if (truncation.paths.length < MAX_REPORTED_PATHS) truncation.paths.push(path);
+
+    return undefined;
+  }
+
+  if (Array.isArray(value))
+    return value.map((entry, index) =>
+      stripForbiddenKeys(entry, depth + 1, `${path}[${index}]`, truncation),
+    );
 
   if (!isPlainObject(value)) return value;
 
@@ -75,35 +106,94 @@ function stripForbiddenKeys(value: unknown, depth = 0): unknown {
 
     if (!descriptor?.enumerable || !("value" in descriptor)) continue;
 
-    safe[key] = stripForbiddenKeys(descriptor.value, depth + 1);
+    safe[key] = stripForbiddenKeys(descriptor.value, depth + 1, `${path}.${key}`, truncation);
   }
 
   return safe;
 }
 
 /**
+ * Deterministic precedence between two authored spellings of the SAME allowlisted key.
+ *
+ * Duplicate spellings are an authoring error, but they must not resolve by luck: the raw payload is
+ * parsed JSON, so iterating it would make the survivor depend on the order Drupal happened to
+ * serialise the row in. Precedence is therefore, in order:
+ *   1. the allowlist's own canonical spelling, which is unambiguously the intended key;
+ *   2. otherwise the lowest by UTF-16 code-point order - arbitrary, but stable across payloads.
+ *
+ * Whichever loses is dropped and named in a warning, never silently merged.
+ */
+const compareSpellings =
+  (canonical: string) =>
+  (a: string, b: string): number => {
+    if (a === canonical) return -1;
+    if (b === canonical) return 1;
+
+    return a < b ? -1 : a > b ? 1 : 0;
+  };
+
+/**
  * Filter raw `bioland.settings` down to the keys head consumes, with prototype-poisoning keys
  * stripped at every depth. Returns a fresh object; the input is never mutated.
+ *
+ * Top-level keys come back under their canonical allowlist spelling, and the output is built by
+ * walking the allowlist rather than the payload, so neither the surviving key nor its position
+ * depends on the payload's own key order. That is load-bearing: matching is case- and
+ * separator-insensitive, so `theme` and `THEME` (or `mega_menu`, `mega-menu` and `megaMenu`) all
+ * pass the allowlist and would otherwise collapse onto one another during camelCasing, last one
+ * winning. Nested keys are left as authored for the depth-7 camelCase pass downstream.
  *
  * Call this BEFORE camelCasing - the point is that nothing unlisted is ever handed on.
  */
 export function sanitizeBiolandSettings(raw: unknown): Record<string, unknown> {
   if (!isPlainObject(raw)) return {};
 
-  const sanitized: Record<string, unknown> = {};
+  /** canonical key -> every authored spelling of it found in the payload, with its value. */
+  const candidates = new Map<string, Array<{ key: string; value: unknown }>>();
 
   for (const key of Object.getOwnPropertyNames(raw)) {
     const normalized = normalizeKey(key);
 
     if (FORBIDDEN_KEYS.has(key) || FORBIDDEN_KEYS.has(normalized)) continue;
-    if (!ALLOWED_KEYS.has(normalized)) continue;
+
+    const canonical = CANONICAL_KEYS.get(normalized);
+
+    if (!canonical) continue;
 
     const descriptor = Object.getOwnPropertyDescriptor(raw, key);
 
     if (!descriptor?.enumerable || !("value" in descriptor)) continue;
 
-    sanitized[key] = stripForbiddenKeys(descriptor.value, 1);
+    const spellings = candidates.get(canonical);
+
+    if (spellings) spellings.push({ key, value: descriptor.value });
+    else candidates.set(canonical, [{ key, value: descriptor.value }]);
   }
+
+  const sanitized: Record<string, unknown> = {};
+  const truncation: TruncationLog = { count: 0, paths: [] };
+
+  for (const canonical of BIOLAND_SETTINGS_ALLOWLIST) {
+    const spellings = candidates.get(canonical);
+
+    if (!spellings?.length) continue;
+
+    const [winner, ...discarded] = [...spellings].sort((a, b) =>
+      compareSpellings(canonical)(a.key, b.key),
+    );
+
+    if (discarded.length)
+      consola.warn(
+        `[bioland.settings] "${canonical}" was authored ${spellings.length} times; kept "${winner!.key}" and dropped ${discarded.map((entry) => `"${entry.key}"`).join(", ")}. Remove the duplicate spellings in Drupal.`,
+      );
+
+    sanitized[canonical] = stripForbiddenKeys(winner!.value, 1, canonical, truncation);
+  }
+
+  if (truncation.count)
+    consola.warn(
+      `[bioland.settings] dropped ${truncation.count} branch(es) nested deeper than ${MAX_DEPTH}. Paths: ${truncation.paths.join(", ")}${truncation.count > truncation.paths.length ? ", ..." : ""}`,
+    );
 
   return sanitized;
 }
