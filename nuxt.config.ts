@@ -274,7 +274,6 @@ export default defineNuxtConfig({
     tsConfig: {
       compilerOptions: {
         baseUrl: ".",
-        ignoreDeprecations: "6.0",
       },
     },
   },

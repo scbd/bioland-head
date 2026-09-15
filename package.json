@@ -2,6 +2,7 @@
   "name": "nuxt-app",
   "private": true,
   "type": "module",
+  "packageManager": "yarn@4.5.0",
   "scripts": {
     "build": "nuxt build",
     "dev": "rm -rf .data && nuxt cleanup && nuxt dev --host be.localhost",
@@ -21,7 +22,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report .playwright-report",
-    "test:e2e:auth-setup": "node tests/e2e/scripts/auth-setup.mjs"
+    "test:e2e:auth-setup": "node tests/e2e/scripts/auth-setup.mjs",
+    "typecheck": "nuxt typecheck"
   },
   "devDependencies": {
     "@nuxt/devtools": "3.1.0",
@@ -43,7 +45,8 @@
     "sass-loader": "14.1.1",
     "typescript": "5.9.3",
     "vitest": "^4.0.15",
-    "vue": "3.5.24"
+    "vue": "3.5.24",
+    "vue-tsc": "3.3.11"
   },
   "dependencies": {
     "@aws-sdk/client-translate": "^3.948.0",
