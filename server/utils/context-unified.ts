@@ -11,6 +11,7 @@ import { camelCase } from "change-case/keys";
 import type { H3Event } from "h3";
 import type { SiteContext, DmsmConfig, ContextCookie } from "~/shared/types";
 import { getSiteSettings } from "./drupal/index.js";
+import { sanitizeBiolandSettings } from "./bioland-settings";
 
 
 interface RequestContextOptions { /** Explicit siteCode (skips host extraction) - used by context API route */ siteCode?: string; /** Explicit locale (skips path/cookie resolution) */ locale?: string; /** Bypass DMSM config cache - forces fresh fetch from DMSM API */ bypassCache?: boolean; }
@@ -485,10 +486,10 @@ async function buildSiteContext(params: { siteCode: string; locale: string; conf
     siteName,
     homePath,
     config,
-    biolandSettings: config?.runTime?.biolandSettings? camelCase(config.runTime.biolandSettings, 7) || {} : {} ,
+    // BL-890: `bioland.settings` is editor-authored and passed through whole by dmsm, so it is
+    // filtered HERE, at the boundary, not in each consumer. See ./bioland-settings.
+    biolandSettings: camelCase(sanitizeBiolandSettings(config?.runTime?.biolandSettings), 7) || {},
   };
-  if(config?.runTime?.biolandSettings)config.runTime.biolandSettings = camelCase(config.runTime.biolandSettings, 7);
- 
 }
 
 /**
