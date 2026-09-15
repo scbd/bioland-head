@@ -6,6 +6,9 @@
 // Context types
 export * from './context';
 
+// Site config contract types (theme/runTime shapes + registry-input types)
+export * from './site-config';
+
 // Thesaurus types
 export * from './thesaurus';
 
