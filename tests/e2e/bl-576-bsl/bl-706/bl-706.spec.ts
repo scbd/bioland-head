@@ -85,7 +85,6 @@ test.describe('BL-706: Hero Image SSR Context Fix', () => {
   })
 
   test('hero image renders on first SSR load without context cookie', async ({ page, context }, testInfo) => {
-    test.skip(!expectations.hasHeroBackgroundImage, `target "${expectations.siteCode}" configures no hero image, so the hero carries no background-image`)
     testInfo.setTimeout(60_000)
 
     // Clear all cookies EXCEPT consent cookies to simulate first-time visitor
@@ -109,14 +108,19 @@ test.describe('BL-706: Hero Image SSR Context Fix', () => {
     const heroImage = page.getByTestId('hero-image')
     await expect(heroImage, 'Hero image should be visible on first SSR load').toBeVisible({ timeout: 10_000 })
 
-    // VERIFY: Hero has a background image (not empty)
-    const bgStyle = await heroImage.evaluate(el => 
-      window.getComputedStyle(el).backgroundImage
-    )
-    
-    expect(bgStyle, 'Hero should have background-image style').not.toBe('none')
-    expect(bgStyle, 'Hero background should not contain "undefined"').not.toContain('undefined')
-    expect(bgStyle, 'Hero background should have actual URL').toMatch(/url\(/)
+    // VERIFY: Hero has a background image (not empty).
+    // BL-888: only tenants that configure a hero image can assert a background URL. The
+    // rest of this test - console health and the SSR `context` cookie - is the actual
+    // BL-706 regression and is tenant-agnostic, so it runs at every target.
+    if (expectations.hasHeroBackgroundImage) {
+      const bgStyle = await heroImage.evaluate(el =>
+        window.getComputedStyle(el).backgroundImage
+      )
+
+      expect(bgStyle, 'Hero should have background-image style').not.toBe('none')
+      expect(bgStyle, 'Hero background should not contain "undefined"').not.toContain('undefined')
+      expect(bgStyle, 'Hero background should have actual URL').toMatch(/url\(/)
+    }
 
     // VERIFY: No hero-related hydration mismatches (ignore other component warnings)
     const heroHydrationWarnings = consoleCapture.hydrationWarnings.filter(w =>
@@ -151,7 +155,6 @@ test.describe('BL-706: Hero Image SSR Context Fix', () => {
   })
 
   test('hero image stable during hydration (no flash or change)', async ({ page, context }, testInfo) => {
-    test.skip(!expectations.hasHeroBackgroundImage, `target "${expectations.siteCode}" configures no hero image, so the hero carries no background-image`)
     testInfo.setTimeout(60_000)
 
     // Clear context cookie to test SSR path
@@ -179,12 +182,16 @@ test.describe('BL-706: Hero Image SSR Context Fix', () => {
     const heroImage = page.getByTestId('hero-image')
     await expect(heroImage, 'Hero should remain visible after hydration').toBeVisible()
 
-    // Verify background still valid
-    const bgStyle = await heroImage.evaluate(el => 
-      window.getComputedStyle(el).backgroundImage
-    )
-    expect(bgStyle, 'Hero background should remain valid after hydration').not.toContain('undefined')
-    expect(bgStyle).toMatch(/url\(/)
+    // Verify background still valid.
+    // BL-888: background-image assertions apply only to tenants that configure a hero image;
+    // the hydration-stability assertions below are tenant-agnostic and always run.
+    if (expectations.hasHeroBackgroundImage) {
+      const bgStyle = await heroImage.evaluate(el =>
+        window.getComputedStyle(el).backgroundImage
+      )
+      expect(bgStyle, 'Hero background should remain valid after hydration').not.toContain('undefined')
+      expect(bgStyle).toMatch(/url\(/)
+    }
 
     // VERIFY: No hero-related hydration warnings (ignore other component warnings like cookie control)
     const heroHydrationWarnings = consoleCapture.hydrationWarnings.filter(w =>

@@ -28,38 +28,16 @@ export interface TargetExpectations {
 
   /**
    * Tenant is a Biosafety (BCH/BSL) site: its home page renders the `home-bch-*`
-   * widgets and its mega menu carries the biosafety sections in `biosafetyMenus`.
+   * widgets and its mega menu carries the biosafety sections.
    */
   isBiosafety: boolean
-
-  /** Mega-menu labels that exist only on biosafety tenants. */
-  biosafetyMenus: readonly string[]
 
   /** Tenant configures a hero image, so the hero element carries a `background-image`. */
   hasHeroBackgroundImage: boolean
 
-  /**
-   * Tenant mega menu dropdowns link to locale-prefixed internal routes (`/en/...`).
-   * A tenant whose menu is built from absolute Drupal URLs exposes no internal link.
-   */
-  megaMenuHasInternalLinks: boolean
-
   /** Tenant has node pages that render the body side image (`#page-body-side-image-img`). */
   hasSideImages: boolean
-
-  /**
-   * Tenant media host is covered by `image.domains` in `nuxt.config.ts`, so remote card
-   * and side images are rewritten through `_ipx`. A tenant outside that allowlist serves
-   * its Drupal URLs verbatim, which is correct behaviour, not a regression.
-   */
-  optimizesRemoteImages: boolean
 }
-
-const BIOSAFETY_MENUS = [
-  'National Biosafety Framework',
-  'Resources',
-  'Useful Links',
-] as const
 
 const BIOSAFETY_LOCALES = ['en', 'ar', 'es', 'fr', 'ru', 'zh'] as const
 
@@ -70,40 +48,33 @@ const EXPECTATIONS: Record<E2ETarget, TargetExpectations> = {
     homeTitle: /Biosafety Seed \(GT\)/,
     locales: BIOSAFETY_LOCALES,
     isBiosafety: true,
-    biosafetyMenus: BIOSAFETY_MENUS,
     hasHeroBackgroundImage: true,
-    megaMenuHasInternalLinks: true,
     hasSideImages: true,
-    optimizesRemoteImages: true,
   },
 
-  // Second biosafety tenant, same content shape as `seed`.
+  // Second biosafety tenant, same content shape as `seed`. Its exact site title is not
+  // pinned here because the tenant was not reachable to probe; the pattern is written to
+  // be mutually exclusive with `seed` so a `bsl` run pointed at the seed host fails loudly
+  // instead of passing on a substring match.
   bsl: {
     siteCode: 'bsl',
-    homeTitle: /Biosafety/,
+    homeTitle: /^(?!.*Biosafety Seed \(GT\)).*Biosafety/s,
     locales: BIOSAFETY_LOCALES,
     isBiosafety: true,
-    biosafetyMenus: BIOSAFETY_MENUS,
     hasHeroBackgroundImage: true,
-    megaMenuHasInternalLinks: true,
     hasSideImages: true,
-    optimizesRemoteImages: true,
   },
 
   // Default target: the ASEAN Clearing House Mechanism tenant. A CHM site, not a
   // biosafety one - it renders `widget-content-types-stats` and no `home-bch-*` widgets,
-  // serves the ASEAN locale set, configures no hero or side image, and its media host
-  // (`e2e.bl2.chm-cbd.net`) is outside `image.domains`, so nothing goes through `_ipx`.
+  // serves the ASEAN locale set, and configures no hero or side image.
   e2e: {
     siteCode: 'e2e',
     homeTitle: /ASEAN Clearing House Mechanism/,
     locales: ['en', 'vi', 'th', 'lo', 'km', 'zh', 'ms'],
     isBiosafety: false,
-    biosafetyMenus: [],
     hasHeroBackgroundImage: false,
-    megaMenuHasInternalLinks: false,
     hasSideImages: false,
-    optimizesRemoteImages: false,
   },
 }
 
