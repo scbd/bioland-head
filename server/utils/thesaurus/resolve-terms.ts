@@ -89,10 +89,18 @@ export function labelFieldOrder(domain?: string): readonly string[] {
  * Build a cache key. Exported so tests and sibling tasks address the same namespaces rather than
  * re-deriving the format.
  *
+ * ⚠ **`id` and `locale` are percent-encoded, and that is load-bearing, not cosmetic.** `:` is both this
+ * key's field separator and a legal character inside an identifier or a locale tag, so the raw form lets
+ * `('a:b', 'c')` and `('a', 'b:c')` collide on one key — one term reading or overwriting another term's
+ * cached label. `unstorage@1.17.3` widens the hole further by folding `/` and `\` into `:` at the driver
+ * boundary. `encodeURIComponent` escapes all three (`%3A`, `%2F`, `%5C`) and is injective, so distinct
+ * `(tier, id, locale)` triples can no longer produce the same key. Plain identifiers and locale tags
+ * (`GBF-GOAL-A`, `en`) are unaffected, so keys stay readable in a cache dump.
+ *
  * @param tier - `api` (direct hit), `tr` (translation) or `fb` (degraded).
  */
 export function buildLabelKey(tier: CacheTier, id: string, locale: string): string {
-  return `label:${tier}:${LABEL_CACHE_VERSION}:${id}:${locale}`;
+  return `label:${tier}:${LABEL_CACHE_VERSION}:${encodeURIComponent(id)}:${encodeURIComponent(locale)}`;
 }
 
 /**
@@ -108,8 +116,31 @@ export function buildLabelKey(tier: CacheTier, id: string, locale: string): stri
  */
 const ALIAS_ASSET_PREFIX = 'thesaurus-aliases';
 
+/**
+ * Identifier shape accepted by the alias seam (and, transitively, by everything downstream of it).
+ *
+ * Thesaurus identifiers are GUIDs or dash-separated slugs (`GBF-TARGET-01`, `CBD-SUBJECT-BIOMES`, `be`).
+ * An alias value reaches a thesaurus API **path segment** and a cache key, so the seam validates rather
+ * than trusting whatever a caller — from p02-02 onward, untrusted HTTP input — hands it.
+ */
+const IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
+
+/**
+ * `consola` is a Nitro auto-import, not a static import, so it can be absent (unit harness, exotic preset)
+ * and a bare call would throw a `ReferenceError` — from inside {@link degrade}, which is the never-throw
+ * guarantee's own recovery path. Every log in this module goes through here.
+ */
+function warn(message: string, payload?: Record<string, unknown>): void {
+  try {
+    (globalThis as { consola?: { warn?: (...args: unknown[]) => void } }).consola?.warn?.(message, payload);
+  } catch {
+    /* logging must never be the thing that breaks resolution */
+  }
+}
+
 let aliasMaps: Record<string, string>[] | null = null;
 let aliasLoad: Promise<void> | null = null;
+let aliasWarned = false;
 
 /**
  * Load every alias map once. Idempotent and never throws — a failure leaves {@link resolveAlias} as the
@@ -132,12 +163,24 @@ export async function loadAliasMaps(): Promise<void> {
           /* one unreadable map must not disable the rest */
         }
       }
+      // Only a clean enumeration memoizes. An empty directory legitimately yields `[]`.
+      aliasMaps = maps;
     } catch {
-      /* no asset storage (unit tests, exotic preset) — stay an identity function */
+      // An asset-store failure is transient, not proof that no maps exist. Memoizing `[]` here would make
+      // `resolveAlias` the identity function for the whole process lifetime off one bad read, silently
+      // un-aliasing every later request. Leave the memo unset so the next call retries; warn once so the
+      // retry loop is visible without flooding the log. No payload — the error can carry a filesystem path.
+      if (!aliasWarned) {
+        aliasWarned = true;
+        warn('resolveTerms: alias maps unavailable, aliasing disabled until the next successful load');
+      }
     }
-    aliasMaps = maps;
   })();
-  await aliasLoad;
+  try {
+    await aliasLoad;
+  } finally {
+    if (!aliasMaps) aliasLoad = null;
+  }
 }
 
 /**
@@ -150,13 +193,19 @@ export async function loadAliasMaps(): Promise<void> {
  *
  * Synchronous by contract: it reads maps that {@link loadAliasMaps} has already cached.
  *
- * @returns The canonical identifier, or the input unchanged when no alias matches.
+ * Both sides are validated against {@link IDENTIFIER_PATTERN}. This module is the *consumer* the p02-03
+ * and p02-04 reviews named: an alias value becomes a thesaurus API path segment and a cache key, so the
+ * strict per-domain identifier shape is re-applied here rather than assumed of the caller. A key that does
+ * not match is never looked up, and a mapped value that does not match is never returned — so the output
+ * is always either the untouched input or a validated canonical identifier.
+ *
+ * @returns The canonical identifier, or the input unchanged when no valid alias matches.
  */
 export function resolveAlias(identifier: string): string {
-  if (!identifier || !aliasMaps) return identifier;
+  if (!identifier || !aliasMaps || !IDENTIFIER_PATTERN.test(identifier)) return identifier;
   for (const map of aliasMaps) {
     const mapped = map?.[identifier];
-    if (typeof mapped === 'string' && mapped) return mapped;
+    if (typeof mapped === 'string' && IDENTIFIER_PATTERN.test(mapped)) return mapped;
   }
   return identifier;
 }
@@ -260,82 +309,112 @@ async function writeTier(
  * @param ids    - Thesaurus identifiers (GUIDs or slugs). Non-string and empty entries are ignored.
  * @param locale - Requested locale code, e.g. `fr`.
  * @param event  - Optional H3 event, forwarded to `getThesaurusByKey` for its request-scoped cache.
+ * @param domain - Optional `dataSourceConfigs` key selecting that domain's D17 `labelFields` order. Omitted
+ *                 → {@link DEFAULT_LABEL_FIELDS}. ⚠ The cache key does **not** include the domain, so a
+ *                 caller must use one consistent domain per identifier; identifiers are domain-scoped in
+ *                 practice (`REGION-*`, `GBF-TARGET-*`), so this costs nothing and keeps keys short.
  * @returns One entry per valid requested id, keyed by the id **as requested** (not its canonical alias).
  */
 export async function resolveTerms(
   ids: string[],
   locale: string,
-  event?: H3Event
+  event?: H3Event,
+  domain?: string
 ): Promise<Record<string, ResolvedLabel>> {
-  const resolved: Record<string, ResolvedLabel> = {};
-  if (!Array.isArray(ids) || ids.length === 0) return resolved;
+  // Null-prototype: every key below is caller-supplied (untrusted HTTP input from p02-02 onward). On a
+  // plain object literal `resolved['__proto__'] = …` mutates the prototype instead of adding an own
+  // property, so the entry silently vanishes from the result and the returned object's prototype is
+  // re-pointed — breaking the documented one-entry-per-valid-id contract. `Object.create(null)` has no
+  // `__proto__` setter, so such an id becomes an ordinary own key like any other.
+  const resolved: Record<string, ResolvedLabel> = Object.create(null);
+  try {
+    if (!Array.isArray(ids) || ids.length === 0) return resolved;
 
-  const loc = typeof locale === 'string' && locale.trim() ? locale.trim() : 'en';
-  const requested = [...new Set(ids.filter((id): id is string => typeof id === 'string' && id.length > 0))];
-  if (requested.length === 0) return resolved;
+    const loc = typeof locale === 'string' && locale.trim() ? locale.trim() : 'en';
+    const fields = labelFieldOrder(domain);
+    const requested = [...new Set(ids.filter((id): id is string => typeof id === 'string' && id.length > 0))];
+    if (requested.length === 0) return resolved;
 
-  const now = Date.now();
-  const storage = labelStorage();
-  await loadAliasMaps();
+    const now = Date.now();
+    const storage = labelStorage();
+    await loadAliasMaps();
 
-  // Pass 1 — cache. `canonical` maps each still-unresolved canonical id to the requested ids wanting it,
-  // since two aliases can collapse onto the same canonical term.
-  const canonical = new Map<string, string[]>();
-  for (const id of requested) {
-    try {
-      let hit: ResolvedLabel | null = null;
-      for (const tier of READ_TIERS) {
-        hit = await readTier(storage, tier, id, loc, now);
-        if (hit) break;
-      }
+    // Pass 1 — cache. Reads fan out across ids (this sits on the SSR critical path from p02-06 on, and the
+    // sequential form cost up to 3N round trips before the batch fetch could even start); the tiers stay
+    // ordered per id so a hit on `api` never pays for a `tr`/`fb` read.
+    const cacheHits = await Promise.all(
+      requested.map(async (id): Promise<ResolvedLabel | null> => {
+        // `readTier` is total — every failure mode inside it already resolves to `null`.
+        for (const tier of READ_TIERS) {
+          const hit = await readTier(storage, tier, id, loc, now);
+          if (hit) return hit;
+        }
+        return null;
+      })
+    );
+
+    // `canonical` maps each still-unresolved canonical id to the requested ids wanting it, since two
+    // aliases can collapse onto the same canonical term. Built in `requested` order so the batch call's
+    // argument order stays deterministic.
+    const canonical = new Map<string, string[]>();
+    for (const [index, id] of requested.entries()) {
+      const hit = cacheHits[index];
       if (hit) {
         resolved[id] = hit;
         continue;
       }
-      const canonicalId = resolveAlias(id);
+      let canonicalId: string;
+      try {
+        canonicalId = resolveAlias(id);
+      } catch {
+        await degrade(storage, id, loc, now, resolved);
+        continue;
+      }
       const waiting = canonical.get(canonicalId);
       if (waiting) waiting.push(id);
       else canonical.set(canonicalId, [id]);
-    } catch {
-      await degrade(storage, id, loc, now, resolved);
     }
-  }
-  if (canonical.size === 0) return resolved;
+    if (canonical.size === 0) return resolved;
 
-  // Pass 2 — one batch fetch for everything still missing.
-  const byIdentifier = await fetchByIdentifier([...canonical.keys()], event);
+    // Pass 2 — one batch fetch for everything still missing.
+    const byIdentifier = await fetchByIdentifier([...canonical.keys()], event);
 
-  for (const [canonicalId, requestedIds] of canonical) {
-    const item = byIdentifier.get(canonicalId) ?? byIdentifier.get(canonicalId.toLowerCase());
-    for (const id of requestedIds) {
-      try {
-        if (!item) {
+    for (const [canonicalId, requestedIds] of canonical) {
+      const item = byIdentifier.get(canonicalId) ?? byIdentifier.get(canonicalId.toLowerCase());
+      for (const id of requestedIds) {
+        try {
+          if (!item) {
+            await degrade(storage, id, loc, now, resolved);
+            continue;
+          }
+          const value = pickLabel(item, loc, fields);
+          if (value) {
+            resolved[id] = { value, source: 'api' };
+            await writeTier(storage, 'api', id, loc, resolved[id], now + ONE_YEAR_MS);
+            continue;
+          }
+          // The term resolved but this locale is not covered — serve English, and keep the entry short-lived
+          // so the label upgrades as soon as the thesaurus (or p04-01's translator) covers the locale.
+          const english = pickLabel(item, 'en', fields);
+          if (english) {
+            resolved[id] = { value: english, source: 'fallback' };
+            await writeTier(storage, 'fb', id, loc, resolved[id], now + ONE_MINUTE_MS);
+            continue;
+          }
+          await degrade(storage, id, loc, now, resolved, 'resolveTerms: no usable label field');
+        } catch {
           await degrade(storage, id, loc, now, resolved);
-          continue;
         }
-        const value = pickLabel(item, loc);
-        if (value) {
-          resolved[id] = { value, source: 'api' };
-          await writeTier(storage, 'api', id, loc, resolved[id], now + ONE_YEAR_MS);
-          continue;
-        }
-        // The term resolved but this locale is not covered — serve English, and keep the entry short-lived
-        // so the label upgrades as soon as the thesaurus (or p04-01's translator) covers the locale.
-        const english = pickLabel(item, 'en');
-        if (english) {
-          resolved[id] = { value: english, source: 'fallback' };
-          await writeTier(storage, 'fb', id, loc, resolved[id], now + ONE_MINUTE_MS);
-          continue;
-        }
-        await degrade(storage, id, loc, now, resolved);
-      } catch {
-        await degrade(storage, id, loc, now, resolved);
       }
     }
+  } catch {
+    // Belt and braces for the never-throw guarantee: input normalisation, `loadAliasMaps` and the batch
+    // fan-out all sit outside the per-id isolates above. Whatever was resolved before the fault is served.
   }
 
   return resolved;
 }
+
 
 /**
  * Batch-fetch through the existing `getThesaurusByKey` and index the results by `.identifier`.
@@ -358,20 +437,26 @@ async function fetchByIdentifier(
       if (!byIdentifier.has(lower)) byIdentifier.set(lower, item as Record<string, unknown>);
     }
   } catch {
-    consola.warn('resolveTerms: batch fetch failed', { count: canonicalIds.length });
+    warn('resolveTerms: batch fetch failed', { count: canonicalIds.length });
   }
   return byIdentifier;
 }
 
-/** D5's degraded outcome: warn with the identifier and locale only, serve the raw id, cache it briefly. */
+/**
+ * D5's degraded outcome: warn with the identifier and locale only, serve the raw id, cache it briefly.
+ *
+ * @param message - Why we degraded. Defaults to the 404 wording; the "resolved but no usable field" caller
+ *                  passes its own so a triage log distinguishes a missing term from an empty one.
+ */
 async function degrade(
   storage: ReturnType<typeof useStorage> | null,
   identifier: string,
   locale: string,
   now: number,
-  into: Record<string, ResolvedLabel>
+  into: Record<string, ResolvedLabel>,
+  message = 'resolveTerms: unresolved identifier'
 ): Promise<void> {
-  consola.warn('resolveTerms: unresolved identifier', { identifier, locale });
+  warn(message, { identifier, locale });
   into[identifier] = { value: identifier, source: 'identifier' };
   await writeTier(storage, 'fb', identifier, locale, into[identifier], now + ONE_MINUTE_MS);
 }

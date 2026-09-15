@@ -98,18 +98,30 @@ describe('resolveTerms — label field preference (D17)', () => {
     expect(mod.pickLabel(REGION, 'en')).toBe('AFR – Middle')
   })
 
-  it('honours a per-domain override that puts title first', async () => {
+  it('declares the regions title-first override in the real config, not in a test patch', async () => {
     const { dataSourceConfigs } = await import('../../../../../server/utils/thesaurus/config')
-    const regions = dataSourceConfigs.regions as unknown as { labelFields?: string[] }
-    try {
-      regions.labelFields = ['title', 'shortTitle', 'name']
-      expect(mod.labelFieldOrder('regions')).toEqual(['title', 'shortTitle', 'name'])
-      expect(mod.pickLabel(REGION, 'en', mod.labelFieldOrder('regions'))).toBe('Africa - Middle Africa')
-    } finally {
-      delete regions.labelFields
-    }
-    // Same fixture, default order -> the abbreviation. The override really switches.
-    expect(mod.pickLabel(REGION, 'en', mod.labelFieldOrder('regions'))).toBe('AFR – Middle')
+    expect(dataSourceConfigs.regions.labelFields).toEqual(['title', 'shortTitle', 'name'])
+    expect(mod.labelFieldOrder('regions')).toEqual(['title', 'shortTitle', 'name'])
+    // Unconfigured domains keep the default, so the override is opt-in per domain.
+    expect(mod.labelFieldOrder('gbfTargets')).toEqual(['shortTitle', 'title', 'name'])
+    expect(mod.labelFieldOrder('no-such-domain')).toEqual(['shortTitle', 'title', 'name'])
+  })
+
+  it('threads the domain through resolveTerms so a regions term renders its long title', async () => {
+    // Without the domain wired into resolveTerms this returns the internal abbreviation.
+    const withDomain = await mod.resolveTerms(['REGION-AFR-MIDDLE'], 'en', undefined, 'regions')
+    expect(withDomain['REGION-AFR-MIDDLE']).toEqual({ value: 'Africa - Middle Africa', source: 'api' })
+
+    vi.resetModules()
+    const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
+    store.clear()
+    const noDomain = await fresh.resolveTerms(['REGION-AFR-MIDDLE'], 'en')
+    expect(noDomain['REGION-AFR-MIDDLE']).toEqual({ value: 'AFR – Middle', source: 'api' })
+  })
+
+  it('applies the domain order to the English fallback too', async () => {
+    const out = await mod.resolveTerms(['REGION-AFR-MIDDLE'], 'fr', undefined, 'regions')
+    expect(out['REGION-AFR-MIDDLE']).toEqual({ value: 'Africa - Middle Africa', source: 'fallback' })
   })
 
   it('falls through an empty shortTitle to title', async () => {
@@ -121,6 +133,14 @@ describe('resolveTerms — label field preference (D17)', () => {
   it('does not treat the plain-English name as a localized value', () => {
     expect(mod.pickLabel({ name: 'Biomes' }, 'fr')).toBeUndefined()
     expect(mod.pickLabel({ name: 'Biomes' }, 'en')).toBe('Biomes')
+  })
+
+  it('returns undefined for a missing item or a non-string field value', () => {
+    expect(mod.pickLabel(null, 'en')).toBeUndefined()
+    expect(mod.pickLabel(undefined, 'en')).toBeUndefined()
+    expect(mod.pickLabel({ title: 42, name: 7 }, 'en')).toBeUndefined()
+    expect(mod.pickLabel({ name: '   ' }, 'en')).toBeUndefined()
+    expect(mod.pickLabel({ title: { en: '  ' }, name: 'Fallthrough' }, 'en')).toBe('Fallthrough')
   })
 })
 
@@ -225,6 +245,24 @@ describe('LABEL_CACHE_VERSION', () => {
     expect(mod.buildLabelKey('fb', 'X', 'en')).toBe(`label:fb:${V}:X:en`)
   })
 
+  it('cannot collide two distinct (id, locale) pairs onto one key', () => {
+    // `:` is both the separator and legal inside either field, so the raw form made these identical —
+    // one term could then read or overwrite another term's cached label.
+    expect(mod.buildLabelKey('api', 'a:b', 'c')).not.toBe(mod.buildLabelKey('api', 'a', 'b:c'))
+    // unstorage folds `/` and `\\` into `:` at the driver boundary, so those must not survive raw either.
+    expect(mod.buildLabelKey('api', 'a/b', 'c')).not.toBe(mod.buildLabelKey('api', 'a', 'b/c'))
+    expect(mod.buildLabelKey('api', 'a', 'en')).not.toContain('/')
+    // Plain identifiers stay readable in a cache dump.
+    expect(mod.buildLabelKey('api', 'GBF-GOAL-A', 'en')).toBe(`label:api:${mod.LABEL_CACHE_VERSION}:GBF-GOAL-A:en`)
+  })
+
+  it('keeps one term from serving another term\'s cached label through a colliding key', async () => {
+    seed('api', 'a:b', 'c', 'label-for-a:b', 'api', Date.now() + 60_000)
+    const out = await mod.resolveTerms(['a'], 'b:c')
+    // Before the encoding fix this returned `label-for-a:b` off the other term's entry.
+    expect(out['a']).toEqual({ value: 'a', source: 'identifier' })
+  })
+
   it('evicts every prior namespace when bumped', async () => {
     const V = mod.LABEL_CACHE_VERSION
     const future = Date.now() + 60_000
@@ -273,11 +311,55 @@ describe('resolveTerms — batch behaviour', () => {
     expect(out['BIOMES-DUP']).toEqual({ value: 'Biomes', source: 'api' })
   })
 
+  it('collapses two aliases onto one canonical fetch and keys both results by their requested id', async () => {
+    assets.set('thesaurus-aliases:dup.json', { 'ALIAS-ONE': 'GBF-GOAL-A', 'ALIAS-TWO': 'GBF-GOAL-A' })
+    const out = await mod.resolveTerms(['ALIAS-ONE', 'ALIAS-TWO'], 'en')
+    expect(fetcher.mock.calls[0][1]).toEqual(['GBF-GOAL-A'])
+    expect(out['ALIAS-ONE']).toEqual({ value: 'Goal A', source: 'api' })
+    expect(out['ALIAS-TWO']).toEqual({ value: 'Goal A', source: 'api' })
+  })
+
+  it('degrades when the fetcher returns a non-array', async () => {
+    vi.stubGlobal('getThesaurusByKey', vi.fn(async () => ({ not: 'an array' })))
+    vi.resetModules()
+    const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
+    const out = await fresh.resolveTerms(['GBF-GOAL-A'], 'en')
+    expect(out['GBF-GOAL-A']).toEqual({ value: 'GBF-GOAL-A', source: 'identifier' })
+  })
+
+  it('does not double-index an identifier that is already lowercase', async () => {
+    vi.stubGlobal('getThesaurusByKey', vi.fn(async () => [{ identifier: 'be', name: 'Belgium' }]))
+    vi.resetModules()
+    const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
+    expect((await fresh.resolveTerms(['be'], 'en'))['be']).toEqual({ value: 'Belgium', source: 'api' })
+  })
+
   it('issues one batch call and de-duplicates repeated ids', async () => {
     const out = await mod.resolveTerms(['GBF-GOAL-A', 'GBF-GOAL-A', 'CBD-SUBJECT-BIOMES'], 'en')
     expect(Object.keys(out)).toHaveLength(2)
     expect(fetcher).toHaveBeenCalledTimes(1)
     expect(fetcher.mock.calls[0][1]).toEqual(['GBF-GOAL-A', 'CBD-SUBJECT-BIOMES'])
+  })
+
+  it('fans pass-1 cache reads out across ids instead of serialising them', async () => {
+    // This sits on the SSR critical path from p02-06 on; serialised it cost up to 3N round trips before
+    // the batch fetch could start.
+    let inFlight = 0
+    let peak = 0
+    vi.stubGlobal('useStorage', () => ({
+      getItem: async () => {
+        peak = Math.max(peak, ++inFlight)
+        await new Promise((r) => setTimeout(r, 1))
+        inFlight -= 1
+        return null
+      },
+      setItem: async () => {},
+      getKeys: async () => []
+    }))
+    vi.resetModules()
+    const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
+    await fresh.resolveTerms(['GBF-GOAL-A', 'CBD-SUBJECT-BIOMES', 'GBF-TARGET-01', 'MISS-1'], 'en')
+    expect(peak).toBeGreaterThan(1)
   })
 
   it('forwards the event to the existing fetcher', async () => {
@@ -347,6 +429,43 @@ describe('resolveTerms — never throws', () => {
     expect(out['GBF-GOAL-A']).toEqual({ value: 'Goal A', source: 'api' })
   })
 
+  it('returns __proto__ as an ordinary entry instead of dropping it', async () => {
+    // On a plain object literal this assignment mutates the prototype: the entry disappears from the
+    // result and the returned object's prototype is re-pointed. From p02-02 on the key is HTTP input.
+    const out = await mod.resolveTerms(['__proto__', 'GBF-GOAL-A'], 'en')
+    expect(Object.keys(out).sort()).toEqual(['GBF-GOAL-A', '__proto__'])
+    expect(out['__proto__']).toEqual({ value: '__proto__', source: 'identifier' })
+    expect(Object.getPrototypeOf(out)).toBeNull()
+    expect(Object.getPrototypeOf({})).toBe(Object.prototype)
+  })
+
+  it('survives consola being absent entirely', async () => {
+    // `consola` is a Nitro auto-import; unguarded it throws a ReferenceError from inside `degrade`,
+    // which is the never-throw guarantee's own recovery path.
+    vi.stubGlobal('consola', undefined)
+    vi.resetModules()
+    const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
+    await expect(fresh.resolveTerms(['MISS-1'], 'en')).resolves.toEqual({
+      'MISS-1': { value: 'MISS-1', source: 'identifier' }
+    })
+  })
+
+  it('returns rather than throws when input normalisation itself blows up', async () => {
+    // `ids.filter` and `loadAliasMaps` run outside every per-id isolate — only the outer try covers them.
+    const hostile = new Proxy(['GBF-GOAL-A'], {
+      get: (t, prop, r) => { if (prop === 'filter') throw new Error('hostile ids'); return Reflect.get(t, prop, r) }
+    })
+    await expect(mod.resolveTerms(hostile, 'en')).resolves.toEqual({})
+  })
+
+  it('distinguishes a missing term from one with no usable field in the log', async () => {
+    vi.stubGlobal('getThesaurusByKey', vi.fn(async () => [{ identifier: 'EMPTY-TERM', title: {}, shortTitle: {} }]))
+    vi.resetModules()
+    const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
+    await fresh.resolveTerms(['EMPTY-TERM'], 'en')
+    expect(warn).toHaveBeenCalledWith('resolveTerms: no usable label field', { identifier: 'EMPTY-TERM', locale: 'en' })
+  })
+
   it('defaults a blank locale to en', async () => {
     const out = await mod.resolveTerms(['GBF-GOAL-A'], '   ')
     expect(out['GBF-GOAL-A']).toEqual({ value: 'Goal A', source: 'api' })
@@ -383,6 +502,51 @@ describe('resolveAlias', () => {
     expect(fetcher.mock.calls[0][1]).toEqual(['GBF-GOAL-A'])
     expect(out['SDG-GOAL-01']).toEqual({ value: 'Goal A', source: 'api' })
     expect(store.has(mod.buildLabelKey('api', 'SDG-GOAL-01', 'en'))).toBe(true)
+  })
+
+  it('refuses to look up or return an identifier outside the accepted shape', async () => {
+    assets.set('thesaurus-aliases:evil.json', {
+      '../../admin': 'HIJACKED',
+      'OK-KEY': '../../../etc/passwd',
+      'GOOD-KEY': 'GOOD-CANONICAL'
+    })
+    await mod.loadAliasMaps()
+    // A key that is not a valid identifier is never looked up at all.
+    expect(mod.resolveAlias('../../admin')).toBe('../../admin')
+    // A mapped VALUE that is not a valid identifier never escapes the seam.
+    expect(mod.resolveAlias('OK-KEY')).toBe('OK-KEY')
+    // A valid pair still maps.
+    expect(mod.resolveAlias('GOOD-KEY')).toBe('GOOD-CANONICAL')
+  })
+
+  it('retries after a transient asset-store failure instead of disabling aliases for the process', async () => {
+    let calls = 0
+    vi.stubGlobal('useStorage', (group: string) => {
+      if (group !== 'assets:server') return { getItem: async () => null, setItem: async () => {}, getKeys: async () => [] }
+      calls += 1
+      if (calls === 1) throw new Error('transient EIO')
+      return {
+        getItem: async () => ({ 'SDG-GOAL-01': 'GBF-GOAL-A' }),
+        setItem: async () => {},
+        getKeys: async () => ['thesaurus-aliases:sdg.json']
+      }
+    })
+    vi.resetModules()
+    const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
+
+    await fresh.loadAliasMaps()
+    expect(fresh.resolveAlias('SDG-GOAL-01')).toBe('SDG-GOAL-01')
+    expect(warn).toHaveBeenCalledWith(
+      'resolveTerms: alias maps unavailable, aliasing disabled until the next successful load',
+      undefined
+    )
+
+    // Before the fix the empty memo was permanent and this second load made zero further asset calls.
+    // The warning is emitted once, not on every retry.
+    expect(warn.mock.calls.filter((c) => String(c[0]).includes('alias maps unavailable'))).toHaveLength(1)
+    await fresh.loadAliasMaps()
+    expect(calls).toBeGreaterThan(1)
+    expect(fresh.resolveAlias('SDG-GOAL-01')).toBe('GBF-GOAL-A')
   })
 
   it('stays an identity function when asset storage is unavailable', async () => {
