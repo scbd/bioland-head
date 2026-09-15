@@ -10,6 +10,7 @@ import { camelCase } from "change-case/keys";
 
 import type { H3Event } from "h3";
 import type { SiteContext, DmsmConfig, ContextCookie } from "~/shared/types";
+import { getDmsmCacheKey } from "~/shared/types";
 import { getSiteSettings } from "./drupal/index.js";
 import { sanitizeBiolandSettings } from "./bioland-settings";
 
@@ -183,9 +184,12 @@ const _fetchDmsmConfig = cachedFunction(
     maxAge: CACHE_TTL.FIVE_MINUTES, // 5 minutes cache
     name: "get-dmsm-config",
     group: "context",
+    // `env` is required even though one container serves one env: the Nitro FS cache
+    // volume (`nuxt.config.ts` `storage.cache` base `./cache`) may be shared across
+    // envs, so an env-less key would be ambiguous the moment that volume is reused.
     getKey: (_event: H3Event, siteCode: string) => {
       const { env, multiSiteCode } = useRuntimeConfig().public;
-      return `${multiSiteCode}:${siteCode}`;
+      return getDmsmCacheKey(env, multiSiteCode, siteCode);
     }
   },
 );
@@ -203,7 +207,9 @@ export async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypa
   }
 
   const { env, multiSiteCode } = useRuntimeConfig().public;
-  const cacheKey = `${multiSiteCode}:${siteCode}`;
+  // Same builder as `_fetchDmsmConfig`'s `getKey` above, so both keys agree on shape
+  // and `env` never drifts out of one of the two independently again.
+  const cacheKey = getDmsmCacheKey(env, multiSiteCode, siteCode);
 
   // Check if there's already a request in-flight for this key
   const pending = pendingDmsmRequests.get(cacheKey);
