@@ -17,7 +17,7 @@ export default defineConfig({
       include: [
         'server/utils/**/*.ts',
         'server/utils/thesaurus/index.js',
-        'server/api/thesaurus/[termIdentifier]/index.ts',
+        'server/api/thesaurus/[[]termIdentifier[]]/index.ts',
         'shared/utils/**/*.ts',
         'app/utils/resolve-theme.js'
       ]
