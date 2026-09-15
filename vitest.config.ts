@@ -11,7 +11,15 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['server/utils/**/*.ts', 'shared/utils/**/*.ts', 'app/utils/resolve-theme.js']
+      include: [
+        'server/utils/**/*.ts',
+        'shared/utils/**/*.ts',
+        'app/utils/resolve-theme.js',
+        // p02-03: the discovery-method fallback and unmapped-partition branches are real
+        // branching logic per D14/the task's own testing note, not a pure straight-line fetch
+        // loop, so they are measured rather than excluded — see the script's own test file.
+        'scripts/thesaurus/build-sdg-alias-map.mjs'
+      ]
     }
   },
   resolve: {
