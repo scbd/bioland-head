@@ -7,6 +7,7 @@ import { expect, test } from '@playwright/test'
 import {
   CONFIG_API_KEY_HEADER,
   CONFIG_DOCUMENT_PATH,
+  CONFIG_DOCUMENT_QUERY,
   CONFIG_FETCH_TIMEOUT_MS,
   SUPPORTED_CONFIG_VERSION,
   findLeakInDocument,
@@ -31,6 +32,22 @@ import {
  */
 
 const RELATIVE_EXAMPLE = 'tests/fixtures/config-contract/drupal-config-document.example.json'
+
+/**
+ * p02-04's Drupal module routing file: this checkout once it merges, else the sibling read-only
+ * worktree, else an explicit override. Same resolver shape as the example document, same reason.
+ */
+function resolveModuleRouting(): string | null {
+  const root = fileURLToPath(new URL('../..', import.meta.url))
+
+  const candidates = [
+    resolve(root, 'bioland.routing.yml'),
+    resolve(root, '../p02-04-module', 'bioland.routing.yml'),
+    process.env.BL985_MODULE_ROUTING_YML,
+  ]
+
+  return candidates.find(path => path && existsSync(path)) ?? null
+}
 
 /**
  * p01-01's example document: this checkout once p01-01 merges, else the sibling `p01-01` worktree
@@ -91,6 +108,32 @@ function conformanceErrors(document: unknown): string[] {
   return errors
 }
 
+/**
+ * Block 1/2/3 regression. The earlier version of this file built its request URL from
+ * `CONFIG_DOCUMENT_PATH`, so a wrong constant was wrong in BOTH places and the check still passed -
+ * which is how `/bioland/config` survived against a route served at `/bioland/api/config`. The
+ * literal below is deliberately hardcoded: it is compared against p02-04's own routing file, and
+ * the client constant is compared against the same literal. Nothing here derives from the client.
+ */
+test("the client's route path and format match p02-04's routing definition", () => {
+  const path = resolveModuleRouting()
+
+  expect(path, "p02-04's bioland.routing.yml not found in this checkout, the sibling p02-04-module worktree, or $BL985_MODULE_ROUTING_YML").not.toBeNull()
+
+  const routing = readFileSync(path as string, 'utf8')
+  const block = routing.split(/^bioland\.config_api:$/m)[1]
+
+  expect(block, 'no bioland.config_api route in bioland.routing.yml').toBeDefined()
+
+  expect(block).toContain("path: '/bioland/api/config'")
+  expect(CONFIG_DOCUMENT_PATH).toBe('/bioland/api/config')
+
+  // The route requires `_format: 'json'`, and Drupal derives the request format from `?_format=`,
+  // defaulting to `html`. Without the query parameter a correct path still 404s.
+  expect(block).toContain("_format: 'json'")
+  expect(CONFIG_DOCUMENT_QUERY).toEqual({ _format: 'json' })
+})
+
 test('p01-01 example document conforms to what the client accepts', () => {
   const path = resolveExampleDocument()
 
@@ -129,7 +172,11 @@ test('the live config document conforms, when an origin is configured', async ({
     // Header, never a query param: `drupal/index.js:30` puts the key in the query string, which
     // lands a service-account credential in access logs and CDN cache keys.
     headers: apiKey ? { [CONFIG_API_KEY_HEADER]: apiKey } : {},
+    params: { ...CONFIG_DOCUMENT_QUERY },
     timeout: CONFIG_FETCH_TIMEOUT_MS,
+    // Same reason the client sends `redirect: 'manual'`: a redirect would forward the api key to
+    // whatever origin it points at. A 3xx here is a failure to report, not a hop to follow.
+    maxRedirects: 0,
   })
 
   expect(response.status(), 'config endpoint did not answer 200').toBe(200)

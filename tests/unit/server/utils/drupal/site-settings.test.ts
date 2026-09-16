@@ -22,13 +22,17 @@ import {
   findWrongCasedKey,
   awaitPendingWriteBacks,
   registerLastKnownGoodPort,
+  hasLastKnownGoodPort,
   CONFIG_API_KEY_HEADER,
   CONFIG_DOCUMENT_PATH,
+  CONFIG_DOCUMENT_QUERY,
   CONFIG_FETCH_TIMEOUT_MS,
+  MAX_DOCUMENT_BYTES,
   SUPPORTED_CONFIG_VERSION,
   type DrupalConfigDocument,
   type LastKnownGoodRecord,
 } from "../../../../../server/utils/drupal/site-settings";
+import { BIOLAND_SETTINGS_ALLOWLIST } from "../../../../../server/utils/bioland-settings";
 
 const API_KEY = "dummy-api-key-not-a-real-credential";
 
@@ -88,6 +92,8 @@ const contractDocument = (): DrupalConfigDocument =>
 
 let fetchCalls: Array<{ uri: string; options: Record<string, unknown> }> = [];
 let fetchImpl: () => Promise<unknown> = async () => contractDocument();
+/** Status the `$fetch.raw` double reports. 3xx is the interesting one: the client must not follow. */
+let fetchStatus = 200;
 
 let store: Record<string, unknown> | null = null;
 let writes: Array<{ key: unknown; record: LastKnownGoodRecord }> = [];
@@ -121,17 +127,37 @@ beforeEach(() => {
   writes = [];
   store = null;
   writeShouldFail = false;
+  fetchStatus = 200;
   fetchImpl = async () => contractDocument();
   readSpy.mockClear();
   vi.mocked(consola.error).mockClear();
+  vi.mocked(consola.warn).mockClear();
 
   globalThis.useRuntimeConfig = () => ({ apiKey: API_KEY, public: {} });
-  globalThis.$fetchBaseOptions = (options = {}) => ({ method: "GET", retry: 3, ...options });
-  globalThis.$fetch = (uri: string, options: Record<string, unknown>) => {
+  // Mirrors the real default, `redirect: 'follow'` included, so a client that forgets to override
+  // it fails the redirect test rather than silently inheriting a safe value from the double.
+  globalThis.$fetchBaseOptions = (options = {}) => ({
+    method: "GET",
+    redirect: "follow",
+    retry: 3,
+    retryStatusCodes: [408, 429, 500, 502, 503, 504],
+    ...options,
+  });
+
+  const raw = async (uri: string, options: Record<string, unknown>) => {
     fetchCalls.push({ uri, options });
 
-    return fetchImpl();
+    return { status: fetchStatus, _data: await fetchImpl() };
   };
+
+  // Only `.raw` is provided: the client reads the response STATUS, so a regression back to the
+  // plain `$fetch` (which cannot see a 3xx) fails here rather than silently following redirects.
+  globalThis.$fetch = Object.assign(
+    () => {
+      throw new Error("the config client must use $fetch.raw so it can inspect the status");
+    },
+    { raw },
+  );
 
   withRegistry();
 });
@@ -156,6 +182,68 @@ describe("fetchSiteSettings - transport", () => {
     expect(call!.uri).not.toContain("api-key");
     expect(call!.uri).not.toContain(API_KEY);
     expect(call!.options.headers).toEqual({ [CONFIG_API_KEY_HEADER]: API_KEY });
+    expect(JSON.stringify(call!.options.query)).not.toContain(API_KEY);
+  });
+
+  it("targets p02-04's route path", () => {
+    // The literal, not a re-derivation: p02-04 serves `/bioland/api/config`
+    // (`bioland.routing.yml:96`), and the e2e conformance check asserts this same literal against
+    // that file. A previous version of the constant said `/bioland/config` and nothing caught it.
+    expect(CONFIG_DOCUMENT_PATH).toBe("/bioland/api/config");
+  });
+
+  it("sends _format=json so Drupal's format requirement matches", async () => {
+    // p02-04's route requires `_format: 'json'`. Drupal derives the format from `?_format=` and
+    // defaults to `html`, so without this a correct path still 404s.
+    await fetchSiteSettings(ctx);
+
+    expect(fetchCalls[0]!.options.query).toMatchObject({ _format: "json" });
+    expect(CONFIG_DOCUMENT_QUERY).toEqual({ _format: "json" });
+  });
+
+  it("never follows a redirect, so the api key cannot cross origins", async () => {
+    await fetchSiteSettings(ctx);
+
+    // undici strips `authorization` on a cross-origin hop but forwards `x-bioland-api-key`
+    // verbatim, so `redirect: 'follow'` would hand the key to whatever a 302 points at.
+    expect(fetchCalls[0]!.options.redirect).toBe("manual");
+  });
+
+  it("treats a 3xx as a fetch failure rather than following it with the key attached", async () => {
+    await fetchSiteSettings(ctx);
+    await awaitPendingWriteBacks();
+
+    fetchCalls = [];
+    vi.mocked(consola.error).mockClear();
+    fetchStatus = 302;
+
+    const result = await fetchSiteSettings(ctx);
+
+    expect(result?.stale).toBe(true);
+    expect(fetchCalls).toHaveLength(1);
+    expect(vi.mocked(consola.error).mock.calls.join(" ")).toContain("refusing to follow a redirect");
+  });
+
+  it("does not retry: last-known-good is the retry", async () => {
+    // `$fetchBaseOptions` defaults to 3 retries on 5xx; with a 5s per-attempt timeout that pins a
+    // Nitro worker for tens of seconds on every uncached render before degrading.
+    await fetchSiteSettings(ctx);
+
+    expect(fetchCalls[0]!.options.retry).toBe(0);
+  });
+
+  it("serves last-known-good rather than fetching 'undefined/...' when the context has no host", async () => {
+    await fetchSiteSettings(ctx);
+    await awaitPendingWriteBacks();
+
+    fetchCalls = [];
+    vi.mocked(consola.error).mockClear();
+
+    const result = await fetchSiteSettings({ siteCode: "example", env: "dev", multiSiteCode: "bl2" });
+
+    expect(fetchCalls).toHaveLength(0);
+    expect(result?.stale).toBe(true);
+    expect(vi.mocked(consola.error).mock.calls.join(" ")).toContain("no host on the request context");
   });
 
   it("enforces a request timeout so a hanging Drupal cannot hold a worker open", async () => {
@@ -441,6 +529,54 @@ describe("fetchSiteSettings - the second leak layer", () => {
     );
   });
 
+  /**
+   * Every one of these escaped the first implementation of the detector, each verified by running
+   * that exact logic. They are regression cases, not hypotheticals: the value scan was anchored
+   * (`^…$`), so a token in prose slipped through; it required a digit, so a lowercase-only token
+   * did; its URI pattern omitted `https?`; it never percent-decoded; its length floor was 25, over
+   * the 20 characters of a real AWS key id; and its PEM pattern was uppercase-only.
+   */
+  const MUST_CATCH: Array<[string, string]> = [
+    ["token embedded in prose", "deploy token AKIAFAKE0000EXAMPLE7h4Qz2Xv9Lm3Np8Rt5Yw1 keep it safe"],
+    ["lowercase-only 32-char token", "qwmzrblkxnvdtysghfjpaoceuirwbnmk"],
+    ["https URL with userinfo", "https://svcacct:S3cr3tPassw0rd@drupal.internal/api"],
+    ["percent-encoded service URI", "mysql%3A%2F%2Fsvcacct%3Apw%40db.internal%3A3306%2Fbioland"],
+    ["AWS access key id at 20 chars", "AKIAIOSFODNN7EXAMPLE"],
+    ["lowercase PEM armour", "-----begin rsa private key-----\nMIIE"],
+    ["long hex digest", "da39a3ee5e6b4b0d3255bfef95601890afd80709"],
+  ];
+
+  for (const [label, payload] of MUST_CATCH) {
+    it(`catches ${label} under a benign key`, () => {
+      expect(findLeakInDocument({ helpComments: { note: payload } })).not.toBeNull();
+    });
+
+    it(`catches ${label} inside an array element`, () => {
+      expect(findLeakInDocument({ helpComments: { notes: ["fine", payload] } })).not.toBeNull();
+    });
+  }
+
+  /**
+   * The other half of the calibration. p02-03 shipped an entropy check whose tokenizer kept `/`,
+   * `-` and `_` inside tokens, so ordinary logo paths and URLs scored 4.0-4.3 against a 4.0
+   * threshold and were flagged as secrets. Splitting on path and URL structure, plus exempting
+   * slug-shaped tokens, is what keeps these clean - so they are asserted, not assumed.
+   */
+  const MUST_NOT_FLAG: Array<[string, unknown]> = [
+    ["a real logo URL", "https://www.cbd.int/sites/default/files/2023-05/bioland-logo-colour.png"],
+    ["a logo path with a year segment", "/sites/default/files/bioland-logo-colour-transparent-2023.png"],
+    ["a long camelCase identifier", "componentMenuShowAttributes"],
+    ["an IANA timezone", "America/Argentina/Buenos_Aires"],
+    ["prose", "Please provide the national focal point contact information for your country here"],
+    ["a hyphenated slug", "convention-on-biological-diversity-national-report"],
+    ["a numeric id", "1234567890123456789012345"],
+  ];
+
+  for (const [label, payload] of MUST_NOT_FLAG)
+    it(`does not flag ${label}`, () => {
+      expect(findLeakInDocument({ theme: { logo: payload } })).toBeNull();
+    });
+
   it("passes a clean contract document", () => {
     expect(findLeakInDocument(contractDocument())).toBeNull();
   });
@@ -461,6 +597,148 @@ describe("fetchSiteSettings - the second leak layer", () => {
     leaf.x = 1;
 
     expect(findLeakInDocument(nested)).toContain("nests deeper than");
+  });
+});
+
+describe("fetchSiteSettings - an empty document must not poison the fallback", () => {
+  it("refuses to overwrite a stored last-known-good with an empty config.biolandSettings", async () => {
+    await fetchSiteSettings(ctx);
+    await awaitPendingWriteBacks();
+
+    const good = structuredClone(store);
+
+    expect(good).toBeTruthy();
+
+    vi.mocked(consola.error).mockClear();
+
+    // A partially-installed or misconfigured module answering 200 with an empty bag. This used to
+    // pass the shape check, sanitize to `{}`, and destroy the fallback at the worst moment.
+    fetchImpl = async () => ({ version: SUPPORTED_CONFIG_VERSION, generated: "2026-01-01T00:00:00.000Z", siteCode: "example", config: {} });
+
+    const result = await fetchSiteSettings(ctx);
+
+    await awaitPendingWriteBacks();
+
+    expect(store).toEqual(good);
+    expect(result?.stale).toBe(true);
+    expect(result?.settings.theme).toBeTruthy();
+  });
+
+  it("refuses a document that exceeds the size bound rather than holding and storing it", async () => {
+    await fetchSiteSettings(ctx);
+    await awaitPendingWriteBacks();
+
+    const good = structuredClone(store);
+
+    fetchImpl = async () => ({
+      version: SUPPORTED_CONFIG_VERSION,
+      generated: "2026-01-01T00:00:00.000Z",
+      siteCode: "example",
+      config: { biolandSettings: { theme: { note: "x".repeat(MAX_DOCUMENT_BYTES + 1) } } },
+    });
+
+    expect((await fetchSiteSettings(ctx))?.stale).toBe(true);
+
+    await awaitPendingWriteBacks();
+
+    expect(store).toEqual(good);
+  });
+
+  it("never throws when a check hits a throwing getter", async () => {
+    await fetchSiteSettings(ctx);
+    await awaitPendingWriteBacks();
+
+    const hostile = { version: SUPPORTED_CONFIG_VERSION, generated: "2026-01-01T00:00:00.000Z", siteCode: "example", config: { biolandSettings: {} } };
+
+    Object.defineProperty(hostile.config.biolandSettings, "theme", {
+      enumerable: true,
+      get() {
+        throw new Error("hostile getter");
+      },
+    });
+
+    fetchImpl = async () => hostile;
+
+    // Serializing it throws too, so it is refused at the size bound - either way, no throw escapes.
+    expect((await fetchSiteSettings(ctx))?.stale).toBe(true);
+  });
+});
+
+describe("fetchSiteSettings - a stored row is untrusted input", () => {
+  /** The registry column is free-form JSON writable by anything with registry access. */
+  const servedFrom = async (settings: unknown) => {
+    registerLastKnownGoodPort({
+      readLastKnownGoodSettings: async () => ({
+        version: SUPPORTED_CONFIG_VERSION,
+        fetchedAt: "2026-01-01T00:00:00.000Z",
+        settings,
+      }),
+    });
+
+    fetchImpl = async () => {
+      throw new Error("down");
+    };
+
+    return fetchSiteSettings(ctx);
+  };
+
+  it("strips a JSON __proto__ own-key out of a stored row before serving it", async () => {
+    const settings = JSON.parse('{"theme":{"color":"#fff"},"__proto__":{"polluted":true},"megaMenu":{"__proto__":{"polluted":true}}}');
+
+    const result = await servedFrom(settings);
+
+    expect(result?.stale).toBe(true);
+    expect(Object.prototype.hasOwnProperty.call(result!.settings, "__proto__")).toBe(false);
+    expect(JSON.stringify(result!.settings)).not.toContain("polluted");
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+  });
+
+  it("re-applies the BL-890 allowlist to a stored row written by an older build", async () => {
+    const result = await servedFrom({ theme: { color: "#fff" }, panoramaKeyish: "x", systemSite: { name: "Example Site" } });
+
+    expect(result?.settings).not.toHaveProperty("systemSite");
+    expect(result?.settings).not.toHaveProperty("panoramaKeyish");
+    expect(result?.settings.theme).toBeTruthy();
+  });
+
+  it("refuses to serve a stored row carrying a credential", async () => {
+    const result = await servedFrom({ theme: { note: "mysql://svcacct:pw@db.internal:3306/bioland" } });
+
+    expect(result).toBeNull();
+    expect(vi.mocked(consola.error).mock.calls.join(" ")).toContain("live exposure in the registry row");
+  });
+});
+
+describe("last-known-good wiring", () => {
+  it("reports whether a usable port is registered, so p03-01 can gate on it", () => {
+    registerLastKnownGoodPort(null);
+    expect(hasLastKnownGoodPort()).toBe(false);
+
+    registerLastKnownGoodPort({ readLastKnownGoodSettings: async () => null });
+    expect(hasLastKnownGoodPort()).toBe(false);
+
+    withRegistry();
+    expect(hasLastKnownGoodPort()).toBe(true);
+  });
+
+  it("warns once per process - not per request - when a fetch succeeds with no port registered", async () => {
+    registerLastKnownGoodPort(null);
+
+    await fetchSiteSettings(ctx);
+    await fetchSiteSettings(ctx);
+    await fetchSiteSettings(ctx);
+
+    const warnings = vi
+      .mocked(consola.warn)
+      .mock.calls.filter((call) => String(call[0]).includes("FETCH-ONLY"));
+
+    expect(warnings).toHaveLength(1);
+  });
+
+  it("stays quiet when a port is registered", async () => {
+    await fetchSiteSettings(ctx);
+
+    expect(vi.mocked(consola.warn).mock.calls.join(" ")).not.toContain("FETCH-ONLY");
   });
 });
 
@@ -522,5 +800,22 @@ describe("conformance to p01-01's contract", () => {
     const result = await fetchSiteSettings(ctx);
 
     expect(result).toEqual({ settings: expect.any(Object), stale: false });
+  });
+
+  it("returns only BL-890 allowlisted keys, which is far less than the document carries", async () => {
+    // The conformance check proves the DOCUMENT conforms; it says nothing about what the client
+    // hands its caller. `sanitizeBiolandSettings` drops 18 of the 23 keys in p01-01's example
+    // document - consistent with today's dmsm path, so not a regression, but worth being explicit
+    // about so a consumer does not plan on a key that never arrives.
+    const document = contractDocument();
+
+    fetchImpl = async () => document;
+
+    const result = await fetchSiteSettings(ctx);
+    const offered = Object.keys(document.config.biolandSettings as Record<string, unknown>);
+    const returned = Object.keys(result!.settings);
+
+    expect(returned.length).toBeLessThanOrEqual(offered.length);
+    expect(returned.every((key) => BIOLAND_SETTINGS_ALLOWLIST.includes(key as never))).toBe(true);
   });
 });
