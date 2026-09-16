@@ -561,9 +561,15 @@ export async function readConfigGeneration(
  *
  * Inherits the shared pool's 30s `acquireTimeout` (C13 — see the module JSDoc).
  *
+ * **Objects only.** `doc` is typed `unknown`, and `readLastKnownGoodSettings`
+ * runs whatever is stored through `parseObjectColumn`. A `null`, an array or a
+ * primitive would therefore write successfully and then be unreadable on every
+ * subsequent read, so the container type is validated here: every write that
+ * succeeds stays readable.
+ *
  * @throws {RegistryRowMissingError}   no row for `(env, multiSiteCode, siteCode)`.
- * @throws {RegistryRowMalformedError} `doc` is not JSON-serialisable, or carries
- *   a banned top-level key.
+ * @throws {RegistryRowMalformedError} `doc` is not a plain JSON object, is not
+ *   JSON-serialisable, or carries a banned top-level key.
  * @throws {RegistryUnavailableError}  the registry could not be reached.
  */
 export async function writeLastKnownGoodSettings(
@@ -574,20 +580,35 @@ export async function writeLastKnownGoodSettings(
 ): Promise<void> {
   const key = { env, multi_site_code: multiSiteCode, site_code: siteCode }
 
-  if (doc !== null && typeof doc === 'object' && !Array.isArray(doc)) {
-    const banned = BANNED_SETTINGS_KEYS.filter(name => name in (doc as Record<string, unknown>))
-    if (banned.length > 0) {
-      // The key NAMES are safe to report — they are the contract's own
-      // vocabulary. Their values are not, and are never touched.
-      throw new RegistryRowMalformedError(
-        SITE_TABLE, key, 'last_known_good_settings',
-        `document carries banned top-level key(s): ${banned.join(', ')}`,
-      )
-    }
+  // `doc` is typed `unknown`, so nothing upstream guarantees its container type.
+  // `readLastKnownGoodSettings` routes whatever is stored through
+  // `parseObjectColumn`, so a non-object write is accepted here and then
+  // unreadable forever after: an array or a primitive throws
+  // `RegistryRowMalformedError` on every later read, and JSON `null` comes back
+  // indistinguishable from a column that was never written. Reject it at the
+  // write instead, so every successful write stays readable.
+  if (typeof doc !== 'object' || doc === null || Array.isArray(doc)) {
+    // Only the container TYPE is reported, never the value.
+    const actual = doc === null ? 'null' : Array.isArray(doc) ? 'an array' : `a ${typeof doc}`
+    throw new RegistryRowMalformedError(
+      SITE_TABLE, key, 'last_known_good_settings',
+      `expected a JSON object, got ${actual}`,
+    )
   }
 
-  // JSON.stringify returns `undefined` (not a string) for undefined / a function
-  // / a symbol, which the driver would bind as SQL NULL — caught explicitly below.
+  const banned = BANNED_SETTINGS_KEYS.filter(name => name in (doc as Record<string, unknown>))
+  if (banned.length > 0) {
+    // The key NAMES are safe to report — they are the contract's own
+    // vocabulary. Their values are not, and are never touched.
+    throw new RegistryRowMalformedError(
+      SITE_TABLE, key, 'last_known_good_settings',
+      `document carries banned top-level key(s): ${banned.join(', ')}`,
+    )
+  }
+
+  // `doc` is a plain object by here, but JSON.stringify can still return
+  // `undefined` (not a string) for one whose own `toJSON` returns undefined,
+  // which the driver would bind as SQL NULL — caught explicitly below.
   let serialised: string | undefined
   try {
     serialised = JSON.stringify(doc)

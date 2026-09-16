@@ -584,8 +584,35 @@ describe('writeLastKnownGoodSettings', () => {
   })
 
   it('throws on a value that serialises to undefined', async () => {
-    await expect(writeLastKnownGoodSettings('prod', 'bl2', 'be', undefined))
+    await expect(writeLastKnownGoodSettings('prod', 'bl2', 'be', { toJSON: () => undefined }))
       .rejects.toThrow(/serialises to undefined/)
+  })
+
+  // A non-object write is accepted by JSON.stringify but unreadable afterwards:
+  // readLastKnownGoodSettings runs the column through parseObjectColumn, so an
+  // array or a primitive throws on every later read and a JSON null is
+  // indistinguishable from a column that was never written.
+  it.each([
+    ['null', null],
+    ['an array', []],
+    ['a number', 7],
+    ['a string', 'nope'],
+    ['a boolean', true],
+    ['undefined', undefined],
+  ])('refuses to persist %s, which no read could recover', async (_label, doc) => {
+    driverReturns({ affectedRows: 1 })
+
+    const error = await writeLastKnownGoodSettings('prod', 'bl2', 'be', doc).catch(e => e)
+
+    expect(error).toBeInstanceOf(RegistryRowMalformedError)
+    expect(error.message).toMatch(/expected a JSON object/)
+    expect(dbQuery).not.toHaveBeenCalled()
+  })
+
+  it('does not echo the rejected value when reporting a non-object document', async () => {
+    const error = await writeLastKnownGoodSettings('prod', 'bl2', 'be', 'G-FAKE').catch(e => e)
+
+    expect(error.message).not.toContain('G-FAKE')
   })
 
   it.each(['dataBase', 'dns', 'drupal', 'defaultSmtpCredentials', 'panoramaKey', 'meta'])(
