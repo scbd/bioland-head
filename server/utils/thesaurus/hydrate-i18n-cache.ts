@@ -218,6 +218,7 @@ export async function hydrateI18nCache(deps: HydrateDeps = {}): Promise<void> {
       let rowsRead = 0;
       let entriesWritten = 0;
       let skippedTruncated = 0;
+      let skippedCollision = 0;
 
       for (;;) {
         const page = await getPageFn(offset, HYDRATION_PAGE_SIZE);
@@ -237,18 +238,34 @@ export async function hydrateI18nCache(deps: HydrateDeps = {}): Promise<void> {
             continue;
           }
 
-          for (const identifier of identifiers) {
-            await storage.setItem(buildLabelKey('tr', identifier, row.target_locale), {
-              value: row.translation_value,
-              source: 'translation',
-              expiresAt
-            });
-            entriesWritten += 1;
+          if (identifiers.length > 1) {
+            // `i18n_cache` is content-addressed by English text alone, so this one row can only ever
+            // hold a single `translation_value` per (cache_key, target_locale) pair — it carries no
+            // per-identifier distinction. `detectLabelCollisions` (seed-translation-cache.js) already
+            // proved that identifiers sharing an English label can legitimately want *different*
+            // locale values (the committed data's real `eu` conflict between `CBD-SUBJECT-NBSAP` and
+            // `doc-14`), and the seeder withholds those rather than guessing. Boot-time hydration has
+            // no locale-file data to re-run that per-locale check against, so it withholds identically:
+            // every identifier on a shared label is skipped here rather than risking a silently wrong
+            // label. `resolve-terms`'s normal reactive fetch (p04-01) still fills these in correctly.
+            skippedCollision += identifiers.length;
+            continue;
           }
+
+          await storage.setItem(buildLabelKey('tr', identifiers[0], row.target_locale), {
+            value: row.translation_value,
+            source: 'translation',
+            expiresAt
+          });
+          entriesWritten += 1;
         }
 
         if (page.length < HYDRATION_PAGE_SIZE) break;
         offset += HYDRATION_PAGE_SIZE;
+      }
+
+      if (skippedCollision > 0) {
+        logger.debug?.(`[i18n-cache-hydrator] withheld ${skippedCollision} rows sharing a collision-prone English label`);
       }
 
       if (skippedTruncated > 0) {

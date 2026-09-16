@@ -353,7 +353,12 @@ describe('hydrateI18nCache', () => {
     expect(deps.logger.debug).toHaveBeenCalledWith(expect.stringContaining('truncated-hash'))
   })
 
-  it('a shared English label writes every identifier it maps to', async () => {
+  it('a shared English label is withheld from every identifier it maps to, not written to all of them (BL-1005 P2)', async () => {
+    // Mirrors `detectLabelCollisions`' rationale in `seed-translation-cache.js`: `i18n_cache` holds one
+    // `translation_value` per (cache_key, target_locale), so two identifiers sharing an English label
+    // can silently receive the wrong locale value when their real translations diverge (the committed
+    // data's `eu` conflict between `CBD-SUBJECT-NBSAP` and `doc-14`). The hydrator has no per-locale
+    // data to re-verify agreement at boot, so it withholds the whole group rather than guessing.
     const deps = makeDeps({
       readIdentifierLabels: vi.fn(async () => ({ 'ID-A': 'Alpha', 'ID-C': 'Alpha' })),
       getPageFn: vi
@@ -364,8 +369,23 @@ describe('hydrateI18nCache', () => {
 
     await hydrateI18nCache(deps)
 
+    expect(deps.storage.setItem).not.toHaveBeenCalledWith(buildLabelKey('tr', 'ID-A', 'fr'), expect.anything())
+    expect(deps.storage.setItem).not.toHaveBeenCalledWith(buildLabelKey('tr', 'ID-C', 'fr'), expect.anything())
+    expect(deps.storage.setItem).toHaveBeenCalledTimes(1) // marker only
+  })
+
+  it('an unshared English label still writes its one identifier', async () => {
+    const deps = makeDeps({
+      readIdentifierLabels: vi.fn(async () => ({ 'ID-A': 'Alpha', 'ID-B': 'Beta' })),
+      getPageFn: vi
+        .fn()
+        .mockResolvedValueOnce([{ source_locale: 'en', target_locale: 'fr', cache_key: 'Alpha', translation_value: 'Alpha (fr)' }])
+        .mockResolvedValueOnce([])
+    })
+
+    await hydrateI18nCache(deps)
+
     expect(deps.storage.setItem).toHaveBeenCalledWith(buildLabelKey('tr', 'ID-A', 'fr'), expect.anything())
-    expect(deps.storage.setItem).toHaveBeenCalledWith(buildLabelKey('tr', 'ID-C', 'fr'), expect.anything())
   })
 
   it('reads and parses the real, statically-bundled identifier-labels.json via readIdentifierLabelMap when not overridden', async () => {
