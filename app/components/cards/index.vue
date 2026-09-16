@@ -33,9 +33,9 @@
             </p>
 
             <span v-show="record?.eventCity" class="badge me-1" :style="badgePrimaryStyle"> {{record?.eventCity || ''}}</span>
-            <span v-show="record?.eventCountry?.symbol" class="badge me-1" :style="badgeSecondaryStyle"> {{ record?.eventCountry?.symbol ? t(record.eventCountry.symbol) : '' }}</span>
+            <span v-show="record?.eventCountry?.symbol" class="badge me-1" :style="badgeSecondaryStyle"> {{ record?.eventCountry?.symbol ? eventCountryLabel : '' }}</span>
             <template v-for="(aCountry,i) in visibleCountries" :key="i">
-                <span class="badge me-1 mb-1" :style="badgeSecondaryStyle"> {{ t(aCountry.identifier) }}</span>
+                <span class="badge me-1 mb-1" :style="badgeSecondaryStyle"> {{ countryLabel(aCountry.identifier) }}</span>
             </template>
             <button v-if="countriesList.length > 3" type="button" class="badge me-1 mb-1 border-0" :style="badgeSecondaryStyle" @click="toggleExpanded('countries')">{{ expanded.countries ? '−' : '…' }}</button>
 
@@ -128,6 +128,19 @@
 
     // SSR-safe array computed to ensure consistent DOM structure
     const countriesList = computed(() => record?.value?.tags?.countries || []);
+
+    /** Resolved event-country label (D3/D5) — falls back to the raw symbol on a miss. */
+    const eventCountryLabel = await useTermLabel(() => record?.value?.eventCountry?.symbol);
+
+    /**
+     * Resolved country-tag labels (D3/D5), keyed on the shared `term-labels` payload state so every badge
+     * reads a single pre-resolved lookup instead of each `v-for` iteration awaiting its own composable call.
+     */
+    const termLabels = useState(TERM_LABEL_STATE_KEY, () => ({}));
+    await Promise.all(countriesList.value.map((aCountry) => useTermLabel(() => aCountry.identifier)));
+    function countryLabel(identifier) {
+        return termLabels.value?.[identifier]?.value ?? identifier;
+    }
     const gbfTagsList = computed(() => gbfTags.value || []);
     const sdgsList = computed(() => record?.value?.tags?.sdgs || []);
 
