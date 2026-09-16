@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { assertNoLeaks, findLeaks } from '#shared/utils/leak-detection'
 import {
-  mergeTheme,
+  mergeThemeForProjection,
   normalizeHasBl1,
   PUBLIC_SITE_CONFIG_KEYS,
   toPublicConfig
@@ -217,9 +217,9 @@ describe('normalizeHasBl1 (R3)', () => {
   })
 })
 
-describe('mergeTheme (R6): per-site over multiSite, shallow at the branch level', () => {
+describe('mergeThemeForProjection (R6): per-site over multiSite, shallow at the branch level', () => {
   it('takes the site branch whole and does not deep-merge it', () => {
-    const merged = mergeTheme(
+    const merged = mergeThemeForProjection(
       { color: { primary: '#111111' } },
       { color: { primary: '#222222', primaryTextOver: '#ffffff' }, hero: { height: '40vh' } }
     )
@@ -229,21 +229,60 @@ describe('mergeTheme (R6): per-site over multiSite, shallow at the branch level'
   })
 
   it('falls back to the multiSite branch when the site does not define it', () => {
-    const merged = mergeTheme({ color: { primary: '#111111' } }, { hero: { height: '40vh' } })
+    const merged = mergeThemeForProjection({ color: { primary: '#111111' } }, { hero: { height: '40vh' } })
 
     expect(merged?.hero).toEqual({ height: '40vh' })
   })
 
   it('returns undefined only when neither level defines a theme', () => {
-    expect(mergeTheme(undefined, undefined)).toBeUndefined()
-    expect(mergeTheme(undefined, { color: {} })).toBeDefined()
-    expect(mergeTheme({ color: {} }, undefined)).toBeDefined()
+    expect(mergeThemeForProjection(undefined, undefined)).toBeUndefined()
+    expect(mergeThemeForProjection(undefined, { color: {} })).toBeDefined()
+    expect(mergeThemeForProjection({ color: {} }, undefined)).toBeDefined()
   })
 
   it('is applied by the projection, so a bsl site with no theme inherits the network one', () => {
     const result = toPublicConfig(hostileSite({ theme: undefined }), hostileMultiSite())
 
     expect(result.theme).toMatchObject({ color: { primary: '#abcdef' }, hero: { height: '40vh' } })
+  })
+
+  /**
+   * Unknown top-level branches are pass-through BY DESIGN: `app/utils/resolve-theme.js`
+   * (`collectGroups`, :291) unions its contract groups with whatever groups each leg carries,
+   * `SiteTheme`'s own JSDoc says unknown groups pass through, and p02-01's registry merge preserves
+   * them with a spread. An enumerated merge here dropped them, which would have handed p03-01 two
+   * different themes for one site depending on which code path produced it.
+   */
+  describe('unknown top-level branches survive the merge', () => {
+    type Theme = Parameters<typeof mergeThemeForProjection>[0]
+
+    const withSpacing = (gutter: string): Theme =>
+      ({ spacing: { gutter } }) as unknown as NonNullable<Theme>
+
+    it('keeps a branch carried only by the site leg', () => {
+      expect(mergeThemeForProjection(withSpacing('2rem'), { color: { primary: '#222222' } })).toEqual(
+        { spacing: { gutter: '2rem' }, color: { primary: '#222222' } }
+      )
+    })
+
+    it('keeps a branch carried only by the multiSite leg', () => {
+      expect(mergeThemeForProjection({ color: { primary: '#111111' } }, withSpacing('1rem'))).toEqual(
+        { color: { primary: '#111111' }, spacing: { gutter: '1rem' } }
+      )
+    })
+
+    it('lets the site leg win whole when both legs carry the branch', () => {
+      expect(mergeThemeForProjection(withSpacing('2rem'), withSpacing('1rem'))).toEqual({
+        spacing: { gutter: '2rem' }
+      })
+    })
+
+    it('carries an unknown branch through toPublicConfig to the public payload', () => {
+      const theme = { color: { primary: '#111111' }, ...withSpacing('2rem') } as Theme
+      const result = toPublicConfig(hostileSite({ theme }), hostileMultiSite())
+
+      expect(result.theme).toMatchObject({ spacing: { gutter: '2rem' } })
+    })
   })
 })
 
@@ -287,6 +326,14 @@ describe('leak defence over the serialized output', () => {
     expect(findings).toContainEqual(
       expect.objectContaining({ path: 'description', kind: 'value-entropy' })
     )
-    expect(() => assertNoLeaks(smuggled, 'projection')).toThrow(/2 leak finding/)
+    // The same smuggled value trips the credentialed-URI rule as well as the scheme rule: it
+    // carries `fakeuser:fakepw@`, which is a leak independent of the scheme being a known one.
+    expect(findings).toContainEqual(
+      expect.objectContaining({
+        path: 'theme.homePageWidgets.helpComments',
+        kind: 'value-credentialed-uri'
+      })
+    )
+    expect(() => assertNoLeaks(smuggled, 'projection')).toThrow(/3 leak finding/)
   })
 })
