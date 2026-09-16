@@ -12,5 +12,8 @@ export * from './thesaurus';
 // Logger types
 export * from './logger';
 
+// Config-source fallback telemetry types
+export * from './config-fallback';
+
 // Constants types (ContentType interface)
 export type { ContentType } from '../utils/constants';
