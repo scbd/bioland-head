@@ -55,7 +55,15 @@ const NON_UN_LOCALE = pickLocale(false)
 
 const BARE_ISO2 = /^[a-z]{2}$/i
 
-/** Reach the search-results page through the app's own search-navigation flow (no hardcoded URL). */
+/**
+ * Reach the search-results page through the app's own search-navigation flow (no hardcoded URL),
+ * then RELOAD it as a fresh document.
+ *
+ * The search button calls `navigateTo`, so the results page arrives via client-side routing and its
+ * rows take `useTermLabel`'s client-fetch branch. Asserting on that hydrated DOM would pass even
+ * with the server resolver or the SSR payload injection completely broken - the opposite of what
+ * these specs claim to verify. The reload makes the assertions read server-rendered HTML.
+ */
 async function goToSearchResults(page: Page, locale: string): Promise<void> {
   await page.goto(`${E2E_BASE_URL}/${locale}`, { waitUntil: 'networkidle' })
 
@@ -65,6 +73,9 @@ async function goToSearchResults(page: Page, locale: string): Promise<void> {
 
   await searchBtn.click()
   await page.waitForLoadState('networkidle')
+
+  // Discover where the app routed us, then fetch that URL as a real document navigation.
+  await page.goto(page.url(), { waitUntil: 'networkidle' })
 }
 
 /** The expected localized label, read from the same client resolver endpoint `useTermLabel` calls on a miss. */
@@ -127,7 +138,10 @@ for (const [slot, locale] of [['a UN locale', UN_LOCALE], ['a non-UN locale', NO
       test(`document detail country badge (page/body-tags-date.vue) resolves in ${locale}`, async ({ page }) => {
         await goToSearchResults(page, locale as string)
 
-        const resultLink = page.locator('[id^="page-list-row-"] a[id*="-title"], [id^="page-list-row-"] h5 a').first()
+        // `page/list/row.vue` wraps the whole card in the anchor that carries the bare
+        // `page-list-row-*` id; the `*-title` element is an <h5> with no anchor inside it, so the
+        // previous descendant locator could never match and this test always skipped.
+        const resultLink = page.locator('a[id^="page-list-row-"]').first()
         const hasResult = await resultLink.isVisible({ timeout: 15_000 }).catch(() => false)
 
         test.skip(!hasResult, 'no search result available to open a detail page from on this tenant/run')
