@@ -601,6 +601,26 @@ describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
             expect(theme.color.secondary).toBe(networkTheme.color.secondary)
         })
 
+        it.each([
+            ['a trailing declaration', 'red;background-image:url(https://elsewhere.test/x)'],
+            ['a closing brace',        '#fff}body{background:url(https://elsewhere.test/x)'],
+            ['a bare url()',           'url(https://elsewhere.test/x)'],
+        ])('an authored color.primary carrying %s falls through rather than reaching a style', (_label, primary) => {
+            // These values are editor-supplied and end up interpolated into inline styles and
+            // --bs-* custom properties, so a shape check is the thing standing between the theme
+            // form and an outbound request from every visitor's browser.
+            const theme = resolveTheme(siteConfig, { color: { primary } })
+
+            expect(theme.color.primary).toBe(networkTheme.color.primary)
+        })
+
+        it('keeps the colour shapes the theme form actually produces', () => {
+            expect(resolveTheme(siteConfig, { color: { primary: '#fff' } }).color.primary).toBe('#fff')
+            expect(resolveTheme(siteConfig, { color: { primary: '#7b6f82' } }).color.primary).toBe('#7b6f82')
+            expect(resolveTheme(siteConfig, { color: { primary: 'rgb(123 45 67 / 50%)' } }).color.primary).toBe('rgb(123 45 67 / 50%)')
+            expect(resolveTheme(siteConfig, { color: { primary: 'rebeccapurple' } }).color.primary).toBe('rebeccapurple')
+        })
+
         it('an authored megaMenu.maxColumns of 0 falls through — 0 collapses the grid', () => {
             const theme = resolveTheme(siteConfig, { megaMenu: { maxColumns: 0 } })
 
@@ -611,6 +631,96 @@ describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
             const theme = resolveTheme(siteConfig, { color: { primary: '', secondary: '#889262' } })
 
             expect(theme.color.primary).toBe(networkTheme.color.primary)
+            expect(theme.color.secondary).toBe('#889262')
+        })
+    })
+
+    describe('hero — Drupal authors the pair directly (BL-1011)', () => {
+
+        it('uses both authored scalar slots over the inherited pair and the Drupal colors', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), {
+                hero : { primary: '#aaaaaa', secondary: '#bbbbbb' },
+                color: { primary: '#06dbad', secondary: '#889262' }
+            })
+
+            expect(theme.hero.primary).toEqual(['#aaaaaa', '#bbbbbb'])
+        })
+
+        it('keeps the inherited slot Drupal did not author, and does not colour-override it', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), {
+                hero : { primary: '#aaaaaa' },
+                color: { primary: '#06dbad', secondary: '#889262' }
+            })
+
+            // Belgium's own #CBB279, not the authored colour.secondary: authoring either hero slot
+            // means the editor reached the hero directly, so the colour shim stops standing in.
+            expect(theme.hero.primary).toEqual(['#aaaaaa', '#CBB279'])
+        })
+
+        it('authoring only hero.secondary leaves the inherited primary alone', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), {
+                hero : { secondary: '#bbbbbb' },
+                color: { primary: '#06dbad' }
+            })
+
+            expect(theme.hero.primary).toEqual(['#7b6f82', '#bbbbbb'])
+        })
+
+        it.each([
+            ['empty string', ''],
+            ['whitespace', '   '],
+            ['number', 42],
+            ['null', null],
+            ['object', { primary: '#aaaaaa' }]
+        ])('an unusable authored hero.primary (%s) falls through to today\u2019s behaviour', (_label, primary) => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), {
+                hero : { primary },
+                color: { primary: '#06dbad' }
+            })
+
+            // Exactly what the colour-override path produces with no hero authored at all.
+            expect(theme.hero.primary[0]).toBe('#06dbad')
+        })
+
+        it('an authored hero.primary in the LEGACY array shape still wins outright', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), {
+                hero : { primary: ['#aaaaaa', '#bbbbbb'] },
+                color: { primary: '#06dbad' }
+            })
+
+            // Pre-existing behaviour, deliberately preserved: the authored leg may still carry the
+            // ordered pair (a site seeded before the Theme tab split it into two scalars), and it
+            // is an explicit hero, so the colour override stands down.
+            expect(theme.hero.primary).toEqual(['#aaaaaa', '#bbbbbb'])
+        })
+
+        it('hero.secondary on the result always matches slot 1 of the pair', () => {
+            for (const authored of [
+                undefined,
+                { color: { primary: '#06dbad' } },
+                { hero: { primary: '#aaaaaa', secondary: '#bbbbbb' } },
+                { hero: { secondary: '#bbbbbb' } }
+            ]) {
+                const theme = resolveTheme(withRunTime(networkTheme, beTheme), authored)
+
+                expect(theme.hero.secondary).toBe(theme.hero.primary[1])
+            }
+        })
+
+        it('the pair is still an array of two on a site with no network hero and no Drupal hero', () => {
+            const theme = resolveTheme({}, {})
+
+            expect(Array.isArray(theme.hero.primary)).toBe(true)
+            expect(theme.hero.primary).toHaveLength(2)
+        })
+
+        it('an authored hero does not alter the colour group itself', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), {
+                hero : { primary: '#aaaaaa', secondary: '#bbbbbb' },
+                color: { primary: '#06dbad' }
+            })
+
+            expect(theme.color.primary).toBe('#06dbad')
             expect(theme.color.secondary).toBe('#889262')
         })
     })
