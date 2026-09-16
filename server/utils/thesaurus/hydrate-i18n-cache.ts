@@ -134,19 +134,25 @@ interface HydrateDeps {
  * @param deps - Injection seam for tests; every field defaults to the real implementation.
  */
 export async function hydrateI18nCache(deps: HydrateDeps = {}): Promise<void> {
-  const {
-    runtimeConfig = typeof useRuntimeConfig === 'function' ? useRuntimeConfig() : {},
-    storage = typeof useStorage === 'function' ? (useStorage('thesaurus') as HydrationStorage) : null,
-    logger = typeof consola !== 'undefined' ? consola : console,
-    isDev = typeof process !== 'undefined' && process.dev === true,
-    acquireLockFn = acquireHydrationLock,
-    releaseLockFn = releaseHydrationLock,
-    getPageFn = getCachedTranslationsPage,
-    readIdentifierLabels = readIdentifierLabelMap,
-    now = Date.now()
-  } = deps;
+  // Resolving `deps.logger` can never throw (a plain property read/default, no Nitro context
+  // involved), so it is safe to do outside the try — unlike `runtimeConfig`/`storage` below, whose
+  // real implementations (`useRuntimeConfig`/`useStorage`) need a live Nitro request context and
+  // can throw when boot calls this before or outside one. Resolving `logger` here means the
+  // catch below can always warn through the caller's own injected logger, not just a fallback.
+  const logger: HydrationLogger = deps.logger ?? (typeof consola !== 'undefined' ? consola : console);
 
   try {
+    const {
+      runtimeConfig = typeof useRuntimeConfig === 'function' ? useRuntimeConfig() : {},
+      storage = typeof useStorage === 'function' ? (useStorage('thesaurus') as HydrationStorage) : null,
+      isDev = typeof process !== 'undefined' && process.dev === true,
+      acquireLockFn = acquireHydrationLock,
+      releaseLockFn = releaseHydrationLock,
+      getPageFn = getCachedTranslationsPage,
+      readIdentifierLabels = readIdentifierLabelMap,
+      now = Date.now()
+    } = deps;
+
     // Flag gate, first — no useStorage/MariaDB touch at all when disabled.
     if (runtimeConfig?.hydrateI18nCache === false) {
       logger.debug?.('[i18n-cache-hydrator] disabled via runtimeConfig.hydrateI18nCache; skipping');

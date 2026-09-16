@@ -227,7 +227,18 @@ export async function acquireHydrationLock(lockName) {
   const pool = getDbPool()
   const connection = await pool.getConnection()
 
-  const rows = await connection.query('SELECT GET_LOCK(?, 0) AS locked', [lockName])
+  let rows
+  try {
+    rows = await connection.query('SELECT GET_LOCK(?, 0) AS locked', [lockName])
+  } catch (error) {
+    // The query itself failed (transient network blip, permission error, ...) — distinct from
+    // pool.getConnection() failing above. Without this catch the connection would never be
+    // released nor returned in the thrown error, permanently shrinking the pool
+    // (I18N_DB_CONNECTION_LIMIT defaults to 5) across repeated boot failures.
+    connection.release()
+    throw error
+  }
+
   const locked = Number(rows?.[0]?.locked) === 1
 
   if (!locked) {

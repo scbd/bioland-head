@@ -207,6 +207,38 @@ describe('hydrateI18nCache', () => {
     expect(parseErrorDeps.storage.setItem).not.toHaveBeenCalled()
   })
 
+  it('is a no-op — logged, not crashed — when p03-01\'s map parses but is empty (Minor 3)', async () => {
+    const deps = makeDeps({ readIdentifierLabels: vi.fn(async () => ({})) })
+
+    await hydrateI18nCache(deps)
+
+    expect(deps.getPageFn).not.toHaveBeenCalled()
+    expect(deps.storage.setItem).not.toHaveBeenCalled()
+    expect(deps.logger.warn).toHaveBeenCalledWith(expect.stringContaining('identifier-labels.json'))
+  })
+
+  it('a throwing useRuntimeConfig default cannot crash boot (BL-1005 Major 1)', async () => {
+    // Regression for a real reported failure mode: `useRuntimeConfig()` throwing (no Nitro request
+    // context) previously ran OUTSIDE the function's own try/catch, as part of the destructuring
+    // default itself — so the rejection escaped `hydrateI18nCache`'s "never throws" contract, and
+    // the unawaited plugin call site (`hydrateI18nCache()`, no `.catch`) surfaced it as an
+    // unhandled rejection at boot. Calling with no `deps` at all exercises the real default wiring.
+    vi.stubGlobal('useRuntimeConfig', () => {
+      throw new Error('no Nitro request context')
+    })
+
+    await expect(hydrateI18nCache()).resolves.toBeUndefined()
+  })
+
+  it('a throwing useStorage default cannot crash boot (BL-1005 Major 1)', async () => {
+    vi.stubGlobal('useRuntimeConfig', () => ({ hydrateI18nCache: true }))
+    vi.stubGlobal('useStorage', () => {
+      throw new Error('bad mount config')
+    })
+
+    await expect(hydrateI18nCache()).resolves.toBeUndefined()
+  })
+
   it("the lock's connection is the one that releases it (real acquireHydrationLock/releaseHydrationLock)", async () => {
     createdConnections.length = 0
     const deps = makeDeps({})
@@ -225,6 +257,33 @@ describe('hydrateI18nCache', () => {
     const releaseLockCallOrder = lockConnection.query.mock.invocationCallOrder[1]
     const connectionReleaseCallOrder = lockConnection.release.mock.invocationCallOrder[0]
     expect(releaseLockCallOrder).toBeLessThan(connectionReleaseCallOrder)
+  })
+
+  it('a throwing GET_LOCK query releases the connection instead of leaking it (BL-1005 Major 2)', async () => {
+    // Distinct from the "DB unreachable" spec above, which fails at `pool.getConnection()`. Here
+    // the connection is acquired fine and the `GET_LOCK` query itself throws (transient network
+    // blip, permission error). Without a try/catch around that query, the connection is neither
+    // released nor returned in the thrown error — with I18N_DB_CONNECTION_LIMIT defaulting to 5,
+    // repeated failures like this exhaust the pool and take translation down process-wide.
+    const { acquireHydrationLock } = await import('~/server/utils/translate/index.js')
+    createdConnections.length = 0
+    const originalGetConnection = fakePool.getConnection
+    fakePool.getConnection = vi.fn(async () => {
+      const connection = makeFakeConnection(createdConnections.length)
+      connection.query = vi.fn(async (sql: string) => {
+        if (sql.includes('GET_LOCK')) throw new Error('ECONNRESET')
+        return []
+      })
+      createdConnections.push(connection)
+      return connection
+    })
+
+    try {
+      await expect(acquireHydrationLock('i18n-cache-hydration')).rejects.toThrow('ECONNRESET')
+      expect(createdConnections[0].release).toHaveBeenCalledTimes(1)
+    } finally {
+      fakePool.getConnection = originalGetConnection
+    }
   })
 
   it('disabled via runtimeConfig.hydrateI18nCache never touches storage or the lock', async () => {
