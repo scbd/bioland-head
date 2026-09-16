@@ -61,6 +61,7 @@ type FakeRow = { source_hash: string | null, config_generation: number | bigint 
 
 const CLAIM = /config_generation = config_generation \+ 1\s+WHERE env = \? AND multi_site_code = \? AND config_generation/
 const COMMIT_HASH = /^UPDATE \S+multi_site_config SET source_hash = \?/
+const RETIRE = /^DELETE FROM \S+site_config/
 
 /** A connection whose responses are scripted per statement kind. */
 function fakeConnection(options: {
@@ -70,12 +71,15 @@ function fakeConnection(options: {
   claimed?: boolean
   /** Rows the multiSite hash write matches. 0 means the claim is gone. */
   commitRows?: number
+  /** Obsolete site rows the retire delete removes. */
+  retiredRows?: number
   failOn?: RegExp
 } = {}) {
   const {
     state = { source_hash: 'stale0000000000000000000000000000000000', config_generation: 3 },
     claimed = true,
     commitRows = 1,
+    retiredRows = 0,
     failOn,
   } = options
   const stateAfterClaim = 'stateAfterClaim' in options ? options.stateAfterClaim : state
@@ -98,6 +102,7 @@ function fakeConnection(options: {
         claimAttempted = true
         return { affectedRows: claimed ? 1 : 0 }
       }
+      if (RETIRE.test(sql)) return { affectedRows: retiredRows }
       if (COMMIT_HASH.test(sql)) return { affectedRows: commitRows }
       return { affectedRows: 1 }
     }),
@@ -310,7 +315,7 @@ describe('runDriftCheck outcomes', () => {
     expect(alert.currentHashPrefix).toBe(HASH.slice(0, 12))
     expect(alert.previousHashPrefix).toBe('stale0000000')
     expect(alert.configGeneration).toBe(4)
-    expect(alert.rows).toEqual({ multiSites: 1, sites: 2 })
+    expect(alert.rows).toEqual({ multiSites: 1, sites: 2, retired: 0 })
 
     const claim = statements.findIndex(sql => /config_generation \+ 1/.test(sql))
     const insert = statements.findIndex(sql => /^INSERT INTO/.test(sql))
@@ -381,6 +386,58 @@ describe('runDriftCheck outcomes', () => {
     expect(statements).not.toContain('COMMIT')
     // Nothing persisted, so the alert must not claim rows were written.
     expect(alert.rows).toBeNull()
+  })
+
+  it('retires site rows the new plan no longer contains, before publishing the hash', async () => {
+    // seedSlice only upserts, and the apply stamps the new hash on every row in
+    // the slice — so a removed site would be served forever under a source_hash
+    // that reads as current.
+    const { connection, statements } = fakeConnection({ retiredRows: 1 })
+    const alert = await runDriftCheck({}, deps({ connect: async () => connection }))
+
+    expect(alert.outcome).toBe('reseeded')
+    expect(alert.rows).toEqual({ multiSites: 1, sites: 2, retired: 1 })
+
+    const retire = statements.findIndex(sql => RETIRE.test(sql))
+    const store = statements.findIndex(sql => COMMIT_HASH.test(sql))
+    expect(retire).toBeGreaterThanOrEqual(0)
+    expect(store).toBeGreaterThan(retire)
+
+    const [sql, params] = connection.query.mock.calls.find(
+      ([statement]) => RETIRE.test(statement as string),
+    ) as [string, unknown[]]
+    // Scoped to the slice, and keyed on the plan's site codes only.
+    expect(sql).toMatch(/WHERE env = \? AND multi_site_code = \?/)
+    expect(sql).toMatch(/site_code NOT IN \(\?, \?\)/)
+    expect(params).toEqual(['stg', 'bl2', 'be', 'gt'])
+  })
+
+  it('retires nothing when the new plan has no sites at all', async () => {
+    // An empty sites block parses. Wiping a whole slice is likelier a malformed
+    // publish than an intent, and the delete is the one irreversible write here.
+    const emptied = { bl2: { ...body.bl2, sites: {} } }
+    const source = JSON5.stringify({ ...emptied, meta: { hash: dmsmHashOf(emptied) } })
+    const { connection, statements } = fakeConnection({ retiredRows: 4 })
+    const alert = await runDriftCheck({}, deps({ connect: async () => connection, readSource: async () => source }))
+
+    expect(alert.outcome).toBe('reseeded')
+    expect(alert.rows).toEqual({ multiSites: 1, sites: 0, retired: 0 })
+    expect(statements.some(sql => RETIRE.test(sql))).toBe(false)
+  })
+
+  it('rolls the retire back with the hash when the apply does not commit', async () => {
+    const { connection, statements } = fakeConnection({ commitRows: 0, retiredRows: 2 })
+    const alert = await runDriftCheck({}, deps({ connect: async () => connection }))
+
+    expect(alert.outcome).toBe('reseed-uncommitted')
+
+    const retire = statements.findIndex(sql => RETIRE.test(sql))
+    const begin = statements.indexOf('START TRANSACTION')
+    const rollback = statements.indexOf('ROLLBACK')
+
+    expect(retire).toBeGreaterThan(begin)
+    expect(rollback).toBeGreaterThan(retire)
+    expect(statements).not.toContain('COMMIT')
   })
 
   it('rolls the seed back with the hash when a racer took the generation first', async () => {

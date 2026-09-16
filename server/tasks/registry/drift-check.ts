@@ -11,7 +11,11 @@
  * `aliases`, `theme`). Concretely: setting `sites.<code>.redirect` to an
  * external URL redirects every request for that site off-site one tick later,
  * with no deploy, no review and no approval. Before this task, the same change
- * required a human to run `registry:seed`.
+ * required a human to run `registry:seed`. Removing a site from the config
+ * likewise **deletes** its registry row one tick later, degraded-mode cache and
+ * all (`retireAbsentSites`); leaving it would serve a site the config no longer
+ * declares, so the deletion is required, but it is the one irreversible write
+ * here and the `retired` count in the alert is how an operator sees it.
  *
  * That trade is deliberate — drift nobody notices is the failure this task
  * exists to prevent — but it is a trade, and the alert is the **only** detection
@@ -257,7 +261,7 @@ export interface DriftAlert {
   /** Set only when dmsm's stamp and the content it describes disagree. */
   computedHashPrefix: string | null
   configGeneration: number | null
-  rows: { multiSites: number, sites: number } | null
+  rows: ReseedRows | null
   failureClass: string | null
   at: string
 }
@@ -461,7 +465,59 @@ export async function claimReseed(
 }
 
 /** What one apply did: whether the drift key landed, and what it wrote. */
-export interface ReseedResult { committed: boolean, rows: { multiSites: number, sites: number } }
+export interface ReseedResult { committed: boolean, rows: ReseedRows }
+
+/** Rows written by one apply, plus the obsolete rows it retired. */
+export interface ReseedRows { multiSites: number, sites: number, retired: number }
+
+/**
+ * Delete the slice's site rows that the new plan no longer contains.
+ *
+ * ## Why obsolete rows cannot simply be left alone
+ *
+ * `seedSlice` only upserts, and the apply stamps the new `source_hash` on every
+ * row in the slice. So a publish that *removes* a site leaves its row behind,
+ * freshly stamped as current: `listSites` and `readSite` keep serving a site the
+ * config says no longer exists, and every later tick reports `no-drift`. The
+ * removal is invisible forever.
+ *
+ * ## Why this deletes rather than soft-retires
+ *
+ * The row carries two columns the JSON5 source does not: `last_known_good_settings`
+ * and `last_known_good_at`, the degraded-mode cache written by
+ * `writeLastKnownGoodSettings`. Deleting the row drops that cache — accepted
+ * here for three reasons. Nothing in the current schema retires a row without
+ * deleting it: `published` is not read by `listSites` or `readSite`, so flipping
+ * it would not stop the site being served, and a dedicated retired-at column is
+ * a schema change this task does not own. The cache is regenerable — the next
+ * successful compose rewrites it — so a site removed by mistake and restored
+ * gets it back on its first compose, with only a bounded window without a
+ * fallback. And `network_summary` lives in its own table, so the CHM Network
+ * row is not collateral here.
+ *
+ * A plan with **no** sites retires nothing. An empty `sites` block parses, and
+ * "wipe the entire slice" is far more likely a malformed publish than an
+ * intent; the upserts of a normal publish are reproducible from the source,
+ * whereas this delete is the one irreversible thing the task does.
+ *
+ * @returns how many obsolete rows were removed.
+ */
+async function retireAbsentSites(
+  connection: SeedConnectionLike,
+  plan: SeedPlan,
+): Promise<number> {
+  const { env, multiSiteCode } = plan.multiSite
+  const keep = plan.sites.map(site => site.siteCode)
+  if (!keep.length) return 0
+
+  const result = await connection.query(
+    `DELETE FROM ${SITE_TABLE}
+      WHERE env = ? AND multi_site_code = ?
+        AND site_code NOT IN (${keep.map(() => '?').join(', ')})`,
+    [env, multiSiteCode, ...keep],
+  )
+  return affectedRows(result)
+}
 
 /**
  * Apply the whole re-seed — **row writes and hash publication in one
@@ -510,7 +566,11 @@ export async function applyReseed(
 
   await connection.query('START TRANSACTION')
   try {
-    const rows = await seed(connection, plan)
+    const seeded = await seed(connection, plan)
+    // Before the hash is published, so a removed site cannot survive under a
+    // current `source_hash`; inside the transaction, so a lost generation puts
+    // it back.
+    const rows = { ...seeded, retired: await retireAbsentSites(connection, plan) }
 
     await connection.query(
       `UPDATE ${SITE_TABLE} SET config_generation = config_generation + 1, source_hash = ?
