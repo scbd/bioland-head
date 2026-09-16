@@ -3,9 +3,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createStorage } from 'unstorage'
 import fsDriver from 'unstorage/drivers/fs'
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { CACHE_TTL } from '../../../../../shared/utils/constants'
+import { getDmsmCacheKey } from '../../../../../shared/types/context'
 import { invalidateSiteConfig } from '../../../../../server/utils/site-registry/invalidation'
 
 // TWO-CONTAINER SIMULATION. Real containers are impractical in CI, so the fleet's shared
@@ -22,28 +22,18 @@ let containerB: ReturnType<typeof createStorage>
 let log: { info: ReturnType<typeof vi.fn>; warn: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> }
 let useStorageSpy: ReturnType<typeof vi.fn>
 
-// `buildDmsmConfigCacheKey` is the real `getKey()` used by the `_fetchDmsmConfig` cached
-// function in context-unified.ts. Importing it here (rather than hand-typing the
-// `multiSiteCode:siteCode` shape a second time) means a rename or key-shape change on that
-// write path fails this suite instead of leaving it silently green. Nitro's `cachedFunction`
-// composes the on-disk key as `${group}:${name}:${getKey()}.json`; the group/name literals
-// stay hand-written here since they are the module's own load-bearing config, not something
-// that can drift out from under `getKey()` unnoticed the way the key shape can.
-let buildDmsmConfigCacheKey: (multiSiteCode: string, siteCode: string) => string
-
+// `getDmsmCacheKey` is the real `getKey()` used by the `_fetchDmsmConfig` cached function in
+// context-unified.ts, and by its in-flight coalescing map. Importing it here (rather than
+// hand-typing the `dmsm-config-<env>-<msc>-<sc>` shape a second time) means a rename or
+// key-shape change on that write path fails this suite instead of leaving it silently green.
+// Nitro's `cachedFunction` composes the on-disk key as `[base, group, name, getKey()+".json"]`
+// joined on `:`, and `useStorage("cache")` strips the `cache:` base back off before this
+// module ever sees a key - so what the scan filters is `${group}:${name}:${getKey()}.json`.
+// The group/name literals stay hand-written here since they are the module's own load-bearing
+// config, not something that can drift out from under `getKey()` unnoticed the way the key
+// shape can.
 const container = (base: string) => createStorage({ driver: fsDriver({ base }) })
-const configKey = (multiSiteCode: string, siteCode: string) => `context:get-dmsm-config:${buildDmsmConfigCacheKey(multiSiteCode, siteCode)}.json`
-
-beforeAll(async () => {
-  // context-unified.ts (and, transitively, server/utils/drupal/index.js) call
-  // `cachedFunction(...)` / `defineCachedFunction(...)` at module scope, so both globals
-  // must exist before the module is imported - a plain top-level `import` runs too early
-  // for a per-test `vi.stubGlobal`, hence the dynamic import gated behind this stub.
-  vi.stubGlobal('cachedFunction', (fn: unknown) => fn);
-  vi.stubGlobal('defineCachedFunction', (fn: unknown) => fn);
-  vi.stubGlobal('CACHE_TTL', CACHE_TTL);
-  ({ buildDmsmConfigCacheKey } = await import('../../../../../server/utils/context-unified'))
-})
+const configKey = (env: string, multiSiteCode: string, siteCode: string) => `context:get-dmsm-config:${getDmsmCacheKey(env, multiSiteCode, siteCode)}.json`
 
 beforeEach(async () => {
   mount = mkdtempSync(join(tmpdir(), 'bl-invalidation-'))
@@ -57,7 +47,7 @@ beforeEach(async () => {
   vi.stubGlobal('useStorage', useStorageSpy)
   vi.stubGlobal('consola', log)
 
-  await containerA.setItem(configKey('bl2', 'be'), { value: { siteName: 'stale' } })
+  await containerA.setItem(configKey('prod', 'bl2', 'be'), { value: { siteName: 'stale' } })
 })
 
 afterEach(() => {
@@ -67,21 +57,21 @@ afterEach(() => {
 
 describe('invalidateSiteConfig', () => {
   it('stops a second container serving the old config with no delay (staleness bound 0s)', async () => {
-    expect(await containerB.getItem(configKey('bl2', 'be'))).not.toBeNull()
+    expect(await containerB.getItem(configKey('prod', 'bl2', 'be'))).not.toBeNull()
 
     await invalidateSiteConfig('prod', 'bl2', 'be')
 
     // No timer advance, no revalidation pass: the bound is zero, not "eventually".
-    expect(await containerB.getItem(configKey('bl2', 'be'))).toBeNull()
+    expect(await containerB.getItem(configKey('prod', 'bl2', 'be'))).toBeNull()
   })
 
   it('leaves other sites and other cache groups alone', async () => {
-    await containerA.setItem(configKey('bl2', 'gt'), { value: { siteName: 'other site' } })
+    await containerA.setItem(configKey('prod', 'bl2', 'gt'), { value: { siteName: 'other site' } })
     await containerA.setItem('menus:main-menu:bl2:be.json', { value: { items: [] } })
 
     await invalidateSiteConfig('prod', 'bl2', 'be')
 
-    expect(await containerB.getItem(configKey('bl2', 'gt'))).not.toBeNull()
+    expect(await containerB.getItem(configKey('prod', 'bl2', 'gt'))).not.toBeNull()
     expect(await containerB.getItem('menus:main-menu:bl2:be.json')).not.toBeNull()
   })
 
@@ -125,26 +115,42 @@ describe('invalidateSiteConfig', () => {
 
   it('leaves a hyphenated sibling site\'s own config key alone', async () => {
     // `be-fr` is a distinct site, not site `be` with a locale suffix: a hyphen can appear in
-    // a site code because the code comes from a host label / query / cookie
-    // (context-unified.ts:41-95), never from a fixed alphabet. Its real config key is the
-    // colon-joined `bl2:be-fr`, which the colon pattern used to match because it accepted an
-    // optional `-xx` locale before the terminator. Colon-joined keys carry the locale as its
-    // own `:` segment instead, so that suffix only ever created this collision.
-    await containerA.setItem(configKey('bl2', 'be-fr'), { value: { siteName: 'sibling site be-fr' } })
+    // a site code because the code comes from a host label / query / cookie, never from a
+    // fixed alphabet. This is the harder case under the env-scoped key shape, because that
+    // key is itself hyphen-joined (`dmsm-config-prod-bl2-be-fr`) - so `be`'s pattern ends
+    // exactly where the sibling's second segment begins. It holds only because the pattern
+    // carries no optional locale suffix and its right boundary excludes `-`.
+    await containerA.setItem(configKey('prod', 'bl2', 'be-fr'), { value: { siteName: 'sibling site be-fr' } })
 
     await invalidateSiteConfig('prod', 'bl2', 'be')
 
-    expect(await containerB.getItem(configKey('bl2', 'be-fr'))).not.toBeNull()
-    expect(await containerB.getItem(configKey('bl2', 'be'))).toBeNull()
+    expect(await containerB.getItem(configKey('prod', 'bl2', 'be-fr'))).not.toBeNull()
+    expect(await containerB.getItem(configKey('prod', 'bl2', 'be'))).toBeNull()
+  })
+
+  it('invalidates only the target env, leaving the other envs\' entries intact', async () => {
+    // `getDmsmCacheKey` is env-scoped precisely because the Nitro FS cache volume may be
+    // shared across dev/stg/prod (shared/types/context.ts). If the pattern ignored `env` -
+    // or matched it loosely - a prod publish would evict dev's and stg's entries too, and
+    // every env would take an unrelated cold-fill. `env` sits between two fixed literals in
+    // the key, so it can only match exactly.
+    await containerA.setItem(configKey('dev', 'bl2', 'be'), { value: { siteName: 'dev' } })
+    await containerA.setItem(configKey('stg', 'bl2', 'be'), { value: { siteName: 'stg' } })
+
+    await invalidateSiteConfig('prod', 'bl2', 'be')
+
+    expect(await containerB.getItem(configKey('prod', 'bl2', 'be'))).toBeNull()
+    expect(await containerB.getItem(configKey('dev', 'bl2', 'be'))).not.toBeNull()
+    expect(await containerB.getItem(configKey('stg', 'bl2', 'be'))).not.toBeNull()
   })
 
   it('still invalidates a hyphenated site when it is the target', async () => {
-    await containerA.setItem(configKey('bl2', 'be-fr'), { value: { siteName: 'sibling site be-fr' } })
+    await containerA.setItem(configKey('prod', 'bl2', 'be-fr'), { value: { siteName: 'sibling site be-fr' } })
 
     await invalidateSiteConfig('prod', 'bl2', 'be-fr')
 
-    expect(await containerB.getItem(configKey('bl2', 'be-fr'))).toBeNull()
-    expect(await containerB.getItem(configKey('bl2', 'be'))).not.toBeNull()
+    expect(await containerB.getItem(configKey('prod', 'bl2', 'be-fr'))).toBeNull()
+    expect(await containerB.getItem(configKey('prod', 'bl2', 'be'))).not.toBeNull()
   })
 
   it('still matches the colon-joined locale segment', async () => {
@@ -170,7 +176,7 @@ describe('invalidateSiteConfig', () => {
 
     await invalidateSiteConfig('prod', 'bl2', 'be')
 
-    expect(await containerB.getItem(configKey('bl2', 'be'))).toBeNull()
+    expect(await containerB.getItem(configKey('prod', 'bl2', 'be'))).toBeNull()
     expect(await clearStore.getItem('completed:some-token')).not.toBeNull()
   })
 

@@ -16,7 +16,7 @@
  *
  * 1. A request already past its own cache read finishes on the value it loaded.
  * 2. **An in-flight fill can restore the pre-publish value for a full TTL, fleet-wide.** If a
- *    container entered `_fetchDmsmConfig` (`context-unified.ts:190-201`) before the publish -
+ *    container entered `_fetchDmsmConfig` (`context-unified.ts:186-202`) before the publish -
  *    on a cache miss, or on an SWR revalidation - this scan can delete the entry and resolve
  *    before that older `$fetch` completes. Nitro's `cachedFunction` then writes its
  *    pre-publish response into the shared store unconditionally, and every container serves
@@ -28,7 +28,7 @@
  *    not built here. Tracked as follow-up work on the p03-03 publish-path wiring.
  *
  * **Per-request cost: zero.** No generation is read, so the config path adds no database
- * round trip, on the cached path or anywhere else. `context-unified.ts:167` (`bypassCache`)
+ * round trip, on the cached path or anywhere else. `context-unified.ts:211` (`bypassCache`)
  * is uncached by design, fetches fresh every time and so cannot serve a stale config; it
  * needs no check and pays nothing.
  *
@@ -42,8 +42,15 @@
 
 /** Nitro storage base holding the config cache. Backed by the fleet's shared `./cache` mount. */
 const CONFIG_CACHE_BASE = "cache";
-/** Cache group the config entries live in (`context-unified.ts:184` sets `group: "context"`). */
+/** Cache group the config entries live in (`context-unified.ts` sets `group: "context"`). */
 const CONFIG_CACHE_GROUP = "context";
+/**
+ * Literal prefix `getDmsmCacheKey()` (`shared/types/context.ts`) puts in front of its
+ * `<env>-<msc>-<sc>` triple. Kept as its own constant because it is what makes the site
+ * code's LEFT boundary exact: without it, `<env>-<msc>-<sc>` is just three hyphen-joined
+ * tokens inside a hyphen-joined key and nothing pins where the triple starts.
+ */
+const DMSM_CONFIG_KEY_PREFIX = "dmsm-config-";
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -80,15 +87,24 @@ const CONCATENATED_LOCALE_SUFFIX = "(?:[a-z]{2})?";
 /**
  * Key shapes a site's config entries take inside the `context` group.
  *
- * Nitro composes a cached-function key as `${group}:${name}:${getKey()}.json`, and this
- * codebase's `getKey` helpers emit `msc:sc`, `msc-sc`, and env-prefixed variants of both
- * (`context-unified.ts:187-189`, `drupal/index.js:58-66`). The concatenated
- * `${env}${msc}${sc}` shape is also matched for parity with `nitro-cache.js:48-49,67`'s
- * documented real example, even though that example itself lives in the `menus` group -
- * `invalidateSiteConfig` only ever scans `context` (`CONFIG_CACHE_GROUP`), so this guards
- * against a future `context`-group `getKey` adopting the same shape, not against that
- * specific `menus` entry. Matching all of them keeps a renamed cache helper from silently
- * leaving a stale entry behind.
+ * Nitro composes a cached-function key as `[base, group, name, getKey() + ".json"]` joined
+ * on `:` (`nitropack/dist/runtime/internal/cache.mjs:29`), and `useStorage("cache")` is a
+ * `prefixStorage`, so `getKeys(CONFIG_CACHE_GROUP)` hands this scan the `cache:` prefix
+ * already stripped (`unstorage` `prefixStorage.getKeys` slices the base back off). The keys
+ * filtered below are therefore `${group}:${name}:${getKey()}.json`.
+ *
+ * The DMSM config's own entry - the one this function exists to drop - is keyed by
+ * `getDmsmCacheKey(env, msc, sc)` (`shared/types/context.ts`), giving the real key
+ * `context:get-dmsm-config:dmsm-config-<env>-<msc>-<sc>.json`. That shape is env-scoped on
+ * purpose: the Nitro FS cache volume may be shared across `dev`/`stg`/`prod`, so an env-less
+ * key would collide across envs.
+ *
+ * The remaining `context`-group helpers still emit `msc:sc:locale`
+ * (`drupal/index.js:58-66`, `nitro-cache.js:162-170`), and the hyphen-joined / concatenated
+ * / env-prefixed shapes are matched for parity with `nitro-cache.js:48-49,67`'s documented
+ * real examples. Those examples live in the `menus` group, which this function never scans -
+ * they guard against a future `context`-group `getKey` adopting the same shape, so a renamed
+ * cache helper cannot silently leave a stale entry behind.
  */
 function buildSitePatterns(env: string, multiSiteCode: string, siteCode: string): RegExp[] {
   const e = escapeRegExp(env.toLowerCase());
@@ -96,6 +112,22 @@ function buildSitePatterns(env: string, multiSiteCode: string, siteCode: string)
   const sc = escapeRegExp(siteCode.toLowerCase());
 
   return [
+    /**
+     * The real DMSM config key. Every token to the LEFT of the site code is a fixed literal
+     * (`dmsm-config-`, then `env`, then `multiSiteCode`), and `RIGHT_BOUNDARY` deliberately
+     * excludes `-`, so the site code is pinned on both sides even though the key is itself
+     * hyphen-joined: invalidating `be` cannot reach `...-bl2-be-fr.json`, because the `-`
+     * that opens the sibling's second segment is not a terminator.
+     *
+     * No `LOCALE_SUFFIX` here, and that is load-bearing rather than an omission. A DMSM
+     * config is per-site and locale-independent, so this key never carries a locale; allowing
+     * an optional `-xx` would make `<sc>` and a hyphenated sibling `<sc>-fr` indistinguishable
+     * again - exactly the over-match the colon-joined pattern already had to drop.
+     *
+     * Env isolation falls out of the same anchoring: `env` sits between two fixed literals,
+     * so a `prod` invalidation cannot match `dmsm-config-stg-bl2-be.json`.
+     */
+    new RegExp(`${LEFT_BOUNDARY}${DMSM_CONFIG_KEY_PREFIX}${e}-${msc}-${sc}${RIGHT_BOUNDARY}`, "i"),
     new RegExp(`${LEFT_BOUNDARY}${msc}:${sc}${RIGHT_BOUNDARY}`, "i"),
     new RegExp(`${LEFT_BOUNDARY}${msc}-${sc}${LOCALE_SUFFIX}${RIGHT_BOUNDARY}`, "i"),
     new RegExp(`${LEFT_BOUNDARY}${e}-?${msc}-?${sc}${LOCALE_SUFFIX}${RIGHT_BOUNDARY}`, "i"),
