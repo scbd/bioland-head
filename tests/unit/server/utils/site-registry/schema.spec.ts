@@ -83,6 +83,37 @@ describe('schema.sql — idempotency', () => {
   })
 })
 
+describe('schema.sql — the documented grants cover what the code actually runs', () => {
+  // The file is the provisioning contract: a DBA applies it by hand and grants
+  // what it says. If it under-documents a privilege, every push rolls back
+  // access-denied in production and nothing in CI notices.
+
+  it('documents SELECT and UPDATE across the registry database', () => {
+    expect(registrySection).toMatch(/GRANT SELECT, UPDATE ON site_registry\.\*/)
+  })
+
+  it('documents the INSERT and DELETE that writeNetworkSummary needs', () => {
+    // `writeNetworkSummary` replaces a slice with DELETE + INSERT; neither is
+    // covered by SELECT/UPDATE, and MariaDB grants are database-scoped so the
+    // existing i18n_cache access carries nothing here.
+    expect(registrySection).toMatch(/GRANT INSERT, DELETE ON site_registry\.network_summary/)
+  })
+
+  it('keeps the write grant off the seeded tables', () => {
+    // Widening INSERT/DELETE to site_registry.* would make multi_site_config and
+    // site_config deletable by the application; they are seeded out of band.
+    expect(registrySection).not.toMatch(/GRANT[^\n]*(?:INSERT|DELETE)[^\n]*ON site_registry\.\*/)
+  })
+
+  it('grants no privilege that would let the application change the schema', () => {
+    expect(registrySection).not.toMatch(/GRANT[^\n]*\b(?:ALL|CREATE|ALTER|DROP|GRANT OPTION)\b/i)
+  })
+
+  it('writes no credential into the provisioning example', () => {
+    expect(registrySection).not.toMatch(/IDENTIFIED\s+BY/i)
+  })
+})
+
 describe('schema.sql — no secret-bearing column exists', () => {
   // Asserted as an EXACT SET per table, not as a denylist. A denylist only
   // catches the names somebody thought to list: `credentials`, `api_key`,

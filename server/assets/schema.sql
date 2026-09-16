@@ -76,8 +76,8 @@ ORDER BY total_translations DESC;
 -- Lives in its own `site_registry` database on the SAME server as `i18n_cache`
 -- (ADR 0008). Reads go over the existing shared pool using cross-database
 -- qualified names, so there are no new credentials and no second pool: the
--- registry only needs one additional grant on `site_registry.*` for the
--- existing `I18N_DB_USER`.
+-- registry only needs additional grants on `site_registry` for the existing
+-- `I18N_DB_USER`. See PRIVILEGES THE RUNTIME USER NEEDS below for exactly which.
 --
 -- WHAT MUST NEVER BE STORED HERE
 -- ------------------------------
@@ -100,13 +100,44 @@ ORDER BY total_translations DESC;
 -- HOW THIS FILE IS APPLIED
 -- ------------------------
 -- By a DBA, by hand, out of band. NOTHING in this repository reads, parses or
--- executes schema.sql at boot or at any other time -- the runtime user needs
--- SELECT/UPDATE on `site_registry.*` and no CREATE privilege at all. Do not
--- wire this file into application startup: a process that can CREATE can also
--- ALTER, and the whole no-secret-column guarantee below rests on the schema
--- being changeable only by a human with a review behind them.
+-- executes schema.sql at boot or at any other time -- the runtime user holds
+-- no CREATE privilege at all. Do not wire this file into application startup: a
+-- process that can CREATE can also ALTER, and the whole no-secret-column
+-- guarantee below rests on the schema being changeable only by a human with a
+-- review behind them.
 --
 -- Every statement below is idempotent: re-running this file is a no-op.
+--
+-- PRIVILEGES THE RUNTIME USER NEEDS
+-- ---------------------------------
+-- MariaDB grants are database-scoped, so the existing `I18N_DB_USER` grant on
+-- `i18n_cache` carries none of this: `site_registry` needs its own. Two grants,
+-- not one, because the ingest path writes rows and the rest of the registry does
+-- not:
+--
+--   1. SELECT, UPDATE on `site_registry.*` -- every read, plus the two in-place
+--      writes (`writeLastKnownGoodSettings` and the re-seeder's
+--      `config_generation` bump). Nothing else in the registry inserts or
+--      deletes, so nothing else needs more.
+--
+--   2. INSERT, DELETE on `site_registry.network_summary` -- and on that ONE
+--      table only. `writeNetworkSummary` replaces a slice wholesale (DELETE then
+--      INSERT in one transaction), which SELECT/UPDATE cannot express: the rows
+--      do not exist yet to be updated, and a slice that shrinks must lose rows.
+--      Scoped to the table rather than widened to `site_registry.*` on purpose --
+--      `multi_site_config` and `site_config` are seeded out of band and must stay
+--      un-deletable by the application.
+--
+-- Provision them as below, substituting the deployment's own user and host.
+-- Left as a comment rather than a statement because the placeholders are not
+-- valid SQL, and because a credential never belongs in this file:
+--
+--   GRANT SELECT, UPDATE ON site_registry.* TO '<i18n-db-user>'@'<app-host>';
+--   GRANT INSERT, DELETE ON site_registry.network_summary TO '<i18n-db-user>'@'<app-host>';
+--   FLUSH PRIVILEGES;
+--
+-- Without the second grant every accepted network-summary push rolls back with
+-- an access-denied error, and the CHM Network table silently never updates.
 
 CREATE DATABASE IF NOT EXISTS site_registry
   DEFAULT CHARACTER SET utf8mb4
