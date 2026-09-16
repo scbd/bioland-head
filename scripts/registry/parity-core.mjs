@@ -134,7 +134,22 @@ export function canonicalizeRegistry(publicConfig, biolandSettings) {
   return canonical
 }
 
-/** Flatten a serialized value into `path -> leaf`. Empty objects/arrays are leaves themselves. */
+/**
+ * Typed sentinels for empty containers.
+ *
+ * An empty object/array has no entries to recurse into, so it has to be recorded as a leaf at its
+ * own path. Encoding it as the STRING `'{}'`/`'[]'` made it collide with a payload that really
+ * carries that string: `{x: {}}` and `{x: "{}"}` flattened to the same entry, so
+ * {@link comparePayloads} saw no difference and the gate could pass on structurally different
+ * payloads. Reachable in the loosely typed `theme` and `biolandSettings` leaves, where a value is
+ * whatever an editor saved. Symbols are identity-compared and are not equal to any string, so the
+ * collision is impossible by construction, and the `typeof` split in {@link comparePayloads}
+ * reports container-vs-string as a `type-mismatch` — which default-deny then fails.
+ */
+export const EMPTY_OBJECT = Symbol('parity:empty-object')
+export const EMPTY_ARRAY = Symbol('parity:empty-array')
+
+/** Flatten a serialized value into `path -> leaf`. Empty objects/arrays are sentinel leaves. */
 function flatten(value, path, out) {
   if (value === null || typeof value !== 'object') {
     out.set(path, value)
@@ -146,7 +161,7 @@ function flatten(value, path, out) {
     : Object.entries(value).map(([key, item]) => [path ? `${path}.${key}` : key, item])
 
   if (!entries.length) {
-    out.set(path, Array.isArray(value) ? '[]' : '{}')
+    out.set(path, Array.isArray(value) ? EMPTY_ARRAY : EMPTY_OBJECT)
     return out
   }
 
@@ -265,8 +280,8 @@ const ALLOW_RULES = [
     // as a rule rather than silently normalized so the report still counts it.
     match: d =>
       d.path === 'derivedCountries' &&
-      (d.dmsm === undefined || d.dmsm === '[]') &&
-      (d.registry === undefined || d.registry === '[]'),
+      (d.dmsm === undefined || d.dmsm === EMPTY_ARRAY) &&
+      (d.registry === undefined || d.registry === EMPTY_ARRAY),
   },
 ]
 

@@ -191,6 +191,44 @@ describe('canonicalization', () => {
   })
 })
 
+describe('flattening keeps container types distinct from their serialized spellings', () => {
+  it('reports an empty object against the literal string "{}" as a difference', () => {
+    const differences = comparePayloads({ theme: { x: {} } }, { theme: { x: '{}' } })
+
+    expect(differences).toHaveLength(1)
+    expect(differences[0]).toMatchObject({ path: 'theme.x', kind: 'type-mismatch' })
+    expect(classifyDifference(differences[0]).classification).toBe('failing')
+  })
+
+  it('reports an empty array against the literal string "[]" as a difference', () => {
+    const differences = comparePayloads({ theme: { x: [] } }, { theme: { x: '[]' } })
+
+    expect(differences).toHaveLength(1)
+    expect(differences[0]).toMatchObject({ path: 'theme.x', kind: 'type-mismatch' })
+    expect(classifyDifference(differences[0]).classification).toBe('failing')
+  })
+
+  it('still reports no difference when both sides carry the same empty container', () => {
+    expect(comparePayloads({ theme: { x: {}, y: [] } }, { theme: { x: {}, y: [] } })).toEqual([])
+  })
+
+  it('does not confuse an empty object with an empty array', () => {
+    const differences = comparePayloads({ theme: { x: {} } }, { theme: { x: [] } })
+
+    expect(differences).toHaveLength(1)
+    expect(differences[0]).toMatchObject({ path: 'theme.x' })
+  })
+
+  it('keeps the empty-derivedCountries allowance working on the typed sentinel', () => {
+    const [difference] = comparePayloads({ derivedCountries: [] }, { derivedCountries: undefined })
+
+    expect(classifyDifference(difference)).toEqual({
+      classification: 'allowed',
+      rule: 'derived-countries-empty-both-ways',
+    })
+  })
+})
+
 describe('classification is default-deny', () => {
   it('fails an unclassified difference', () => {
     expect(classifyDifference({ path: 'logo', kind: 'value-mismatch' })).toEqual({
