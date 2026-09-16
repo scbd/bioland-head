@@ -58,17 +58,58 @@ export interface SeedConnectionLike {
 }
 
 /**
- * Keys that must never reach a write, because no column can hold them.
+ * Keys that must never reach a write, **at any depth**.
  *
- * The real guarantee is structural — `server/assets/schema.sql` has no such
- * column and the record types have no such field — but the loop that builds
- * records is code, and code changes. This is the cheap second check that turns
- * a future mistake into a thrown error instead of a leak.
+ * ## Why this is not a top-level check
+ *
+ * The "no secret-bearing column exists" guarantee in `server/assets/schema.sql`
+ * covers the SCALAR columns only. Four columns — `multi_site_config.settings`,
+ * `.theme`, `.i18n` and `site_config.theme` — are opaque JSON blobs bound from
+ * `optObject(...)` in `seed-source.ts`, copied wholesale with no key filtering
+ * at any depth. Absence of a column protects nothing there, exactly as
+ * `last_known_good_settings` is unprotected by absence in p02-01 — which is why
+ * p02-01 enforces `BANNED_SETTINGS_KEYS` in code on that column. This list is
+ * the same enforcement for this module's four blobs, and it mirrors
+ * `BANNED_SETTINGS_KEYS` plus the site-level `smtpCredentials`.
+ *
+ * A top-level `key in record` check was tautological: layer 2 (additive
+ * derivation onto an allowlisted record type) already makes it impossible for
+ * the record LITERAL to carry one of these, so the check could never fire while
+ * `settings.smtpCredentials.password` sailed through underneath it.
+ *
+ * These names are credential- or PII-bearing wherever they appear, so a match
+ * anywhere in the tree is a refusal. A public blob that legitimately used one of
+ * these names would be refused too; that is the safe direction, and the error
+ * names the path so the operator can see which blob to look at.
  */
 export const SECRET_BEARING_KEYS = [
-  'dataBase', 'dataBaseName', 'dns', 'drupal', 'defaultSmtpCredentials',
-  'smtpCredentials', 'panoramaKey', 'meta', 'runTime', 'root', 'drupalRoot', 'siteRoot',
+  'dataBase', 'dns', 'drupal', 'defaultSmtpCredentials',
+  'smtpCredentials', 'panoramaKey', 'meta',
 ] as const
+
+/**
+ * Non-storable but **not** secret-bearing: deployment paths, a database name and
+ * dmsm's runtime block. There is no column for them, and unlike the list above
+ * they are ordinary words that a public nested blob could legitimately use
+ * (`theme.root`, say), so they are checked at the record's top level only —
+ * where the record type already makes them impossible, and where a regression in
+ * the derivation loop would first show up.
+ */
+export const NON_STORABLE_TOP_LEVEL_KEYS = [
+  'dataBaseName', 'runTime', 'root', 'drupalRoot', 'siteRoot',
+] as const
+
+const SECRET_BEARING_KEY_SET: ReadonlySet<string> = new Set(SECRET_BEARING_KEYS)
+
+/**
+ * Deepest nesting the scan will walk. An observed `theme` is three levels; a
+ * blob deeper than this is something the derivation was never designed to carry,
+ * so it is reported as unscannable rather than waved through.
+ */
+const MAX_SECRET_SCAN_DEPTH = 12
+
+/** Cap on reported paths, so one pathological blob cannot build a huge message. */
+const MAX_REPORTED_FORBIDDEN_PATHS = 10
 
 /** A seed write failed. Names the table, the row key and a failure class only. */
 export class RegistrySeedWriteError extends RegistryError {
@@ -162,10 +203,90 @@ function scalar(value: unknown): string | number | null {
   return String(value)
 }
 
-/** Throw if a record carries anything the registry must not store. */
+/**
+ * Walk a record depth-first and collect the PATHS at which a secret-bearing key
+ * appears. Key names and array indices only — never a value, so the result is
+ * safe to put in an error message.
+ *
+ * A matching key is not descended into: the record is already refused, and
+ * walking further would only lengthen the report.
+ */
+export function findSecretBearingKeys(value: unknown): string[] {
+  const found: string[] = []
+  const seen = new Set<object>()
+
+  const walk = (node: unknown, path: string, depth: number): void => {
+    if (found.length >= MAX_REPORTED_FORBIDDEN_PATHS) return
+    if (typeof node !== 'object' || node === null) return
+    // A cycle cannot be stored anyway (JSON.stringify throws), but the scan must
+    // not be the thing that hangs.
+    if (seen.has(node)) return
+    seen.add(node)
+
+    if (depth > MAX_SECRET_SCAN_DEPTH) {
+      found.push(`${path || '<record>'}.<nested deeper than ${MAX_SECRET_SCAN_DEPTH} levels>`)
+      return
+    }
+
+    if (Array.isArray(node)) {
+      node.forEach((entry, index) => walk(entry, `${path}[${index}]`, depth + 1))
+      return
+    }
+
+    for (const [key, entry] of Object.entries(node)) {
+      const child = path ? `${path}.${key}` : key
+      if (SECRET_BEARING_KEY_SET.has(key)) found.push(child)
+      else walk(entry, child, depth + 1)
+    }
+  }
+
+  walk(value, '', 0)
+  return found
+}
+
+/**
+ * Throw if a record carries anything the registry must not store — a
+ * secret-bearing key at ANY depth (so a credential nested inside `settings` or
+ * `theme` is caught before it is bound), or a non-storable deployment key at the
+ * top level.
+ */
 export function assertNoSecretBearingKeys(table: string, record: object): void {
-  const forbidden = SECRET_BEARING_KEYS.filter(key => key in record)
+  const forbidden = [
+    ...findSecretBearingKeys(record),
+    ...NON_STORABLE_TOP_LEVEL_KEYS.filter(key => key in record),
+  ]
   if (forbidden.length) throw new RegistrySeedForbiddenKeyError(table, forbidden)
+}
+
+/** Fields `readSite` requires and `schema.sql` declares NOT NULL or REQUIRED. */
+export const REQUIRED_SITE_FIELDS = ['name', 'defaultLocale', 'locales'] as const
+
+/**
+ * A site record cannot satisfy the storage or read contract.
+ *
+ * `site_config.default_locale` and `.locales` are `NOT NULL` in
+ * `server/assets/schema.sql`, so binding SQL NULL raises `ER_BAD_NULL_ERROR`
+ * mid-loop against a strict-mode server. `name` is NULL-able in storage but
+ * `readSite`'s `toRequiredString` throws on it, so such a row seeds
+ * "successfully" and then goes dark with nothing in the report. Both are refused
+ * here instead, before the first write.
+ */
+export class RegistrySeedIncompleteSiteError extends RegistryError {
+  constructor(missing: string[]) {
+    super(
+      'REGISTRY_SEED_SITE_INCOMPLETE',
+      `Refusing to seed: site record(s) missing a required field — ${missing.join('; ')}`,
+    )
+  }
+}
+
+/** Required fields this site record does not carry. Field names only. */
+export function findMissingRequiredSiteFields(record: SeedSiteRecord): string[] {
+  const missing: string[] = []
+  if (!record.name) missing.push('name')
+  if (!record.defaultLocale) missing.push('defaultLocale')
+  if (!record.locales?.length) missing.push('locales')
+  return missing
 }
 
 /** `INSERT … ON DUPLICATE KEY UPDATE` over a fixed allowlist of columns. */
@@ -260,6 +381,11 @@ export async function seedSiteConfig(
 ): Promise<void> {
   assertNoSecretBearingKeys(SITE_TABLE, record)
 
+  const missing = findMissingRequiredSiteFields(record)
+  if (missing.length) {
+    throw new RegistrySeedIncompleteSiteError([`${record.siteCode}: ${missing.join(', ')}`])
+  }
+
   const key = {
     env: record.env,
     multi_site_code: record.multiSiteCode,
@@ -330,7 +456,26 @@ export class RegistrySeedSliceMismatchError extends RegistryError {
  * Sequential on purpose — the connection is a single connection, and a
  * deterministic order keeps a partial failure easy to reason about.
  *
- * @throws {RegistrySeedSliceMismatchError} a site does not belong to the slice.
+ * ## Why the required-field pass runs before anything is written
+ *
+ * `site_config.default_locale` and `.locales` are `NOT NULL`, and `readSite`
+ * requires `name`. Discovering that in the middle of the loop would raise
+ * `ER_BAD_NULL_ERROR` on the offending site with every earlier site already
+ * written — or, for `name`, write a row that reads back as a hard failure. Every
+ * site is therefore validated up front, so an incomplete source refuses the
+ * whole slice and the operator sees which sites and which fields.
+ *
+ * ## Why the whole slice is one transaction
+ *
+ * Without one, a mid-loop failure leaves a partially seeded slice with no
+ * rollback and no resume marker: the upsert makes a re-run converge, but between
+ * runs the slice is mixed-generation, and p02-06's drift hash would compare
+ * against a state that never existed upstream. `START TRANSACTION` / `COMMIT`
+ * makes the slice all-or-nothing; a `ROLLBACK` failure is swallowed so the
+ * original error is what the caller sees.
+ *
+ * @throws {RegistrySeedSliceMismatchError}  a site does not belong to the slice.
+ * @throws {RegistrySeedIncompleteSiteError} a site cannot satisfy the contract.
  * @returns how many rows were written.
  */
 export async function seedSlice(
@@ -345,10 +490,31 @@ export async function seedSlice(
     }
   }
 
-  // Awaited before the loop below: the slice row must exist before any site row
-  // that joins to it. Do not hoist a site write above this line.
-  await seedMultiSiteConfig(connection, plan.multiSite)
+  const incomplete = plan.sites
+    .map(site => ({ siteCode: site.siteCode, missing: findMissingRequiredSiteFields(site) }))
+    .filter(entry => entry.missing.length)
+  if (incomplete.length) {
+    throw new RegistrySeedIncompleteSiteError(
+      incomplete.map(entry => `${entry.siteCode}: ${entry.missing.join(', ')}`),
+    )
+  }
 
-  for (const site of plan.sites) await seedSiteConfig(connection, site)
+  await connection.query('START TRANSACTION')
+  try {
+    // Awaited before the loop below: the slice row must exist before any site row
+    // that joins to it. Do not hoist a site write above this line.
+    await seedMultiSiteConfig(connection, plan.multiSite)
+
+    for (const site of plan.sites) await seedSiteConfig(connection, site)
+
+    await connection.query('COMMIT')
+  }
+  catch (error) {
+    // The rollback's own failure must not mask what actually went wrong, and the
+    // driver error it would carry is unscrubbed.
+    await connection.query('ROLLBACK').catch(() => {})
+    throw error
+  }
+
   return { multiSites: 1, sites: plan.sites.length }
 }
