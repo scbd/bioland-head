@@ -20,5 +20,4 @@ pages-*
 cypress*
 .vscode
 .github
-.agents/temp*
-.agents/worktrees
+.agents

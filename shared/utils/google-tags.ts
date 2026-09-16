@@ -5,23 +5,32 @@
  * `bioland.settings` bag, surfaced to the client as
  * `siteStore.biolandSettings.googleAnalyticsIds`, alongside the administrator's explicit
  * `googleAnalyticsEnabled` switch. Nothing here loads a script: this module only decides which
- * tokens are admissible and whether the administrator has turned measurement on. The loader lives
- * in `app/plugins/google-tags.client.ts`.
+ * tokens are admissible, whether the administrator has turned measurement on, and whether the
+ * browser is on a hostname this tenant serves. The loader lives in
+ * `app/plugins/google-tags.client.ts`.
  *
  * BL-1015 removed the deployment gate that used to sit here (`isGoogleTagsSite`). Tags activated on
  * the presence of IDs, narrowed by rules no administrator could see from the admin UI. The Drupal
  * checkbox is the only control now. Visitor consent is a separate gate and still applies, in the
  * plugin.
  *
- * One control was traded away rather than found redundant, and the next reader should know it. The
- * browser-host half of that gate was BL-946's answer to a specific attacker: a reverse proxy on an
- * origin it owns, forwarding a real tenant's `Host`, so the tenant's live `G-`, `AW-`, `DC-` and
- * `GTM-` IDs execute on that origin. That is unmitigated again, and no server-side check can
- * replace it, because only the browser knows the origin it is really on. It asks where a site may
- * measure, not whether, so it is severable from this module and BL-1030 tracks restoring it.
- * `cookie_domain` is still pinned to the current hostname in the plugin, so such a page cannot link
- * identities with the real site.
+ * BL-1030 restored the other half of BL-946, which asks *where* a site may measure rather than
+ * whether: {@link isGoogleTagsBrowserHost} requires the hostname the visitor's browser is actually
+ * on to be one this tenant serves. The attacker it stops is a reverse proxy on an origin the
+ * attacker owns, forwarding a real tenant's `Host`. `server/utils/context-unified.ts` fails closed
+ * on an unmapped `Host`, but forwarding a *valid* one is a line of proxy config, so the tenant
+ * resolves normally and its live `G-`, `AW-`, `DC-` and `GTM-` IDs would execute on that page -
+ * write access to the tenant's GA4 property and Google Ads conversion stream, and its GTM
+ * container running arbitrary marketing JS, from an origin the tenant does not control. No
+ * server-side check can substitute, because only the visitor's browser knows the origin it is
+ * really on, which is why the assertion is client-side and takes the hostname as an argument.
+ *
+ * The allowed host set comes from dmsm alone - no environment name, no publication flag, no
+ * multisite allowlist, and no hard-coded host template. `cookie_domain` stays pinned to the
+ * current hostname in the plugin, which is a separate protection and still wanted.
  */
+
+import { getGeneratedHostname, normalizeRedirectHost } from './site-host';
 
 /**
  * The only token grammar admitted into a tag loader.
@@ -60,6 +69,144 @@ export interface GoogleTagIds {
  */
 export function isGoogleTagsEnabled(enabled?: unknown): boolean {
     return enabled === true;
+}
+
+/**
+ * The slice of site context the browser-host assertion reads, straight off the site store.
+ *
+ * Every field is `unknown` because all three originate in untyped dmsm operator config: a
+ * partially hydrated store, a missing key, or a value of the wrong type has to fail closed rather
+ * than throw. `siteCode` and `baseHost` are the store's own values, which
+ * `server/utils/context-unified.ts` derives from dmsm; `redirect` is dmsm's `config.redirect`,
+ * read off `siteStore.config` where the store holds that payload verbatim in every environment.
+ */
+export interface GoogleTagHostContext {
+    siteCode?: unknown;
+    baseHost?: unknown;
+    redirect?: unknown;
+}
+
+/**
+ * Reduces an untrusted, bare hostname to the form used for an exact comparison.
+ *
+ * This is the normaliser for `browserHost`, the one argument that does not come from dmsm. It
+ * accepts a bare hostname and nothing else: no scheme is unwrapped here, so a caller that later
+ * hands this `document.referrer`, an `Origin` header or any other full URL fails closed instead of
+ * being quietly accepted on the hostname inside it. `window.location.hostname`, the production
+ * caller, is already exactly this shape.
+ *
+ * Lower cased, with one trailing dot stripped - browsers preserve the dot a visitor typed in
+ * `location.hostname`, and `normalizeRedirectHost` strips it from the configured value, so the two
+ * would otherwise never meet. Anything still carrying `/`, `@`, `:`, `?` or `#` after that is
+ * rejected, which kills host confusable input such as `evil.test/real.chm-cbd.net`, a userinfo
+ * trick, an explicit port and a bracketed IPv6 literal.
+ */
+function normalizeBrowserHost(rawHost: unknown): string | null {
+    if (typeof rawHost !== 'string' || rawHost.length === 0) return null;
+
+    const hostname = rawHost.toLowerCase().replace(/\.$/, '');
+
+    if (!hostname) return null;
+    if (/[/@:?#]/.test(hostname)) return null;
+
+    return hostname;
+}
+
+/**
+ * Unwraps the HTTPS origin {@link getGeneratedHostname} returns into a bare hostname.
+ *
+ * Separate from {@link normalizeBrowserHost} because the trust levels differ: this input is built
+ * from dmsm's own `siteCode` and `baseHost` and always arrives as `https://<host>`, so a scheme is
+ * expected here and only here. A `baseHost` carrying a port, a path, credentials, a query or a
+ * fragment still fails closed with `null`, which is the whole point of re-parsing operator config
+ * rather than trusting the template that built it.
+ */
+function normalizeGeneratedHost(rawOrigin: string): string | null {
+    let url: URL;
+
+    try {
+        url = new URL(rawOrigin);
+    } catch {
+        return null;
+    }
+
+    if (url.protocol !== 'https:') return null;
+    if (url.username || url.password) return null;
+    if (url.port) return null;
+    if (url.pathname !== '/' && url.pathname !== '') return null;
+    if (url.search || url.hash) return null;
+
+    return normalizeBrowserHost(url.hostname);
+}
+
+/**
+ * Decides whether the hostname the visitor's browser is on is one this tenant actually serves.
+ *
+ * The allowed set is exactly two hostnames, both derived from dmsm and nothing else:
+ *
+ * 1. The tenant's generated host, the hostname part of
+ *    {@link getGeneratedHostname}`(siteCode, baseHost)`. dmsm owns both halves, so a multisite
+ *    whose `baseHost` is `chm-cbd.net` yields `<siteCode>.chm-cbd.net` without a template here.
+ * 2. The tenant's redirect alias, `normalizeRedirectHost(redirect)`, when dmsm has configured a
+ *    usable one - subject to the same cross-tenant rule `getCanonicalHost` applies in
+ *    `shared/utils/site-host.ts`. An alias inside the multisite zone (`${baseHost}` itself, or
+ *    anything under `.${baseHost}`) is only this tenant's if it *is* its generated host: inbound
+ *    suffix routing resolves that zone before the dmsm reverse index, so `site-b.chm-cbd.net`
+ *    configured on site A always lands on site B, and the bare apex lands on neither. Accepting
+ *    those would widen the set past "hostnames this tenant serves". The alias is read from
+ *    `siteStore.config.redirect`, dmsm's payload verbatim, so it is visible in every environment.
+ *
+ * `browserHost` is an argument rather than a `window` read so this module stays pure and unit
+ * testable; `app/plugins/google-tags.client.ts` passes `window.location.hostname`. It is the one
+ * input a proxy forwarding a tenant `Host` header cannot forge for the visitor, and it is
+ * normalised as a bare hostname only - see {@link normalizeBrowserHost}.
+ *
+ * Everything fails closed: a missing or non string `siteCode` or `baseHost`, a browser host that
+ * does not normalise, a generated host that does not normalise (a `baseHost` carrying a port or a
+ * path, say), and a hostname matching neither member of the set all return `false`. This asks only
+ * *where* a site may measure - *whether* is the administrator's Drupal checkbox, read by
+ * {@link isGoogleTagsEnabled}, and both are required.
+ */
+export function isGoogleTagsBrowserHost(site?: GoogleTagHostContext | null, browserHost?: string | null): boolean {
+    if (!site || typeof site !== 'object') return false;
+
+    const { siteCode, baseHost, redirect } = site;
+
+    if (typeof siteCode !== 'string' || typeof baseHost !== 'string') return false;
+    if (siteCode.length === 0 || baseHost.length === 0) return false;
+
+    const actualHost = normalizeBrowserHost(browserHost);
+
+    if (actualHost === null) return false;
+
+    const generatedHost = normalizeGeneratedHost(getGeneratedHostname(siteCode, baseHost));
+
+    if (generatedHost !== null && actualHost === generatedHost) return true;
+
+    const redirectAlias = normalizeRedirectHost(redirect);
+
+    if (redirectAlias === null) return false;
+
+    // The zone is normalised by the same function as `browserHost` rather than lower cased, so an
+    // operator `baseHost` written `chm-cbd.net.` still meets an alias the strippers have already
+    // de-dotted. Lower casing alone would leave the trailing dot on one side only, the zone rule
+    // below would never fire, and a sibling's hostname configured here would measure. A `baseHost`
+    // that does not reduce to a bare hostname fails closed rather than skipping the rule.
+    const zone = normalizeBrowserHost(baseHost);
+
+    if (zone === null) return false;
+
+    // An alias inside the multisite zone is this tenant's only when it *is* its generated host.
+    // The bare apex therefore never qualifies: it is the network's own domain, not a tenant
+    // hostname, so a tenant configuring it stops measuring rather than measuring on a name it does
+    // not own. That is deliberately stricter than `getCanonicalHost`
+    // (`shared/utils/site-host.ts`), whose `endsWith(`.${baseHost}`)` test admits the apex -
+    // deciding where to route a request is a weaker question than deciding where to measure.
+    const insideMultisiteZone = redirectAlias === zone || redirectAlias.endsWith(`.${zone}`);
+
+    if (insideMultisiteZone && redirectAlias !== generatedHost) return false;
+
+    return actualHost === redirectAlias;
 }
 
 /**
