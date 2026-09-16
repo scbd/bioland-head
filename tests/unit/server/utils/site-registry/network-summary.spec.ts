@@ -382,10 +382,18 @@ describe('token auth', () => {
     expect(scopeAllowsSlice(devScope, 'prod', 'bl2')).toBe(false)
     expect(scopeAllowsSlice(devScope, 'stg', 'bl2')).toBe(false)
 
+    // Equality on both halves, not a prefix or a substring. ALLOWED_ENVS is
+    // closed today so no env can prefix another, but the comparison must not be
+    // what is holding that up.
+    expect(scopeAllowsSlice(devScope, 'dev2', 'bl2')).toBe(false)
+    expect(scopeAllowsSlice(devScope, 'de', 'bl2')).toBe(false)
+
     // A multiSiteCode-scoped credential is narrower still.
     const prodScope = resolveNetworkSummaryScope(CONFIGURED, PROD_SECRET)!
     expect(scopeAllowsSlice(prodScope, 'prod', 'bl2')).toBe(true)
     expect(scopeAllowsSlice(prodScope, 'prod', 'bsl')).toBe(false)
+    expect(scopeAllowsSlice(prodScope, 'prod', 'bl22')).toBe(false)
+    expect(scopeAllowsSlice(prodScope, 'prod2', 'bl2')).toBe(false)
   })
 })
 
@@ -832,6 +840,9 @@ describe('the read scope', () => {
     // A multiSiteCode-narrowed scope still reads its own env's whole store.
     expect(scopeAllowsRead(prodScope, 'prod')).toBe(true)
     expect(scopeAllowsRead(prodScope, 'dev')).toBe(false)
+
+    // Equality again, not a prefix: 'dev' must not read 'dev2'.
+    expect(scopeAllowsRead(devScope, 'dev2')).toBe(false)
 
     // An unknown deployment env admits nobody rather than everybody.
     expect(scopeAllowsRead(devScope, '')).toBe(false)
