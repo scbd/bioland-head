@@ -130,14 +130,14 @@
     const countriesList = computed(() => record?.value?.tags?.countries || []);
 
     /** Resolved event-country label (D3/D5) — falls back to the raw symbol on a miss. */
-    const eventCountryLabel = await useTermLabel(() => record?.value?.eventCountry?.symbol);
+    const eventCountryLabel = await useTermLabel(() => record?.value?.eventCountry?.symbol, 'countries');
 
     /**
      * Resolved country-tag labels (D3/D5), keyed on the shared `term-labels` payload state so every badge
      * reads a single pre-resolved lookup instead of each `v-for` iteration awaiting its own composable call.
      */
     const termLabels = useState(TERM_LABEL_STATE_KEY, () => ({}));
-    await Promise.all(countriesList.value.map((aCountry) => useTermLabel(() => aCountry.identifier)));
+    await Promise.all(countriesList.value.map((aCountry) => useTermLabel(() => aCountry.identifier, 'countries')));
     function countryLabel(identifier) {
         return termLabels.value?.[identifier]?.value ?? identifier;
     }

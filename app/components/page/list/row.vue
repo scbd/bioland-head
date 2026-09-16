@@ -123,7 +123,7 @@
      * reads a single pre-resolved lookup instead of each `v-for` iteration awaiting its own composable call.
      */
     const termLabels = useState(TERM_LABEL_STATE_KEY, () => ({}));
-    await Promise.all((aLine.value?.tags?.countries || []).map((aCountry) => useTermLabel(() => aCountry.identifier)));
+    await Promise.all((aLine.value?.tags?.countries || []).map((aCountry) => useTermLabel(() => aCountry.identifier, 'countries')));
     function countryLabel(identifier) {
         return termLabels.value?.[identifier]?.value ?? identifier;
     }

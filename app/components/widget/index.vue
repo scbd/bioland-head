@@ -89,6 +89,6 @@
     ]);
 
     /** Resolved country label (D3/D5) — falls back to the raw identifier on a miss. */
-    const countryLabel = await useTermLabel(() => record.value?.countryIdentifier || record.value?.country?.identifier || record.value?.country);
+    const countryLabel = await useTermLabel(() => record.value?.countryIdentifier || record.value?.country?.identifier || record.value?.country, 'countries');
 </script>
 
