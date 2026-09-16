@@ -31,7 +31,10 @@ function eventWithContentLength(bytes: number) {
 
 describe('POST /api/thesaurus/terms', () => {
   let handler: (event: unknown) => unknown
-  const event = {}
+  // A valid request always declares a Content-Length (real JSON clients — fetch/axios/curl/$fetch — set
+  // it from the actual body); most tests below aren't exercising that guard, so they use a small
+  // well-formed value rather than the omitted-header shape now rejected with 411.
+  const event = eventWithContentLength(1024)
 
   beforeAll(async () => {
     const mod = await import('../../../../../server/api/thesaurus/terms/index.post')
@@ -147,6 +150,50 @@ describe('POST /api/thesaurus/terms', () => {
 
     expect(readBody).toHaveBeenCalled()
     expect(resolveTerms).toHaveBeenCalledWith(['a'], 'fr', atCap)
+  })
+
+  it('rejects a chunked-encoding request with no Content-Length header with 411, before readBody is ever called', async () => {
+    // This is the bug this test guards against: a request with no Content-Length at all (Transfer-Encoding:
+    // chunked, no Content-Length, is the prime real-world case) used to fall through the old
+    // `Number.isFinite(declaredLength)` check — parseInt('') is NaN, isFinite(NaN) is false — straight into
+    // an unbounded readBody. Reverting the handler's guard to that old shape makes this test fail because
+    // readBody would then be called and resolveTerms would resolve normally instead of rejecting with 411.
+    const noContentLength = { node: { req: { headers: {} } } }
+    readBody.mockResolvedValue({ ids: ['a'] })
+
+    await expect(handler(noContentLength)).rejects.toMatchObject({ statusCode: 411 })
+    expect(readBody).not.toHaveBeenCalled()
+    expect(resolveTerms).not.toHaveBeenCalled()
+  })
+
+  it('rejects a request whose content-length header is entirely absent from the headers object with 411', async () => {
+    const missingHeader = { node: { req: { headers: { 'x-other-header': '1' } } } }
+
+    await expect(handler(missingHeader)).rejects.toMatchObject({ statusCode: 411 })
+    expect(readBody).not.toHaveBeenCalled()
+  })
+
+  it('rejects a blank Content-Length header with 411', async () => {
+    const blank = { node: { req: { headers: { 'content-length': '   ' } } } }
+
+    await expect(handler(blank)).rejects.toMatchObject({ statusCode: 411 })
+    expect(readBody).not.toHaveBeenCalled()
+  })
+
+  it('rejects a malformed Content-Length value with 400 instead of silently truncating it (scientific notation)', async () => {
+    const malformed = { node: { req: { headers: { 'content-length': '1e9' } } } }
+
+    await expect(handler(malformed)).rejects.toMatchObject({ statusCode: 400 })
+    expect(readBody).not.toHaveBeenCalled()
+  })
+
+  it('rejects a comma-joined duplicate Content-Length header value with 400', async () => {
+    // Some proxies emit a single joined string like "100,200" for a duplicated header; parseInt would read
+    // only the leading "100" and silently ignore the rest.
+    const duplicated = { node: { req: { headers: { 'content-length': '100,200' } } } }
+
+    await expect(handler(duplicated)).rejects.toMatchObject({ statusCode: 400 })
+    expect(readBody).not.toHaveBeenCalled()
   })
 
   it('rejects a single id over 128 characters with 400 and never calls resolveTerms', async () => {

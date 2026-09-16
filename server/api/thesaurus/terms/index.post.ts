@@ -16,13 +16,17 @@
  *           the parts that throw deliberately — in error handling, never the `resolveTerms` call itself.
  *
  * Body size ceiling: `MAX_BODY_BYTES`, rejected with `413` **before** `readBody` is called. `readBody`
- * buffers and parses the entire request body with no ceiling of its own, so without this guard a caller
- * forces an unbounded allocation before the `MAX_IDS` cap below ever runs — the cap counts array elements,
- * not bytes, so it cannot protect the parse step itself. Checked against the declared `Content-Length`,
- * which every real JSON client (fetch/axios/curl) sets from the actual body it sends; a client that instead
- * sends an unbounded body via chunked transfer-encoding with no `Content-Length` is not covered by this
- * check and depends on `MAX_IDS`/`MAX_ID_LENGTH` after parsing — an accepted residual gap, since closing it
- * fully means replacing `readBody` with a hand-rolled streaming parser, disproportionate to this route.
+ * buffers and parses the entire request body with no ceiling of its own (h3's `readRawBody` does a plain
+ * `Buffer.concat` over the incoming stream), so without this guard a caller forces an unbounded allocation
+ * before the `MAX_IDS` cap below ever runs — that cap counts array elements, not bytes, so it cannot protect
+ * the parse step itself. Checked against the declared `Content-Length`, which every real JSON client
+ * (fetch/axios/curl, and this app's own `$fetch`/`useFetch`) sets from the actual body it sends. A request
+ * with no `Content-Length` — chunked transfer-encoding is the prime example, Node's own `http.request`
+ * default whenever `Content-Length` is omitted — declares no size to check against `MAX_BODY_BYTES` and is
+ * rejected outright with `411 Length Required`, before `readBody` runs; this route has no legitimate chunked
+ * caller (internal JSON POST, always sized), so requiring a declared length is total, not a compromise. A
+ * present but malformed value (non-digit characters, e.g. `"1e9"` or a comma-joined duplicate header like
+ * `"100,200"` some proxies emit) is rejected with `400` rather than silently truncated by `parseInt`.
  *
  * Batch ceiling: 200 ids, rejected with `400`. An unbounded batch size is a DoS/cost vector: each id can
  * trigger a live thesaurus API fetch on a cache miss, so an attacker-controlled request with, say, 10,000
@@ -62,12 +66,24 @@ const MAX_ID_LENGTH = 128
 const MAX_BODY_BYTES = 32 * 1024
 
 export default defineEventHandler(async (event) => {
-  const declaredLength = Number.parseInt(
-    ((event as { node?: { req?: { headers?: Record<string, string | string[] | undefined> } } }).node?.req
-      ?.headers?.['content-length'] as string | undefined) ?? '',
-    10
-  )
-  if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
+  const contentLengthHeader = (event as { node?: { req?: { headers?: Record<string, string | string[] | undefined> } } })
+    .node?.req?.headers?.['content-length']
+  const rawContentLength = Array.isArray(contentLengthHeader) ? contentLengthHeader[0] : contentLengthHeader
+
+  // No declared length at all (chunked transfer-encoding omits Content-Length) — reject outright rather
+  // than falling through to an unbounded readBody. See file header.
+  if (typeof rawContentLength !== 'string' || rawContentLength.trim() === '') {
+    throw createError({ statusCode: 411, statusMessage: 'Length Required' })
+  }
+
+  // Strict digit-only match: rejects scientific notation ("1e9") and comma-joined duplicate headers
+  // ("100,200") that Number.parseInt would otherwise silently truncate to a leading numeric prefix.
+  if (!/^\d+$/.test(rawContentLength.trim())) {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid Content-Length header' })
+  }
+
+  const declaredLength = Number.parseInt(rawContentLength, 10)
+  if (declaredLength > MAX_BODY_BYTES) {
     throw createError({ statusCode: 413, statusMessage: 'Request body too large' })
   }
 
