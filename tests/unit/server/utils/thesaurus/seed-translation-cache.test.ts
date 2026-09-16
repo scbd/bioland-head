@@ -15,10 +15,12 @@ vi.stubGlobal('useRuntimeConfig', () => ({}))
 vi.stubGlobal('useStorage', () => ({ setItem: vi.fn(), getMount: () => ({ driver: { name: 'memory' } }) }))
 
 const {
-  BLOCK_FIRST_KEY,
-  BLOCK_LAST_KEY,
+  BLOCK_FIRST_IDENTIFIER,
+  BLOCK_LAST_IDENTIFIER,
   SIX_MONTHS_MS,
   buildIdentifierLabelMap,
+  serializeIdentifierLabels,
+  deserializeIdentifierLabels,
   buildSeedPairs,
   detectLabelCollisions,
   buildDbRows,
@@ -29,9 +31,12 @@ const {
 
 const repoRoot = resolve(__dirname, '../../../../..')
 const enJson = JSON.parse(readFileSync(resolve(repoRoot, 'i18n/locales/en.json'), 'utf8'))
-const committedMap = JSON.parse(
+/** The file exactly as committed: `{ labels: [{ identifier, label }, ...] }` — no bare GUID keys. */
+const committedFile = JSON.parse(
   readFileSync(resolve(repoRoot, 'server/utils/thesaurus/identifier-labels.json'), 'utf8')
 )
+/** The same data reshaped to `Record<string, string>` for the assertions below, which predate the file's on-disk shape. */
+const committedMap = deserializeIdentifierLabels(committedFile)
 
 /** A durable mount, as the `fs` driver would report itself. */
 const durableStorage = () => ({ setItem: vi.fn().mockResolvedValue(undefined), getMount: () => ({ driver: { name: 'fs' } }) })
@@ -65,25 +70,25 @@ describe('buildIdentifierLabelMap', () => {
   it('extracts the sentinel-bounded window from the real en.json', () => {
     const map = buildIdentifierLabelMap(enJson)
     expect(Object.keys(map).length).toBeGreaterThan(600)
-    expect(map[BLOCK_FIRST_KEY]).toBe(enJson[BLOCK_FIRST_KEY])
+    expect(map[BLOCK_FIRST_IDENTIFIER]).toBe(enJson[BLOCK_FIRST_IDENTIFIER])
   })
 
   it('drops identity-mapped UI strings, including the last sentinel itself', () => {
     const map = buildIdentifierLabelMap(enJson)
-    expect(map[BLOCK_LAST_KEY]).toBeUndefined()
+    expect(map[BLOCK_LAST_IDENTIFIER]).toBeUndefined()
     for (const [id, label] of Object.entries(map)) expect(id).not.toBe(label)
   })
 
   it('throws rather than guessing when the first sentinel is missing', () => {
-    expect(() => buildIdentifierLabelMap({ a: '1', [BLOCK_LAST_KEY]: 'x' })).toThrow(/sentinel drift/)
+    expect(() => buildIdentifierLabelMap({ a: '1', [BLOCK_LAST_IDENTIFIER]: 'x' })).toThrow(/sentinel drift/)
   })
 
   it('throws rather than guessing when the last sentinel is missing', () => {
-    expect(() => buildIdentifierLabelMap({ [BLOCK_FIRST_KEY]: 'x', a: '1' })).toThrow(/sentinel drift/)
+    expect(() => buildIdentifierLabelMap({ [BLOCK_FIRST_IDENTIFIER]: 'x', a: '1' })).toThrow(/sentinel drift/)
   })
 
   it('throws when the sentinels are out of order', () => {
-    expect(() => buildIdentifierLabelMap({ [BLOCK_LAST_KEY]: 'x', [BLOCK_FIRST_KEY]: 'y' }))
+    expect(() => buildIdentifierLabelMap({ [BLOCK_LAST_IDENTIFIER]: 'x', [BLOCK_FIRST_IDENTIFIER]: 'y' }))
       .toThrow(/precedes/)
   })
 
@@ -99,12 +104,36 @@ describe('the committed identifier-labels.json artifact', () => {
     }
   })
 
-  it('is exactly what buildIdentifierLabelMap produces from the current en.json', () => {
-    expect({ ...buildIdentifierLabelMap(enJson) }).toEqual(committedMap)
+  it('is exactly what buildIdentifierLabelMap produces from the current en.json, reshaped for disk', () => {
+    expect(deserializeIdentifierLabels(committedFile)).toEqual(buildIdentifierLabelMap(enJson))
   })
 
   it('carries no identity-mapped key', () => {
     for (const [identifier, label] of Object.entries(committedMap)) expect(identifier).not.toBe(label)
+  })
+
+  it('never stores a GUID as a bare object key — every entry is an { identifier, label } record', () => {
+    expect(Array.isArray(committedFile.labels)).toBe(true)
+    expect(committedFile.labels.length).toBeGreaterThan(600)
+    for (const entry of committedFile.labels) {
+      expect(Object.keys(entry).sort()).toEqual(['identifier', 'label'])
+    }
+  })
+})
+
+describe('serializeIdentifierLabels / deserializeIdentifierLabels', () => {
+  it('round-trips a map through the on-disk shape', () => {
+    const map = { 'ID-A': 'Alpha', 'ID-B': 'Beta' }
+    expect(deserializeIdentifierLabels(serializeIdentifierLabels(map))).toEqual(map)
+  })
+
+  it('serializes to an array of { identifier, label } records, never a GUID-keyed object', () => {
+    expect(serializeIdentifierLabels({ 'ID-A': 'Alpha' })).toEqual({ labels: [{ identifier: 'ID-A', label: 'Alpha' }] })
+  })
+
+  it('deserializes an empty or missing labels array to an empty map', () => {
+    expect(deserializeIdentifierLabels({ labels: [] })).toEqual({})
+    expect(deserializeIdentifierLabels({})).toEqual({})
   })
 })
 

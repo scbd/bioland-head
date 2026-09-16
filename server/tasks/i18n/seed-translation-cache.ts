@@ -22,8 +22,8 @@
  * reachability probe must succeed — and returns an `aborted` summary rather than a partial write if
  * either fails.
  */
-import { runSeed } from '../../utils/thesaurus/seed-translation-cache.js';
-import identifierLabels from '../../utils/thesaurus/identifier-labels.json';
+import { runSeed, deserializeIdentifierLabels } from '../../utils/thesaurus/seed-translation-cache.js';
+import identifierLabelsFile from '../../utils/thesaurus/identifier-labels.json';
 
 export default defineTask({
   meta: {
@@ -36,7 +36,7 @@ export default defineTask({
    */
   async run({ payload }) {
     const result = await runSeed(payload as { dryRun?: boolean }, {
-      identifierLabels: identifierLabels as Record<string, string>,
+      identifierLabels: deserializeIdentifierLabels(identifierLabelsFile as { labels: Array<{ identifier: string, label: string }> }),
       storage: useStorage('thesaurus')
     });
     return { result };

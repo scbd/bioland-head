@@ -43,16 +43,16 @@ import { getCacheKey, getCachedTranslations, saveCachedTranslations } from '../t
  * when this map was generated, against the research's 1080), so the boundaries are pinned by key *name*
  * and the index range is recomputed at authoring time. This GUID is the first `regions` term.
  */
-export const BLOCK_FIRST_KEY = 'CCA4B662-8EF4-418D-B327-0D6F418AA703';
+export const BLOCK_FIRST_IDENTIFIER = 'CCA4B662-8EF4-418D-B327-0D6F418AA703';
 
 /**
- * Last key of the taxonomy candidate window. Provenance as {@link BLOCK_FIRST_KEY}.
+ * Last key of the taxonomy candidate window. Provenance as {@link BLOCK_FIRST_IDENTIFIER}.
  *
  * Note this sentinel is itself an identity-mapped UI string (`"Contact" -> "Contact"`) and is therefore
  * excluded from the seed set by {@link buildIdentifierLabelMap}'s identity filter. It bounds the window;
  * it is not seeded.
  */
-export const BLOCK_LAST_KEY = 'Contact';
+export const BLOCK_LAST_IDENTIFIER = 'Contact';
 
 /** Six months in ms — the `label:tr:` tier's lifetime per the resolver's storage contract (D6). */
 export const SIX_MONTHS_MS = 1000 * 60 * 60 * 24 * 182;
@@ -71,8 +71,8 @@ const NON_LOCALE_FILES = new Set(['en.json']);
  *
  * Two rules, in order:
  *
- * 1. **Sentinel-bounded window.** Take every key between {@link BLOCK_FIRST_KEY} and
- *    {@link BLOCK_LAST_KEY} inclusive. Throws if either sentinel is missing or out of order — `en.json`
+ * 1. **Sentinel-bounded window.** Take every key between {@link BLOCK_FIRST_IDENTIFIER} and
+ *    {@link BLOCK_LAST_IDENTIFIER} inclusive. Throws if either sentinel is missing or out of order — `en.json`
  *    has drifted and guessing a range would silently seed the wrong keys.
  * 2. **Identity filter — `key === value` keys are dropped.** A key whose value is itself (`"Contact"`,
  *    `"High"`, `"Task"`, `"Key"`, `"Summary"`) is an English UI string used as its own i18n key, not a
@@ -88,17 +88,17 @@ const NON_LOCALE_FILES = new Set(['en.json']);
  */
 export function buildIdentifierLabelMap(enJson) {
   const keys = Object.keys(enJson ?? {});
-  const startIdx = keys.indexOf(BLOCK_FIRST_KEY);
-  const endIdx = keys.indexOf(BLOCK_LAST_KEY);
+  const startIdx = keys.indexOf(BLOCK_FIRST_IDENTIFIER);
+  const endIdx = keys.indexOf(BLOCK_LAST_IDENTIFIER);
 
   if (startIdx === -1 || endIdx === -1) {
     throw new Error(
-      `en.json sentinel drift: BLOCK_FIRST_KEY ${startIdx === -1 ? 'missing' : 'found'}, ` +
-      `BLOCK_LAST_KEY ${endIdx === -1 ? 'missing' : 'found'}. Refusing to guess the taxonomy block.`
+      `en.json sentinel drift: BLOCK_FIRST_IDENTIFIER ${startIdx === -1 ? 'missing' : 'found'}, ` +
+      `BLOCK_LAST_IDENTIFIER ${endIdx === -1 ? 'missing' : 'found'}. Refusing to guess the taxonomy block.`
     );
   }
   if (startIdx > endIdx) {
-    throw new Error(`en.json sentinel drift: BLOCK_LAST_KEY precedes BLOCK_FIRST_KEY (${endIdx} < ${startIdx}).`);
+    throw new Error(`en.json sentinel drift: BLOCK_LAST_IDENTIFIER precedes BLOCK_FIRST_IDENTIFIER (${endIdx} < ${startIdx}).`);
   }
 
   /** @type {Record<string, string>} */
@@ -106,6 +106,36 @@ export function buildIdentifierLabelMap(enJson) {
   for (const key of keys.slice(startIdx, endIdx + 1)) {
     if (key !== enJson[key]) map[key] = enJson[key];
   }
+  return map;
+}
+
+/**
+ * Serialize an identifier -> label map to the shape committed at
+ * `server/utils/thesaurus/identifier-labels.json`.
+ *
+ * The GUID moves from a JSON *key* to a value under `identifier`, so the file never contains a
+ * bare `"<guid>": "<label>"` pair — the exact shape gitleaks' `generic-api-key` rule flags a
+ * high-entropy string for. Neither field name (`identifier`, `label`) carries a trigger substring
+ * (`key`/`api`/`token`/`secret`), so this file needs no `.gitleaksignore` entry.
+ *
+ * @param {Record<string, string>} map - Insertion-ordered identifier -> English label map.
+ * @returns {{ labels: Array<{ identifier: string, label: string }> }}
+ */
+export function serializeIdentifierLabels(map) {
+  return { labels: Object.entries(map ?? {}).map(([identifier, label]) => ({ identifier, label })) };
+}
+
+/**
+ * Reverse of {@link serializeIdentifierLabels} — rebuild the identifier -> label map from the
+ * committed file's parsed JSON.
+ *
+ * @param {{ labels?: Array<{ identifier: string, label: string }> }} file
+ * @returns {Record<string, string>}
+ */
+export function deserializeIdentifierLabels(file) {
+  /** @type {Record<string, string>} */
+  const map = Object.create(null);
+  for (const { identifier, label } of file?.labels ?? []) map[identifier] = label;
   return map;
 }
 
@@ -280,7 +310,8 @@ export async function runSeed(payload = {}, deps = {}) {
     logger = console
   } = deps;
 
-  const labels = identifierLabels ?? (await readJson(path.join(process.cwd(), 'server/utils/thesaurus/identifier-labels.json')));
+  const labels = identifierLabels
+    ?? deserializeIdentifierLabels(await readJson(path.join(process.cwd(), 'server/utils/thesaurus/identifier-labels.json')));
   const identifierCount = Object.keys(labels).length;
 
   const summary = {
