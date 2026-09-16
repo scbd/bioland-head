@@ -1,13 +1,16 @@
 /**
  * Loads the site's configured Google tags, and only when it is allowed to.
  *
- * Two gates, both required, both re-evaluated on every change:
+ * Three gates, all required, all re-evaluated on every change:
  *
- * - **Site eligibility** via the shared site gate in `shared/utils/google-tags.ts`: the deployment
- *   is `prod`, the multisite has a host template in `GOOGLE_TAG_HOSTS` (today only `bl2`), dmsm
- *   marks the site `published`, and the hostname the browser is actually on is either that
- *   template applied to its `siteCode` or the site's configured `redirect` alias. No env var, no
- *   kill switch.
+ * - **The administrator's switch**, `siteStore.biolandSettings.googleAnalyticsEnabled`, read
+ *   strictly through `isGoogleTagsEnabled`. BL-1015 made this the only thing that decides *whether*
+ *   this site measures. Tag IDs no longer imply consent to measure.
+ * - **The browser's own hostname**, checked through `isGoogleTagsBrowserHost` against the tenant's
+ *   generated host and its dmsm redirect alias. BL-1030 restored this; it decides *where* a site
+ *   may measure, and it is the only input a reverse proxy forwarding a real tenant `Host` header
+ *   cannot forge for the visitor. `window.location.hostname` is read here and passed in, so the
+ *   util stays pure. See `shared/utils/google-tags.ts` for the attack it stops.
  * - **Visitor consent** via `useCookieControl().cookiesEnabledIds` containing `ga`. Every consent
  *   action in the module funnels through one writer (`CookieControl.vue setCookies`), which sets
  *   `cookiesEnabledIds`, so watching that ref catches grant, per category revoke, and decline all.
@@ -43,10 +46,12 @@
  * `denied`, set the per property `ga-disable-<id>` opt out, purge every GA cookie we can name, wait
  * for cookie-control to persist its own decision, then reload once. This plugin is the single owner
  * of that reload, and it only reloads on a granted to revoked transition, never on a visit where
- * consent was never given. Losing eligibility or losing the tag IDs is not a consent withdrawal:
- * those silence Google (`consent` `update` plus `ga-disable-<id>`) and stop, because the store
- * re-initialises on every locale switch and a hard reload mid-session over a transient context
- * payload is a worse outcome than a silenced tag.
+ * consent was never given. The switch going off, or the tag IDs going away, is not a consent
+ * withdrawal: those silence Google (`consent` `update` plus `ga-disable-<id>`) and stop, because the
+ * store re-initialises on every locale switch and a hard reload mid-session over a transient context
+ * payload is a worse outcome than a silenced tag. An administrator deliberately unticking the box
+ * also denies consent immediately when the updated context arrives; an already-injected GTM
+ * container remains under denied consent until the visitor's next full load, when it is not loaded.
  */
 
 type GtagFn = (...args: unknown[]) => void
@@ -141,6 +146,16 @@ async function waitForConsentPersistence(): Promise<void> {
     }
 }
 
+/** Bound editor-authored diagnostics without traversing objects or invoking their toJSON hooks. */
+function misconfiguredValueForLog(value: unknown): string {
+    const limit = 80;
+    const preview = typeof value === 'string'
+        ? JSON.stringify(value.slice(0, limit)).replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029')
+        : typeof value === 'number' ? String(value) : Array.isArray(value) ? '[array]' : `[${typeof value}]`;
+
+    return preview.length > limit ? `${preview.slice(0, limit - 3)}...` : preview;
+}
+
 export default defineNuxtPlugin({
     name: 'google-tags',
     dependsOn: ['site'],
@@ -149,13 +164,34 @@ export default defineNuxtPlugin({
         const siteStore = useSiteStore(nuxtApp.$pinia);
         const { cookiesEnabledIds } = useCookieControl();
 
-        const eligible = computed(() => isGoogleTagsSite({
-            env: siteStore.env,
-            multiSiteCode: siteStore.multiSiteCode,
-            siteCode: siteStore.siteCode,
-            published: siteStore.config?.published,
-            redirect: siteStore.config?.redirect,
-        }, window.location.hostname));
+        const enabled = computed(() => isGoogleTagsEnabled(siteStore.biolandSettings?.googleAnalyticsEnabled));
+
+        // Re-derived rather than read once: a context re-fetch can replace `siteCode`, `baseHost`
+        // or the dmsm `redirect` alias mid-session. `window.location.hostname` cannot change
+        // without a navigation, which would re-run this plugin anyway.
+        //
+        // The alias is read off `siteStore.config`, dmsm's payload held verbatim, rather than the
+        // top-level `siteStore.redirect`, which the store deliberately blanks outside prod because
+        // it feeds `params.redirect` and roughly 25 client query strings. The assertion needs every
+        // hostname this tenant serves in every environment, and needs it without widening that.
+        const onTenantHost = computed(() => isGoogleTagsBrowserHost(
+            { siteCode: siteStore.siteCode, baseHost: siteStore.baseHost, redirect: siteStore.config?.redirect },
+            window.location.hostname,
+        ));
+
+        // Once per session, not per store re-initialisation: the context re-fetch would otherwise
+        // repeat this on every locale switch.
+        let warnedMisconfigured = false;
+
+        watch(() => siteStore.biolandSettings?.googleAnalyticsEnabled, (value) => {
+            if (warnedMisconfigured || !isGoogleTagsMisconfigured(value)) return;
+
+            warnedMisconfigured = true;
+            consola.warn(
+                `Google Analytics is configured with ${typeof value} ${misconfiguredValueForLog(value)} rather than the boolean true, `
+                + 'so no tag will load. Re-save the Enable Google Analytics checkbox in Drupal under Front End > General.',
+            );
+        }, { immediate: true });
 
         const consent = computed(() => Boolean(cookiesEnabledIds.value?.includes('ga')));
         const ids = computed(() => parseGoogleTagIds(siteStore.biolandSettings?.googleAnalyticsIds));
@@ -172,7 +208,7 @@ export default defineNuxtPlugin({
             // `onBeforeGtagStart` never fires when no `G-`/`AW-`/`DC-`/`UA-` ID is configured.
             ensureGtag()('set', cookieParams);
 
-            // Recover from a transient eligibility/ID loss without configuring tags twice.
+            // Recover from a transient switch/ID loss without configuring tags twice.
             if (!loaded && configured.size) {
                 const win = window as unknown as GoogleTagWindow;
 
@@ -222,7 +258,7 @@ export default defineNuxtPlugin({
         /**
          * Tells Google to stop measuring, without touching cookies and without reloading.
          *
-         * Shared by the consent withdrawal path and by the weaker eligibility loss path.
+         * Shared by the consent withdrawal path and by the weaker switched-off path.
          */
         function silence(): void {
             const win = window as unknown as GoogleTagWindow;
@@ -261,9 +297,9 @@ export default defineNuxtPlugin({
             window.location.reload();
         }
 
-        watch([ids, consent, eligible], ([tagIds, hasConsent, isEligible]) => {
+        watch([ids, consent, enabled, onTenantHost], ([tagIds, hasConsent, isEnabled, isTenantHost]) => {
             const hasIds = tagIds.gtag.length > 0 || tagIds.gtm.length > 0;
-            const shouldLoad = isEligible && hasConsent && hasIds;
+            const shouldLoad = isEnabled && isTenantHost && hasConsent && hasIds;
 
             if (shouldLoad) {
                 // Unconditional, not `&& !loaded`: a measurement ID added in Drupal mid-session
@@ -293,7 +329,8 @@ export default defineNuxtPlugin({
                 return;
             }
 
-            // Consent is still held, but tags should not load (e.g. unpublished or missing IDs).
+            // Consent is still held, but tags should not load: the switch is off, the browser is
+            // not on a hostname this tenant serves, or there are no IDs.
             if (!loaded) return;
 
             loaded = false;

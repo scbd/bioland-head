@@ -7,15 +7,13 @@ export const useSiteStore = defineStore('site', {
             return this;
         },
         initialize( { biolandSettings, locale, identifier,siteCode, defaultLocale, config, siteName, gaiaApi, multiSiteCode, baseHost, env, homePath }){
-            // `env` arrives on every context payload (server/api/context/[siteCode]/[locale].js:36)
-            // but was previously dropped here. Persisting it lets client side consumers such as
-            // isGoogleTagsSite() evaluate deployment eligibility. The existing `host` getter
-            // already supplies the other half, so it stays untouched.
-            this.set('env',                       env);
             this.set('baseHost',                  baseHost);
             this.set('gaiaApi',                   gaiaApi);
             this.set('drupalMultisiteIdentifier', multiSiteCode);
             this.set('multiSiteCode',             multiSiteCode);
+            // Persisted for the `getHost` getter, which hands it to `getCanonicalHost`. BL-946
+            // added a second, duplicate write here for the Google tags gate; BL-1015 removed that
+            // gate, so this is the only write and `getHost` is the only consumer.
             this.set('env',                       env);
             this.set('locale',                    locale);
             this.set('identifier',                identifier || siteCode);

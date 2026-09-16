@@ -155,16 +155,18 @@ const CONTRACT_GROUPS = Object.freeze(Object.keys(CONTRACT_LEAVES));
 const isPresent = value => value !== undefined && value !== null;
 
 /**
- * A colour a browser can actually apply. `''` interpolated into a style declaration voids it.
+ * A colour every consumer can parse, not just one a browser can apply.
  *
  * Shape-checked, not merely non-empty: these values come from the Drupal theme form and are
  * interpolated into inline styles and `--bs-*` custom properties, so a value such as
  * `red;background-image:url(https://elsewhere/x)` would otherwise ride along as a second
- * declaration. Hex, the rgb/hsl function forms, and a bare CSS keyword cover every shape the
- * theme form produces; anything else falls back to the default rather than reaching a consumer.
+ * declaration. The hero components' hexToRgb and color-contrast.js share support for 3/6-digit
+ * hex, matching Drupal's color pickers. Other CSS formats and alpha hex fall through per slot.
+ * Validate the returned string unchanged: trimming only for validation would let padded values
+ * reach the hex-only consumers (and `$` alone also accepts a final newline).
  */
-const COLOR_SHAPE   = /^(?:#[0-9a-f]{3,8}|(?:rgb|hsl)a?\([0-9a-z%.,/\s-]*\)|[a-z]+)$/i;
-const isUsableColor = value => typeof value === 'string' && COLOR_SHAPE.test(value.trim());
+const COLOR_SHAPE   = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+const isUsableColor = value => typeof value === 'string' && value === value.trim() && COLOR_SHAPE.test(value);
 
 /** A column count that yields at least one column. `0` collapses the mega-menu grid to nothing. */
 const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(value) >= 1;

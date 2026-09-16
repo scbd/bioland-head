@@ -26,6 +26,7 @@ describe('sanitizeBiolandSettings', () => {
     const authored = () => ({
         theme        : { color: { primary: '#7b6f82' }, mega_menu: { max_columns: 4, forums: false } },
         config       : { promote_and_sticky_public: true },
+        google_analytics_enabled: true,
         google_analytics_ids: 'G-ABC123',
         home_widgets : { gbif_widget: { enable: false } },
         mega_menu    : { forums: { position: 'top' }, content_type_menus: { 12: { menu_position: 'bottom' } } },
@@ -40,7 +41,7 @@ describe('sanitizeBiolandSettings', () => {
             const sanitized = sanitizeBiolandSettings(authored())
 
             expect(Object.keys(sanitized).sort())
-                .toEqual(['config', 'googleAnalyticsIds', 'homeWidgets', 'megaMenu', 'theme'])
+                .toEqual(['config', 'googleAnalyticsEnabled', 'googleAnalyticsIds', 'homeWidgets', 'megaMenu', 'theme'])
         })
 
         it('emits keys in allowlist order, not payload order, so output never depends on Drupal serialisation', () => {
@@ -306,19 +307,20 @@ describe('sanitizeBiolandSettings', () => {
 
     describe('every consumed key survives intact', () => {
 
-        it('carries theme, config.promoteAndStickyPublic, ga ids, home widgets and mega menu through camelCase', () => {
+        it('carries theme, config.promoteAndStickyPublic, the ga switch and ids, home widgets and mega menu through camelCase', () => {
             const settings: any = camelCase(sanitizeBiolandSettings(authored()), 7)
 
-            // app/stores/site.js:162 -> app/utils/resolve-theme.js
+            // app/stores/site.js -> app/utils/resolve-theme.js
             expect(settings.theme.color.primary).toBe('#7b6f82')
             expect(settings.theme.megaMenu.maxColumns).toBe(4)
-            // app/stores/site.js:116
+            // app/stores/site.js
             expect(settings.config.promoteAndStickyPublic).toBe(true)
-            // app/plugins/google-tags.client.ts:161
+            // app/plugins/google-tags.client.ts - the only GA control (BL-1015)
+            expect(settings.googleAnalyticsEnabled).toBe(true)
             expect(settings.googleAnalyticsIds).toBe('G-ABC123')
-            // app/components/page/home-page-widget-selection.vue:32 and the widget/* components
+            // app/components/page/home-page-widget-selection.vue and the widget/* components
             expect(settings.homeWidgets.gbifWidget.enable).toBe(false)
-            // app/components/page/header/mega-menu/** and server/utils/drupal/drupal-content-types.js:26
+            // app/components/page/header/mega-menu/** and server/utils/drupal/drupal-content-types.js
             expect(settings.megaMenu.forums.position).toBe('top')
             expect(settings.megaMenu.contentTypeMenus['12'].menuPosition).toBe('bottom')
         })
@@ -337,9 +339,9 @@ describe('sanitizeBiolandSettings', () => {
             expect(settings.theme.homePageWidgets.columns).toEqual([['panorama', 'gbif'], ['forums']])
         })
 
-        it('lists exactly the five keys head consumes', () => {
+        it('lists exactly the six keys head consumes', () => {
             expect([...BIOLAND_SETTINGS_ALLOWLIST].sort())
-                .toEqual(['config', 'googleAnalyticsIds', 'homeWidgets', 'megaMenu', 'theme'])
+                .toEqual(['config', 'googleAnalyticsEnabled', 'googleAnalyticsIds', 'homeWidgets', 'megaMenu', 'theme'])
         })
     })
 

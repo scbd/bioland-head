@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import {
   parseGoogleTagIds,
-  isGoogleTagsSite,
+  isGoogleTagsEnabled,
+  isGoogleTagsBrowserHost,
+  isGoogleTagsMisconfigured,
   GOOGLE_TAG_ID_PATTERN,
-  GOOGLE_TAG_HOSTS,
 } from '~/shared/utils/google-tags'
 
 const EMPTY = { gtag: [], gtm: [], rejected: [] }
@@ -95,136 +96,181 @@ describe('GOOGLE_TAG_ID_PATTERN', () => {
   })
 })
 
-describe('GOOGLE_TAG_HOSTS', () => {
-  it('maps bl2 to the lower-cased siteCode under chm-cbd.net', () => {
-    expect(Object.keys(GOOGLE_TAG_HOSTS)).toEqual(['bl2'])
-    expect(GOOGLE_TAG_HOSTS.bl2!('MySite')).toBe('mysite.chm-cbd.net')
+describe('isGoogleTagsEnabled', () => {
+  it('passes only on a real boolean true', () => {
+    expect(isGoogleTagsEnabled(true)).toBe(true)
+  })
+
+  it.each([false, undefined, null, 0, 1, '', 'true', 'TRUE', '1', 'on', {}, [], [true], { enabled: true }])(
+    'fails closed on %p, so only a ticked checkbox turns measurement on',
+    (value) => {
+      expect(isGoogleTagsEnabled(value)).toBe(false)
+    },
+  )
+
+  it('fails closed when the store has not hydrated the setting yet', () => {
+    expect(isGoogleTagsEnabled()).toBe(false)
+    expect(isGoogleTagsEnabled(({} as { googleAnalyticsEnabled?: boolean }).googleAnalyticsEnabled)).toBe(false)
   })
 })
 
-describe('isGoogleTagsSite', () => {
-  const eligible = {
-    env: 'prod',
-    multiSiteCode: 'bl2',
-    siteCode: 'mysite',
-    published: true,
-  }
+describe('isGoogleTagsMisconfigured', () => {
+  it.each(['true', 'TRUE', '1', 'on', 1, [true], { enabled: true }])(
+    'flags %p, which reads as an intent to measure but loads nothing',
+    (value) => {
+      expect(isGoogleTagsMisconfigured(value)).toBe(true)
+      expect(isGoogleTagsEnabled(value)).toBe(false)
+    },
+  )
 
-  // The hostname the browser is really on. The plugin passes `window.location.hostname`.
-  const BROWSER_HOST = 'mysite.chm-cbd.net'
+  it.each([true, false, undefined, null, 0, ''])('stays quiet on %p', (value) => {
+    expect(isGoogleTagsMisconfigured(value)).toBe(false)
+  })
+})
 
-  it('passes for prod + bl2 + published + a matching browser host', () => {
-    expect(isGoogleTagsSite(eligible, BROWSER_HOST)).toBe(true)
+describe('isGoogleTagsBrowserHost', () => {
+  // The multisite whose `baseHost` is `chm-cbd.net`, so the generated host is the public one.
+  const SITE = { siteCode: 'seed', baseHost: 'chm-cbd.net' }
+
+  it('admits the tenant generated host, case insensitively', () => {
+    expect(isGoogleTagsBrowserHost(SITE, 'seed.chm-cbd.net')).toBe(true)
+    expect(isGoogleTagsBrowserHost(SITE, 'SEED.CHM-CBD.NET')).toBe(true)
   })
 
-  it('compares env, multiSiteCode and the browser host case-insensitively', () => {
-    expect(isGoogleTagsSite({
-      env: 'PROD',
-      multiSiteCode: 'BL2',
-      siteCode: 'MySite',
-      published: true,
-    }, 'MySite.CHM-CBD.Net')).toBe(true)
+  it.each(['alias.example.gov', 'Alias.Example.GOV', 'alias.example.gov.'])(
+    'admits the dmsm redirect alias configured as %p',
+    (redirect) => {
+      expect(isGoogleTagsBrowserHost({ ...SITE, redirect }, 'alias.example.gov')).toBe(true)
+    },
+  )
+
+  // Browsers keep the trailing dot a visitor typed in `location.hostname`, and
+  // `normalizeRedirectHost` strips it from the configured value, so both sides must be stripped
+  // or a fully qualified visitor silently loses measurement.
+  it('admits a fully qualified browser host on both the generated host and the alias', () => {
+    expect(isGoogleTagsBrowserHost(SITE, 'seed.chm-cbd.net.')).toBe(true)
+    expect(isGoogleTagsBrowserHost({ ...SITE, redirect: 'alias.example.gov' }, 'alias.example.gov.')).toBe(true)
   })
 
-  it('fails when the browser is on a host other than the template', () => {
-    // A reverse proxy can forward `Host: mysite.chm-cbd.net` from any origin it likes, so this
-    // must be the actual browser hostname, not something read from the dmsm config.
-    for (const browserHost of [
-      'evil.test',
-      'mysite.chm-cbd.net.evil.test',
-      'othersite.chm-cbd.net',
-      'mysite.bl2.chm-cbd.net',
-      'localhost',
-      'mysite.localhost',
-      'evil.test/mysite.chm-cbd.net',
-    ]) {
-      expect(isGoogleTagsSite(eligible, browserHost)).toBe(false)
-    }
+  // `browserHost` is untrusted and bare-hostname only. Nothing in the app hands it an origin
+  // today; rejecting one keeps a future caller passing `document.referrer` or an `Origin` header
+  // from being admitted on the hostname buried inside it.
+  it('rejects a scheme-bearing browser host, however well formed', () => {
+    expect(isGoogleTagsBrowserHost(SITE, 'https://seed.chm-cbd.net')).toBe(false)
+    expect(isGoogleTagsBrowserHost(SITE, 'https://seed.chm-cbd.net/')).toBe(false)
   })
 
-  it('fails closed when no browser host is supplied', () => {
-    expect(isGoogleTagsSite(eligible)).toBe(false)
-    expect(isGoogleTagsSite(eligible, undefined)).toBe(false)
-    expect(isGoogleTagsSite(eligible, null)).toBe(false)
-    expect(isGoogleTagsSite(eligible, '')).toBe(false)
+  // Same rule `getCanonicalHost` applies: inbound suffix routing resolves the multisite zone
+  // before the dmsm reverse index, so neither of these is a hostname this tenant serves.
+  it.each([
+    ['a sibling tenant inside the multisite zone', 'site-b.chm-cbd.net'],
+    ['the bare multisite apex', 'chm-cbd.net'],
+  ])('rejects %s configured as this tenant alias', (_label, redirect) => {
+    expect(isGoogleTagsBrowserHost({ ...SITE, redirect }, redirect)).toBe(false)
   })
 
-  it('fails for any non-prod env', () => {
-    for (const env of ['stg', 'dev', 'test', 'production']) {
-      expect(isGoogleTagsSite({ ...eligible, env }, BROWSER_HOST)).toBe(false)
-    }
+  // `baseHost` is a deployment value, so a trailing dot on it is a misconfiguration rather than an
+  // attack - but it must not disarm the cross-tenant rule, which it would if the zone were merely
+  // lower cased while the alias had its dot stripped.
+  it('still applies the cross-tenant rule when baseHost carries a trailing dot', () => {
+    const site = { siteCode: 'seed', baseHost: 'chm-cbd.net.' }
+
+    expect(isGoogleTagsBrowserHost({ ...site, redirect: 'site-b.chm-cbd.net' }, 'site-b.chm-cbd.net')).toBe(false)
+    expect(isGoogleTagsBrowserHost({ ...site, redirect: 'chm-cbd.net' }, 'chm-cbd.net')).toBe(false)
+    expect(isGoogleTagsBrowserHost(site, 'seed.chm-cbd.net')).toBe(true)
   })
 
-  it('fails for a multisite with no host template', () => {
-    for (const multiSiteCode of ['bsl', 'chm', 'abs']) {
-      expect(isGoogleTagsSite({ ...eligible, multiSiteCode }, BROWSER_HOST)).toBe(false)
-    }
+  it('still admits an alias that happens to be this tenant own generated host', () => {
+    expect(isGoogleTagsBrowserHost({ ...SITE, redirect: 'seed.chm-cbd.net' }, 'seed.chm-cbd.net')).toBe(true)
   })
 
-  it('fails for a prototype key masquerading as a multisite', () => {
-    for (const multiSiteCode of ['constructor', '__proto__', 'toString']) {
-      expect(isGoogleTagsSite({ ...eligible, multiSiteCode }, BROWSER_HOST)).toBe(false)
-    }
+  it.each([
+    ['a foreign origin', 'evil.test'],
+    ['a sibling tenant', 'other.chm-cbd.net'],
+    ['a suffix of the tenant host', 'chm-cbd.net'],
+    ['a prefixed lookalike', 'seed.chm-cbd.net.evil.test'],
+    ['an unconfigured alias', 'alias.example.gov'],
+  ])('rejects %s', (_label, browserHost) => {
+    expect(isGoogleTagsBrowserHost(SITE, browserHost)).toBe(false)
   })
 
-  it('fails when published is false', () => {
-    expect(isGoogleTagsSite({ ...eligible, published: false }, BROWSER_HOST)).toBe(false)
+  it('rejects an alias dmsm never configured even when another one is', () => {
+    expect(isGoogleTagsBrowserHost({ ...SITE, redirect: 'alias.example.gov' }, 'other.example.gov')).toBe(false)
   })
 
-  it('fails when published is missing or undefined', () => {
-    const { published: _published, ...unpublished } = eligible
-
-    expect(isGoogleTagsSite(unpublished, BROWSER_HOST)).toBe(false)
-    expect(isGoogleTagsSite({ ...eligible, published: undefined }, BROWSER_HOST)).toBe(false)
+  it.each([
+    ['host confusable path', 'evil.test/real.chm-cbd.net'],
+    ['scheme plus confusable path', 'https://evil.test/real.chm-cbd.net'],
+    ['embedded userinfo', 'https://seed.chm-cbd.net@evil.test'],
+    ['bare userinfo', 'seed.chm-cbd.net@evil.test'],
+    ['explicit port', 'seed.chm-cbd.net:8443'],
+    ['scheme plus port', 'https://seed.chm-cbd.net:8443'],
+    ['non-HTTPS scheme', 'http://seed.chm-cbd.net'],
+    ['javascript scheme', 'javascript://seed.chm-cbd.net'],
+    ['non-root path', 'https://seed.chm-cbd.net/sink'],
+    ['query string', 'https://seed.chm-cbd.net/?a=1'],
+    ['fragment', 'https://seed.chm-cbd.net/#x'],
+  ])('rejects %s, so a confusable browser host never passes', (_label, browserHost) => {
+    expect(isGoogleTagsBrowserHost(SITE, browserHost)).toBe(false)
   })
 
-  it('fails when published is a truthy non-boolean, not strictly true', () => {
-    // @ts-expect-error - malformed DMSM input must also fail closed at runtime
-    expect(isGoogleTagsSite({ ...eligible, published: 'true' }, BROWSER_HOST)).toBe(false)
-    // @ts-expect-error - malformed DMSM input must also fail closed at runtime
-    expect(isGoogleTagsSite({ ...eligible, published: 1 }, BROWSER_HOST)).toBe(false)
+  it.each([undefined, null, '', 42, {}, ['seed.chm-cbd.net']])(
+    'fails closed on the browser host %p',
+    (browserHost) => {
+      expect(isGoogleTagsBrowserHost(SITE, browserHost as string | null | undefined)).toBe(false)
+    },
+  )
+
+  it.each([
+    ['siteCode missing', { baseHost: 'chm-cbd.net' }],
+    ['siteCode empty', { siteCode: '', baseHost: 'chm-cbd.net' }],
+    ['siteCode non-string', { siteCode: 42, baseHost: 'chm-cbd.net' }],
+    ['baseHost missing', { siteCode: 'seed' }],
+    ['baseHost empty', { siteCode: 'seed', baseHost: '' }],
+    ['baseHost non-string', { siteCode: 'seed', baseHost: ['chm-cbd.net'] }],
+  ])('fails closed when %s, even against the right hostname', (_label, site) => {
+    expect(isGoogleTagsBrowserHost(site, 'seed.chm-cbd.net')).toBe(false)
   })
 
-  it('passes when published and the browser host matches the redirect alias', () => {
-    expect(isGoogleTagsSite({ ...eligible, siteCode: 'other', redirect: 'alias.example.org' }, 'alias.example.org')).toBe(true)
+  it('fails closed when the alias would be the only match and the tenant is unidentified', () => {
+    expect(isGoogleTagsBrowserHost({ redirect: 'alias.example.gov' }, 'alias.example.gov')).toBe(false)
   })
 
-  it('compares the redirect alias case-insensitively', () => {
-    expect(isGoogleTagsSite({ ...eligible, siteCode: 'other', redirect: 'Alias.Example.ORG' }, 'alias.example.org')).toBe(true)
+  it.each([undefined, null, 'seed', 42, []])('fails closed on the site context %p', (site) => {
+    expect(isGoogleTagsBrowserHost(site as never, 'seed.chm-cbd.net')).toBe(false)
   })
 
-  it('normalises a redirect trailing dot without loosening the browser host gate', () => {
-    const site = { ...eligible, siteCode: 'other', redirect: 'Alias.Example.ORG.' }
-
-    expect(isGoogleTagsSite(site, 'alias.example.org')).toBe(true)
-    for (const browserHost of ['alias.example.org.', ' alias.example.org', 'alias.example.org/path', 'alias.example.org:8443']) {
-      expect(isGoogleTagsSite(site, browserHost)).toBe(false)
-    }
+  it.each([
+    ['a port', 'chm-cbd.net:8443'],
+    ['a path', 'chm-cbd.net/sink'],
+    ['userinfo', 'chm-cbd.net@evil.test'],
+  ])('fails closed when baseHost carries %s', (_label, baseHost) => {
+    expect(isGoogleTagsBrowserHost({ siteCode: 'seed', baseHost }, `seed.${baseHost}`)).toBe(false)
   })
 
-  it('rejects aliases outside the canonical bare-hostname contract', () => {
-    for (const redirect of ['https://alias.example.org/', 'alias.example.org:443', 'alias.example.org/path', 'alias.example.org..', 'user@alias.example.org']) {
-      expect(isGoogleTagsSite({ ...eligible, siteCode: 'other', redirect }, 'alias.example.org')).toBe(false)
-    }
+  it.each([
+    ['localhost', 'localhost'],
+    ['a localhost subdomain', 'seed.localhost'],
+    ['an HTTPS origin', 'https://alias.example.gov'],
+    ['a port', 'alias.example.gov:8443'],
+  ])('rejects %p as a redirect alias, matching normalizeRedirectHost', (_label, redirect) => {
+    expect(isGoogleTagsBrowserHost({ ...SITE, redirect }, 'alias.example.gov')).toBe(false)
+    expect(isGoogleTagsBrowserHost({ ...SITE, redirect }, 'seed.localhost')).toBe(false)
+  })
+})
+
+describe('the two gates are independent, and both are required', () => {
+  const SITE = { siteCode: 'seed', baseHost: 'chm-cbd.net' }
+
+  it('the checkbox on is not enough on a hostname this tenant does not serve', () => {
+    expect(isGoogleTagsEnabled(true)).toBe(true)
+    expect(isGoogleTagsBrowserHost(SITE, 'evil.test')).toBe(false)
+    expect(isGoogleTagsEnabled(true) && isGoogleTagsBrowserHost(SITE, 'evil.test')).toBe(false)
   })
 
-  it('fails when the browser host matches neither the template nor the redirect alias', () => {
-    expect(isGoogleTagsSite({ ...eligible, siteCode: 'other', redirect: 'alias.example.org' }, 'wrongdomain.com')).toBe(false)
-  })
-
-  it('rejects a confusable alias and browser host', () => {
-    expect(isGoogleTagsSite(
-      { ...eligible, siteCode: 'other', redirect: 'evil.test/real.example.gov' },
-      'evil.test/real.example.gov',
-    )).toBe(false)
-  })
-
-  it('fails closed on missing or non-string fields', () => {
-    expect(isGoogleTagsSite()).toBe(false)
-    expect(isGoogleTagsSite(null, BROWSER_HOST)).toBe(false)
-    expect(isGoogleTagsSite({}, BROWSER_HOST)).toBe(false)
-    expect(isGoogleTagsSite({ ...eligible, env: undefined }, BROWSER_HOST)).toBe(false)
-    expect(isGoogleTagsSite({ ...eligible, multiSiteCode: undefined }, BROWSER_HOST)).toBe(false)
-    expect(isGoogleTagsSite({ ...eligible, siteCode: undefined }, BROWSER_HOST)).toBe(false)
+  it('the right hostname is not enough with the checkbox off', () => {
+    expect(isGoogleTagsBrowserHost(SITE, 'seed.chm-cbd.net')).toBe(true)
+    expect(isGoogleTagsEnabled(false)).toBe(false)
+    expect(isGoogleTagsEnabled(false) && isGoogleTagsBrowserHost(SITE, 'seed.chm-cbd.net')).toBe(false)
   })
 })
