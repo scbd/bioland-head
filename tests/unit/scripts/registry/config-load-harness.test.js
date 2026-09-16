@@ -291,6 +291,33 @@ describe('config-only acquire timeout (shape a)', () => {
   })
 })
 
+describe('orphaned acquires are drained before the next level starts', () => {
+  it('waits for demand its own reads abandoned, so the next level does not queue behind it', async () => {
+    // One connection, held by a blocker, and a query slower than the config-only timeout: every
+    // read in the level loses its race and leaves a queued getConnection behind it.
+    const pool = makePool({ limit: 1, queryMs: 40 })
+    const blocker = await pool.getConnection()
+
+    const levelPromise = runLevel({
+      ...readShape,
+      pool,
+      keys: buildFleet({ env: 'stg', multiSiteCode: 'bsl', siteCount: 3 }),
+      concurrency: 3,
+      configAcquireTimeoutMs: 10
+    })
+
+    await sleep(30)
+    blocker.release()
+
+    const level = await levelPromise
+
+    expect(level.timedOut).toBe(3)
+    expect(level.orphanedAcquires).toBe(3)
+    // runLevel has returned, so nothing is left queued or held for the next level to inherit.
+    expect(pool.state.inUse).toBe(0)
+  })
+})
+
 describe('failure phase attribution', () => {
   it('keeps a slow failed query out of acquire latency instead of reporting a false near-timeout', async () => {
     const pool = {

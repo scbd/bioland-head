@@ -105,6 +105,10 @@ export function summarizeLevel(level, options = {}) {
     requestedConcurrency: level.requestedConcurrency ?? level.concurrency,
     sweepPosition: level.sweepPosition ?? null,
     reads: reads.length,
+    // Acquires the level abandoned to its config-only timeout and then waited to be served and
+    // released before returning. Non-zero means demand outlived the reads that requested it, so
+    // the level's drain is what kept it out of the next level's measurement.
+    orphanedAcquires: level.orphanedAcquires ?? 0,
     rowsReturned: reads.reduce((sum, read) => sum + (read.rowCount ?? 0), 0),
     failed: reads.length - ok.length,
     timedOut: reads.filter(read => read.timedOut).length,

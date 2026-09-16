@@ -343,9 +343,12 @@ export async function resolveFleet({ pool, tableMissing, table, env, multiSiteCo
  *
  * @param {{getConnection: Function}} pool - MariaDB pool (or a test double).
  * @param {number} timeoutMs - Config-only timeout in ms; 0 disables the race.
+ * @param {Promise[]} [orphans] - Collector the caller can await on, so a level can wait for its
+ *   own abandoned acquires to be served and released before the next level starts. Without it
+ *   the release is fire-and-forget and the demand outlives the level that created it.
  * @returns {Promise<object>} A pooled connection.
  */
-export async function acquireConnection(pool, timeoutMs) {
+export async function acquireConnection(pool, timeoutMs, orphans) {
   const pending = pool.getConnection()
 
   if (!timeoutMs) return pending
@@ -363,7 +366,12 @@ export async function acquireConnection(pool, timeoutMs) {
       })
     ])
   } catch (error) {
-    pending.then(connection => connection?.release?.()).catch(() => {})
+    // The release is unconditional; `orphans` only lets a caller await it. Making the release
+    // itself depend on a collector being passed would leak a connection per timed-out read on
+    // every call site that does not pass one.
+    const released = pending.then(connection => connection?.release?.()).catch(() => {})
+
+    orphans?.push(released)
     throw error
   } finally {
     clearTimeout(timer)
@@ -384,7 +392,7 @@ export async function acquireConnection(pool, timeoutMs) {
  * @returns {Promise<object>} Per-read record — timings and status only. `failedPhase` says
  *   which phase threw, so an acquire failure is never read as a slow query or the reverse.
  */
-export async function timedConfigRead({ pool, key, sql, params, configAcquireTimeoutMs = 0, now = () => performance.now(), seenValues }) {
+export async function timedConfigRead({ pool, key, sql, params, configAcquireTimeoutMs = 0, now = () => performance.now(), seenValues, orphans }) {
   const startedAt = now()
   let connection = null
   // Kept outside the try so the catch can still tell the two phases apart. Without it a query
@@ -394,7 +402,7 @@ export async function timedConfigRead({ pool, key, sql, params, configAcquireTim
   let acquiredAt = null
 
   try {
-    connection = await acquireConnection(pool, configAcquireTimeoutMs)
+    connection = await acquireConnection(pool, configAcquireTimeoutMs, orphans)
 
     acquiredAt = now()
 
@@ -514,19 +522,32 @@ export function startTranslationLoad({ pool, workers, holdMs, sql, params, error
 /**
  * Run one concurrency level of the cold fleet.
  *
+ * Under `--config-acquire-timeout-ms` a losing `getConnection()` stays queued after its caller
+ * has already failed fast, and is only released once the pool eventually serves it. The level's
+ * own reads can therefore all finish while that demand is still outstanding, and the next level
+ * would queue behind work abandoned by the previous one — making each level's metrics a function
+ * of where the randomised sweep put it rather than of its own load. Isolating levels with a
+ * fresh pool each would also fix it, but it would discard the warm connections the sweep is
+ * deliberately measuring through and double the harness's connection footprint against the same
+ * constrained server; draining is local to the level that created the demand, so that is what is
+ * done here. The drain is bounded by the pool's own `acquireTimeout`.
+ *
+ * `wallMs` is taken before the drain: it is the level's load duration, not its cleanup.
+ *
  * @param {object} options - Level options.
  * @returns {Promise<object>} Level summary from {@link summarizeLevel}.
  */
 export async function runLevel(options) {
   const { keys, concurrency, sweepPosition = null, now = () => performance.now(), acquireWaitThresholdMs = 100, acquireTimeoutMs = POOL_ACQUIRE_TIMEOUT_MS } = options
   const reads = []
+  const orphans = []
   const queue = [...keys]
   const startedAt = now()
 
   const worker = async () => {
     while (queue.length) {
       const key = queue.shift()
-      reads.push(await timedConfigRead({ ...options, key, now }))
+      reads.push(await timedConfigRead({ ...options, key, now, orphans }))
     }
   }
 
@@ -536,13 +557,18 @@ export async function runLevel(options) {
 
   await Promise.all(Array.from({ length: effectiveConcurrency }, worker))
 
+  const wallMs = now() - startedAt
+
+  await Promise.allSettled(orphans)
+
   return summarizeLevel(
     {
       concurrency: effectiveConcurrency,
       requestedConcurrency: concurrency,
       sweepPosition,
       reads,
-      wallMs: now() - startedAt
+      orphanedAcquires: orphans.length,
+      wallMs
     },
     { acquireWaitThresholdMs, acquireTimeoutMs }
   )
