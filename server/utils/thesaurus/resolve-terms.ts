@@ -25,6 +25,7 @@
 import type { H3Event } from 'h3';
 import { CACHE_TTL } from '#shared/utils/constants';
 import { dataSourceConfigs } from './config';
+import { enqueueTranslation } from './translation-queue';
 
 /**
  * Provenance of a resolved label.
@@ -399,6 +400,9 @@ export async function resolveTerms(
           if (english) {
             resolved[id] = { value: english, source: 'fallback' };
             await writeTier(storage, 'fb', id, loc, resolved[id], now + ONE_MINUTE_MS);
+            // Fire-and-forget: enqueueTranslation's contract guarantees it never rejects, so this
+            // never needs an await or a .catch() — see translation-queue.ts (p04-01).
+            void enqueueTranslation(id, loc, english);
             continue;
           }
           await degrade(storage, id, loc, now, resolved, 'resolveTerms: no usable label field');
