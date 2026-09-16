@@ -11,9 +11,21 @@
  * a POSIX bind mount.** The entry is gone from the shared volume when this function
  * resolves; whether the next read on another container observes that immediately depends
  * on the mount type (a POSIX bind mount surfaces it with no delay; a network volume with
- * client attribute caching adds its own attribute-cache TTL on top). A second residual sits
- * outside that bound regardless of mount type and cannot be closed here: a request already
- * past its own cache read finishes on the value it loaded.
+ * client attribute caching adds its own attribute-cache TTL on top). Two residuals sit
+ * outside that bound regardless of mount type and cannot be closed here:
+ *
+ * 1. A request already past its own cache read finishes on the value it loaded.
+ * 2. **An in-flight fill can restore the pre-publish value for a full TTL, fleet-wide.** If a
+ *    container entered `_fetchDmsmConfig` (`context-unified.ts:190-201`) before the publish -
+ *    on a cache miss, or on an SWR revalidation - this scan can delete the entry and resolve
+ *    before that older `$fetch` completes. Nitro's `cachedFunction` then writes its
+ *    pre-publish response into the shared store unconditionally, and every container serves
+ *    it until `CACHE_TTL.FIVE_MINUTES` expires. Deletion alone cannot close this: the writer
+ *    is a separate process with no way to learn its read is stale. Closing it needs a
+ *    generation captured before the fetch and compared before the store, which means owning
+ *    the store step instead of delegating it to `cachedFunction` - a cross-container storage
+ *    contract spanning this module, `context-unified.ts` and the publish path, deliberately
+ *    not built here. Tracked as follow-up work on the p03-03 publish-path wiring.
  *
  * **Per-request cost: zero.** No generation is read, so the config path adds no database
  * round trip, on the cached path or anywhere else. `context-unified.ts:167` (`bypassCache`)
