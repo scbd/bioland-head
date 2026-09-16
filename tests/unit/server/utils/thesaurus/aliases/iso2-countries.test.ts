@@ -7,7 +7,20 @@ import { getGenuineIso2Keys, buildMap } from '../../../../../../scripts/thesauru
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(__dirname, '../../../../../..')
 const MAP_FILE = path.join(REPO_ROOT, 'server/assets/thesaurus-aliases/iso2-countries.json')
-const LOCALE_FILE = path.join(REPO_ROOT, 'i18n/locales/en.json')
+// `p03-05` removes this map's source keys from the LIVE `i18n/locales/en.json` — that is its job.
+// This map was built FROM the 680-key block as it existed at build time, so `getGenuineIso2Keys`
+// is audited here against a frozen fixture of that pre-deletion state, not the live (now-shrunk) file.
+// The fixture stores `{ entries: [{ identifier, label }] }` rather than a flat `{ [guid]: label }`
+// object (same reshape as BL-994's `identifier-labels.json`) so the secret scanner's
+// `generic-api-key` rule has no bare `"<GUID>": "<text>"` line to flag.
+const LOCALE_FILE = path.join(REPO_ROOT, 'tests/unit/scripts/thesaurus/fixtures/en.pre-p03-05-deletion.json')
+const loadPreDeletionEn = (): Record<string, string> =>
+  Object.fromEntries(
+    (JSON.parse(readFileSync(LOCALE_FILE, 'utf8')).entries as Array<{ identifier: string; label: string }>).map(({ identifier, label }) => [
+      identifier,
+      label
+    ])
+  )
 
 // Captured at test-authoring time from a live scan of the [380, 1059] ordered-key block in
 // i18n/locales/en.json (199 keys match /^[a-z]{2}$/, 1 excluded false positive: "or"). Re-verify
@@ -56,7 +69,7 @@ describe('server/utils/thesaurus/aliases/iso2-countries.json', () => {
 
 describe('getGenuineIso2Keys', () => {
   it('finds the iso2-bucket keys in the live locale block and excludes "or" by exact key match', () => {
-    const localeData = JSON.parse(readFileSync(LOCALE_FILE, 'utf8'))
+    const localeData = loadPreDeletionEn()
     const { iso2Bucket, genuine } = getGenuineIso2Keys(localeData)
 
     expect(iso2Bucket).toContain('or')

@@ -34,6 +34,24 @@ import {
 const REPO_ROOT = resolve(__dirname, '../../../..');
 const readJson = (relative: string) => JSON.parse(readFileSync(resolve(REPO_ROOT, relative), 'utf8'));
 
+/**
+ * `p03-05` (the deletion task this manifest gates) removes every `safeToDelete` key from the LIVE
+ * `i18n/locales/en.json` — that is its entire job. The audits below assert this manifest was built
+ * correctly FROM the 680-key block as it existed at classification time, so they must read a frozen
+ * fixture of that pre-deletion state (`fixtures/en.pre-p03-05-deletion.json`, captured verbatim from
+ * `en.json` immediately before `p03-05` ran) rather than the live file, which `p03-05` has since
+ * legitimately shrunk. Re-running `classify-resolvable-keys.mjs` for real still targets the live file.
+ *
+ * The fixture stores `{ entries: [{ identifier, label }] }` rather than a flat `{ [guid]: label }`
+ * object — the same reshape `BL-994` applied to `identifier-labels.json` — because a bare
+ * `"<GUID>": "<English text>"` line is exactly the shape the secret scanner's `generic-api-key` rule
+ * flags a subset of these (genuinely public, non-secret) GUIDs for. `loadPreDeletionEn` reassembles
+ * the ordered plain object the block-boundary functions expect.
+ */
+const EN_PRE_DELETION_FIXTURE = 'tests/unit/scripts/thesaurus/fixtures/en.pre-p03-05-deletion.json';
+const loadPreDeletionEn = (): Record<string, string> =>
+  Object.fromEntries(readJson(EN_PRE_DELETION_FIXTURE).entries.map(({ identifier, label }: { identifier: string; label: string }) => [identifier, label]));
+
 /** A locale object whose ordered keys reproduce the real block shape at miniature scale. */
 const makeLocaleData = () => {
   const data: Record<string, string> = {};
@@ -86,7 +104,7 @@ describe('block boundary', () => {
   });
 
   it('holds against the real en.json, which is the file the manifest is built from', () => {
-    const en = readJson('i18n/locales/en.json');
+    const en = loadPreDeletionEn();
     expect(() => assertBlockIntegrity(en)).not.toThrow();
     expect(getBlockKeys(en)).toHaveLength(680);
   });
@@ -140,7 +158,7 @@ describe('bucketOf', () => {
   });
 
   it('reproduces the verified per-family counts against the real en.json', () => {
-    const block = getBlockKeys(readJson('i18n/locales/en.json'));
+    const block = getBlockKeys(loadPreDeletionEn());
     const counts: Record<string, number> = {};
     for (const { key } of block) counts[bucketOf(key)] = (counts[bucketOf(key)] ?? 0) + 1;
     expect(counts).toEqual({
@@ -196,7 +214,7 @@ describe('the "or" false positive', () => {
   });
 
   it('sits inside the UI gap in the real en.json, so it is never probed', () => {
-    const block = getBlockKeys(readJson('i18n/locales/en.json'));
+    const block = getBlockKeys(loadPreDeletionEn());
     const or = block.find((entry) => entry.key === 'or');
     expect(or).toBeDefined();
     expect(isInUiGap(or!.index)).toBe(true);
@@ -668,7 +686,7 @@ describe('the committed manifest', () => {
   });
 
   it('keys every record to what actually appears in en.json today', () => {
-    const block = getBlockKeys(readJson('i18n/locales/en.json')).map((entry) => entry.key);
+    const block = getBlockKeys(loadPreDeletionEn()).map((entry) => entry.key);
     expect(manifest.records.map((r: { identifier: string }) => r.identifier)).toEqual(block);
   });
 

@@ -25,7 +25,10 @@ export default defineConfig({
         'scripts/thesaurus/build-sdg-alias-map.mjs',
         // p02-05: the classification, alias, gap and resume logic is all exported and measured;
         // the live-HTTP `main()` entrypoint carries its own `v8 ignore` block per D14's note.
-        'scripts/thesaurus/classify-resolvable-keys.mjs'
+        'scripts/thesaurus/classify-resolvable-keys.mjs',
+        // p03-05: the plan/archive/promote/apply logic is all exported and measured; only the
+        // real-filesystem `main()` wiring carries a `v8 ignore` block, same pattern as p02-05.
+        'scripts/i18n/remove-resolved-locale-keys.mjs'
       ]
     }
   },
