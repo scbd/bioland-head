@@ -1,7 +1,19 @@
 import { expect, test } from '@playwright/test'
 
-for (const explicitHero of [false, true]) {
-  test(`hero follows ${explicitHero ? 'explicit Drupal hero colors' : 'the saved Drupal primary'}`, async ({ page }) => {
+// `scalars` is the shape the Drupal Theme tab writes as of BL-1011: two named hex strings.
+// `legacyPair` is the ordered pair the network theme has always used, still accepted in the
+// authored leg. `none` is a site that has never saved the tab, where the saved brand colour
+// stands in for the hero.
+const HERO_MODES = {
+  none: undefined,
+  legacyPair: { hero: { primary: ['#123456', '#abcdef'] } },
+  scalars: { hero: { primary: '#123456', secondary: '#abcdef' } },
+} as const
+
+for (const [mode, authoredHero] of Object.entries(HERO_MODES)) {
+  const explicitHero = mode !== 'none'
+
+  test(`hero follows ${explicitHero ? `explicit Drupal hero colors (${mode})` : 'the saved Drupal primary'}`, async ({ page }) => {
     await page.route('**/api/context/**', async (route) => {
       const response = await route.fetch()
       const context = await response.json()
@@ -14,7 +26,7 @@ for (const explicitHero of [false, true]) {
         ...context.biolandSettings,
         theme: {
           color: { primary: '#ff00e7' },
-          ...(explicitHero ? { hero: { primary: ['#123456', '#abcdef'] } } : {}),
+          ...(authoredHero ?? {}),
         },
       }
 
