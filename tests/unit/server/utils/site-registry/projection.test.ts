@@ -130,7 +130,6 @@ describe('toPublicConfig: additive construction', () => {
       continent: 'antarctica',
       region: 'nowhere',
       env: 'dev',
-      hasBl2: true,
       geoBonPage: site.geoBonPage,
       hideHomePageWidgets: { geobon: true },
       migrated: true,
@@ -143,6 +142,7 @@ describe('toPublicConfig: additive construction', () => {
 describe('toPublicConfig: keys that must never ship', () => {
   it.each([
     'redirect',
+    'hasBl2',
     'aliases',
     'migratedFailed',
     'meta',
@@ -177,6 +177,23 @@ describe('toPublicConfig: keys that must never ship', () => {
 
     expect(serialized).not.toContain('redirect')
     expect(serialized).not.toContain('elsewhere.example.invalid')
+  })
+
+  /**
+   * dmsm strips `hasBl2` from the anonymous response and the parity allowed-difference list does
+   * not exempt it, so emitting it would be a registry-only field on the 98/211 sites that carry
+   * one — a non-exempt difference at p03-01, not an inert addition.
+   */
+  it('does not ship hasBl2, which dmsm strips and the parity list does not exempt', () => {
+    for (const hasBl2 of [true, false, undefined] as const) {
+      const result = toPublicConfig(hostileSite({ hasBl2 }), hostileMultiSite()) as Record<
+        string,
+        unknown
+      >
+
+      expect('hasBl2' in result).toBe(false)
+      expect(JSON.stringify(result)).not.toContain('hasBl2')
+    }
   })
 
   it('ignores an unknown key the registry may add upstream (additive, not filter-down)', () => {

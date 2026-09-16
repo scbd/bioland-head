@@ -42,14 +42,14 @@ import type {
  *
  * `siteCode`, `multiSiteCode`, `name`, `description`, `host`, `published`, `logo`, `defaultLocale`,
  * `locales`, `country`, `countries`, `continent`, `region`, `env`, `theme` (merged), `hasBl1`
- * (normalized), `hasBl2`, `geoBonPage`, `hideHomePageWidgets`, `migrated`, `i18n`, `scbd`.
+ * (normalized), `geoBonPage`, `hideHomePageWidgets`, `migrated`, `i18n`, `scbd`.
  *
  * ## Never included
  *
  * `dataBase`, `dns`, `drupal`, `defaultSmtpCredentials`, `panoramaKey`, `auth`, `dmsmApi`, the
  * image name/version fields, `root`, `drupalRoot`, `siteRoot`, `dataBaseName`, `smtpCredentials`,
  * and `meta` at BOTH levels (`createdBy`/`updatedBy` are `{email, uid}` — staff emails). Also
- * absent, as non-secret but non-public: `aliases`, `migratedFailed`, `cdn`, `baseHost`,
+ * absent, as non-secret but non-public: `hasBl2`, `aliases`, `migratedFailed`, `cdn`, `baseHost`,
  * `prePublishedBaseHost`, `gaiaApi`, `showBl1Link`.
  *
  * ## `redirect` — NOT shipped
@@ -62,12 +62,15 @@ import type {
  * begin acting on operator-supplied free text it has never received. Restoring `redirect` is its
  * own ticket, reviewed on its own merits.
  *
- * ## `hasBl2` — newly shipped, and inert
+ * ## `hasBl2` — NOT shipped, for the same reason as `redirect`
  *
- * `hasBl2` IS shipped, unlike `redirect`. dmsm strips it today, but it is neither secret nor PII —
- * just a boolean grouping flag, the sibling of `hasBl1`, and its absence forces every consumer to
- * infer it. It is also inert on merge: nothing calls this function until p03-02, so shipping it
- * changes no rendered output today.
+ * An earlier revision shipped `hasBl2` on the grounds that it is neither secret nor PII — just a
+ * boolean grouping flag, the sibling of `hasBl1` — and that emitting it is inert until p03-02 calls
+ * this function. Inertness is not the test. dmsm strips it from the anonymous response today
+ * (docs/specs/site-config-contract.md:124) and the parity allowed-difference list does not exempt
+ * it, so emitting it here is a registry-only field on the 98/211 sites that populate it and a
+ * non-exempt difference the moment p03-01 diffs the two payloads. Adding it to the public surface
+ * is its own contract change, argued on its own merits with the spec updated alongside it.
  *
  * ## `runTime` — not emitted, and the `settings` decision
  *
@@ -108,7 +111,6 @@ export const PUBLIC_SITE_CONFIG_KEYS = [
   'env',
   'theme',
   'hasBl1',
-  'hasBl2',
   'geoBonPage',
   'hideHomePageWidgets',
   'migrated',
@@ -230,7 +232,6 @@ export function toPublicConfig(
     env: site.env,
     theme: mergeThemeForProjection(site.theme, multiSiteConfig.theme),
     hasBl1: normalizeHasBl1(site.hasBl1),
-    hasBl2: site.hasBl2,
     geoBonPage: site.geoBonPage,
     hideHomePageWidgets: site.hideHomePageWidgets,
     migrated: site.migrated,
