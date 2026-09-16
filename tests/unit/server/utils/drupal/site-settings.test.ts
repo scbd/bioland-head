@@ -85,10 +85,17 @@ const CONTRACT_ENVELOPE: DrupalConfigDocument = {
   },
 };
 
-const contractDocument = (): DrupalConfigDocument =>
-  EXAMPLE_DOCUMENT_PATH
+const contractDocument = (): DrupalConfigDocument => ({
+  ...(EXAMPLE_DOCUMENT_PATH
     ? (JSON.parse(readFileSync(EXAMPLE_DOCUMENT_PATH, "utf8")) as DrupalConfigDocument)
-    : structuredClone(CONTRACT_ENVELOPE);
+    : structuredClone(CONTRACT_ENVELOPE)),
+  // p01-01's example document names p01-01's own site. These tests fetch config for `ctx.siteCode`,
+  // and the client now refuses a document addressed to a different tenant - correctly, that is the
+  // cross-tenant check below. A config document is per-site, so addressing the contract envelope to
+  // the site under test is setup, not a weakened assertion: the envelope's shape is untouched, and
+  // the conformance block still checks `siteCode` is a string.
+  siteCode: ctx.siteCode,
+});
 
 let fetchCalls: Array<{ uri: string; options: Record<string, unknown> }> = [];
 let fetchImpl: () => Promise<unknown> = async () => contractDocument();
@@ -458,6 +465,72 @@ describe("fetchSiteSettings - failure modes serve last-known-good", () => {
     fetchImpl = async () => "<html>maintenance</html>";
 
     expect((await fetchSiteSettings(ctx))?.stale).toBe(true);
+  });
+});
+
+describe("fetchSiteSettings - a document must name the site that asked for it", () => {
+  /** A valid document for a DIFFERENT tenant: correct shape, correct version, wrong `siteCode`. */
+  const otherTenantDocument = (): DrupalConfigDocument => ({
+    ...contractDocument(),
+    siteCode: "other-tenant",
+    config: {
+      biolandSettings: {
+        theme: { color: { primary: "#ff00ff" } },
+        googleAnalyticsIds: "G-OTHERTENANT",
+      },
+    },
+  });
+
+  it("refuses another tenant's document rather than serving it as this site's config", async () => {
+    await fetchSiteSettings(ctx);
+    await awaitPendingWriteBacks();
+
+    vi.mocked(consola.error).mockClear();
+
+    // A CDN keyed without the Host header, a proxy on the wrong upstream, or a misbound vhost:
+    // 200, valid, and for someone else. Shape alone used to accept it.
+    fetchImpl = otherTenantDocument;
+
+    const result = await fetchSiteSettings(ctx);
+
+    expect(result?.stale).toBe(true);
+    expect(result?.settings.googleAnalyticsIds).not.toBe("G-OTHERTENANT");
+    expect(vi.mocked(consola.error).mock.calls.join(" ")).toContain("is addressed to");
+    expect(vi.mocked(consola.error).mock.calls.join(" ")).toContain("other-tenant");
+  });
+
+  it("never writes another tenant's settings into this site's last-known-good row", async () => {
+    await fetchSiteSettings(ctx);
+    await awaitPendingWriteBacks();
+
+    const good = structuredClone(store);
+
+    expect(good).toBeTruthy();
+
+    writes = [];
+    fetchImpl = otherTenantDocument;
+
+    await fetchSiteSettings(ctx);
+    await awaitPendingWriteBacks();
+
+    // The damage a shape-only check does is not the one bad response - it is the poisoned row that
+    // keeps serving the wrong tenant's config long after the misroute is fixed.
+    expect(writes).toEqual([]);
+    expect(store).toEqual(good);
+  });
+
+  it("refuses a document with no siteCode at all, rather than reading it as a match", async () => {
+    await fetchSiteSettings(ctx);
+    await awaitPendingWriteBacks();
+
+    vi.mocked(consola.error).mockClear();
+
+    const { siteCode: _omitted, ...withoutSiteCode } = contractDocument();
+
+    fetchImpl = async () => withoutSiteCode;
+
+    expect((await fetchSiteSettings(ctx))?.stale).toBe(true);
+    expect(vi.mocked(consola.error).mock.calls.join(" ")).toContain("is addressed to");
   });
 });
 

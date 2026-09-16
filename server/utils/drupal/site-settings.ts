@@ -765,6 +765,23 @@ function validateAndStore(
     return serveLastKnownGood(key, site);
   }
 
+  // Tenant identity, checked BEFORE anything is sanitized, returned, or stored. Every other check
+  // in this function asks "is this a well-formed config document"; none of them asks "is it THIS
+  // site's". A CDN edge keyed without the Host header, a reverse proxy pointed at the wrong
+  // upstream, or a Drupal vhost misbinding all answer 200 with a perfectly VALID document for a
+  // different tenant, and shape alone accepts it. The consequence is worse than serving nothing:
+  // the other site's theme, analytics ids, and menu configuration are returned for this request
+  // AND written into this site's last-known-good row, where they outlive the misroute and keep
+  // being served long after the infrastructure is fixed. A document that does not name this site
+  // is not this site's config, so it degrades like any other bad document.
+  if (typeof document.siteCode !== "string" || document.siteCode !== key.siteCode) {
+    consola.error(
+      `[site-settings] config document for ${site} is addressed to ${JSON.stringify(document.siteCode)}, not ${key.siteCode}; refusing to serve or store another tenant's config. Treat this as a misrouted request - a CDN, proxy, or vhost is answering for the wrong site.`,
+    );
+
+    return serveLastKnownGood(key, site);
+  }
+
   // A shape change is a deploy error, not an outage: fail loudly and do NOT fall back.
   if (!Number.isInteger(document.version) || document.version !== SUPPORTED_CONFIG_VERSION) {
     consola.error(
