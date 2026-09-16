@@ -11,7 +11,12 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['server/utils/**/*.ts', 'shared/utils/**/*.ts', 'app/utils/resolve-theme.js']
+      include: [
+        'server/utils/**/*.ts',
+        'shared/utils/**/*.ts',
+        'app/utils/resolve-theme.js',
+        'app/composables/use-term-label.js'
+      ]
     }
   },
   resolve: {
