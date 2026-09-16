@@ -1,14 +1,23 @@
-// Server utils (useRequestContext, resolveTerms) are auto-imported by Nuxt.
+// Server utils (useRequestContext, resolveTerms, isValidDomain) are auto-imported by Nuxt.
 
 /**
  * Batch thesaurus label resolution over HTTP.
  *
  * `POST /api/thesaurus/terms`
  *
- * Request:  `{ ids: string[] | string }` — an array of identifiers, or a comma-delimited string. Both
- *           shapes are accepted for symmetry with `getThesaurusByKey`'s own flexible-input handling
- *           (`server/utils/thesaurus/index.js:10-14`), so a caller migrating from the single-term
+ * Request:  `{ ids: string[] | string, domain?: string }` — an array of identifiers, or a comma-delimited
+ *           string. Both shapes are accepted for symmetry with `getThesaurusByKey`'s own flexible-input
+ *           handling (`server/utils/thesaurus/index.js:10-14`), so a caller migrating from the single-term
  *           `GET /api/thesaurus/[termIdentifier]` route does not have to change its data shape.
+ *
+ *           `domain` is optional and selects that domain's `labelFields` order, mirroring
+ *           `resolveTerms`'s own 4th argument and the SSR request-batcher, which already keys its
+ *           batches by `(locale, domain)`. It matters wherever the default `shortTitle -> title -> name`
+ *           order picks the wrong field: `countries` terms carry the ISO-2 code as `shortTitle`, so
+ *           without `domain: 'countries'` a client-resolved country badge renders `BE`, not `Belgium`.
+ *           An unrecognised domain is IGNORED rather than rejected — it is untrusted input that reaches
+ *           only a label-field lookup, and `resolveTerms` already falls back to the default order — so a
+ *           stale client cannot turn a label request into a 400.
  * Response: `Record<string, ResolvedLabel>` — one entry per requested id, keyed by the id as requested
  *           (not its canonical alias). `resolveTerms` never throws (its own contract, p02-01): an id that
  *           fails to resolve at all still appears in the response with `source: 'identifier'` (D5) rather
@@ -125,8 +134,15 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Optional, validated against the real `dataSourceConfigs` keys; anything else is dropped so
+  // `resolveTerms` uses its default label-field order.
+  const domainRaw = body && typeof body === 'object' && !Array.isArray(body)
+    ? (body as { domain?: unknown }).domain
+    : undefined
+  const domain = typeof domainRaw === 'string' && isValidDomain(domainRaw) ? domainRaw : undefined
+
   const ctx = await useRequestContext(event)
   const locale = ctx?.locale || 'en'
 
-  return resolveTerms(normalizedIds as string[], locale, event)
+  return resolveTerms(normalizedIds as string[], locale, event, domain)
 })
