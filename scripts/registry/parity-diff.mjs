@@ -1,313 +1,80 @@
 #!/usr/bin/env node
 /**
- * Parity diff (p02-10, BL-990) — does the new config composition match dmsm, site for site?
- *
- * This script's verdict is what authorizes deleting the dmsm path, so it is built around one
- * asymmetry: **a false PASS is far worse than a false FAIL.** Every ambiguity therefore resolves
- * toward FAIL — an unclassified difference (default-deny), a site that could not be compared, a
- * site present in one enumeration only, a missing source, an unreadable checkpoint. Exit 0 means
- * every site was actually compared and every difference was on the allowed list.
- *
- * ## Usage
+ * Parity diff (p02-10, BL-990) — documented entry point.
  *
  *   node scripts/registry/parity-diff.mjs --env stg --multi-site-code bl2 \
  *        --dmsm-base https://<dmsm-host>/api --composition-base https://<head-host> \
  *        [--site <code>] [--resume] [--checkpoint <path>]
  *
- *   --env               deployment env: dev | stg | prod
- *   --multi-site-code   the multiSite slice, e.g. bl2 | bsl
- *   --site              compare one site only (debugging). The enumeration diff still runs.
- *   --resume            reuse classifications already in the checkpoint; compare only the rest
- *   --checkpoint        checkpoint path (default .parity-checkpoint-<env>-<ms>.json)
- *   --dmsm-base         dmsm API base, the same origin+/api `fetchDmsmConfigCore` calls
- *   --composition-base  origin serving the composed registry config (see "Sources")
- *   --source            ESM specifier overriding BOTH sources (tests, and p03-01's harness)
+ * The flags, sources, exit codes and classification rules are all documented on
+ * `./parity-cli.mjs`, which this file loads. Everything here is the Node preflight, and nothing
+ * else belongs here.
  *
- * ## Exit codes
+ * ## Why this file is a shell
  *
- *   0  parity — every site compared, every difference allowed
- *   1  at least one failing difference, enumeration mismatch, or not-comparable site
- *   2  usage or wiring error — a source was not supplied, or a checkpoint was unreadable
+ * The pipeline compares against the REAL projection and the REAL leak detector rather than a
+ * restatement of them, so its dependency graph reaches two TypeScript sources —
+ * `shared/utils/leak-detection.ts` and `server/utils/site-registry/projection.ts`. Node can import
+ * those only where type stripping is available: it arrived behind a flag in 22.6 and is on by
+ * default from 22.18, so the command above dies with an opaque `ERR_UNKNOWN_FILE_EXTENSION` on
+ * Node 20 and 21 — versions `package.json` still declares supported (`engines.node: ">=20.0.0"`).
  *
- * ## Sources, and why the composition side is HTTP
+ * Making the graph plain JavaScript instead would mean either converting two production modules
+ * that carry the type surface the runtime and `projection.test-d.ts` depend on, or keeping a second
+ * divergent copy of the classification rules — exactly the duplication this design rejects. A
+ * loader dependency is out for the same reason (no new deps). So the minimum Node version is
+ * enforced here, at the one boundary that actually needs it, rather than raised repo-wide: Nuxt and
+ * Vitest transpile these imports and are unaffected, so a repo-wide `engines` bump would be a
+ * project-level decision this script has no standing to make.
  *
- * The dmsm side is read exactly as the head reads it today: `GET {base}/config/{env}/{ms}` for the
- * enumeration, `GET {base}/config/{env}/{ms}/{site}` per site.
- *
- * The composition side is read over HTTP from the deployment rather than composed in-process.
- * p02-01's `readSite` and p02-05's `fetchSiteSettings` both require a Nitro runtime — they call
- * `useRuntimeConfig()`, `$fetch.raw()` and `$fetchBaseOptions()`, and the registry pool is a Nitro
- * singleton. Reaching them from a bare Node ESM process would mean either a loader dependency
- * (forbidden: no new deps) or shimming Nitro's auto-imports onto `globalThis`, which is untestable
- * here and would be a second, divergent copy of the runtime's wiring. p02-03's projection IS used
- * directly — `parity-core.mjs` imports `mergeThemeForProjection` and `normalizeHasBl1` from it —
- * so the classification rules run against the real code, not a restatement of it.
- *
- * `--source` replaces both sources with an ESM module exporting
- * `{ dmsm: {enumerate, read}, composition: {enumerate, read} }`. `read` on the composition side
- * returns `{ publicConfig, biolandSettings }`. This is the seam the unit suite drives and the seam
- * p03-01 wires to whatever it can actually reach.
- *
- * ## Never values
- *
- * The report and the checkpoint carry key paths, difference kinds, rule ids and counts. Before
- * anything is printed or written, every string in the report — paths and site codes included — is
- * run through p02-03's shared `findLeaks` (`shared/utils/leak-detection.ts`) and replaced with
- * `<redacted:kind>` if it is credential-shaped. Paths are attacker-influenceable: `biolandSettings`
- * is editor-authored, so a key NAME can carry a pasted secret. The checkpoint holds no path at all.
- * Error text is redacted the same way before it reaches stderr.
+ * The check is a capability probe, not version arithmetic: `process.features.typescript` reports
+ * what the running binary will actually do, so a supported version launched with
+ * `--no-experimental-strip-types` is caught too. It is deliberately conservative — an unreadable
+ * probe refuses with an explanation rather than proceeding into the opaque loader crash.
  *
  * @module scripts/registry/parity-diff
  */
 
-import { readFile, writeFile } from 'node:fs/promises'
 import process from 'node:process'
 import { pathToFileURL } from 'node:url'
 
-import { findLeaks } from '../../shared/utils/leak-detection.ts'
-import {
-  canonicalizeDmsm,
-  canonicalizeRegistry,
-  compareSite,
-  diffEnumerations,
-  EXIT_FAILING,
-  EXIT_PASS,
-  EXIT_USAGE,
-  fromCheckpoint,
-  hasFalsyCountryEntry,
-  renderReport,
-  skippedSite,
-  summarize,
-  toCheckpoint,
-} from './parity-core.mjs'
+/** First Node release with type stripping on by default. */
+export const MIN_NODE_VERSION = '22.18.0'
 
-const USAGE =
-  'usage: node scripts/registry/parity-diff.mjs --env <dev|stg|prod> --multi-site-code <code> ' +
-  '[--site <code>] [--resume] [--checkpoint <path>] ' +
-  '(--dmsm-base <url> --composition-base <url> | --source <module>)'
+/**
+ * Explain why this Node cannot load the pipeline, or return `undefined` when it can.
+ *
+ * Pure, and parameterized so the unit suite can drive every branch without spawning — though the
+ * suite spawns a real `node` as well, because Vitest transpiles the `.ts` imports and so cannot
+ * observe the failure this guards against.
+ *
+ * @param {{typescript?: unknown}} features normally `process.features`
+ * @param {string} version normally `process.versions.node`
+ * @returns {string | undefined}
+ */
+export function typeStrippingUnsupported(features = process.features, version = process.versions.node) {
+  if (features?.typescript) return undefined
 
-/** Parse `--flag value` and `--flag` pairs. Unknown flags are a usage error, never ignored. */
-export function parseArgs(argv) {
-  const known = new Set([
-    'env', 'multi-site-code', 'site', 'resume', 'checkpoint',
-    'dmsm-base', 'composition-base', 'source', 'help',
-  ])
-  const booleans = new Set(['resume', 'help'])
-  const options = {}
-
-  for (let index = 0; index < argv.length; index += 1) {
-    const token = argv[index]
-    if (!token.startsWith('--')) throw new Error(`unexpected argument "${token}"`)
-
-    const name = token.slice(2)
-    if (!known.has(name)) throw new Error(`unknown flag "--${name}"`)
-
-    if (booleans.has(name)) {
-      options[name] = true
-      continue
-    }
-
-    const value = argv[index + 1]
-    if (value === undefined || value.startsWith('--')) throw new Error(`--${name} needs a value`)
-    options[name] = value
-    index += 1
-  }
-
-  return options
-}
-
-/** Redact any credential-shaped string. Used on every path, site code and error message emitted. */
-export function redact(value) {
-  if (typeof value !== 'string' || !value) return value
-
-  const finding = findLeaks({ v: value })[0]
-
-  return finding ? `<redacted:${finding.kind}>` : value
-}
-
-/** Deep-redact the report object: every string in it, at any depth, including object keys. */
-export function redactDeep(value) {
-  if (typeof value === 'string') return redact(value)
-  if (Array.isArray(value)) return value.map(redactDeep)
-  if (value === null || typeof value !== 'object') return value
-
-  return Object.fromEntries(
-    Object.entries(value).map(([key, item]) => [redact(key), redactDeep(item)]),
+  return (
+    `Node ${version} cannot run this CLI: it imports TypeScript modules ` +
+    '(shared/utils/leak-detection.ts, server/utils/site-registry/projection.ts) and this build ' +
+    'has no type stripping, so the import would fail with ERR_UNKNOWN_FILE_EXTENSION. ' +
+    `Use Node >= ${MIN_NODE_VERSION}. Note package.json declares engines.node ">=20.0.0" for the ` +
+    'app as a whole; this script needs more than the app does. Refusing to run: a parity gate ' +
+    'that cannot load its comparison rules must not be mistaken for one that found no difference.'
   )
 }
 
-const describeError = error =>
-  redact(error instanceof Error ? `${error.name}: ${error.message}` : String(error))
+/* `EXIT_USAGE` from parity-core.mjs is unreachable here by design — importing it would pull in the
+ * very TypeScript graph this check exists to guard. Kept in sync with that module's value. */
+const EXIT_USAGE = 2
 
-/**
- * The live HTTP sources. Both throw on a non-2xx so a bad slice is never mistaken for an empty one:
- * a 404 enumeration parsed as `{}` would yield zero sites, zero differences and a false PASS.
- * Exported so the unit suite can prove that with `fetch` stubbed, rather than trusting the read.
- */
-export function httpSources({ dmsmBase, compositionBase }) {
-  const getJson = async url => {
-    const response = await fetch(url, { headers: { accept: 'application/json' } })
-    if (!response.ok) throw new Error(`HTTP ${response.status} for ${new URL(url).pathname}`)
+const unsupported = typeStrippingUnsupported()
 
-    return response.json()
-  }
-  const slicePath = ({ env, multiSiteCode }) =>
-    `${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}`
-
-  return {
-    dmsm: {
-      enumerate: async slice =>
-        Object.keys((await getJson(`${dmsmBase}/config/${slicePath(slice)}`))?.sites ?? {}),
-      read: (slice, siteCode) =>
-        getJson(`${dmsmBase}/config/${slicePath(slice)}/${encodeURIComponent(siteCode)}`),
-    },
-    composition: {
-      enumerate: async slice =>
-        (await getJson(`${compositionBase}/api/registry-config/${slicePath(slice)}`))?.sites ?? [],
-      read: (slice, siteCode) =>
-        getJson(
-          `${compositionBase}/api/registry-config/${slicePath(slice)}/${encodeURIComponent(siteCode)}`,
-        ),
-    },
-  }
+if (unsupported) {
+  process.stderr.write(`parity-diff: ${unsupported}\n`)
+  process.exitCode = EXIT_USAGE
+} else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const { main } = await import('./parity-cli.mjs')
+  await main()
 }
-
-async function resolveSources(options) {
-  if (options.source) return import(options.source)
-
-  if (!options['dmsm-base'] || !options['composition-base']) {
-    throw Object.assign(
-      new Error(
-        'no comparand wired: pass --dmsm-base and --composition-base, or --source <module>. ' +
-          'Refusing to run: a parity gate with one side missing can only produce a false PASS.',
-      ),
-      { usage: true },
-    )
-  }
-
-  return httpSources({
-    dmsmBase: options['dmsm-base'].replace(/\/$/, ''),
-    compositionBase: options['composition-base'].replace(/\/$/, ''),
-  })
-}
-
-async function loadCheckpoint(path, slice) {
-  try {
-    return fromCheckpoint(JSON.parse(await readFile(path, 'utf8')), slice)
-  } catch (error) {
-    if (error?.code === 'ENOENT') return new Map()
-
-    throw Object.assign(
-      new Error(`checkpoint at ${path} is unreadable (${describeError(error)}); refusing to resume`),
-      { usage: true },
-    )
-  }
-}
-
-/**
- * Run one slice. Exported so the unit suite drives the whole pipeline — enumeration diff, resume,
- * redaction and exit code — rather than only its parts.
- *
- * @returns {{code: number, report: string, summary: object, checkpoint: object}}
- */
-export async function run(argv, { now = () => new Date().toISOString() } = {}) {
-  const options = parseArgs(argv)
-  const slice = { env: options.env, multiSiteCode: options['multi-site-code'] }
-
-  if (options.help) {
-    throw Object.assign(new Error(USAGE), { usage: true })
-  }
-
-  if (!slice.env || !slice.multiSiteCode) {
-    throw Object.assign(new Error('--env and --multi-site-code are required'), { usage: true })
-  }
-
-  const sources = await resolveSources(options)
-  const checkpointPath =
-    options.checkpoint ?? `.parity-checkpoint-${slice.env}-${slice.multiSiteCode}.json`
-
-  // The enumeration diff runs FIRST and over BOTH sources, before a single site is compared. A
-  // site in one source only is invisible to a loop over the other source's list.
-  const [dmsmCodes, registryCodes] = await Promise.all([
-    sources.dmsm.enumerate(slice),
-    sources.composition.enumerate(slice),
-  ])
-  const enumeration = diffEnumerations(dmsmCodes, registryCodes)
-
-  const resumed = options.resume ? await loadCheckpoint(checkpointPath, slice) : new Map()
-  const targets = options.site ? enumeration.union.filter(c => c === options.site) : enumeration.union
-  const normalizations = {}
-  const records = []
-
-  // A misspelled `--site`, or one absent from both enumerations, leaves an empty target list. With
-  // otherwise-matching enumerations that used to summarize as PASS with `sitesCompared: 0` — an
-  // exit 0 that authorizes the cutover while having compared nothing. The requested site becomes a
-  // not-comparable record instead, which can never leave the run green.
-  if (options.site && !targets.length) {
-    records.push(skippedSite(options.site, 'requested --site is absent from both enumerations'))
-  }
-
-  for (const siteCode of targets) {
-    if (resumed.has(siteCode)) {
-      records.push(resumed.get(siteCode))
-      continue
-    }
-
-    // A site missing from either source cannot be compared, and "not comparable" never counts as
-    // parity — it keeps the verdict red.
-    if (!dmsmCodes.includes(siteCode) || !registryCodes.includes(siteCode)) {
-      records.push(skippedSite(siteCode, 'absent from one enumeration'))
-      continue
-    }
-
-    try {
-      const [dmsm, composed] = await Promise.all([
-        sources.dmsm.read(slice, siteCode),
-        sources.composition.read(slice, siteCode),
-      ])
-
-      if (hasFalsyCountryEntry(composed?.publicConfig?.countries)) {
-        normalizations['falsy countries entry dropped (dmsm filter reproduced)'] =
-          (normalizations['falsy countries entry dropped (dmsm filter reproduced)'] ?? 0) + 1
-      }
-
-      records.push(
-        compareSite({
-          siteCode,
-          dmsm: canonicalizeDmsm(dmsm),
-          registry: canonicalizeRegistry(composed?.publicConfig, composed?.biolandSettings),
-          biolandSettings: composed?.biolandSettings,
-          findLeaks,
-        }),
-      )
-    } catch (error) {
-      records.push(skippedSite(siteCode, describeError(error)))
-    }
-  }
-
-  const summary = redactDeep(summarize({ slice, enumeration, records, normalizations }))
-  const checkpoint = redactDeep({ ...toCheckpoint(slice, records), generatedAt: now() })
-
-  return {
-    code: summary.verdict === 'PASS' ? EXIT_PASS : EXIT_FAILING,
-    report: renderReport(summary),
-    summary,
-    checkpoint,
-    checkpointPath,
-  }
-}
-
-/* Entrypoint wiring only; the pipeline itself is driven end to end by `run()` in the unit suite. */
-async function main() {
-  try {
-    const result = await run(process.argv.slice(2))
-    await writeFile(result.checkpointPath, `${JSON.stringify(result.checkpoint, null, 2)}\n`)
-    process.stdout.write(`${result.report}\n`)
-    process.exitCode = result.code
-  } catch (error) {
-    process.stderr.write(`parity-diff: ${describeError(error)}\n`)
-    process.exitCode = error?.usage ? EXIT_USAGE : EXIT_FAILING
-  }
-}
-
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main()

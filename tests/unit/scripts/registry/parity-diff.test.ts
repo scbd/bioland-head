@@ -9,10 +9,13 @@
  * Fixtures are synthetic. The "credential" values are obviously fake and were typed here, not
  * copied from any config.
  */
+import { execFile } from 'node:child_process'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import process from 'node:process'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { promisify } from 'node:util'
 
 import { afterAll, describe, expect, it } from 'vitest'
 
@@ -30,7 +33,11 @@ import {
   summarize,
   toCheckpoint,
 } from '../../../../scripts/registry/parity-core.mjs'
-import { httpSources, parseArgs, redactDeep, run } from '../../../../scripts/registry/parity-diff.mjs'
+import { httpSources, parseArgs, redactDeep, run } from '../../../../scripts/registry/parity-cli.mjs'
+import {
+  MIN_NODE_VERSION,
+  typeStrippingUnsupported,
+} from '../../../../scripts/registry/parity-diff.mjs'
 import { findLeaks } from '#shared/utils/leak-detection'
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -135,6 +142,78 @@ const sourceFor = (dmsmCodes: string[], registryCodes: string[], sites: Record<s
 
 afterAll(async () => {
   if (sourceDir) await rm(sourceDir, { recursive: true, force: true })
+})
+
+/* ---------------------------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------------------------- */
+
+/**
+ * The Node preflight, exercised by SPAWNING a real `node`.
+ *
+ * Vitest transpiles the `.ts` imports in this pipeline's graph, so it can never observe the loader
+ * failure the guard exists to prevent. Only a real process can. These run the documented command
+ * exactly as the docblock writes it.
+ */
+const repoRoot = fileURLToPath(new URL('../../../../', import.meta.url))
+const entry = 'scripts/registry/parity-diff.mjs'
+const runNode = promisify(execFile)
+
+/** The running Vitest binary may itself predate type stripping; these cases need one that has it. */
+const hasTypeStripping = Boolean(process.features.typescript)
+
+async function spawnEntry(nodeFlags: string[], args: string[]) {
+  try {
+    const { stdout, stderr } = await runNode(process.execPath, [...nodeFlags, entry, ...args], {
+      cwd: repoRoot,
+    })
+
+    return { code: 0, stdout, stderr }
+  } catch (error) {
+    const failure = error as { code?: number, stdout?: string, stderr?: string }
+
+    return { code: failure.code ?? 1, stdout: failure.stdout ?? '', stderr: failure.stderr ?? '' }
+  }
+}
+
+describe('the Node preflight on the documented entry point', () => {
+  it('refuses a build without type stripping, naming the version to use', () => {
+    const message = typeStrippingUnsupported({ typescript: false }, '20.11.0')
+
+    expect(message).toContain('Node 20.11.0')
+    expect(message).toContain(MIN_NODE_VERSION)
+    expect(message).toContain('ERR_UNKNOWN_FILE_EXTENSION')
+  })
+
+  it('refuses a build that does not report the capability at all', () => {
+    expect(typeStrippingUnsupported({}, '21.7.3')).toContain('Node 21.7.3')
+  })
+
+  it('allows a build that strips types', () => {
+    expect(typeStrippingUnsupported({ typescript: 'strip' }, '22.18.0')).toBeUndefined()
+  })
+
+  it.skipIf(!hasTypeStripping)(
+    'exits 2 with the explanation, not an opaque loader crash, under a real node that cannot strip',
+    async () => {
+      const result = await spawnEntry(['--no-experimental-strip-types'], [...SLICE])
+
+      expect(result.code).toBe(EXIT_USAGE)
+      expect(result.stderr).not.toContain('ERR_UNKNOWN_FILE_EXTENSION:')
+      expect(result.stderr).toContain('parity-diff:')
+      expect(result.stderr).toContain(MIN_NODE_VERSION)
+    },
+  )
+
+  it.skipIf(!hasTypeStripping)(
+    'loads the real pipeline under a real node that can strip, reaching the CLI\'s own usage check',
+    async () => {
+      const result = await spawnEntry([], [...SLICE])
+
+      expect(result.stderr).toContain('no comparand wired')
+      expect(result.code).toBe(EXIT_USAGE)
+    },
+  )
 })
 
 /* ---------------------------------------------------------------------------------------------- */
