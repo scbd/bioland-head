@@ -1,7 +1,9 @@
 <template>
     <!-- Collapse entirely when the fetch resolved with no record: a bare wrapper still takes its
-         column in the widget grid and leaves a visible hole on every site with no courses. -->
-    <div v-if="showWidget && (loading || record)" class="position-relative">
+         column in the widget grid and leaves a visible hole on every site with no courses.
+         `!error` is part of the gate because a cached record survives a failed refresh, and the
+         inner branch below refuses to render it -- which would leave that same hole. -->
+    <div v-if="showWidget && (loading || (record && !error))" class="position-relative">
         <!-- Placeholder shown during loading -->
         <div v-if="loading">
             <div class="text-capitalize placeholder-glow">

@@ -104,5 +104,38 @@ describe('html', () => {
 
       expect(htmlSanitize(input)).not.toContain('src=')
     })
+
+    it('drops a mixed srcset whose first candidate has a scheme', () => {
+      // The leading `/a.jpg` satisfies both the prefix and the scheme check when they are anchored
+      // to the whole attribute, so the stripped second candidate used to survive and get requested
+      // as a path: the 414 and HTTP/2 teardown this hook exists to prevent.
+      const input  = `<img src="/a.jpg" srcset="/a.jpg 1x, image/jpeg;base64,${'A'.repeat(4000)} 2x">`
+
+      expect(htmlSanitize(input)).not.toContain('srcset')
+    })
+
+    it('drops a mixed srcset whose oversized candidate is not a shape we recognise', () => {
+      const input  = `<img src="/a.jpg" srcset="/a.jpg 1x, ${'A'.repeat(4000)} 2x">`
+
+      expect(htmlSanitize(input)).not.toContain('srcset')
+    })
+
+    it('keeps a legitimate relative srcset', () => {
+      const input  = '<img src="/a.jpg" srcset="/img/a.png 1x, /img/a@2x.png 2x">'
+
+      expect(htmlSanitize(input)).toContain('srcset="/img/a.png 1x, /img/a@2x.png 2x"')
+    })
+
+    it('never repairs an svg payload, whatever DOMPurify would accept', () => {
+      // DOMPurify's DATA_URI_TAGS rule accepts ANY `data:` value on <img src>, `text/html`
+      // included, so `base64ImageTypes` is the whole guard. Pin it: widening that list is what
+      // would re-attach an attacker-authored document.
+      const input  = '<img src="image/svg+xml;base64,PHN2Zz48c2NyaXB0PmFsZXJ0KDEpPC9zY3JpcHQ+PC9zdmc+">'
+
+      // Left inert rather than repaired: no `data:` scheme is re-attached, so the payload is
+      // never parsed as a document. `text/html` is held to the same line.
+      expect(htmlSanitize(input)).not.toContain('data:')
+      expect(htmlSanitize('<img src="text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">')).not.toContain('data:')
+    })
   })
 })

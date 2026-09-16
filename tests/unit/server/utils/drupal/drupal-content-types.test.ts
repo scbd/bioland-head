@@ -36,7 +36,7 @@ const requestedLimits = () => fetchMock.mock.calls
 
 describe('content type menu limits', () => {
   it.each([undefined, {}, { megaMenu: {} }])(
-    'reports missing menu settings once while loading every content type: %j',
+    'reports missing menu settings once per call, not once per content type: %j',
     async biolandSettings => {
       const menus = await useContentTypeMenus({ ...ctx, biolandSettings })
 

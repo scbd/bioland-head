@@ -42,15 +42,41 @@ const base64ImageSrc    = new RegExp(`^image\\/(?:${base64ImageTypes})${base64Im
 const maxUrlLength      = 2048;
 const hasUsableScheme   = /^(?:https?:|data:|\/|#)/i;
 
+// `srcset` is a candidate list, so a guard anchored to the whole attribute only ever sees the
+// first candidate: `"/a.jpg 1x, image/jpeg;base64,AAAA... 2x"` starts with a usable scheme and
+// keeps its stripped payload, which the browser still requests as a path. Match the stripped
+// shape at any candidate boundary instead, and length-check each url token rather than the
+// joined value. A stripped payload carries its own comma (`;base64,`), so the candidates are
+// split on whitespace as well: a base64 payload never contains any.
+const base64ImageCandidate = new RegExp(`(?:^|[\\s,])image\\/(?:${base64ImageTypes})${base64ImageParams};base64,`, 'i');
+
+const hasOversizedCandidate = value => value
+  .split(/[\s,]+/)
+  .some(token => token.length > maxUrlLength && !hasUsableScheme.test(token));
+
 const repairBase64Image = (node, attr) =>
   {
     const value = node.getAttribute(attr) || '';
 
     if(!value) return;
 
+    // srcset wins over src in the browser, so a candidate list carrying a stripped payload is
+    // removed outright rather than repaired: the repaired src is what should render.
+    if(attr === 'srcset'){
+      if(base64ImageCandidate.test(value) || hasOversizedCandidate(value)) node.removeAttribute(attr);
+
+      return;
+    }
+
     if(base64ImagePrefix.test(value)){
-      // srcset wins over src in the browser, so a schemeless candidate list is removed outright
-      // rather than repaired: the repaired src is what should render.
+      // `base64ImageSrc` is the ONLY thing standing between an editor's payload and the rendered
+      // document. This hook runs in `afterSanitizeAttributes`, so the write below lands after
+      // DOMPurify has already applied `ALLOWED_URI_REGEXP` and is never re-validated -- and
+      // DOMPurify would not catch it anyway: its DATA_URI_TAGS rule accepts ANY `data:` value on
+      // `<img src>`, `data:text/html` and `data:image/svg+xml` included. Widening
+      // `base64ImageTypes` therefore re-attaches an attacker-authored document with nothing left
+      // to stop it. Keep the type list raster-only and the payload class free of `<`, `>`, `:`,
+      // `,`, `%` and quotes.
       if(node.tagName?.toLowerCase() === 'img' && attr === 'src' && base64ImageSrc.test(value)) node.setAttribute(attr, `data:${value}`);
       else node.removeAttribute(attr);
 

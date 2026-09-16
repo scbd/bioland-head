@@ -7,14 +7,14 @@
     const { t } = useI18n();
     const siteStore = useSiteStore();
     const bannerStyle = computed(() => ({
-        background: siteStore?.primaryColor,
-        color: contrastTextColor(siteStore?.primaryColor),
+        background: siteStore.primaryColor,
+        color: contrastTextColor(siteStore.primaryColor),
     }));
 </script>
 <style scoped>
     .dev-site {
-        padding: 1 rem;
+        padding: 1rem;
         text-align: center;
-        font-size: .7 rem;
+        font-size: .7rem;
     }
 </style>
