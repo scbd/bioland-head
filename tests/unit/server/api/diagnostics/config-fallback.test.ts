@@ -5,16 +5,23 @@ import {
   resetConfigFallbackCounts,
 } from '../../../../../server/utils/observability/config-fallback';
 
+/** Headers the handler set, keyed by header name. Cleared before every test. */
+const responseHeaders = new Map<string, string>();
+
 // Bind the Nitro auto-imports the route relies on before importing it in plain-Node Vitest.
 vi.stubGlobal('defineEventHandler', (handler: unknown) => handler);
 vi.stubGlobal('createError', (input: { statusCode: number; statusMessage: string }) =>
   Object.assign(new Error(input.statusMessage), input));
+vi.stubGlobal('setResponseHeader', (_event: unknown, name: string, value: string) => {
+  responseHeaders.set(name, value);
+});
 
 type DiagnosticsEvent = { context?: { me?: Record<string, unknown> } };
 
 let handler: (event: DiagnosticsEvent) => {
   scope: string;
   generatedAt: string;
+  logLevel: number;
   counts: Array<Record<string, unknown>>;
 };
 
@@ -26,6 +33,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
   resetConfigFallbackCounts();
+  responseHeaders.clear();
   vi.spyOn(consola, 'warn').mockImplementation(() => {});
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-09-15T12:00:00.000Z'));
@@ -73,13 +81,46 @@ describe('GET /api/diagnostics/config-fallback authentication', () => {
   });
 });
 
+/**
+ * The response is admin-only and per-caller. `server/middleware/cache-control.js` would
+ * otherwise drop this path into its shared-cacheable default (`max-age=15`,
+ * `stale-if-error=1w`, no `private`, no `Vary: Cookie`), which lets an intermediary keying
+ * on path alone hand one administrator's body to an anonymous caller. The handler must be
+ * correct on its own, not rely on the middleware being amended.
+ */
+describe('GET /api/diagnostics/config-fallback cacheability', () => {
+  it('sets Cache-Control: no-store on the served response', () => {
+    handler(asAdmin);
+
+    expect(responseHeaders.get('Cache-Control')).toBe('no-store, max-age=0');
+  });
+
+  it('sets no cache header at all on a rejected request', () => {
+    expect(() => handler({ context: { me: { isAdmin: false } } })).toThrow();
+    expect(responseHeaders.size).toBe(0);
+  });
+});
+
 describe('GET /api/diagnostics/config-fallback payload', () => {
   it('reports an empty container honestly', () => {
     expect(handler(asAdmin)).toEqual({
       scope: 'container',
       generatedAt: '2026-09-15T12:00:00.000Z',
+      logLevel: consola.level,
       counts: [],
     });
+  });
+
+  it('reports the effective log level, so an empty aggregate can be told from a muted sink', () => {
+    const original = consola.level;
+
+    try {
+      consola.level = 0;
+
+      expect(handler(asAdmin).logLevel).toBe(0);
+    } finally {
+      consola.level = original;
+    }
   });
 
   it('exposes this container counts keyed by env:multiSiteCode:siteCode:reason', () => {

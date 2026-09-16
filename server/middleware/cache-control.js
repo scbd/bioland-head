@@ -15,12 +15,15 @@ export default defineEventHandler((event) => {
     const isMeApi       = !isMenusApi && pathname.match(/\/api\/me/);
     const isForumsApi   = pathname.match(/\/api\/forums\/[a-f0-9\-]+\/[a-f0-9\-]+/);
     const byPassCache   = !!searchParams.get('seachain-taisce') || false;
+    // Admin-only, per-caller payloads. Those handlers set no-store themselves; this is the
+    // backstop so a diagnostics route can never fall into the shared-cacheable default below.
+    const isDiagnostics = pathname.match(/\/api\/diagnostics\//);
 
     const isIpx        = pathname.match(/\/_ipx\//);
     const isNuxt       = pathname.match(/\/_nuxt\//);
     const isSites      = pathname.match(/\/sites\/[a-zA-Z0-9]+\/files\//);
     const isAsset      = isIpx || isNuxt || isSites || pathname.match(/(.+)\.(avif|webp|jpg|jpeg|gif|css|png|js|ico|svg|mjs)/)
-    const isNoCache    = isMeApi || isCommentsApi || isForumsApi || byPassCache;
+    const isNoCache    = isMeApi || isCommentsApi || isForumsApi || isDiagnostics || byPassCache;
 
     if (isNoCache)
       res.setHeader('Cache-Control', `no-store, max-age=0`);
