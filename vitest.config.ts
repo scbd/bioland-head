@@ -11,6 +11,8 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      // D14: a task adding code outside this glob extends it with the specific path it owns, never a
+      // tree-wide widening — p02-02 adds its own new route family here.
       // D14: extended for p01-01 — server/utils/thesaurus/index.js is .js (outside the
       // *.ts glob above) and server/api/thesaurus/[termIdentifier]/index.ts lives under
       // server/api, not server/utils. Both changed for the title/name localization fix.
@@ -33,7 +35,8 @@ export default defineConfig({
         'scripts/thesaurus/classify-resolvable-keys.mjs',
         // p03-05: the plan/archive/promote/apply logic is all exported and measured; only the
         // real-filesystem `main()` wiring carries a `v8 ignore` block, same pattern as p02-05.
-        'scripts/i18n/remove-resolved-locale-keys.mjs'
+        'scripts/i18n/remove-resolved-locale-keys.mjs',
+        'server/api/thesaurus/terms/**/*.ts'
       ]
     }
   },
