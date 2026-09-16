@@ -169,8 +169,34 @@ export interface SeedFindings {
    * MultiSite codes missing a `config.name` or `config.baseHost`. Both are
    * REQUIRED on read, so a slice listed here seeds a row `readMultiSiteConfig`
    * and every `readSite` under it will reject.
+   *
+   * REFUSED by `seedSlice`, not merely reported. Both columns are NULL-able in
+   * storage, so the write itself would succeed and the damage would only show up
+   * at read time — which is precisely why the refusal has to be in code.
    */
   multiSitesMissingRequired: Record<string, number>
+  /**
+   * `multiSiteCode/siteCode.field` for every site missing a `name`,
+   * `defaultLocale` or `locales`. Unlike the multiSite case these are REFUSED,
+   * not merely reported: `default_locale` and `locales` are `NOT NULL` in
+   * `server/assets/schema.sql`, so a NULL bind raises `ER_BAD_NULL_ERROR`
+   * mid-loop, and a NULL `name` seeds a row that reads back as a hard failure.
+   * `seedSlice` throws `RegistrySeedIncompleteSiteError` before its first write.
+   */
+  sitesMissingRequired: Record<string, number>
+  /**
+   * `multiSiteCode/key` where the sites map key and the site's own `siteCode`
+   * field disagree. dmsm derives `host` from `site.siteCode`; this module uses
+   * the map key, so a mismatch silently changes both the derived host and the
+   * primary key. Names only — both halves are codes.
+   */
+  siteCodeKeyMismatches: Record<string, number>
+  /**
+   * Top-level entries that are neither `meta` nor a multiSite object — an array
+   * or a scalar at the document root. They are skipped by
+   * `listSourceMultiSites`, so without this they would vanish from the report.
+   */
+  nonMultiSiteTopLevelKeys: string[]
   counts: {
     multiSites: number
     sites: number
@@ -246,6 +272,15 @@ function optBoolean(raw: unknown): boolean | undefined {
   return typeof raw === 'boolean' ? raw : undefined
 }
 
+/**
+ * **Parity delta, deliberate.** dmsm's `countries` pipeline ends in
+ * `.filter(x => x)` (`dmsm/server/utils/config/index.js:245`), which drops every
+ * falsy entry — an empty string included. This keeps `''`, because a source
+ * array of `['']` is a data problem the registry should preserve rather than
+ * quietly launder, and because the only consumer that compares the two is
+ * p02-10's parity run, which needs to SEE the difference. p02-10 must therefore
+ * normalise empty strings out of both sides before comparing.
+ */
 function optStringArray(raw: unknown): string[] | undefined {
   if (!Array.isArray(raw)) return undefined
   const entries = raw.filter((entry): entry is string => typeof entry === 'string')
@@ -330,6 +365,12 @@ export function deriveMultiSiteRecord(
  * See the module JSDoc: when `countries` is non-empty dmsm drops the site's own
  * `country`, because `country|''` evaluates to `0`. Matching that is what keeps
  * the registry in parity with the config dmsm serves today.
+ *
+ * **Parity delta, deliberate.** Where dmsm yields an empty array this returns
+ * `undefined`, so the column stores SQL NULL rather than `'[]'` — "no countries
+ * recorded" and "recorded as none" stay distinguishable, and an absent field
+ * never becomes a stored value. p02-10 must treat NULL and `[]` as equal, and
+ * must normalise empty strings out of both sides (see `optStringArray`).
  */
 export function deriveCountries(site: Record<string, unknown>): string[] | undefined {
   const passed = optStringArray(site.countries)
@@ -352,11 +393,16 @@ export function deriveCountries(site: Record<string, unknown>): string[] | undef
  * string) stores NULL and is counted in `unstorableValueShapes`. Writing the raw
  * value through would seed rows that make `readSite` throw — the exact failure
  * this seeder must not manufacture.
+ *
+ * `geobon` must already BE a boolean. `Boolean(raw)` was wrong: it turned the
+ * string `"false"` into `true`, inverting the flag rather than reporting that
+ * upstream had changed shape. A non-boolean `geobon` is an unstorable value
+ * shape like any other, and is counted as one.
  */
 export function deriveHideHomePageWidgets(raw: unknown): { geobon: boolean } | undefined {
   const record = optObject(raw)
-  if (!record || !('geobon' in record)) return undefined
-  return { geobon: Boolean(record.geobon) }
+  if (!record || typeof record.geobon !== 'boolean') return undefined
+  return { geobon: record.geobon }
 }
 
 /**
@@ -477,8 +523,12 @@ export function collectFindings(env: string, document: SeedSourceDocument): Seed
   const droppedKeys: Record<string, number> = {}
   const unstorableValueShapes: Record<string, number> = {}
   const multiSitesMissingRequired: Record<string, number> = {}
+  const sitesMissingRequired: Record<string, number> = {}
+  const siteCodeKeyMismatches: Record<string, number> = {}
   const multiSitesWithConfigI18n: string[] = []
   const multiSitesWithConfigSettings: string[] = []
+  const nonMultiSiteTopLevelKeys = Object.keys(document)
+    .filter(key => key !== 'meta' && !multiSites.includes(key))
 
   let sites = 0
   let sitesWithTheme = 0
@@ -504,10 +554,27 @@ export function collectFindings(env: string, document: SeedSourceDocument): Seed
       else if (!MAPPED_MULTI_SITE_KEYS.has(key)) tally(unknownMultiSiteConfigKeys, `config.${key}`)
     }
 
-    for (const site of Object.values(optObject(block.sites) ?? {})) {
+    for (const [siteCode, site] of Object.entries(optObject(block.sites) ?? {})) {
       const record = optObject(site)
       if (!record) continue
       sites += 1
+
+      // The map key is what becomes the primary key and the derived host; dmsm
+      // derives its host from `site.siteCode`. A disagreement silently changes
+      // both, so it is a finding rather than a preference.
+      const declaredSiteCode = optString(record.siteCode)
+      if (declaredSiteCode && declaredSiteCode !== siteCode) {
+        tally(siteCodeKeyMismatches, `${multiSiteCode}/${siteCode}`)
+      }
+
+      // REFUSED by seedSlice, not merely reported — see the SeedFindings JSDoc.
+      if (!optString(record.name)) tally(sitesMissingRequired, `${multiSiteCode}/${siteCode}.name`)
+      if (!optString(record.defaultLocale)) {
+        tally(sitesMissingRequired, `${multiSiteCode}/${siteCode}.defaultLocale`)
+      }
+      if (!optStringArray(record.locales)) {
+        tally(sitesMissingRequired, `${multiSiteCode}/${siteCode}.locales`)
+      }
 
       if (optObject(record.theme)) sitesWithTheme += 1
       if (optString(record.country)) sitesWithCountry += 1
@@ -542,6 +609,9 @@ export function collectFindings(env: string, document: SeedSourceDocument): Seed
     droppedKeys,
     unstorableValueShapes,
     multiSitesMissingRequired,
+    sitesMissingRequired,
+    siteCodeKeyMismatches,
+    nonMultiSiteTopLevelKeys,
     counts: {
       multiSites: multiSites.length,
       sites,

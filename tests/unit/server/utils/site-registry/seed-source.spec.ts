@@ -242,8 +242,14 @@ describe('deriveSiteRecord', () => {
       expect(deriveSiteRecord('stg', 'bl2', 'be', { hideHomePageWidgets: raw }, {})
         .hideHomePageWidgets, JSON.stringify(raw)).toBeUndefined()
     }
-    expect(deriveSiteRecord('stg', 'bl2', 'be', { hideHomePageWidgets: { geobon: 1 } }, {})
-      .hideHomePageWidgets).toEqual({ geobon: true })
+    // `geobon` must already BE a boolean. Boolean(raw) turned the string
+    // "false" into true — inverting the flag instead of reporting a shape change.
+    for (const raw of [1, 0, 'false', 'true', null]) {
+      expect(deriveSiteRecord('stg', 'bl2', 'be', { hideHomePageWidgets: { geobon: raw } }, {})
+        .hideHomePageWidgets, JSON.stringify(raw)).toBeUndefined()
+    }
+    expect(deriveSiteRecord('stg', 'bl2', 'be', { hideHomePageWidgets: { geobon: false } }, {})
+      .hideHomePageWidgets).toEqual({ geobon: false })
 
     for (const raw of [{ slug: 'x' }, 42, ['x']]) {
       expect(deriveSiteRecord('stg', 'bl2', 'be', { geoBonPage: raw }, {})
@@ -329,6 +335,34 @@ describe('collectFindings', () => {
 
     expect(collectFindings('stg', { xx: { config: {}, sites: {} } }).multiSitesMissingRequired)
       .toEqual({ 'xx.name': 1, 'xx.baseHost': 1 })
+  })
+
+  it('reports every site missing a field the slice write refuses on', () => {
+    // seedSlice throws RegistrySeedIncompleteSiteError on these before its first
+    // write: default_locale and locales are NOT NULL, and readSite requires name.
+    expect(findings.sitesMissingRequired).toEqual({
+      'bl2/be.defaultLocale': 1, 'bl2/be.locales': 1,
+      'bl2/ck.name': 1, 'bl2/ck.defaultLocale': 1, 'bl2/ck.locales': 1,
+      'bl2/zz.name': 1, 'bl2/zz.defaultLocale': 1, 'bl2/zz.locales': 1,
+      'bsl/gt.name': 1, 'bsl/gt.defaultLocale': 1, 'bsl/gt.locales': 1,
+    })
+  })
+
+  it('tallies a sites-map key that disagrees with the site’s own siteCode', () => {
+    // The map key becomes the primary key AND the derived host; dmsm derives its
+    // host from site.siteCode. A mismatch silently changes both.
+    expect(findings.siteCodeKeyMismatches).toEqual({})
+    expect(collectFindings('stg', {
+      bl2: { config: {}, sites: { be: { siteCode: 'belgium' } } },
+    }).siteCodeKeyMismatches).toEqual({ 'bl2/be': 1 })
+  })
+
+  it('reports a top-level entry that is neither meta nor a multiSite', () => {
+    // listSourceMultiSites skips a non-object root entry, so without this it
+    // would vanish from the report entirely.
+    expect(findings.nonMultiSiteTopLevelKeys).toEqual([])
+    expect(collectFindings('stg', { bl2: { config: {}, sites: {} }, oddments: [1, 2], version: 3 })
+      .nonMultiSiteTopLevelKeys).toEqual(['oddments', 'version'])
   })
 
   it('reports a value stored as NULL because the read contract would reject it', () => {

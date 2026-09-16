@@ -17,6 +17,12 @@ import { describe, it, expect, vi } from 'vitest'
  * values back the way the driver does: JSON columns as text, TINYINT as 0/1.
  */
 
+/** Columns declared NOT NULL in `server/assets/schema.sql`. */
+const NOT_NULL_COLUMNS: Record<string, string[]> = {
+  'site_registry.multi_site_config': ['env', 'multi_site_code'],
+  'site_registry.site_config': ['env', 'multi_site_code', 'site_code', 'default_locale', 'locales'],
+}
+
 /** The two registry tables, keyed by primary key, as the driver would see them. */
 function registryStore() {
   const rows = new Map<string, Record<string, unknown>>()
@@ -27,6 +33,14 @@ function registryStore() {
     const [, table, columnList] = /^INSERT INTO (\S+) \(([^)]+)\) VALUES/.exec(sql)!
     const columns = columnList.split(', ')
     const row = Object.fromEntries(columns.map((column, index) => [column, params[index]]))
+
+    // NOT NULL as declared in server/assets/schema.sql. Without this the store
+    // happily accepted a row MariaDB would have rejected.
+    for (const column of NOT_NULL_COLUMNS[table] ?? []) {
+      if (row[column] === null || row[column] === undefined) {
+        throw Object.assign(new Error(`Column '${column}' cannot be null`), { code: 'ER_BAD_NULL_ERROR' })
+      }
+    }
     const parts = columns.includes('site_code')
       ? [row.env, row.multi_site_code, row.site_code]
       : [row.env, row.multi_site_code]
@@ -37,8 +51,29 @@ function registryStore() {
     return { affectedRows: 1 }
   }
 
+  /** The slice prune: keep only the site codes the plan named. */
+  const prune = (sql: string, params: unknown[]) => {
+    const [, table] = /^DELETE FROM (\S+) WHERE/.exec(sql)!
+    const [env, multiSiteCode, ...keep] = params
+    const prefix = `${key(table, [env, multiSiteCode])}|`
+    let affectedRows = 0
+
+    for (const rowKey of [...rows.keys()]) {
+      if (!rowKey.startsWith(prefix)) continue
+      if (keep.includes(rowKey.slice(prefix.length))) continue
+      rows.delete(rowKey)
+      affectedRows += 1
+    }
+    return { affectedRows }
+  }
+
   const query = async (sql: string, params: unknown[] = []) => {
+    // The seeder wraps a slice in a transaction. This store commits as it goes —
+    // rollback semantics are covered in write.spec.ts; here the point is only
+    // that the statements do not derail the round trip.
+    if (sql === 'START TRANSACTION' || sql === 'COMMIT' || sql === 'ROLLBACK') return { affectedRows: 0 }
     if (sql.startsWith('INSERT INTO')) return insert(sql, params)
+    if (sql.startsWith('DELETE FROM')) return prune(sql, params)
 
     if (/FROM site_registry\.site_config s/.test(sql)) {
       const [env, multiSiteCode, siteCode] = params as string[]
@@ -106,6 +141,10 @@ const SOURCE = `{
         hideHomePageWidgets: { geobon: true },
         geoBonPage: 'geobon-be',
       },
+      // The minimal site: only the fields the storage and read contracts
+      // require. The fully-populated be site above was the only fixture here, which
+      // is how a row that binds SQL NULL into a NOT NULL column went unnoticed.
+      zz: { siteCode: 'zz', name: 'Zed', defaultLocale: 'en', locales: ['en'] },
     },
   },
 }`
@@ -168,6 +207,19 @@ describe('seed → readSite round trip', () => {
       settings: undefined,
       i18n: { maxLangBeforeWrap: 4 },
     })
+  })
+
+  it('round-trips the minimal site, whose every optional column is NULL', async () => {
+    await seedSlice(store, plan())
+
+    const site = await readSite('stg', 'bl2', 'zz')
+
+    expect(site).toMatchObject({
+      siteCode: 'zz', name: 'Zed', defaultLocale: 'en', locales: ['en'],
+      host: 'zz.example.test',
+    })
+    // The multiSite theme still reaches it, with nothing of its own to merge.
+    expect(site.theme).toEqual({ color: { primary: '#111111' }, hero: { style: 'wide' } })
   })
 
   it('proves the ordering matters: a site row without its slice row is unreadable', async () => {

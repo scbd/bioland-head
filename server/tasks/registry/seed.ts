@@ -29,15 +29,26 @@
  * development the dev server's task endpoint is the way in:
  *
  * ```
- * yarn dev            # in one shell
+ * DMSM_CONFIG_DIR=/path/to/dmsm/config yarn dev      # in one shell
  * curl -s 'http://localhost:3000/_nitro/tasks/registry:seed?env=stg&multiSiteCode=bl2&dryRun=true'
  * ```
  *
- * Whoever owns the OPS-1 flips therefore needs either a nuxi that exposes a task
- * command or a thin standalone runner — which is why `createSeedConnection`
- * takes its credentials as an argument instead of reaching for
- * `useRuntimeConfig()`: the only thing such a runner has to supply is that
- * object.
+ * That route builds its payload from `getQuery(event)`, so **every value arrives
+ * as a string** — which is why `dryRun` goes through `parseDryRun` rather than an
+ * identity check against `true`, and why an unrecognised spelling refuses to run
+ * instead of quietly seeding for real.
+ *
+ * It is also unauthenticated, so `configDir` may only narrow within the root the
+ * environment names (`DMSM_CONFIG_ROOT`, falling back to `DMSM_CONFIG_DIR`); see
+ * `resolveConfigDir`.
+ *
+ * That is fine for the seeding and dry-run passes this task exists for, and it
+ * is the right shape for p02-06, which re-invokes the seeder with `runTask()`
+ * from inside Nitro. It is **not** a production ops command yet. Whoever owns
+ * the OPS-1 flips needs either a Nitro upgrade that bundles tasks or a thin
+ * standalone runner — which is why `createSeedConnection` takes its credentials
+ * as an argument instead of reaching for `useRuntimeConfig()`: the only thing
+ * such a runner would have to supply is that object.
  *
  * `env` and `multiSiteCode` are both required and the task refuses to run
  * without them, so it cannot silently write the wrong slice. `dryRun` derives
@@ -61,6 +72,8 @@
  * @module server/tasks/registry/seed
  */
 import { readFile } from 'node:fs/promises'
+import { resolve, sep } from 'node:path'
+import { consola } from 'consola'
 import {
   KNOWN_ENVS,
   buildSeedPlan,
@@ -79,29 +92,96 @@ export interface SeedTaskPayload {
   dryRun?: unknown
 }
 
+/** Spellings of `dryRun` that mean "derive and report, write nothing". */
+const DRY_RUN_TRUE = new Set(['true', '1'])
+/** Spellings that mean "write for real". Anything else is refused. */
+const DRY_RUN_FALSE = new Set(['false', '0'])
+
+/**
+ * Coerce `dryRun` from a payload that may have come off a query string.
+ *
+ * Nitro's dev task route builds the payload with `getQuery(event)`, so every
+ * value arrives as a STRING. `payload.dryRun === true` therefore read the
+ * documented `?dryRun=true` as false and **seeded for real** — the single most
+ * dangerous line in this task.
+ *
+ * Absent is false, because that is the only way a caller can express "just run
+ * it". Every other unrecognised value is refused loudly rather than defaulted to
+ * false: a typo in this flag is the difference between a report and a write.
+ *
+ * @throws {Error} the value is neither a boolean nor a recognised spelling.
+ */
+export function parseDryRun(raw: unknown): boolean {
+  if (raw === undefined || raw === null) return false
+  if (typeof raw === 'boolean') return raw
+
+  if (typeof raw === 'string') {
+    const value = raw.trim().toLowerCase()
+    if (DRY_RUN_TRUE.has(value)) return true
+    if (DRY_RUN_FALSE.has(value)) return false
+  }
+
+  throw new Error(
+    'registry:seed: payload.dryRun must be true | false | "true" | "false" | "1" | "0". '
+    + 'Refusing to run rather than guess — an unrecognised value would otherwise seed for real.',
+  )
+}
+
+/**
+ * Resolve the source directory, confined to an operator-configured root.
+ *
+ * `configDir` is caller-controlled, and on the only documented way to run this
+ * task (the dev task endpoint) that caller is an unauthenticated query string.
+ * `resolve(configDir, '<env>.json5')` would otherwise traverse anywhere on the
+ * box and put the parsed document's top-level key names into the HTTP response.
+ * The filename is pinned to `dev|stg|prod.json5`, which makes it narrow — but
+ * p02-06 adds a `scheduledTasks` entry, and a sibling task has already shown
+ * that shipping the task runtime is all it takes to make this reachable.
+ *
+ * So the environment names the root (`DMSM_CONFIG_ROOT`, falling back to
+ * `DMSM_CONFIG_DIR`) and the payload may only narrow WITHIN it. A payload
+ * `configDir` with no configured root is refused outright.
+ *
+ * @throws {Error} no root is configured, or the requested directory escapes it.
+ */
+export function resolveConfigDir(requested: string, env: NodeJS.ProcessEnv): string {
+  const root = (env.DMSM_CONFIG_ROOT ?? env.DMSM_CONFIG_DIR ?? '').trim()
+  if (!root) {
+    throw new Error('registry:seed requires payload.configDir or the DMSM_CONFIG_DIR environment variable')
+  }
+
+  const resolvedRoot = resolve(root)
+  const resolved = resolve(requested || resolvedRoot)
+  if (resolved !== resolvedRoot && !resolved.startsWith(`${resolvedRoot}${sep}`)) {
+    // The requested path is not echoed: it is caller-controlled text on an
+    // unauthenticated endpoint, and echoing it back is a reflection primitive.
+    throw new Error('registry:seed: payload.configDir must resolve inside the configured config root')
+  }
+  return resolved
+}
+
 /**
  * Validate the payload before anything is read.
  *
- * @throws {Error} a required argument is missing or not a known env, which
- *   makes `nuxi task run` exit non-zero.
+ * @throws {Error} a required argument is missing, is not a known env, carries an
+ *   unrecognised `dryRun`, or points outside the configured config root — each
+ *   of which makes the task exit non-zero.
  */
 export function readSeedArguments(payload: SeedTaskPayload, env = process.env) {
   const envName = typeof payload.env === 'string' ? payload.env.trim() : ''
   const multiSiteCode = typeof payload.multiSiteCode === 'string' ? payload.multiSiteCode.trim() : ''
-  const configDir = typeof payload.configDir === 'string' && payload.configDir.trim()
-    ? payload.configDir.trim()
-    : (env.DMSM_CONFIG_DIR ?? '').trim()
+  const requestedDir = typeof payload.configDir === 'string' ? payload.configDir.trim() : ''
 
   if (!envName) throw new Error('registry:seed requires payload.env (dev | stg | prod)')
   if (!KNOWN_ENVS.includes(envName)) {
     throw new Error(`registry:seed: unknown env "${envName}" (expected ${KNOWN_ENVS.join(' | ')})`)
   }
   if (!multiSiteCode) throw new Error('registry:seed requires payload.multiSiteCode')
-  if (!configDir) {
-    throw new Error('registry:seed requires payload.configDir or the DMSM_CONFIG_DIR environment variable')
-  }
 
-  return { env: envName, multiSiteCode, configDir, dryRun: payload.dryRun === true }
+  const dryRun = parseDryRun(payload.dryRun)
+  const configDir = resolveConfigDir(requestedDir, env)
+
+  return { env: envName, multiSiteCode, configDir, dryRun }
 }
 
 /**
@@ -128,8 +208,13 @@ export function formatFindings(findings: SeedFindings): string[] {
     `  sites with i18n: ${findings.counts.sitesWithI18n}`,
     `  sites with hasBl1: ${findings.counts.sitesWithHasBl1}`,
     `  sites with logo: ${findings.counts.sitesWithLogo}`,
-    '  multiSites missing a column readMultiSiteConfig requires:',
+    `  top-level entries that are not a multiSite: ${findings.nonMultiSiteTopLevelKeys.join(', ') || '(none)'}`,
+    '  multiSites missing a column readMultiSiteConfig requires (these REFUSE their slice too):',
     ...list(findings.multiSitesMissingRequired),
+    '  sites missing a required field (these REFUSE the slice, they are not just reported):',
+    ...list(findings.sitesMissingRequired),
+    '  sites whose map key disagrees with their own siteCode:',
+    ...list(findings.siteCodeKeyMismatches),
     '  values stored as NULL because the read contract would reject them:',
     ...list(findings.unstorableValueShapes),
     '  unknown config keys (not in the contract):',
@@ -152,23 +237,42 @@ export default defineTask({
     const fileName = sourceFileName(configDir, env)
 
     // A read or parse failure aborts before any connection is opened, so a
-    // malformed source writes nothing at all.
-    const document = parseSeedSource(await readFile(fileName, 'utf8'), fileName)
+    // malformed source writes nothing at all. A raw ENOENT would put the
+    // absolute config path into the HTTP error, so it is wrapped like the parse
+    // failure already is — the env name is enough for an operator.
+    let text: string
+    try {
+      text = await readFile(fileName, 'utf8')
+    }
+    catch {
+      throw new Error(`registry:seed: could not read the ${env} config file from the configured config root`)
+    }
 
-    const findings = collectFindings(env, document)
-    for (const line of formatFindings(findings)) console.log(line)
-
-    const plan = buildSeedPlan(env, multiSiteCode, document)
+    // `plan` and `findings` are the only things that outlive this block; the
+    // parsed document is hundreds of kilobytes of plaintext credentials, so the
+    // reference is dropped as soon as both are derived.
+    const { plan, findings } = (() => {
+      const document = parseSeedSource(text, fileName)
+      const collected = collectFindings(env, document)
+      // Logged in here so the report still reaches the operator when the
+      // requested slice turns out to be the thing that is missing.
+      consola.info(formatFindings(collected).join('\n'))
+      return { plan: buildSeedPlan(env, multiSiteCode, document), findings: collected }
+    })()
+    text = ''
 
     if (dryRun) {
-      console.log(`registry:seed dry run: would upsert 1 multiSite row and ${plan.sites.length} site rows for env=${env} multiSiteCode=${multiSiteCode}`)
+      consola.info(`registry:seed dry run: would upsert 1 multiSite row and ${plan.sites.length} site rows for env=${env} multiSiteCode=${multiSiteCode}`)
       return { result: { dryRun: true, multiSites: 1, sites: plan.sites.length, findings } }
     }
 
     const connection = await createSeedConnection(getDbConfig())
     try {
       const written = await seedSlice(connection, plan)
-      console.log(`registry:seed wrote ${written.multiSites} multiSite row and ${written.sites} site rows for env=${env} multiSiteCode=${multiSiteCode}`)
+      // The removal count is reported alongside the writes on purpose: pruning
+      // a stale row is the one destructive thing a seed does, so it must never
+      // happen silently.
+      consola.info(`registry:seed wrote ${written.multiSites} multiSite row and ${written.sites} site rows, removed ${written.sitesRemoved} stale site rows, for env=${env} multiSiteCode=${multiSiteCode}`)
       return { result: { dryRun: false, ...written, findings } }
     }
     finally {

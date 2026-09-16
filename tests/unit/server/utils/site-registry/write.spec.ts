@@ -14,11 +14,14 @@ vi.mock('../../../../../server/utils/db/pool', () => ({
 const {
   SECRET_BEARING_KEYS,
   RegistrySeedForbiddenKeyError,
+  RegistrySeedIncompleteMultiSiteError,
+  RegistrySeedIncompleteSiteError,
   RegistrySeedSliceMismatchError,
   RegistrySeedWriteError,
   assertNoSecretBearingKeys,
   buildSeedConnectionOptions,
   createSeedConnection,
+  findSecretBearingKeys,
   scrubFailureClass,
   seedMultiSiteConfig,
   seedSiteConfig,
@@ -45,49 +48,141 @@ const SOURCE = `{
     sites: {
       be: {
         siteCode: 'be', name: 'Belgium', logo: '/sites/be/logo.svg',
+        defaultLocale: 'en', locales: ['en', 'fr'],
         country: 'BE', countries: ['BE', 'LU'],
         published: true, scbd: false, hasBl1: 'yes', i18n: true,
         theme: { color: { primary: '#222222' } }, hideHomePageWidgets: { geobon: true },
         smtpCredentials: { password: '${DUMMY_DB_PASSWORD}' }, meta: { email: 'nobody@example.test' },
       },
-      zz: { siteCode: 'zz' },
+      // The minimal site: nothing but the three fields the storage and read
+      // contracts require. Everything else must land as SQL NULL.
+      zz: { siteCode: 'zz', name: 'Zed', defaultLocale: 'en', locales: ['en'] },
     },
   },
 }`
+
+/** The same file with a site that carries none of the required fields. */
+const SOURCE_INCOMPLETE_SITE = SOURCE.replace(
+  `zz: { siteCode: 'zz', name: 'Zed', defaultLocale: 'en', locales: ['en'] }`,
+  `zz: { siteCode: 'zz' }`,
+)
+
+/**
+ * The same file with a slice block missing both columns `readMultiSiteConfig`
+ * requires. Storage takes NULL for either, so only a code-level refusal catches
+ * it — the sites themselves are untouched and still perfectly valid.
+ */
+const SOURCE_INCOMPLETE_MULTI_SITE = SOURCE.replace(
+  `multiSiteCode: 'bl2', name: 'Bioland 2', description: 'The bl2 network',
+      baseHost: 'example.test', defaultLocale: 'en',`,
+  `multiSiteCode: 'bl2', description: 'The bl2 network',
+      defaultLocale: 'en',`,
+)
 
 function plan() {
   return buildSeedPlan('stg', 'bl2', parseSeedSource(SOURCE, '/synthetic/stg.json5'))
 }
 
 /**
+ * Columns declared `NOT NULL` in `server/assets/schema.sql`.
+ *
+ * The fake used to be a bare `Map.set(pk, row)` with no column semantics at all,
+ * which is how a site row bound with a NULL `default_locale` / `locales` passed
+ * every test here while raising `ER_BAD_NULL_ERROR` against a real strict-mode
+ * MariaDB. Enforcing the constraint is what makes that case fail in CI instead.
+ */
+const NOT_NULL_COLUMNS: Record<string, string[]> = {
+  'site_registry.multi_site_config': ['env', 'multi_site_code'],
+  'site_registry.site_config': ['env', 'multi_site_code', 'site_code', 'default_locale', 'locales'],
+}
+
+/**
  * An in-memory stand-in for the two registry tables that implements
  * `INSERT … ON DUPLICATE KEY UPDATE` the way MariaDB does: the primary key
- * decides identity, and a repeated write replaces the row rather than adding one.
+ * decides identity, a repeated write replaces the row rather than adding one,
+ * a NOT NULL column bound NULL raises `ER_BAD_NULL_ERROR`, and the slice's
+ * writes are held out of `rows` until `COMMIT`.
  */
 function fakeDb() {
   const rows = new Map<string, Record<string, unknown>>()
   const calls: Array<{ sql: string, params: unknown[] }> = []
+  let pending: Map<string, Record<string, unknown>> | null = null
+  let pendingDeletes: Set<string> = new Set()
 
   return {
     rows,
     calls,
     async query(sql: string, params: unknown[] = []) {
       calls.push({ sql, params })
+
+      if (sql === 'START TRANSACTION') {
+        pending = new Map()
+        pendingDeletes = new Set()
+        return { affectedRows: 0 }
+      }
+      if (sql === 'COMMIT') {
+        for (const key of pendingDeletes) rows.delete(key)
+        for (const [key, row] of pending ?? []) rows.set(key, row)
+        pending = null
+        pendingDeletes = new Set()
+        return { affectedRows: 0 }
+      }
+      if (sql === 'ROLLBACK') {
+        pending = null
+        pendingDeletes = new Set()
+        return { affectedRows: 0 }
+      }
+
+      // The prune. Modelled like the upserts are: committed rows are what the
+      // statement sees, and the removal only lands in `rows` at COMMIT, so a
+      // rollback has to leave a stale row exactly where it was.
+      const pruneMatch = /^DELETE FROM (\S+) WHERE env = \? AND multi_site_code = \? AND site_code NOT IN \(([^)]*)\)$/
+        .exec(sql)
+      if (pruneMatch) {
+        const [, table] = pruneMatch
+        const [env, multiSiteCode, ...keep] = params
+        const prefix = `${table}|${env}|${multiSiteCode}|`
+        let affectedRows = 0
+
+        for (const key of [...rows.keys(), ...(pending?.keys() ?? [])]) {
+          if (!key.startsWith(prefix)) continue
+          if (keep.includes(key.slice(prefix.length))) continue
+          pendingDeletes.add(key)
+          affectedRows += 1
+        }
+        return { affectedRows }
+      }
+
       const match = /^INSERT INTO (\S+) \(([^)]+)\) VALUES/.exec(sql)
       if (!match) throw new Error('unexpected statement')
 
       const [, table, columnList] = match
       const columns = columnList.split(', ')
       const row = Object.fromEntries(columns.map((column, index) => [column, params[index]]))
+
+      for (const column of NOT_NULL_COLUMNS[table] ?? []) {
+        if (row[column] === null || row[column] === undefined) {
+          throw Object.assign(
+            new Error(`Column '${column}' cannot be null`),
+            { code: 'ER_BAD_NULL_ERROR', errno: 1048 },
+          )
+        }
+      }
+
       const key = columns.includes('site_code')
         ? [row.env, row.multi_site_code, row.site_code]
         : [row.env, row.multi_site_code]
 
-      rows.set(`${table}|${key.join('|')}`, row)
+      ;(pending ?? rows).set(`${table}|${key.join('|')}`, row)
       return { affectedRows: 1 }
     },
     async end() {},
   }
+}
+
+/** INSERT calls only — the transaction statements are asserted separately. */
+function inserts(db: ReturnType<typeof fakeDb>) {
+  return db.calls.filter(call => call.sql.startsWith('INSERT INTO'))
 }
 
 function snapshot(db: ReturnType<typeof fakeDb>) {
@@ -158,6 +253,161 @@ describe('assertNoSecretBearingKeys', () => {
   it('passes a derived record', () => {
     expect(() => assertNoSecretBearingKeys('t', plan().sites[0])).not.toThrow()
   })
+
+  // The guarantee the schema banner claims — "no secret-bearing column exists" —
+  // covers the SCALAR columns only. `settings`, `theme` and `i18n` are opaque
+  // JSON blobs copied wholesale from the source, so a credential nested inside
+  // one of them was bound verbatim while the old top-level `key in record` check
+  // reported clean. These are the cases that check could never see.
+  it('finds a credential nested inside the settings blob', () => {
+    expect(findSecretBearingKeys({
+      env: 'stg',
+      settings: { mail: { smtpCredentials: { password: DUMMY_DB_PASSWORD } } },
+    })).toEqual(['settings.mail.smtpCredentials'])
+  })
+
+  it('finds an API key nested inside the theme blob', () => {
+    expect(findSecretBearingKeys({ theme: { hero: { panoramaKey: DUMMY_API_KEY } } }))
+      .toEqual(['theme.hero.panoramaKey'])
+  })
+
+  it('finds one nested inside an array', () => {
+    expect(findSecretBearingKeys({ settings: { hosts: [{ dataBase: { user: 'x' } }] } }))
+      .toEqual(['settings.hosts[0].dataBase'])
+  })
+
+  it('reports the path, never the value', () => {
+    let message = ''
+    try {
+      assertNoSecretBearingKeys('t', { theme: { panoramaKey: DUMMY_API_KEY } })
+    }
+    catch (error) {
+      message = (error as Error).message
+    }
+    expect(message).toContain('theme.panoramaKey')
+    expect(message).not.toContain(DUMMY_API_KEY)
+  })
+
+  it('still refuses a non-storable deployment key at the top level', () => {
+    expect(() => assertNoSecretBearingKeys('t', { env: 'stg', drupalRoot: '/srv/drupal' }))
+      .toThrow(RegistrySeedForbiddenKeyError)
+    // …but not the same word nested in a public blob, where it is just a word.
+    expect(findSecretBearingKeys({ theme: { root: { fontSize: '16px' } } })).toEqual([])
+  })
+
+  it('refuses a blob too deep to scan rather than waving it through', () => {
+    // 20 levels of nesting is not something the derivation was designed to
+    // carry, so "I could not prove this is clean" is reported, not ignored.
+    let deep: Record<string, unknown> = { panoramaKey: DUMMY_API_KEY }
+    for (let level = 0; level < 20; level += 1) deep = { nest: deep }
+
+    const found = findSecretBearingKeys({ settings: deep })
+    expect(found).toHaveLength(1)
+    expect(found[0]).toContain('nested deeper than')
+    expect(() => assertNoSecretBearingKeys('t', { settings: deep }))
+      .toThrow(RegistrySeedForbiddenKeyError)
+  })
+
+  it('caps how many paths one pathological blob can report', () => {
+    const settings = Object.fromEntries(
+      Array.from({ length: 30 }, (_, index) => [`slot${index}`, { smtpCredentials: {} }]),
+    )
+    expect(findSecretBearingKeys({ settings }).length).toBeLessThanOrEqual(10)
+  })
+
+  it('survives a cycle rather than hanging', () => {
+    const cyclic: Record<string, unknown> = { theme: {} }
+    ;(cyclic.theme as Record<string, unknown>).self = cyclic
+    expect(findSecretBearingKeys(cyclic)).toEqual([])
+  })
+})
+
+describe('required site fields', () => {
+  function incompletePlan() {
+    return buildSeedPlan('stg', 'bl2', parseSeedSource(SOURCE_INCOMPLETE_SITE, '/synthetic/stg.json5'))
+  }
+
+  it('refuses the whole slice before the first write', async () => {
+    const db = fakeDb()
+
+    await expect(seedSlice(db, incompletePlan()))
+      .rejects.toBeInstanceOf(RegistrySeedIncompleteSiteError)
+
+    // Not one statement issued — not the slice row, not even START TRANSACTION.
+    // `default_locale` and `locales` are NOT NULL, so discovering this mid-loop
+    // would leave every earlier site already committed.
+    expect(db.calls).toHaveLength(0)
+    expect(db.rows.size).toBe(0)
+  })
+
+  it('names every missing field, and no values', async () => {
+    let message = ''
+    try {
+      await seedSlice(fakeDb(), incompletePlan())
+    }
+    catch (error) {
+      message = (error as Error).message
+    }
+    expect(message).toContain('zz: name, defaultLocale, locales')
+    expect(message).not.toContain('be:')
+  })
+
+  it('refuses a single incomplete record too, not only a whole plan', async () => {
+    const db = fakeDb()
+    const record = { ...plan().sites[1], defaultLocale: undefined }
+
+    await expect(seedSiteConfig(db, record)).rejects.toBeInstanceOf(RegistrySeedIncompleteSiteError)
+    expect(db.calls).toHaveLength(0)
+  })
+
+  it('refuses a slice whose multiSite record cannot be read back', async () => {
+    const db = fakeDb()
+    const incomplete = buildSeedPlan(
+      'stg', 'bl2', parseSeedSource(SOURCE_INCOMPLETE_MULTI_SITE, '/synthetic/stg.json5'),
+    )
+
+    // Regression: the preflight validated only the sites, so this seeded a row
+    // with NULL name / base_host, reported success, and readMultiSiteConfig then
+    // rejected it as malformed — taking every readSite in the slice with it.
+    await expect(seedSlice(db, incomplete))
+      .rejects.toBeInstanceOf(RegistrySeedIncompleteMultiSiteError)
+
+    // Aborted before START TRANSACTION, exactly like the site-level refusal.
+    expect(db.calls).toHaveLength(0)
+    expect(db.rows.size).toBe(0)
+  })
+
+  it('names the multiSite and the missing fields, and no values', async () => {
+    let message = ''
+    try {
+      await seedSlice(fakeDb(), buildSeedPlan(
+        'stg', 'bl2', parseSeedSource(SOURCE_INCOMPLETE_MULTI_SITE, '/synthetic/stg.json5'),
+      ))
+    }
+    catch (error) {
+      message = (error as Error).message
+    }
+    expect(message).toContain('bl2: name, baseHost')
+    expect(message).not.toContain(DUMMY_DB_PASSWORD)
+  })
+
+  it('refuses a single incomplete multiSite record too, not only a whole plan', async () => {
+    const db = fakeDb()
+
+    await expect(seedMultiSiteConfig(db, { ...plan().multiSite, baseHost: undefined }))
+      .rejects.toBeInstanceOf(RegistrySeedIncompleteMultiSiteError)
+    expect(db.calls).toHaveLength(0)
+  })
+
+  it('would hit ER_BAD_NULL_ERROR if the guard were removed', async () => {
+    // Proves the fake models the constraint, so this class of bug fails here
+    // rather than against a real strict-mode server.
+    const db = fakeDb()
+    await expect(db.query(
+      'INSERT INTO site_registry.site_config (env, multi_site_code, site_code, default_locale) VALUES (?, ?, ?, ?)',
+      ['stg', 'bl2', 'zz', null],
+    )).rejects.toMatchObject({ code: 'ER_BAD_NULL_ERROR' })
+  })
 })
 
 describe('seedSiteConfig / seedMultiSiteConfig', () => {
@@ -165,7 +415,7 @@ describe('seedSiteConfig / seedMultiSiteConfig', () => {
     const db = fakeDb()
     await seedSlice(db, plan())
 
-    for (const call of db.calls) {
+    for (const call of inserts(db)) {
       expect(call.sql).toMatch(/^INSERT INTO site_registry\.\w+ \(/)
       expect(call.sql).not.toContain('Belgium')
       expect(call.sql).not.toContain('#222222')
@@ -207,7 +457,7 @@ describe('seedSiteConfig / seedMultiSiteConfig', () => {
     await seedSlice(db, plan())
 
     const row = db.rows.get('site_registry.site_config|stg|bl2|zz')!
-    for (const column of ['name', 'aliases', 'theme', 'country', 'countries', 'has_bl1', 'i18n_enabled']) {
+    for (const column of ['description', 'aliases', 'theme', 'country', 'countries', 'has_bl1', 'i18n_enabled']) {
       expect(row[column], column).toBeNull()
     }
     // `host` is the one field that is derived rather than copied.
@@ -277,7 +527,7 @@ describe('write ordering', () => {
     const db = fakeDb()
     await seedSlice(db, plan())
 
-    const tables = db.calls.map(call => /^INSERT INTO (\S+) /.exec(call.sql)![1])
+    const tables = inserts(db).map(call => /^INSERT INTO (\S+) /.exec(call.sql)![1])
 
     // readSite LEFT JOINs the site row to its slice row and throws
     // RegistryRowMissingError when the join misses, so a site row written first
@@ -295,6 +545,7 @@ describe('write ordering', () => {
 
     const db = {
       async query(sql: string) {
+        if (!sql.startsWith('INSERT INTO')) return { affectedRows: 0 }
         const table = /^INSERT INTO (\S+) /.exec(sql)![1]
         order.push(`start:${table}`)
         // Hold the slice write open; a site write starting now would prove the
@@ -307,7 +558,9 @@ describe('write ordering', () => {
     }
 
     const seeding = seedSlice(db, plan())
-    await Promise.resolve()
+    // A full macrotask, so START TRANSACTION and the slice write have both been
+    // issued; anything after this that is not awaited would already show up.
+    await new Promise(resolve => setTimeout(resolve, 0))
     expect(order).toEqual(['start:site_registry.multi_site_config'])
 
     releaseSlice()
@@ -327,6 +580,148 @@ describe('write ordering', () => {
     // The slice row is not written either: a plan that cannot be trusted to name
     // its own slice must not leave a half-seeded network behind.
     expect(db.calls).toHaveLength(0)
+  })
+})
+
+describe('transaction', () => {
+  it('wraps the whole slice so a mid-loop failure leaves nothing behind', async () => {
+    const db = fakeDb()
+    const good = plan()
+    const failing = {
+      ...good,
+      // Passes the up-front validation, fails at bind time: a value the column
+      // cannot take. Exactly the shape of a mid-loop driver failure.
+      sites: [good.sites[0], { ...good.sites[1], siteCode: null as unknown as string }],
+    }
+
+    await expect(seedSlice(db, failing)).rejects.toBeInstanceOf(RegistrySeedWriteError)
+
+    // The slice row and the first site row were both written inside the
+    // transaction, and both are gone.
+    expect(db.rows.size).toBe(0)
+    expect(db.calls.at(-1)!.sql).toBe('ROLLBACK')
+  })
+
+  it('commits once, after the last site row', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+
+    expect(db.calls.map(call => call.sql.split(' ').slice(0, 2).join(' '))).toEqual([
+      'START TRANSACTION', 'INSERT INTO', 'INSERT INTO', 'INSERT INTO', 'DELETE FROM', 'COMMIT',
+    ])
+    expect(db.rows.size).toBe(3)
+  })
+})
+
+describe('reconciling rows the source dropped', () => {
+  /** The same file with `be` removed — a site deleted, renamed or moved away. */
+  const SOURCE_WITHOUT_BE = SOURCE.replace(
+    /be: \{[\s\S]*?\},\n {6}\/\/ The minimal site/,
+    '// The minimal site',
+  )
+
+  function planWithoutBe() {
+    return buildSeedPlan('stg', 'bl2', parseSeedSource(SOURCE_WITHOUT_BE, '/synthetic/stg.json5'))
+  }
+
+  it('drops the SOURCE_WITHOUT_BE fixture down to one site', () => {
+    // Guards the regex above: a fixture that silently still carried `be` would
+    // make every test below pass for the wrong reason.
+    expect(planWithoutBe().sites.map(site => site.siteCode)).toEqual(['zz'])
+  })
+
+  it('removes a row the reseeded slice no longer names', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+    expect(db.rows.has('site_registry.site_config|stg|bl2|be')).toBe(true)
+
+    const second = await seedSlice(db, planWithoutBe())
+
+    // Regression: the loop only upserted the surviving sites, so `be` kept its
+    // row indefinitely, listSites kept returning it, and the drift re-seed could
+    // never make the registry converge to the source.
+    expect(db.rows.has('site_registry.site_config|stg|bl2|be')).toBe(false)
+    expect(db.rows.has('site_registry.site_config|stg|bl2|zz')).toBe(true)
+    expect(second.sitesRemoved).toBe(1)
+  })
+
+  it('converges to exactly the plan, not a superset of every plan ever seeded', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+    await seedSlice(db, planWithoutBe())
+
+    const siteCodes = [...db.rows.keys()]
+      .filter(key => key.startsWith('site_registry.site_config|'))
+      .map(key => key.split('|').at(-1))
+    expect(siteCodes).toEqual(['zz'])
+  })
+
+  it('leaves another slice and the slice row alone', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+    // A neighbouring slice that must survive a bl2 reseed untouched.
+    db.rows.set('site_registry.site_config|stg|bsl|be', { env: 'stg', multi_site_code: 'bsl', site_code: 'be' })
+    db.rows.set('site_registry.site_config|prod|bl2|be', { env: 'prod', multi_site_code: 'bl2', site_code: 'be' })
+
+    await seedSlice(db, planWithoutBe())
+
+    expect(db.rows.has('site_registry.site_config|stg|bsl|be')).toBe(true)
+    expect(db.rows.has('site_registry.site_config|prod|bl2|be')).toBe(true)
+    expect(db.rows.has('site_registry.multi_site_config|stg|bl2')).toBe(true)
+  })
+
+  it('binds every site code as a parameter and interpolates none of them', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+
+    const prune = db.calls.find(call => call.sql.startsWith('DELETE FROM'))!
+    expect(prune.sql).toBe(
+      'DELETE FROM site_registry.site_config WHERE env = ? AND multi_site_code = ? '
+      + 'AND site_code NOT IN (?, ?)',
+    )
+    expect(prune.params).toEqual(['stg', 'bl2', 'be', 'zz'])
+  })
+
+  it('rolls the removal back with the rest of the slice', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+
+    const failing = planWithoutBe()
+    failing.sites = [...failing.sites, { ...plan().sites[1], siteCode: null as unknown as string }]
+
+    await expect(seedSlice(db, failing)).rejects.toBeInstanceOf(RegistrySeedWriteError)
+
+    // A prune that lands while the slice that justified it is rolled back would
+    // delete a live site for nothing.
+    expect(db.rows.has('site_registry.site_config|stg|bl2|be')).toBe(true)
+    expect(db.calls.at(-1)!.sql).toBe('ROLLBACK')
+  })
+
+  it('prunes nothing when the plan carries no sites at all', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+
+    const empty = { ...plan(), sites: [] }
+    const result = await seedSlice(db, empty)
+
+    // A `sites: {}` block parses perfectly and is indistinguishable from a
+    // truncated source, so emptying a slice stays a deliberate out-of-band act.
+    // Both rows survive, including `be`'s non-regenerable last-known-good cache.
+    expect(db.rows.has('site_registry.site_config|stg|bl2|be')).toBe(true)
+    expect(db.rows.has('site_registry.site_config|stg|bl2|zz')).toBe(true)
+    expect(result.sitesRemoved).toBe(0)
+    expect(db.calls.filter(call => call.sql.startsWith('DELETE FROM'))).toHaveLength(1)
+  })
+
+  it('never names a column another task owns', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+
+    // The prune does take last_known_good_settings with the row, which is why
+    // the statement must stay keyed on the slice and nothing else.
+    const prune = db.calls.find(call => call.sql.startsWith('DELETE FROM'))!
+    expect(prune.sql).not.toContain('last_known_good')
+    expect(prune.sql).not.toContain('network_summary')
   })
 })
 
@@ -351,7 +746,7 @@ describe('idempotency', () => {
     const db = fakeDb()
     await seedSlice(db, plan())
 
-    for (const call of db.calls) {
+    for (const call of inserts(db)) {
       expect(call.sql).toContain('ON DUPLICATE KEY UPDATE')
     }
   })
