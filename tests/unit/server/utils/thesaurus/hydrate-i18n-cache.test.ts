@@ -6,18 +6,17 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
  * is no `@nuxt/test-utils` runtime harness in this repo.
  *
  * Most specs inject every MariaDB/filesystem call through `hydrateI18nCache`'s own `deps` seam — no real
- * database or real `identifier-labels.json` file is ever touched. One spec ("the lock's connection is the
- * one that releases it") deliberately does NOT override `acquireLockFn`/`releaseLockFn`/`getPageFn`, so it
- * exercises the REAL `acquireHydrationLock`/`releaseHydrationLock`/`getCachedTranslationsPage` from
+ * database is ever touched. `readIdentifierLabelMap`'s non-injected path reads the real, statically
+ * imported `identifier-labels.json` (see that function's docblock for why it is a static import rather
+ * than a runtime `fs.readFile` — the Docker production image copies only `.output`, so a source-tree
+ * `fs` read finds nothing there at boot). One spec ("the lock's connection is the one that releases it")
+ * deliberately does NOT override `acquireLockFn`/`releaseLockFn`/`getPageFn`, so it exercises the REAL
+ * `acquireHydrationLock`/`releaseHydrationLock`/`getCachedTranslationsPage` from
  * `server/utils/translate/index.js` against a mocked `mariadb` pool — this is the one test that would fail
  * if a future refactor "simplified" the lock functions back to the per-call release idiom (the exact trap
  * the war-game and task Step 3 both call out).
  */
 vi.mock('mariadb', () => ({ default: { createPool: () => fakePool } }))
-
-/** Backs the real (non-injected) `readIdentifierLabelMap`'s `fs.promises.readFile` call. */
-const readFileMock = vi.fn()
-vi.mock('node:fs', () => ({ promises: { readFile: (...args: unknown[]) => readFileMock(...args) } }))
 
 /** Every connection the fake pool has ever handed out, in acquisition order. */
 const createdConnections: Array<{ id: number; query: ReturnType<typeof vi.fn>; release: ReturnType<typeof vi.fn> }> = []
@@ -369,29 +368,28 @@ describe('hydrateI18nCache', () => {
     expect(deps.storage.setItem).toHaveBeenCalledWith(buildLabelKey('tr', 'ID-C', 'fr'), expect.anything())
   })
 
-  it('reads and parses the real committed identifier-labels.json via readIdentifierLabelMap when not overridden', async () => {
-    readFileMock.mockResolvedValueOnce(JSON.stringify({ labels: [{ identifier: 'ID-A', label: 'Alpha' }] }))
+  it('reads and parses the real, statically-bundled identifier-labels.json via readIdentifierLabelMap when not overridden', async () => {
+    // No fs/import mocking: this exercises the actual static import (the BL-1005 P1 fix — a build-time
+    // import that Nitro inlines into the server bundle, unlike the old `fs.readFile(process.cwd() + ...)`
+    // which found nothing in the production `.output`-only Docker image). CCA4B662-8EF4-418D-B327-0D6F418AA703
+    // / 'Africa - All countries' is a real, stable entry in the committed file.
     const deps = makeDeps({})
     delete (deps as Record<string, unknown>).readIdentifierLabels
     deps.getPageFn = vi
       .fn()
-      .mockResolvedValueOnce([{ source_locale: 'en', target_locale: 'fr', cache_key: 'Alpha', translation_value: 'Alpha (fr)' }])
+      .mockResolvedValueOnce([{
+        source_locale: 'en',
+        target_locale: 'fr',
+        cache_key: 'Africa - All countries',
+        translation_value: 'Afrique - Tous les pays'
+      }])
       .mockResolvedValueOnce([])
 
     await hydrateI18nCache(deps)
 
-    expect(readFileMock).toHaveBeenCalledWith(expect.stringContaining('identifier-labels.json'), 'utf8')
-    expect(deps.storage.setItem).toHaveBeenCalledWith(buildLabelKey('tr', 'ID-A', 'fr'), expect.anything())
-  })
-
-  it('treats an unreadable/unparseable committed identifier-labels.json as absent (abort, no crash)', async () => {
-    readFileMock.mockRejectedValueOnce(new Error('ENOENT: no such file'))
-    const deps = makeDeps({})
-    delete (deps as Record<string, unknown>).readIdentifierLabels
-
-    await expect(hydrateI18nCache(deps)).resolves.toBeUndefined()
-
-    expect(deps.getPageFn).not.toHaveBeenCalled()
-    expect(deps.logger.warn).toHaveBeenCalled()
+    expect(deps.storage.setItem).toHaveBeenCalledWith(
+      buildLabelKey('tr', 'CCA4B662-8EF4-418D-B327-0D6F418AA703', 'fr'),
+      expect.anything()
+    )
   })
 })

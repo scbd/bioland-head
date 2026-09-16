@@ -34,11 +34,10 @@
  *
  * @module server/utils/thesaurus/hydrate-i18n-cache
  */
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
 import { LABEL_CACHE_VERSION, buildLabelKey } from './resolve-terms';
 import { deserializeIdentifierLabels, SIX_MONTHS_MS } from './seed-translation-cache';
 import { acquireHydrationLock, releaseHydrationLock, getCachedTranslationsPage } from '../translate/index.js';
+import identifierLabelsFile from './identifier-labels.json';
 
 /** `i18n_cache.source_locale` this hydrator reads from — mirrors `translate/index.js`'s own default. */
 const SOURCE_LOCALE = 'en';
@@ -52,9 +51,6 @@ const HYDRATION_PAGE_SIZE = 500;
 /** A truncated `getCacheKey` hash is a 64-character lowercase hex SHA-256 digest — see `getCacheKey`. */
 const TRUNCATED_HASH_PATTERN = /^[0-9a-f]{64}$/;
 
-/** The committed identifier -> English label map, as written by `p03-01`. */
-const IDENTIFIER_LABELS_PATH = () => path.join(process.cwd(), 'server/utils/thesaurus/identifier-labels.json');
-
 /** @returns The version-scoped completion marker key in `useStorage('thesaurus')`. */
 function markerKey(): string {
   return `hydration-marker:${LABEL_CACHE_VERSION}`;
@@ -64,12 +60,19 @@ function markerKey(): string {
  * Default reader for `p03-01`'s committed identifier -> englishLabel map. Injectable via
  * {@link hydrateI18nCache}'s `deps` so tests never touch the real filesystem.
  *
- * @returns The identifier -> englishLabel map, or `null` if the file is absent or fails to parse.
+ * Reads `identifierLabelsFile` via a **static** import rather than a runtime `fs.readFile` against
+ * `process.cwd()`: the production Docker image (`Dockerfile`) copies only the built `.output`
+ * directory into the container, so a source-tree-relative `fs` read of
+ * `server/utils/thesaurus/identifier-labels.json` finds nothing there and this function would abort
+ * hydration on every boot. A static import is traced by Nitro's build and inlined into the server
+ * bundle, so the data ships regardless of what the Dockerfile copies — the same pattern already used
+ * by `server/tasks/i18n/seed-translation-cache.ts`.
+ *
+ * @returns The identifier -> englishLabel map, or `null` if the bundled file fails to parse.
  */
 async function readIdentifierLabelMap(): Promise<Record<string, string> | null> {
   try {
-    const raw = await fs.readFile(IDENTIFIER_LABELS_PATH(), 'utf8');
-    return deserializeIdentifierLabels(JSON.parse(raw));
+    return deserializeIdentifierLabels(identifierLabelsFile as { labels: Array<{ identifier: string; label: string }> });
   } catch {
     return null;
   }
