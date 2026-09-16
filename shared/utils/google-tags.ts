@@ -1,14 +1,19 @@
 /**
- * Google tag configuration parsing and site eligibility.
+ * Google tag configuration parsing and the single on/off switch.
  *
  * A site's Google tag IDs arrive as a single comma separated string on the Drupal
  * `bioland.settings` bag, surfaced to the client as
- * `siteStore.biolandSettings.googleAnalyticsIds`. Nothing here loads a script: this module only
- * decides which tokens are admissible and whether the current site is allowed to run tags at all.
- * The loader lives in `app/plugins/google-tags.client.ts`.
+ * `siteStore.biolandSettings.googleAnalyticsIds`, alongside the administrator's explicit
+ * `googleAnalyticsEnabled` switch. Nothing here loads a script: this module only decides which
+ * tokens are admissible and whether the administrator has turned measurement on. The loader lives
+ * in `app/plugins/google-tags.client.ts`.
+ *
+ * BL-1015 removed the deployment gate that used to sit here (`isGoogleTagsSite`, keyed on `env`,
+ * `multiSiteCode`, dmsm's `published` flag and a `<siteCode>.chm-cbd.net` host template). Tags used
+ * to activate on the presence of IDs, narrowed by rules no administrator could see from the admin
+ * UI. The Drupal checkbox is now the only control, so no environment name appears in any GA code
+ * path. Visitor consent is a separate gate and still applies, in the plugin.
  */
-
-import { normalizeRedirectHost } from './site-host';
 
 /**
  * The only token grammar admitted into a tag loader.
@@ -37,123 +42,16 @@ export interface GoogleTagIds {
 }
 
 /**
- * The slice of site context the eligibility gate reads.
+ * Decides whether the administrator has turned Google Analytics on for this site.
  *
- * Every field is optional so a partially hydrated store fails closed rather than throwing.
- * `published` is the dmsm config's own `published` boolean (`siteStore.config.published`).
- * `redirect` is the site's configured redirect alias, a bare hostname, when dmsm has one
- * (`siteStore.config.redirect`); today no prod site has one.
+ * The value is the Drupal `bioland.settings` key `google_analytics_enabled`, camelCased at the
+ * head boundary to `googleAnalyticsEnabled`. Drupal stores it as a real boolean and ships it as
+ * `false` on every site and every environment, so the comparison is strict: a string `'true'`, a
+ * `1`, a missing key, or a partially hydrated store all mean off. Failing closed here is the whole
+ * point of the switch - a site must measure only because somebody ticked the box.
  */
-export interface GoogleTagSiteContext {
-    env?: string;
-    multiSiteCode?: string;
-    siteCode?: string;
-    published?: boolean;
-    redirect?: string;
-}
-
-/**
- * Per multisite host template a site must match before any tag may load.
- *
- * Keyed by `multiSiteCode`. Today only `bl2` is served, and its production sites are reached at
- * `${siteCode}.chm-cbd.net`. The map is the extension point: adding a multisite means adding a
- * template here, never loosening the comparison. The match is exact, so no suffix or prefix
- * variant of the template is accepted.
- */
-export const GOOGLE_TAG_HOSTS: Record<string, (siteCode: string) => string> = {
-    bl2: (siteCode: string) => `${siteCode.toLowerCase()}.chm-cbd.net`,
-};
-
-/**
- * Reduces a candidate host to a bare, lower cased hostname suitable for an exact comparison.
- *
- * Used for the browser's `window.location.hostname`. An HTTPS origin is accepted too so a
- * caller that includes the scheme still normalises. Redirect aliases use the canonical
- * `normalizeRedirectHost` contract instead. Anything else fails closed with `null`:
- * a non HTTPS scheme, embedded credentials, an explicit port, a non root path, a query or a
- * fragment, or a bare string still carrying `/`, `@`, or `:`. That rejects host confusable input
- * such as `evil.test/real.chm-cbd.net` or a userinfo trick instead of quietly accepting it.
- */
-function normalizeGoogleTagHost(rawHost: unknown): string | null {
-    if (typeof rawHost !== 'string' || rawHost.length === 0) return null;
-
-    let hostname: string;
-
-    if (/^[a-z][a-z0-9+.-]*:\/\//i.test(rawHost)) {
-        let url: URL;
-
-        try {
-            url = new URL(rawHost);
-        } catch {
-            return null;
-        }
-
-        if (url.protocol !== 'https:') return null;
-        if (url.username || url.password) return null;
-        if (url.port) return null;
-        if (url.pathname !== '/' && url.pathname !== '') return null;
-        if (url.search || url.hash) return null;
-
-        hostname = url.hostname;
-    } else {
-        hostname = rawHost;
-    }
-
-    if (!hostname || hostname.includes('/') || hostname.includes('@') || hostname.includes(':')) return null;
-
-    return hostname.toLowerCase();
-}
-
-/**
- * Decides whether the current site is allowed to run Google tags at all.
- *
- * Five conditions, all required, all failing closed:
- *
- * 1. `env` is `prod`, compared case insensitively. `prod` is the runtime token this deployment
- *    actually emits.
- * 2. `multiSiteCode` names an own property of {@link GOOGLE_TAG_HOSTS}. The lookup goes through
- *    `hasOwnProperty`, never a bare index, so a crafted `multiSiteCode` of `constructor` or
- *    `__proto__` cannot resolve to a prototype method and false positive. Adding a multisite is
- *    adding a template to that map and nothing else.
- * 3. `published` is strictly `true`. dmsm's own publish flag, not truthiness of some other field:
- *    a string `'true'`, `1`, or a missing value all fail closed.
- * 4. `browserHost`, the hostname the visitor's browser is actually on, equals either that
- *    multisite's template applied to `siteCode` (`<siteCode>.chm-cbd.net`, compared case
- *    insensitively) or the site's normalised `redirect` alias, when it has one.
- *
- * There is deliberately no comparison against the dmsm-configured host: `context-unified.ts`
- * always builds it as `${siteCode}.${baseHost}` (today `<siteCode>.bl2.chm-cbd.net`), so it can
- * never equal the public template and would make the gate impossible to pass. The browser
- * hostname is what actually gates eligibility now; it is an argument rather than a `window` read
- * so this module stays pure and unit testable, and `app/plugins/google-tags.client.ts` passes
- * `window.location.hostname`.
- *
- * A missing or non string `env`, `multiSiteCode`, or `siteCode`, a `published` that is not
- * strictly `true`, or a browser host that matches neither the template nor a normalised
- * `redirect`, returns `false`.
- */
-export function isGoogleTagsSite(site?: GoogleTagSiteContext | null, browserHost?: string | null): boolean {
-    if (!site || typeof site !== 'object') return false;
-
-    const { env, multiSiteCode, siteCode, published, redirect } = site;
-
-    if (typeof env !== 'string' || typeof multiSiteCode !== 'string' || typeof siteCode !== 'string') return false;
-    if (env.toLowerCase() !== 'prod') return false;
-    if (published !== true) return false;
-
-    const multiSiteKey = multiSiteCode.toLowerCase();
-
-    if (!Object.prototype.hasOwnProperty.call(GOOGLE_TAG_HOSTS, multiSiteKey)) return false;
-
-    const expectedHost = GOOGLE_TAG_HOSTS[multiSiteKey]!(siteCode).toLowerCase();
-    const actualBrowserHost = normalizeGoogleTagHost(browserHost);
-
-    if (actualBrowserHost === null) return false;
-    if (actualBrowserHost === expectedHost) return true;
-
-    const redirectAlias = normalizeRedirectHost(redirect);
-
-    return redirectAlias !== null && actualBrowserHost === redirectAlias;
+export function isGoogleTagsEnabled(enabled?: unknown): boolean {
+    return enabled === true;
 }
 
 /**

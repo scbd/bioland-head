@@ -8,9 +8,9 @@ export const useSiteStore = defineStore('site', {
         },
         initialize( { biolandSettings, locale, identifier,siteCode, defaultLocale, config, siteName, gaiaApi, multiSiteCode, baseHost, env, homePath }){
             // `env` arrives on every context payload (server/api/context/[siteCode]/[locale].js:36)
-            // but was previously dropped here. Persisting it lets client side consumers such as
-            // isGoogleTagsSite() evaluate deployment eligibility. The existing `host` getter
-            // already supplies the other half, so it stays untouched.
+            // but was previously dropped here. Persisting it lets client side consumers read the
+            // deployment, as the `redirect` line below does. Google tags no longer consult it:
+            // BL-1015 made the Drupal checkbox their only control.
             this.set('env',                       env);
             this.set('baseHost',                  baseHost);
             this.set('gaiaApi',                   gaiaApi);

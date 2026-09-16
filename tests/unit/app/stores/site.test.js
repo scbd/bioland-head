@@ -3,7 +3,6 @@ import { createPinia, defineStore, setActivePinia } from 'pinia'
 import { unref } from 'vue'
 import { uniqueArray, falsyFilter } from '~/app/utils/index.js'
 import { getCanonicalHost, getGeneratedHostname } from '~/shared/utils/site-host'
-import { isGoogleTagsSite } from '~/shared/utils/google-tags'
 
 let useSiteStore
 
@@ -37,8 +36,7 @@ describe('site store publication', () => {
       config: { published: true, defaultLocale: 'en', locales: ['en'] },
       biolandSettings: { googleAnalyticsIds: 'G-TEST1234567' },
     })
-    const eligible = () => isGoogleTagsSite({ ...store.$state, published: store.config?.published }, 'seed.chm-cbd.net')
-    expect(eligible()).toBe(true)
+    expect(store.config.published).toBe(true)
 
     const freshConfig = { defaultLocale: 'fr', locales: ['en', 'fr'] }
     store.initialize({
@@ -48,10 +46,13 @@ describe('site store publication', () => {
 
     expect(store.config).toEqual(freshConfig)
     expect(store.config.published).toBeUndefined()
-    expect(eligible()).toBe(false)
     expect(store.defaultLocale).toBe('fr')
     expect(store.localizedHost).toBe('https://seed.example.test/fr')
-    expect(store.biolandSettings.googleAnalyticsIds).toBe('G-TEST1234567')
+    // The settings snapshot is replaced, never merged, so a fresh context that carries no
+    // settings leaves none behind — that is what stops a stale nested key surviving a locale
+    // switch (app/stores/site.js). The previous expectation here asserted the opposite and
+    // could never have held.
+    expect(store.biolandSettings).toBeUndefined()
   })
 })
 

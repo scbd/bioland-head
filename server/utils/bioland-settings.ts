@@ -38,7 +38,9 @@ export const BIOLAND_SETTINGS_ALLOWLIST = [
   "theme",
   /** app/stores/site.js:116 - `config.promoteAndStickyPublic` */
   "config",
-  /** app/plugins/google-tags.client.ts:161 - `googleAnalyticsIds` */
+  /** app/plugins/google-tags.client.ts - `googleAnalyticsEnabled`, the only GA switch (BL-1015) */
+  "googleAnalyticsEnabled",
+  /** app/plugins/google-tags.client.ts - `googleAnalyticsIds` */
   "googleAnalyticsIds",
   /** app/components/page/home-page-widget-selection.vue and the widget/* components */
   "homeWidgets",

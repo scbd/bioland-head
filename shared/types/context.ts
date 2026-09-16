@@ -51,6 +51,7 @@ export interface DmsmConfig {
 export interface BiolandSettings {
   theme?: Record<string, unknown>
   config?: Record<string, unknown>
+  googleAnalyticsEnabled?: boolean
   googleAnalyticsIds?: string
   homeWidgets?: Record<string, unknown>
   megaMenu?: Record<string, unknown>

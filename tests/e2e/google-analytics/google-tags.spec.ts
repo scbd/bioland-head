@@ -13,33 +13,15 @@ const ADS_ID = 'AW-123456789'
 const LEGACY_ID = 'UA-12345-6'
 const CONFIGURED_TAG_IDS = `${GTAG_ID},${GTM_ID},${ADS_ID},${LEGACY_ID},bad-id`
 
-const ELIGIBLE_BASE_HOST = 'chm-cbd.net'
-
-// The site gate now requires the browser's own hostname to match the multisite template too, not
-// just the dmsm-configured host, so a reverse proxy forwarding `Host: <site>.chm-cbd.net` cannot
-// put a tenant's real tags on an attacker origin. That means these tests have to run on the real
-// `<siteCode>.chm-cbd.net` name rather than on `<siteCode>.localhost`. `--host-resolver-rules`
-// points that name at whatever the dev server is already bound to, so no /etc/hosts entry and no
-// test-only bypass in product code is needed. Every case, negative ones included, runs there, so
-// the only condition that varies is the one under test.
-const DEV_URL = new URL(E2E_BASE_URL)
-const SITE_LABEL = DEV_URL.hostname.split('.')[0]
-const ELIGIBLE_HOST = `${SITE_LABEL}.${ELIGIBLE_BASE_HOST}`
-const ELIGIBLE_BASE_URL = `${DEV_URL.protocol}//${ELIGIBLE_HOST}${DEV_URL.port ? `:${DEV_URL.port}` : ''}`
-const ALIAS_HOST = 'alias.example.test'
-const ALIAS_BASE_URL = `${DEV_URL.protocol}//${ALIAS_HOST}${DEV_URL.port ? `:${DEV_URL.port}` : ''}`
-
-test.use({
-  baseURL: ELIGIBLE_BASE_URL,
-  launchOptions: { args: [`--host-resolver-rules=MAP ${ELIGIBLE_HOST} ${DEV_URL.hostname}, MAP ${ALIAS_HOST} ${DEV_URL.hostname}`] },
-})
+// BL-1015 removed the deployment gate (prod-only, a `<siteCode>.chm-cbd.net` host template per
+// multisite, dmsm's `published` flag). The Drupal checkbox is the only control now, so these tests
+// run on whatever host the dev server is already bound to: no `--host-resolver-rules` mapping, no
+// alias host, and no environment name anywhere. The only conditions that vary are the switch, the
+// visitor's consent, and the configured tag IDs.
 
 interface ContextOverrides {
-  env?: string
-  multiSiteCode?: string
-  baseHost?: string
-  published?: unknown // Deliberately includes malformed/missing API values.
-  redirect?: string
+  /** `bioland.settings.google_analytics_enabled`. Deliberately accepts malformed API values. */
+  enabled?: unknown
 }
 
 type NuxtRoot = HTMLElement & {
@@ -112,40 +94,23 @@ async function installPageRecorder (page: Page): Promise<void> {
 }
 
 /**
- * Intercept the client context re-fetch so the site eligibility inputs and the configured tag IDs
+ * Intercept the client context re-fetch so the administrator's switch and the configured tag IDs
  * are under the test's control, and stub every Google endpoint so no real request is made.
  *
- * The gate no longer compares the dmsm-configured host (`context-unified.ts` always builds it as
- * `<siteCode>.bl2.chm-cbd.net`, never the public template) — it compares the browser's own
- * hostname against the template or redirect alias plus `config.published`. The navigation URL
- * controls the browser host; the payload's `baseHost` and `host` do not gate eligibility.
+ * `enabled` defaults to `true` because most cases here are about consent, not the switch. The
+ * switch cases pass it explicitly. Nothing else in the payload can gate a tag any more.
  */
 async function installRoutes (page: Page, overrides: ContextOverrides = {}): Promise<void> {
   await page.route('**/api/context/**', async (route) => {
-    // `--host-resolver-rules` is a browser flag, and `route.fetch` runs in node, which would try to
-    // resolve the real `<site>.chm-cbd.net` and hang the request the `site` plugin awaits. Fetch
-    // the dev server by the name it is actually bound to; the site is resolved off the first host
-    // label either way, so the payload is identical.
-    const target = new URL(route.request().url())
-
-    target.hostname = DEV_URL.hostname
-
-    const response = await route.fetch({ url: target.toString() })
+    const response = await route.fetch()
     const payload = await response.json()
 
     await route.fulfill({
       json: {
         ...payload,
-        env: overrides.env ?? 'prod',
-        multiSiteCode: overrides.multiSiteCode ?? 'bl2',
-        baseHost: overrides.baseHost ?? ELIGIBLE_BASE_HOST,
-        config: {
-          ...(payload.config ?? {}),
-          published: Object.hasOwn(overrides, 'published') ? overrides.published : true,
-          redirect: overrides.redirect,
-        },
         biolandSettings: {
           ...(payload.biolandSettings ?? {}),
+          googleAnalyticsEnabled: Object.hasOwn(overrides, 'enabled') ? overrides.enabled : true,
           googleAnalyticsIds: CONFIGURED_TAG_IDS,
         },
       },
@@ -209,7 +174,7 @@ async function seedGoogleCookies (context: BrowserContext): Promise<void> {
   // tells gtag to write (`cookie_domain: window.location.hostname, cookie_path: '/'`). The revoke
   // path deletes this domain-qualified form explicitly (`path=/; domain=${window.location.hostname}`),
   // so seeding it here genuinely exercises that deletion rather than only the host-only fallback.
-  const domain = new URL(ELIGIBLE_BASE_URL).hostname
+  const domain = new URL(E2E_BASE_URL).hostname
 
   await context.addCookies([
     { name: '_ga', value: 'GA1.1.111.222', domain, path: '/' },
@@ -218,7 +183,7 @@ async function seedGoogleCookies (context: BrowserContext): Promise<void> {
 }
 
 async function cookieNames (context: BrowserContext): Promise<string[]> {
-  return (await context.cookies(ELIGIBLE_BASE_URL)).map((cookie) => cookie.name)
+  return (await context.cookies(E2E_BASE_URL)).map((cookie) => cookie.name)
 }
 
 test.describe('BL-933: Google tags follow analytics consent', () => {
@@ -227,11 +192,11 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
   test.setTimeout(60000)
 
   test('(a) consent granted on an eligible site loads each tag exactly once', async ({ context, page }) => {
-    await seedConsentCookies(context, ELIGIBLE_BASE_URL)
+    await seedConsentCookies(context, E2E_BASE_URL)
     await installPageRecorder(page)
     await installRoutes(page)
 
-    await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+    await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
     await waitForSiteInitialization(page)
 
     await expect(page.locator(
@@ -251,7 +216,7 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
     // The rejected token never reaches the loader.
     expect(countConfigCalls(entries, 'BAD-ID')).toBe(0)
 
-    const hostname = new URL(ELIGIBLE_BASE_URL).hostname
+    const hostname = new URL(E2E_BASE_URL).hostname
     const cookieParams = { cookie_domain: hostname, cookie_path: '/' }
     const setIndex = indexOfCommand(entries, 'set')
     const consentIndex = indexOfCommand(entries, 'consent')
@@ -304,7 +269,7 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
     await installPageRecorder(page)
     await installRoutes(page)
 
-    await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+    await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
     await waitForSiteInitialization(page)
     await page.waitForLoadState('networkidle')
 
@@ -314,7 +279,7 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
   })
 
   test('(b2) consent for other categories only loads nothing', async ({ context, page }) => {
-    const url = `${new URL(ELIGIBLE_BASE_URL).origin}/`
+    const url = `${new URL(E2E_BASE_URL).origin}/`
 
     await context.addCookies([
       { name: 'ncc_c', value: 'bl2ga', url, sameSite: 'Strict' },
@@ -324,7 +289,7 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
     await installPageRecorder(page)
     await installRoutes(page)
 
-    await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+    await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
     await waitForSiteInitialization(page)
     await page.waitForLoadState('networkidle')
 
@@ -333,12 +298,12 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
   })
 
   test('(c) revoking consent silences Google, purges its cookies, and reloads once', async ({ context, page }) => {
-    await seedConsentCookies(context, ELIGIBLE_BASE_URL)
+    await seedConsentCookies(context, E2E_BASE_URL)
     await seedGoogleCookies(context)
     await installPageRecorder(page)
     await installRoutes(page)
 
-    await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+    await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
     await waitForSiteInitialization(page)
 
     await expect(googleScripts(page).first()).toBeAttached({ timeout: 20000 })
@@ -370,64 +335,10 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
     expect(await readLoadCount(page)).toBe(2)
   })
 
-  test('(d) a non-prod env loads nothing even with consent', async ({ context, page }) => {
-    await seedConsentCookies(context, ELIGIBLE_BASE_URL)
-    await installPageRecorder(page)
-    await installRoutes(page, { env: 'stg' })
-
-    await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
-    await waitForSiteInitialization(page)
-    await page.waitForLoadState('networkidle')
-
-    await expect(googleScripts(page)).toHaveCount(0)
-    expect(await readDataLayer(page)).toEqual([])
-  })
-
-  test('(e) a multisite with no host template loads nothing even with consent', async ({ context, page }) => {
-    await seedConsentCookies(context, ELIGIBLE_BASE_URL)
-    await installPageRecorder(page)
-    await installRoutes(page, { multiSiteCode: 'bsl' })
-
-    await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
-    await waitForSiteInitialization(page)
-    await page.waitForLoadState('networkidle')
-
-    await expect(googleScripts(page)).toHaveCount(0)
-    expect(await readDataLayer(page)).toEqual([])
-  })
-
-  test('(f) the generated baseHost does not veto an eligible public browser host', async ({ context, page }) => {
-    await seedConsentCookies(context, ELIGIBLE_BASE_URL)
-    await installPageRecorder(page)
-    await installRoutes(page, { baseHost: 'bl2.chm-cbd.net' })
-
-    await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
-    await waitForSiteInitialization(page)
-
-    await expect(googleScripts(page)).toHaveCount(2)
-    expect(countConfigCalls(await readDataLayer(page), GTAG_ID)).toBe(1)
-  })
-
-  test('(g0) an unpublished site loads nothing even with consent and a matching browser host', async ({ context, page }) => {
-    await seedConsentCookies(context, ELIGIBLE_BASE_URL)
-    await installPageRecorder(page)
-    await installRoutes(page, { published: false })
-
-    await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
-    await waitForSiteInitialization(page)
-    await page.waitForLoadState('networkidle')
-
-    await expect(googleScripts(page)).toHaveCount(0)
-    expect(await readDataLayer(page)).toEqual([])
-  })
-
-  test('(g) a browser on a host outside the template loads nothing, even when the config says otherwise', async ({ context, page }) => {
-    // The configured host is the eligible one and consent is granted: the only thing wrong is the
-    // hostname the browser is on. This is the reverse-proxy case, where an attacker origin forwards
-    // `Host: <site>.chm-cbd.net` to get a tenant's real tags running on a domain it controls.
+  test('(d) the switch off loads nothing even with consent and configured IDs', async ({ context, page }) => {
     await seedConsentCookies(context, E2E_BASE_URL)
     await installPageRecorder(page)
-    await installRoutes(page)
+    await installRoutes(page, { enabled: false })
 
     await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
     await waitForSiteInitialization(page)
@@ -438,70 +349,51 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
   })
 })
 
-test.describe('BL-946: publication and redirect eligibility', () => {
+test.describe('BL-1015: the Drupal switch is the only control', () => {
   test.setTimeout(60000)
 
-  for (const [label, published] of [
+  for (const [label, enabled] of [
     ['missing', undefined], ['null', null], ['string', 'true'], ['number', 1],
   ] as const) {
-    test(`a ${label} publication flag in the client refetch loads nothing`, async ({ context, page }) => {
-      await seedConsentCookies(context, ELIGIBLE_BASE_URL)
+    test(`a ${label} switch value loads nothing`, async ({ context, page }) => {
+      await seedConsentCookies(context, E2E_BASE_URL)
       await installPageRecorder(page)
-      await installRoutes(page, { published })
+      await installRoutes(page, { enabled })
 
-      await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+      await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
       await waitForSiteInitialization(page)
+      await page.waitForLoadState('networkidle')
 
       await expect(googleScripts(page)).toHaveCount(0)
       expect(await readDataLayer(page)).toEqual([])
     })
   }
 
-  for (const redirect of [ALIAS_HOST, 'Alias.Example.TEST', 'Alias.Example.TEST.']) {
-    test(`a published site loads tags on its normalized alias ${redirect}`, async ({ context, page }) => {
-      await seedConsentCookies(context, ALIAS_BASE_URL)
-      await installPageRecorder(page)
-      await installRoutes(page, { redirect })
+  test('the switch on is sufficient: tags load on the ordinary dev host', async ({ context, page }) => {
+    await seedConsentCookies(context, E2E_BASE_URL)
+    await installPageRecorder(page)
+    await installRoutes(page, { enabled: true })
 
-      await page.goto(`${ALIAS_BASE_URL}${HOME_PATH}`)
-      await waitForSiteInitialization(page)
+    await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
+    await waitForSiteInitialization(page)
 
-      await expect(googleScripts(page)).toHaveCount(2)
-      expect(countConfigCalls(await readDataLayer(page), GTAG_ID)).toBe(1)
-    })
-  }
+    await expect(googleScripts(page)).toHaveCount(2)
+    expect(countConfigCalls(await readDataLayer(page), GTAG_ID)).toBe(1)
+  })
 
-  for (const [label, overrides] of [
-    ['unpublished', { redirect: ALIAS_HOST, published: false }],
-    ['nonmatching', { redirect: 'other.example.test' }],
-    ['noncanonical HTTPS', { redirect: `https://${ALIAS_HOST}/` }],
-  ] as const) {
-    test(`an ${label} alias loads nothing`, async ({ context, page }) => {
-      await seedConsentCookies(context, ALIAS_BASE_URL)
+  for (const enabled of [false, undefined]) {
+    test(`a refetch restoring the switch after ${enabled} resumes tags without duplication or reload`, async ({ context, page }) => {
+      const overrides: ContextOverrides = { enabled: true }
+      await seedConsentCookies(context, E2E_BASE_URL)
       await installPageRecorder(page)
       await installRoutes(page, overrides)
 
-      await page.goto(`${ALIAS_BASE_URL}${HOME_PATH}`)
-      await waitForSiteInitialization(page)
-
-      await expect(googleScripts(page)).toHaveCount(0)
-      expect(await readDataLayer(page)).toEqual([])
-    })
-  }
-
-  for (const published of [false, undefined]) {
-    test(`a refetch restoring publication after ${published} resumes tags without duplication or reload`, async ({ context, page }) => {
-      const overrides: ContextOverrides = { published: true }
-      await seedConsentCookies(context, ELIGIBLE_BASE_URL)
-      await installPageRecorder(page)
-      await installRoutes(page, overrides)
-
-      await page.goto(`${ELIGIBLE_BASE_URL}${HOME_PATH}`)
+      await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
       await waitForSiteInitialization(page)
       await expect(googleScripts(page)).toHaveCount(2)
       const scriptsBefore = await googleScripts(page).elementHandles()
 
-      overrides.published = published
+      overrides.enabled = enabled
       // Use the real site plugin's locale-refetch path, retaining the same hydrated store.
       await page.evaluate(async () => {
         const nuxt = (document.querySelector('#__nuxt') as NuxtRoot | null)?.__vue_app__?.$nuxt
@@ -516,7 +408,7 @@ test.describe('BL-946: publication and redirect eligibility', () => {
         analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
       }])
 
-      overrides.published = true
+      overrides.enabled = true
       await page.evaluate(async () => {
         const nuxt = (document.querySelector('#__nuxt') as NuxtRoot | null)?.__vue_app__?.$nuxt
         if (!nuxt) throw new Error('Nuxt is not initialized')

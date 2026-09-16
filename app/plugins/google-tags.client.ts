@@ -3,11 +3,11 @@
  *
  * Two gates, both required, both re-evaluated on every change:
  *
- * - **Site eligibility** via the shared site gate in `shared/utils/google-tags.ts`: the deployment
- *   is `prod`, the multisite has a host template in `GOOGLE_TAG_HOSTS` (today only `bl2`), dmsm
- *   marks the site `published`, and the hostname the browser is actually on is either that
- *   template applied to its `siteCode` or the site's configured `redirect` alias. No env var, no
- *   kill switch.
+ * - **The administrator's switch**, `siteStore.biolandSettings.googleAnalyticsEnabled`, read
+ *   strictly through `isGoogleTagsEnabled`. BL-1015 made this the only thing that decides whether
+ *   this site measures: the deployment gate that used to sit here (`prod` only, a
+ *   `<siteCode>.chm-cbd.net` host template per multisite, dmsm's `published` flag) is gone, and no
+ *   environment name appears in any GA code path. Tag IDs no longer imply consent to measure.
  * - **Visitor consent** via `useCookieControl().cookiesEnabledIds` containing `ga`. Every consent
  *   action in the module funnels through one writer (`CookieControl.vue setCookies`), which sets
  *   `cookiesEnabledIds`, so watching that ref catches grant, per category revoke, and decline all.
@@ -43,9 +43,9 @@
  * `denied`, set the per property `ga-disable-<id>` opt out, purge every GA cookie we can name, wait
  * for cookie-control to persist its own decision, then reload once. This plugin is the single owner
  * of that reload, and it only reloads on a granted to revoked transition, never on a visit where
- * consent was never given. Losing eligibility or losing the tag IDs is not a consent withdrawal:
- * those silence Google (`consent` `update` plus `ga-disable-<id>`) and stop, because the store
- * re-initialises on every locale switch and a hard reload mid-session over a transient context
+ * consent was never given. The switch going off, or the tag IDs going away, is not a consent
+ * withdrawal: those silence Google (`consent` `update` plus `ga-disable-<id>`) and stop, because the
+ * store re-initialises on every locale switch and a hard reload mid-session over a transient context
  * payload is a worse outcome than a silenced tag.
  */
 
@@ -149,13 +149,7 @@ export default defineNuxtPlugin({
         const siteStore = useSiteStore(nuxtApp.$pinia);
         const { cookiesEnabledIds } = useCookieControl();
 
-        const eligible = computed(() => isGoogleTagsSite({
-            env: siteStore.env,
-            multiSiteCode: siteStore.multiSiteCode,
-            siteCode: siteStore.siteCode,
-            published: siteStore.config?.published,
-            redirect: siteStore.config?.redirect,
-        }, window.location.hostname));
+        const enabled = computed(() => isGoogleTagsEnabled(siteStore.biolandSettings?.googleAnalyticsEnabled));
 
         const consent = computed(() => Boolean(cookiesEnabledIds.value?.includes('ga')));
         const ids = computed(() => parseGoogleTagIds(siteStore.biolandSettings?.googleAnalyticsIds));
@@ -172,7 +166,7 @@ export default defineNuxtPlugin({
             // `onBeforeGtagStart` never fires when no `G-`/`AW-`/`DC-`/`UA-` ID is configured.
             ensureGtag()('set', cookieParams);
 
-            // Recover from a transient eligibility/ID loss without configuring tags twice.
+            // Recover from a transient switch/ID loss without configuring tags twice.
             if (!loaded && configured.size) {
                 const win = window as unknown as GoogleTagWindow;
 
@@ -222,7 +216,7 @@ export default defineNuxtPlugin({
         /**
          * Tells Google to stop measuring, without touching cookies and without reloading.
          *
-         * Shared by the consent withdrawal path and by the weaker eligibility loss path.
+         * Shared by the consent withdrawal path and by the weaker switched-off path.
          */
         function silence(): void {
             const win = window as unknown as GoogleTagWindow;
@@ -261,9 +255,9 @@ export default defineNuxtPlugin({
             window.location.reload();
         }
 
-        watch([ids, consent, eligible], ([tagIds, hasConsent, isEligible]) => {
+        watch([ids, consent, enabled], ([tagIds, hasConsent, isEnabled]) => {
             const hasIds = tagIds.gtag.length > 0 || tagIds.gtm.length > 0;
-            const shouldLoad = isEligible && hasConsent && hasIds;
+            const shouldLoad = isEnabled && hasConsent && hasIds;
 
             if (shouldLoad) {
                 // Unconditional, not `&& !loaded`: a measurement ID added in Drupal mid-session
@@ -293,7 +287,7 @@ export default defineNuxtPlugin({
                 return;
             }
 
-            // Consent is still held, but tags should not load (e.g. unpublished or missing IDs).
+            // Consent is still held, but tags should not load (the switch is off, or no IDs).
             if (!loaded) return;
 
             loaded = false;

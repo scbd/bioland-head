@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { computed, effectScope, nextTick, reactive, ref, watch } from 'vue'
-import { isGoogleTagsSite, parseGoogleTagIds } from '../../../../shared/utils/google-tags'
+import { isGoogleTagsEnabled, parseGoogleTagIds } from '../../../../shared/utils/google-tags'
 
 const GTAG_IDS = ['G-TEST1234567', 'UA-12345-6', 'AW-123456789']
 const GTM_ID = 'GTM-TEST123'
@@ -14,11 +14,13 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-async function setupTags (tagIds = [...GTAG_IDS, GTM_ID].join(',')) {
+async function setupTags (tagIds = [...GTAG_IDS, GTM_ID].join(','), { enabled }: { enabled?: unknown } = { enabled: true }) {
   const site = reactive({
     env: 'prod', multiSiteCode: 'bl2', siteCode: 'seed',
     config: { published: true } as { published?: boolean },
-    biolandSettings: { googleAnalyticsIds: tagIds },
+    biolandSettings: {
+      googleAnalyticsEnabled: enabled, googleAnalyticsIds: tagIds,
+    } as { googleAnalyticsEnabled?: unknown, googleAnalyticsIds?: string },
   })
   const cookiesEnabledIds = ref(['ga'])
   const gtag = vi.fn()
@@ -33,7 +35,7 @@ async function setupTags (tagIds = [...GTAG_IDS, GTM_ID].join(',')) {
     useCookieControl: () => ({ cookiesEnabledIds }),
     useScriptGoogleAnalytics: () => ({ proxy: { gtag } }),
     useScriptGoogleTagManager: loadGtm,
-    computed, watch, isGoogleTagsSite, parseGoogleTagIds,
+    computed, watch, isGoogleTagsEnabled, parseGoogleTagIds,
     window: win, document: { cookie: '' },
   }
   for (const [name, value] of Object.entries(globals)) vi.stubGlobal(name, value)
@@ -47,10 +49,38 @@ async function setupTags (tagIds = [...GTAG_IDS, GTM_ID].join(',')) {
   return { site, cookiesEnabledIds, gtag, reload, win, loadGtm }
 }
 
-describe('Google tags publication recovery', () => {
-  it.each([false, undefined])('resumes configured tags after publication %s with consent retained', async (published) => {
+describe('the Drupal switch is the only control', () => {
+  it.each([false, undefined, 'true', 1])(
+    'loads nothing when the switch is %p, however many tag IDs are configured',
+    async (enabled) => {
+      const { gtag, loadGtm } = await setupTags(undefined, { enabled })
+
+      expect(loadGtm).not.toHaveBeenCalled()
+      expect(gtag.mock.calls.filter(([command]) => command === 'config')).toEqual([])
+    },
+  )
+
+  it('loads the configured tags as soon as the switch is on, with no host or env condition', async () => {
+    const { site, gtag, loadGtm } = await setupTags(undefined, { enabled: false })
+    // A host and deployment the old gate would have refused outright.
+    site.env = 'dev'
+    site.multiSiteCode = 'notbl2'
+    site.config = {}
+
+    site.biolandSettings = { ...site.biolandSettings, googleAnalyticsEnabled: true }
+    await nextTick()
+
+    for (const id of GTAG_IDS) {
+      expect(gtag.mock.calls.filter(([command, tagId]) => command === 'config' && tagId === id)).toHaveLength(1)
+    }
+    expect(loadGtm).toHaveBeenCalledOnce()
+  })
+})
+
+describe('Google tags switch recovery', () => {
+  it.each([false, undefined])('resumes configured tags after the switch goes %p with consent retained', async (enabled) => {
     const { site, gtag, reload, win, loadGtm } = await setupTags()
-    site.config = published === undefined ? {} : { published }
+    site.biolandSettings = { ...site.biolandSettings, googleAnalyticsEnabled: enabled }
     await nextTick()
 
     expect(win['ga-disable-G-TEST1234567']).toBe(true)
@@ -59,7 +89,7 @@ describe('Google tags publication recovery', () => {
       analytics_storage: 'denied', ...DENIED_AD_CONSENT,
     })
 
-    site.config = { published: true }
+    site.biolandSettings = { ...site.biolandSettings, googleAnalyticsEnabled: true }
     await nextTick()
 
     expect(win['ga-disable-G-TEST1234567']).toBe(false)
@@ -78,9 +108,9 @@ describe('Google tags publication recovery', () => {
 
   it('restores analytics consent for an already-loaded GTM-only site', async () => {
     const { site, gtag, loadGtm } = await setupTags(GTM_ID)
-    site.config = {}
+    site.biolandSettings = { ...site.biolandSettings, googleAnalyticsEnabled: false }
     await nextTick()
-    site.config = { published: true }
+    site.biolandSettings = { ...site.biolandSettings, googleAnalyticsEnabled: true }
     await nextTick()
 
     expect(gtag).toHaveBeenLastCalledWith('consent', 'update', {
@@ -90,12 +120,12 @@ describe('Google tags publication recovery', () => {
     expect(gtag.mock.calls.filter(([command]) => command === 'config')).toEqual([])
   })
 
-  it('does not resume when publication returns without analytics consent', async () => {
+  it('does not resume when the switch returns without analytics consent', async () => {
     const { site, cookiesEnabledIds, gtag, win } = await setupTags()
-    site.config = {}
+    site.biolandSettings = { ...site.biolandSettings, googleAnalyticsEnabled: false }
     await nextTick()
     cookiesEnabledIds.value = []
-    site.config = { published: true }
+    site.biolandSettings = { ...site.biolandSettings, googleAnalyticsEnabled: true }
     await nextTick()
 
     expect(win['ga-disable-G-TEST1234567']).toBe(true)
@@ -105,9 +135,9 @@ describe('Google tags publication recovery', () => {
     })
   })
 
-  it('purges cookies and reloads when consent is revoked while unpublished', async () => {
+  it('purges cookies and reloads when consent is revoked while switched off', async () => {
     const { site, cookiesEnabledIds, reload } = await setupTags()
-    site.config = {}
+    site.biolandSettings = { ...site.biolandSettings, googleAnalyticsEnabled: false }
     await nextTick()
     expect(reload).not.toHaveBeenCalled()
 
