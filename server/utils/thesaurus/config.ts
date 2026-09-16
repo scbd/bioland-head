@@ -34,6 +34,12 @@ export interface DataSourceConfig {
   path?: string;
   searchable?: boolean;
   sanitizer: SanitizerConfig;
+  /**
+   * Per-domain label-field preference (D17), consumed by `labelFieldOrder` in `./resolve-terms`.
+   * Omitted means the default `shortTitle` -> `title` -> `name` order. Declare it only where
+   * `shortTitle` is an internal code rather than a display label (see `regions`).
+   */
+  labelFields?: string[];
 }
 
 // IDs used for filtering org types vs gov types
@@ -74,7 +80,8 @@ const DOC_TYPE_IDS = new Set([
 /** All data source configurations */
 export const dataSourceConfigs: Record<string, DataSourceConfig> = {
   // API-based domains (path relative to the gaiaApi thesaurus domains base)
-  regions:         { source: 'api', path: 'regions/terms', searchable: true, sanitizer: { type: 'AdministrativeArea' } },
+  // `shortTitle` here is an internal abbreviation (`AFR - Middle`), not a label — D17 override.
+  regions:         { source: 'api', path: 'regions/terms', searchable: true, labelFields: ['title', 'shortTitle', 'name'], sanitizer: { type: 'AdministrativeArea' } },
   countries:       { source: 'api', path: 'countries/terms', searchable: true, sanitizer: { type: 'Country', transform: (item) => ({
     image: `https://flagcdn.com/${item.identifier?.toLowerCase()}.svg`,
     url: `https://www.cbd.int/countries/${item.identifier?.toLowerCase()}`
