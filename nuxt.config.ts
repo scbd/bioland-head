@@ -66,6 +66,11 @@ export default defineNuxtConfig({
       : 5,
     // Local dev: Drupal session cookie bypass (e.g., SSESSxxx=yyy)
     localDrupalSession: process.env.NUXT_LOCAL_DRUPAL_SESSION || "",
+    // Thesaurus label resolution source (D12 rollback flag): 'api' (default, live thesaurus) or
+    // 'snapshot' (committed archive, flipped on a running container to recover from an API
+    // degradation without a code revert). Server-only — never read client-side, so it stays out of
+    // `public` even though its name omits `_PUBLIC_` (see server/utils/thesaurus/resolve-terms.ts).
+    thesaurusLabelSource: process.env.NUXT_THESAURUS_LABEL_SOURCE || "api",
     public: {
       isLocalHost:
         process.env.NUXT_PUBLIC_IS_LOCAL_HOST === "true" ? true : false,
