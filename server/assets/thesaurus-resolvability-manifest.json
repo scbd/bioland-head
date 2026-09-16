@@ -1,14 +1,14 @@
 {
   "summary": {
     "deletionGateRule": "D1: resolvable -> in scope for deletion by p03-05; unresolvable -> left in place for the user manual review pass.",
-    "readThisFirst": "Use `safeToDelete`, not `resolvable`, as the deletion gate. `resolvable` only means the API returned a term; 51 resolvable keys resolve to a DIFFERENT English label than en.json carries today, so deleting those would silently change rendered text.",
+    "readThisFirst": "Use `safeToDelete`, not `resolvable`, as the deletion gate. `resolvable` only means the API returned a term; 186 resolvable keys resolve to a DIFFERENT English label than en.json carries today, so deleting those would silently change rendered text.",
     "blockStartIndex": 380,
     "blockEndIndex": 1059,
     "totalKeys": 680,
     "resolvable": 545,
     "unresolvable": 135,
-    "safeToDelete": 494,
-    "needsHumanReview": 186,
+    "safeToDelete": 359,
+    "needsHumanReview": 321,
     "uiChromeGap": {
       "startIndex": 932,
       "endIndex": 1001,
@@ -26,7 +26,7 @@
         "total": 84,
         "resolvable": 84,
         "unresolvable": 0,
-        "safeToDelete": 84
+        "safeToDelete": 60
       },
       "doc-n": {
         "total": 20,
@@ -38,13 +38,13 @@
         "total": 46,
         "resolvable": 23,
         "unresolvable": 23,
-        "safeToDelete": 23
+        "safeToDelete": 0
       },
       "guid": {
         "total": 181,
         "resolvable": 181,
         "unresolvable": 0,
-        "safeToDelete": 167
+        "safeToDelete": 83
       },
       "iso2": {
         "total": 199,
@@ -56,7 +56,7 @@
         "total": 96,
         "resolvable": 5,
         "unresolvable": 91,
-        "safeToDelete": 4
+        "safeToDelete": 0
       },
       "sdg": {
         "total": 34,
@@ -67,13 +67,97 @@
     },
     "reviewGroups": {
       "label-would-change-on-delete": {
-        "count": 51,
+        "count": 186,
         "keys": [
           "CCA4B662-8EF4-418D-B327-0D6F418AA703",
+          "A23DD6C0-44C5-418D-83B5-461D79D2721A",
+          "0938DB0F-E4BB-464F-ABBB-ADD615BE5371",
+          "39AF4BA6-E769-4013-B5F2-91B2E5BACB27",
+          "BA8BAEF5-821C-43A6-8700-5CC215D4B5B0",
+          "AEF6F814-52C0-4F1A-9838-5799B021BA26",
+          "E0006E60-E0D9-4196-855F-8456F0C38690",
+          "46358A41-9D1D-4B13-A5D2-DE9CAA1DF1C7",
+          "21C5AE1A-B050-4EEB-8A3D-FE8BC3EB33B1",
+          "99AB05D6-1FB0-4369-A673-C266A80D3004",
+          "2c311a50-e5ba-4463-b780-2bebc578697b",
           "14E81A9D-73EA-4667-A699-CD78C61B3655",
+          "E9E917DF-872A-4B01-B152-B019E53D046E",
+          "90DBC1E4-AFD0-4FB4-B9EE-4CA2CB5D2C36",
+          "8317D3CB-6CAB-4C05-BC2C-2DB93A8FEC6A",
+          "C9A535FB-8B15-4BD5-9AC7-9A9783871A5A",
+          "005BDEA9-4063-4CD8-8E56-14D75E02D8A7",
+          "9C5E1A4D-E8EE-4C74-B9C9-5C7BCDF6B84A",
+          "11E24235-03ED-4D1A-A1FE-FF2798B06240",
+          "25806FD6-C329-4878-8032-8832C92B3557",
+          "89FB902F-5060-4B12-9C84-A2B8F5F45DBF",
+          "CFCF6D60-8800-4B1F-B404-5E1FC60CEEB7",
+          "0D93D0A4-3DE8-49A9-8825-1237ACBCDD60",
+          "6C734879-5007-47F8-A931-C9A90B17DFA5",
           "3BED3C61-C8C5-49D8-9AFA-0B4D03FC427F",
+          "1CF17830-479B-42DD-AC6C-974E86EABE15",
+          "8962A223-E1F2-4200-905C-51B6FEF79FFE",
+          "B462BE9E-38A6-4DE0-997D-2CC07853379F",
+          "B6C14B25-FDF6-4FA1-97A2-561D6B43FA80",
+          "70AD3B5C-9390-4E11-B4FB-60B5591037FA",
+          "99724A74-6CCD-4731-B111-9EEDF2612303",
+          "2A2161ED-B501-4022-BDF0-8AC5F0E6A512",
+          "57FB8FD1-7EBF-4271-9788-3716DAFEE347",
+          "581432E3-4880-410D-ACBC-44B958B0E5AC",
           "884FADBA-3BF3-4D76-AC7B-83E076852CD4",
+          "11D3515A-2C70-4766-B07C-E538AA16554B",
+          "3B22777F-BD43-4DED-8379-EB3829BB53A5",
+          "DB6CE7B5-EE86-41B1-A3A8-726E5A76C4F9",
+          "7DCF92D5-8412-4CFA-A67C-C6AA7A0A69F2",
+          "bd12d7fb-91f7-4b2d-996c-e70f18a51f0e",
+          "6DD4D22F-CFAE-4C2C-A2B5-4EC8386925DE",
+          "0C201C06-3E4E-4044-85E0-DAE5DCE0F2C1",
+          "C595105F-C5E7-4DF3-A68D-93CC9DAB900F",
+          "E5AA1403-308B-495F-9117-9F516F973C77",
+          "B52F76F8-B8A4-4381-8A78-E0BAD505AEBE",
           "284697B9-D1C2-426B-890A-1ADBAC8EC477",
+          "E9BAA797-CDAE-497E-A860-87AE784F4C53",
+          "743D2F85-8ABA-4F35-BC83-30D295343EA8",
+          "0451E289-BC9E-4F9D-95C0-B28A20F86BE9",
+          "9EED1DD1-BA36-41F1-BEF9-63021AB24EBF",
+          "3AA1250A-8715-436C-B397-75FB0C9AB472",
+          "1776454D-33DB-460B-A940-AA27A665D832",
+          "FFBF9DAA-79F3-4FEC-8A31-C60317BF7281",
+          "D50FE62D-8A5E-4407-83F8-AFCAAF708EA4",
+          "5E5B7AA4-2420-4147-825B-0820F7EC5A4B",
+          "942E40CA-4C23-4D3A-A0B4-736CD0EFCD54",
+          "3D0CCC9A-A0A1-4399-8FA2-41D4D649DB0E",
+          "0EC2E5AE-25F3-4D3A-B71F-8019BB62ED4B",
+          "C7E6113A-66ED-42E1-B8BB-004EC02D3D22",
+          "948125C2-F580-4357-AA0A-B6C636279E96",
+          "BF64EC30-A6BE-4967-959F-FFE08A6A2D0A",
+          "8920655D-3986-465B-837A-CE055B428A74",
+          "CE5B4B10-61B5-469B-961B-D541068A4098",
+          "209A0CEA-8525-44E8-8DF5-AD8B064F2897",
+          "12B485C4-C805-451A-A444-F6767E2E1B86",
+          "293E5CA9-15DB-4D83-9CAC-F406F759727A",
+          "BE9DD6CC-F466-4735-A851-160221D6C380",
+          "EFE67AA8-CB7B-4182-AAE8-A72E5A145D3B",
+          "C5A18F9B-0E93-4FB3-B37F-67DEB5F3A696",
+          "AE0C442C-E11D-4CF9-AC83-4712DA612B48",
+          "5E2E72A0-1564-4F07-B085-6409F452EA40",
+          "50529AA0-D3B6-4F5D-97D4-436699900FBD",
+          "D04D887E-6514-41E3-96BA-967CD3208365",
+          "57C5F9CB-7E61-4D47-92E9-B0D3BADDAC53",
+          "9CD6B1A8-1A47-46CF-A933-58018A093601",
+          "E789DF4A-F71A-413C-BDFE-F33EF91AF1A0",
+          "FB9B3E6D-C6C1-40CA-992D-2D42908FF559",
+          "38CC1BBA-7217-4E33-B9E4-F8C063CD3FD9",
+          "D5BEB8FF-C718-4AD7-821E-A02171F72429",
+          "AA724727-4AF7-4D3C-9AD6-B38A45A353A1",
+          "5E884201-FBF6-4204-923C-AAC2BF11F2E3",
+          "07C56CEE-BFB1-41EA-972B-1B177D2AAEF7",
+          "CDFED5B2-F60A-4C51-B00B-548606B2A41B",
+          "1F130DD3-A710-406E-A8F3-A0A2D25EC0E1",
+          "7AE80876-D08B-4E78-AB2A-56921E1885DF",
+          "091FD5C6-AA3D-47A7-BB61-63008D092B8B",
+          "E5E31D9B-FE56-4807-9CF7-E1154041C5A8",
+          "6F1D5BE4-0F37-4848-8DE4-BE83F714A2AC",
+          "77B4AA2B-B7BF-48D5-B6CE-397207C9060F",
           "6F65B204-500B-4C56-B57D-25CC3DC809F8",
           "345F2B78-DE28-475B-BA7D-81C3DA020ADF",
           "0088F30A-723A-4351-A22C-C68BEB0C56F1",
@@ -85,6 +169,57 @@
           "952F18B8-BB83-4C7E-9232-7B3E3EA64A3C",
           "bs",
           "nr",
+          "CBD-SUBJECT-AGR",
+          "CBD-SUBJECT-DSHL",
+          "CBD-SUBJECT-CBD",
+          "CBD-SUBJECT-SBSTTA",
+          "CBD-SUBJECT-STRAT",
+          "CBD-SUBJECT-NBSAP",
+          "CBD-SUBJECT-IND",
+          "CBD-SUBJECT-GBO",
+          "CBD-SUBJECT-BIZ",
+          "CBD-SUBJECT-CITY",
+          "CBD-SUBJECT-CHM",
+          "CBD-SUBJECT-FIN",
+          "CBD-SUBJECT-COOP",
+          "CBD-SUBJECT-CHPO",
+          "CBD-SUBJECT-CC",
+          "CBD-SUBJECT-PA",
+          "CBD-SUBJECT-TKIP",
+          "CBD-SUBJECT-TOUR",
+          "CBD-SUBJECT-IBD",
+          "CBD-SUBJECT-IYB",
+          "CBD-SUBJECT-UNDB",
+          "CBD-SUBJECT-YOUTH",
+          "CBD-SUBJECT-SBI",
+          "CBD-SUBJECT-SSC",
+          "GBF-TARGET-01",
+          "GBF-TARGET-02",
+          "GBF-TARGET-03",
+          "GBF-TARGET-04",
+          "GBF-TARGET-05",
+          "GBF-TARGET-06",
+          "GBF-TARGET-07",
+          "GBF-TARGET-08",
+          "GBF-TARGET-09",
+          "GBF-TARGET-10",
+          "GBF-TARGET-11",
+          "GBF-TARGET-12",
+          "GBF-TARGET-13",
+          "GBF-TARGET-14",
+          "GBF-TARGET-15",
+          "GBF-TARGET-16",
+          "GBF-TARGET-17",
+          "GBF-TARGET-18",
+          "GBF-TARGET-19",
+          "GBF-TARGET-20",
+          "GBF-TARGET-21",
+          "GBF-TARGET-22",
+          "GBF-TARGET-23",
+          "GBF-GOAL-B",
+          "GBF-GOAL-A",
+          "GBF-GOAL-C",
+          "GBF-GOAL-D",
           "submission",
           "SDG-GOAL-01",
           "SDG-GOAL-01Alt",
@@ -307,101 +442,10 @@
         ]
       }
     },
-    "localeFiles": [
-      "af",
-      "am",
-      "ar",
-      "az",
-      "be",
-      "bg",
-      "bn",
-      "bs",
-      "ca",
-      "cs",
-      "cy",
-      "da",
-      "de",
-      "dz",
-      "el",
-      "en",
-      "eo",
-      "es",
-      "et",
-      "eu",
-      "fa",
-      "fi",
-      "fr",
-      "fy",
-      "ga",
-      "gd",
-      "gl",
-      "gu",
-      "he",
-      "hi",
-      "hr",
-      "ht",
-      "hu",
-      "hy",
-      "id",
-      "is",
-      "it",
-      "ja",
-      "jv",
-      "ka",
-      "kk",
-      "km",
-      "kn",
-      "ko",
-      "ku",
-      "ky",
-      "lo",
-      "lt",
-      "lv",
-      "mg",
-      "mk",
-      "ml",
-      "mn",
-      "mr",
-      "ms",
-      "my",
-      "ne",
-      "nl",
-      "no",
-      "oc",
-      "pa",
-      "pl",
-      "ps",
-      "pt",
-      "ro",
-      "ru",
-      "si",
-      "sk",
-      "sl",
-      "sq",
-      "sr",
-      "sv",
-      "ta",
-      "te",
-      "th",
-      "tl",
-      "tr",
-      "ug",
-      "uk",
-      "ur",
-      "vi",
-      "zh"
-    ],
-    "localeRegistry": {
-      "registeredLocales": 79,
-      "localeJsonFilesOnDisk": 82,
-      "onDiskButNotRegistered": [
-        "no",
-        "ps",
-        "ur"
-      ],
-      "registeredButNoFileOnDisk": [],
-      "strayNonJsonFiles": [],
-      "note": "Reported, not fixed. Reconciliation is the user call (index.md, Manual Prerequisites item 5)."
+    "fieldNotes": {
+      "localeFilesMissingIt": "Complement form. Files carrying a key = summary.localeFiles minus this list.",
+      "resolvable": "HTTP 200 with a non-empty title object. Not a deletion authorisation on its own.",
+      "safeToDelete": "resolvable AND the resolved English label is byte-identical to the en.json value. THIS is the deletion gate."
     },
     "localeDivergence": {
       "comparedAgainst": "en",
@@ -527,15 +571,106 @@
         }
       ]
     },
+    "localeFiles": [
+      "af",
+      "am",
+      "ar",
+      "az",
+      "be",
+      "bg",
+      "bn",
+      "bs",
+      "ca",
+      "cs",
+      "cy",
+      "da",
+      "de",
+      "dz",
+      "el",
+      "en",
+      "eo",
+      "es",
+      "et",
+      "eu",
+      "fa",
+      "fi",
+      "fr",
+      "fy",
+      "ga",
+      "gd",
+      "gl",
+      "gu",
+      "he",
+      "hi",
+      "hr",
+      "ht",
+      "hu",
+      "hy",
+      "id",
+      "is",
+      "it",
+      "ja",
+      "jv",
+      "ka",
+      "kk",
+      "km",
+      "kn",
+      "ko",
+      "ku",
+      "ky",
+      "lo",
+      "lt",
+      "lv",
+      "mg",
+      "mk",
+      "ml",
+      "mn",
+      "mr",
+      "ms",
+      "my",
+      "ne",
+      "nl",
+      "no",
+      "oc",
+      "pa",
+      "pl",
+      "ps",
+      "pt",
+      "ro",
+      "ru",
+      "si",
+      "sk",
+      "sl",
+      "sq",
+      "sr",
+      "sv",
+      "ta",
+      "te",
+      "th",
+      "tl",
+      "tr",
+      "ug",
+      "uk",
+      "ur",
+      "vi",
+      "zh"
+    ],
+    "localeRegistry": {
+      "registeredLocales": 79,
+      "localeJsonFilesOnDisk": 82,
+      "onDiskButNotRegistered": [
+        "no",
+        "ps",
+        "ur"
+      ],
+      "registeredButNoFileOnDisk": [],
+      "strayNonJsonFiles": [],
+      "note": "Reported, not fixed. Reconciliation is the user call (index.md, Manual Prerequisites item 5)."
+    },
     "requestCounts": {
       "domainEnumerations": 14,
       "singleTermProbes": 68,
       "total": 82
-    },
-    "fieldNotes": {
-      "localeFilesMissingIt": "Complement form. Files carrying a key = summary.localeFiles minus this list.",
-      "resolvable": "HTTP 200 with a non-empty title object. Not a deletion authorisation on its own.",
-      "safeToDelete": "resolvable AND the resolved English label is byte-identical to the en.json value. THIS is the deletion gate."
     }
   },
   "records": [
@@ -577,7 +712,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -591,8 +726,10 @@
       ],
       "enValue": "Africa - Middle Africa",
       "resolvedLabelEn": "AFR – Middle",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -606,7 +743,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -620,8 +757,10 @@
       ],
       "enValue": "Africa - Eastern Africa",
       "resolvedLabelEn": "AFR – East",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -635,7 +774,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -649,8 +788,10 @@
       ],
       "enValue": "Africa - Northern Africa",
       "resolvedLabelEn": "AFR – North",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -664,7 +805,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -678,8 +819,10 @@
       ],
       "enValue": "Africa - Southern Africa",
       "resolvedLabelEn": "AFR – South",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -693,7 +836,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -707,8 +850,10 @@
       ],
       "enValue": "Africa - Western Africa",
       "resolvedLabelEn": "AFR – West",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -722,7 +867,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -736,8 +881,10 @@
       ],
       "enValue": "Africa - African Union",
       "resolvedLabelEn": "AFR – AU",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -751,7 +898,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -765,8 +912,10 @@
       ],
       "enValue": "Africa - Economic Commission for Africa",
       "resolvedLabelEn": "AFR – UNECA",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -780,7 +929,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -794,8 +943,10 @@
       ],
       "enValue": "Africa - Economic Community of West African States",
       "resolvedLabelEn": "AFR – ECOWAS",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -809,7 +960,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -823,8 +974,10 @@
       ],
       "enValue": "Africa - Southern African Development Community",
       "resolvedLabelEn": "AFR – SADC",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -838,7 +991,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -852,8 +1005,10 @@
       ],
       "enValue": "Africa - Union Economique et Monétaire Ouest Africaine",
       "resolvedLabelEn": "AFR – UEMOA",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -898,7 +1053,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -912,8 +1067,10 @@
       ],
       "enValue": "Americas - Caribbean",
       "resolvedLabelEn": "AME - Car",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -927,7 +1084,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -941,8 +1098,10 @@
       ],
       "enValue": "Americas - Central America",
       "resolvedLabelEn": "AME - Center",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -956,7 +1115,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -970,8 +1129,10 @@
       ],
       "enValue": "Americas - Northern America",
       "resolvedLabelEn": "AME - North",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -985,7 +1146,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -999,8 +1160,10 @@
       ],
       "enValue": "Americas - South America",
       "resolvedLabelEn": "AME - South",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1014,7 +1177,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1028,8 +1191,10 @@
       ],
       "enValue": "Americas - Amazon Cooperation Treaty",
       "resolvedLabelEn": "AME - ACT",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1043,7 +1208,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1057,8 +1222,10 @@
       ],
       "enValue": "Americas - Andean Pact",
       "resolvedLabelEn": "AME - CAN",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1072,7 +1239,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1086,8 +1253,10 @@
       ],
       "enValue": "Americas - Asociacion Latinoamericana de Integracion",
       "resolvedLabelEn": "AME - ALADI",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1101,7 +1270,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1115,8 +1284,10 @@
       ],
       "enValue": "Americas - Association of Caribbean States",
       "resolvedLabelEn": "AME - ACS",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1130,7 +1301,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1144,8 +1315,10 @@
       ],
       "enValue": "Americas - Comision Centroamericana de Ambiente y Desarrollo",
       "resolvedLabelEn": "AME - CCAD",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1159,7 +1332,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1173,8 +1346,10 @@
       ],
       "enValue": "Americas - Economic Commission for Latin America and the Caribbean",
       "resolvedLabelEn": "AME - ECLAC",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1188,7 +1363,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1202,8 +1377,10 @@
       ],
       "enValue": "Americas - Mercosur",
       "resolvedLabelEn": "AME - Merc",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1217,7 +1394,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1231,8 +1408,10 @@
       ],
       "enValue": "Americas - The Caribbean Community (Caricom)",
       "resolvedLabelEn": "AME - CARICOM",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1277,7 +1456,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1291,8 +1470,10 @@
       ],
       "enValue": "Asia - Central Asia",
       "resolvedLabelEn": "Asia - Center",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1306,7 +1487,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1320,8 +1501,10 @@
       ],
       "enValue": "Asia - Eastern Asia",
       "resolvedLabelEn": "Asia - East",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1335,7 +1518,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1349,8 +1532,10 @@
       ],
       "enValue": "Asia - Southern Asia",
       "resolvedLabelEn": "Asia - South",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1364,7 +1549,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1378,8 +1563,10 @@
       ],
       "enValue": "Asia - South-Eastern Asia",
       "resolvedLabelEn": "Asia – S-E",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1393,7 +1580,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1407,8 +1594,10 @@
       ],
       "enValue": "Asia - Western Asia",
       "resolvedLabelEn": "Asia - West",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1422,7 +1611,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1436,8 +1625,10 @@
       ],
       "enValue": "Asia - Association of Southeast Asian Nations",
       "resolvedLabelEn": "Asia - ASEAN",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1451,7 +1642,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1465,8 +1656,10 @@
       ],
       "enValue": "Asia-Pacific - Economic and Social Commission for Asia and the Pacific",
       "resolvedLabelEn": "Asia - ESCAP",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1480,7 +1673,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1494,8 +1687,10 @@
       ],
       "enValue": "Asia - Economic and Social Commission for Western Asia",
       "resolvedLabelEn": "Asia - ESCWA",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1509,7 +1704,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1523,8 +1718,10 @@
       ],
       "enValue": "Asia - South Asia Cooperative Environment Programme",
       "resolvedLabelEn": "Asia - SACEP",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1598,7 +1795,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1612,8 +1809,10 @@
       ],
       "enValue": "Europe - Northern Europe",
       "resolvedLabelEn": "EUR - North",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1627,7 +1826,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1641,8 +1840,10 @@
       ],
       "enValue": "Europe - Southern Europe",
       "resolvedLabelEn": "EUR - South",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1656,7 +1857,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1670,8 +1871,10 @@
       ],
       "enValue": "Europe - Western Europe",
       "resolvedLabelEn": "EUR - West",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1685,7 +1888,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1699,8 +1902,10 @@
       ],
       "enValue": "Europe - Eastern Europe",
       "resolvedLabelEn": "EUR - East",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1714,7 +1919,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1728,8 +1933,10 @@
       ],
       "enValue": "Europe - European Union member states",
       "resolvedLabelEn": "EUR - EU",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1743,7 +1950,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1757,8 +1964,10 @@
       ],
       "enValue": "Europe - Economic Commission for Europe",
       "resolvedLabelEn": "EUR - UNECE",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1772,7 +1981,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1786,8 +1995,10 @@
       ],
       "enValue": "Europe - European Free Trade Association",
       "resolvedLabelEn": "EUR - EFTA",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1801,7 +2012,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1815,8 +2026,10 @@
       ],
       "enValue": "Europe - Visegrad Group",
       "resolvedLabelEn": "EUR - Viseg",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1830,7 +2043,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "single-term-probe",
       "httpStatus": 200,
       "domain": null,
@@ -1844,8 +2057,10 @@
       ],
       "enValue": "Eurasia - Commonwealth of Independent States",
       "resolvedLabelEn": "Euras - CIS",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1859,7 +2074,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "single-term-probe",
       "httpStatus": 200,
       "domain": null,
@@ -1873,8 +2088,10 @@
       ],
       "enValue": "Eurasia - Pan-European Biological and Landscape Diversity Strategy",
       "resolvedLabelEn": "Euras - PEBLDS",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1919,7 +2136,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1933,8 +2150,10 @@
       ],
       "enValue": "Oceania - Australia and New Zealand",
       "resolvedLabelEn": "OCE – AU&NZ",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1948,7 +2167,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1962,8 +2181,10 @@
       ],
       "enValue": "Oceania - Melanesia",
       "resolvedLabelEn": "OCE - Mela",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -1977,7 +2198,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -1991,8 +2212,10 @@
       ],
       "enValue": "Oceania - Micronesia",
       "resolvedLabelEn": "OCE - Micr",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2006,7 +2229,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2020,8 +2243,10 @@
       ],
       "enValue": "Oceania - Polynesia",
       "resolvedLabelEn": "OCE - Poly",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2064,7 +2289,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2078,8 +2303,10 @@
       ],
       "enValue": "CBD - Biosafety Protocol Parties",
       "resolvedLabelEn": "CBD - CPB",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2093,7 +2320,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2107,8 +2334,10 @@
       ],
       "enValue": "CBD - Signatories to the Supplementary Protocol on Liability and Redress",
       "resolvedLabelEn": "CBD – SPLR Sign",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2122,7 +2351,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2136,8 +2365,10 @@
       ],
       "enValue": "CBD - Parties to the Nagoya Protocol on Access and Benefit-Sharing",
       "resolvedLabelEn": "CBD – ABS Sign",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2151,7 +2382,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2165,8 +2396,10 @@
       ],
       "enValue": "CBD Regional Groups - Africa",
       "resolvedLabelEn": "CBD - AFR",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2180,7 +2413,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2194,8 +2427,10 @@
       ],
       "enValue": "CBD Regional Groups - Asia and the Pacific",
       "resolvedLabelEn": "CBD - Asia",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2263,7 +2498,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2277,8 +2512,10 @@
       ],
       "enValue": "CBD Regional Groups - Central and Eastern Europe",
       "resolvedLabelEn": "CBD - CEE",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2292,7 +2529,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2306,8 +2543,10 @@
       ],
       "enValue": "CBD Regional Groups - Latin America and the Caribbean",
       "resolvedLabelEn": "CBD - GRULAC",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2375,7 +2614,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2389,8 +2628,10 @@
       ],
       "enValue": "CBD Regional Groups - Western Europe and Others",
       "resolvedLabelEn": "CBD - WEOG",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2404,7 +2645,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2418,8 +2659,10 @@
       ],
       "enValue": "Global - Countries with Economies in Transition",
       "resolvedLabelEn": "World - CET",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2433,7 +2676,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2447,8 +2690,10 @@
       ],
       "enValue": "Global - Developing countries",
       "resolvedLabelEn": "World - DEV",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2462,7 +2707,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2476,8 +2721,10 @@
       ],
       "enValue": "Global - Industrialized countries",
       "resolvedLabelEn": "World - IND",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2491,7 +2738,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2505,8 +2752,10 @@
       ],
       "enValue": "Global - Least Developed Countries",
       "resolvedLabelEn": "World - LDC",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2520,7 +2769,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2534,8 +2783,10 @@
       ],
       "enValue": "Global - Small Island Developing States",
       "resolvedLabelEn": "World - SIDS",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2549,7 +2800,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2563,8 +2814,10 @@
       ],
       "enValue": "Global - Arctic countries",
       "resolvedLabelEn": "World - Arctic",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2578,7 +2831,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2592,8 +2845,10 @@
       ],
       "enValue": "Global - Asia-Pacific Economic Cooperation",
       "resolvedLabelEn": "World - APEC",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2607,7 +2862,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2621,8 +2876,10 @@
       ],
       "enValue": "Global - La Francophonie",
       "resolvedLabelEn": "World - FRA",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2636,7 +2893,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2650,8 +2907,10 @@
       ],
       "enValue": "Global - Organisation for Economic Co-operation and Development",
       "resolvedLabelEn": "World - OECD",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2665,7 +2924,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2679,8 +2938,10 @@
       ],
       "enValue": "Global - The Cairns Group",
       "resolvedLabelEn": "World - CAIRNS",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2694,7 +2955,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2708,8 +2969,10 @@
       ],
       "enValue": "Global - The Commonwealth",
       "resolvedLabelEn": "World - COMM",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2723,7 +2986,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2737,8 +3000,10 @@
       ],
       "enValue": "Inland water ecosystems - Amazon basin countries",
       "resolvedLabelEn": "IWE - Amaz",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2752,7 +3017,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2766,8 +3031,10 @@
       ],
       "enValue": "Inland water ecosystems - Caspian Sea countries",
       "resolvedLabelEn": "IWE - Casp",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2781,7 +3048,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2795,8 +3062,10 @@
       ],
       "enValue": "Inland water ecosystems - Danube basin countries",
       "resolvedLabelEn": "IWE – Danu",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2810,7 +3079,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2824,8 +3093,10 @@
       ],
       "enValue": "Inland water ecosystems - Ganges-Brahmaputra basin countries",
       "resolvedLabelEn": "IWE - Ind",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2839,7 +3110,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2853,8 +3124,10 @@
       ],
       "enValue": "Inland water ecosystems - Mekong basin countries",
       "resolvedLabelEn": "IWE – Mek",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2868,7 +3141,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2882,8 +3155,10 @@
       ],
       "enValue": "Inland water ecosystems - Niger basin countries",
       "resolvedLabelEn": "IWE – Nig",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2897,7 +3172,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2911,8 +3186,10 @@
       ],
       "enValue": "Inland water ecosystems - Nile basin countries",
       "resolvedLabelEn": "IWE – Nil",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2926,7 +3203,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2940,8 +3217,10 @@
       ],
       "enValue": "Inland water ecosystems - Zambezi basin countries",
       "resolvedLabelEn": "IWE – Zam",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2955,7 +3234,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2969,8 +3248,10 @@
       ],
       "enValue": "Large marine ecosystems - Arabian Sea countries",
       "resolvedLabelEn": "LME - ArSea",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -2984,7 +3265,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -2998,8 +3279,10 @@
       ],
       "enValue": "Large marine ecosystems - Baltic Sea countries",
       "resolvedLabelEn": "LME - BaSea",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -3013,7 +3296,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -3027,8 +3310,10 @@
       ],
       "enValue": "Large marine ecosystems - Black Sea countries",
       "resolvedLabelEn": "LME - BlSea",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -3042,7 +3327,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -3056,8 +3341,10 @@
       ],
       "enValue": "Large marine ecosystems - Mediterranean countries",
       "resolvedLabelEn": "LME - Med",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -3071,7 +3358,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -3085,8 +3372,10 @@
       ],
       "enValue": "Large marine ecosystems - North Sea countries",
       "resolvedLabelEn": "LME - NoSea",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -3100,7 +3389,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -3114,8 +3403,10 @@
       ],
       "enValue": "Large marine ecosystems - Red Sea countries",
       "resolvedLabelEn": "LME - ReSea",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -3129,7 +3420,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -3143,8 +3434,10 @@
       ],
       "enValue": "Large marine ecosystems - South China Sea countries",
       "resolvedLabelEn": "LME - ChSea",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -3158,7 +3451,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -3172,8 +3465,10 @@
       ],
       "enValue": "Mountains - Alpine countries",
       "resolvedLabelEn": "MOUNT - Alp",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -3187,7 +3482,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -3201,8 +3496,10 @@
       ],
       "enValue": "Mountains - Andean countries",
       "resolvedLabelEn": "MOUNT - And",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -3216,7 +3513,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -3230,8 +3527,10 @@
       ],
       "enValue": "Mountains - Carpathian countries",
       "resolvedLabelEn": "MOUNT - Car",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -3245,7 +3544,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -3259,8 +3558,10 @@
       ],
       "enValue": "Mountains - Caucasus countries",
       "resolvedLabelEn": "MOUNT - Cau",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -3274,7 +3575,7 @@
       "consumerFamily": "guid",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "regions",
@@ -3288,8 +3589,10 @@
       ],
       "enValue": "Mountains - Himalayan countries",
       "resolvedLabelEn": "MOUNT - Him",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -10384,7 +10687,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -10398,8 +10701,10 @@
       ],
       "enValue": "Agricultural Biodiversity",
       "resolvedLabelEn": "Agriculture and Biodiversity",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -10413,7 +10718,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -10427,8 +10732,10 @@
       ],
       "enValue": "Dry and Sub-Humid Lands",
       "resolvedLabelEn": "Dry and Sub-Humid Lands Biodiversity",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -10643,7 +10950,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -10656,8 +10963,10 @@
       ],
       "enValue": "Secretariat of the Convention on Biological Diversity",
       "resolvedLabelEn": "Convention on Biological Diversity",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -10699,7 +11008,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -10712,8 +11021,10 @@
       ],
       "enValue": "Subsidiary Body on Scientific, Technical and Technological Advice (SBSTTA)",
       "resolvedLabelEn": "Subsidiary Body on Scientific, Technical and Technological Advice",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -10809,7 +11120,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -10822,8 +11133,10 @@
       ],
       "enValue": "Strategic Plan 2011-2020",
       "resolvedLabelEn": "Strategic Plan / Biodiversity Targets",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -10837,7 +11150,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -10850,8 +11163,10 @@
       ],
       "enValue": "National Biodiversity Strategies and Action Plans (NBSAPs)",
       "resolvedLabelEn": "NBSAPs",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -10947,7 +11262,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -10960,8 +11275,10 @@
       ],
       "enValue": "Indicators",
       "resolvedLabelEn": "Identification, Monitoring and Indicators",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -10975,7 +11292,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -10988,8 +11305,10 @@
       ],
       "enValue": "Global Biodiversity Outlook (GBO)",
       "resolvedLabelEn": "Global Biodiversity Outlook",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -11111,7 +11430,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -11124,8 +11443,10 @@
       ],
       "enValue": "Business",
       "resolvedLabelEn": "Business and Biodiversity",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -11166,7 +11487,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -11179,8 +11500,10 @@
       ],
       "enValue": "Cities and Sub national Authorities",
       "resolvedLabelEn": "Cities and Biodiversity",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -11194,7 +11517,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -11207,8 +11530,10 @@
       ],
       "enValue": "Clearing-House Mechanisms",
       "resolvedLabelEn": "Clearing-House Mechanism",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -11251,7 +11576,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -11264,8 +11589,10 @@
       ],
       "enValue": "Financial Mechanism and Resources Mobilization",
       "resolvedLabelEn": "Financial Resources and Mechanism",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -11391,7 +11718,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -11404,8 +11731,10 @@
       ],
       "enValue": "Memorandum of Cooperation",
       "resolvedLabelEn": "Cooperation and Partnerships",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -11506,7 +11835,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -11520,8 +11849,10 @@
       ],
       "enValue": "Chemicals and pollution",
       "resolvedLabelEn": "Chemicals and Pollution",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -11535,7 +11866,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -11549,8 +11880,10 @@
       ],
       "enValue": "Climate Change and Biodiversity",
       "resolvedLabelEn": "Climate Change",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -11738,7 +12071,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -11752,8 +12085,10 @@
       ],
       "enValue": "Protected Areas",
       "resolvedLabelEn": "Protected Areas / In-Situ Conservation",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -11825,7 +12160,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -11839,8 +12174,10 @@
       ],
       "enValue": "Traditional Knowledge, Innovations and Practices",
       "resolvedLabelEn": "Traditional Knowledge, Innovations and Practices - Article 8(j)",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -11883,7 +12220,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -11897,8 +12234,10 @@
       ],
       "enValue": "Tourism",
       "resolvedLabelEn": "Tourism and Biodiversity",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -11939,7 +12278,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -11952,8 +12291,10 @@
       ],
       "enValue": "International Day for Biodiversity",
       "resolvedLabelEn": "International Day for Biological Diversity",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -11967,7 +12308,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -11980,8 +12321,10 @@
       ],
       "enValue": "International Year of Biodiversity",
       "resolvedLabelEn": "International Year of Biodiversity - 2010",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -11995,7 +12338,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -12008,8 +12351,10 @@
       ],
       "enValue": "United Nations Decade on Biodiversity",
       "resolvedLabelEn": "United Nations Decade on Biodiversity - 2011-2020",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -12023,7 +12368,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -12036,8 +12381,10 @@
       ],
       "enValue": "Youth",
       "resolvedLabelEn": "Youth and Biodiversity",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -12304,7 +12651,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -12318,8 +12665,10 @@
       ],
       "enValue": "Subsidiary Body on Implementation (SBI)",
       "resolvedLabelEn": "Subsidiary Body on Implementation",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -12476,7 +12825,7 @@
       "consumerFamily": "cbd-subject",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "subjects",
@@ -12490,8 +12839,10 @@
       ],
       "enValue": "South-South Cooperation",
       "resolvedLabelEn": "SSC",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -12864,7 +13215,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -12875,8 +13226,10 @@
       ],
       "enValue": "GBF-T01. All areas are planned or managed to bring loss of areas of high biodiversity importance close to zero",
       "resolvedLabelEn": "GBF-T01. Plan and Manage all Areas To Reduce Biodiversity Loss",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -12890,7 +13243,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -12901,8 +13254,10 @@
       ],
       "enValue": "GBF-T02. 30% of degraded areas are under effective restoration",
       "resolvedLabelEn": "GBF-T02. Restore 30% of all Degraded Ecosystems",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -12916,7 +13271,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -12927,8 +13282,10 @@
       ],
       "enValue": "GBF-T03. 30% of areas are effectively conserved",
       "resolvedLabelEn": "GBF-T03. Conserve 30% of Land, Waters and Seas",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -12942,7 +13299,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -12953,8 +13310,10 @@
       ],
       "enValue": "GBF-T04. Threatened species are recovering, genetic diversity is being maintained and human-wildlife conflict is being managed",
       "resolvedLabelEn": "GBF-T04. Halt Species Extinction, Protect Genetic Diversity, and Manage Human-Wildlife Conflicts",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -12968,7 +13327,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -12979,8 +13338,10 @@
       ],
       "enValue": "GBF-T05. Use, harvesting and trade of wild species is sustainable, safe and legal",
       "resolvedLabelEn": "GBF-T05. Ensure Sustainable, Safe and Legal Harvesting and Trade of Wild Species",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -12994,7 +13355,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13005,8 +13366,10 @@
       ],
       "enValue": "GBF-T06. Reduce rates of introduction and establishment of invasive alien species by 50%",
       "resolvedLabelEn": "GBF-T06. Reduce the Introduction of Invasive Alien Species by 50% and Minimize Their Impact",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13020,7 +13383,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13031,8 +13394,10 @@
       ],
       "enValue": "GBF-T07. Pollution reduced, halving nutrient loss and pesticide risk",
       "resolvedLabelEn": "GBF-T07. Reduce Pollution to Levels That Are Not Harmful to Biodiversity",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13046,7 +13411,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13057,8 +13422,10 @@
       ],
       "enValue": "GBF-T08. Minimize impacts of climate change and ocean acidification including through nature-based solutions and/or ecosystem-based approaches",
       "resolvedLabelEn": "GBF-T08. Minimize the Impacts of Climate Change on Biodiversity and Build Resilience",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13072,7 +13439,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13083,8 +13450,10 @@
       ],
       "enValue": "GBF-T09. Management of wild species is sustainable and benefits people",
       "resolvedLabelEn": "GBF-T09. Manage Wild Species Sustainably To Benefit People",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13098,7 +13467,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13109,8 +13478,10 @@
       ],
       "enValue": "GBF-T10. Areas under agriculture, aquaculture, fisheries and forestry are managed sustainably",
       "resolvedLabelEn": "GBF-T10. Enhance Biodiversity and Sustainability in Agriculture, Aquaculture, Fisheries, and Forestry",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13124,7 +13495,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13135,8 +13506,10 @@
       ],
       "enValue": "GBF-T11. Nature’s contributions to people are restored, maintained and enhanced",
       "resolvedLabelEn": "GBF-T11. Restore, Maintain and Enhance Nature’s Contributions to People",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13150,7 +13523,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13161,8 +13534,10 @@
       ],
       "enValue": "GBF-T12. Urban green and blue spaces enhanced for human well-being",
       "resolvedLabelEn": "GBF-T12. Enhance Green Spaces and Urban Planning for Human Well-Being and Biodiversity",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13176,7 +13551,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13187,8 +13562,10 @@
       ],
       "enValue": "GBF-T13. Fair and equitable sharing of benefits from genetic resources, digital sequence information and associated traditional knowledge",
       "resolvedLabelEn": "GBF-T13. Increase the Sharing of Benefits From Genetic Resources, Digital Sequence Information and Traditional Knowledge",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13202,7 +13579,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13213,8 +13590,10 @@
       ],
       "enValue": "GBF-T14. The multiple values of biodiversity are integrated into decision-making at all levels",
       "resolvedLabelEn": "GBF-T14. Integrate Biodiversity in Decision-Making at Every Level",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13228,7 +13607,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13239,8 +13618,10 @@
       ],
       "enValue": "GBF-T15. Businesses assess and disclose biodiversity dependencies, impacts and risks, and reduce negative impacts",
       "resolvedLabelEn": "GBF-T15. Businesses Assess, Disclose and Reduce Biodiversity-Related Risks and Negative Impacts",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13254,7 +13635,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13265,8 +13646,10 @@
       ],
       "enValue": "GBF-T16. Sustainable consumption choices are enabled, and food waste reduced by half",
       "resolvedLabelEn": "GBF-T16. Enable Sustainable Consumption Choices To Reduce Waste and Overconsumption",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13280,7 +13663,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13291,8 +13674,10 @@
       ],
       "enValue": "GBF-T17. Strengthen biosafety and distribute benefits of biotechnology",
       "resolvedLabelEn": "GBF-T17. Strengthen Biosafety and Distribute the Benefits of Biotechnology",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13306,7 +13691,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13317,8 +13702,10 @@
       ],
       "enValue": "GBF-T18. Reduce harmful incentives by at least $500 billion per year",
       "resolvedLabelEn": "GBF-T18. Reduce Harmful Incentives by at Least $500 Billion per Year, and Scale Up Positive Incentives for Biodiversity",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13332,7 +13719,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13343,8 +13730,10 @@
       ],
       "enValue": "GBF-T19. Financial resources increased to $200 billion per year, including $ 30 billion through international finance",
       "resolvedLabelEn": "GBF-T19. Mobilize $200 Billion per Year for Biodiversity From all Sources, Including $30 Billion Through International Finance",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13358,7 +13747,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13369,8 +13758,10 @@
       ],
       "enValue": "GBF-T20. Capacity-building and development, technology transfer, and technical and scientific cooperation for implementation is strengthened",
       "resolvedLabelEn": "GBF-T20. Strengthen Capacity-Building, Technology Transfer, and Scientific and Technical Cooperation for Biodiversity",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13384,7 +13775,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13395,8 +13786,10 @@
       ],
       "enValue": "GBF-T21. Data, information and knowledge for decision-making is available",
       "resolvedLabelEn": "GBF-T21. Ensure That Knowledge Is Available and Accessible To Guide Biodiversity Action",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13410,7 +13803,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13421,8 +13814,10 @@
       ],
       "enValue": "GBF-T22. Ensure participation, justice, and rights for indigenous peoples and local communities, women, youth persons with disabilities and environmental defenders",
       "resolvedLabelEn": "GBF-T22. Ensure Participation in Decision-Making and Access to Justice and Information Related to Biodiversity for all",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13436,7 +13831,7 @@
       "consumerFamily": "gbf-target",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfTargets",
@@ -13447,8 +13842,10 @@
       ],
       "enValue": "GBF-T23. Implementation follows a gender-responsive approach",
       "resolvedLabelEn": "GBF-T23. Ensure Gender Equality and a Gender-Responsive Approach for Biodiversity Action",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13462,7 +13859,7 @@
       "consumerFamily": "other",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfGoals",
@@ -13471,8 +13868,10 @@
       ],
       "enValue": "GBF-G-B. Biodiversity is sustainably used and its contributions to people are maintained, enhanced or restored",
       "resolvedLabelEn": "GBF-G-B. Biodiversity is sustainably used",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13486,7 +13885,7 @@
       "consumerFamily": "other",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfGoals",
@@ -13495,8 +13894,10 @@
       ],
       "enValue": "GBF-G-A. Ecosystems are conserved, extinctions are halted and genetic diversity is maintained",
       "resolvedLabelEn": "GBF-G-A. Biodiversity is conserved",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13510,7 +13911,7 @@
       "consumerFamily": "other",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfGoals",
@@ -13519,8 +13920,10 @@
       ],
       "enValue": "GBF-G-C. Benefits from the use of genetic resources are shared and substantially increased",
       "resolvedLabelEn": "GBF-G-C. Benefits from genetic resources are shared",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"
@@ -13534,7 +13937,7 @@
       "consumerFamily": "other",
       "inUiGap": false,
       "resolvable": true,
-      "safeToDelete": true,
+      "safeToDelete": false,
       "resolutionMethod": "domain-enumeration",
       "httpStatus": 200,
       "domain": "gbfGoals",
@@ -13543,8 +13946,10 @@
       ],
       "enValue": "GBF-G-D. The biodiversity funding gap of 700 billion USD is progressively closed by ensuring adequate means of implementation are available.",
       "resolvedLabelEn": "GBF-G-D. Adequate means of implementation are available",
-      "labelMatchesEn": true,
-      "reviewFlags": [],
+      "labelMatchesEn": false,
+      "reviewFlags": [
+        "label-would-change-on-delete"
+      ],
       "localeFilesMissingIt": [
         "no",
         "ps"

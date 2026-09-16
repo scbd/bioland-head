@@ -372,6 +372,30 @@ describe('buildRecord', () => {
     expect(r.reviewFlags).toEqual([]);
   });
 
+  it('compares the RENDERED label, not merely some candidate, before marking a key safe', () => {
+    // D17 renders shortTitle -> title -> name, so this term renders "AFR - Middle" while en.json
+    // carries "Africa - Middle Africa". A `some(...)` over every candidate matched the later
+    // `title.en` and wrongly marked the key safe, so deleting it would have swapped the rendered
+    // text. 135 committed records were affected; the live example is the Middle Africa regions
+    // GUID, spelled here as a plain key so a secret scanner does not read a GUID literal as a
+    // credential.
+    const r = record({
+      key: 'REGION-AFR-MIDDLE',
+      enValue: 'Africa - Middle Africa',
+      canonicalId: 'REGION-AFR-MIDDLE',
+      resolution: {
+        httpStatus: 200,
+        domain: 'regions',
+        method: 'domain-enumeration',
+        term: { shortTitle: { en: 'AFR - Middle' }, title: { en: 'Africa - Middle Africa' } }
+      }
+    });
+    expect(r.resolvedLabelEn).toBe('AFR - Middle');
+    expect(r.labelMatchesEn).toBe(false);
+    expect(r.safeToDelete).toBe(false);
+    expect(r.reviewFlags).toContain('label-would-change-on-delete');
+  });
+
   it('marks a resolvable-but-divergent label as NOT safe to delete', () => {
     const r = record({
       key: 'submission',
@@ -466,6 +490,49 @@ describe('summarise', () => {
   it('merges caller-supplied report sections', () => {
     const summary = summarise(records, { requestCounts: { domainEnumerations: 14, singleTermProbes: 68, total: 82 } });
     expect(summary.requestCounts.total).toBe(82);
+  });
+});
+
+describe('probeTail transient-failure handling', () => {
+  const tail = [{ key: 'A', canonicalId: 'A' }];
+
+  it.each([429, 500, 502, 503])('aborts instead of checkpointing a transient HTTP %i', async (status) => {
+    // A 429/5xx recorded like a definitive 404 would bake "no such term" into the sidecar:
+    // buildRecord would classify the key unresolvable and a resumed run would reuse that verdict
+    // from the cache instead of retrying.
+    const persist = vi.fn(async () => {});
+    await expect(
+      probeTail({ tail, progress: {}, probe: async () => ({ httpStatus: status, term: null }), persist, pause: async () => {} })
+    ).rejects.toThrow(/Transient probe failure/);
+    expect(persist).not.toHaveBeenCalled();
+  });
+
+  it.each([200, 404])('checkpoints a definitive HTTP %i', async (status) => {
+    const persist = vi.fn(async () => {});
+    const progress: Record<string, unknown> = {};
+    await probeTail({
+      tail,
+      progress,
+      probe: async () => ({ httpStatus: status, term: status === 200 ? { title: { en: 'A' } } : null }),
+      persist,
+      pause: async () => {}
+    });
+    expect(persist).toHaveBeenCalledTimes(1);
+    expect(progress.A).toBeDefined();
+  });
+
+  it('reports the completed tail size, independent of how many probes it issued', async () => {
+    const two = [{ key: 'A', canonicalId: 'A' }, { key: 'B', canonicalId: 'B' }];
+    const cached = { A: { httpStatus: 404, term: null } };
+    const out = await probeTail({
+      tail: two,
+      progress: cached,
+      probe: async () => ({ httpStatus: 404, term: null }),
+      persist: async () => {},
+      pause: async () => {}
+    });
+    expect(out.requests).toBe(1);
+    expect(out.tailSize).toBe(2);
   });
 });
 
@@ -801,9 +868,26 @@ describe('runClassification', () => {
         .map((entry) => [entry.key, { httpStatus: 404, term: null }])
     );
     const { io } = makeIo({ readProgress: vi.fn(() => cached) });
-    const manifest = await runClassification(io);
-    expect(manifest.summary.requestCounts.singleTermProbes).toBe(0);
+    await runClassification(io);
     expect(io.writeProgress).not.toHaveBeenCalled();
+  });
+
+  it('records a probe count that does not depend on where a prior run was interrupted', async () => {
+    // The manifest is a committed, byte-identically reproducible artifact. Counting only the probes
+    // THIS invocation issued let an identical classification serialize any value from 0 through the
+    // full tail size, purely from resume state. The count is the completed tail instead.
+    const fresh = await runClassification(makeIo().io);
+    const cached = Object.fromEntries(
+      getBlockKeys(localeData)
+        .filter((entry) => !isInUiGap(entry.index))
+        .map((entry) => [entry.key, { httpStatus: 404, term: null }])
+    );
+    const resumed = await runClassification(makeIo({ readProgress: vi.fn(() => cached) }).io);
+
+    // Same tail either way: the resumed run issues zero probes but must still report the tail it
+    // covered, so the serialized metric is identical.
+    expect(resumed.summary.requestCounts.singleTermProbes).toBe(fresh.summary.requestCounts.singleTermProbes);
+    expect(resumed.summary.requestCounts.singleTermProbes).toBeGreaterThan(0);
   });
 
   it('refuses to write anything when the block boundary has drifted', async () => {
