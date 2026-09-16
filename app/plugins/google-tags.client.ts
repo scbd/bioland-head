@@ -140,6 +140,16 @@ async function waitForConsentPersistence(): Promise<void> {
     }
 }
 
+/** Bound editor-authored diagnostics without traversing objects or invoking their toJSON hooks. */
+function misconfiguredValueForLog(value: unknown): string {
+    const limit = 80;
+    const preview = typeof value === 'string'
+        ? JSON.stringify(value.slice(0, limit)).replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029')
+        : typeof value === 'number' ? String(value) : Array.isArray(value) ? '[array]' : `[${typeof value}]`;
+
+    return preview.length > limit ? `${preview.slice(0, limit - 3)}...` : preview;
+}
+
 export default defineNuxtPlugin({
     name: 'google-tags',
     dependsOn: ['site'],
@@ -159,7 +169,7 @@ export default defineNuxtPlugin({
 
             warnedMisconfigured = true;
             consola.warn(
-                `Google Analytics is configured with ${typeof value} ${JSON.stringify(value)} rather than the boolean true, `
+                `Google Analytics is configured with ${typeof value} ${misconfiguredValueForLog(value)} rather than the boolean true, `
                 + 'so no tag will load. Re-save the Enable Google Analytics checkbox in Drupal under Front End > General.',
             );
         }, { immediate: true });

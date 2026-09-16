@@ -97,6 +97,46 @@ describe('a switch value that is not the boolean true', () => {
     expect(warn).toHaveBeenCalledOnce()
   })
 
+  it('bounds a long string preview without hiding the corrective action', async () => {
+    const { warn } = await setupTags(undefined, { enabled: 'x'.repeat(10_000) })
+    const message = String(warn.mock.calls[0]![0])
+    const preview = message.split('string ')[1]!.split(' rather than')[0]!
+
+    expect(warn).toHaveBeenCalledOnce()
+    expect(preview.length).toBeLessThanOrEqual(80)
+    expect(preview).toContain('x'.repeat(20))
+    expect(preview.endsWith('...')).toBe(true)
+    expect(message).toContain('Re-save the Enable Google Analytics checkbox')
+  })
+
+  it.each([
+    ['object', { nested: { value: 'x'.repeat(10_000) } }, '[object]'],
+    ['array', [true], '[array]'],
+  ])('summarizes a malformed %s without serializing its contents', async (_label, enabled, preview) => {
+    const { warn, gtag, loadGtm } = await setupTags(undefined, { enabled })
+
+    expect(warn).toHaveBeenCalledOnce()
+    expect(warn.mock.calls[0]![0]).toContain(`object ${preview} rather than the boolean true`)
+    expect(loadGtm).not.toHaveBeenCalled()
+    expect(gtag.mock.calls.filter(([command]) => command === 'config')).toEqual([])
+  })
+
+  it('does not invoke a malformed object serialization hook', async () => {
+    const toJSON = vi.fn(() => { throw new Error('must not serialize editor objects') })
+    const { warn } = await setupTags(undefined, { enabled: { toJSON } })
+
+    expect(toJSON).not.toHaveBeenCalled()
+    expect(warn.mock.calls[0]![0]).toContain('object [object] rather than the boolean true')
+  })
+
+  it('escapes line separators and control characters in the warning', async () => {
+    const { warn } = await setupTags(undefined, { enabled: 'on\u2028\u2029\n\t\u001b[31m' })
+    const message = String(warn.mock.calls[0]![0])
+
+    expect(message).toContain('"on\\u2028\\u2029\\n\\t\\u001b[31m"')
+    expect(message).not.toMatch(/[\u2028\u2029\n\t\u001b]/)
+  })
+
   it.each([false, undefined, null, 0, ''])('stays quiet on %p, which is an ordinary off', async (enabled) => {
     const { warn } = await setupTags(undefined, { enabled })
 
