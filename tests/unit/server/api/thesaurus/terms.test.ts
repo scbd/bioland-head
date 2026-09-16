@@ -16,6 +16,8 @@ vi.stubGlobal('defineEventHandler', (handler: (event: unknown) => unknown) => ha
 vi.stubGlobal('readBody', readBody)
 vi.stubGlobal('useRequestContext', useRequestContext)
 vi.stubGlobal('resolveTerms', resolveTerms)
+// Mirrors the real `isValidDomain` (config.ts): membership in dataSourceConfigs, nothing looser.
+vi.stubGlobal('isValidDomain', (d: string) => ['countries', 'regions', 'subjects'].includes(d))
 vi.stubGlobal('createError', createError)
 
 vi.mock('h3', () => ({
@@ -49,12 +51,40 @@ describe('POST /api/thesaurus/terms', () => {
 
   afterAll(() => vi.unstubAllGlobals())
 
+  it('forwards a recognised domain so client-resolved countries render the title, not the ISO-2 code', async () => {
+    // countries terms carry the ISO-2 code as shortTitle, so without the domain the default
+    // shortTitle -> title -> name order renders "BE" instead of "Belgium" on the client path.
+    readBody.mockResolvedValue({ ids: ['be'], domain: 'countries' })
+
+    await handler(event)
+
+    expect(resolveTerms).toHaveBeenCalledWith(['be'], 'fr', event, 'countries')
+  })
+
+  it('ignores an unrecognised domain rather than rejecting the request', async () => {
+    // Untrusted input that reaches only a label-field lookup; resolveTerms already defaults safely,
+    // so a stale or hostile client must not be able to turn a label request into a 400.
+    readBody.mockResolvedValue({ ids: ['be'], domain: 'not-a-domain' })
+
+    await handler(event)
+
+    expect(resolveTerms).toHaveBeenCalledWith(['be'], 'fr', event, undefined)
+  })
+
+  it('ignores a non-string domain', async () => {
+    readBody.mockResolvedValue({ ids: ['be'], domain: { evil: true } })
+
+    await handler(event)
+
+    expect(resolveTerms).toHaveBeenCalledWith(['be'], 'fr', event, undefined)
+  })
+
   it('resolves an array body unchanged and forwards the request locale', async () => {
     readBody.mockResolvedValue({ ids: ['a', 'b'] })
 
     const result = await handler(event)
 
-    expect(resolveTerms).toHaveBeenCalledWith(['a', 'b'], 'fr', event)
+    expect(resolveTerms).toHaveBeenCalledWith(['a', 'b'], 'fr', event, undefined)
     expect(result).toEqual({ ok: true })
   })
 
@@ -63,7 +93,7 @@ describe('POST /api/thesaurus/terms', () => {
 
     await handler(event)
 
-    expect(resolveTerms).toHaveBeenCalledWith(['a', 'b', 'c'], 'fr', event)
+    expect(resolveTerms).toHaveBeenCalledWith(['a', 'b', 'c'], 'fr', event, undefined)
   })
 
   it('wraps a single bare string id in an array', async () => {
@@ -71,7 +101,7 @@ describe('POST /api/thesaurus/terms', () => {
 
     await handler(event)
 
-    expect(resolveTerms).toHaveBeenCalledWith(['a'], 'fr', event)
+    expect(resolveTerms).toHaveBeenCalledWith(['a'], 'fr', event, undefined)
   })
 
   it('defaults locale to "en" when the request context has none', async () => {
@@ -80,7 +110,7 @@ describe('POST /api/thesaurus/terms', () => {
 
     await handler(event)
 
-    expect(resolveTerms).toHaveBeenCalledWith(['a'], 'en', event)
+    expect(resolveTerms).toHaveBeenCalledWith(['a'], 'en', event, undefined)
   })
 
   it('rejects an empty array with 400 and never calls resolveTerms', async () => {
@@ -117,7 +147,7 @@ describe('POST /api/thesaurus/terms', () => {
 
     await handler(event)
 
-    expect(resolveTerms).toHaveBeenCalledWith(ids, 'fr', event)
+    expect(resolveTerms).toHaveBeenCalledWith(ids, 'fr', event, undefined)
   })
 
   it('rejects a malformed body where ids is a number, with no throw escaping uncaught', async () => {
@@ -149,7 +179,7 @@ describe('POST /api/thesaurus/terms', () => {
     await handler(atCap)
 
     expect(readBody).toHaveBeenCalled()
-    expect(resolveTerms).toHaveBeenCalledWith(['a'], 'fr', atCap)
+    expect(resolveTerms).toHaveBeenCalledWith(['a'], 'fr', atCap, undefined)
   })
 
   it('rejects a chunked-encoding request with no Content-Length header with 411, before readBody is ever called', async () => {
@@ -216,7 +246,7 @@ describe('POST /api/thesaurus/terms', () => {
 
     await handler(event)
 
-    expect(resolveTerms).toHaveBeenCalledWith([id], 'fr', event)
+    expect(resolveTerms).toHaveBeenCalledWith([id], 'fr', event, undefined)
   })
 
   it('rejects a 200-id batch of ~10KB ids by declared size, before it is ever fully parsed', async () => {
