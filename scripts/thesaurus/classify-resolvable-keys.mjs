@@ -289,7 +289,14 @@ export function buildRecord({ key, index, enValue, canonicalId, resolution, loca
 
   const candidates = resolvable ? englishLabelCandidates(resolution.term) : [];
   const resolvedLabelEn = candidates[0] ?? null;
-  const labelMatchesEn = resolvable && candidates.some((value) => value.trim() === String(enValue).trim());
+  // Compare ONLY the candidate the resolver would actually render (`candidates[0]`, D17's
+  // shortTitle -> title -> name order). A `some(...)` over every candidate marked a key safe when a
+  // LATER candidate happened to equal en.json's value, so deleting it would have swapped the
+  // rendered text for the preferred one — e.g. regions term A23DD6C0-…21A, whose en.json value is
+  // "Africa - Middle Africa" but whose rendered shortTitle is "AFR – Middle". This is the deletion
+  // gate p03-05 consumes, so the comparison must be the rendered label.
+  const labelMatchesEn = resolvable && resolvedLabelEn !== null
+    && resolvedLabelEn.trim() === String(enValue).trim();
 
   const reviewFlags = [];
   if (inUiGap) reviewFlags.push('ui-chrome-gap-not-probed');
@@ -380,6 +387,9 @@ export function summarise(records, extras) {
  * A thrown `probe` propagates deliberately: the caller's crash is what leaves the sidecar on disk,
  * and the already-probed identifiers in it are what the next run skips.
  */
+/** Probe outcomes that are a real answer about the term, rather than a transient API failure. */
+export const DEFINITIVE_PROBE_STATUSES = new Set([200, 404]);
+
 export async function probeTail({ tail, progress, probe, persist, pause }) {
   const resolutions = new Map();
   let requests = 0;
@@ -390,6 +400,17 @@ export async function probeTail({ tail, progress, probe, persist, pause }) {
       await pause();
       outcome = await probe(canonicalId);
       requests += 1;
+      // Only 200 and 404 are DEFINITIVE. A 429 or 5xx is a transient API failure, and checkpointing
+      // it would bake "no such term" into the sidecar: `buildRecord` would classify the key
+      // unresolvable, and a resumed run would reuse that verdict from the cache instead of
+      // retrying. Abort instead, leaving the sidecar holding only definitive outcomes so a rerun
+      // resumes cleanly from the last good probe.
+      if (!DEFINITIVE_PROBE_STATUSES.has(outcome.httpStatus)) {
+        throw new Error(
+          `Transient probe failure for ${canonicalId}: HTTP ${outcome.httpStatus}. ` +
+            `Refusing to record it as a definitive result; rerun to resume from the last good probe.`
+        );
+      }
       progress[canonicalId] = outcome;
       await persist(progress);
     }
@@ -401,7 +422,11 @@ export async function probeTail({ tail, progress, probe, persist, pause }) {
     });
   }
 
-  return { resolutions, requests };
+  // `requests` counts probes issued by THIS invocation and is for the console log only. `tailSize`
+  // is the completed tail — identical for identical input regardless of where a prior run was
+  // interrupted — and is what the committed manifest records, so the artifact stays byte-identical
+  // across a fresh run and a resumed one.
+  return { resolutions, requests, tailSize: tail.length };
 }
 
 /**
@@ -539,7 +564,7 @@ export async function runClassification(io) {
   // Step 4c — single-term fallback for corpus misses only, paced and resumable.
   const progress = readProgress();
   log(`Tail: ${tail.length} corpus misses to probe individually (${Object.keys(progress).length} already cached).`);
-  const { resolutions: tailResolutions, requests: tailRequests } = await probeTail({
+  const { resolutions: tailResolutions, requests: tailRequests, tailSize } = await probeTail({
     tail,
     progress,
     probe: async (canonicalId) => {
@@ -560,7 +585,8 @@ export async function runClassification(io) {
     localeIndex,
     registryCodes,
     strayFiles,
-    requestCounts: { domainEnumerations: domainRequests, singleTermProbes: tailRequests, total: domainRequests + tailRequests }
+    // Resume-independent by construction: `tailSize`, not `tailRequests`. See probeTail.
+    requestCounts: { domainEnumerations: domainRequests, singleTermProbes: tailSize, total: domainRequests + tailSize }
   });
 
   writeManifest(manifest);
