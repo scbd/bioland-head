@@ -13,8 +13,8 @@
 </script>
 <style scoped>
     .dev-site {
-        padding: 1 rem;
+        padding: 1rem;
         text-align: center;
-        font-size: .7 rem;
+        font-size: .7rem;
     }
 </style>
