@@ -11,8 +11,13 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      // D14: extended for p01-01 — server/utils/thesaurus/index.js is .js (outside the
+      // *.ts glob above) and server/api/thesaurus/[termIdentifier]/index.ts lives under
+      // server/api, not server/utils. Both changed for the title/name localization fix.
       include: [
         'server/utils/**/*.ts',
+        'server/utils/thesaurus/index.js',
+        'server/api/thesaurus/[[]termIdentifier[]]/index.ts',
         'shared/utils/**/*.ts',
         'app/utils/resolve-theme.js',
         // p03-01 (D14): the glob is `.ts`-only, so this task's own `.js` module is named explicitly
