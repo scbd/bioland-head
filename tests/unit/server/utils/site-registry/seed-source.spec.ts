@@ -26,6 +26,8 @@ function sourceText(): string {
     bl2: {
       config: {
         multiSiteCode: 'bl2',
+        name: 'Bioland 2',
+        description: 'The bl2 network',
         baseHost: 'example.test',
         defaultLocale: 'en',
         locales: ['en', 'fr'],
@@ -40,6 +42,8 @@ function sourceText(): string {
         be: {
           siteCode: 'be',
           name: 'Belgium',
+          logo: '/sites/be/logo.svg',
+          geoBonPage: 'geobon-be',
           country: 'BE',
           countries: ['BE', 'BE', 'LU'],
           published: true,
@@ -56,6 +60,10 @@ function sourceText(): string {
           host: 'chm.example.test',
           country: 'CK',
           hasBl1: false,
+          // Neither shape survives the p02-01 read contract: both must store
+          // NULL and surface as a finding rather than seeding an unreadable row.
+          hideHomePageWidgets: true,
+          geoBonPage: { slug: 'geobon' },
         },
         zz: {
           siteCode: 'zz',
@@ -147,6 +155,10 @@ describe('deriveMultiSiteRecord', () => {
     expect(record).toEqual({
       env: 'stg',
       multiSiteCode: 'bl2',
+      // REQUIRED by readMultiSiteConfig — a slice without these cannot be read.
+      name: 'Bioland 2',
+      description: 'The bl2 network',
+      baseHost: 'example.test',
       defaultLocale: 'en',
       locales: ['en', 'fr'],
       countries: undefined,
@@ -185,7 +197,7 @@ describe('deriveSiteRecord', () => {
     const record = deriveSiteRecord('stg', 'bl2', 'zz', { siteCode: 'zz' }, {})
 
     for (const field of [
-      'name', 'description', 'host', 'redirect', 'aliases', 'defaultLocale', 'locales',
+      'name', 'description', 'logo', 'host', 'redirect', 'aliases', 'defaultLocale', 'locales',
       'i18nEnabled', 'country', 'countries', 'region', 'continent', 'published', 'scbd',
       'hasBl1', 'hasBl2', 'migrated', 'migratedFailed', 'theme', 'hideHomePageWidgets',
       'geoBonPage',
@@ -221,6 +233,28 @@ describe('deriveSiteRecord', () => {
   it('keeps hideHomePageWidgets as the object it is upstream, not a boolean', () => {
     const record = deriveSiteRecord('stg', 'bl2', 'be', { hideHomePageWidgets: { geobon: true } }, {})
     expect(record.hideHomePageWidgets).toEqual({ geobon: true })
+  })
+
+  it('stores NULL rather than a shape readSite would reject', () => {
+    // readSite throws RegistryRowMalformedError on anything but {geobon: boolean}
+    // / a JSON string, so an unconvertible source value must not be written.
+    for (const raw of [true, ['geobon'], 'geobon', { other: 1 }]) {
+      expect(deriveSiteRecord('stg', 'bl2', 'be', { hideHomePageWidgets: raw }, {})
+        .hideHomePageWidgets, JSON.stringify(raw)).toBeUndefined()
+    }
+    expect(deriveSiteRecord('stg', 'bl2', 'be', { hideHomePageWidgets: { geobon: 1 } }, {})
+      .hideHomePageWidgets).toEqual({ geobon: true })
+
+    for (const raw of [{ slug: 'x' }, 42, ['x']]) {
+      expect(deriveSiteRecord('stg', 'bl2', 'be', { geoBonPage: raw }, {})
+        .geoBonPage, JSON.stringify(raw)).toBeUndefined()
+    }
+    expect(deriveSiteRecord('stg', 'bl2', 'be', { geoBonPage: 'geobon-be' }, {}).geoBonPage)
+      .toBe('geobon-be')
+  })
+
+  it('copies the logo, which the p02-03 projection needs to avoid a fallback mark', () => {
+    expect(deriveSiteRecord('stg', 'bl2', 'be', { logo: '/logo.svg' }, {}).logo).toBe('/logo.svg')
   })
 
   it('carries no secret-bearing key across', () => {
@@ -285,6 +319,22 @@ describe('collectFindings', () => {
       sitesWithCountries: 1,
       sitesWithI18n: 1,
       sitesWithHasBl1: 2,
+      sitesWithLogo: 1,
+    })
+  })
+
+  it('reports a multiSite missing a column readMultiSiteConfig requires', () => {
+    // bsl carries a baseHost but no name, so its slice row would be unreadable.
+    expect(findings.multiSitesMissingRequired).toEqual({ 'bsl.name': 1 })
+
+    expect(collectFindings('stg', { xx: { config: {}, sites: {} } }).multiSitesMissingRequired)
+      .toEqual({ 'xx.name': 1, 'xx.baseHost': 1 })
+  })
+
+  it('reports a value stored as NULL because the read contract would reject it', () => {
+    expect(findings.unstorableValueShapes).toEqual({
+      'site.hideHomePageWidgets': 1,
+      'site.geoBonPage': 1,
     })
   })
 

@@ -14,6 +14,7 @@ vi.mock('../../../../../server/utils/db/pool', () => ({
 const {
   SECRET_BEARING_KEYS,
   RegistrySeedForbiddenKeyError,
+  RegistrySeedSliceMismatchError,
   RegistrySeedWriteError,
   assertNoSecretBearingKeys,
   buildSeedConnectionOptions,
@@ -35,14 +36,16 @@ const SOURCE = `{
   meta: { hash: 'fake-hash' },
   bl2: {
     config: {
-      multiSiteCode: 'bl2', baseHost: 'example.test', defaultLocale: 'en',
+      multiSiteCode: 'bl2', name: 'Bioland 2', description: 'The bl2 network',
+      baseHost: 'example.test', defaultLocale: 'en',
       locales: ['en', 'fr'], theme: { color: { primary: '#111111' } },
       i18n: { maxLangBeforeWrap: 4 },
       dataBase: { password: '${DUMMY_DB_PASSWORD}' }, panoramaKey: '${DUMMY_API_KEY}',
     },
     sites: {
       be: {
-        siteCode: 'be', name: 'Belgium', country: 'BE', countries: ['BE', 'LU'],
+        siteCode: 'be', name: 'Belgium', logo: '/sites/be/logo.svg',
+        country: 'BE', countries: ['BE', 'LU'],
         published: true, scbd: false, hasBl1: 'yes', i18n: true,
         theme: { color: { primary: '#222222' } }, hideHomePageWidgets: { geobon: true },
         smtpCredentials: { password: '${DUMMY_DB_PASSWORD}' }, meta: { email: 'nobody@example.test' },
@@ -179,6 +182,26 @@ describe('seedSiteConfig / seedMultiSiteConfig', () => {
     expect(bound).not.toContain('nobody@example.test')
   })
 
+  it('populates the columns readMultiSiteConfig requires', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+
+    const row = db.rows.get('site_registry.multi_site_config|stg|bl2')!
+    // NULL in either of these makes readMultiSiteConfig throw, and takes every
+    // readSite in the slice with it.
+    expect(row.name).toBe('Bioland 2')
+    expect(row.base_host).toBe('example.test')
+    expect(row.description).toBe('The bl2 network')
+  })
+
+  it('populates the site logo the p02-03 projection reads', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+
+    expect(db.rows.get('site_registry.site_config|stg|bl2|be')!.logo).toBe('/sites/be/logo.svg')
+    expect(db.rows.get('site_registry.site_config|stg|bl2|zz')!.logo).toBeNull()
+  })
+
   it('writes NULL for an absent optional field, never an empty value', async () => {
     const db = fakeDb()
     await seedSlice(db, plan())
@@ -246,6 +269,64 @@ describe('seedSiteConfig / seedMultiSiteConfig', () => {
     // default error formatter, which would put the parameters straight back.
     expect(error.cause).toBeUndefined()
     expect(JSON.stringify(error, Object.getOwnPropertyNames(error))).not.toContain(DUMMY_DB_PASSWORD)
+  })
+})
+
+describe('write ordering', () => {
+  it('writes the slice row before any site row that joins to it', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+
+    const tables = db.calls.map(call => /^INSERT INTO (\S+) /.exec(call.sql)![1])
+
+    // readSite LEFT JOINs the site row to its slice row and throws
+    // RegistryRowMissingError when the join misses, so a site row written first
+    // is an unreadable site until the slice row lands.
+    expect(tables[0]).toBe('site_registry.multi_site_config')
+    expect(tables.slice(1).every(table => table === 'site_registry.site_config')).toBe(true)
+    expect(tables.indexOf('site_registry.multi_site_config'))
+      .toBeLessThan(tables.indexOf('site_registry.site_config'))
+  })
+
+  it('does not begin a site write until the slice write has resolved', async () => {
+    const order: string[] = []
+    let releaseSlice: () => void = () => {}
+    const slicePending = new Promise<void>((resolve) => { releaseSlice = resolve })
+
+    const db = {
+      async query(sql: string) {
+        const table = /^INSERT INTO (\S+) /.exec(sql)![1]
+        order.push(`start:${table}`)
+        // Hold the slice write open; a site write starting now would prove the
+        // ordering is only textual, not awaited.
+        if (table === 'site_registry.multi_site_config') await slicePending
+        order.push(`end:${table}`)
+        return { affectedRows: 1 }
+      },
+      async end() {},
+    }
+
+    const seeding = seedSlice(db, plan())
+    await Promise.resolve()
+    expect(order).toEqual(['start:site_registry.multi_site_config'])
+
+    releaseSlice()
+    await seeding
+
+    expect(order[0]).toBe('start:site_registry.multi_site_config')
+    expect(order[1]).toBe('end:site_registry.multi_site_config')
+    expect(order[2]).toBe('start:site_registry.site_config')
+  })
+
+  it('writes nothing at all when a site does not belong to the slice', async () => {
+    const db = fakeDb()
+    const mixed = plan()
+    mixed.sites[1] = { ...mixed.sites[1], multiSiteCode: 'bsl' }
+
+    await expect(seedSlice(db, mixed)).rejects.toBeInstanceOf(RegistrySeedSliceMismatchError)
+    // The slice row is not written either: a plan that cannot be trusted to name
+    // its own slice must not leave a half-seeded network behind.
+    expect(db.calls).toHaveLength(0)
   })
 })
 
