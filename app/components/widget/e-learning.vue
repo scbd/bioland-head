@@ -1,7 +1,7 @@
 <template>
     <div v-if="showWidget" class="position-relative">
         <!-- Placeholder shown during loading -->
-        <div v-if="loading || !record">
+        <div v-if="loading">
             <div class="text-capitalize placeholder-glow">
                 <h4 class="mb-3"><span class="placeholder col-3"></span></h4>
             </div>
@@ -35,7 +35,7 @@
         </div>
 
         <!-- Actual content after data loads -->
-        <LazyWidget v-else-if="!error" :loading="loading" :name="t('e-Learning')" :record="record" :links="links"/>
+        <LazyWidget v-else-if="!error && record" :loading="loading" :name="t('e-Learning')" :record="record" :links="links"/>
     </div>
 </template>
 <script setup>
