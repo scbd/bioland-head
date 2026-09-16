@@ -38,6 +38,21 @@
  *   per-site `theme` stays at the site level, **unmerged**. Precedence belongs
  *   to `readSite`, which already implements it.
  *
+ * ## What the p02-01 read contract forces
+ *
+ * `readMultiSiteConfig` types `name` and `baseHost` as REQUIRED and throws
+ * `RegistryRowMalformedError` on a NULL column; `readSite` throws
+ * `RegistryRowMissingError` when the slice row is absent altogether. So those
+ * two are not optional-with-a-shrug here — a slice seeded without them is a
+ * slice that cannot be read back, and every site under it fails with it. Both
+ * come from the multiSite `config` block, alongside the `baseHost` this module
+ * already used to derive a site host.
+ *
+ * `hide_home_page_widgets` and `geo_bon_page` are validated on read too
+ * (`{geobon: boolean}` or NULL, and a JSON string or NULL). So they are coerced
+ * to the contract shape rather than passed through raw: an unconvertible source
+ * value becomes NULL plus a finding, never a row `readSite` would reject.
+ *
  * ## Deliberately NOT reproduced
  *
  * - `root`, `drupalRoot`, `siteRoot`, `dataBaseName` — deployment paths and a
@@ -64,6 +79,11 @@ export type SeedSourceDocument = Record<string, unknown>
 export interface SeedMultiSiteRecord {
   env: string
   multiSiteCode: string
+  /** REQUIRED on read — `readMultiSiteConfig` throws on a NULL `name`. */
+  name?: string
+  description?: string
+  /** REQUIRED on read — `readMultiSiteConfig` throws on a NULL `base_host`. */
+  baseHost?: string
   defaultLocale?: string
   locales?: string[]
   countries?: string[]
@@ -79,6 +99,7 @@ export interface SeedSiteRecord {
   siteCode: string
   name?: string
   description?: string
+  logo?: string
   host?: string
   redirect?: string
   aliases?: string[]
@@ -97,8 +118,10 @@ export interface SeedSiteRecord {
   migrated?: boolean
   migratedFailed?: boolean
   theme?: SiteTheme
-  hideHomePageWidgets?: unknown
-  geoBonPage?: unknown
+  /** Coerced to the read contract's shape; see `deriveHideHomePageWidgets`. */
+  hideHomePageWidgets?: { geobon: boolean }
+  /** Coerced to the read contract's shape; see `deriveGeoBonPage`. */
+  geoBonPage?: string
 }
 
 /** Counts and key names the operator needs. Never a source value. */
@@ -116,6 +139,20 @@ export interface SeedFindings {
   unknownSiteKeys: Record<string, number>
   /** Contract keys deliberately dropped, with how many records carried each. */
   droppedKeys: Record<string, number>
+  /**
+   * Keys present in the source whose value cannot satisfy the p02-01 read
+   * contract and so are stored as NULL — `site.hideHomePageWidgets` that is not
+   * `{geobon: …}`, `site.geoBonPage` that is not a string. Reported rather than
+   * dropped quietly: an upstream shape change here is exactly what would make
+   * `readSite` start throwing on rows this seeder wrote.
+   */
+  unstorableValueShapes: Record<string, number>
+  /**
+   * MultiSite codes missing a `config.name` or `config.baseHost`. Both are
+   * REQUIRED on read, so a slice listed here seeds a row `readMultiSiteConfig`
+   * and every `readSite` under it will reject.
+   */
+  multiSitesMissingRequired: Record<string, number>
   counts: {
     multiSites: number
     sites: number
@@ -124,6 +161,7 @@ export interface SeedFindings {
     sitesWithCountries: number
     sitesWithI18n: number
     sitesWithHasBl1: number
+    sitesWithLogo: number
   }
 }
 
@@ -153,18 +191,19 @@ export class SeedSourceShapeError extends RegistryError {
 
 /** `config` keys the registry stores. */
 const MAPPED_MULTI_SITE_KEYS = new Set([
-  'multiSiteCode', 'defaultLocale', 'locales', 'countries', 'theme', 'settings', 'i18n',
+  'multiSiteCode', 'name', 'description', 'baseHost',
+  'defaultLocale', 'locales', 'countries', 'theme', 'settings', 'i18n',
 ])
 
 /** `config` keys the registry knowingly drops (no column, by design). */
 const DROPPED_MULTI_SITE_KEYS = new Set([
-  'name', 'description', 'baseHost', 'env', 'cdn', 'runTime',
+  'env', 'cdn', 'runTime',
   'dataBase', 'dns', 'drupal', 'defaultSmtpCredentials', 'panoramaKey', 'meta',
 ])
 
 /** Site keys the registry stores. */
 const MAPPED_SITE_KEYS = new Set([
-  'siteCode', 'name', 'description', 'host', 'redirect', 'aliases',
+  'siteCode', 'name', 'description', 'logo', 'host', 'redirect', 'aliases',
   'defaultLocale', 'locales', 'i18n', 'country', 'countries', 'region', 'continent',
   'published', 'scbd', 'hasBl1', 'hasBl2', 'migrated', 'migratedFailed',
   'theme', 'hideHomePageWidgets', 'geoBonPage',
@@ -172,7 +211,7 @@ const MAPPED_SITE_KEYS = new Set([
 
 /** Site keys the registry knowingly drops (no column, by design). */
 const DROPPED_SITE_KEYS = new Set([
-  'multiSiteCode', 'env', 'logo', 'runTime',
+  'multiSiteCode', 'env', 'runTime',
   'smtpCredentials', 'dataBase', 'dns', 'drupal', 'panoramaKey', 'meta',
 ])
 
@@ -238,7 +277,15 @@ export function listSourceMultiSites(document: SeedSourceDocument): string[] {
   return Object.keys(document).filter(key => key !== 'meta' && optObject(document[key]) !== undefined)
 }
 
-/** Derive the multiSite-level record. Absent stays absent. */
+/**
+ * Derive the multiSite-level record. Absent stays absent.
+ *
+ * `name` and `baseHost` are copied because `readMultiSiteConfig` requires them
+ * and `readSite` needs the slice row to exist at all. They are still typed
+ * optional: this module reports a missing one as a finding rather than throwing,
+ * so an operator sees which slices the source itself cannot satisfy instead of
+ * the seed aborting on the first incomplete network.
+ */
 export function deriveMultiSiteRecord(
   env: string,
   multiSiteCode: string,
@@ -247,6 +294,9 @@ export function deriveMultiSiteRecord(
   return {
     env,
     multiSiteCode,
+    name: optString(config.name),
+    description: optString(config.description),
+    baseHost: optString(config.baseHost),
     defaultLocale: optString(config.defaultLocale),
     locales: optStringArray(config.locales),
     countries: optStringArray(config.countries),
@@ -272,6 +322,33 @@ export function deriveCountries(site: Record<string, unknown>): string[] | undef
     : [country].filter((entry): entry is string => Boolean(entry))
 
   return derived.length ? derived : undefined
+}
+
+/**
+ * Coerce `hideHomePageWidgets` to the read contract's `{geobon: boolean}`.
+ *
+ * p01-01 found the upstream value is an OBJECT carrying `geobon`, not a bare
+ * boolean, and `readSite`'s `parseHideHomePageWidgets` throws
+ * `RegistryRowMalformedError` on anything else. So only an object with a
+ * `geobon` member converts; every other shape (a bare boolean, an array, a
+ * string) stores NULL and is counted in `unstorableValueShapes`. Writing the raw
+ * value through would seed rows that make `readSite` throw — the exact failure
+ * this seeder must not manufacture.
+ */
+export function deriveHideHomePageWidgets(raw: unknown): { geobon: boolean } | undefined {
+  const record = optObject(raw)
+  if (!record || !('geobon' in record)) return undefined
+  return { geobon: Boolean(record.geobon) }
+}
+
+/**
+ * Coerce `geoBonPage` to the read contract's JSON string.
+ *
+ * `readSite`'s `parseStringColumn` throws on anything that is not a JSON string,
+ * so a non-string value stores NULL and is counted rather than written.
+ */
+export function deriveGeoBonPage(raw: unknown): string | undefined {
+  return optString(raw)
 }
 
 /**
@@ -303,6 +380,7 @@ export function deriveSiteRecord(
     siteCode,
     name: optString(site.name),
     description: optString(site.description),
+    logo: optString(site.logo),
     host: explicitHost ?? (baseHost ? `${siteCode}.${baseHost}` : undefined),
     redirect: optString(site.redirect),
     aliases: optStringArray(site.aliases),
@@ -320,8 +398,8 @@ export function deriveSiteRecord(
     migrated: optBoolean(site.migrated),
     migratedFailed: optBoolean(site.migratedFailed),
     theme: optObject(site.theme) as SiteTheme | undefined,
-    hideHomePageWidgets: opt(site.hideHomePageWidgets),
-    geoBonPage: opt(site.geoBonPage),
+    hideHomePageWidgets: deriveHideHomePageWidgets(site.hideHomePageWidgets),
+    geoBonPage: deriveGeoBonPage(site.geoBonPage),
   }
 }
 
@@ -379,6 +457,8 @@ export function collectFindings(env: string, document: SeedSourceDocument): Seed
   const unknownMultiSiteConfigKeys: Record<string, number> = {}
   const unknownSiteKeys: Record<string, number> = {}
   const droppedKeys: Record<string, number> = {}
+  const unstorableValueShapes: Record<string, number> = {}
+  const multiSitesMissingRequired: Record<string, number> = {}
   const multiSitesWithConfigI18n: string[] = []
   const multiSitesWithConfigSettings: string[] = []
 
@@ -388,6 +468,7 @@ export function collectFindings(env: string, document: SeedSourceDocument): Seed
   let sitesWithCountries = 0
   let sitesWithI18n = 0
   let sitesWithHasBl1 = 0
+  let sitesWithLogo = 0
 
   for (const multiSiteCode of multiSites) {
     const block = optObject(document[multiSiteCode]) ?? {}
@@ -395,6 +476,10 @@ export function collectFindings(env: string, document: SeedSourceDocument): Seed
 
     if (optObject(config.i18n)) multiSitesWithConfigI18n.push(multiSiteCode)
     if (optObject(config.settings)) multiSitesWithConfigSettings.push(multiSiteCode)
+
+    // Both are REQUIRED on read; a slice missing either seeds an unreadable row.
+    if (!optString(config.name)) tally(multiSitesMissingRequired, `${multiSiteCode}.name`)
+    if (!optString(config.baseHost)) tally(multiSitesMissingRequired, `${multiSiteCode}.baseHost`)
 
     for (const key of Object.keys(config)) {
       if (DROPPED_MULTI_SITE_KEYS.has(key)) tally(droppedKeys, `config.${key}`)
@@ -411,6 +496,16 @@ export function collectFindings(env: string, document: SeedSourceDocument): Seed
       if (optStringArray(record.countries)) sitesWithCountries += 1
       if (record.i18n !== undefined) sitesWithI18n += 1
       if (record.hasBl1 !== undefined && record.hasBl1 !== null) sitesWithHasBl1 += 1
+      if (optString(record.logo)) sitesWithLogo += 1
+
+      // Present upstream but unconvertible to what `readSite` will accept.
+      if (opt(record.hideHomePageWidgets) !== undefined
+        && deriveHideHomePageWidgets(record.hideHomePageWidgets) === undefined) {
+        tally(unstorableValueShapes, 'site.hideHomePageWidgets')
+      }
+      if (opt(record.geoBonPage) !== undefined && deriveGeoBonPage(record.geoBonPage) === undefined) {
+        tally(unstorableValueShapes, 'site.geoBonPage')
+      }
 
       for (const key of Object.keys(record)) {
         if (DROPPED_SITE_KEYS.has(key)) tally(droppedKeys, `site.${key}`)
@@ -427,6 +522,8 @@ export function collectFindings(env: string, document: SeedSourceDocument): Seed
     unknownMultiSiteConfigKeys,
     unknownSiteKeys,
     droppedKeys,
+    unstorableValueShapes,
+    multiSitesMissingRequired,
     counts: {
       multiSites: multiSites.length,
       sites,
@@ -435,6 +532,7 @@ export function collectFindings(env: string, document: SeedSourceDocument): Seed
       sitesWithCountries,
       sitesWithI18n,
       sitesWithHasBl1,
+      sitesWithLogo,
     },
   }
 }

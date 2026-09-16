@@ -177,12 +177,17 @@ function upsertStatement(table: string, keyColumns: string[], valueColumns: stri
 }
 
 const MULTI_SITE_KEY_COLUMNS = ['env', 'multi_site_code']
-const MULTI_SITE_VALUE_COLUMNS = ['default_locale', 'locales', 'countries', 'theme', 'settings', 'i18n']
+const MULTI_SITE_VALUE_COLUMNS = [
+  // `name` and `base_host` are REQUIRED by `readMultiSiteConfig`, so they are
+  // not optional extras here — a slice row without them cannot be read back.
+  'name', 'description', 'base_host',
+  'default_locale', 'locales', 'countries', 'theme', 'settings', 'i18n',
+]
 const MULTI_SITE_UPSERT = upsertStatement(MULTI_SITE_TABLE, MULTI_SITE_KEY_COLUMNS, MULTI_SITE_VALUE_COLUMNS)
 
 const SITE_KEY_COLUMNS = ['env', 'multi_site_code', 'site_code']
 const SITE_VALUE_COLUMNS = [
-  'name', 'description', 'host', 'redirect', 'aliases',
+  'name', 'description', 'logo', 'host', 'redirect', 'aliases',
   'default_locale', 'locales', 'i18n_enabled',
   'country', 'countries', 'region', 'continent',
   'published', 'scbd', 'has_bl1', 'has_bl2', 'migrated', 'migrated_failed',
@@ -227,6 +232,9 @@ export async function seedMultiSiteConfig(
   await runWrite(connection, MULTI_SITE_TABLE, key, MULTI_SITE_UPSERT, [
     record.env,
     record.multiSiteCode,
+    scalar(record.name),
+    scalar(record.description),
+    scalar(record.baseHost),
     scalar(record.defaultLocale),
     json(record.locales),
     json(record.countries),
@@ -263,6 +271,7 @@ export async function seedSiteConfig(
     record.siteCode,
     scalar(record.name),
     scalar(record.description),
+    scalar(record.logo),
     scalar(record.host),
     scalar(record.redirect),
     json(record.aliases),
@@ -285,19 +294,61 @@ export async function seedSiteConfig(
   ])
 }
 
+/** A site record does not belong to the slice being seeded. */
+export class RegistrySeedSliceMismatchError extends RegistryError {
+  constructor(expected: Record<string, string>, siteCode: string) {
+    const where = Object.entries(expected).map(([k, v]) => `${k}=${v}`).join(', ')
+    super(
+      'REGISTRY_SEED_SLICE_MISMATCH',
+      `Refusing to seed site ${siteCode}: it does not belong to the slice being written (${where})`,
+    )
+  }
+}
+
 /**
- * Seed one whole slice: the multiSite row first, then every site, in order.
+ * Seed one whole slice: **the multiSite row first**, then every site, in order.
+ *
+ * ## Why the order is load-bearing, not cosmetic
+ *
+ * `readSite` (p02-01) joins the site row to its `multi_site_config` row and
+ * throws `RegistryRowMissingError` when that join misses — a missing slice row
+ * no longer degrades quietly to "site theme only". So a site row written before
+ * its slice row is an unreadable site for however long the gap lasts, and a run
+ * that dies between the two leaves every site in the slice dark rather than
+ * half-themed. The slice write is therefore awaited to completion before the
+ * first site write is issued, and a failure there aborts the whole slice.
+ *
+ * ## Why the slice check exists
+ *
+ * Ordering alone only helps if the sites being written actually belong to the
+ * slice just seeded. `seedSiteConfig` carries its own `env`/`multiSiteCode`, so
+ * a mis-assembled plan could write site rows into a slice whose row this call
+ * never wrote — the same broken join by another route. Every site is checked
+ * against the multiSite key BEFORE any write is issued, so a mismatched plan
+ * writes nothing at all rather than a partial slice.
  *
  * Sequential on purpose — the connection is a single connection, and a
  * deterministic order keeps a partial failure easy to reason about.
  *
+ * @throws {RegistrySeedSliceMismatchError} a site does not belong to the slice.
  * @returns how many rows were written.
  */
 export async function seedSlice(
   connection: SeedConnectionLike,
   plan: { multiSite: SeedMultiSiteRecord, sites: SeedSiteRecord[] },
 ): Promise<{ multiSites: number, sites: number }> {
+  const { env, multiSiteCode } = plan.multiSite
+
+  for (const site of plan.sites) {
+    if (site.env !== env || site.multiSiteCode !== multiSiteCode) {
+      throw new RegistrySeedSliceMismatchError({ env, multi_site_code: multiSiteCode }, site.siteCode)
+    }
+  }
+
+  // Awaited before the loop below: the slice row must exist before any site row
+  // that joins to it. Do not hoist a site write above this line.
   await seedMultiSiteConfig(connection, plan.multiSite)
+
   for (const site of plan.sites) await seedSiteConfig(connection, site)
   return { multiSites: 1, sites: plan.sites.length }
 }
