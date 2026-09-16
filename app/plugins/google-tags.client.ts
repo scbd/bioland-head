@@ -45,7 +45,9 @@
  * consent was never given. The switch going off, or the tag IDs going away, is not a consent
  * withdrawal: those silence Google (`consent` `update` plus `ga-disable-<id>`) and stop, because the
  * store re-initialises on every locale switch and a hard reload mid-session over a transient context
- * payload is a worse outcome than a silenced tag.
+ * payload is a worse outcome than a silenced tag. An administrator deliberately unticking the box
+ * also denies consent immediately when the updated context arrives; an already-injected GTM
+ * container remains under denied consent until the visitor's next full load, when it is not loaded.
  */
 
 type GtagFn = (...args: unknown[]) => void

@@ -51,7 +51,8 @@ export interface DmsmConfig {
 export interface BiolandSettings {
   theme?: Record<string, unknown>
   config?: Record<string, unknown>
-  googleAnalyticsEnabled?: boolean
+  /** Declared by Drupal as a boolean, but not enforced on write — see isGoogleTagsMisconfigured. */
+  googleAnalyticsEnabled?: unknown
   googleAnalyticsIds?: string
   homeWidgets?: Record<string, unknown>
   megaMenu?: Record<string, unknown>

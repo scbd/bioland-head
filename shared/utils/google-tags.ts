@@ -19,8 +19,9 @@
  * `GTM-` IDs execute on that origin. That is unmitigated again, and no server-side check can
  * replace it, because only the browser knows the origin it is really on. It asks where a site may
  * measure, not whether, so it is severable from this module and BL-1030 tracks restoring it.
- * `cookie_domain` is still pinned to the current hostname in the plugin, so such a page cannot link
- * identities with the real site.
+ * The plugin pins `cookie_domain` on its own gtag `config` calls, isolating those cookies from the
+ * real site. GTM container-defined tags can override that setting or fire their own pixels. Cookie
+ * pinning does not prevent conversion or ad-spend pollution from `AW-` and `DC-` IDs on that origin.
  */
 
 /**
