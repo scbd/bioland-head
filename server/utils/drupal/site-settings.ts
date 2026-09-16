@@ -823,6 +823,21 @@ function validateAndStore(
     return serveLastKnownGood(key, site);
   }
 
+  // The emptiness check in `isConfigDocument` runs on the RAW bag, so it only catches a document
+  // that arrives empty. A bag that is nonempty but carries nothing the BL-890 allowlist keeps -
+  // `{ helpComments: "hello" }` from a partially-configured Drupal, or a future field this build
+  // does not know yet - passes that check and reduces to `{}` right here. Returning it as fresh
+  // and persisting it recreates exactly the empty-fallback corruption the raw check exists to
+  // prevent: the good row is overwritten with nothing at the moment it is most needed. Post-
+  // sanitization emptiness is the same outage, so it degrades the same way and writes nothing.
+  if (Object.keys(settings).length === 0) {
+    consola.error(
+      `[site-settings] config document for ${site} carries no allowlisted settings - every key was dropped by the BL-890 allowlist. Refusing to overwrite last-known-good with an empty bag.`,
+    );
+
+    return serveLastKnownGood(key, site);
+  }
+
   warnOnceIfUnwired();
 
   persistLastKnownGood(key, {

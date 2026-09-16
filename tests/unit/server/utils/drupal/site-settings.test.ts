@@ -697,6 +697,57 @@ describe("fetchSiteSettings - an empty document must not poison the fallback", (
     expect(result?.settings.theme).toBeTruthy();
   });
 
+  it("refuses a document whose keys all fall outside the allowlist, leaving nothing after sanitizing", async () => {
+    await fetchSiteSettings(ctx);
+    await awaitPendingWriteBacks();
+
+    const good = structuredClone(store);
+
+    expect(good).toBeTruthy();
+
+    writes = [];
+    vi.mocked(consola.error).mockClear();
+
+    // NONEMPTY raw, so the `isConfigDocument` check passes - but every key is outside the BL-890
+    // allowlist, so it sanitizes to `{}`. A partially-configured Drupal emitting an editor-only
+    // field, or a field newer than this build, looks exactly like this.
+    fetchImpl = async () => ({
+      version: SUPPORTED_CONFIG_VERSION,
+      generated: "2026-01-01T00:00:00.000Z",
+      siteCode: ctx.siteCode,
+      config: { biolandSettings: { helpComments: "hello" } },
+    });
+
+    const result = await fetchSiteSettings(ctx);
+
+    await awaitPendingWriteBacks();
+
+    expect(writes).toEqual([]);
+    expect(store).toEqual(good);
+    expect(result?.stale).toBe(true);
+    expect(result?.settings.theme).toBeTruthy();
+    expect(vi.mocked(consola.error).mock.calls.join(" ")).toContain("no allowlisted settings");
+  });
+
+  it("refuses to overwrite last-known-good with an empty bag even when nothing is stored yet", async () => {
+    // The fallback must not be created empty either: a first request during a partial Drupal
+    // configuration would otherwise seed the row with `{}` and make every later request serve it.
+    fetchImpl = async () => ({
+      version: SUPPORTED_CONFIG_VERSION,
+      generated: "2026-01-01T00:00:00.000Z",
+      siteCode: ctx.siteCode,
+      config: { biolandSettings: { helpComments: "hello" } },
+    });
+
+    const result = await fetchSiteSettings(ctx);
+
+    await awaitPendingWriteBacks();
+
+    expect(writes).toEqual([]);
+    expect(store).toBeNull();
+    expect(result).toBeNull();
+  });
+
   it("refuses a document that exceeds the size bound rather than holding and storing it", async () => {
     await fetchSiteSettings(ctx);
     await awaitPendingWriteBacks();
