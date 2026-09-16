@@ -1,0 +1,184 @@
+/**
+ * Per-request collection point for thesaurus label resolution (D3).
+ *
+ * `resolveTerms` already batches internally — one `getThesaurusByKey` call for however many ids it is
+ * handed. What it cannot do is *find* the ids: during an SSR render each component knows only its own
+ * identifier, so a naive `resolveTerms([myId], …)` per component produces N upstream round trips instead
+ * of one. This module is the missing collection step: calls made within the same microtask tick of the
+ * same request accumulate into one pending batch, and the flush hands the whole set to `resolveTerms`
+ * exactly once.
+ *
+ * **Scope is the request, never the process.** The pending batch lives on `event.context`
+ * (`_termLabelBatcher`), so two concurrent renders never share a batch and nothing survives the response.
+ * A batch is keyed by `(locale, domain)` because `resolveTerms` takes both per call — mixing locales into
+ * one batch would resolve half the ids in the wrong language.
+ *
+ * **Never throws.** `resolveTerms` is itself total, and the flush is additionally wrapped, so a waiter
+ * always settles — degraded to `{ value: identifier, source: 'identifier' }` (D5) if nothing better exists.
+ *
+ * ⚠ **Not yet exercised against a real multi-component render.** No component calls this as of p02-06;
+ * phase 03's cutover tasks (`p03-02`/`p03-03`/`p03-04`) are the first real consumers. If the one-microtask
+ * batching window proves too tight (components that resolve their ids across several awaits each open their
+ * own batch) or too loose against a real page, that is a finding for those tasks to surface.
+ *
+ * ⚠ **Nitro-only module — never import it from `app/**`, statically or dynamically.** It reaches
+ * `resolveTerms`, which depends on the Nitro auto-imports `useStorage` and `getThesaurusByKey`. Verified
+ * empirically 2026-09-15 against a built server: a dynamic `import('~~/server/utils/thesaurus/…')` from a
+ * composable resolves and builds clean, but Vite emits a *second* copy of this module into
+ * `.output/server/chunks/build/` with those auto-imports left as free identifiers (`globalThis.useStorage`
+ * is `undefined` there), so every label silently degrades to `{ source: 'identifier' }` — masked by
+ * `resolveTerms`' never-throw contract, and invisible in dev. The Vue app reaches this module only through
+ * {@link TERM_LABEL_CONTEXT_KEY}, a closure `server/plugins/thesaurus.js` puts on each request's context.
+ */
+import type { H3Event } from 'h3';
+import { resolveTerms, type ResolvedLabel } from './resolve-terms';
+
+/** One caller waiting on the current batch. */
+interface Waiter {
+  identifier: string;
+  resolve: (label: ResolvedLabel) => void;
+}
+
+/** The ids accumulated for one `(locale, domain)` pair since the last flush. */
+interface Batch {
+  waiters: Waiter[];
+}
+
+/** `(locale, domain)` → its open batch. Lives on `event.context`, one per request. */
+type Batcher = Map<string, Batch>;
+
+/** Where the batcher hangs off the request. Exported so tests address the same property, not a copy. */
+export const BATCHER_CONTEXT_KEY = '_termLabelBatcher';
+
+/**
+ * Where `server/plugins/thesaurus.js` parks the per-request label resolver for the Vue app to read.
+ *
+ * ⚠ `app/composables/use-term-label.js` hard-codes the same string. It cannot import this constant —
+ * doing so would pull this Nitro-only module into the Vue bundle, which is the exact failure documented at
+ * the top of this file. Change one and you must change the other.
+ */
+export const TERM_LABEL_CONTEXT_KEY = 'getTermLabel';
+
+/**
+ * Batch key. ` ` cannot appear in a locale tag or a `dataSourceConfigs` key, so it cannot be smuggled
+ * in to make two distinct pairs collide on one batch.
+ */
+function batchKey(locale: string, domain?: string): string {
+  return `${locale} ${domain ?? ''}`;
+}
+
+/** The D5 degraded outcome, used whenever the batch cannot produce anything better. */
+function identityLabel(identifier: string): ResolvedLabel {
+  return { value: identifier, source: 'identifier' };
+}
+
+/**
+ * Read one entry out of a `resolveTerms` result.
+ *
+ * `resolveTerms` returns a null-prototype object, but the fallback path below may not, and identifiers are
+ * untrusted input from `p02-02` onward — so the lookup is an own-property check with a shape guard rather
+ * than a bare index, which on a plain object would happily return `Object.prototype.toString` for the id
+ * `"toString"`.
+ */
+function ownLabel(resolved: Record<string, ResolvedLabel>, identifier: string): ResolvedLabel | null {
+  if (!resolved || !Object.prototype.hasOwnProperty.call(resolved, identifier)) return null;
+  const label = resolved[identifier];
+  return label && typeof label.value === 'string' ? label : null;
+}
+
+/**
+ * Resolve the locale for a call that did not specify one.
+ *
+ * `event.context.site` is the already-resolved per-request `SiteContext` that `useRequestContext` caches
+ * (`server/utils/context-unified.ts:38-40`) — the same source every other thesaurus route reads, so this
+ * introduces no third way of determining locale and costs no extra resolution work.
+ */
+function contextLocale(event: H3Event | undefined): string {
+  const locale = (event?.context as { site?: { locale?: unknown } } | undefined)?.site?.locale;
+  return typeof locale === 'string' && locale.trim() ? locale.trim() : 'en';
+}
+
+/**
+ * Flush one batch: detach it so later calls open a fresh one, then resolve every waiter from a single
+ * `resolveTerms` call, matched back **by identifier, never by position** (same discipline as `p02-01`).
+ */
+async function flush(event: H3Event, batcher: Batcher, key: string, locale: string, domain?: string): Promise<void> {
+  const batch = batcher.get(key);
+  if (!batch) return;
+  // Detach before awaiting: any call made after this point belongs to the next batch, not this one.
+  batcher.delete(key);
+
+  const { waiters } = batch;
+  const ids = [...new Set(waiters.map((waiter) => waiter.identifier))];
+
+  let resolved: Record<string, ResolvedLabel> = Object.create(null);
+  try {
+    resolved = await resolveTerms(ids, locale, event, domain);
+  } catch {
+    // `resolveTerms` is documented never-throw; this only guards a future regression in it from hanging
+    // every waiter on this request forever.
+    resolved = Object.create(null);
+  }
+
+  for (const waiter of waiters) waiter.resolve(ownLabel(resolved, waiter.identifier) ?? identityLabel(waiter.identifier));
+}
+
+/**
+ * Resolve one thesaurus identifier to a localized label, coalescing with every other call made for the
+ * same request, locale and domain in the same microtask tick into a single `resolveTerms` invocation.
+ *
+ * @param event      - The current request's H3 event. Without one (or its `context`) there is nothing to
+ *                     batch against, so the call resolves standalone rather than failing.
+ * @param identifier - A thesaurus identifier, e.g. `GBF-TARGET-01`. Empty or non-string → degraded result.
+ * @param locale     - Requested locale. Omitted → the request's resolved `ctx.locale`, else `en`.
+ * @param domain     - Optional `dataSourceConfigs` key selecting that domain's D17 `labelFields` order.
+ * @returns The resolved label; never rejects.
+ *
+ * @example
+ * // Two components in one render, same tick → one `resolveTerms(['GBF-TARGET-01', 'GBF-GOAL-A'], 'fr')`.
+ * const [a, b] = await Promise.all([
+ *   getBatchedLabel(event, 'GBF-TARGET-01', 'fr'),
+ *   getBatchedLabel(event, 'GBF-GOAL-A', 'fr')
+ * ]);
+ */
+export async function getBatchedLabel(
+  event: H3Event,
+  identifier: string,
+  locale?: string,
+  domain?: string
+): Promise<ResolvedLabel> {
+  const id = typeof identifier === 'string' ? identifier.trim() : '';
+  if (!id) return identityLabel(typeof identifier === 'string' ? identifier : '');
+
+  const loc = typeof locale === 'string' && locale.trim() ? locale.trim() : contextLocale(event);
+
+  const context = event?.context as Record<string, unknown> | undefined;
+  if (!context) {
+    // No request scope to hang a batch off — resolve alone rather than throw.
+    const resolved = await resolveTerms([id], loc, event, domain);
+    return ownLabel(resolved, id) ?? identityLabel(id);
+  }
+
+  let batcher = context[BATCHER_CONTEXT_KEY] as Batcher | undefined;
+  if (!(batcher instanceof Map)) {
+    batcher = new Map<string, Batch>();
+    context[BATCHER_CONTEXT_KEY] = batcher;
+  }
+
+  const key = batchKey(loc, domain);
+  let batch = batcher.get(key);
+  if (!batch) {
+    batch = { waiters: [] };
+    batcher.set(key, batch);
+  }
+
+  const pending = new Promise<ResolvedLabel>((resolve) => {
+    batch.waiters.push({ identifier: id, resolve });
+  });
+
+  // The executor above runs synchronously, so length 1 means *this* call opened the batch and owns the
+  // flush. Every further call in this tick joins it; the flush runs once the current tick drains.
+  if (batch.waiters.length === 1) queueMicrotask(() => void flush(event, batcher, key, loc, domain));
+
+  return pending;
+}
