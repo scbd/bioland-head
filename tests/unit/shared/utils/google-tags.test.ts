@@ -135,7 +135,6 @@ describe('isGoogleTagsBrowserHost', () => {
   it('admits the tenant generated host, case insensitively', () => {
     expect(isGoogleTagsBrowserHost(SITE, 'seed.chm-cbd.net')).toBe(true)
     expect(isGoogleTagsBrowserHost(SITE, 'SEED.CHM-CBD.NET')).toBe(true)
-    expect(isGoogleTagsBrowserHost(SITE, 'https://seed.chm-cbd.net')).toBe(true)
   })
 
   it.each(['alias.example.gov', 'Alias.Example.GOV', 'alias.example.gov.'])(
@@ -144,6 +143,35 @@ describe('isGoogleTagsBrowserHost', () => {
       expect(isGoogleTagsBrowserHost({ ...SITE, redirect }, 'alias.example.gov')).toBe(true)
     },
   )
+
+  // Browsers keep the trailing dot a visitor typed in `location.hostname`, and
+  // `normalizeRedirectHost` strips it from the configured value, so both sides must be stripped
+  // or a fully qualified visitor silently loses measurement.
+  it('admits a fully qualified browser host on both the generated host and the alias', () => {
+    expect(isGoogleTagsBrowserHost(SITE, 'seed.chm-cbd.net.')).toBe(true)
+    expect(isGoogleTagsBrowserHost({ ...SITE, redirect: 'alias.example.gov' }, 'alias.example.gov.')).toBe(true)
+  })
+
+  // `browserHost` is untrusted and bare-hostname only. Nothing in the app hands it an origin
+  // today; rejecting one keeps a future caller passing `document.referrer` or an `Origin` header
+  // from being admitted on the hostname buried inside it.
+  it('rejects a scheme-bearing browser host, however well formed', () => {
+    expect(isGoogleTagsBrowserHost(SITE, 'https://seed.chm-cbd.net')).toBe(false)
+    expect(isGoogleTagsBrowserHost(SITE, 'https://seed.chm-cbd.net/')).toBe(false)
+  })
+
+  // Same rule `getCanonicalHost` applies: inbound suffix routing resolves the multisite zone
+  // before the dmsm reverse index, so neither of these is a hostname this tenant serves.
+  it.each([
+    ['a sibling tenant inside the multisite zone', 'site-b.chm-cbd.net'],
+    ['the bare multisite apex', 'chm-cbd.net'],
+  ])('rejects %s configured as this tenant alias', (_label, redirect) => {
+    expect(isGoogleTagsBrowserHost({ ...SITE, redirect }, redirect)).toBe(false)
+  })
+
+  it('still admits an alias that happens to be this tenant own generated host', () => {
+    expect(isGoogleTagsBrowserHost({ ...SITE, redirect: 'seed.chm-cbd.net' }, 'seed.chm-cbd.net')).toBe(true)
+  })
 
   it.each([
     ['a foreign origin', 'evil.test'],

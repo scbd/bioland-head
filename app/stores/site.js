@@ -24,11 +24,7 @@ export const useSiteStore = defineStore('site', {
             this.config = unref(config);
             this.set('logo',   this.getLogoUri);
             this.set('name',   siteName);
-            // dmsm's value verbatim, with no environment condition. `getCanonicalHost` owns the
-            // redirect decision, env gate included (see `getHost` below), so blanking it here was
-            // redundant double-gating - and it hid the alias from the BL-1030 browser-host
-            // assertion, which must know every hostname this tenant serves in every environment.
-            this.set('redirect', config?.redirect || '');
+            this.set('redirect', (env === 'prod' || env === 'production') ? config?.redirect || '' : '');
             this.set('homePath', homePath);
 
             // Replace the settings snapshot directly so successive initializations (e.g. locale switch)

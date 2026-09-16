@@ -157,8 +157,13 @@ export default defineNuxtPlugin({
         // Re-derived rather than read once: a context re-fetch can replace `siteCode`, `baseHost`
         // or the dmsm `redirect` alias mid-session. `window.location.hostname` cannot change
         // without a navigation, which would re-run this plugin anyway.
+        //
+        // The alias is read off `siteStore.config`, dmsm's payload held verbatim, rather than the
+        // top-level `siteStore.redirect`, which the store deliberately blanks outside prod because
+        // it feeds `params.redirect` and roughly 25 client query strings. The assertion needs every
+        // hostname this tenant serves in every environment, and needs it without widening that.
         const onTenantHost = computed(() => isGoogleTagsBrowserHost(
-            { siteCode: siteStore.siteCode, baseHost: siteStore.baseHost, redirect: siteStore.redirect },
+            { siteCode: siteStore.siteCode, baseHost: siteStore.baseHost, redirect: siteStore.config?.redirect },
             window.location.hostname,
         ));
 

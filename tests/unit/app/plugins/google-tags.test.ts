@@ -26,12 +26,13 @@ async function setupTags (
 ) {
   // No env, multisite or publication here on purpose: the plugin reads none of them since
   // BL-1015. `siteCode` and `baseHost` generate the one hostname this tenant serves, and
-  // `redirect` adds its dmsm alias; BL-1030 asserts `location.hostname` is one of them.
-  // `cookie_domain` is pinned to that same hostname, which is a separate protection.
+  // `config.redirect` adds its dmsm alias; BL-1030 asserts `location.hostname` is one of them.
+  // The alias is read from `config`, dmsm's payload verbatim, not the top-level `redirect` the
+  // store blanks outside prod. `cookie_domain` is pinned to that hostname, a separate protection.
   const site = reactive({
     siteCode: 'seed',
     baseHost: BASE_HOST,
-    redirect,
+    config: { redirect } as { redirect?: string },
     biolandSettings: (noSettings ? undefined : {
       googleAnalyticsEnabled: enabled, googleAnalyticsIds: tagIds,
     }) as { googleAnalyticsEnabled?: unknown, googleAnalyticsIds?: string } | undefined,
@@ -259,7 +260,8 @@ describe('BL-1030: the browser host must be one this tenant serves', () => {
 
     expect(win['ga-disable-G-TEST1234567']).toBeUndefined()
 
-    site.redirect = undefined
+    // A context refetch replaces the whole dmsm payload, exactly as `app/stores/site.js` does.
+    site.config = {}
     await nextTick()
 
     expect(win['ga-disable-G-TEST1234567']).toBe(true)
