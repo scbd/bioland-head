@@ -94,6 +94,16 @@ export default defineEventHandler(async (event) => {
   await storage.setItem(pendingKey, Date.now())
 
   try {
+    // The fs driver ignores setItem TTL options. Prune completed markers on each
+    // authorized clear, including tokens never reused after a restart. Leave pending
+    // coordination and other storage groups alone; no per-token timers are needed.
+    for (const key of await storage.getKeys('completed:')) {
+      const timestamp = await storage.getItem<number>(key)
+      if (typeof timestamp === 'number' && Date.now() - timestamp >= COMPLETED_TTL * 1000) {
+        await storage.removeItem(key)
+      }
+    }
+
     // Perform the cache clear
     const result = await clearSiteCache(event)
     
