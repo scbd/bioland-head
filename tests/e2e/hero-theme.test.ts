@@ -14,7 +14,14 @@ for (const [mode, authoredHero] of Object.entries(HERO_MODES)) {
   const explicitHero = mode !== 'none'
 
   test(`hero follows ${explicitHero ? `explicit Drupal hero colors (${mode})` : 'the saved Drupal primary'}`, async ({ page }) => {
+    // Counted, because the assertions below would pass on whatever the real site theme happens to
+    // be if this handler never ran -- a test that cannot fail for the right reason. If the context
+    // ever moves into the SSR payload, this is what will catch it.
+    let interceptions = 0
+
     await page.route('**/api/context/**', async (route) => {
+      interceptions += 1
+
       const response = await route.fetch()
       const context = await response.json()
 
@@ -41,6 +48,8 @@ for (const [mode, authoredHero] of Object.entries(HERO_MODES)) {
     })
 
     await page.goto('/en', { waitUntil: 'domcontentloaded' })
+
+    expect(interceptions, 'the context route was never intercepted, so nothing below is under test').toBeGreaterThan(0)
 
     const hero = page.locator('#page-header-hero-image')
     const primary = explicitHero ? /rgb\(18, 52, 86\)/ : /rgb\(255, 0, 231\)/
