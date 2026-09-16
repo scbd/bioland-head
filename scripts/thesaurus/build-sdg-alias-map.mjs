@@ -121,8 +121,12 @@ const main = async () => {
     method = 'cross-reference'
     byGoalNumber = await discoverViaCrossReference()
   }
-  if (!byGoalNumber) {
-    console.error('Both discovery methods failed; aborting without writing sdg.json.')
+  // A zero-sized fallback result is a discovery failure, not an empty-but-valid
+  // mapping: the cross-reference endpoint can answer 200 with no usable
+  // `relatedTerms` after an API schema or content change. Writing that through
+  // would overwrite a valid sdg.json with `_unmapped` only and report success.
+  if (!byGoalNumber || byGoalNumber.size === 0) {
+    console.error('Both discovery methods failed (no SDG identifiers discovered); aborting without writing sdg.json.')
     process.exitCode = 1
     return
   }
