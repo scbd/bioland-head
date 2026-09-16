@@ -4,9 +4,21 @@
 
 // Pre-existing, untouched by p01-01 (BL-970); this task's coverage requirement is for
 // the getCountryName localization fix below, not this whole file.
+/**
+ * Uncached batch fetch, extracted from {@link getThesaurusByKey}'s cached wrapper.
+ *
+ * Exported because two callers must NOT go through the 7-day thesaurus cache:
+ *
+ * 1. A caller with no H3 event. The wrapper's `getKey` (`getKeyIdentifier`) dereferences
+ *    `event.context`, so an eventless call rejects before the fetch body ever runs.
+ * 2. A retry after a degraded result. The wrapper caches `[false]` and partial results under
+ *    `CACHE_TTL.THESAURUS` (7 days, SWR), so a transient failure or a term that did not exist yet
+ *    would keep answering "missing" for a week.
+ *
+ * The cached wrapper stays the default path for hits; this is the escape hatch.
+ */
 /* v8 ignore next */
-export const getThesaurusByKey = defineCachedFunction(
-  async (event, keysRaw) => {
+export const fetchThesaurusByKey = async (event, keysRaw) => {
     if (!keysRaw) return [false];
     try {
       const { gaiaApi } = useRuntimeConfig().public;
@@ -93,7 +105,11 @@ export const getThesaurusByKey = defineCachedFunction(
 
       return [false];
     }
-  },
+};
+
+/* v8 ignore next */
+export const getThesaurusByKey = defineCachedFunction(
+  fetchThesaurusByKey,
   getThesaurusCacheOptions("get-thesaurus-by-key"),
 );
 
