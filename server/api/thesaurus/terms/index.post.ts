@@ -15,16 +15,38 @@
  *           than causing a request-level error, so this handler only wraps body-parsing and validation —
  *           the parts that throw deliberately — in error handling, never the `resolveTerms` call itself.
  *
+ * Body size ceiling: `MAX_BODY_BYTES`, rejected with `413` **before** `readBody` is called. `readBody`
+ * buffers and parses the entire request body with no ceiling of its own, so without this guard a caller
+ * forces an unbounded allocation before the `MAX_IDS` cap below ever runs — the cap counts array elements,
+ * not bytes, so it cannot protect the parse step itself. Checked against the declared `Content-Length`,
+ * which every real JSON client (fetch/axios/curl) sets from the actual body it sends; a client that instead
+ * sends an unbounded body via chunked transfer-encoding with no `Content-Length` is not covered by this
+ * check and depends on `MAX_IDS`/`MAX_ID_LENGTH` after parsing — an accepted residual gap, since closing it
+ * fully means replacing `readBody` with a hand-rolled streaming parser, disproportionate to this route.
+ *
  * Batch ceiling: 200 ids, rejected with `400`. An unbounded batch size is a DoS/cost vector: each id can
  * trigger a live thesaurus API fetch on a cache miss, so an attacker-controlled request with, say, 10,000
  * ids would fan out into 10,000 outbound requests from this route alone. 200 is a deliberately generous
  * ceiling for legitimate page-render batches — the largest real consumer family has ~8 sites per page
  * (`temp/research/r4-consumer-map.md`), nowhere near this limit.
  *
- * Malformed entries inside an otherwise valid array (e.g. a stray number) are not filtered here — they are
- * handed to `resolveTerms` unchanged, which already treats non-string/empty entries as ignorable. Re-doing
- * that filter in this handler would be dead code that could silently drift out of sync with the util it is
- * meant to mirror; `resolveTerms` is the single source of truth for entry-level normalization.
+ * Per-id length ceiling: `MAX_ID_LENGTH` (128), rejected with `400` for the **whole request** — not a
+ * silent per-id drop — the moment any string entry exceeds it. The 200-id cap above counts elements, not
+ * bytes, so `{ ids: ["x".repeat(50_000_000)] }` has array length 1 and passes it untouched; without this
+ * check that string reaches `resolveAlias`/`fetchByIdentifier` (`resolve-terms.ts`) and lands
+ * `encodeURIComponent`'d in a live outbound URL. The bound reuses `IDENTIFIER_PATTERN`'s `{0,127}` length
+ * ceiling (`resolve-terms.ts`) rather than inventing a second rule, but checks length only — the full
+ * character-class validation stays owned by `resolveAlias`, so this route does not duplicate it. Rejecting
+ * the whole request (rather than dropping just the offending id) keeps this boundary symmetric with the
+ * `MAX_IDS` cap above: a structurally invalid batch is one clear `400`, not a response silently missing
+ * keys a caller has no signal to explain.
+ *
+ * Malformed entries inside an otherwise valid array (e.g. a stray number, or an empty string) are not
+ * filtered here — they are handed to `resolveTerms` unchanged, which already treats non-string/empty
+ * entries as ignorable: such an entry produces **no key at all** in the response (not an error entry), so a
+ * caller making positional or count assumptions about the response should not expect one. Re-doing that
+ * filter in this handler would be dead code that could silently drift out of sync with the util it is meant
+ * to mirror; `resolveTerms` is the single source of truth for entry-level normalization.
  *
  * No `defineCachedEventHandler` wrapper (D4/D6): per-term caching already lives underneath, in
  * `resolveTerms`'s three cache namespaces (`label:api:*`, `label:tr:*`, `label:fb:*`). A route-level cache
@@ -33,8 +55,22 @@
  */
 
 const MAX_IDS = 200
+const MAX_ID_LENGTH = 128
+// 200 ids at MAX_ID_LENGTH chars each, JSON-quoted and comma-joined, serializes to ~26KB
+// (`"..."` × 130 chars + `,` × 199 + `{"ids":[` / `]}` wrapper). 32KB leaves headroom for a legitimate
+// max-size batch without opening the door to multi-megabyte payloads.
+const MAX_BODY_BYTES = 32 * 1024
 
 export default defineEventHandler(async (event) => {
+  const declaredLength = Number.parseInt(
+    ((event as { node?: { req?: { headers?: Record<string, string | string[] | undefined> } } }).node?.req
+      ?.headers?.['content-length'] as string | undefined) ?? '',
+    10
+  )
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
+    throw createError({ statusCode: 413, statusMessage: 'Request body too large' })
+  }
+
   let body: unknown
   try {
     body = await readBody(event)
@@ -62,6 +98,15 @@ export default defineEventHandler(async (event) => {
   if (normalizedIds.length > MAX_IDS) {
     // See file header: an unbounded batch is a DoS/cost vector, one live fetch per cache miss.
     throw createError({ statusCode: 400, statusMessage: `Too many ids: maximum ${MAX_IDS} per request` })
+  }
+
+  if (normalizedIds.some((id) => typeof id === 'string' && id.length > MAX_ID_LENGTH)) {
+    // See file header: reused length bound from IDENTIFIER_PATTERN, whole-request 400 for symmetry with
+    // the MAX_IDS cap above.
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Identifier exceeds maximum length of ${MAX_ID_LENGTH} characters`
+    })
   }
 
   const ctx = await useRequestContext(event)

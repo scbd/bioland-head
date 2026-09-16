@@ -24,6 +24,11 @@ vi.mock('h3', () => ({
   createError
 }))
 
+/** Build a fake H3-shaped event carrying a declared `content-length`, as real requests do. */
+function eventWithContentLength(bytes: number) {
+  return { node: { req: { headers: { 'content-length': String(bytes) } } } }
+}
+
 describe('POST /api/thesaurus/terms', () => {
   let handler: (event: unknown) => unknown
   const event = {}
@@ -123,6 +128,57 @@ describe('POST /api/thesaurus/terms', () => {
     readBody.mockRejectedValue(new Error('invalid json'))
 
     await expect(handler(event)).rejects.toMatchObject({ statusCode: 400 })
+    expect(resolveTerms).not.toHaveBeenCalled()
+  })
+
+  it('rejects a declared Content-Length over the body cap with 413, before readBody is ever called', async () => {
+    const oversized = eventWithContentLength(32 * 1024 + 1)
+
+    await expect(handler(oversized)).rejects.toMatchObject({ statusCode: 413 })
+    expect(readBody).not.toHaveBeenCalled()
+    expect(resolveTerms).not.toHaveBeenCalled()
+  })
+
+  it('accepts a declared Content-Length exactly at the body cap (boundary, not rejected)', async () => {
+    const atCap = eventWithContentLength(32 * 1024)
+    readBody.mockResolvedValue({ ids: ['a'] })
+
+    await handler(atCap)
+
+    expect(readBody).toHaveBeenCalled()
+    expect(resolveTerms).toHaveBeenCalledWith(['a'], 'fr', atCap)
+  })
+
+  it('rejects a single id over 128 characters with 400 and never calls resolveTerms', async () => {
+    readBody.mockResolvedValue({ ids: ['a'.repeat(129)] })
+
+    await expect(handler(event)).rejects.toMatchObject({ statusCode: 400 })
+    expect(resolveTerms).not.toHaveBeenCalled()
+  })
+
+  it('rejects the whole batch with 400 when only one of many ids is over-long, not a partial response', async () => {
+    readBody.mockResolvedValue({ ids: ['a', 'b'.repeat(200), 'c'] })
+
+    await expect(handler(event)).rejects.toMatchObject({ statusCode: 400 })
+    expect(resolveTerms).not.toHaveBeenCalled()
+  })
+
+  it('accepts an id at exactly 128 characters (boundary, not rejected)', async () => {
+    const id = 'a'.repeat(128)
+    readBody.mockResolvedValue({ ids: [id] })
+
+    await handler(event)
+
+    expect(resolveTerms).toHaveBeenCalledWith([id], 'fr', event)
+  })
+
+  it('rejects a 200-id batch of ~10KB ids by declared size, before it is ever fully parsed', async () => {
+    // 200 ids at 10KB each declares a body around 2MB — the Content-Length guard rejects it up front;
+    // readBody must never run to buffer/parse a payload this size.
+    const oversized = eventWithContentLength(200 * 10 * 1024)
+
+    await expect(handler(oversized)).rejects.toMatchObject({ statusCode: 413 })
+    expect(readBody).not.toHaveBeenCalled()
     expect(resolveTerms).not.toHaveBeenCalled()
   })
 
