@@ -11,8 +11,15 @@ const translateWithAws = vi.fn()
 const saveCachedTranslations = vi.fn()
 const getCacheKey = vi.fn((text: string) => text)
 const checkSupportedLocales = vi.fn()
+const getCachedTranslations = vi.fn()
+
+// `consola` is mocked as a MODULE: the queue imports it statically, because Nitro's auto-import is a
+// build-time transform and never assigns `globalThis.consola`.
+const consolaSpies = vi.hoisted(() => ({ warn: vi.fn(), error: vi.fn(), debug: vi.fn(), info: vi.fn() }))
+vi.mock('consola', () => ({ consola: consolaSpies, default: consolaSpies }))
 
 vi.mock('../../../../../server/utils/translate/index.js', () => ({
+  getCachedTranslations: (...args: unknown[]) => getCachedTranslations(...args),
   translateWithAws: (...args: unknown[]) => translateWithAws(...args),
   saveCachedTranslations: (...args: unknown[]) => saveCachedTranslations(...args),
   getCacheKey: (...args: unknown[]) => getCacheKey(...args),
@@ -31,7 +38,8 @@ beforeEach(async () => {
   vi.resetModules()
   vi.clearAllMocks()
   store = new Map()
-  warn = vi.fn()
+  consolaSpies.warn.mockReset()
+  warn = consolaSpies.warn
 
   vi.stubGlobal('useStorage', () => ({
     getItem: async (key: string) => (store.has(key) ? store.get(key) : null),
@@ -43,13 +51,15 @@ beforeEach(async () => {
     },
     getKeys: async (prefix = '') => [...store.keys()].filter((k) => k.startsWith(prefix))
   }))
-  vi.stubGlobal('consola', { warn, error: vi.fn(), debug: vi.fn(), info: vi.fn() })
 
   translateWithAws.mockReset()
   saveCachedTranslations.mockReset()
   getCacheKey.mockReset()
   getCacheKey.mockImplementation((text: string) => text)
   checkSupportedLocales.mockReset()
+  getCachedTranslations.mockReset()
+  // Default: nothing in the DB translation cache, so existing cases still exercise the AWS path.
+  getCachedTranslations.mockResolvedValue(new Map())
   // Default: every requested locale is AWS-supported, so the existing suite's `fr` pairs are
   // unaffected by the BL-1004 locale-support gate unless a test overrides this.
   checkSupportedLocales.mockImplementation((locales: string[]) => Promise.resolve({ supported: locales, unsupported: [] }))
@@ -287,6 +297,64 @@ describe('enqueueTranslation — negative cache for transient failures (BL-1004)
 
     await queue.enqueueTranslation('GBF-GOAL-A', 'xx', 'Goal A')
     expect(translateWithAws).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('enqueueTranslation — DB translation cache is consulted before AWS', () => {
+  it('serves an existing i18n_cache row without calling AWS, and still writes the tr entry', async () => {
+    // The DB cache is keyed by TEXT, so it can already hold this pair after the six-month tr entry
+    // expired or because another identifier translated identical text. Calling AWS regardless paid
+    // for the same translation again.
+    getCachedTranslations.mockResolvedValue(new Map([['Goal A', 'But A']]))
+
+    await queue.enqueueTranslation('GBF-GOAL-A', 'fr', 'Goal A')
+
+    expect(translateWithAws).not.toHaveBeenCalled()
+    expect(getCachedTranslations).toHaveBeenCalledWith(['Goal A'], 'fr')
+    expect(store.get(buildLabelKey('tr', 'GBF-GOAL-A', 'fr'))).toMatchObject({
+      value: 'But A',
+      source: 'translation'
+    })
+  })
+
+  it('falls through to AWS on a cache MISS', async () => {
+    getCachedTranslations.mockResolvedValue(new Map())
+    translateWithAws.mockResolvedValue('traduit')
+    saveCachedTranslations.mockResolvedValue(undefined)
+
+    await queue.enqueueTranslation('GBF-GOAL-A', 'fr', 'Goal A')
+
+    expect(translateWithAws).toHaveBeenCalledTimes(1)
+  })
+
+  it('falls through to AWS when the cache read itself fails, rather than suppressing the translation', async () => {
+    getCachedTranslations.mockRejectedValue(new Error('db down'))
+    translateWithAws.mockResolvedValue('traduit')
+    saveCachedTranslations.mockResolvedValue(undefined)
+
+    await queue.enqueueTranslation('GBF-GOAL-A', 'fr', 'Goal A')
+
+    expect(translateWithAws).toHaveBeenCalledTimes(1)
+    expect(warn).toHaveBeenCalledWith('translation-queue: translation cache read failed', { id: 'GBF-GOAL-A', locale: 'fr' })
+  })
+})
+
+describe('enqueueTranslation — a FAILED locale-support check backs off', () => {
+  it('marks a failure so queued terms do not re-request ListLanguages every cycle', async () => {
+    // Distinct from a definitive "unsupported" answer (covered above): when the check THROWS the
+    // supported-language cache stays empty, so without a backoff mark every term retries the AWS
+    // support request and retries again as soon as the 1-minute fb TTL expires.
+    checkSupportedLocales.mockRejectedValue(new Error('aws unreachable'))
+
+    await queue.enqueueTranslation('GBF-GOAL-A', 'fr', 'Goal A')
+    expect(checkSupportedLocales).toHaveBeenCalledTimes(1)
+
+    // Second attempt inside the backoff window: short-circuited by the negative cache.
+    checkSupportedLocales.mockResolvedValue({ supported: ['fr'], unsupported: [] })
+    await queue.enqueueTranslation('GBF-GOAL-A', 'fr', 'Goal A')
+
+    expect(checkSupportedLocales).toHaveBeenCalledTimes(1)
+    expect(translateWithAws).not.toHaveBeenCalled()
   })
 })
 

@@ -52,7 +52,8 @@
  * long enough to meaningfully cut retry volume for a page a crawler keeps re-fetching, short enough that
  * a genuine recovery (AWS back up, or the transient error was one-off) is not hidden for long.
  */
-import { checkSupportedLocales, getCacheKey, saveCachedTranslations, translateWithAws } from '../translate/index.js';
+import { consola } from 'consola';
+import { checkSupportedLocales, getCacheKey, getCachedTranslations, saveCachedTranslations, translateWithAws } from '../translate/index.js';
 import { LABEL_CACHE_VERSION, writeTier } from './resolve-terms';
 
 const STORAGE_GROUP = 'thesaurus';
@@ -91,12 +92,15 @@ const pendingJobs: QueuedJob[] = [];
 let activeCount = 0;
 
 /**
- * `consola` is a Nitro auto-import, not a static import — it can be absent under a plain unit harness,
- * and a bare call would throw from inside the very recovery path meant to never throw.
+ * `consola` is imported statically, not read off `globalThis`. Nitro's auto-import is a build-time
+ * transform of a free identifier and never assigns a `globalThis` property, so the previous
+ * `globalThis.consola?.warn?.()` form was permanently undefined in the real server and silently
+ * swallowed every queue warning. The defensive `try` stays: this is called from recovery paths that
+ * must never throw. (Same finding the reviewer raised against `resolve-terms.ts` in #105.)
  */
 function warn(message: string, payload?: Record<string, unknown>): void {
   try {
-    (globalThis as { consola?: { warn?: (...args: unknown[]) => void } }).consola?.warn?.(message, payload);
+    consola.warn(message, payload);
   } catch {
     /* logging must never be the thing that breaks the queue */
   }
@@ -193,7 +197,31 @@ async function runJob(job: QueuedJob): Promise<void> {
         return;
       }
     } catch {
+      // A check failure leaves the supported-language cache empty, so WITHOUT a backoff mark every
+      // queued term re-requests ListLanguages, and every request cycle retries again the moment the
+      // 1-minute `fb` TTL expires - the exact retry storm FAILURE_BACKOFF_MS exists to prevent.
       warn('translation-queue: locale support check failed, skipping', { id, locale });
+      await markFailure(storage, id, locale, now);
+      return;
+    }
+
+    // The DB cache is keyed by TEXT, not by identifier, so it can already hold this exact
+    // English/locale pair - after the six-month `tr` entry expired, or because another identifier or
+    // feature translated identical text. Calling AWS unconditionally defeated that cache and paid for
+    // the same translation again. Read it first; on a hit, populate the `tr` tier and stop.
+    let cached: string | undefined;
+    try {
+      const hits = await getCachedTranslations([englishText], locale);
+      const hit = hits?.get?.(getCacheKey(englishText));
+      if (typeof hit === 'string' && hit) cached = hit;
+    } catch {
+      // A cache-read failure is not a translation failure: fall through to AWS rather than
+      // marking the pair failed and suppressing a translation we can still produce.
+      warn('translation-queue: translation cache read failed', { id, locale });
+    }
+
+    if (cached !== undefined) {
+      await writeTier(storage, 'tr', id, locale, { value: cached, source: 'translation' }, Date.now() + SIX_MONTHS_MS);
       return;
     }
 
