@@ -7,8 +7,8 @@
     const { t } = useI18n();
     const siteStore = useSiteStore();
     const bannerStyle = computed(() => ({
-        background: siteStore?.primaryColor,
-        color: contrastTextColor(siteStore?.primaryColor),
+        background: siteStore.primaryColor,
+        color: contrastTextColor(siteStore.primaryColor),
     }));
 </script>
 <style scoped>
