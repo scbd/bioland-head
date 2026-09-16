@@ -8,8 +8,8 @@
                     <Transition :name="fadeName">
                         <div class="text-center">
 
-                            <h5 class="my-1 text-muted">{{t(selectedCountry)}}</h5>
-                            <NuxtImg  v-if="!hide" :alt="`Flag of ${t(selectedCountry)}`" :title="`Flag of ${t(selectedCountry)}`" :src="logo" class="flag"/>
+                            <h5 class="my-1 text-muted">{{selectedCountryLabel}}</h5>
+                            <NuxtImg  v-if="!hide" :alt="`Flag of ${selectedCountryLabel}`" :title="`Flag of ${selectedCountryLabel}`" :src="logo" class="flag"/>
                         </div>
                     </Transition>
                     &nbsp;
@@ -25,7 +25,6 @@
 </template>
 
 <script setup>
-    const {t} = useI18n();
     const   eventBus           = useEventBus();
     const props = defineProps({ menu: Object });
     const menu  = ref(props.menu);
@@ -35,6 +34,18 @@
     const hasOneCountry        = computed(() => countries.value.length === 1);
     const selectedCountryIndex = ref(0);
     const selectedCountry      = computed(() => countries.value[selectedCountryIndex.value]);
+
+    /**
+     * Resolved labels (D3/D5) for every country this tab can select, keyed on the shared `term-labels`
+     * payload state. Pre-resolving the whole set (not just `selectedCountry`) is required here: the
+     * selection changes client-side via `slideLeft`/`slideRight`, and `useTermLabel`'s returned ref only
+     * ever reacts to the identifier it was first called with — it does not itself re-resolve when a
+     * *different* identifier becomes selected later. Reading the shared state directly is what lets a
+     * single computed track whichever country is currently selected.
+     */
+    const termLabels = useState(TERM_LABEL_STATE_KEY, () => ({}));
+    await Promise.all(countries.value.map((aCountry) => useTermLabel(() => aCountry)));
+    const selectedCountryLabel = computed(() => termLabels.value?.[selectedCountry.value]?.value ?? selectedCountry.value);
 
     const fadeName = ref('slide-fade-left')
     const logo     = computed(() =>  getFlagUrl(selectedCountry.value));
