@@ -207,6 +207,96 @@ export async function saveCachedTranslations(translations, targetLocale, sourceL
 }
 
 /**
+ * Try to acquire a MariaDB advisory lock (p04-02's cross-container hydration coordinator).
+ *
+ * ⚠ **Deliberately does NOT follow this file's own `getConnection → query → release-in-finally`
+ * idiom** (see {@link getCachedTranslations}/{@link saveCachedTranslations} above). `GET_LOCK` is
+ * session-scoped — MariaDB ties the lock to the specific connection that acquired it, and handing
+ * that connection back to the pool drops the lock even without an explicit `RELEASE_LOCK`. So:
+ * - **Not locked** (another session holds it): the connection carries no lock, so it is released
+ *   immediately back to the pool here — nothing for the caller to hold.
+ * - **Locked**: the connection is returned to the caller, *not* released, so the caller can hold it
+ *   for the whole hydration and give it back only via {@link releaseHydrationLock}. Releasing it any
+ *   other way (or reusing this file's per-call idiom) would let every container "win" on its own
+ *   separate connection — a silent N-way concurrent hydration.
+ *
+ * @param {string} lockName - Advisory lock name.
+ * @returns {Promise<{ locked: boolean, connection?: import('mariadb').PoolConnection }>}
+ */
+export async function acquireHydrationLock(lockName) {
+  const pool = getDbPool()
+  const connection = await pool.getConnection()
+
+  let rows
+  try {
+    rows = await connection.query('SELECT GET_LOCK(?, 0) AS locked', [lockName])
+  } catch (error) {
+    // The query itself failed (transient network blip, permission error, ...) — distinct from
+    // pool.getConnection() failing above. Without this catch the connection would never be
+    // released nor returned in the thrown error, permanently shrinking the pool
+    // (I18N_DB_CONNECTION_LIMIT defaults to 5) across repeated boot failures.
+    connection.release()
+    throw error
+  }
+
+  const locked = Number(rows?.[0]?.locked) === 1
+
+  if (!locked) {
+    connection.release()
+    return { locked: false }
+  }
+
+  return { locked: true, connection }
+}
+
+/**
+ * Release a MariaDB advisory lock acquired via {@link acquireHydrationLock}.
+ *
+ * Runs `RELEASE_LOCK` on the **same connection** that acquired the lock (session-scoped, so a
+ * fresh `pool.getConnection()` call cannot release someone else's session-held lock), then hands
+ * that connection back to the pool in a `finally` regardless of the `RELEASE_LOCK` outcome. No-op
+ * when `connection` is absent — the lock was never acquired, so there is nothing to release.
+ *
+ * @param {{ connection?: import('mariadb').PoolConnection, lockName: string }} held
+ * @returns {Promise<void>}
+ */
+export async function releaseHydrationLock({ connection, lockName }) {
+  if (!connection) return
+
+  try {
+    await connection.query('SELECT RELEASE_LOCK(?)', [lockName])
+  } finally {
+    connection.release()
+  }
+}
+
+/**
+ * Read one page of `i18n_cache` rows, ordered for stable pagination.
+ *
+ * Unlike the lock functions above, a page read carries no lock semantics, so it is safe to use this
+ * file's ordinary grab-connection → query → release-in-`finally` idiom — do **not** "simplify" the
+ * lock functions to match this shape; see {@link acquireHydrationLock}'s doc comment for why they
+ * must differ.
+ *
+ * @param {number} offset - Rows to skip.
+ * @param {number} limit - Max rows to return.
+ * @returns {Promise<Array<{source_locale: string, target_locale: string, cache_key: string, translation_value: string}>>}
+ */
+export async function getCachedTranslationsPage(offset, limit) {
+  const pool = getDbPool()
+  const connection = await pool.getConnection()
+
+  try {
+    return await connection.query(
+      'SELECT source_locale, target_locale, cache_key, translation_value FROM i18n_cache ORDER BY id LIMIT ? OFFSET ?',
+      [limit, offset]
+    )
+  } finally {
+    connection?.release()
+  }
+}
+
+/**
  * Translate text using AWS Translate
  * @param {string} text - Text to translate
  * @param {string} targetLocale - Target language code
