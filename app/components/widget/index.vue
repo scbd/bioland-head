@@ -35,9 +35,9 @@
                     <NuxtImg :alt="aSdg.name" :src="aSdg.image" width="25" height="25" class="me-1"/>
                 </NuxtLink>
 
-                <span  :style="bgStyle" v-if="tags?.subjects?.length" v-for="(subject,i) in tags.subjects" :key="i" class="badge  me-1"><span v-if="subject.identifier">{{t(subject.identifier)}}</span></span>
+                <span  :style="bgStyle" v-if="tags?.subjects?.length" v-for="(subject,i) in tags.subjects" :key="i" class="badge  me-1"><span v-if="subject.identifier">{{ subjectLabels.get(subject.identifier)?.value ?? subject.identifier }}</span></span>
 
-                <span  :style="bgStyle" v-if="tags?.bchSubjects?.length" v-for="(subject,i) in tags.bchSubjects" :key="i" class="badge  me-1"><span v-if="subject.identifier">{{t(subject.identifier)}}</span></span>
+                <span  :style="bgStyle" v-if="tags?.bchSubjects?.length" v-for="(subject,i) in tags.bchSubjects" :key="i" class="badge  me-1"><span v-if="subject.identifier">{{ subjectLabels.get(subject.identifier)?.value ?? subject.identifier }}</span></span>
 
                 <span v-if="record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate" class="float-end card-subtitle text-nowrap text-muted text-small mt-1 mb-2">{{dateFormat(record.fieldPublished || record.fieldStartDate ||record.changed||record.startDate|| record.updatedDate)}}</span>
 
@@ -66,5 +66,26 @@
     const { name, record, links, t:passedType, loading }            = toRefs(props);
     const { backgroundStyles, hasImg }                              = useImageBackground(record);
     const { external, goTo, recordExists, tags, type, getGbfUrl }   = useDocumentHelpers(record, { passedType });
+
+    /**
+     * Batch-resolve subject/bchSubject identifiers via {@link useTermLabel} in one microtask tick (so
+     * `server/utils/thesaurus/request-batcher.ts` collapses them into a single upstream call), indexed by
+     * identifier. Local to this component; see `app/composables/use-term-label.js` for the D5 miss-fallback
+     * and SSR/hydration contract this shares.
+     *
+     * @param   {string[]} identifiers
+     * @returns {Promise<Map<string, import('vue').ComputedRef<string>>>}
+     */
+    async function useSubjectLabels(identifiers) {
+        const ids    = [...new Set(identifiers.filter(Boolean))];
+        const labels = await Promise.all(ids.map((id) => useTermLabel(() => id)));
+
+        return new Map(ids.map((id, i) => [id, labels[i]]));
+    }
+
+    const subjectLabels = await useSubjectLabels([
+        ...(tags.value?.subjects ?? []).map((subject) => subject.identifier),
+        ...(tags.value?.bchSubjects ?? []).map((subject) => subject.identifier)
+    ]);
 </script>
 

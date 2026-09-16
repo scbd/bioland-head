@@ -59,10 +59,10 @@
                             <span >{{getDateFormated()}}</span>
                         </p>
             
-                        <span  v-for="(subject,i) in aLine.tags?.subjects" :id="`${baseId}-subject-${i}`" :key="i" :style="bgStyle" class="badge text-bg-primary">{{ t(subject.identifier) }}</span>
-                
+                        <span  v-for="(subject,i) in aLine.tags?.subjects" :id="`${baseId}-subject-${i}`" :key="i" :style="bgStyle" class="badge text-bg-primary">{{ subjectLabels.get(subject.identifier)?.value ?? subject.identifier }}</span>
 
-                        <span  v-for="(bchSubject,i) in aLine.tags?.bchSubjects" :id="`${baseId}-bch-subject-${i}`" :key="i" :style="bgStyle" class="badge text-bg-primary text-white me-1">{{ t(bchSubject.identifier) }}</span>
+
+                        <span  v-for="(bchSubject,i) in aLine.tags?.bchSubjects" :id="`${baseId}-bch-subject-${i}`" :key="i" :style="bgStyle" class="badge text-bg-primary text-white me-1">{{ subjectLabels.get(bchSubject.identifier)?.value ?? bchSubject.identifier }}</span>
 
                     </div>
                 </div>
@@ -96,6 +96,27 @@
     const { aLine }      = toRefs(props);
     const { bgStyle }    = useTheme();
     const { smartTruncate } = useText();
+
+    /**
+     * Batch-resolve subject/bchSubject identifiers via {@link useTermLabel} in one microtask tick (so
+     * `server/utils/thesaurus/request-batcher.ts` collapses them into a single upstream call), indexed by
+     * identifier. Local to this component; see `app/composables/use-term-label.js` for the D5 miss-fallback
+     * and SSR/hydration contract this shares.
+     *
+     * @param   {string[]} identifiers
+     * @returns {Promise<Map<string, import('vue').ComputedRef<string>>>}
+     */
+    async function useSubjectLabels(identifiers) {
+        const ids    = [...new Set(identifiers.filter(Boolean))];
+        const labels = await Promise.all(ids.map((id) => useTermLabel(() => id)));
+
+        return new Map(ids.map((id, i) => [id, labels[i]]));
+    }
+
+    const subjectLabels = await useSubjectLabels([
+        ...(aLine.value?.tags?.subjects ?? []).map((subject) => subject.identifier),
+        ...(aLine.value?.tags?.bchSubjects ?? []).map((bchSubject) => bchSubject.identifier)
+    ]);
 
     const isChm         = computed(()=> aLine.value?.realms?.length);
     const isContentType = computed(()=>!!contentTypes[type]);
