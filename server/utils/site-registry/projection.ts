@@ -174,6 +174,24 @@ export function normalizeHasBl1(value: boolean | string | undefined): boolean {
  * two cannot actually be mixed up by import; the distinct name is cheap insurance for the phase-03
  * merge, when both land in one module and the private one may be exported.
  *
+ * ## Branches are DEFINED, not assigned
+ *
+ * Both legs are JSON-derived, so either can carry an own `__proto__` key. Plain assignment
+ * (`merged[branch] = ...`) would hand that branch to `Object.prototype`'s legacy `__proto__` setter
+ * instead of creating an own property: the value would then be readable as `merged.someKey` through
+ * the swapped prototype while `Object.keys` and `JSON.stringify` silently omit it — the opposite of
+ * the unknown-branch pass-through promised above, and a way to feed downstream theme lookups values
+ * the payload does not show. `Object.defineProperty` bypasses the setter and always creates an own,
+ * enumerable, serializable data property.
+ *
+ * The result keeps `Object.prototype` rather than being built with `Object.create(null)`, so its
+ * shape is unchanged for every consumer: `app/utils/resolve-theme.js` and
+ * `server/utils/bioland-settings.ts` both test plain-object-ness with a prototype-agnostic `typeof`
+ * check and read through `Object.keys` / `Object.hasOwn`, and resolve-theme already drops
+ * `__proto__`, `constructor` and `prototype` via its `DANGEROUS_KEYS` filter. A `__proto__` branch
+ * therefore reaches the wire as ordinary inert data and is dropped at the consumer, which is what
+ * "pass-through" is supposed to mean.
+ *
  * Returns `undefined` when neither level defines a theme, so the output carries no empty husk.
  */
 export function mergeThemeForProjection(
@@ -187,7 +205,14 @@ export function mergeThemeForProjection(
   const branches = new Set([...Object.keys(multiSite), ...Object.keys(site)])
 
   const merged: Record<string, unknown> = {}
-  for (const branch of branches) merged[branch] = site[branch] ?? multiSite[branch]
+  for (const branch of branches) {
+    Object.defineProperty(merged, branch, {
+      value: site[branch] ?? multiSite[branch],
+      writable: true,
+      enumerable: true,
+      configurable: true
+    })
+  }
 
   return merged as SiteTheme
 }

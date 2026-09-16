@@ -294,6 +294,55 @@ describe('mergeThemeForProjection (R6): per-site over multiSite, shallow at the 
       })
     })
 
+    /**
+     * REGRESSION. Both legs are JSON-derived, so either can carry an own `__proto__` key. Plain
+     * assignment routed that branch to `Object.prototype`'s legacy setter: the value became
+     * readable through the swapped prototype while `Object.keys` and `JSON.stringify` omitted it.
+     */
+    describe('an own __proto__ branch is data, not a prototype swap', () => {
+      const withProtoBranch = (): NonNullable<Theme> =>
+        JSON.parse(String.raw`{"color":{"primary":"#111111"},"__proto__":{"polluted":"yes"}}`)
+
+      it('does not let a site-leg __proto__ branch swap the result prototype', () => {
+        const merged = mergeThemeForProjection(withProtoBranch(), { hero: { height: '40vh' } })
+        const asRecord = merged as unknown as Record<string, unknown>
+
+        expect(Object.getPrototypeOf(merged!)).toBe(Object.prototype)
+        expect(asRecord.polluted).toBeUndefined()
+        expect(Object.hasOwn(merged!, '__proto__')).toBe(true)
+      })
+
+      it('does not let a multiSite-leg __proto__ branch swap the result prototype', () => {
+        const merged = mergeThemeForProjection({ hero: { height: '40vh' } }, withProtoBranch())
+
+        expect(Object.getPrototypeOf(merged!)).toBe(Object.prototype)
+        expect((merged as unknown as Record<string, unknown>).polluted).toBeUndefined()
+      })
+
+      it('keeps the branch visible to Object.keys and JSON.stringify', () => {
+        const merged = mergeThemeForProjection(withProtoBranch(), undefined)!
+
+        expect(Object.keys(merged)).toEqual(['color', '__proto__'])
+        expect(JSON.parse(JSON.stringify(merged))).toEqual(
+          JSON.parse(String.raw`{"color":{"primary":"#111111"},"__proto__":{"polluted":"yes"}}`)
+        )
+      })
+
+      it('leaves Object.prototype itself untouched', () => {
+        mergeThemeForProjection(withProtoBranch(), withProtoBranch())
+
+        expect(({} as Record<string, unknown>).polluted).toBeUndefined()
+      })
+
+      it('carries the branch through toPublicConfig as inert own data', () => {
+        const result = toPublicConfig(hostileSite({ theme: withProtoBranch() }), hostileMultiSite())
+        const theme = result.theme as unknown as Record<string, unknown>
+
+        expect(theme.polluted).toBeUndefined()
+        expect(JSON.stringify(result)).toContain('__proto__')
+      })
+    })
+
     it('carries an unknown branch through toPublicConfig to the public payload', () => {
       const theme = { color: { primary: '#111111' }, ...withSpacing('2rem') } as Theme
       const result = toPublicConfig(hostileSite({ theme }), hostileMultiSite())
