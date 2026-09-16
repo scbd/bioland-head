@@ -231,6 +231,30 @@ describe('buildDbRows', () => {
   })
 })
 
+describe('detectLabelCollisions — agreeing identifiers', () => {
+  it('records every agreeing identifier on the safe representative', () => {
+    const { safe, deduped } = detectLabelCollisions([
+      { identifier: 'doc-8', englishLabel: 'Document 8', localeLabel: 'Document 8 (fr)' },
+      { identifier: 'doc-8-twin', englishLabel: 'Document 8', localeLabel: 'Document 8 (fr)' }
+    ])
+    expect(safe).toHaveLength(1)
+    expect(safe[0].agreeingIdentifiers).toEqual(['doc-8', 'doc-8-twin'])
+    // Still one DB row: the dedupe applies to the content-addressed row, not to the entries.
+    expect(deduped).toBe(1)
+    expect(buildDbRows(safe)).toHaveLength(1)
+  })
+
+  it('leaves a disagreeing group withheld, with no agreeing set', () => {
+    const { safe, collisions, withheld } = detectLabelCollisions([
+      { identifier: 'a', englishLabel: 'Shared', localeLabel: 'Un' },
+      { identifier: 'b', englishLabel: 'Shared', localeLabel: 'Deux' }
+    ])
+    expect(safe).toEqual([])
+    expect(withheld).toBe(2)
+    expect(collisions[0].identifiers).toEqual(['a', 'b'])
+  })
+})
+
 describe('buildStorageEntries', () => {
   it('builds versioned label:tr keys with an explicit six-month expiresAt', () => {
     const now = 1_700_000_000_000
@@ -242,6 +266,19 @@ describe('buildStorageEntries', () => {
   it('percent-encodes identifiers and locales so separators cannot collide', () => {
     expect(buildStorageEntries([{ identifier: 'a:b', localeLabel: 'v' }], 'fr', 0)[0].key)
       .toBe('label:tr:1:a%3Ab:fr')
+  })
+
+  it('emits one entry per agreeing identifier, not just the deduplicated representative', () => {
+    // The DB row is content-addressed by English label so one row serves the group, but these keys
+    // are identifier-addressed: a collapsed twin left without its own entry becomes unrecoverable
+    // once p03-05 deletes the locale-file key.
+    const entries = buildStorageEntries(
+      [{ identifier: 'doc-8', localeLabel: 'Document 8', agreeingIdentifiers: ['doc-8', 'doc-8-twin'] }],
+      'fr',
+      0
+    )
+    expect(entries.map(e => e.key)).toEqual(['label:tr:1:doc-8:fr', 'label:tr:1:doc-8-twin:fr'])
+    expect(new Set(entries.map(e => e.entry.value))).toEqual(new Set(['Document 8']))
   })
 })
 

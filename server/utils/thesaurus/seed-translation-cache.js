@@ -202,7 +202,12 @@ export function detectLabelCollisions(pairs) {
   for (const [englishLabel, group] of byLabel) {
     const distinct = new Set(group.map(p => p.localeLabel));
     if (distinct.size <= 1) {
-      safe.push(group[0]);
+      // The DB row is CONTENT-addressed by the English label, so one row serves the whole group and
+      // `group[0]` is the right representative there. The Nitro entries are IDENTIFIER-addressed,
+      // so every agreeing identifier needs its own `label:tr` key — carrying only the first left
+      // real pairs (e.g. `doc-8` and its GUID twin) with no seeded entry, and once p03-05 removes
+      // the locale-file keys `resolveTerms` could not recover them from the content-addressed row.
+      safe.push({ ...group[0], agreeingIdentifiers: group.map(p => p.identifier) });
       deduped += group.length - 1;
       continue;
     }
@@ -240,17 +245,24 @@ export function buildDbRows(pairs, cacheKeyFn = getCacheKey) {
  * The envelope carries an explicit `expiresAt` because neither the `fs` driver nor the memory driver
  * honours `setItem`'s `ttl` option — the resolver enforces expiry in code, so a bare `ttl` would be inert.
  *
- * @param {Array<{identifier: string, localeLabel: string}>} pairs
+ * One entry per IDENTIFIER, not per deduplicated pair: `detectLabelCollisions` collapses identifiers
+ * that share an English label AND agree on its translation down to a single representative for the
+ * content-addressed DB row, and records the rest in `agreeingIdentifiers`. Every one of them still
+ * needs its own identifier-addressed key here.
+ *
+ * @param {Array<{identifier: string, localeLabel: string, agreeingIdentifiers?: string[]}>} pairs
  * @param {string} locale
  * @param {number} now - Epoch ms the six-month window is measured from.
  * @returns {Array<{key: string, entry: {value: string, source: 'translation', expiresAt: number}}>}
  */
 export function buildStorageEntries(pairs, locale, now) {
   const expiresAt = now + SIX_MONTHS_MS;
-  return pairs.map(({ identifier, localeLabel }) => ({
-    key: buildLabelKey('tr', identifier, locale),
-    entry: { value: localeLabel, source: 'translation', expiresAt }
-  }));
+  return pairs.flatMap(({ identifier, localeLabel, agreeingIdentifiers }) =>
+    (agreeingIdentifiers?.length ? agreeingIdentifiers : [identifier]).map(id => ({
+      key: buildLabelKey('tr', id, locale),
+      entry: { value: localeLabel, source: 'translation', expiresAt }
+    }))
+  );
 }
 
 /**

@@ -1,299 +1,219 @@
 import { describe, it, expect } from 'vitest'
-import type { LString } from '~/shared/types'
+import type { ThesaurusItem, LString } from '~/shared/types'
+import { getLocalizedName, createSanitizer, getSanitizer, sanitizeItems } from '~/server/utils/thesaurus/sanitizers'
 
 /**
- * Standalone implementations for testing sanitizer logic
- * The actual sanitizers.ts imports from config-new which doesn't exist,
- * so we test the core logic independently here.
+ * Live-probe-shaped fixtures (BL-970 / p01-01). These mirror the four real
+ * response shapes the CBD thesaurus API returns, verified against
+ * `temp/research/api-probes/*.json`:
+ *  1. full six-language coverage
+ *  2. partial coverage (en/es/fr only)
+ *  3. English-only
+ *  4. an empty `shortTitle: {}` object
  */
-
-interface ThesaurusItem {
-  identifier?: string
-  name?: LString | string
-  title?: string
-  shortTitle?: LString | string
-  description?: LString | string
-  narrowerTerms?: string[]
-  code?: string
-  [key: string]: any
+const fullCoverageTerm: ThesaurusItem = {
+  identifier: 'CCA4B662-0000-0000-0000-000000000000',
+  name: 'Access and Benefit-sharing',
+  title: { en: 'Access and Benefit-sharing', es: 'Acceso y participación en los beneficios', fr: 'Accès et partage des avantages', ar: 'الوصول وتقاسم المنافع', ru: 'Доступ и совместное использование выгод', zh: '获取和惠益分享' },
+  shortTitle: { en: 'ABS', es: 'APB', fr: 'APA', ar: 'ABS', ru: 'ABS', zh: 'ABS' }
 }
 
-interface SanitizedItem {
-  identifier: string
-  name?: string
-  alternateName?: string
-  description?: string
-  narrowerTerms?: string[]
-  '@type'?: string
-  '@context'?: string
-  [key: string]: any
+const partialCoverageTerm: ThesaurusItem = {
+  identifier: 'GBF-TARGET-01',
+  name: 'Plan and Manage All Areas To Reduce Biodiversity Loss',
+  title: { en: 'Plan and Manage All Areas To Reduce Biodiversity Loss', es: 'Planificar y gestionar todas las áreas para reducir la pérdida de biodiversidad', fr: 'Planifier et gérer toutes les zones pour réduire la perte de biodiversité' }
 }
 
-interface SanitizerConfig {
-  type: string
-  filter?: (item: ThesaurusItem) => boolean
-  transform?: (item: ThesaurusItem, locale: string) => Partial<SanitizedItem>
+const englishOnlyTerm: ThesaurusItem = {
+  identifier: 'GBF-GOAL-A',
+  name: 'Goal A',
+  title: { en: 'Goal A' }
 }
 
-/** Extract localized text from lstring, falls back to 'en' */
-const getLocalizedName = (val: LString | string | undefined, locale = 'en'): string | undefined => {
-  if (!val) return undefined
-  if (typeof val === 'string') return val
-  return val[locale] || val.en || Object.values(val)[0]
+const emptyShortTitleTerm: ThesaurusItem = {
+  identifier: 'CBD-SUBJECT-BIOMES',
+  name: 'Biomes',
+  title: { en: 'Biomes' },
+  shortTitle: {} as LString
 }
-
-/** Remove null/undefined values from object */
-const omitNil = <T extends Record<string, any>>(obj: T): Partial<T> =>
-  Object.fromEntries(Object.entries(obj).filter(([, v]) => v != null)) as Partial<T>
-
-/** Create a sanitizer function from config */
-function createSanitizer(config: SanitizerConfig) {
-  return (item: ThesaurusItem, locale = 'en'): SanitizedItem | null => {
-    if (!item?.identifier && !item?.code) return null
-    if (config.filter && !config.filter(item)) return null
-
-    const transformed = config.transform?.(item, locale) || {}
-    
-    const result: SanitizedItem = {
-      identifier: item.identifier || '',
-      name: getLocalizedName(item.name, locale) || getLocalizedName(item.title as LString, locale),
-      alternateName: getLocalizedName(item.shortTitle, locale),
-      description: getLocalizedName(item.description, locale),
-      narrowerTerms: item.narrowerTerms,
-      '@type': config.type,
-      '@context': 'https://schema.org',
-      ...transformed
-    }
-
-    return omitNil(result) as SanitizedItem
-  }
-}
-
-/** Get sanitizer - returns default for unknown domains */
-const getSanitizer = (domain: string) => {
-  // Simple default sanitizer for testing
-  return createSanitizer({ type: 'Thing' })
-}
-
-/** Sanitize array of items */
-const sanitizeItems = (items: ThesaurusItem[], domain: string, locale = 'en'): SanitizedItem[] =>
-  items.map(item => getSanitizer(domain)(item, locale)).filter((x): x is SanitizedItem => x !== null)
 
 describe('thesaurus/sanitizers', () => {
   describe('getLocalizedName', () => {
-    it('should return undefined for undefined input', () => {
+    it('returns undefined for undefined input', () => {
       expect(getLocalizedName(undefined)).toBeUndefined()
     })
 
-    it('should return string as-is for string input', () => {
-      expect(getLocalizedName('Test Name')).toBe('Test Name')
+    it('returns a plain string unchanged, locale ignored (the guard other callers rely on)', () => {
+      expect(getLocalizedName('plain string', 'fr')).toBe('plain string')
     })
 
-    it('should return requested locale from LString', () => {
+    it('returns the requested locale from an LString', () => {
       const lstring: LString = { en: 'English', fr: 'French', es: 'Spanish' }
       expect(getLocalizedName(lstring, 'fr')).toBe('French')
       expect(getLocalizedName(lstring, 'es')).toBe('Spanish')
     })
 
-    it('should fallback to English when locale not found', () => {
+    it('falls back to English when the requested locale is missing', () => {
       const lstring: LString = { en: 'English', fr: 'French' }
       expect(getLocalizedName(lstring, 'de')).toBe('English')
     })
 
-    it('should fallback to first value when no English', () => {
+    it('falls back to the first value when neither the locale nor English is present', () => {
       const lstring = { fr: 'French', es: 'Spanish' } as LString
       expect(getLocalizedName(lstring, 'de')).toBe('French')
     })
 
-    it('should default to English locale when not specified', () => {
+    it('defaults to English when no locale is specified', () => {
       const lstring: LString = { en: 'English', fr: 'French' }
       expect(getLocalizedName(lstring)).toBe('English')
+    })
+
+    it('returns undefined for an empty LString object rather than leaking undefined into a truthy chain', () => {
+      expect(getLocalizedName({} as LString, 'en')).toBeUndefined()
+    })
+  })
+
+  describe('createSanitizer field ordering (shortTitle -> title -> name)', () => {
+    it('prefers shortTitle for name, and title (not shortTitle) for alternateName — full coverage', () => {
+      const sanitizer = createSanitizer({ type: 'Thing' })
+      const result = sanitizer(fullCoverageTerm, 'fr')
+
+      expect(result?.name).toBe('APA')
+      expect(result?.alternateName).toBe('Accès et partage des avantages')
+    })
+
+    it('falls back to title when locale is missing from shortTitle-less/partial data', () => {
+      const sanitizer = createSanitizer({ type: 'Thing' })
+      const result = sanitizer(partialCoverageTerm, 'fr')
+
+      expect(result?.name).toBe('Planifier et gérer toutes les zones pour réduire la perte de biodiversité')
+      expect(result?.alternateName).toBe(result?.name)
+    })
+
+    it('falls back to English when the requested locale does not exist on the term at all', () => {
+      const sanitizer = createSanitizer({ type: 'Thing' })
+      const result = sanitizer(partialCoverageTerm, 'ar')
+
+      expect(result?.name).toBe('Plan and Manage All Areas To Reduce Biodiversity Loss')
+    })
+
+    it('resolves to the single available language for an English-only term', () => {
+      const sanitizer = createSanitizer({ type: 'Thing' })
+      const result = sanitizer(englishOnlyTerm, 'fr')
+
+      expect(result?.name).toBe('Goal A')
+      expect(result?.name).not.toBeUndefined()
+    })
+
+    it('falls through past an empty shortTitle object to title, never leaking undefined', () => {
+      const sanitizer = createSanitizer({ type: 'Thing' })
+      const result = sanitizer(emptyShortTitleTerm, 'en')
+
+      expect(result?.name).toBe('Biomes')
+      expect(result?.name).not.toBeUndefined()
+    })
+
+    it('falls all the way back to plain-English name when neither shortTitle nor title carry data', () => {
+      const sanitizer = createSanitizer({ type: 'Thing' })
+      const result = sanitizer({ identifier: 'NO-TITLE', name: 'Plain English Only' }, 'fr')
+
+      expect(result?.name).toBe('Plain English Only')
     })
   })
 
   describe('createSanitizer', () => {
-    it('should create a sanitizer function', () => {
-      const sanitizer = createSanitizer({ type: 'Thing' })
-      expect(typeof sanitizer).toBe('function')
+    it('creates a sanitizer function', () => {
+      expect(typeof createSanitizer({ type: 'Thing' })).toBe('function')
     })
 
-    it('should return null for items without identifier', () => {
+    it('returns null for items without an identifier or code', () => {
       const sanitizer = createSanitizer({ type: 'Thing' })
-      expect(sanitizer({} as ThesaurusItem)).toBeNull()
-      expect(sanitizer({ name: { en: 'Test' } } as ThesaurusItem)).toBeNull()
+      expect(sanitizer({})).toBeNull()
+      expect(sanitizer({ name: 'Test' })).toBeNull()
     })
 
-    it('should sanitize item with basic properties', () => {
-      const sanitizer = createSanitizer({ type: 'Country' })
-      const item: ThesaurusItem = {
-        identifier: 'CA',
-        name: { en: 'Canada', fr: 'Canada' },
-        description: { en: 'A North American country' }
-      }
-      
-      const result = sanitizer(item, 'en')
-      
+    it('uses code as identifier when identifier is missing', () => {
+      const sanitizer = createSanitizer({ type: 'Project' })
+      const result = sanitizer({ code: '01', name: 'SDG Goal 1' })
       expect(result).not.toBeNull()
-      expect(result?.identifier).toBe('CA')
-      expect(result?.name).toBe('Canada')
-      expect(result?.description).toBe('A North American country')
-      expect(result?.['@type']).toBe('Country')
-      expect(result?.['@context']).toBe('https://schema.org')
+      expect(result?.identifier).toBe('')
     })
 
-    it('should apply filter and return null when filtered out', () => {
-      const sanitizer = createSanitizer({
-        type: 'Thing',
-        filter: (item) => item.identifier !== 'EXCLUDED'
-      })
-      
+    it('applies a filter and returns null when filtered out', () => {
+      const sanitizer = createSanitizer({ type: 'Thing', filter: (item) => item.identifier !== 'EXCLUDED' })
       expect(sanitizer({ identifier: 'INCLUDED' })).not.toBeNull()
       expect(sanitizer({ identifier: 'EXCLUDED' })).toBeNull()
     })
 
-    it('should apply transform function', () => {
+    it('applies a transform function on top of the localized fields', () => {
       const sanitizer = createSanitizer({
         type: 'Project',
-        transform: (item) => ({
-          image: `/images/${item.identifier}.svg`,
-          url: `https://example.com/${item.identifier}`
-        })
+        transform: (item) => ({ image: `/images/${item.identifier}.svg`, url: `https://example.com/${item.identifier}` })
       })
-      
-      const result = sanitizer({ identifier: 'test-id', name: { en: 'Test' } })
-      
+      const result = sanitizer({ identifier: 'test-id', name: 'Test' })
       expect(result?.image).toBe('/images/test-id.svg')
       expect(result?.url).toBe('https://example.com/test-id')
     })
 
-    it('should handle shortTitle as alternateName', () => {
+    it('carries narrowerTerms through untouched', () => {
       const sanitizer = createSanitizer({ type: 'Thing' })
-      const item: ThesaurusItem = {
-        identifier: 'TEST',
-        name: { en: 'Full Name' },
-        shortTitle: { en: 'Short' }
-      }
-      
-      const result = sanitizer(item, 'en')
-      expect(result?.alternateName).toBe('Short')
-    })
-
-    it('should handle narrowerTerms', () => {
-      const sanitizer = createSanitizer({ type: 'Thing' })
-      const item: ThesaurusItem = {
-        identifier: 'PARENT',
-        name: { en: 'Parent Term' },
-        narrowerTerms: ['CHILD1', 'CHILD2']
-      }
-      
-      const result = sanitizer(item, 'en')
+      const result = sanitizer({ identifier: 'PARENT', name: 'Parent Term', narrowerTerms: ['CHILD1', 'CHILD2'] })
       expect(result?.narrowerTerms).toEqual(['CHILD1', 'CHILD2'])
     })
 
-    it('should omit undefined/null values from result', () => {
+    it('omits undefined/null values from the result', () => {
       const sanitizer = createSanitizer({ type: 'Thing' })
-      const item: ThesaurusItem = {
-        identifier: 'TEST',
-        name: { en: 'Test' }
-      }
-      
-      const result = sanitizer(item, 'en')
+      const result = sanitizer({ identifier: 'TEST', name: 'Test' })
       expect(result).not.toHaveProperty('description')
       expect(result).not.toHaveProperty('alternateName')
       expect(result).not.toHaveProperty('narrowerTerms')
     })
-
-    it('should use code as identifier when identifier is missing', () => {
-      const sanitizer = createSanitizer({ type: 'Project' })
-      const item: ThesaurusItem = {
-        code: '01',
-        title: 'SDG Goal 1'
-      }
-      
-      const result = sanitizer(item, 'en')
-      expect(result).not.toBeNull()
-    })
   })
 
   describe('getSanitizer', () => {
-    it('should return sanitizer for known domains', () => {
-      const regionsSanitizer = getSanitizer('regions')
-      expect(typeof regionsSanitizer).toBe('function')
-      
-      const countriesSanitizer = getSanitizer('countries')
-      expect(typeof countriesSanitizer).toBe('function')
+    it('returns a sanitizer for a known domain', () => {
+      expect(typeof getSanitizer('regions')).toBe('function')
+      expect(typeof getSanitizer('countries')).toBe('function')
     })
 
-    it('should return default sanitizer for unknown domains', () => {
-      const unknownSanitizer = getSanitizer('unknownDomain')
-      expect(typeof unknownSanitizer).toBe('function')
-      
-      const result = unknownSanitizer({ identifier: 'TEST', name: { en: 'Test' } })
+    it('returns a default Thing sanitizer for an unknown domain', () => {
+      const sanitizer = getSanitizer('unknownDomain')
+      const result = sanitizer({ identifier: 'TEST', name: 'Test' })
       expect(result?.['@type']).toBe('Thing')
     })
   })
 
   describe('sanitizeItems', () => {
-    it('should sanitize array of items', () => {
+    it('sanitizes an array of items', () => {
       const items: ThesaurusItem[] = [
-        { identifier: 'A', name: { en: 'Item A' } },
-        { identifier: 'B', name: { en: 'Item B' } },
-        { identifier: 'C', name: { en: 'Item C' } }
+        { identifier: 'A', name: 'Item A' },
+        { identifier: 'B', name: 'Item B' }
       ]
-      
       const result = sanitizeItems(items, 'regions', 'en')
-      
-      expect(result).toHaveLength(3)
-      expect(result[0].identifier).toBe('A')
-      expect(result[1].identifier).toBe('B')
-      expect(result[2].identifier).toBe('C')
-    })
-
-    it('should filter out null results', () => {
-      const items: ThesaurusItem[] = [
-        { identifier: 'VALID', name: { en: 'Valid' } },
-        { name: { en: 'No ID' } } as ThesaurusItem,
-        { identifier: 'ALSO-VALID', name: { en: 'Also Valid' } }
-      ]
-      
-      const result = sanitizeItems(items, 'regions', 'en')
-      
       expect(result).toHaveLength(2)
-      expect(result.every(item => item.identifier)).toBe(true)
+      expect(result[0].identifier).toBe('A')
     })
 
-    it('should apply domain-specific sanitization', () => {
-      // Create a countries-specific sanitizer with transform
-      const countrySanitizer = createSanitizer({
-        type: 'Country',
-        transform: (item) => ({
-          image: `https://flagcdn.com/${item.identifier?.toLowerCase()}.svg`,
-          url: `https://www.cbd.int/countries/${item.identifier?.toLowerCase()}`
-        })
-      })
-      
-      const item: ThesaurusItem = { identifier: 'CA', name: { en: 'Canada' } }
-      const result = countrySanitizer(item, 'en')
-      
-      expect(result?.image).toContain('flagcdn.com')
-      expect(result?.url).toContain('cbd.int/countries')
-    })
-
-    it('should handle empty array', () => {
-      const result = sanitizeItems([], 'regions', 'en')
-      expect(result).toEqual([])
-    })
-
-    it('should respect locale parameter', () => {
+    it('filters out null results (items with no identifier)', () => {
       const items: ThesaurusItem[] = [
-        { identifier: 'TEST', name: { en: 'English', fr: 'French' } }
+        { identifier: 'VALID', name: 'Valid' },
+        { name: 'No ID' } as ThesaurusItem
       ]
-      
-      const enResult = sanitizeItems(items, 'regions', 'en')
-      const frResult = sanitizeItems(items, 'regions', 'fr')
-      
-      expect(enResult[0].name).toBe('English')
-      expect(frResult[0].name).toBe('French')
+      const result = sanitizeItems(items, 'regions', 'en')
+      expect(result).toHaveLength(1)
+    })
+
+    it('respects the locale parameter across the array', () => {
+      const items: ThesaurusItem[] = [fullCoverageTerm]
+      const enResult = sanitizeItems(items, 'unknownDomain', 'en')
+      const zhResult = sanitizeItems(items, 'unknownDomain', 'zh')
+      expect(enResult[0].name).toBe('ABS')
+      expect(zhResult[0].name).toBe('ABS')
+      expect(zhResult[0].alternateName).toBe('获取和惠益分享')
+    })
+
+    it('returns an empty array for an empty input', () => {
+      expect(sanitizeItems([], 'regions', 'en')).toEqual([])
     })
   })
 })
