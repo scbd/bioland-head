@@ -97,6 +97,15 @@ ORDER BY total_translations DESC;
 -- migration. Everything `listSites` filters, orders or keys on is a real scalar
 -- column, so the JSON is never in a WHERE clause.
 --
+-- HOW THIS FILE IS APPLIED
+-- ------------------------
+-- By a DBA, by hand, out of band. NOTHING in this repository reads, parses or
+-- executes schema.sql at boot or at any other time -- the runtime user needs
+-- SELECT/UPDATE on `site_registry.*` and no CREATE privilege at all. Do not
+-- wire this file into application startup: a process that can CREATE can also
+-- ALTER, and the whole no-secret-column guarantee below rests on the schema
+-- being changeable only by a human with a review behind them.
+--
 -- Every statement below is idempotent: re-running this file is a no-op.
 
 CREATE DATABASE IF NOT EXISTS site_registry
@@ -110,6 +119,10 @@ CREATE TABLE IF NOT EXISTS site_registry.multi_site_config (
   env VARCHAR(16) NOT NULL COMMENT 'Deployment environment slice (dev, stg, prod)',
   multi_site_code VARCHAR(64) NOT NULL COMMENT 'MultiSite network code (e.g. bl2, bsl)',
 
+  name VARCHAR(255) NULL COMMENT 'Human-readable network name. NULL-able so the column can be added ahead of the seeder, but REQUIRED by the contract -- readMultiSiteConfig throws on a NULL',
+  description TEXT NULL COMMENT 'Free-text network description',
+  base_host VARCHAR(255) NULL COMMENT 'Base host every site in the network hangs off. NULL-able for the same reason as name, and REQUIRED on read for the same reason -- network_summary.base_host is derived from it',
+
   default_locale VARCHAR(16) NULL COMMENT 'Network default locale code',
   locales JSON NULL COMMENT 'JSON array of locale codes offered network-wide',
   countries JSON NULL COMMENT 'JSON array of ISO country codes covered by the network',
@@ -118,7 +131,7 @@ CREATE TABLE IF NOT EXISTS site_registry.multi_site_config (
   i18n JSON NULL COMMENT 'MultiSite-level i18n OBJECT ({maxLangBeforeWrap}). Distinct from the site-level i18n BOOLEAN in site_config.i18n_enabled -- the wire names collide, the columns must not',
 
   config_generation BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Monotonic counter bumped by the re-seeder (p02-06). Written there, never here',
-  source_hash CHAR(64) NULL COMMENT 'Hash of the upstream source document, used by the drift check (p02-06) as its comparison key',
+  source_hash CHAR(64) CHARACTER SET ascii NULL COMMENT 'Hex SHA-256 of the upstream source document, used by the drift check (p02-06) as its comparison key. ASCII charset on purpose: utf8mb4 would reserve 256 bytes a row for 64 hex characters',
 
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'When the row was first seeded',
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When the row was last re-seeded',
@@ -136,8 +149,9 @@ CREATE TABLE IF NOT EXISTS site_registry.site_config (
   multi_site_code VARCHAR(64) NOT NULL COMMENT 'MultiSite network code this site belongs to',
   site_code VARCHAR(64) NOT NULL COMMENT 'Site code, unique within (env, multi_site_code)',
 
-  name VARCHAR(255) NULL COMMENT 'Human-readable site name',
+  name VARCHAR(255) NULL COMMENT 'Human-readable site name. NULL-able in storage but REQUIRED by the contract -- readSite throws on a NULL',
   description TEXT NULL COMMENT 'Free-text site description',
+  logo VARCHAR(255) NULL COMMENT 'Site logo URL or path. Public, and emitted by the p02-03 projection -- without this column every site would render the fallback mark',
   host VARCHAR(255) NULL COMMENT 'Canonical site host, without protocol',
   redirect VARCHAR(255) NULL COMMENT 'Redirect host; drives localizedHost and the Drupal JSON:API base URL',
   aliases JSON NULL COMMENT 'JSON array of additional hosts that resolve to this site',
@@ -166,14 +180,16 @@ CREATE TABLE IF NOT EXISTS site_registry.site_config (
   last_known_good_at TIMESTAMP NULL DEFAULT NULL COMMENT 'When last_known_good_settings was last written',
 
   config_generation BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Monotonic counter bumped by the re-seeder (p02-06). Written there, never here',
-  source_hash CHAR(64) NULL COMMENT 'Hash of the upstream source document, used by the drift check (p02-06) as its comparison key',
+  source_hash CHAR(64) CHARACTER SET ascii NULL COMMENT 'Hex SHA-256 of the upstream source document, used by the drift check (p02-06) as its comparison key. ASCII charset on purpose: utf8mb4 would reserve 256 bytes a row for 64 hex characters',
 
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'When the row was first seeded',
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When the row was last re-seeded',
 
   PRIMARY KEY (env, multi_site_code, site_code),
 
-  INDEX idx_slice (env, multi_site_code) COMMENT 'listSites enumerates one deployment slice',
+  -- No (env, multi_site_code) index: that is a leftmost prefix of the PRIMARY
+  -- KEY, so listSites already uses the PK and a second copy would only cost
+  -- writes.
   INDEX idx_slice_published (env, multi_site_code, published) COMMENT 'Published-only enumeration without touching a JSON column'
 
 ) ENGINE=InnoDB
@@ -196,9 +212,9 @@ CREATE TABLE IF NOT EXISTS site_registry.network_summary (
 
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When this summary row was last pushed',
 
-  PRIMARY KEY (env, multi_site_code, site_code),
-
-  INDEX idx_env (env) COMMENT 'Prod reads the whole cross-env summary by env'
+  -- No idx_env: env is the leftmost PRIMARY KEY column, so a by-env read is
+  -- already a PK range scan.
+  PRIMARY KEY (env, multi_site_code, site_code)
 
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4

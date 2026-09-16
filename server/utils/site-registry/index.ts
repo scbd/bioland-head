@@ -44,6 +44,7 @@
  */
 import { getDbPool } from '../db/pool'
 import {
+  BANNED_SETTINGS_KEYS,
   RegistryError,
   RegistryRowMalformedError,
   RegistryRowMissingError,
@@ -53,6 +54,7 @@ import {
 import type { MultiSiteConfigInput, SiteConfigInput, SiteTheme } from './types'
 
 export {
+  BANNED_SETTINGS_KEYS,
   RegistryError,
   RegistryRowMalformedError,
   RegistryRowMissingError,
@@ -77,8 +79,9 @@ type Row = Record<string, unknown>
  * Run one read against the registry over the shared pool.
  *
  * Wraps driver failures in `RegistryUnavailableError` so a mariadb `SqlError`
- * (which can echo bound parameter values) never propagates its own message; the
- * original is retained as `cause` for a debugger, not for a log line.
+ * (which can echo bound parameter values) never propagates its own message. Only
+ * the driver's `{code, errno, sqlState}` triple survives as `cause` — see that
+ * class for why the error itself is not attached.
  */
 async function execute(operation: string, sql: string, params: unknown[]): Promise<unknown> {
   const pool = getDbPool()
@@ -94,7 +97,12 @@ async function execute(operation: string, sql: string, params: unknown[]): Promi
     throw new RegistryUnavailableError(operation, error)
   }
   finally {
-    if (conn) await conn.release()
+    // A throw from release() would escape this function unwrapped, past the
+    // catch above, and reach a caller as a bare driver error rather than a
+    // RegistryUnavailableError. A failed release is also not actionable by the
+    // caller: the pool reclaims the connection on its own. So it is swallowed
+    // here, deliberately, and never allowed to mask the real result.
+    if (conn) await conn.release().catch(() => undefined)
   }
 }
 
@@ -158,6 +166,45 @@ function parseObjectColumn(
   return parsed as Record<string, unknown>
 }
 
+/**
+ * Parse `hide_home_page_widgets`, which the contract types as `{geobon: boolean}`.
+ *
+ * Validated rather than passed through as `unknown`: the projection reads
+ * `.geobon` directly, so a row holding an array or a bare string would become a
+ * silent `undefined` at the far end — the dmsm failure mode this module exists
+ * to prevent.
+ */
+function parseHideHomePageWidgets(
+  table: string,
+  key: Record<string, string>,
+  column: string,
+  raw: unknown,
+): { geobon: boolean } | undefined {
+  const parsed = parseObjectColumn(table, key, column, raw)
+  if (parsed === undefined) return undefined
+
+  if (typeof parsed.geobon !== 'boolean') {
+    throw new RegistryRowMalformedError(table, key, column, 'expected a boolean `geobon` member')
+  }
+  return { geobon: parsed.geobon }
+}
+
+/** Parse a JSON column that must hold a plain string when present. */
+function parseStringColumn(
+  table: string,
+  key: Record<string, string>,
+  column: string,
+  raw: unknown,
+): string | undefined {
+  const parsed = parseJsonColumn(table, key, column, raw)
+  if (parsed === undefined) return undefined
+
+  if (typeof parsed !== 'string') {
+    throw new RegistryRowMalformedError(table, key, column, 'expected a JSON string')
+  }
+  return parsed
+}
+
 /** TINYINT(1) arrives as 0/1; `NULL` stays absent rather than becoming `false`. */
 function toOptionalBoolean(raw: unknown): boolean | undefined {
   if (raw === null || raw === undefined) return undefined
@@ -168,6 +215,20 @@ function toOptionalBoolean(raw: unknown): boolean | undefined {
 function toOptionalString(raw: unknown): string | undefined {
   if (raw === null || raw === undefined) return undefined
   return String(raw)
+}
+
+/** A scalar the contract types as required: `NULL` is a malformed row, not an absence. */
+function toRequiredString(
+  table: string,
+  key: Record<string, string>,
+  column: string,
+  raw: unknown,
+): string {
+  const value = toOptionalString(raw)
+  if (!value) {
+    throw new RegistryRowMalformedError(table, key, column, 'required column is empty')
+  }
+  return value
 }
 
 /** BIGINT UNSIGNED arrives as a BigInt from the mariadb driver by default. */
@@ -215,6 +276,9 @@ function mapMultiSiteRow(env: string, multiSiteCode: string, row: Row): MultiSit
   return {
     env,
     multiSiteCode,
+    name: toRequiredString(MULTI_SITE_TABLE, key, 'name', row.name),
+    description: toOptionalString(row.description),
+    baseHost: toRequiredString(MULTI_SITE_TABLE, key, 'base_host', row.base_host),
     defaultLocale: toOptionalString(row.default_locale),
     locales: parseStringArrayColumn(MULTI_SITE_TABLE, key, 'locales', row.locales),
     countries: parseStringArrayColumn(MULTI_SITE_TABLE, key, 'countries', row.countries),
@@ -230,7 +294,8 @@ function mapMultiSiteRow(env: string, multiSiteCode: string, row: Row): MultiSit
  * Inherits the shared pool's 30s `acquireTimeout` (C13 — see the module JSDoc).
  *
  * @throws {RegistryRowMissingError}   no row for `(env, multiSiteCode)`.
- * @throws {RegistryRowMalformedError} a JSON column is unparseable or the wrong type.
+ * @throws {RegistryRowMalformedError} `name` or `base_host` is NULL, or a JSON
+ *   column is unparseable or the wrong type.
  * @throws {RegistryUnavailableError}  the registry could not be reached.
  */
 export async function readMultiSiteConfig(
@@ -239,7 +304,8 @@ export async function readMultiSiteConfig(
 ): Promise<MultiSiteConfigInput> {
   const rows = await query(
     'readMultiSiteConfig',
-    `SELECT default_locale, locales, countries, theme, settings, i18n
+    `SELECT name, description, base_host,
+            default_locale, locales, countries, theme, settings, i18n
        FROM ${MULTI_SITE_TABLE}
       WHERE env = ? AND multi_site_code = ?
       LIMIT 1`,
@@ -261,7 +327,8 @@ export async function readMultiSiteConfig(
  * `hasBl1` is normalised to a boolean here, once, via `normalizeHasBl1`.
  * Inherits the shared pool's 30s `acquireTimeout` (C13 — see the module JSDoc).
  *
- * @throws {RegistryRowMissingError}   no row for `(env, multiSiteCode, siteCode)`.
+ * @throws {RegistryRowMissingError}   no row for `(env, multiSiteCode, siteCode)`,
+ *   or no `multi_site_config` row for the slice it claims to belong to.
  * @throws {RegistryRowMalformedError} a required scalar is missing, `locales` is
  *   empty, or a JSON column is unparseable or the wrong container type. Never a
  *   partial config, never `undefined`.
@@ -276,12 +343,12 @@ export async function readSite(
 
   const rows = await query(
     'readSite',
-    `SELECT s.name, s.description, s.host, s.redirect, s.aliases,
+    `SELECT s.name, s.description, s.logo, s.host, s.redirect, s.aliases,
             s.default_locale, s.locales, s.i18n_enabled,
             s.country, s.countries, s.region, s.continent,
             s.published, s.scbd, s.has_bl1, s.has_bl2, s.migrated, s.migrated_failed,
             s.theme, s.hide_home_page_widgets, s.geo_bon_page,
-            m.theme AS multi_site_theme
+            m.env AS multi_site_env, m.theme AS multi_site_theme
        FROM ${SITE_TABLE} s
        LEFT JOIN ${MULTI_SITE_TABLE} m
               ON m.env = s.env AND m.multi_site_code = s.multi_site_code
@@ -292,6 +359,15 @@ export async function readSite(
 
   const row = rows[0]
   if (!row) throw new RegistryRowMissingError(SITE_TABLE, key)
+
+  // The multiSite join is LEFT, so an absent slice row yields NULLs rather than
+  // dropping the site row. Left unchecked, that silently degrades: the merged
+  // theme becomes the per-site theme alone, and the 35/211 sites with no
+  // per-site theme fall back to code defaults with nobody paged. `m.env` is NOT
+  // NULL in the slice table, so it is NULL here only when the join missed.
+  if (row.multi_site_env === null || row.multi_site_env === undefined) {
+    throw new RegistryRowMissingError(MULTI_SITE_TABLE, { env, multi_site_code: multiSiteCode })
+  }
 
   const defaultLocale = toOptionalString(row.default_locale)
   if (!defaultLocale) {
@@ -313,8 +389,9 @@ export async function readSite(
     multiSiteCode,
     siteCode,
 
-    name: toOptionalString(row.name),
+    name: toRequiredString(SITE_TABLE, key, 'name', row.name),
     description: toOptionalString(row.description),
+    logo: toOptionalString(row.logo),
     host: toOptionalString(row.host),
     redirect: toOptionalString(row.redirect),
     aliases: parseStringArrayColumn(SITE_TABLE, key, 'aliases', row.aliases),
@@ -336,10 +413,10 @@ export async function readSite(
     migratedFailed: toOptionalBoolean(row.migrated_failed),
 
     theme: mergeTheme(multiSiteTheme, siteTheme),
-    hideHomePageWidgets: parseJsonColumn(
+    hideHomePageWidgets: parseHideHomePageWidgets(
       SITE_TABLE, key, 'hide_home_page_widgets', row.hide_home_page_widgets,
     ),
-    geoBonPage: parseJsonColumn(SITE_TABLE, key, 'geo_bon_page', row.geo_bon_page),
+    geoBonPage: parseStringColumn(SITE_TABLE, key, 'geo_bon_page', row.geo_bon_page),
   }
 }
 
@@ -470,13 +547,23 @@ export async function readConfigGeneration(
  *
  * `doc` is serialised with `JSON.stringify` and bound as a parameter, never
  * interpolated, so nothing from the document reaches the SQL text. A failure is
- * wrapped in `RegistryUnavailableError` rather than re-thrown, so a mariadb
- * `SqlError` cannot echo the document back into a log.
+ * wrapped in `RegistryUnavailableError`, which keeps only the driver's
+ * `{code, errno, sqlState}` as its cause, and the pool sets `logParam: false`,
+ * so a mariadb `SqlError` cannot echo the document back into a log.
+ *
+ * **Banned keys.** Every other registry column is protected by absence — no
+ * column exists that could hold a secret. This one is an opaque blob, so the
+ * guarantee is enforced here instead: a document carrying any of
+ * `BANNED_SETTINGS_KEYS` at the top level is rejected rather than stored. A
+ * composed `bioland.settings` document has no business carrying them, and if a
+ * future composer regresses, the write fails loudly instead of persisting
+ * credentials where `readLastKnownGoodSettings` would hand them straight back.
  *
  * Inherits the shared pool's 30s `acquireTimeout` (C13 — see the module JSDoc).
  *
  * @throws {RegistryRowMissingError}   no row for `(env, multiSiteCode, siteCode)`.
- * @throws {RegistryRowMalformedError} `doc` is not JSON-serialisable.
+ * @throws {RegistryRowMalformedError} `doc` is not JSON-serialisable, or carries
+ *   a banned top-level key.
  * @throws {RegistryUnavailableError}  the registry could not be reached.
  */
 export async function writeLastKnownGoodSettings(
@@ -486,6 +573,18 @@ export async function writeLastKnownGoodSettings(
   doc: unknown,
 ): Promise<void> {
   const key = { env, multi_site_code: multiSiteCode, site_code: siteCode }
+
+  if (doc !== null && typeof doc === 'object' && !Array.isArray(doc)) {
+    const banned = BANNED_SETTINGS_KEYS.filter(name => name in (doc as Record<string, unknown>))
+    if (banned.length > 0) {
+      // The key NAMES are safe to report — they are the contract's own
+      // vocabulary. Their values are not, and are never touched.
+      throw new RegistryRowMalformedError(
+        SITE_TABLE, key, 'last_known_good_settings',
+        `document carries banned top-level key(s): ${banned.join(', ')}`,
+      )
+    }
+  }
 
   // JSON.stringify returns `undefined` (not a string) for undefined / a function
   // / a symbol, which the driver would bind as SQL NULL — caught explicitly below.
@@ -513,6 +612,12 @@ export async function writeLastKnownGoodSettings(
     [serialised, env, multiSiteCode, siteCode],
   ) as unknown as { affectedRows?: number | bigint }
 
+  // `affectedRows` counts MATCHED rows here, not changed ones, because the
+  // mariadb connector sets CLIENT_FOUND_ROWS by default (`foundRows: true` in
+  // its connection options). That is what makes re-writing an identical document
+  // idempotent rather than a spurious "row missing". If that pool option is ever
+  // flipped, this check must move to a SELECT — it is an assumption about the
+  // pool, not about this statement.
   const affected = Number(result?.affectedRows ?? 0)
   if (!affected) throw new RegistryRowMissingError(SITE_TABLE, key)
 }
