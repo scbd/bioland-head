@@ -11,7 +11,14 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['server/utils/**/*.ts', 'shared/utils/**/*.ts', 'app/utils/resolve-theme.js']
+      // D14: a task adding code outside this glob extends it with the specific path it owns, never a
+      // tree-wide widening — p02-02 adds its own new route family here.
+      include: [
+        'server/utils/**/*.ts',
+        'shared/utils/**/*.ts',
+        'app/utils/resolve-theme.js',
+        'server/api/thesaurus/terms/**/*.ts'
+      ]
     }
   },
   resolve: {

@@ -1,0 +1,143 @@
+import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest'
+
+// Bind Nuxt/Nitro auto-imports before importing the handler in plain-Node Vitest, mirroring the pattern in
+// tests/unit/server/middleware/cache-control.test.js and tests/unit/server/utils/context.test.js.
+const readBody = vi.fn()
+const useRequestContext = vi.fn()
+const resolveTerms = vi.fn()
+const createError = vi.fn((opts: { statusCode: number; statusMessage: string }) => {
+  const err = new Error(opts.statusMessage) as Error & { statusCode: number; statusMessage: string }
+  err.statusCode = opts.statusCode
+  err.statusMessage = opts.statusMessage
+  return err
+})
+
+vi.stubGlobal('defineEventHandler', (handler: (event: unknown) => unknown) => handler)
+vi.stubGlobal('readBody', readBody)
+vi.stubGlobal('useRequestContext', useRequestContext)
+vi.stubGlobal('resolveTerms', resolveTerms)
+vi.stubGlobal('createError', createError)
+
+vi.mock('h3', () => ({
+  defineEventHandler: (handler: (event: unknown) => unknown) => handler,
+  readBody,
+  createError
+}))
+
+describe('POST /api/thesaurus/terms', () => {
+  let handler: (event: unknown) => unknown
+  const event = {}
+
+  beforeAll(async () => {
+    const mod = await import('../../../../../server/api/thesaurus/terms/index.post')
+    handler = mod.default
+  })
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    useRequestContext.mockResolvedValue({ locale: 'fr' })
+    resolveTerms.mockResolvedValue({ ok: true })
+  })
+
+  afterAll(() => vi.unstubAllGlobals())
+
+  it('resolves an array body unchanged and forwards the request locale', async () => {
+    readBody.mockResolvedValue({ ids: ['a', 'b'] })
+
+    const result = await handler(event)
+
+    expect(resolveTerms).toHaveBeenCalledWith(['a', 'b'], 'fr', event)
+    expect(result).toEqual({ ok: true })
+  })
+
+  it('normalizes a comma-delimited string body to an array', async () => {
+    readBody.mockResolvedValue({ ids: 'a,b,c' })
+
+    await handler(event)
+
+    expect(resolveTerms).toHaveBeenCalledWith(['a', 'b', 'c'], 'fr', event)
+  })
+
+  it('wraps a single bare string id in an array', async () => {
+    readBody.mockResolvedValue({ ids: 'a' })
+
+    await handler(event)
+
+    expect(resolveTerms).toHaveBeenCalledWith(['a'], 'fr', event)
+  })
+
+  it('defaults locale to "en" when the request context has none', async () => {
+    readBody.mockResolvedValue({ ids: ['a'] })
+    useRequestContext.mockResolvedValue({})
+
+    await handler(event)
+
+    expect(resolveTerms).toHaveBeenCalledWith(['a'], 'en', event)
+  })
+
+  it('rejects an empty array with 400 and never calls resolveTerms', async () => {
+    readBody.mockResolvedValue({ ids: [] })
+
+    await expect(handler(event)).rejects.toMatchObject({ statusCode: 400 })
+    expect(resolveTerms).not.toHaveBeenCalled()
+  })
+
+  it('rejects a missing ids field with 400', async () => {
+    readBody.mockResolvedValue({})
+
+    await expect(handler(event)).rejects.toMatchObject({ statusCode: 400 })
+    expect(resolveTerms).not.toHaveBeenCalled()
+  })
+
+  it('rejects an empty string ids field with 400', async () => {
+    readBody.mockResolvedValue({ ids: '' })
+
+    await expect(handler(event)).rejects.toMatchObject({ statusCode: 400 })
+    expect(resolveTerms).not.toHaveBeenCalled()
+  })
+
+  it('rejects 201 ids with 400 and never calls resolveTerms', async () => {
+    readBody.mockResolvedValue({ ids: Array.from({ length: 201 }, (_, i) => `id-${i}`) })
+
+    await expect(handler(event)).rejects.toMatchObject({ statusCode: 400 })
+    expect(resolveTerms).not.toHaveBeenCalled()
+  })
+
+  it('passes exactly 200 ids through to resolveTerms (boundary, not rejected)', async () => {
+    const ids = Array.from({ length: 200 }, (_, i) => `id-${i}`)
+    readBody.mockResolvedValue({ ids })
+
+    await handler(event)
+
+    expect(resolveTerms).toHaveBeenCalledWith(ids, 'fr', event)
+  })
+
+  it('rejects a malformed body where ids is a number, with no throw escaping uncaught', async () => {
+    readBody.mockResolvedValue({ ids: 42 })
+
+    await expect(handler(event)).rejects.toMatchObject({ statusCode: 400 })
+    expect(resolveTerms).not.toHaveBeenCalled()
+  })
+
+  it('rejects a non-JSON/unparseable body with 400', async () => {
+    readBody.mockRejectedValue(new Error('invalid json'))
+
+    await expect(handler(event)).rejects.toMatchObject({ statusCode: 400 })
+    expect(resolveTerms).not.toHaveBeenCalled()
+  })
+
+  it('returns 200 with the full map even when one id degrades to source: identifier (D5)', async () => {
+    readBody.mockResolvedValue({ ids: ['a', 'unresolvable'] })
+    resolveTerms.mockResolvedValue({
+      a: { value: 'Resolved A', source: 'api' },
+      unresolvable: { value: 'unresolvable', source: 'identifier' }
+    })
+
+    const result = await handler(event)
+
+    expect(result).toEqual({
+      a: { value: 'Resolved A', source: 'api' },
+      unresolvable: { value: 'unresolvable', source: 'identifier' }
+    })
+  })
+})
