@@ -1,5 +1,7 @@
 <template>
-    <div v-if="showWidget" class="position-relative">
+    <!-- Collapse entirely when the fetch resolved with no record: a bare wrapper still takes its
+         column in the widget grid and leaves a visible hole on every site with no courses. -->
+    <div v-if="showWidget && (loading || record)" class="position-relative">
         <!-- Placeholder shown during loading -->
         <div v-if="loading">
             <div class="text-capitalize placeholder-glow">
