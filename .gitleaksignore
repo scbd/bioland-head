@@ -1,0 +1,21 @@
+# gitleaks false positives, allowlisted by fingerprint.
+#
+# The CBD thesaurus identifies taxonomy terms by GUID. gitleaks' `generic-api-key` rule scores a bare
+# GUID as high-entropy and flags it as a credential. These are public term identifiers, not secrets:
+# every GUID below is already a key in the tracked `i18n/locales/en.json`, and the same values are served
+# publicly by https://api.cbd.int/api/v2013/thesaurus.
+#
+# Scoped by fingerprint (file + rule + line) rather than by path or rule, so the rest of these files —
+# and the rest of the repo — stay fully scanned.
+#
+# Added by p03-01 (BL-994). `identifier-labels.json` is generated; if it is ever regenerated the line
+# numbers shift, the hook will flag the new lines, and these fingerprints should be refreshed rather
+# than broadened.
+
+# BLOCK_FIRST_KEY sentinel — the first `regions` term.
+server/utils/thesaurus/seed-translation-cache.js:generic-api-key:46
+
+# Taxonomy term GUIDs inside the generated identifier -> English label map.
+server/utils/thesaurus/identifier-labels.json:generic-api-key:56
+server/utils/thesaurus/identifier-labels.json:generic-api-key:400
+server/utils/thesaurus/identifier-labels.json:generic-api-key:599

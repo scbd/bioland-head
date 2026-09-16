@@ -11,7 +11,14 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['server/utils/**/*.ts', 'shared/utils/**/*.ts', 'app/utils/resolve-theme.js']
+      include: [
+        'server/utils/**/*.ts',
+        'shared/utils/**/*.ts',
+        'app/utils/resolve-theme.js',
+        // p03-01 (D14): the glob is `.ts`-only, so this task's own `.js` module is named explicitly
+        // rather than widening the tree.
+        'server/utils/thesaurus/seed-translation-cache.js'
+      ]
     }
   },
   resolve: {
