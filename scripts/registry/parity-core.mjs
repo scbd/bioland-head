@@ -386,8 +386,14 @@ function tally(bucket, key, siteCode, path) {
  * Aggregate site records plus the enumeration diff into the report object.
  *
  * The verdict is `FAIL` when anything failing exists: an enumeration mismatch, a failing
- * difference, or a site that could not be compared. A `not-comparable` site is never parity, so it
- * cannot leave the run green — that is the false-PASS direction the whole script exists to block.
+ * difference, a site that could not be compared, or nothing compared at all. A `not-comparable`
+ * site is never parity, so it cannot leave the run green — that is the false-PASS direction the
+ * whole script exists to block.
+ *
+ * `sitesCompared === 0` is failing for the same reason. A run that compared nothing has produced
+ * no evidence of parity, only the absence of evidence against it, and exit 0 here authorizes
+ * deleting the dmsm path. It is reachable from an empty slice on both sides and from a `--site`
+ * naming a code neither source enumerates.
  */
 export function summarize({ slice, enumeration, records, normalizations = {} }) {
   const allowed = {}
@@ -425,7 +431,7 @@ export function summarize({ slice, enumeration, records, normalizations = {} }) 
     provisionalRules: provisional,
     failingCount,
     verdict:
-      failingCount || enumerationFailures || skipped.length ? 'FAIL' : 'PASS',
+      failingCount || enumerationFailures || skipped.length || !compared ? 'FAIL' : 'PASS',
   }
 }
 
@@ -450,6 +456,10 @@ export function renderReport(summary) {
   }
 
   lines.push(`  sites compared: ${summary.sitesCompared}`)
+
+  if (!summary.sitesCompared) {
+    lines.push('  FAILING nothing was compared — no site compared is not evidence of parity')
+  }
 
   for (const { siteCode, reason } of summary.sitesSkipped) {
     lines.push(`  NOT COMPARABLE ${siteCode}: ${reason}`)

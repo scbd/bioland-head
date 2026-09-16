@@ -239,6 +239,14 @@ export async function run(argv, { now = () => new Date().toISOString() } = {}) {
   const normalizations = {}
   const records = []
 
+  // A misspelled `--site`, or one absent from both enumerations, leaves an empty target list. With
+  // otherwise-matching enumerations that used to summarize as PASS with `sitesCompared: 0` — an
+  // exit 0 that authorizes the cutover while having compared nothing. The requested site becomes a
+  // not-comparable record instead, which can never leave the run green.
+  if (options.site && !targets.length) {
+    records.push(skippedSite(options.site, 'requested --site is absent from both enumerations'))
+  }
+
   for (const siteCode of targets) {
     if (resumed.has(siteCode)) {
       records.push(resumed.get(siteCode))

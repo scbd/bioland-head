@@ -428,6 +428,44 @@ describe('exit codes — the false-PASS direction', () => {
   })
 })
 
+describe('--site cannot authorize a cutover it never exercised', () => {
+  it('fails a targeted run naming a site absent from both enumerations', async () => {
+    const source = await sourceFor(['alpha'], ['alpha'], {
+      alpha: { dmsm: dmsmSite(), composed: composed() },
+    })
+    const result = await run([...SLICE, '--source', source, '--site', 'alpah'])
+
+    expect(result.summary.sitesCompared).toBe(0)
+    expect(result.summary.verdict).toBe('FAIL')
+    expect(result.code).toBe(EXIT_FAILING)
+    expect(result.summary.sitesSkipped).toEqual([
+      { siteCode: 'alpah', reason: 'requested --site is absent from both enumerations' },
+    ])
+  })
+
+  it('still compares and passes a targeted run naming a present site', async () => {
+    const source = await sourceFor(['alpha', 'beta'], ['alpha', 'beta'], {
+      alpha: { dmsm: dmsmSite(), composed: composed() },
+      beta: { dmsm: dmsmSite(), composed: composed() },
+    })
+    const result = await run([...SLICE, '--source', source, '--site', 'alpha'])
+
+    expect(result.summary.sitesCompared).toBe(1)
+    expect(result.summary.verdict).toBe('PASS')
+    expect(result.code).toBe(EXIT_PASS)
+  })
+
+  it('fails a slice both sources enumerate as empty, rather than passing on zero comparisons', async () => {
+    const source = await sourceFor([], [], {})
+    const result = await run([...SLICE, '--source', source])
+
+    expect(result.summary.sitesCompared).toBe(0)
+    expect(result.summary.verdict).toBe('FAIL')
+    expect(result.code).toBe(EXIT_FAILING)
+    expect(result.report).toContain('nothing was compared')
+  })
+})
+
 describe('--resume', () => {
   it('reuses classified slices and compares only the rest', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'parity-ckpt-'))
