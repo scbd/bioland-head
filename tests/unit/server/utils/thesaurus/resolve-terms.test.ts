@@ -3,7 +3,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 /**
  * Plain Vitest (`environment: 'node'`) with `vi.stubGlobal` for the Nitro auto-imports, matching
  * `tests/unit/server/utils/context.test.js`. There is no `@nuxt/test-utils` runtime harness in this repo.
+ *
+ * `consola` is mocked as a MODULE, not stubbed as a global. The module under test imports it
+ * statically, because Nitro's auto-import is a build-time transform of a free identifier and never
+ * assigns `globalThis.consola` — a `vi.stubGlobal('consola', ...)` here would pass while the real
+ * server silently emitted no warnings at all.
  */
+const consolaSpies = vi.hoisted(() => ({ warn: vi.fn(), error: vi.fn(), debug: vi.fn(), info: vi.fn() }))
+vi.mock('consola', () => ({ consola: consolaSpies, default: consolaSpies }))
 
 // `enqueueTranslation` is mocked at the module boundary so the BL-1004 allowlist-gate tests below can
 // assert whether it was called without a real AWS/DB call ever firing.
@@ -70,11 +77,29 @@ const realisticFetcher = (known: Record<string, Record<string, unknown>> = TERMS
     return hits.length > 0 ? hits : [false]
   })
 
+/**
+ * Stub BOTH batch-fetch seams with one fetcher.
+ *
+ * `resolveTerms(ids, locale)` (the documented optional-event form) deliberately takes the UNCACHED
+ * `fetchThesaurusByKey` path, because the cached `getThesaurusByKey` wrapper's `getKey`
+ * (`getKeyIdentifier`) dereferences `event.context` and rejects without an H3 event. Stubbing only
+ * the cached name would leave the eventless path pointing at a stale fetcher and quietly invert
+ * these assertions.
+ */
+const stubFetcher = (fn: unknown) => {
+  vi.stubGlobal('getThesaurusByKey', fn)
+  vi.stubGlobal('fetchThesaurusByKey', fn)
+}
+
 beforeEach(async () => {
   vi.resetModules()
   store = new Map()
   assets = new Map()
-  warn = vi.fn()
+  consolaSpies.warn.mockReset()
+  consolaSpies.error.mockReset()
+  consolaSpies.debug.mockReset()
+  consolaSpies.info.mockReset()
+  warn = consolaSpies.warn
   fetcher = realisticFetcher()
   vi.stubGlobal('useStorage', (group: string) => {
     const backing = group === 'assets:server' ? assets : store
@@ -85,8 +110,7 @@ beforeEach(async () => {
       getKeys: async (prefix = '') => [...backing.keys()].filter((k) => k.startsWith(prefix))
     }
   })
-  vi.stubGlobal('consola', { warn, error: vi.fn(), debug: vi.fn(), info: vi.fn() })
-  vi.stubGlobal('getThesaurusByKey', fetcher)
+  stubFetcher(fetcher)
   enqueueTranslation.mockReset()
   mod = await import('../../../../../server/utils/thesaurus/resolve-terms')
 })
@@ -177,7 +201,7 @@ describe('resolveTerms — resolution outcomes', () => {
   })
 
   it('degrades when the fetcher itself throws', async () => {
-    vi.stubGlobal('getThesaurusByKey', vi.fn(async () => { throw new Error('boom') }))
+    stubFetcher(vi.fn(async () => { throw new Error('boom') }))
     vi.resetModules()
     const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
     const out = await fresh.resolveTerms(['GBF-GOAL-A'], 'en')
@@ -340,7 +364,7 @@ describe('resolveTerms — batch behaviour', () => {
       'BIOMES-DUP': { ...BIOMES, identifier: 'BIOMES-DUP' }
     }
     // Out-of-order results, two requested ids missing entirely: 10 requested, 8 returned.
-    vi.stubGlobal('getThesaurusByKey', vi.fn(async (_e: unknown, keys: string[]) => {
+    stubFetcher(vi.fn(async (_e: unknown, keys: string[]) => {
       const hits = keys.map((k) => known[k]).filter(Boolean).reverse()
       return hits.length > 0 ? hits : [false]
     }))
@@ -369,7 +393,7 @@ describe('resolveTerms — batch behaviour', () => {
   })
 
   it('degrades when the fetcher returns a non-array', async () => {
-    vi.stubGlobal('getThesaurusByKey', vi.fn(async () => ({ not: 'an array' })))
+    stubFetcher(vi.fn(async () => ({ not: 'an array' })))
     vi.resetModules()
     const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
     const out = await fresh.resolveTerms(['GBF-GOAL-A'], 'en')
@@ -377,7 +401,7 @@ describe('resolveTerms — batch behaviour', () => {
   })
 
   it('does not double-index an identifier that is already lowercase', async () => {
-    vi.stubGlobal('getThesaurusByKey', vi.fn(async () => [{ identifier: 'be', name: 'Belgium' }]))
+    stubFetcher(vi.fn(async () => [{ identifier: 'be', name: 'Belgium' }]))
     vi.resetModules()
     const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
     expect((await fresh.resolveTerms(['be'], 'en'))['be']).toEqual({ value: 'Belgium', source: 'api' })
@@ -418,6 +442,62 @@ describe('resolveTerms — batch behaviour', () => {
   })
 })
 
+describe('resolveTerms — cache-bypass seams (per-outcome TTL must survive the 7-day wrapper)', () => {
+  it('uses the uncached fetcher, not the cached wrapper, when no event is supplied', async () => {
+    const cached = vi.fn(async () => [GBF_GOAL_A])
+    const uncached = vi.fn(async () => [GBF_GOAL_A])
+    vi.stubGlobal('getThesaurusByKey', cached)
+    vi.stubGlobal('fetchThesaurusByKey', uncached)
+
+    const out = await mod.resolveTerms(['GBF-GOAL-A'], 'en')
+
+    // The cached wrapper's getKey dereferences event.context, so calling it here would reject and
+    // silently degrade every uncached identifier to its raw value.
+    expect(cached).not.toHaveBeenCalled()
+    expect(uncached).toHaveBeenCalledTimes(1)
+    expect(out['GBF-GOAL-A']).toEqual({ value: 'Goal A', source: 'api' })
+  })
+
+  it('retries a cached miss uncached, so a 7-day [false] cannot outlive the 1-minute fb entry', async () => {
+    const event = { context: {} } as never
+    const cached = vi.fn(async () => [false])
+    const uncached = vi.fn(async () => [GBF_GOAL_A])
+    vi.stubGlobal('getThesaurusByKey', cached)
+    vi.stubGlobal('fetchThesaurusByKey', uncached)
+
+    const out = await mod.resolveTerms(['GBF-GOAL-A'], 'en', event)
+
+    expect(cached).toHaveBeenCalledTimes(1)
+    expect(uncached).toHaveBeenCalledTimes(1)
+    expect(uncached.mock.calls[0][1]).toEqual(['GBF-GOAL-A'])
+    // Resolved on the retry rather than degraded to the raw identifier.
+    expect(out['GBF-GOAL-A']).toEqual({ value: 'Goal A', source: 'api' })
+  })
+
+  it('does not retry when the cached wrapper already covered every id', async () => {
+    const event = { context: {} } as never
+    const cached = vi.fn(async () => [GBF_GOAL_A])
+    const uncached = vi.fn(async () => [GBF_GOAL_A])
+    vi.stubGlobal('getThesaurusByKey', cached)
+    vi.stubGlobal('fetchThesaurusByKey', uncached)
+
+    await mod.resolveTerms(['GBF-GOAL-A'], 'en', event)
+
+    expect(uncached).not.toHaveBeenCalled()
+  })
+
+  it('still degrades, without throwing, when the uncached retry also fails', async () => {
+    const event = { context: {} } as never
+    vi.stubGlobal('getThesaurusByKey', vi.fn(async () => [false]))
+    vi.stubGlobal('fetchThesaurusByKey', vi.fn(async () => { throw new Error('boom') }))
+
+    const out = await mod.resolveTerms(['GBF-GOAL-A'], 'en', event)
+
+    expect(out['GBF-GOAL-A']).toEqual({ value: 'GBF-GOAL-A', source: 'identifier' })
+    expect(warn).toHaveBeenCalledWith('resolveTerms: uncached retry failed', { count: 1 })
+  })
+})
+
 describe('resolveTerms — never throws', () => {
   it.each([
     ['empty array', [] as string[]],
@@ -451,7 +531,7 @@ describe('resolveTerms — never throws', () => {
   })
 
   it('degrades an item that resolves with no usable label at all', async () => {
-    vi.stubGlobal('getThesaurusByKey', vi.fn(async () => [{ identifier: 'EMPTY-TERM', title: {}, shortTitle: {} }]))
+    stubFetcher(vi.fn(async () => [{ identifier: 'EMPTY-TERM', title: {}, shortTitle: {} }]))
     vi.resetModules()
     const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
     const out = await fresh.resolveTerms(['EMPTY-TERM'], 'en')
@@ -469,7 +549,7 @@ describe('resolveTerms — never throws', () => {
 
   it('isolates an id whose label pick blows up, leaving the rest of the batch intact', async () => {
     const exploding = { identifier: 'EXPLODING', get shortTitle(): never { throw new Error('bad item') } }
-    vi.stubGlobal('getThesaurusByKey', vi.fn(async (_e: unknown, keys: string[]) =>
+    stubFetcher(vi.fn(async (_e: unknown, keys: string[]) =>
       keys.map((k) => (k === 'EXPLODING' ? exploding : TERMS[k])).filter(Boolean)))
     vi.resetModules()
     const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
@@ -508,7 +588,7 @@ describe('resolveTerms — never throws', () => {
   })
 
   it('distinguishes a missing term from one with no usable field in the log', async () => {
-    vi.stubGlobal('getThesaurusByKey', vi.fn(async () => [{ identifier: 'EMPTY-TERM', title: {}, shortTitle: {} }]))
+    stubFetcher(vi.fn(async () => [{ identifier: 'EMPTY-TERM', title: {}, shortTitle: {} }]))
     vi.resetModules()
     const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
     await fresh.resolveTerms(['EMPTY-TERM'], 'en')

@@ -24,6 +24,7 @@
  */
 import type { H3Event } from 'h3';
 import { CACHE_TTL } from '#shared/utils/constants';
+import { consola } from 'consola';
 import { dataSourceConfigs } from './config';
 import { enqueueTranslation } from './translation-queue';
 
@@ -127,13 +128,20 @@ const ALIAS_ASSET_PREFIX = 'thesaurus-aliases';
 const IDENTIFIER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 
 /**
- * `consola` is a Nitro auto-import, not a static import, so it can be absent (unit harness, exotic preset)
- * and a bare call would throw a `ReferenceError` — from inside {@link degrade}, which is the never-throw
- * guarantee's own recovery path. Every log in this module goes through here.
+ * Every log in this module goes through here.
+ *
+ * `consola` is imported statically rather than read off `globalThis`. Nitro's auto-import is a
+ * build-time transform of a free identifier — it never assigns a `globalThis` property — so the old
+ * `globalThis.consola?.warn?.()` form was permanently undefined in the real server runtime and
+ * silently swallowed every unresolved-identifier and batch-failure warning this module promises to
+ * emit. The tests only passed because they installed `globalThis.consola` themselves.
+ *
+ * The defensive `try` stays: this is called from inside {@link degrade}, which is the never-throw
+ * guarantee's own recovery path, so logging must never be the thing that breaks resolution.
  */
 function warn(message: string, payload?: Record<string, unknown>): void {
   try {
-    (globalThis as { consola?: { warn?: (...args: unknown[]) => void } }).consola?.warn?.(message, payload);
+    consola.warn(message, payload);
   } catch {
     /* logging must never be the thing that breaks resolution */
   }
@@ -458,9 +466,44 @@ export async function resolveTerms(
 }
 
 
+/** Index a `getThesaurusByKey`-shaped result array by `.identifier`, tolerating its `[false]` sentinel. */
+function indexByIdentifier(results: unknown, into: Map<string, Record<string, unknown>>): void {
+  if (!Array.isArray(results)) return;
+  for (const item of results) {
+    // `[false]` is this fetcher's "nothing resolved" sentinel.
+    const identifier = item && typeof item === 'object' ? (item as { identifier?: unknown }).identifier : null;
+    if (typeof identifier !== 'string' || !identifier) continue;
+    into.set(identifier, item as Record<string, unknown>);
+    const lower = identifier.toLowerCase();
+    if (!into.has(lower)) into.set(lower, item as Record<string, unknown>);
+  }
+}
+
+/** Which of `canonicalIds` the index does not cover, case-insensitively. */
+function missingFrom(canonicalIds: string[], byIdentifier: Map<string, Record<string, unknown>>): string[] {
+  return canonicalIds.filter((id) => !byIdentifier.has(id) && !byIdentifier.has(id.toLowerCase()));
+}
+
 /**
- * Batch-fetch through the existing `getThesaurusByKey` and index the results by `.identifier`.
+ * Batch-fetch the canonical ids and index the results by `.identifier`.
  * Returns an empty map on any failure — callers degrade rather than throw.
+ *
+ * ⚠ Two deliberate bypasses of the cached `getThesaurusByKey` wrapper, both required for this
+ * module's per-outcome TTL contract (D6) to actually hold:
+ *
+ * 1. **No event → uncached.** The wrapper is a `defineCachedFunction` whose `getKey`
+ *    (`getKeyIdentifier`) awaits `useRequestContext(event)` and dereferences `event.context`. Called
+ *    through the documented optional-event form `resolveTerms(ids, locale)`, it rejects before its
+ *    fetch body runs, this `catch` swallowed the rejection, and EVERY uncached identifier silently
+ *    degraded to its raw value. The eventless path now calls the uncached fetcher directly.
+ *
+ * 2. **Degraded results → one uncached retry.** The wrapper caches under
+ *    `getThesaurusCacheOptions`, i.e. `CACHE_TTL.THESAURUS` (7 days) with SWR — including its
+ *    `[false]` sentinel and partial results. Without this retry, a missing identifier, a transient
+ *    fetch failure, or a term added upstream after the miss would keep answering "missing" for a
+ *    week, long outliving the 1-minute `fb` entry that is supposed to bound the degraded outcome.
+ *    The `fb` tier is what rate-limits this retry: while it is warm, pass 2 is never reached, so an
+ *    unresolvable id costs at most one uncached fetch per minute rather than one per request.
  */
 async function fetchByIdentifier(
   canonicalIds: string[],
@@ -468,15 +511,20 @@ async function fetchByIdentifier(
 ): Promise<Map<string, Record<string, unknown>>> {
   const byIdentifier = new Map<string, Record<string, unknown>>();
   try {
-    const results = await getThesaurusByKey(event, canonicalIds);
-    if (!Array.isArray(results)) return byIdentifier;
-    for (const item of results) {
-      // `[false]` is this fetcher's "nothing resolved" sentinel.
-      const identifier = item && typeof item === 'object' ? (item as { identifier?: unknown }).identifier : null;
-      if (typeof identifier !== 'string' || !identifier) continue;
-      byIdentifier.set(identifier, item as Record<string, unknown>);
-      const lower = identifier.toLowerCase();
-      if (!byIdentifier.has(lower)) byIdentifier.set(lower, item as Record<string, unknown>);
+    if (!event) {
+      indexByIdentifier(await fetchThesaurusByKey(event, canonicalIds), byIdentifier);
+      return byIdentifier;
+    }
+
+    indexByIdentifier(await getThesaurusByKey(event, canonicalIds), byIdentifier);
+
+    const missing = missingFrom(canonicalIds, byIdentifier);
+    if (missing.length > 0) {
+      try {
+        indexByIdentifier(await fetchThesaurusByKey(event, missing), byIdentifier);
+      } catch {
+        warn('resolveTerms: uncached retry failed', { count: missing.length });
+      }
     }
   } catch {
     warn('resolveTerms: batch fetch failed', { count: canonicalIds.length });
