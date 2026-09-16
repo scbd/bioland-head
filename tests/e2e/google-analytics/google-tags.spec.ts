@@ -30,11 +30,12 @@ type NuxtRoot = HTMLElement & {
   } }
 }
 
-async function waitForSiteInitialization (page: Page): Promise<void> {
+async function waitForSiteInitialization (page: Page, interceptions: () => number): Promise<void> {
   // The async site plugin must finish before a zero-script assertion can prove anything.
   await page.waitForFunction(() => (
     (document.querySelector('#__nuxt') as NuxtRoot | null)?.__vue_app__?.$nuxt?.isHydrating === false
   ))
+  expect(interceptions(), 'the context route was never intercepted, so the configured switch and IDs are not under test').toBeGreaterThan(0)
 }
 
 type DataLayerEntry = unknown[] | Record<string, unknown>
@@ -99,8 +100,11 @@ async function installPageRecorder (page: Page): Promise<void> {
  * `enabled` defaults to `true` because most cases here are about consent, not the switch. The
  * switch cases pass it explicitly. Nothing else in the payload can gate a tag any more.
  */
-async function installRoutes (page: Page, overrides: ContextOverrides = {}): Promise<void> {
+async function installRoutes (page: Page, overrides: ContextOverrides = {}): Promise<() => number> {
+  let interceptions = 0
+
   await page.route('**/api/context/**', async (route) => {
+    interceptions += 1
     const response = await route.fetch()
     const payload = await response.json()
 
@@ -123,6 +127,8 @@ async function installRoutes (page: Page, overrides: ContextOverrides = {}): Pro
       body: 'window.__gtagStub = 1;',
     })
   })
+
+  return () => interceptions
 }
 
 async function readDataLayer (page: Page): Promise<DataLayerEntry[]> {
@@ -193,10 +199,10 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
   test('(a) consent granted with the switch on loads each tag exactly once', async ({ context, page }) => {
     await seedConsentCookies(context, E2E_BASE_URL)
     await installPageRecorder(page)
-    await installRoutes(page)
+    const interceptions = await installRoutes(page)
 
     await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
-    await waitForSiteInitialization(page)
+    await waitForSiteInitialization(page, interceptions)
 
     await expect(page.locator(
       `script[src*="googletagmanager.com/gtag/js"][src*="id=${GTAG_ID}"]`,
@@ -266,10 +272,10 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
 
   test('(b) a visitor who has given no consent loads nothing and is not reloaded', async ({ page }) => {
     await installPageRecorder(page)
-    await installRoutes(page)
+    const interceptions = await installRoutes(page)
 
     await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
-    await waitForSiteInitialization(page)
+    await waitForSiteInitialization(page, interceptions)
     await page.waitForLoadState('networkidle')
 
     await expect(googleScripts(page)).toHaveCount(0)
@@ -286,10 +292,10 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
     ])
 
     await installPageRecorder(page)
-    await installRoutes(page)
+    const interceptions = await installRoutes(page)
 
     await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
-    await waitForSiteInitialization(page)
+    await waitForSiteInitialization(page, interceptions)
     await page.waitForLoadState('networkidle')
 
     await expect(googleScripts(page)).toHaveCount(0)
@@ -300,10 +306,10 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
     await seedConsentCookies(context, E2E_BASE_URL)
     await seedGoogleCookies(context)
     await installPageRecorder(page)
-    await installRoutes(page)
+    const interceptions = await installRoutes(page)
 
     await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
-    await waitForSiteInitialization(page)
+    await waitForSiteInitialization(page, interceptions)
 
     await expect(googleScripts(page).first()).toBeAttached({ timeout: 20000 })
 
@@ -337,10 +343,10 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
   test('(d) the switch off loads nothing even with consent and configured IDs', async ({ context, page }) => {
     await seedConsentCookies(context, E2E_BASE_URL)
     await installPageRecorder(page)
-    await installRoutes(page, { enabled: false })
+    const interceptions = await installRoutes(page, { enabled: false })
 
     await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
-    await waitForSiteInitialization(page)
+    await waitForSiteInitialization(page, interceptions)
     await page.waitForLoadState('networkidle')
 
     await expect(googleScripts(page)).toHaveCount(0)
@@ -357,10 +363,10 @@ test.describe('BL-1015: the Drupal switch is the only control', () => {
     test(`a ${label} switch value loads nothing`, async ({ context, page }) => {
       await seedConsentCookies(context, E2E_BASE_URL)
       await installPageRecorder(page)
-      await installRoutes(page, { enabled })
+      const interceptions = await installRoutes(page, { enabled })
 
       await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
-      await waitForSiteInitialization(page)
+      await waitForSiteInitialization(page, interceptions)
       await page.waitForLoadState('networkidle')
 
       await expect(googleScripts(page)).toHaveCount(0)
@@ -371,10 +377,10 @@ test.describe('BL-1015: the Drupal switch is the only control', () => {
   test('the switch on is sufficient: tags load on the ordinary dev host', async ({ context, page }) => {
     await seedConsentCookies(context, E2E_BASE_URL)
     await installPageRecorder(page)
-    await installRoutes(page, { enabled: true })
+    const interceptions = await installRoutes(page, { enabled: true })
 
     await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
-    await waitForSiteInitialization(page)
+    await waitForSiteInitialization(page, interceptions)
 
     await expect(googleScripts(page)).toHaveCount(2)
     expect(countConfigCalls(await readDataLayer(page), GTAG_ID)).toBe(1)
@@ -385,13 +391,14 @@ test.describe('BL-1015: the Drupal switch is the only control', () => {
       const overrides: ContextOverrides = { enabled: true }
       await seedConsentCookies(context, E2E_BASE_URL)
       await installPageRecorder(page)
-      await installRoutes(page, overrides)
+      const interceptions = await installRoutes(page, overrides)
 
       await page.goto(`${E2E_BASE_URL}${HOME_PATH}`)
-      await waitForSiteInitialization(page)
+      await waitForSiteInitialization(page, interceptions)
       await expect(googleScripts(page)).toHaveCount(2)
       const scriptsBefore = await googleScripts(page).elementHandles()
 
+      const beforeSwitchOff = interceptions()
       overrides.enabled = enabled
       // Use the real site plugin's locale-refetch path, retaining the same hydrated store.
       await page.evaluate(async () => {
@@ -399,6 +406,7 @@ test.describe('BL-1015: the Drupal switch is the only control', () => {
         if (!nuxt) throw new Error('Nuxt is not initialized')
         await nuxt.callHook('i18n:beforeLocaleSwitch', { oldLocale: 'en', newLocale: 'fr' })
       })
+      expect(interceptions()).toBeGreaterThan(beforeSwitchOff)
 
       await expect.poll(() => page.evaluate(id => (
         (window as unknown as Record<string, unknown>)[`ga-disable-${id}`]
@@ -407,12 +415,14 @@ test.describe('BL-1015: the Drupal switch is the only control', () => {
         analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
       }])
 
+      const beforeSwitchOn = interceptions()
       overrides.enabled = true
       await page.evaluate(async () => {
         const nuxt = (document.querySelector('#__nuxt') as NuxtRoot | null)?.__vue_app__?.$nuxt
         if (!nuxt) throw new Error('Nuxt is not initialized')
         await nuxt.callHook('i18n:beforeLocaleSwitch', { oldLocale: 'fr', newLocale: 'en' })
       })
+      expect(interceptions()).toBeGreaterThan(beforeSwitchOn)
 
       for (const id of [GTAG_ID, LEGACY_ID]) {
         await expect.poll(() => page.evaluate(tagId => (
