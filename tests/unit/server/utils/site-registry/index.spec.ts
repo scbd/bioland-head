@@ -561,6 +561,21 @@ describe('writeLastKnownGoodSettings', () => {
     expect(params).toEqual(['{"googleAnalyticsIds":"G-FAKE"}', 'prod', 'bl2', 'be'])
   })
 
+  // site_config.updated_at is ON UPDATE CURRENT_TIMESTAMP and documented as the
+  // re-seed timestamp. Assigning it its own value suppresses that auto-update,
+  // so compose-rate cache writes cannot make a stale row look freshly seeded.
+  it('preserves the re-seed timestamp instead of letting ON UPDATE stamp it', async () => {
+    driverReturns({ affectedRows: 1 })
+
+    await writeLastKnownGoodSettings('prod', 'bl2', 'be', { googleAnalyticsIds: 'G-FAKE' })
+
+    const [sql] = dbQuery.mock.calls[0]
+    expect(sql).toMatch(/updated_at\s*=\s*updated_at/)
+    // and the cache keeps its own timestamp column
+    expect(sql).toMatch(/last_known_good_at\s*=\s*CURRENT_TIMESTAMP/)
+    expect(sql).not.toMatch(/updated_at\s*=\s*CURRENT_TIMESTAMP/)
+  })
+
   it('throws when the site row does not exist, rather than silently writing nothing', async () => {
     driverReturns({ affectedRows: 0 })
 

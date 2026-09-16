@@ -561,6 +561,12 @@ export async function readConfigGeneration(
  *
  * Inherits the shared pool's 30s `acquireTimeout` (C13 — see the module JSDoc).
  *
+ * **Cache writes are not re-seeds.** The statement pins `updated_at` to its own
+ * value so the column's `ON UPDATE CURRENT_TIMESTAMP` does not fire: `updated_at`
+ * records when the row was last re-seeded (schema.sql), and compose-rate cache
+ * traffic must not overwrite that audit value. `last_known_good_at` is the
+ * cache's own timestamp.
+ *
  * **Objects only.** `doc` is typed `unknown`, and `readLastKnownGoodSettings`
  * runs whatever is stored through `parseObjectColumn`. A `null`, an array or a
  * primitive would therefore write successfully and then be unreadable on every
@@ -627,8 +633,18 @@ export async function writeLastKnownGoodSettings(
 
   const result = await execute(
     'writeLastKnownGoodSettings',
+    // `updated_at` is declared ON UPDATE CURRENT_TIMESTAMP, and schema.sql
+    // documents it as "when the row was last re-seeded". Without the explicit
+    // self-assignment below, every cache write here would also stamp it, so
+    // ordinary compose traffic would make a row that has not been re-seeded in
+    // months look freshly seeded and blind the p02-06 drift check. MariaDB
+    // skips the ON UPDATE clause for any column the statement assigns, so
+    // `updated_at = updated_at` preserves the re-seed audit value.
+    // `last_known_good_at` remains the cache's own timestamp.
     `UPDATE ${SITE_TABLE}
-        SET last_known_good_settings = ?, last_known_good_at = CURRENT_TIMESTAMP
+        SET last_known_good_settings = ?,
+            last_known_good_at = CURRENT_TIMESTAMP,
+            updated_at = updated_at
       WHERE env = ? AND multi_site_code = ? AND site_code = ?`,
     [serialised, env, multiSiteCode, siteCode],
   ) as unknown as { affectedRows?: number | bigint }
