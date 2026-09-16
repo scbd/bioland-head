@@ -2,6 +2,10 @@
 
 export const useContentTypeMenus = async (ctx, bypassMultiplier = true) => {
     try {
+        // Once per call, not once per process: this replaces a warn that fired for every content
+        // type in the menu, so a misconfigured site still logs on each uncached mega-menu request.
+        // That is the intended trade -- the log is how the misconfiguration gets noticed -- but do
+        // not read it as a one-shot.
         if (!ctx.biolandSettings?.megaMenu?.contentTypeMenus) {
             consola.warn(
                 'useContentTypeMenus - missing biolandSettings.megaMenu.contentTypeMenus; check DMSM runTime.biolandSettings, using default length of 6',
