@@ -270,6 +270,42 @@ describe('classification is default-deny', () => {
     ).toBe('failing')
   })
 
+  it('fails a nested `generated` leaf — the envelope timestamp is never compared', () => {
+    expect(
+      classifyDifference({
+        path: 'biolandSettings.config.generated',
+        kind: 'value-mismatch',
+        dmsm: 'a',
+        registry: 'b',
+      }),
+    ).toEqual({ classification: 'failing', rule: 'default-deny' })
+
+    expect(
+      classifyDifference({ path: 'biolandSettings.generated', kind: 'missing-on-registry' }),
+    ).toEqual({ classification: 'failing', rule: 'default-deny' })
+  })
+
+  it('does not let a `generated` leaf launder a site to parity end to end', async () => {
+    const source = await sourceFor(['alpha'], ['alpha'], {
+      alpha: {
+        dmsm: dmsmSite({
+          runTime: {
+            ...dmsmSite().runTime,
+            biolandSettings: { googleAnalyticsIds: 'G-AAAA1111', config: { generated: 'one' } },
+          },
+        }),
+        composed: composed({
+          biolandSettings: { googleAnalyticsIds: 'G-AAAA1111', config: { generated: 'two' } },
+        }),
+      },
+    })
+    const result = await run([...SLICE, '--source', source])
+
+    expect(result.summary.verdict).toBe('FAIL')
+    expect(result.code).toBe(EXIT_FAILING)
+    expect(Object.keys(result.summary.failing).join(' ')).toContain('default-deny')
+  })
+
   it('allows the Drupal document additions dmsm cannot see', () => {
     expect(
       classifyDifference({ path: 'biolandSettings.systemSite.name', kind: 'extra-on-registry' })

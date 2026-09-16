@@ -264,11 +264,19 @@ const ALLOW_RULES = [
       d.kind === 'extra-on-registry' &&
       /^biolandSettings\.(systemSite|systemDate)(\.|\[|$)/.test(d.path),
   },
-  {
-    id: 'generated-timestamp',
-    // "`generated` timestamp — per-response."
-    match: d => /(^|\.)generated$/.test(d.path),
-  },
+  // The spec's "`generated` timestamp — per-response" row has NO rule here, deliberately.
+  //
+  // That timestamp lives on the dmsm response ENVELOPE, and the envelope is not part of what this
+  // module compares: `run()` hands the composition side only `publicConfig` and `biolandSettings`,
+  // and `canonicalizeDmsm` keeps only PUBLIC_SITE_CONFIG_KEYS plus theme/derivedCountries/
+  // biolandSettings. So the row is handled structurally — the field never reaches a difference.
+  //
+  // A rule matching `/(^|\.)generated$/` at any depth and any kind therefore whitelisted something
+  // else entirely: an editor-authored leaf such as `biolandSettings.config.generated` differing,
+  // missing or type-changed was classified `allowed` and could produce a false parity result. Such
+  // a leaf now falls to default-deny, which is the direction this script is built to resolve
+  // toward. Restore a rule here only if the envelope is ever actually compared, and pin it to the
+  // exact canonical path and kind then.
   {
     id: 'theme-owned-by-bioland-settings',
     // "`theme` differs on a site with a saved `bioland.settings.theme` — plan decision 8."
