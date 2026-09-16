@@ -613,6 +613,74 @@ describe('transaction', () => {
   })
 })
 
+describe('joining a caller-owned transaction', () => {
+  /** The same slice with its first site dropped — the prune's reason to exist. */
+  const planWithoutBe = () => ({ ...plan(), sites: plan().sites.slice(1) })
+  const incompletePlan = () =>
+    buildSeedPlan('stg', 'bl2', parseSeedSource(SOURCE_INCOMPLETE_SITE, '/synthetic/stg.json5'))
+
+  it('issues no transaction statements of its own when the caller owns one', async () => {
+    // MariaDB has no nested transactions: a START TRANSACTION here would commit
+    // the caller's, and the COMMIT would commit the seed for good — silently
+    // disarming the caller's rollback.
+    const db = fakeDb()
+    await db.query('START TRANSACTION')
+    await seedSlice(db, plan(), { ownsTransaction: false })
+
+    expect(db.calls.map(call => call.sql.split(' ').slice(0, 2).join(' '))).toEqual([
+      'START TRANSACTION', 'INSERT INTO', 'INSERT INTO', 'INSERT INTO', 'DELETE FROM',
+    ])
+    // Nothing is durable until the caller says so.
+    expect(db.rows.size).toBe(0)
+
+    await db.query('COMMIT')
+    expect(db.rows.size).toBe(3)
+  })
+
+  it('still prunes, last, inside the caller transaction', async () => {
+    const db = fakeDb()
+    await db.query('START TRANSACTION')
+    await seedSlice(db, plan(), { ownsTransaction: false })
+    await db.query('COMMIT')
+
+    await db.query('START TRANSACTION')
+    const result = await seedSlice(db, planWithoutBe(), { ownsTransaction: false })
+    // The prune is reported, but is not durable before the caller commits.
+    expect(result.sitesRemoved).toBe(1)
+    expect(db.rows.has('site_registry.site_config|stg|bl2|be')).toBe(true)
+
+    await db.query('COMMIT')
+    expect(db.rows.has('site_registry.site_config|stg|bl2|be')).toBe(false)
+  })
+
+  it('leaves the rollback to the caller when a write fails', async () => {
+    const db = fakeDb()
+    const good = plan()
+    const failing = {
+      ...good,
+      sites: [good.sites[0], { ...good.sites[1], siteCode: null as unknown as string }],
+    }
+
+    await db.query('START TRANSACTION')
+    await expect(seedSlice(db, failing, { ownsTransaction: false }))
+      .rejects.toBeInstanceOf(RegistrySeedWriteError)
+
+    // Unwinding from here would discard whatever the caller wrote before it
+    // handed the connection over.
+    expect(db.calls.some(call => call.sql === 'ROLLBACK')).toBe(false)
+  })
+
+  it('keeps its preflight validation ahead of any write', async () => {
+    const db = fakeDb()
+    await db.query('START TRANSACTION')
+
+    await expect(seedSlice(db, incompletePlan(), { ownsTransaction: false }))
+      .rejects.toBeInstanceOf(RegistrySeedIncompleteSiteError)
+
+    expect(inserts(db)).toHaveLength(0)
+  })
+})
+
 describe('reconciling rows the source dropped', () => {
   /** The same file with `be` removed — a site deleted, renamed or moved away. */
   const SOURCE_WITHOUT_BE = SOURCE.replace(
