@@ -69,3 +69,138 @@ SELECT
 FROM i18n_cache
 GROUP BY source_locale, target_locale
 ORDER BY total_translations DESC;
+
+-- ---------------------------------------------------------------------------
+-- Site configuration registry (BL-981, plan task p02-01)
+-- ---------------------------------------------------------------------------
+-- Lives in its own `site_registry` database on the SAME server as `i18n_cache`
+-- (ADR 0008). Reads go over the existing shared pool using cross-database
+-- qualified names, so there are no new credentials and no second pool: the
+-- registry only needs one additional grant on `site_registry.*` for the
+-- existing `I18N_DB_USER`.
+--
+-- WHAT MUST NEVER BE STORED HERE
+-- ------------------------------
+-- There is deliberately NO column for `dataBase`, `dns`, `drupal`,
+-- `defaultSmtpCredentials`, `panoramaKey`, or `meta` at either level, and none
+-- may ever be added. `dataBase` / `drupal` / `defaultSmtpCredentials` carry
+-- live credentials; `panoramaKey` is an API key; `dns` carries hosted-zone
+-- identifiers; `meta` holds `{email, uid}` for staff and is a PII leak. A
+-- column that cannot hold a secret cannot leak one -- that is a stronger
+-- guarantee than any read-time filter, so the absence is the control. If a
+-- future task believes it needs one of these, the answer is no: fetch it from
+-- its own source at the point of use instead.
+--
+-- Nested public data (`theme`, `locales`, `countries`, `hide_home_page_widgets`,
+-- `last_known_good_settings`) is stored in JSON columns because it mirrors the
+-- source document shape exactly and survives upstream shape changes without a
+-- migration. Everything `listSites` filters, orders or keys on is a real scalar
+-- column, so the JSON is never in a WHERE clause.
+--
+-- Every statement below is idempotent: re-running this file is a no-op.
+
+CREATE DATABASE IF NOT EXISTS site_registry
+  DEFAULT CHARACTER SET utf8mb4
+  DEFAULT COLLATE utf8mb4_unicode_ci;
+
+-- MultiSite-level configuration: one row per (env, multiSiteCode) deployment
+-- slice. Carries the multiSite DEFAULT theme, which `readSite` merges underneath
+-- any per-site override.
+CREATE TABLE IF NOT EXISTS site_registry.multi_site_config (
+  env VARCHAR(16) NOT NULL COMMENT 'Deployment environment slice (dev, stg, prod)',
+  multi_site_code VARCHAR(64) NOT NULL COMMENT 'MultiSite network code (e.g. bl2, bsl)',
+
+  default_locale VARCHAR(16) NULL COMMENT 'Network default locale code',
+  locales JSON NULL COMMENT 'JSON array of locale codes offered network-wide',
+  countries JSON NULL COMMENT 'JSON array of ISO country codes covered by the network',
+  theme JSON NULL COMMENT 'MultiSite DEFAULT theme object (color, backGround, hero, text, megaMenu, homePageWidgets, i18n); per-site theme overrides it in readSite',
+  settings JSON NULL COMMENT 'MultiSite settings object; absent in every observed source file today, modelled for parity',
+  i18n JSON NULL COMMENT 'MultiSite-level i18n OBJECT ({maxLangBeforeWrap}). Distinct from the site-level i18n BOOLEAN in site_config.i18n_enabled -- the wire names collide, the columns must not',
+
+  config_generation BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Monotonic counter bumped by the re-seeder (p02-06). Written there, never here',
+  source_hash CHAR(64) NULL COMMENT 'Hash of the upstream source document, used by the drift check (p02-06) as its comparison key',
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'When the row was first seeded',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When the row was last re-seeded',
+
+  PRIMARY KEY (env, multi_site_code)
+
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci
+  COMMENT='MultiSite-level site configuration. No secret-bearing column exists or may be added';
+
+-- Site-level configuration: one row per (env, multiSiteCode, siteCode).
+CREATE TABLE IF NOT EXISTS site_registry.site_config (
+  env VARCHAR(16) NOT NULL COMMENT 'Deployment environment slice (dev, stg, prod)',
+  multi_site_code VARCHAR(64) NOT NULL COMMENT 'MultiSite network code this site belongs to',
+  site_code VARCHAR(64) NOT NULL COMMENT 'Site code, unique within (env, multi_site_code)',
+
+  name VARCHAR(255) NULL COMMENT 'Human-readable site name',
+  description TEXT NULL COMMENT 'Free-text site description',
+  host VARCHAR(255) NULL COMMENT 'Canonical site host, without protocol',
+  redirect VARCHAR(255) NULL COMMENT 'Redirect host; drives localizedHost and the Drupal JSON:API base URL',
+  aliases JSON NULL COMMENT 'JSON array of additional hosts that resolve to this site',
+
+  default_locale VARCHAR(16) NOT NULL COMMENT 'Site default locale code. REQUIRED -- a row without it is malformed and readSite throws',
+  locales JSON NOT NULL COMMENT 'JSON array of locale codes this site serves. REQUIRED and must be non-empty; readSite throws otherwise',
+  i18n_enabled TINYINT(1) NULL COMMENT 'Site-level i18n BOOLEAN. Named apart from multi_site_config.i18n on purpose -- the wire key collides, the storage must not',
+
+  country VARCHAR(16) NULL COMMENT 'Primary ISO country code (absent for 3/211 observed sites)',
+  countries JSON NULL COMMENT 'JSON array of ISO country codes (absent for 41/211 observed sites)',
+  region VARCHAR(64) NULL COMMENT 'Region grouping label',
+  continent VARCHAR(64) NULL COMMENT 'Continent grouping label',
+
+  published TINYINT(1) NULL COMMENT 'Whether the site is published',
+  scbd TINYINT(1) NULL COMMENT 'Whether the site is an SCBD-operated site; groups the CHM Network listing',
+  has_bl1 VARCHAR(255) NULL COMMENT 'Raw bl1-migration marker. Mixed boolean|string upstream (145/211 sites) -- stored verbatim and normalised to a boolean on read by normalizeHasBl1, never normalised on write',
+  has_bl2 TINYINT(1) NULL COMMENT 'Whether a bl2 site exists for this code',
+  migrated TINYINT(1) NULL COMMENT 'Whether the bl1 to bl2 migration completed',
+  migrated_failed TINYINT(1) NULL COMMENT 'Whether the bl1 to bl2 migration failed',
+
+  theme JSON NULL COMMENT 'Per-site theme OVERRIDE (present in 176/211 observed sites). readSite shallow-merges it over multi_site_config.theme by top-level group',
+  hide_home_page_widgets JSON NULL COMMENT 'JSON array or object of home-page widgets suppressed for this site',
+  geo_bon_page JSON NULL COMMENT 'GeoBON page configuration, shape not pinned upstream, so stored as-is',
+
+  last_known_good_settings JSON NULL COMMENT 'Last successfully composed Drupal bioland.settings document. Written ONLY by writeLastKnownGoodSettings (p02-01), called by p02-05 on each successful compose',
+  last_known_good_at TIMESTAMP NULL DEFAULT NULL COMMENT 'When last_known_good_settings was last written',
+
+  config_generation BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Monotonic counter bumped by the re-seeder (p02-06). Written there, never here',
+  source_hash CHAR(64) NULL COMMENT 'Hash of the upstream source document, used by the drift check (p02-06) as its comparison key',
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'When the row was first seeded',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When the row was last re-seeded',
+
+  PRIMARY KEY (env, multi_site_code, site_code),
+
+  INDEX idx_slice (env, multi_site_code) COMMENT 'listSites enumerates one deployment slice',
+  INDEX idx_slice_published (env, multi_site_code, published) COMMENT 'Published-only enumeration without touching a JSON column'
+
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci
+  COMMENT='Site-level configuration. No secret-bearing column exists or may be added';
+
+-- CHM Network summary. Written and read by p02-07, which owns the row shape;
+-- this task only creates the table. Only prod reads it, and it is the one table
+-- read across deployment slices.
+CREATE TABLE IF NOT EXISTS site_registry.network_summary (
+  env VARCHAR(16) NOT NULL COMMENT 'Deployment environment slice the summarised site belongs to',
+  multi_site_code VARCHAR(64) NOT NULL COMMENT 'MultiSite network code',
+  site_code VARCHAR(64) NOT NULL COMMENT 'Site code being summarised',
+
+  name VARCHAR(255) NULL COMMENT 'Site name as shown in the CHM Network table',
+  scbd TINYINT(1) NULL COMMENT 'SCBD-operated flag; drives the CHM Network grouping',
+  published TINYINT(1) NULL COMMENT 'Published flag; drives the published / pre-published grouping',
+  base_host VARCHAR(255) NULL COMMENT 'Base host the CHM Network table links to',
+
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When this summary row was last pushed',
+
+  PRIMARY KEY (env, multi_site_code, site_code),
+
+  INDEX idx_env (env) COMMENT 'Prod reads the whole cross-env summary by env'
+
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci
+  COMMENT='CHM Network cross-deployment summary. Row shape owned by p02-07. Exactly the five published fields, never wider';
