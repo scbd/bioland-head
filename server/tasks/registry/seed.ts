@@ -13,24 +13,31 @@
  *
  * ## Invocation — read this before trying to run it in production
  *
- * On this stack `nuxi` 3.30.0 ships **no `task` command**, and Nitro does not
- * compile the tasks runtime into `.output/` even with
- * `nitro.experimental.tasks: true` — a build of this branch contains no
- * `defineTask`/`runTask` and no `registry:seed`. So today the only way to run it
- * is the dev server's task endpoint:
+ * **Corrected — an earlier version of this note was wrong.** It claimed Nitro
+ * never compiles the tasks runtime into `.output/`. That was true only of a
+ * build with no scheduled task registered: `nitro.experimental.tasks: true`
+ * alone bundles nothing, but **registering a cron entry in
+ * `nitro.scheduledTasks` pulls the tasks runtime in**, and p02-06's entry does.
+ * A current `yarn build` emits `.output/server/chunks/tasks/seed.mjs` alongside
+ * `drift-check.mjs`, bundles croner, and calls `startScheduleRunner()` from the
+ * node-server entry. So this task *does* ship, and a deployed container can run
+ * it. Do not reason about production behaviour from the old claim.
+ *
+ * What is still true: `nuxi` 3.30.0 ships **no `task` command**, so there is no
+ * ad-hoc "run it now" CLI, and nothing schedules `registry:seed` itself — it
+ * ships present but uninvoked, run either by p02-06's re-seed or by hand. During
+ * development the dev server's task endpoint is the way in:
  *
  * ```
  * yarn dev            # in one shell
  * curl -s 'http://localhost:3000/_nitro/tasks/registry:seed?env=stg&multiSiteCode=bl2&dryRun=true'
  * ```
  *
- * That is fine for the seeding and dry-run passes this task exists for, and it
- * is the right shape for p02-06, which re-invokes the seeder with `runTask()`
- * from inside Nitro. It is **not** a production ops command yet. Whoever owns
- * the OPS-1 flips needs either a Nitro upgrade that bundles tasks or a thin
- * standalone runner — which is why `createSeedConnection` takes its credentials
- * as an argument instead of reaching for `useRuntimeConfig()`: the only thing
- * such a runner would have to supply is that object.
+ * Whoever owns the OPS-1 flips therefore needs either a nuxi that exposes a task
+ * command or a thin standalone runner — which is why `createSeedConnection`
+ * takes its credentials as an argument instead of reaching for
+ * `useRuntimeConfig()`: the only thing such a runner has to supply is that
+ * object.
  *
  * `env` and `multiSiteCode` are both required and the task refuses to run
  * without them, so it cannot silently write the wrong slice. `dryRun` derives
@@ -54,18 +61,16 @@
  * @module server/tasks/registry/seed
  */
 import { readFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
 import {
+  KNOWN_ENVS,
   buildSeedPlan,
   collectFindings,
   parseSeedSource,
+  sourceFileName,
 } from '../../utils/site-registry/seed-source'
 import type { SeedFindings } from '../../utils/site-registry/seed-source'
 import { createSeedConnection, seedSlice } from '../../utils/site-registry/write'
 import { getDbConfig } from '../../utils/db/pool'
-
-/** Envs the config tree is known to carry. */
-const KNOWN_ENVS = ['dev', 'stg', 'prod']
 
 export interface SeedTaskPayload {
   env?: unknown
@@ -144,7 +149,7 @@ export default defineTask({
 
   async run({ payload }: { payload: SeedTaskPayload }) {
     const { env, multiSiteCode, configDir, dryRun } = readSeedArguments(payload ?? {})
-    const fileName = resolve(configDir, `${env}.json5`)
+    const fileName = sourceFileName(configDir, env)
 
     // A read or parse failure aborts before any connection is opened, so a
     // malformed source writes nothing at all.

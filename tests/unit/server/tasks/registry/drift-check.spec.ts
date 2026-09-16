@@ -57,14 +57,30 @@ const ENABLED_ENV = {
   DMSM_CONFIG_DIR: '/synthetic/config',
 }
 
+type FakeRow = { source_hash: string | null, config_generation: number | bigint }
+
+const CLAIM = /config_generation = config_generation \+ 1\s+WHERE env = \? AND multi_site_code = \? AND config_generation/
+const COMMIT_HASH = /^UPDATE \S+multi_site_config SET source_hash = \?/
+
 /** A connection whose responses are scripted per statement kind. */
 function fakeConnection(options: {
-  state?: { source_hash: string | null, config_generation: number | bigint } | null
+  state?: FakeRow | null
+  /** What a re-read after a lost claim sees. Defaults to the unchanged row. */
+  stateAfterClaim?: FakeRow | null
   claimed?: boolean
+  /** Rows the multiSite hash write matches. 0 means the claim is gone. */
+  commitRows?: number
   failOn?: RegExp
 } = {}) {
-  const { state = { source_hash: 'stale0000000000000000000000000000000000', config_generation: 3 }, claimed = true, failOn } = options
+  const {
+    state = { source_hash: 'stale0000000000000000000000000000000000', config_generation: 3 },
+    claimed = true,
+    commitRows = 1,
+    failOn,
+  } = options
+  const stateAfterClaim = 'stateAfterClaim' in options ? options.stateAfterClaim : state
   const statements: string[] = []
+  let claimAttempted = false
 
   const connection = {
     query: vi.fn(async (sql: string) => {
@@ -74,10 +90,15 @@ function fakeConnection(options: {
         error.code = 'ER_LOCK_WAIT_TIMEOUT'
         throw error
       }
-      if (/^SELECT/.test(sql)) return state ? [state] : []
-      if (/config_generation = config_generation \+ 1\s+WHERE env = \? AND multi_site_code = \? AND config_generation/.test(sql)) {
+      if (/^SELECT/.test(sql)) {
+        const row = claimAttempted ? stateAfterClaim : state
+        return row ? [row] : []
+      }
+      if (CLAIM.test(sql)) {
+        claimAttempted = true
         return { affectedRows: claimed ? 1 : 0 }
       }
+      if (COMMIT_HASH.test(sql)) return { affectedRows: commitRows }
       return { affectedRows: 1 }
     }),
     end: vi.fn(async () => {}),
@@ -154,6 +175,51 @@ describe('readDriftArguments', () => {
   it('validates nothing while disabled, so a misconfigured host stays quiet', () => {
     expect(readDriftArguments({}, {}).enabled).toBe(false)
   })
+
+  it.each(['true', 'TRUE ', '1', 'yes', 'on', 'enabled'])('arms the check on %j', (flag) => {
+    expect(readDriftArguments({}, { ...ENABLED_ENV, REGISTRY_DRIFT_CHECK_ENABLED: flag }).enabled).toBe(true)
+  })
+
+  it.each(['false', '0', 'no', 'off', 'disabled', '', undefined])('stays off on %j', (flag) => {
+    expect(readDriftArguments({}, { ...ENABLED_ENV, REGISTRY_DRIFT_CHECK_ENABLED: flag }).enabled).toBe(false)
+  })
+
+  it('refuses a flag value that is neither on nor off, rather than reading it as off', async () => {
+    const alert = await runDriftCheck({}, deps({
+      processEnv: { ...ENABLED_ENV, REGISTRY_DRIFT_CHECK_ENABLED: 'ture' },
+      connect: vi.fn(),
+    }))
+
+    expect(alert.outcome).toBe('misconfigured')
+    expect(alert.outcome).not.toBe('disabled')
+    expect(alert.ok).toBe(false)
+    expect(alert.failureClass).toBe('REGISTRY_DRIFT_ENABLE_FLAG_INVALID')
+  })
+
+  it('refuses a payload configDir that escapes the configured tree', () => {
+    expect(() => readDriftArguments({ configDir: '/etc' }, ENABLED_ENV))
+      .toThrow(/must resolve inside DMSM_CONFIG_DIR/)
+    expect(() => readDriftArguments({ configDir: '/synthetic/config/../../etc' }, ENABLED_ENV))
+      .toThrow(/must resolve inside DMSM_CONFIG_DIR/)
+  })
+
+  it('accepts a payload configDir that narrows the configured tree', () => {
+    expect(readDriftArguments({ configDir: '/synthetic/config/stg' }, ENABLED_ENV).configDir)
+      .toBe('/synthetic/config/stg')
+  })
+
+  it('gives each misconfiguration its own failure class', async () => {
+    const classOf = async (processEnv: Record<string, string | undefined>, payload = {}) =>
+      (await runDriftCheck(payload, deps({ processEnv, connect: vi.fn() }))).failureClass
+
+    expect(await classOf({ REGISTRY_DRIFT_CHECK_ENABLED: 'true' })).toBe('REGISTRY_DRIFT_ENV_MISSING')
+    expect(await classOf(ENABLED_ENV, { env: 'qa' })).toBe('REGISTRY_DRIFT_ENV_UNKNOWN')
+    expect(await classOf({ ...ENABLED_ENV, NUXT_PUBLIC_MULTI_SITE_CODE: undefined }))
+      .toBe('REGISTRY_DRIFT_MULTI_SITE_CODE_MISSING')
+    expect(await classOf({ ...ENABLED_ENV, DMSM_CONFIG_DIR: undefined }))
+      .toBe('REGISTRY_DRIFT_CONFIG_DIR_MISSING')
+    expect(await classOf(ENABLED_ENV, { configDir: '/etc' })).toBe('REGISTRY_DRIFT_CONFIG_DIR_ESCAPE')
+  })
 })
 
 describe('the drift key', () => {
@@ -177,6 +243,50 @@ describe('the drift key', () => {
   it('only exposes a prefix', () => {
     expect(hashPrefix(HASH)).toBe(HASH.slice(0, 12))
     expect(hashPrefix(null)).toBeNull()
+  })
+
+  it('never reports a tick as healthy when dmsm did not stamp the document', async () => {
+    // No `meta.hash` means the file was written by something other than dmsm's
+    // `writeConfig` — the shape an out-of-band edit produces. The hash still
+    // works as a drift key, but the tick is not evidence of a healthy tree.
+    const { connection } = fakeConnection({ state: { source_hash: HASH, config_generation: 7 } })
+    const alert = await runDriftCheck({}, deps({
+      readSource: async () => SOURCE_NO_META,
+      connect: async () => connection,
+    }))
+
+    expect(alert.outcome).toBe('no-drift')
+    expect(alert.hashSource).toBe('computed')
+    expect(alert.ok).toBe(false)
+
+    emitDriftAlert(alert)
+    expect(errors).toHaveLength(1)
+    expect(logs).toHaveLength(0)
+  })
+
+  it('detects a stale stamp — content changed, meta.hash did not — instead of trusting it', async () => {
+    // A hand edit on the mount or a restore that rewrote bytes but not metadata.
+    // Trusting the stamp here would hide a real publish indefinitely.
+    const stale = JSON5.stringify({ ...body, meta: { hash: dmsmHashOf({ bl2: {} }) } })
+    const connect = vi.fn()
+    const alert = await runDriftCheck({}, deps({ readSource: async () => stale, connect }))
+
+    expect(alert.outcome).toBe('stale-source-hash')
+    expect(alert.outcome).not.toBe('no-drift')
+    expect(alert.ok).toBe(false)
+    expect(alert.hashSource).toBe('meta')
+    expect(alert.computedHashPrefix).toBe(HASH.slice(0, 12))
+    expect(connect).not.toHaveBeenCalled()
+  })
+
+  it('accepts a stamp that agrees with the content it describes', async () => {
+    const { connection } = fakeConnection({ state: { source_hash: HASH, config_generation: 7 } })
+    const alert = await runDriftCheck({}, deps({ connect: async () => connection }))
+
+    expect(alert.outcome).toBe('no-drift')
+    expect(alert.hashSource).toBe('meta')
+    expect(alert.computedHashPrefix).toBeNull()
+    expect(alert.ok).toBe(true)
   })
 })
 
@@ -220,12 +330,91 @@ describe('runDriftCheck outcomes', () => {
     expect(statements.some(sql => /SET source_hash = \?/.test(sql))).toBe(false)
   })
 
-  it('does not double-seed when a concurrent run wins the claim', async () => {
-    const { connection, statements } = fakeConnection({ claimed: false })
+  it('does not double-seed when a concurrent run really won the claim', async () => {
+    // The re-read shows the racer's hash stored: the slice is current, so the
+    // loser writing nothing is the correct, healthy outcome.
+    const { connection, statements } = fakeConnection({
+      claimed: false,
+      stateAfterClaim: { source_hash: HASH, config_generation: 4 },
+    })
     const alert = await runDriftCheck({}, deps({ connect: async () => connection }))
 
     expect(alert.outcome).toBe('skipped-concurrent')
+    expect(alert.ok).toBe(true)
+    expect(alert.configGeneration).toBe(4)
     expect(statements.some(sql => /^INSERT INTO/.test(sql))).toBe(false)
+  })
+
+  it('reports claim-failed, not healthy, when a lost claim was not a lost race', async () => {
+    // Nobody stored the hash, so nothing re-seeded the slice and nothing will.
+    // Reported as healthy this would sit undetected on stdout forever.
+    const { connection, statements } = fakeConnection({ claimed: false })
+    const alert = await runDriftCheck({}, deps({ connect: async () => connection }))
+
+    expect(alert.outcome).toBe('claim-failed')
+    expect(alert.outcome).not.toBe('skipped-concurrent')
+    expect(alert.ok).toBe(false)
+    expect(statements.some(sql => /^INSERT INTO/.test(sql))).toBe(false)
+
+    emitDriftAlert(alert)
+    expect(errors).toHaveLength(1)
+    expect(logs).toHaveLength(0)
+  })
+
+  it('reports claim-failed when the slice row vanished under the claim', async () => {
+    const { connection } = fakeConnection({ claimed: false, stateAfterClaim: null })
+    const alert = await runDriftCheck({}, deps({ connect: async () => connection }))
+
+    expect(alert.outcome).toBe('claim-failed')
+    expect(alert.configGeneration).toBeNull()
+  })
+
+  it('reports reseed-uncommitted, not reseeded, when the hash write matches no row', async () => {
+    const { connection, statements } = fakeConnection({ commitRows: 0 })
+    const alert = await runDriftCheck({}, deps({ connect: async () => connection }))
+
+    expect(alert.outcome).toBe('reseed-uncommitted')
+    expect(alert.outcome).not.toBe('reseeded')
+    expect(alert.ok).toBe(false)
+    // Rolled back, so the site rows do not keep a hash the slice row never got.
+    expect(statements).toContain('ROLLBACK')
+    expect(statements).not.toContain('COMMIT')
+  })
+
+  it('commits the drift key transactionally, and writes it last', async () => {
+    const { connection, statements } = fakeConnection()
+    await runDriftCheck({}, deps({ connect: async () => connection }))
+
+    const begin = statements.indexOf('START TRANSACTION')
+    const site = statements.findIndex(sql => /^UPDATE \S+\.site_config SET config_generation/.test(sql))
+    const multi = statements.findIndex(sql => COMMIT_HASH.test(sql))
+    const commit = statements.indexOf('COMMIT')
+
+    expect(begin).toBeGreaterThanOrEqual(0)
+    expect(site).toBeGreaterThan(begin)
+    // The slice hash gates re-detection, so it must land after the site rows.
+    expect(multi).toBeGreaterThan(site)
+    expect(commit).toBeGreaterThan(multi)
+  })
+
+  it('rolls the commit back and reports reseed-failed when the hash write throws', async () => {
+    const { connection, statements } = fakeConnection({ failOn: COMMIT_HASH })
+    const alert = await runDriftCheck({}, deps({ connect: async () => connection }))
+
+    expect(alert.outcome).toBe('reseed-failed')
+    expect(alert.ok).toBe(false)
+    expect(alert.failureClass).toBe('ER_LOCK_WAIT_TIMEOUT')
+    expect(statements).toContain('ROLLBACK')
+    expect(statements).not.toContain('COMMIT')
+  })
+
+  it('reports registry-unavailable when the claim itself throws', async () => {
+    const { connection } = fakeConnection({ failOn: CLAIM })
+    const alert = await runDriftCheck({}, deps({ connect: async () => connection }))
+
+    expect(alert.outcome).toBe('registry-unavailable')
+    expect(alert.failureClass).toBe('ER_LOCK_WAIT_TIMEOUT')
+    expect(connection.end).toHaveBeenCalled()
   })
 
   it('claims only while the generation it read is still current', async () => {
@@ -297,8 +486,8 @@ describe('runDriftCheck outcomes', () => {
 describe('the alert payload', () => {
   const EXPECTED_KEYS = [
     'event', 'outcome', 'ok', 'env', 'multiSiteCode', 'hashSource',
-    'previousHashPrefix', 'currentHashPrefix', 'configGeneration', 'rows',
-    'failureClass', 'at',
+    'previousHashPrefix', 'currentHashPrefix', 'computedHashPrefix',
+    'configGeneration', 'rows', 'failureClass', 'at',
   ]
 
   it('has a fixed shape with no field a config value could occupy', async () => {
@@ -316,12 +505,31 @@ describe('the alert payload', () => {
     expect(alert.currentHashPrefix).toHaveLength(12)
   })
 
-  it('routes healthy ticks to stdout and everything else to stderr', () => {
+  it('routes quiet healthy ticks to stdout and everything else to stderr', () => {
     emitDriftAlert({ ...({} as never), event: 'config.source.drift', outcome: 'no-drift', ok: true } as never)
     emitDriftAlert({ ...({} as never), event: 'config.source.drift', outcome: 'reseed-failed', ok: false } as never)
 
     expect(logs).toHaveLength(1)
     expect(errors).toHaveLength(1)
+  })
+
+  it('never lets an unattended apply be silent — reseeded goes to stderr', async () => {
+    const alert = await runDriftCheck({}, deps({ connect: async () => fakeConnection().connection }))
+
+    expect(alert.outcome).toBe('reseeded')
+    expect(alert.ok).toBe(true)
+
+    emitDriftAlert(alert)
+    expect(errors).toHaveLength(1)
+    expect(logs).toHaveLength(0)
+  })
+
+  it('states the trust boundary in the module docs, since the alert is its only control', async () => {
+    const source = await (await import('node:fs/promises'))
+      .readFile(new URL('../../../../../server/tasks/registry/drift-check.ts', import.meta.url), 'utf8')
+
+    expect(source).toMatch(/Trust boundary/)
+    expect(source).toMatch(/auto-applies .*unattended/s)
   })
 
   it('is what the task returns and emits', async () => {

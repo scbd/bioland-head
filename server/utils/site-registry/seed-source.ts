@@ -68,9 +68,27 @@
  *
  * @module server/utils/site-registry/seed-source
  */
+import { resolve } from 'node:path'
 import JSON5 from 'json5'
 import { RegistryError } from './types'
 import type { SiteTheme } from './types'
+
+/**
+ * Envs the dmsm config tree is known to carry.
+ *
+ * Owned here, beside the parser, because every consumer that names an env is
+ * naming one of *these* documents: `registry:seed`, `registry:drift-check` and
+ * whatever follows. Two copies of this list is two answers to "is `qa` real".
+ */
+export const KNOWN_ENVS = ['dev', 'stg', 'prod']
+
+/**
+ * The on-disk name of one env's document. dmsm writes `<env>.json5` per env;
+ * this is the single place that convention is spelled out.
+ */
+export function sourceFileName(configDir: string, env: string): string {
+  return resolve(configDir, `${env}.json5`)
+}
 
 /** A parsed env document: multiSite code to its block, plus a `meta` sibling. */
 export type SeedSourceDocument = Record<string, unknown>

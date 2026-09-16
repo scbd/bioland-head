@@ -44,12 +44,9 @@
  * @module server/utils/site-registry/write
  */
 import mariadb from 'mariadb'
-import { SITE_REGISTRY_DB } from './index'
+import { MULTI_SITE_TABLE, SITE_TABLE } from './index'
 import { RegistryError } from './types'
 import type { SeedMultiSiteRecord, SeedSiteRecord } from './seed-source'
-
-const MULTI_SITE_TABLE = `${SITE_REGISTRY_DB}.multi_site_config`
-const SITE_TABLE = `${SITE_REGISTRY_DB}.site_config`
 
 /** The minimum a connection must offer. Lets tests drive the writes directly. */
 export interface SeedConnectionLike {
