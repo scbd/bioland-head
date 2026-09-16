@@ -152,8 +152,9 @@ export interface SeedFindings {
    * REQUIRED on read, so a slice listed here seeds a row `readMultiSiteConfig`
    * and every `readSite` under it will reject.
    *
-   * Reported but not refused: both columns are NULL-able in storage, so the
-   * write itself succeeds and the damage is a read-time contract failure.
+   * REFUSED by `seedSlice`, not merely reported. Both columns are NULL-able in
+   * storage, so the write itself would succeed and the damage would only show up
+   * at read time — which is precisely why the refusal has to be in code.
    */
   multiSitesMissingRequired: Record<string, number>
   /**

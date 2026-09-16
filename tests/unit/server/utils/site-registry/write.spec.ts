@@ -14,6 +14,7 @@ vi.mock('../../../../../server/utils/db/pool', () => ({
 const {
   SECRET_BEARING_KEYS,
   RegistrySeedForbiddenKeyError,
+  RegistrySeedIncompleteMultiSiteError,
   RegistrySeedIncompleteSiteError,
   RegistrySeedSliceMismatchError,
   RegistrySeedWriteError,
@@ -64,6 +65,18 @@ const SOURCE = `{
 const SOURCE_INCOMPLETE_SITE = SOURCE.replace(
   `zz: { siteCode: 'zz', name: 'Zed', defaultLocale: 'en', locales: ['en'] }`,
   `zz: { siteCode: 'zz' }`,
+)
+
+/**
+ * The same file with a slice block missing both columns `readMultiSiteConfig`
+ * requires. Storage takes NULL for either, so only a code-level refusal catches
+ * it — the sites themselves are untouched and still perfectly valid.
+ */
+const SOURCE_INCOMPLETE_MULTI_SITE = SOURCE.replace(
+  `multiSiteCode: 'bl2', name: 'Bioland 2', description: 'The bl2 network',
+      baseHost: 'example.test', defaultLocale: 'en',`,
+  `multiSiteCode: 'bl2', description: 'The bl2 network',
+      defaultLocale: 'en',`,
 )
 
 function plan() {
@@ -319,6 +332,45 @@ describe('required site fields', () => {
     const record = { ...plan().sites[1], defaultLocale: undefined }
 
     await expect(seedSiteConfig(db, record)).rejects.toBeInstanceOf(RegistrySeedIncompleteSiteError)
+    expect(db.calls).toHaveLength(0)
+  })
+
+  it('refuses a slice whose multiSite record cannot be read back', async () => {
+    const db = fakeDb()
+    const incomplete = buildSeedPlan(
+      'stg', 'bl2', parseSeedSource(SOURCE_INCOMPLETE_MULTI_SITE, '/synthetic/stg.json5'),
+    )
+
+    // Regression: the preflight validated only the sites, so this seeded a row
+    // with NULL name / base_host, reported success, and readMultiSiteConfig then
+    // rejected it as malformed — taking every readSite in the slice with it.
+    await expect(seedSlice(db, incomplete))
+      .rejects.toBeInstanceOf(RegistrySeedIncompleteMultiSiteError)
+
+    // Aborted before START TRANSACTION, exactly like the site-level refusal.
+    expect(db.calls).toHaveLength(0)
+    expect(db.rows.size).toBe(0)
+  })
+
+  it('names the multiSite and the missing fields, and no values', async () => {
+    let message = ''
+    try {
+      await seedSlice(fakeDb(), buildSeedPlan(
+        'stg', 'bl2', parseSeedSource(SOURCE_INCOMPLETE_MULTI_SITE, '/synthetic/stg.json5'),
+      ))
+    }
+    catch (error) {
+      message = (error as Error).message
+    }
+    expect(message).toContain('bl2: name, baseHost')
+    expect(message).not.toContain(DUMMY_DB_PASSWORD)
+  })
+
+  it('refuses a single incomplete multiSite record too, not only a whole plan', async () => {
+    const db = fakeDb()
+
+    await expect(seedMultiSiteConfig(db, { ...plan().multiSite, baseHost: undefined }))
+      .rejects.toBeInstanceOf(RegistrySeedIncompleteMultiSiteError)
     expect(db.calls).toHaveLength(0)
   })
 

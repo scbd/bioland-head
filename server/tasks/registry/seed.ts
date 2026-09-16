@@ -201,7 +201,7 @@ export function formatFindings(findings: SeedFindings): string[] {
     `  sites with hasBl1: ${findings.counts.sitesWithHasBl1}`,
     `  sites with logo: ${findings.counts.sitesWithLogo}`,
     `  top-level entries that are not a multiSite: ${findings.nonMultiSiteTopLevelKeys.join(', ') || '(none)'}`,
-    '  multiSites missing a column readMultiSiteConfig requires:',
+    '  multiSites missing a column readMultiSiteConfig requires (these REFUSE their slice too):',
     ...list(findings.multiSitesMissingRequired),
     '  sites missing a required field (these REFUSE the slice, they are not just reported):',
     ...list(findings.sitesMissingRequired),

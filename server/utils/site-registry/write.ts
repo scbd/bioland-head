@@ -280,6 +280,38 @@ export class RegistrySeedIncompleteSiteError extends RegistryError {
   }
 }
 
+/** Fields `readMultiSiteConfig` requires. Both are NULL-able in storage. */
+export const REQUIRED_MULTI_SITE_FIELDS = ['name', 'baseHost'] as const
+
+/**
+ * The slice record cannot satisfy the read contract.
+ *
+ * `multi_site_config.name` and `.base_host` are NULL-able in
+ * `server/assets/schema.sql` — deliberately, so the column could be added ahead
+ * of the seeder — but `readMultiSiteConfig`'s `toRequiredString` throws
+ * `RegistryRowMalformedError` on either. So a slice seeded without them reports
+ * a successful write and is then unreadable, and because `readSite` joins every
+ * site to its slice row, the whole network goes dark rather than one row.
+ * `collectFindings` already tallies this as `multiSitesMissingRequired`; it is
+ * refused here for the same reason the site-level equivalent is.
+ */
+export class RegistrySeedIncompleteMultiSiteError extends RegistryError {
+  constructor(multiSiteCode: string, missing: string[]) {
+    super(
+      'REGISTRY_SEED_MULTI_SITE_INCOMPLETE',
+      `Refusing to seed: multiSite record missing a required field — ${multiSiteCode}: ${missing.join(', ')}`,
+    )
+  }
+}
+
+/** Required fields this slice record does not carry. Field names only. */
+export function findMissingRequiredMultiSiteFields(record: SeedMultiSiteRecord): string[] {
+  const missing: string[] = []
+  if (!record.name) missing.push('name')
+  if (!record.baseHost) missing.push('baseHost')
+  return missing
+}
+
 /** Required fields this site record does not carry. Field names only. */
 export function findMissingRequiredSiteFields(record: SeedSiteRecord): string[] {
   const missing: string[] = []
@@ -340,14 +372,18 @@ async function runWrite(
  * Idempotent on `(env, multi_site_code)`. Leaves `config_generation`,
  * `source_hash` and the timestamps to their owners.
  *
- * @throws {RegistrySeedForbiddenKeyError} the record carries a non-storable key.
- * @throws {RegistrySeedWriteError}        the write failed, scrubbed of values.
+ * @throws {RegistrySeedForbiddenKeyError}      a non-storable key.
+ * @throws {RegistrySeedIncompleteMultiSiteError} the row could not be read back.
+ * @throws {RegistrySeedWriteError}             the write failed, scrubbed of values.
  */
 export async function seedMultiSiteConfig(
   connection: SeedConnectionLike,
   record: SeedMultiSiteRecord,
 ): Promise<void> {
   assertNoSecretBearingKeys(MULTI_SITE_TABLE, record)
+
+  const missing = findMissingRequiredMultiSiteFields(record)
+  if (missing.length) throw new RegistrySeedIncompleteMultiSiteError(record.multiSiteCode, missing)
 
   const key = { env: record.env, multi_site_code: record.multiSiteCode }
   await runWrite(connection, MULTI_SITE_TABLE, key, MULTI_SITE_UPSERT, [
@@ -465,6 +501,12 @@ export class RegistrySeedSliceMismatchError extends RegistryError {
  * site is therefore validated up front, so an incomplete source refuses the
  * whole slice and the operator sees which sites and which fields.
  *
+ * The slice record is validated in the same pass, not only the sites: a source
+ * block without `config.name` or `config.baseHost` binds NULL into two columns
+ * `readMultiSiteConfig` treats as required, so the seed "succeeds" and every
+ * `readSite` in the network then fails on the join. Both levels abort before
+ * `START TRANSACTION`.
+ *
  * ## Why the whole slice is one transaction
  *
  * Without one, a mid-loop failure leaves a partially seeded slice with no
@@ -474,8 +516,9 @@ export class RegistrySeedSliceMismatchError extends RegistryError {
  * makes the slice all-or-nothing; a `ROLLBACK` failure is swallowed so the
  * original error is what the caller sees.
  *
- * @throws {RegistrySeedSliceMismatchError}  a site does not belong to the slice.
- * @throws {RegistrySeedIncompleteSiteError} a site cannot satisfy the contract.
+ * @throws {RegistrySeedSliceMismatchError}       a site is not in this slice.
+ * @throws {RegistrySeedIncompleteMultiSiteError} the slice row cannot be read back.
+ * @throws {RegistrySeedIncompleteSiteError}      a site cannot satisfy the contract.
  * @returns how many rows were written.
  */
 export async function seedSlice(
@@ -488,6 +531,15 @@ export async function seedSlice(
     if (site.env !== env || site.multiSiteCode !== multiSiteCode) {
       throw new RegistrySeedSliceMismatchError({ env, multi_site_code: multiSiteCode }, site.siteCode)
     }
+  }
+
+  // Validated alongside the sites, and before `START TRANSACTION` for the same
+  // reason: `seedMultiSiteConfig` would otherwise bind SQL NULL into `name` /
+  // `base_host` — columns storage accepts and `readMultiSiteConfig` refuses — so
+  // the task would report a clean seed over a slice that is already unreadable.
+  const multiSiteMissing = findMissingRequiredMultiSiteFields(plan.multiSite)
+  if (multiSiteMissing.length) {
+    throw new RegistrySeedIncompleteMultiSiteError(multiSiteCode, multiSiteMissing)
   }
 
   const incomplete = plan.sites
