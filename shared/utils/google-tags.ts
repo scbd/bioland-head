@@ -8,11 +8,19 @@
  * tokens are admissible and whether the administrator has turned measurement on. The loader lives
  * in `app/plugins/google-tags.client.ts`.
  *
- * BL-1015 removed the deployment gate that used to sit here (`isGoogleTagsSite`, keyed on `env`,
- * `multiSiteCode`, dmsm's `published` flag and a `<siteCode>.chm-cbd.net` host template). Tags used
- * to activate on the presence of IDs, narrowed by rules no administrator could see from the admin
- * UI. The Drupal checkbox is now the only control, so no environment name appears in any GA code
- * path. Visitor consent is a separate gate and still applies, in the plugin.
+ * BL-1015 removed the deployment gate that used to sit here (`isGoogleTagsSite`). Tags activated on
+ * the presence of IDs, narrowed by rules no administrator could see from the admin UI. The Drupal
+ * checkbox is the only control now. Visitor consent is a separate gate and still applies, in the
+ * plugin.
+ *
+ * One control was traded away rather than found redundant, and the next reader should know it. The
+ * browser-host half of that gate was BL-946's answer to a specific attacker: a reverse proxy on an
+ * origin it owns, forwarding a real tenant's `Host`, so the tenant's live `G-`, `AW-`, `DC-` and
+ * `GTM-` IDs execute on that origin. That is unmitigated again, and no server-side check can
+ * replace it, because only the browser knows the origin it is really on. It asks where a site may
+ * measure, not whether, so it is severable from this module and BL-1030 tracks restoring it.
+ * `cookie_domain` is still pinned to the current hostname in the plugin, so such a page cannot link
+ * identities with the real site.
  */
 
 /**
@@ -46,12 +54,24 @@ export interface GoogleTagIds {
  *
  * The value is the Drupal `bioland.settings` key `google_analytics_enabled`, camelCased at the
  * head boundary to `googleAnalyticsEnabled`. Drupal stores it as a real boolean and ships it as
- * `false` on every site and every environment, so the comparison is strict: a string `'true'`, a
- * `1`, a missing key, or a partially hydrated store all mean off. Failing closed here is the whole
- * point of the switch - a site must measure only because somebody ticked the box.
+ * `false` on every site, so the comparison is strict: a string `'true'`, a `1`, a missing key, or a
+ * partially hydrated store all mean off. Failing closed here is the whole point of the switch - a
+ * site must measure only because somebody ticked the box.
  */
 export function isGoogleTagsEnabled(enabled?: unknown): boolean {
     return enabled === true;
+}
+
+/**
+ * True when the stored value is trying to say yes but is not the boolean `true`.
+ *
+ * Drupal does not enforce its own boolean schema on a write, so `drush config:set ... 1` stores the
+ * number and a hand-edited import can store `'true'`. {@link isGoogleTagsEnabled} rightly reads
+ * those as off, but silently: the administrator sees a ticked-looking intent and no tags, with
+ * nothing to search for. The plugin logs one warning on this so the misconfiguration is findable.
+ */
+export function isGoogleTagsMisconfigured(enabled?: unknown): boolean {
+    return enabled !== true && Boolean(enabled);
 }
 
 /**

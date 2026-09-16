@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   parseGoogleTagIds,
   isGoogleTagsEnabled,
+  isGoogleTagsMisconfigured,
   GOOGLE_TAG_ID_PATTERN,
 } from '~/shared/utils/google-tags'
 
@@ -109,5 +110,19 @@ describe('isGoogleTagsEnabled', () => {
   it('fails closed when the store has not hydrated the setting yet', () => {
     expect(isGoogleTagsEnabled()).toBe(false)
     expect(isGoogleTagsEnabled(({} as { googleAnalyticsEnabled?: boolean }).googleAnalyticsEnabled)).toBe(false)
+  })
+})
+
+describe('isGoogleTagsMisconfigured', () => {
+  it.each(['true', 'TRUE', '1', 'on', 1, [true], { enabled: true }])(
+    'flags %p, which reads as an intent to measure but loads nothing',
+    (value) => {
+      expect(isGoogleTagsMisconfigured(value)).toBe(true)
+      expect(isGoogleTagsEnabled(value)).toBe(false)
+    },
+  )
+
+  it.each([true, false, undefined, null, 0, ''])('stays quiet on %p', (value) => {
+    expect(isGoogleTagsMisconfigured(value)).toBe(false)
   })
 })

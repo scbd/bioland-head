@@ -5,9 +5,8 @@
  *
  * - **The administrator's switch**, `siteStore.biolandSettings.googleAnalyticsEnabled`, read
  *   strictly through `isGoogleTagsEnabled`. BL-1015 made this the only thing that decides whether
- *   this site measures: the deployment gate that used to sit here (`prod` only, a
- *   `<siteCode>.chm-cbd.net` host template per multisite, dmsm's `published` flag) is gone, and no
- *   environment name appears in any GA code path. Tag IDs no longer imply consent to measure.
+ *   this site measures; see `shared/utils/google-tags.ts` for the gate it replaced and what that
+ *   cost. Tag IDs no longer imply consent to measure.
  * - **Visitor consent** via `useCookieControl().cookiesEnabledIds` containing `ga`. Every consent
  *   action in the module funnels through one writer (`CookieControl.vue setCookies`), which sets
  *   `cookiesEnabledIds`, so watching that ref catches grant, per category revoke, and decline all.
@@ -150,6 +149,20 @@ export default defineNuxtPlugin({
         const { cookiesEnabledIds } = useCookieControl();
 
         const enabled = computed(() => isGoogleTagsEnabled(siteStore.biolandSettings?.googleAnalyticsEnabled));
+
+        // Once per session, not per store re-initialisation: the context re-fetch would otherwise
+        // repeat this on every locale switch.
+        let warnedMisconfigured = false;
+
+        watch(() => siteStore.biolandSettings?.googleAnalyticsEnabled, (value) => {
+            if (warnedMisconfigured || !isGoogleTagsMisconfigured(value)) return;
+
+            warnedMisconfigured = true;
+            consola.warn(
+                `Google Analytics is configured with ${typeof value} ${JSON.stringify(value)} rather than the boolean true, `
+                + 'so no tag will load. Re-save the Enable Google Analytics checkbox in Drupal under Front End > General.',
+            );
+        }, { immediate: true });
 
         const consent = computed(() => Boolean(cookiesEnabledIds.value?.includes('ga')));
         const ids = computed(() => parseGoogleTagIds(siteStore.biolandSettings?.googleAnalyticsIds));

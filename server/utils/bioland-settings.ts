@@ -34,9 +34,9 @@ import { consola } from "consola";
 
 /** Keys `bioland.settings` may expose, with the consumer that justifies each one. */
 export const BIOLAND_SETTINGS_ALLOWLIST = [
-  /** app/stores/site.js:162 -> app/utils/resolve-theme.js (site theme, every page since BL-885) */
+  /** app/stores/site.js -> app/utils/resolve-theme.js (site theme, every page since BL-885) */
   "theme",
-  /** app/stores/site.js:116 - `config.promoteAndStickyPublic` */
+  /** app/stores/site.js - `config.promoteAndStickyPublic` */
   "config",
   /** app/plugins/google-tags.client.ts - `googleAnalyticsEnabled`, the only GA switch (BL-1015) */
   "googleAnalyticsEnabled",
@@ -44,7 +44,7 @@ export const BIOLAND_SETTINGS_ALLOWLIST = [
   "googleAnalyticsIds",
   /** app/components/page/home-page-widget-selection.vue and the widget/* components */
   "homeWidgets",
-  /** app/components/page/header/mega-menu/**, server/utils/drupal/drupal-content-types.js:26 */
+  /** app/components/page/header/mega-menu/**, server/utils/drupal/drupal-content-types.js */
   "megaMenu",
 ] as const;
 

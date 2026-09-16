@@ -13,11 +13,10 @@ const ADS_ID = 'AW-123456789'
 const LEGACY_ID = 'UA-12345-6'
 const CONFIGURED_TAG_IDS = `${GTAG_ID},${GTM_ID},${ADS_ID},${LEGACY_ID},bad-id`
 
-// BL-1015 removed the deployment gate (prod-only, a `<siteCode>.chm-cbd.net` host template per
-// multisite, dmsm's `published` flag). The Drupal checkbox is the only control now, so these tests
-// run on whatever host the dev server is already bound to: no `--host-resolver-rules` mapping, no
-// alias host, and no environment name anywhere. The only conditions that vary are the switch, the
-// visitor's consent, and the configured tag IDs.
+// BL-1015 removed the deployment gate, so no host or deployment can gate a tag any more. These
+// tests therefore run on whatever host the dev server is already bound to, with no
+// `--host-resolver-rules` mapping and no alias host. The only conditions that vary are the switch,
+// the visitor's consent, and the configured tag IDs.
 
 interface ContextOverrides {
   /** `bioland.settings.google_analytics_enabled`. Deliberately accepts malformed API values. */
@@ -191,7 +190,7 @@ test.describe('BL-933: Google tags follow analytics consent', () => {
 
   test.setTimeout(60000)
 
-  test('(a) consent granted on an eligible site loads each tag exactly once', async ({ context, page }) => {
+  test('(a) consent granted with the switch on loads each tag exactly once', async ({ context, page }) => {
     await seedConsentCookies(context, E2E_BASE_URL)
     await installPageRecorder(page)
     await installRoutes(page)

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { computed, effectScope, nextTick, reactive, ref, watch } from 'vue'
-import { isGoogleTagsEnabled, parseGoogleTagIds } from '../../../../shared/utils/google-tags'
+import { isGoogleTagsEnabled, isGoogleTagsMisconfigured, parseGoogleTagIds } from '../../../../shared/utils/google-tags'
 
 const GTAG_IDS = ['G-TEST1234567', 'UA-12345-6', 'AW-123456789']
 const GTM_ID = 'GTM-TEST123'
@@ -14,13 +14,17 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-async function setupTags (tagIds = [...GTAG_IDS, GTM_ID].join(','), { enabled }: { enabled?: unknown } = { enabled: true }) {
+async function setupTags (
+  tagIds = [...GTAG_IDS, GTM_ID].join(','),
+  { enabled, noSettings = false }: { enabled?: unknown, noSettings?: boolean } = { enabled: true },
+) {
+  // No env, multisite or publication here on purpose: the plugin reads none of them since
+  // BL-1015. `location.hostname` below still matters - `cookie_domain` is pinned to it.
   const site = reactive({
-    env: 'prod', multiSiteCode: 'bl2', siteCode: 'seed',
-    config: { published: true } as { published?: boolean },
-    biolandSettings: {
+    siteCode: 'seed',
+    biolandSettings: (noSettings ? undefined : {
       googleAnalyticsEnabled: enabled, googleAnalyticsIds: tagIds,
-    } as { googleAnalyticsEnabled?: unknown, googleAnalyticsIds?: string },
+    }) as { googleAnalyticsEnabled?: unknown, googleAnalyticsIds?: string } | undefined,
   })
   const cookiesEnabledIds = ref(['ga'])
   const gtag = vi.fn()
@@ -29,7 +33,10 @@ async function setupTags (tagIds = [...GTAG_IDS, GTM_ID].join(','), { enabled }:
     location: { hostname: 'seed.chm-cbd.net', reload }, gtag,
   }
   const loadGtm = vi.fn()
+  const warn = vi.fn()
   const globals = {
+    consola: { warn },
+    isGoogleTagsMisconfigured,
     defineNuxtPlugin: (plugin: unknown) => plugin,
     useSiteStore: () => site,
     useCookieControl: () => ({ cookiesEnabledIds }),
@@ -46,7 +53,7 @@ async function setupTags (tagIds = [...GTAG_IDS, GTM_ID].join(','), { enabled }:
     $pinia: {}, runWithContext: <T>(fn: () => T) => fn(),
   } as unknown as Parameters<NonNullable<typeof plugin.setup>>[0]
   scope.run(() => plugin.setup!(nuxtApp))
-  return { site, cookiesEnabledIds, gtag, reload, win, loadGtm }
+  return { site, cookiesEnabledIds, gtag, reload, win, loadGtm, warn }
 }
 
 describe('the Drupal switch is the only control', () => {
@@ -62,10 +69,6 @@ describe('the Drupal switch is the only control', () => {
 
   it('loads the configured tags as soon as the switch is on, with no host or env condition', async () => {
     const { site, gtag, loadGtm } = await setupTags(undefined, { enabled: false })
-    // A host and deployment the old gate would have refused outright.
-    site.env = 'dev'
-    site.multiSiteCode = 'notbl2'
-    site.config = {}
 
     site.biolandSettings = { ...site.biolandSettings, googleAnalyticsEnabled: true }
     await nextTick()
@@ -74,6 +77,27 @@ describe('the Drupal switch is the only control', () => {
       expect(gtag.mock.calls.filter(([command, tagId]) => command === 'config' && tagId === id)).toHaveLength(1)
     }
     expect(loadGtm).toHaveBeenCalledOnce()
+  })
+})
+
+describe('a switch value that is not the boolean true', () => {
+  it.each(['true', 1, 'on'])('warns once that %p will load nothing', async (enabled) => {
+    const { site, warn } = await setupTags(undefined, { enabled })
+
+    expect(warn).toHaveBeenCalledOnce()
+    expect(String(warn.mock.calls[0]![0])).toContain('rather than the boolean true')
+
+    // A locale switch re-initialises the store; the warning must not repeat.
+    site.biolandSettings = { ...site.biolandSettings, googleAnalyticsEnabled: enabled }
+    await nextTick()
+
+    expect(warn).toHaveBeenCalledOnce()
+  })
+
+  it.each([false, undefined, null, 0, ''])('stays quiet on %p, which is an ordinary off', async (enabled) => {
+    const { warn } = await setupTags(undefined, { enabled })
+
+    expect(warn).not.toHaveBeenCalled()
   })
 })
 
@@ -133,6 +157,42 @@ describe('Google tags switch recovery', () => {
     expect(gtag).toHaveBeenLastCalledWith('consent', 'update', {
       analytics_storage: 'denied', ...DENIED_AD_CONSENT,
     })
+  })
+
+  it('silences and resumes when the whole settings bag goes away mid-session', async () => {
+    // A locale switch re-initialises the store, and app/stores/site.js replaces the settings
+    // snapshot rather than merging it, so a context payload carrying none leaves none. The
+    // switch and the IDs now share that one source, so they vanish together.
+    const { site, gtag, reload, win, loadGtm } = await setupTags()
+    const settings = site.biolandSettings
+
+    site.biolandSettings = undefined
+    await nextTick()
+
+    expect(win['ga-disable-G-TEST1234567']).toBe(true)
+    expect(gtag).toHaveBeenLastCalledWith('consent', 'update', {
+      analytics_storage: 'denied', ...DENIED_AD_CONSENT,
+    })
+
+    site.biolandSettings = { ...settings }
+    await nextTick()
+
+    expect(win['ga-disable-G-TEST1234567']).toBe(false)
+    for (const id of GTAG_IDS) {
+      expect(gtag.mock.calls.filter(([command, tagId]) => command === 'config' && tagId === id)).toHaveLength(1)
+    }
+    expect(loadGtm).toHaveBeenCalledOnce()
+    // Losing the settings is not a consent withdrawal.
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  it('loads nothing when the store never hydrates any settings at all', async () => {
+    // A partially hydrated store must fail closed at the plugin, not just at the util.
+    const { gtag, loadGtm, warn } = await setupTags(undefined, { noSettings: true })
+
+    expect(loadGtm).not.toHaveBeenCalled()
+    expect(gtag.mock.calls.filter(([command]) => command === 'config')).toEqual([])
+    expect(warn).not.toHaveBeenCalled()
   })
 
   it('purges cookies and reloads when consent is revoked while switched off', async () => {
