@@ -615,7 +615,60 @@ describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
         })
     })
 
-    describe('hero — derived only when absent from every source', () => {
+    describe('hero — Drupal colors override inherited palette slots', () => {
+
+        it('uses the saved Drupal primary over the legacy Belgium hero primary', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), { color: { primary: '#06dbad' } })
+
+            expect(theme.hero.primary).toEqual(['#06dbad', '#CBB279'])
+        })
+
+        it('uses both Drupal colors over an inherited site hero', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), {
+                color: { primary: '#06dbad', secondary: '#889262' }
+            })
+
+            expect(theme.hero.primary).toEqual(['#06dbad', '#889262'])
+        })
+
+        it('changes only the secondary hero slot when only secondary is authored', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), { color: { secondary: '#abcdef' } })
+
+            expect(theme.hero.primary).toEqual(['#7b6f82', '#abcdef'])
+        })
+
+        it('uses Drupal colors over an inherited network hero', () => {
+            const theme = resolveTheme(siteConfig, { color: { primary: '#06dbad' } })
+
+            expect(theme.hero.primary).toEqual(['#06dbad', '#16c56e'])
+        })
+
+        it('ignores inherited color groups and leaves when overriding the hero', () => {
+            for (const authored of [
+                Object.create({ color: { primary: '#06dbad' } }),
+                { color: Object.create({ primary: '#06dbad' }) }
+            ]) {
+                expect(resolveTheme(withRunTime(networkTheme, beTheme), authored).hero.primary)
+                    .toEqual(['#7b6f82', '#CBB279'])
+            }
+        })
+
+        it('does not let an inherited hero suppress an own Drupal color', () => {
+            const authored = Object.assign(Object.create({ hero: { primary: ['#111111', '#222222'] } }), {
+                color: { primary: '#06dbad' }
+            })
+
+            expect(resolveTheme(withRunTime(networkTheme, beTheme), authored).hero.primary)
+                .toEqual(['#06dbad', '#CBB279'])
+        })
+
+        it.each([undefined, {}, { color: { primary: ' ', secondary: null } }])(
+            'keeps the legacy palette when Drupal supplies no usable colors: %j',
+            authored => {
+                expect(resolveTheme(withRunTime(networkTheme, beTheme), authored).hero.primary)
+                    .toEqual(['#7b6f82', '#CBB279'])
+            }
+        )
 
         it('derives from the AUTHORED colors when no leg authors a hero', () => {
             const config = { runTime: { theme: { color: networkTheme.color } } }

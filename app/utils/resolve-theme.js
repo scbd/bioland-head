@@ -79,11 +79,12 @@
  *
  * ## Hero rule
  *
- * `hero.primary` is *derived* as `[color.primary, color.secondary]` ONLY when it is absent from
- * every leg. An authored hero passes through untouched: live prod site `be` carries
- * `hero.primary[1] = "#CBB279"`, which is not its `color.secondary`, so an always-derive rule
- * would visibly change that site. A partially authored hero keeps its authored slots and has only
- * the missing slots filled from the derived pair. An authored slot that is present but not a usable
+ * Without a Drupal `hero.primary`, each usable Drupal color overrides the corresponding inherited
+ * hero slot. The Theme form exposes colors but no hero fields, so keeping the legacy hero palette
+ * would hide saved color changes. Unauthored slots retain the legacy palette, including Belgium's
+ * custom secondary `#CBB279`. An explicit Drupal hero still wins over Drupal colors.
+ * A partially authored hero keeps its authored slots and has only the missing slots filled from
+ * the resolved color pair. An authored slot that is present but not a usable
  * colour string (number, object, `''`, …) is treated like a missing slot: `hero-image.vue` and
  * `cards/media/hero.vue` call `.replace` on each entry, so a non-string would throw during render.
  *
@@ -315,17 +316,22 @@ const resolveOpaqueGroup = (legs, group) => {
 };
 
 /**
- * Derive-when-absent hero. Fills only the slots no leg authored with a usable colour string.
- * A present-but-unusable slot (e.g. `42`) falls through to the derived colour for that index —
- * the hero consumers call `.replace` on each entry, so a non-string is a render crash.
+ * Drupal colors replace inherited hero slots unless Drupal supplies its own hero palette.
+ * Missing or unusable slots derive from resolved colors so hero consumers can safely use them.
  * @param {Array|undefined} authored - the merged `hero.primary`, if any leg supplied one.
  * @param {object} color - the resolved color group.
+ * @param {object|undefined} authoredTheme - the validated Drupal theme.
  */
-const resolveHeroPrimary = (authored, color) => {
-    const derived = [color.primary, color.secondary];
-    const source  = Array.isArray(authored) ? authored : [];
+const resolveHeroPrimary = (authored, color, authoredTheme) => {
+    const source = Array.isArray(authored) ? authored : [];
+    const authoredLeg = authoredTheme ? [authoredTheme] : [];
+    const inheritsHero = !isPresent(resolveLeaf(authoredLeg, 'hero', 'primary'));
 
-    return [0, 1].map(i => (isUsableColor(source[i]) ? source[i] : derived[i]));
+    return ['primary', 'secondary'].map((key, i) => {
+        const override = inheritsHero ? resolveLeaf(authoredLeg, 'color', key) : undefined;
+
+        return override ?? (isUsableColor(source[i]) ? source[i] : color[key]);
+    });
 };
 
 const MAX_AUTHORED_THEME_DEPTH = 64;
@@ -377,8 +383,8 @@ export function resolveTheme(config, authoredTheme) {
         resolved[group] = Object.fromEntries(leaves.map(leaf => [leaf, resolveLeaf(legs, group, leaf)]));
     }
 
-    // Hero is the one group with a derivation rule rather than a plain default.
-    resolved.hero.primary = resolveHeroPrimary(resolved.hero.primary, resolved.color);
+    // Hero also follows Drupal colors when its own palette has not been explicitly authored there.
+    resolved.hero.primary = resolveHeroPrimary(resolved.hero.primary, resolved.color, authored);
 
     return resolved;
 }
