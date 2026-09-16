@@ -293,6 +293,13 @@ describe('ingest validation', () => {
     expect(() => parseNetworkSummaryPayload(validPayload({ sites }))).toThrow(/exceeds 2000 entries/)
   })
 
+  it('rejects a site entry that is not an object at all', () => {
+    expect(() => parseNetworkSummaryPayload(validPayload({ sites: ['be'] })))
+      .toThrow(/body\.sites\[0\] — expected an object/)
+    expect(() => parseNetworkSummaryPayload(validPayload({ sites: [null] })))
+      .toThrow(NetworkSummaryInvalidError)
+  })
+
   it('rejects a duplicate site code', () => {
     const site = { siteCode: 'be', name: 'Belgium', scbd: false, published: true }
     expect(() => parseNetworkSummaryPayload(validPayload({ sites: [site, { ...site }] })))
@@ -764,6 +771,34 @@ function findLeak(payload: unknown): string | null {
 function assertNoLeak(payload: unknown) {
   expect(findLeak(payload), 'published surface must not carry a secret-shaped value').toBeNull()
 }
+
+describe('a failing connection release never masks the real result', () => {
+  // p02-01 guards this in server/utils/site-registry/index.ts: a throw from
+  // release() escapes the finally block past the catch above it, so a caller
+  // sees a bare driver error instead of a RegistryUnavailableError — and, on a
+  // successful path, a completed operation looks like a failure. The pool
+  // reclaims the connection either way, so the throw is swallowed.
+  it('does not turn a successful build into a failure', async () => {
+    buildDriverReturns([{ site_code: 'be', name: 'Belgium', scbd: 0, published: 1 }])
+    release.mockRejectedValueOnce(new Error('connection already returned'))
+
+    await expect(buildNetworkSummary('dev', 'bl2')).resolves.toMatchObject({ baseHost: 'cbddev.xyz' })
+  })
+
+  it('does not turn a committed write into a failure', async () => {
+    release.mockRejectedValueOnce(new Error('connection already returned'))
+
+    await expect(writeNetworkSummary(parseNetworkSummaryPayload(validPayload()))).resolves.toBeUndefined()
+    expect(commit).toHaveBeenCalledOnce()
+  })
+
+  it('does not turn a successful read into a failure', async () => {
+    driverReturns([])
+    release.mockRejectedValueOnce(new Error('connection already returned'))
+
+    await expect(readNetworkSummary()).resolves.toEqual([])
+  })
+})
 
 describe('an empty push cannot erase a stored slice', () => {
   it('rejects an empty sites array at the ingest boundary', () => {
