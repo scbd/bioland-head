@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { readFile } from 'node:fs/promises'
+import { inspect } from 'node:util'
 
 // The registry reads go over the shared pool from server/utils/db/pool.ts. That
 // module is stubbed here so the reads can be exercised without a Nitro context
@@ -26,6 +27,7 @@ const {
   RegistryRowMissingError,
   RegistryRowMalformedError,
   RegistryUnavailableError,
+  BANNED_SETTINGS_KEYS,
   SITE_REGISTRY_DB,
 } = registry
 
@@ -40,6 +42,7 @@ function siteRow(overrides: Record<string, unknown> = {}) {
   return {
     name: 'Belgium CHM',
     description: null,
+    logo: null,
     host: 'be.example.test',
     redirect: null,
     aliases: null,
@@ -59,6 +62,7 @@ function siteRow(overrides: Record<string, unknown> = {}) {
     theme: null,
     hide_home_page_widgets: null,
     geo_bon_page: null,
+    multi_site_env: 'prod',
     multi_site_theme: null,
     ...overrides,
   }
@@ -103,6 +107,15 @@ describe('server/utils/site-registry — pool usage', () => {
     expect(release).toHaveBeenCalledTimes(1)
   })
 
+  it('does not let a failing release() escape unwrapped or mask the result', async () => {
+    release.mockRejectedValue(new Error('connection already closed'))
+    driverReturns([{ site_code: 'be' }])
+
+    // A throw from the finally block would bypass the catch above and reach the
+    // caller as a bare driver error. The pool reclaims the connection anyway.
+    await expect(listSites('prod', 'bl2')).resolves.toEqual(['be'])
+  })
+
   it('wraps a driver failure without re-emitting its message', async () => {
     driverReturns()
     dbQuery.mockRejectedValueOnce(new Error('Access denied for user using password super-secret'))
@@ -112,6 +125,36 @@ describe('server/utils/site-registry — pool usage', () => {
     expect(error).toBeInstanceOf(RegistryUnavailableError)
     expect(error.code).toBe('REGISTRY_UNAVAILABLE')
     expect(error.message).not.toContain('super-secret')
+  })
+
+  it('narrows the attached cause to {code, errno, sqlState} and drops everything else', async () => {
+    // `console.error(err)` and util.inspect print the whole [cause] chain, so
+    // asserting only on error.message would miss the leak entirely. mariadb
+    // appends `- parameters:['...']` to SqlError.message by default, and the
+    // registry binds a whole settings document as one parameter.
+    const sqlError = Object.assign(
+      new Error("Deadlock found - parameters:['{\"panoramaKey\":\"leaked-value\"}']"),
+      { code: 'ER_LOCK_DEADLOCK', errno: 1213, sqlState: '40001', sql: 'UPDATE ... SET x = ?' },
+    )
+    driverReturns()
+    dbQuery.mockRejectedValueOnce(sqlError)
+
+    const error = await listSites('prod', 'bl2').catch(e => e)
+
+    expect(error.cause).toEqual({ code: 'ER_LOCK_DEADLOCK', errno: 1213, sqlState: '40001' })
+    expect(error.cause).not.toBeInstanceOf(Error)
+    expect(JSON.stringify(error.cause)).not.toContain('leaked-value')
+    expect(inspect(error, { depth: 10 })).not.toContain('leaked-value')
+    expect(inspect(error, { depth: 10 })).not.toContain('parameters:')
+  })
+
+  it('narrows a non-object throw to an empty cause rather than carrying it', async () => {
+    driverReturns()
+    dbQuery.mockRejectedValueOnce('raw string with G-FAKE in it')
+
+    const error = await listSites('prod', 'bl2').catch(e => e)
+
+    expect(error.cause).toEqual({})
   })
 })
 
@@ -267,6 +310,58 @@ describe('readSite', () => {
     driverReturns([siteRow({ has_bl1: 'migrated-2019' })])
     expect((await readSite('prod', 'bl2', 'be')).hasBl1).toBe(true)
   })
+
+  it('selects and returns logo, which the public projection emits', async () => {
+    driverReturns([siteRow({ logo: '/sites/be/logo.svg' })])
+
+    const site = await readSite('prod', 'bl2', 'be')
+
+    expect(site.logo).toBe('/sites/be/logo.svg')
+    expect(dbQuery.mock.calls[0][0]).toMatch(/s\.logo/)
+  })
+
+  it('throws when the required name is empty rather than handing back a nameless site', async () => {
+    driverReturns([siteRow({ name: null })])
+
+    await expect(readSite('prod', 'bl2', 'be')).rejects.toThrow(/site_config\.name/)
+  })
+
+  it('throws when the multiSite row is absent instead of silently degrading the theme', async () => {
+    // The join is LEFT, so an absent slice row yields NULLs rather than dropping
+    // the site row. Tolerating that is how 35/211 themeless sites would quietly
+    // fall back to code defaults with nobody paged.
+    driverReturns([siteRow({ multi_site_env: null, multi_site_theme: null })])
+
+    const error = await readSite('prod', 'bl2', 'be').catch(e => e)
+
+    expect(error).toBeInstanceOf(RegistryRowMissingError)
+    expect(error.message).toContain('multi_site_config')
+  })
+
+  it('still degrades nothing when the multiSite row exists but defines no theme', async () => {
+    driverReturns([siteRow({ theme: '{"hero":{"height":"short"}}', multi_site_theme: null })])
+
+    expect((await readSite('prod', 'bl2', 'be')).theme).toEqual({ hero: { height: 'short' } })
+  })
+
+  it('validates hideHomePageWidgets against the contract shape', async () => {
+    driverReturns([siteRow({ hide_home_page_widgets: '{"geobon":true}' })])
+    expect((await readSite('prod', 'bl2', 'be')).hideHomePageWidgets).toEqual({ geobon: true })
+
+    driverReturns([siteRow({ hide_home_page_widgets: '["geobon"]' })])
+    await expect(readSite('prod', 'bl2', 'be')).rejects.toThrow(/expected a JSON object/)
+
+    driverReturns([siteRow({ hide_home_page_widgets: '{"geobon":"yes"}' })])
+    await expect(readSite('prod', 'bl2', 'be')).rejects.toThrow(/boolean `geobon`/)
+  })
+
+  it('reads geoBonPage as a string, the shape the widget navigates to', async () => {
+    driverReturns([siteRow({ geo_bon_page: '"/node/116"' })])
+    expect((await readSite('prod', 'bl2', 'be')).geoBonPage).toBe('/node/116')
+
+    driverReturns([siteRow({ geo_bon_page: '{"path":"/node/116"}' })])
+    await expect(readSite('prod', 'bl2', 'be')).rejects.toThrow(/expected a JSON string/)
+  })
 })
 
 describe('normalizeHasBl1', () => {
@@ -296,6 +391,9 @@ describe('normalizeHasBl1', () => {
 describe('readMultiSiteConfig', () => {
   it('returns the multiSite block with the i18n object kept distinct', async () => {
     driverReturns([{
+      name: 'Bioland',
+      description: null,
+      base_host: 'chm-cbd.net',
       default_locale: 'en',
       locales: '["en","fr"]',
       countries: '["BE","FR"]',
@@ -309,6 +407,9 @@ describe('readMultiSiteConfig', () => {
     expect(config).toEqual({
       env: 'prod',
       multiSiteCode: 'bl2',
+      name: 'Bioland',
+      description: undefined,
+      baseHost: 'chm-cbd.net',
       defaultLocale: 'en',
       locales: ['en', 'fr'],
       countries: ['BE', 'FR'],
@@ -329,8 +430,22 @@ describe('readMultiSiteConfig', () => {
       .rejects.toBeInstanceOf(RegistryRowMissingError)
   })
 
+  it.each(['name', 'base_host'])('throws when the required %s is NULL', async (column) => {
+    driverReturns([{
+      name: 'Bioland', description: null, base_host: 'chm-cbd.net',
+      default_locale: 'en', locales: null, countries: null, theme: null, settings: null, i18n: null,
+      [column]: null,
+    }])
+
+    await expect(readMultiSiteConfig('prod', 'bl2'))
+      .rejects.toThrow(new RegExp(`multi_site_config\\.${column}`))
+  })
+
   it('throws on a malformed multiSite JSON column', async () => {
-    driverReturns([{ default_locale: 'en', locales: 'nope', countries: null, theme: null, settings: null, i18n: null }])
+    driverReturns([{
+      name: 'Bioland', description: null, base_host: 'chm-cbd.net',
+      default_locale: 'en', locales: 'nope', countries: null, theme: null, settings: null, i18n: null,
+    }])
 
     await expect(readMultiSiteConfig('prod', 'bl2'))
       .rejects.toThrow(/multi_site_config\.locales/)
@@ -471,6 +586,48 @@ describe('writeLastKnownGoodSettings', () => {
   it('throws on a value that serialises to undefined', async () => {
     await expect(writeLastKnownGoodSettings('prod', 'bl2', 'be', undefined))
       .rejects.toThrow(/serialises to undefined/)
+  })
+
+  it.each(['dataBase', 'dns', 'drupal', 'defaultSmtpCredentials', 'panoramaKey', 'meta'])(
+    'rejects a document carrying the banned top-level key %s',
+    async (bannedKey) => {
+      driverReturns({ affectedRows: 1 })
+
+      const error = await writeLastKnownGoodSettings(
+        'prod', 'bl2', 'be', { googleAnalyticsIds: 'G-FAKE', [bannedKey]: { user: 'u' } },
+      ).catch(e => e)
+
+      expect(error).toBeInstanceOf(RegistryRowMalformedError)
+      expect(error.message).toContain(bannedKey)
+      // and nothing was written
+      expect(dbQuery).not.toHaveBeenCalled()
+    },
+  )
+
+  it('names every banned key in one exported list, so p02-05 cannot drift from it', () => {
+    expect([...BANNED_SETTINGS_KEYS].sort()).toEqual([
+      'dataBase', 'defaultSmtpCredentials', 'dns', 'drupal', 'meta', 'panoramaKey',
+    ])
+  })
+
+  it('reports the banned key names without echoing their values', async () => {
+    driverReturns({ affectedRows: 1 })
+
+    const error = await writeLastKnownGoodSettings(
+      'prod', 'bl2', 'be', { panoramaKey: 'super-secret', dns: { zone: 'Z123' } },
+    ).catch(e => e)
+
+    expect(error.message).toContain('panoramaKey')
+    expect(error.message).toContain('dns')
+    expect(error.message).not.toContain('super-secret')
+    expect(error.message).not.toContain('Z123')
+  })
+
+  it('still stores a clean document', async () => {
+    driverReturns({ affectedRows: 1 })
+
+    await expect(writeLastKnownGoodSettings('prod', 'bl2', 'be', { googleAnalyticsIds: 'G-FAKE' }))
+      .resolves.toBeUndefined()
   })
 
   it('wraps a write failure without echoing the document', async () => {

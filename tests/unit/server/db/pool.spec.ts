@@ -87,6 +87,7 @@ describe('server/utils/db/pool', () => {
         connectionLimit: 5,
         acquireTimeout: 30000,
         initializationTimeout: 30000,
+        logParam: false,
       },
     ])
   })
@@ -112,8 +113,22 @@ describe('server/utils/db/pool', () => {
         connectionLimit: 5,
         acquireTimeout: 30000,
         initializationTimeout: 30000,
+        logParam: false,
       },
     ])
+  })
+
+  it('disables logParam so a SqlError message cannot echo bound parameter values', async () => {
+    const { getDbPool } = await importFresh()
+
+    getDbPool()
+
+    // mariadb defaults logParam to true, which appends `- parameters:['<value>']`
+    // (up to debugLen 256 chars) to every SqlError message. Both pool consumers
+    // bind content as parameters — translation source text, and the config
+    // registry's whole serialised settings document — so the default would put
+    // that content into any log that prints the error.
+    expect((createPoolCalls[0] as { logParam?: boolean }).logParam).toBe(false)
   })
 
   it('never reads the password into a template literal or log call', async () => {
