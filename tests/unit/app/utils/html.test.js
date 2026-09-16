@@ -45,5 +45,33 @@ describe('html', () => {
     it('returns empty string for undefined input', () => {
       expect(htmlSanitize(undefined)).toBe('')
     })
+
+    it('restores the data: scheme Drupal stripped from an inline base64 image', () => {
+      const input  = '<p><span><img src="image/jpeg;base64,/9j/4AAQSkZJRg==" width="280"></span></p>'
+      const result = htmlSanitize(input)
+
+      expect(result).toContain('src="data:image/jpeg;base64,/9j/4AAQSkZJRg=="')
+      expect(result).toContain('width="280"')
+    })
+
+    it('leaves a well formed data: image untouched', () => {
+      const input  = '<p><img src="data:image/png;base64,iVBORw0KGgo="></p>'
+
+      expect(htmlSanitize(input)).toContain('src="data:image/png;base64,iVBORw0KGgo="')
+    })
+
+    it('drops a schemeless base64 src that is not a plain image payload', () => {
+      const input  = '<img src="image/jpeg;base64,abc\');alert(1)//">'
+      const result = htmlSanitize(input)
+
+      expect(result).not.toContain('src=')
+      expect(result).not.toContain('alert(1)')
+    })
+
+    it('drops a schemeless base64 src on a non image element', () => {
+      const input  = '<embed src="image/jpeg;base64,/9j/4AAQSkZJRg==">'
+
+      expect(htmlSanitize(input)).not.toContain('base64')
+    })
   })
 })

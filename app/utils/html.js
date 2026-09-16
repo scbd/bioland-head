@@ -22,7 +22,33 @@ DOMPurify.addHook('uponSanitizeElement', (node, data)=>
 
     return node.parentNode.parentNode.removeChild(node.parentNode);//node;
   });
-  
+
+// Drupal's XSS filter strips the `data:` scheme off inline base64 images but keeps the
+// payload, so bodies arrive holding src="image/jpeg;base64,/9j/...". The browser resolves
+// that as a RELATIVE url and requests hundreds of KB of base64 as a path: the edge answers
+// 414/494 and tears down the shared HTTP/2 connection, which fails every other asset
+// multiplexed on it (ERR_HTTP2_PROTOCOL_ERROR). Put the scheme back so the image renders,
+// and drop the src outright when the payload is not a plain base64 image.
+const base64ImagePrefix = /^image\/[a-z0-9.+-]+;base64,/i;
+const base64ImageSrc    = /^image\/[a-z0-9.+-]+;base64,[a-z0-9+/=\s]+$/i;
+
+DOMPurify.addHook('afterSanitizeAttributes', (node)=>
+  {
+    if(!node.getAttribute) return node;
+
+    const src = node.getAttribute('src') || '';
+
+    if(!base64ImagePrefix.test(src)) return node;
+
+    const tag = node.tagName?.toLowerCase();
+
+    if((tag === 'img' || tag === 'source') && base64ImageSrc.test(src)) node.setAttribute('src', `data:${src}`);
+    else node.removeAttribute('src');
+
+    return node;
+  });
+
+
 
 export const hasBchEmbed = (html) => {
   const bchEmbedRegex = /<div\b[^>]*\bclass=["'][^"']*scbd-chm-embed[^"']*["'][^>]*>/i;
