@@ -50,12 +50,9 @@
  * @module server/utils/site-registry/write
  */
 import mariadb from 'mariadb'
-import { SITE_REGISTRY_DB } from './index'
+import { MULTI_SITE_TABLE, SITE_TABLE } from './index'
 import { RegistryError } from './types'
 import type { SeedMultiSiteRecord, SeedSiteRecord } from './seed-source'
-
-const MULTI_SITE_TABLE = `${SITE_REGISTRY_DB}.multi_site_config`
-const SITE_TABLE = `${SITE_REGISTRY_DB}.site_config`
 
 /** The minimum a connection must offer. Lets tests drive the writes directly. */
 export interface SeedConnectionLike {
@@ -618,6 +615,22 @@ export class RegistrySeedSliceMismatchError extends RegistryError {
  * makes the slice all-or-nothing; a `ROLLBACK` failure is swallowed so the
  * original error is what the caller sees.
  *
+ * ## Why a caller may own the transaction instead
+ *
+ * MariaDB has no nested transactions: a `START TRANSACTION` issued while one is
+ * already open implicitly commits it, and the matching `COMMIT` then commits the
+ * inner work for good. A caller that needs the seed to be *part of* a larger
+ * atomic unit — p02-06's `applyReseed`, which must roll the row writes back when
+ * it loses its generation claim — therefore cannot simply wrap this call: doing
+ * so silently ends its own transaction and makes its rollback a no-op.
+ *
+ * `ownsTransaction: false` is the seam for exactly that case. This function then
+ * issues no `START TRANSACTION`, no `COMMIT` and no `ROLLBACK`, leaving all three
+ * to the caller, while the preflight validation, the write order and the prune
+ * stay exactly as they are — including the prune running last, so it is still
+ * inside whichever transaction is open and still before anything the caller does
+ * afterwards. The default is `true`, so every standalone caller is unchanged.
+ *
  * ## Why the slice is reconciled, not merely upserted
  *
  * The upserts alone only ever add and update, so a site the source dropped kept
@@ -635,7 +648,9 @@ export class RegistrySeedSliceMismatchError extends RegistryError {
 export async function seedSlice(
   connection: SeedConnectionLike,
   plan: { multiSite: SeedMultiSiteRecord, sites: SeedSiteRecord[] },
+  options: { ownsTransaction?: boolean } = {},
 ): Promise<{ multiSites: number, sites: number, sitesRemoved: number }> {
+  const ownsTransaction = options.ownsTransaction ?? true
   const { env, multiSiteCode } = plan.multiSite
 
   for (const site of plan.sites) {
@@ -664,7 +679,7 @@ export async function seedSlice(
 
   let sitesRemoved = 0
 
-  await connection.query('START TRANSACTION')
+  if (ownsTransaction) await connection.query('START TRANSACTION')
   try {
     // Awaited before the loop below: the slice row must exist before any site row
     // that joins to it. Do not hoist a site write above this line.
@@ -679,12 +694,14 @@ export async function seedSlice(
       connection, env, multiSiteCode, plan.sites.map(site => site.siteCode),
     )
 
-    await connection.query('COMMIT')
+    if (ownsTransaction) await connection.query('COMMIT')
   }
   catch (error) {
     // The rollback's own failure must not mask what actually went wrong, and the
-    // driver error it would carry is unscrubbed.
-    await connection.query('ROLLBACK').catch(() => {})
+    // driver error it would carry is unscrubbed. A caller that owns the
+    // transaction owns the rollback too — unwinding its transaction from here
+    // would discard work this function never wrote.
+    if (ownsTransaction) await connection.query('ROLLBACK').catch(() => {})
     throw error
   }
 

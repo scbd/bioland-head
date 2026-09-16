@@ -13,11 +13,20 @@
  *
  * ## Invocation — read this before trying to run it in production
  *
- * On this stack `nuxi` 3.30.0 ships **no `task` command**, and Nitro does not
- * compile the tasks runtime into `.output/` even with
- * `nitro.experimental.tasks: true` — a build of this branch contains no
- * `defineTask`/`runTask` and no `registry:seed`. So today the only way to run it
- * is the dev server's task endpoint:
+ * **Corrected — an earlier version of this note was wrong.** It claimed Nitro
+ * never compiles the tasks runtime into `.output/`. That was true only of a
+ * build with no scheduled task registered: `nitro.experimental.tasks: true`
+ * alone bundles nothing, but **registering a cron entry in
+ * `nitro.scheduledTasks` pulls the tasks runtime in**, and p02-06's entry does.
+ * A current `yarn build` emits `.output/server/chunks/tasks/seed.mjs` alongside
+ * `drift-check.mjs`, bundles croner, and calls `startScheduleRunner()` from the
+ * node-server entry. So this task *does* ship, and a deployed container can run
+ * it. Do not reason about production behaviour from the old claim.
+ *
+ * What is still true: `nuxi` 3.30.0 ships **no `task` command**, so there is no
+ * ad-hoc "run it now" CLI, and nothing schedules `registry:seed` itself — it
+ * ships present but uninvoked, run either by p02-06's re-seed or by hand. During
+ * development the dev server's task endpoint is the way in:
  *
  * ```
  * DMSM_CONFIG_DIR=/path/to/dmsm/config yarn dev      # in one shell
@@ -66,16 +75,15 @@ import { readFile } from 'node:fs/promises'
 import { resolve, sep } from 'node:path'
 import { consola } from 'consola'
 import {
+  KNOWN_ENVS,
   buildSeedPlan,
   collectFindings,
   parseSeedSource,
+  sourceFileName,
 } from '../../utils/site-registry/seed-source'
 import type { SeedFindings } from '../../utils/site-registry/seed-source'
 import { createSeedConnection, seedSlice } from '../../utils/site-registry/write'
 import { getDbConfig } from '../../utils/db/pool'
-
-/** Envs the config tree is known to carry. */
-const KNOWN_ENVS = ['dev', 'stg', 'prod']
 
 export interface SeedTaskPayload {
   env?: unknown
@@ -226,7 +234,7 @@ export default defineTask({
 
   async run({ payload }: { payload: SeedTaskPayload }) {
     const { env, multiSiteCode, configDir, dryRun } = readSeedArguments(payload ?? {})
-    const fileName = resolve(configDir, `${env}.json5`)
+    const fileName = sourceFileName(configDir, env)
 
     // A read or parse failure aborts before any connection is opened, so a
     // malformed source writes nothing at all. A raw ENOENT would put the

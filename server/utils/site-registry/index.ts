@@ -70,8 +70,16 @@ export type { MultiSiteConfigInput, SiteConfigInput, SiteTheme }
  */
 export const SITE_REGISTRY_DB = 'site_registry'
 
-const MULTI_SITE_TABLE = `${SITE_REGISTRY_DB}.multi_site_config`
-const SITE_TABLE = `${SITE_REGISTRY_DB}.site_config`
+/**
+ * The two registry tables, named once.
+ *
+ * Exported because three modules address them — this one (reads), `./write.ts`
+ * (bulk seed) and `server/tasks/registry/drift-check.ts` (generation and hash).
+ * A second spelling of a table name is a defect that only surfaces in
+ * production, so there is exactly one.
+ */
+export const MULTI_SITE_TABLE = `${SITE_REGISTRY_DB}.multi_site_config`
+export const SITE_TABLE = `${SITE_REGISTRY_DB}.site_config`
 
 type Row = Record<string, unknown>
 
