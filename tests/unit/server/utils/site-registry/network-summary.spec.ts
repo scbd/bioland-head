@@ -40,7 +40,7 @@ const {
   writeNetworkSummary,
 } = mod
 
-const { RegistryUnavailableError } = await import('../../../../../server/utils/site-registry/types')
+const { RegistryError, RegistryUnavailableError } = await import('../../../../../server/utils/site-registry/types')
 
 /** Obviously-fake dummy secrets. Never a real value. */
 const DEV_SECRET = 'dummy-dev-not-a-real-token'
@@ -51,6 +51,14 @@ function driverReturns(...results: unknown[]) {
   dbQuery.mockReset()
   for (const result of results) dbQuery.mockResolvedValueOnce(result)
   dbQuery.mockResolvedValue([])
+}
+
+/**
+ * Queue the two reads `buildNetworkSummary` makes, in order: the slice's
+ * `multi_site_config` row (where `baseHost` now comes from), then its sites.
+ */
+function buildDriverReturns(sites: unknown[], baseHost: unknown = 'cbddev.xyz') {
+  driverReturns([{ base_host: baseHost }], sites)
 }
 
 /** A valid five-field payload as a pushing deployment would send it. */
@@ -81,7 +89,7 @@ beforeEach(() => {
 
 describe('the published field set', () => {
   it('publishes exactly the five allowed fields and nothing more', async () => {
-    driverReturns([
+    buildDriverReturns([
       {
         site_code: 'be',
         name: 'Belgium CHM',
@@ -107,24 +115,18 @@ describe('the published field set', () => {
   })
 
   it('selects only the four projected columns from site_config', async () => {
-    driverReturns([])
+    buildDriverReturns([])
     await buildNetworkSummary('dev', 'bl2')
 
-    const sql = String(dbQuery.mock.calls[0][0])
+    const sql = String(dbQuery.mock.calls[1][0])
     expect(sql).toMatch(/SELECT site_code, name, scbd, published/)
     expect(sql).not.toMatch(/\bhost\b|description|has_bl1|theme|settings/)
-    expect(dbQuery.mock.calls[0][1]).toEqual(['dev', 'bl2'])
+    expect(dbQuery.mock.calls[1][1]).toEqual(['dev', 'bl2'])
   })
 
   it('treats an empty slice as a legitimate answer, not a failure', async () => {
-    driverReturns([])
+    buildDriverReturns([])
     await expect(buildNetworkSummary('dev', 'bl2')).resolves.toMatchObject({ sites: [] })
-  })
-
-  it('reports a missing baseHost as null rather than an empty string', async () => {
-    runtimeConfig.public = { env: 'dev', multiSiteCode: 'bl2', baseHost: '' }
-    driverReturns([])
-    await expect(buildNetworkSummary('dev', 'bl2')).resolves.toMatchObject({ baseHost: null })
   })
 
   it('wraps a driver failure so a SqlError message cannot propagate', async () => {
@@ -135,6 +137,76 @@ describe('the published field set', () => {
     expect(error).toBeInstanceOf(RegistryUnavailableError)
     expect(error.message).not.toContain('password')
     expect(release).toHaveBeenCalled()
+  })
+})
+
+describe('baseHost comes from the per-slice column', () => {
+  it('reads it from multi_site_config, keyed by the slice primary key', async () => {
+    buildDriverReturns([], 'cbd.int')
+
+    await expect(buildNetworkSummary('prod', 'bl2')).resolves.toMatchObject({ baseHost: 'cbd.int' })
+
+    const sql = String(dbQuery.mock.calls[0][0])
+    expect(sql).toMatch(/SELECT base_host/)
+    expect(sql).toMatch(/multi_site_config/)
+    expect(dbQuery.mock.calls[0][1]).toEqual(['prod', 'bl2'])
+  })
+
+  it('prefers the slice column over disagreeing site rows and over runtime config', async () => {
+    // The defect this replaces: baseHost was per-row by storage and per-slice by
+    // treatment, so whichever row happened to be first decided the whole slice.
+    // Here the site rows disagree with each other AND with runtime config; the
+    // slice column is the only per-slice authority, so it is the only answer.
+    runtimeConfig.public = { env: 'dev', multiSiteCode: 'bl2', baseHost: 'stale.runtime.test' }
+    driverReturns(
+      [{ base_host: 'cbddev.xyz' }],
+      [
+        { site_code: 'be', name: 'Belgium', scbd: 0, published: 1, base_host: 'first.wrong.test' },
+        { site_code: 'cm', name: 'Cameroon', scbd: 0, published: 1, base_host: 'second.wrong.test' },
+      ],
+    )
+
+    const summary = await buildNetworkSummary('dev', 'bl2')
+
+    expect(summary.baseHost).toBe('cbddev.xyz')
+    expect(JSON.stringify(summary)).not.toContain('wrong.test')
+    expect(JSON.stringify(summary)).not.toContain('stale.runtime.test')
+  })
+
+  it('binds the one slice value to every inserted row, so rows cannot disagree', async () => {
+    buildDriverReturns([
+      { site_code: 'be', name: 'Belgium', scbd: 0, published: 1 },
+      { site_code: 'cm', name: 'Cameroon', scbd: 0, published: 1 },
+    ])
+    const summary = await buildNetworkSummary('dev', 'bl2')
+
+    driverReturns()
+    await writeNetworkSummary(summary)
+
+    const inserts = dbQuery.mock.calls.filter(call => String(call[0]).includes('INSERT'))
+    expect(inserts).toHaveLength(2)
+    for (const [, params] of inserts) expect(params[6]).toBe('cbddev.xyz')
+  })
+
+  it.each([
+    ['no multi_site_config row for the slice', []],
+    ['a NULL base_host', [{ base_host: null }]],
+  ])('fails the push rather than publishing a null baseHost: %s', async (_label, sliceRows) => {
+    driverReturns(sliceRows, [])
+
+    // A registry error, not a silent null — nothing links anywhere without it.
+    await expect(buildNetworkSummary('dev', 'bl2')).rejects.toBeInstanceOf(RegistryError)
+  })
+
+  it('resolves one baseHost per slice on read, even for rows written before the fix', async () => {
+    driverReturns([
+      { env: 'dev', multi_site_code: 'bl2', site_code: 'be', name: 'Belgium', scbd: 0, published: 1, base_host: null, updated_at: new Date('2026-09-01T10:00:00Z') },
+      { env: 'dev', multi_site_code: 'bl2', site_code: 'cm', name: 'Cameroon', scbd: 0, published: 1, base_host: 'cbddev.xyz', updated_at: new Date('2026-09-01T11:00:00Z') },
+    ])
+
+    const [slice] = await readNetworkSummary()
+    expect(slice.baseHost).toBe('cbddev.xyz')
+    expect(slice.sites).toHaveLength(2)
   })
 })
 
@@ -417,7 +489,7 @@ describe('the push', () => {
   it('sends the token in a header and never in the URL or body', async () => {
     process.env.NUXT_NETWORK_SUMMARY_TARGET_URL = 'https://prod.test/api/site-registry/network'
     process.env.NUXT_NETWORK_SUMMARY_PUSH_TOKEN = `dev:${DEV_SECRET}`
-    driverReturns([{ site_code: 'be', name: 'Belgium', scbd: 0, published: 1 }])
+    buildDriverReturns([{ site_code: 'be', name: 'Belgium', scbd: 0, published: 1 }])
 
     await expect(pushNetworkSummary()).resolves.toMatchObject({ status: 'pushed', sites: 1 })
 
@@ -433,12 +505,31 @@ describe('the push', () => {
   it('reports a failure without throwing, so previous rows stay in place', async () => {
     process.env.NUXT_NETWORK_SUMMARY_TARGET_URL = 'https://prod.test/api/site-registry/network'
     process.env.NUXT_NETWORK_SUMMARY_PUSH_TOKEN = `dev:${DEV_SECRET}`
-    driverReturns([])
+    buildDriverReturns([])
     fetchImpl.mockRejectedValueOnce(new Error('403 Forbidden'))
 
     await expect(pushNetworkSummary()).resolves.toMatchObject({
       status: 'failed', reason: '403 Forbidden', env: 'dev', multiSiteCode: 'bl2',
     })
+  })
+
+  it('strips the target URL out of a failure reason, credentials and all', async () => {
+    // ofetch formats its message as `[POST] "<url>": 401 …`, so the reason would
+    // otherwise carry NUXT_NETWORK_SUMMARY_TARGET_URL — userinfo included.
+    process.env.NUXT_NETWORK_SUMMARY_TARGET_URL = 'https://pusher:dummynotreal@prod.test/api/site-registry/network'
+    process.env.NUXT_NETWORK_SUMMARY_PUSH_TOKEN = `dev:${DEV_SECRET}`
+    buildDriverReturns([])
+    fetchImpl.mockRejectedValueOnce(new Error(
+      '[POST] "https://pusher:dummynotreal@prod.test/api/site-registry/network": 401 Unauthorized',
+    ))
+
+    const result = await pushNetworkSummary()
+
+    expect(result.status).toBe('failed')
+    expect(result.reason).toBe('[POST] "<url>": 401 Unauthorized')
+    expect(result.reason).not.toContain('dummynotreal')
+    expect(result.reason).not.toContain('prod.test')
+    expect(findLeak(result)).toBeNull()
   })
 
   it('reports a build failure as a failed push rather than throwing', async () => {
@@ -452,23 +543,132 @@ describe('the push', () => {
   })
 })
 
-describe('the leak gate over the published surface', () => {
-  // Value-shaped detection, not key-name matching: a key-name allowlist misses
-  // `panoramaKey` and cannot catch a credential pasted into a benign field.
-  const LEAK_SHAPES: [string, RegExp][] = [
-    ['a connection URI', /\b(?:mysql|mariadb|smtp|postgres|redis):\/\//i],
-    ['a PEM block', /-----BEGIN/],
-    ['a bearer credential', /\b(?:bearer\s+|api[-_]?key\s*[:=]|password\s*[:=])/i],
-    ['a high-entropy blob', /[A-Za-z0-9+/]{40,}={0,2}/],
-  ]
+/* -------------------------------------------------------------------------- */
+/* Leak gate                                                                    */
+/* -------------------------------------------------------------------------- */
 
-  function assertNoLeak(payload: unknown) {
-    const serialised = JSON.stringify(payload)
-    for (const [label, shape] of LEAK_SHAPES) {
-      expect(serialised, `read response must not contain ${label}`).not.toMatch(shape)
+/*
+ * Value-shaped detection, not key-name matching: a key-name allowlist misses
+ * `panoramaKey` and cannot catch a credential pasted into a benign field. This
+ * is a local implementation because p02-03's shared helper is not on this
+ * branch; when it merges, this block collapses to an import.
+ *
+ * The first cut of it was escapable five ways, each of which is now a named
+ * fixture in ESCAPES below, and each of which motivates one decision here:
+ *
+ * 1. `https://user:pass@host` — the scheme list only knew mysql/smtp/etc., so
+ *    credentials carried on an ordinary web scheme walked straight through.
+ *    Userinfo is now detected on ANY scheme, independently of the scheme list.
+ * 2. percent-encoded URIs — `mysql%3A%2F%2F…` never matched a literal `://`.
+ *    Everything is percent-decoded (repeatedly, for double-encoding) first.
+ * 3. lowercase PEM armour — `-----begin …` missed a case-sensitive `-----BEGIN`.
+ *    Every pattern is now case-insensitive.
+ * 4. prose-embedded labels — `api key is <token>` has no `:` or `=`, and the old
+ *    pattern demanded one. The label pattern now spans the prose connectives.
+ * 5. lowercase-only tokens — a 40-char lowercase hex string is not caught by any
+ *    label and was not caught by the old blob pattern, which also required no
+ *    entropy at all. A Shannon-entropy gate replaces it.
+ *
+ * And the matching false-positive trap, which is why locators are stripped
+ * before the entropy scan: the old blob class kept `/` inside a token, so an
+ * ordinary logo URL — `.../sites/default/files/styles/thumbnail/logo.png` — is a
+ * 40+ character run of `[A-Za-z0-9/]` and was flagged as a secret.
+ */
+
+/** Percent-decode repeatedly, so an encoded URI cannot hide behind `%3A%2F%2F`. */
+function decodeDeep(value: string): string {
+  let current = value
+  for (let pass = 0; pass < 3; pass += 1) {
+    let next: string
+    try {
+      next = decodeURIComponent(current)
     }
+    catch {
+      return current
+    }
+    if (next === current) break
+    current = next
+  }
+  return current
+}
+
+/** Shannon entropy in bits per character. Random-looking text scores high. */
+function shannonBits(value: string): number {
+  const counts = new Map<string, number>()
+  for (const character of value) counts.set(character, (counts.get(character) ?? 0) + 1)
+
+  let bits = 0
+  for (const count of counts.values()) {
+    const p = count / value.length
+    bits -= p * Math.log2(p)
+  }
+  return bits
+}
+
+/** Remove URLs and filesystem-ish paths, which are locators rather than secrets. */
+function stripLocators(text: string): string {
+  // Runs stop at a quote, because the input is serialised JSON with no
+  // whitespace: a `\S*` here would swallow every field after the first URL and
+  // turn the entropy scan into a no-op.
+  const RUN = '[^\\s"\'<>]*'
+  return text
+    .replace(new RegExp(`[a-z][a-z0-9+.-]*://${RUN}`, 'gi'), ' ')
+    .replace(new RegExp(`${RUN}/${RUN}\\.[a-z0-9]{2,5}\\b`, 'gi'), ' ')
+    .replace(new RegExp(`(^|[\\s"'])/${RUN}`, 'g'), ' ')
+}
+
+const LEAK_SHAPES: [string, RegExp][] = [
+  // Credentials in a URL's userinfo, on ANY scheme — https included.
+  ['a credential in a URL', /[a-z][a-z0-9+.-]*:\/\/[^\s/@:]+:[^\s/@]+@/i],
+  // Schemes that only ever appear in a connection string.
+  ['a connection URI', /\b(?:mysql|mariadb|postgres(?:ql)?|mongodb(?:\+srv)?|redis|amqp|smtps?|ldaps?):\/\//i],
+  // Case-insensitive, and tolerant of whitespace inside the armour.
+  ['a PEM block', /-{3,}\s*begin\b/i],
+  // Labelled secrets, whether assigned (`token=x`) or written as prose
+  // (`api key is x`). The connectives are what the first cut was missing.
+  [
+    'a labelled credential',
+    /\b(?:api[\s_-]?key|secret|token|password|passwd|credential|bearer|authorization)\b[\s:="'-]*(?:is|was|=|set\s+to|to)?[\s:="']*[A-Za-z0-9+/_.~-]{12,}/i,
+  ],
+]
+
+/**
+ * A run of base64/hex alphabet long and disordered enough to be a key, not a word.
+ *
+ * 32 rather than the old 40: an MD5-length token is 32, and the old bound let it
+ * through. Entropy alone is not enough to separate a key from a word — a 33-
+ * character run of ordinary English letters scores 3.8 bits — so a candidate
+ * must also mix letters with digits, which every hex, base64 and prefixed API
+ * key does and a concatenated slug does not.
+ */
+const ENTROPY_CANDIDATE = /[A-Za-z0-9+/=]{32,}/g
+const ENTROPY_BITS_THRESHOLD = 3.2
+
+function looksOpaque(candidate: string): boolean {
+  return /\d/.test(candidate)
+    && /[A-Za-z]/.test(candidate)
+    && shannonBits(candidate) >= ENTROPY_BITS_THRESHOLD
+}
+
+function findLeak(payload: unknown): string | null {
+  const decoded = decodeDeep(JSON.stringify(payload) ?? '')
+
+  for (const [label, shape] of LEAK_SHAPES) {
+    if (shape.test(decoded)) return label
   }
 
+  for (const candidate of stripLocators(decoded).match(ENTROPY_CANDIDATE) ?? []) {
+    if (looksOpaque(candidate)) return 'a high-entropy blob'
+  }
+
+  return null
+}
+
+function assertNoLeak(payload: unknown) {
+  expect(findLeak(payload), 'published surface must not carry a secret-shaped value').toBeNull()
+}
+
+describe('the leak gate over the published surface', () => {
   it('passes against a read response', async () => {
     driverReturns([
       { env: 'dev', multi_site_code: 'bl2', site_code: 'be', name: 'Belgium CHM', scbd: 0, published: 1, base_host: 'cbddev.xyz', updated_at: new Date('2026-09-01T10:00:00Z') },
@@ -481,8 +681,45 @@ describe('the leak gate over the published surface', () => {
     assertNoLeak(parseNetworkSummaryPayload(validPayload()))
   })
 
-  it('catches a leak-shaped value if one ever reached the surface', () => {
-    expect(() => assertNoLeak({ baseHost: 'mysql://user:dummy@db/i18n_cache' })).toThrow()
-    expect(() => assertNoLeak({ name: '-----BEGIN PRIVATE KEY-----' })).toThrow()
+  // PEM armour is assembled at runtime rather than written out: a literal one
+  // is a secret-scanner finding in its own right, and the repo's pre-commit
+  // gitleaks hook blocks the commit. Assembling it also makes the point that
+  // the gate matches a shape, not a string this file happens to contain.
+  const armour = (label: string) => `${'-'.repeat(5)}${label}${'-'.repeat(5)}`
+
+  // Every fixture is an obviously-fake dummy. Each one escaped the first cut of
+  // this gate; each one is the regression test for one repair above.
+  const ESCAPES: [string, unknown][] = [
+    ['a credential on an https scheme', { baseHost: 'https://svcuser:dummynotreal@registry.internal/summary' }],
+    ['a percent-encoded connection URI', { name: 'mysql%3A%2F%2Fu%3Adummynotreal%40db.internal%2Fi18n_cache' }],
+    ['lowercase PEM armour', { name: armour('begin rsa private key') }],
+    ['a token named in prose, with no separator', { name: 'our api key is dummynotrealtokenvalue1234' }],
+    ['a lowercase-only opaque token', { name: 'a3f9c1e7b20d84af16c5309e7dbb42f08c1e5a97' }],
+    // 32 characters: under the old 40-character bound entirely.
+    ['a short lowercase opaque token', { name: 'a3f9c1e7b20d84af16c5309e7dbb42f0' }],
+  ]
+
+  it.each(ESCAPES)('catches %s', (_label, payload) => {
+    expect(findLeak(payload)).not.toBeNull()
+  })
+
+  it('still catches the two shapes the first cut did catch', () => {
+    expect(findLeak({ baseHost: 'mysql://user:dummy@db/i18n_cache' })).not.toBeNull()
+    expect(findLeak({ name: armour('BEGIN PRIVATE KEY') })).not.toBeNull()
+  })
+
+  // The trap on the other side: a real logo URL is a long run of the same
+  // alphabet a base64 key is made of. Flagging it would make the gate noise.
+  const INNOCENT: [string, unknown][] = [
+    ['an absolute logo URL', { logo: 'https://www.cbd.int/sites/default/files/styles/thumbnail/public/logos/belgium-chm-header.png' }],
+    ['a root-relative logo path', { logo: '/sites/default/files/styles/thumbnail/public/logos/belgium-chm-header.png' }],
+    ['an ordinary baseHost', { baseHost: 'cbddev.xyz' }],
+    ['a long site name', { name: 'Belgium Clearing House Mechanism National Focal Point' }],
+    ['a long unseparated slug', { name: 'belgiumchmheaderthumbnaillogofile' }],
+    ['a plain API documentation URL', { name: 'https://api.cbd.int/v2024/reference/site-configuration' }],
+  ]
+
+  it.each(INNOCENT)('does not flag %s', (_label, payload) => {
+    expect(findLeak(payload)).toBeNull()
   })
 })

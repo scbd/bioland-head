@@ -86,11 +86,19 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
 
 import { getDbPool } from '../db/pool'
-import { RegistryError, RegistryUnavailableError } from './types'
+import {
+  RegistryError,
+  RegistryRowMalformedError,
+  RegistryRowMissingError,
+  RegistryUnavailableError,
+} from './types'
 import { SITE_REGISTRY_DB } from './index'
 
 /** The prod-owned cross-deployment summary table. */
 export const NETWORK_SUMMARY_TABLE = `${SITE_REGISTRY_DB}.network_summary`
+
+/** The slice table `baseHost` is derived from. See `buildNetworkSummary`. */
+const MULTI_SITE_CONFIG_TABLE = `${SITE_REGISTRY_DB}.multi_site_config`
 
 /** The header the push token travels in. Never a query parameter (C7). */
 export const NETWORK_SUMMARY_TOKEN_HEADER = 'x-network-summary-token'
@@ -338,12 +346,34 @@ function toNullableText(raw: unknown): string | null {
  * Reads `site_config` directly with a single projecting SELECT rather than
  * looping `readSite` — the summary needs four columns per site, and an N+1 over
  * a 5-connection pool shared with the translation workload would be the wrong
- * shape entirely. `baseHost` comes from this deployment's public runtime config,
- * which is the same value `/api/chm-network` hands the table today.
+ * shape entirely.
+ *
+ * ## Where `baseHost` comes from, and why it moved
+ *
+ * From `multi_site_config.base_host` — the slice's own column, added by p02-01.
+ * NOT from this deployment's public runtime config, and not from a site row.
+ *
+ * The published row treats `baseHost` as a property of the slice. Until that
+ * column existed there was nothing per-slice to read, so the value came from
+ * runtime config and happened to be right only because one deployment publishes
+ * one slice — correct by luck. `multi_site_config` is keyed exactly
+ * `(env, multi_site_code)`, so reading it makes the per-slice treatment correct
+ * BY CONSTRUCTION: a slice has precisely one `base_host` because the primary key
+ * says so. The schema comment on that column names `network_summary.base_host`
+ * as its derivative, which is this read.
+ *
+ * A missing slice row, or a NULL `base_host`, is a hard failure rather than a
+ * published `null`. `base_host` is REQUIRED on read (p02-01), and every link the
+ * CHM Network table renders is built from it, so publishing `null` would replace
+ * a usable-but-stale slice with a fresh one whose every row links nowhere.
+ * `pushNetworkSummary` turns the throw into a `failed` push, leaving the
+ * receiving deployment's previous rows untouched — stale, never broken.
  *
  * An empty slice is a legitimate answer and yields `sites: []`.
  *
- * @throws {RegistryUnavailableError} the registry could not be reached.
+ * @throws {RegistryRowMissingError}   no `multi_site_config` row for the slice.
+ * @throws {RegistryRowMalformedError} the slice's `base_host` is NULL or empty.
+ * @throws {RegistryUnavailableError}  the registry could not be reached.
  */
 export async function buildNetworkSummary(
   env: string,
@@ -354,6 +384,28 @@ export async function buildNetworkSummary(
 
   try {
     conn = await pool.getConnection()
+
+    // The slice is read first, so a slice that cannot describe itself fails
+    // before its sites are enumerated. One extra round trip, on a primary key.
+    const sliceKey = { env, multi_site_code: multiSiteCode }
+    const sliceRows = await conn.query(
+      `SELECT base_host
+         FROM ${MULTI_SITE_CONFIG_TABLE}
+        WHERE env = ? AND multi_site_code = ?
+        LIMIT 1`,
+      [env, multiSiteCode],
+    ) as Record<string, unknown>[]
+
+    const sliceRow = Array.isArray(sliceRows) ? sliceRows[0] : undefined
+    if (!sliceRow) throw new RegistryRowMissingError(MULTI_SITE_CONFIG_TABLE, sliceKey)
+
+    const baseHost = toNullableText(sliceRow.base_host)
+    if (!baseHost) {
+      throw new RegistryRowMalformedError(
+        MULTI_SITE_CONFIG_TABLE, sliceKey, 'base_host', 'required column is empty',
+      )
+    }
+
     const rows = await conn.query(
       `SELECT site_code, name, scbd, published
          FROM ${SITE_REGISTRY_DB}.site_config
@@ -369,7 +421,7 @@ export async function buildNetworkSummary(
       published: toBoolean(row.published),
     }))
 
-    return { env, multiSiteCode, baseHost: resolveOwnBaseHost(), sites }
+    return { env, multiSiteCode, baseHost, sites }
   }
   catch (error) {
     if (error instanceof RegistryError) throw error
@@ -378,12 +430,6 @@ export async function buildNetworkSummary(
   finally {
     if (conn) await conn.release()
   }
-}
-
-/** This deployment's own `baseHost`, or `null` when it is not configured. */
-function resolveOwnBaseHost(): string | null {
-  const baseHost = (useRuntimeConfig().public as { baseHost?: string }).baseHost
-  return baseHost ? baseHost : null
 }
 
 /* -------------------------------------------------------------------------- */
@@ -483,6 +529,13 @@ function toIsoTimestamp(raw: unknown): string | null {
  * Each slice carries the newest `updated_at` among its rows so a consumer can
  * render staleness rather than pretending freshness.
  *
+ * **Access path.** Unfiltered, ordered by the primary key's own column order, so
+ * InnoDB serves it as a clustered-index scan with no filesort and no secondary
+ * index involved. p02-01 dropped `network_summary`'s `idx_env` as a redundant
+ * leftmost prefix of that key; nothing here or in `writeNetworkSummary` ever
+ * used it, and the slice `DELETE` is likewise a primary-key range scan on
+ * `(env, multi_site_code)`.
+ *
  * @throws {RegistryUnavailableError} the registry could not be reached.
  */
 export async function readNetworkSummary(): Promise<NetworkSummary[]> {
@@ -507,15 +560,18 @@ export async function readNetworkSummary(): Promise<NetworkSummary[]> {
 
       let slice = slices.get(sliceKey)
       if (!slice) {
-        slice = {
-          env,
-          multiSiteCode,
-          baseHost: toNullableText(row.base_host),
-          sites: [],
-          updatedAt: null,
-        }
+        slice = { env, multiSiteCode, baseHost: null, sites: [], updatedAt: null }
         slices.set(sliceKey, slice)
       }
+
+      // `base_host` is a per-ROW column holding a per-SLICE value. Every row in
+      // a slice agrees by construction — `buildNetworkSummary` reads one value
+      // from `multi_site_config`, keyed by the slice's own primary key, and
+      // `writeNetworkSummary` binds that one value for every row it inserts.
+      // Taking the first non-null rather than the first value only matters for
+      // rows written before that source existed; it can no longer pick between
+      // two disagreeing values, because two can no longer be written.
+      if (slice.baseHost === null) slice.baseHost = toNullableText(row.base_host)
 
       slice.sites.push({
         siteCode: String(row.site_code),
@@ -592,7 +648,27 @@ export async function pushNetworkSummary(): Promise<NetworkSummaryPushResult> {
   }
   catch (error) {
     // The message only: an error object from $fetch can carry request headers.
-    const reason = error instanceof Error ? error.message : 'unknown error'
+    // The message itself is not safe as-is either — ofetch formats it as
+    // `[POST] "<url>": 401 Unauthorized`, so it embeds NUXT_NETWORK_SUMMARY_TARGET_URL,
+    // and a target URL configured as `https://user:pass@host/...` would put a
+    // credential into whatever logs this result. Every URL is stripped out.
+    const reason = error instanceof Error ? redactUrls(error.message) : 'unknown error'
     return { status: 'failed', reason, env, multiSiteCode }
   }
+}
+
+/**
+ * Replace every URL in a message with `<url>`.
+ *
+ * Wholesale rather than userinfo-only: the reason string is diagnostic, the URL
+ * is already known to the operator from their own configuration, and stripping
+ * the whole thing cannot be defeated by a credential smuggled somewhere else in
+ * the URL (a query parameter, a path segment). What remains — the method and the
+ * status — is the part that actually says why the push failed.
+ */
+function redactUrls(message: string): string {
+  // Stops at a quote or angle bracket, not only at whitespace: ofetch wraps the
+  // URL in double quotes, and swallowing the closing quote would mangle the
+  // status that follows it.
+  return message.replace(/[a-z][a-z0-9+.-]*:\/\/[^\s"'<>]*/gi, '<url>')
 }
