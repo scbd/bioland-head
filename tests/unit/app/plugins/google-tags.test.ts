@@ -87,7 +87,10 @@ describe('a switch value that is not the boolean true', () => {
     expect(warn).toHaveBeenCalledOnce()
     expect(String(warn.mock.calls[0]![0])).toContain('rather than the boolean true')
 
-    // A locale switch re-initialises the store; the warning must not repeat.
+    // A locale switch re-initialises the store; the warning must not repeat. The value has to
+    // genuinely change, or the getter returns the same primitive and the watcher never re-fires.
+    site.biolandSettings = { ...site.biolandSettings, googleAnalyticsEnabled: false }
+    await nextTick()
     site.biolandSettings = { ...site.biolandSettings, googleAnalyticsEnabled: enabled }
     await nextTick()
 
