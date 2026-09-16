@@ -105,7 +105,13 @@ export interface SiteConfigInput {
   siteCode: string
   multiSiteCode: string
   name: string
-  published?: boolean
+  /**
+   * Present on every site in the observed corpus (211/211, 11/11 envs — see the contract spec's
+   * inventory) and the parity gate treats a difference in this field as a failure, so it is an
+   * invariant, not an optional flag. Required here so a malformed registry read or mapper cannot
+   * satisfy this type while silently omitting it.
+   */
+  published: boolean
   /**
    * Stored on every site but absent from `publicSiteProperties`, so it is stripped from the
    * unauthenticated response and never reaches this repo today. It stays on the INPUT type
