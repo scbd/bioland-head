@@ -51,12 +51,29 @@ function registryStore() {
     return { affectedRows: 1 }
   }
 
+  /** The slice prune: keep only the site codes the plan named. */
+  const prune = (sql: string, params: unknown[]) => {
+    const [, table] = /^DELETE FROM (\S+) WHERE/.exec(sql)!
+    const [env, multiSiteCode, ...keep] = params
+    const prefix = `${key(table, [env, multiSiteCode])}|`
+    let affectedRows = 0
+
+    for (const rowKey of [...rows.keys()]) {
+      if (!rowKey.startsWith(prefix)) continue
+      if (keep.includes(rowKey.slice(prefix.length))) continue
+      rows.delete(rowKey)
+      affectedRows += 1
+    }
+    return { affectedRows }
+  }
+
   const query = async (sql: string, params: unknown[] = []) => {
     // The seeder wraps a slice in a transaction. This store commits as it goes —
     // rollback semantics are covered in write.spec.ts; here the point is only
     // that the statements do not derail the round trip.
     if (sql === 'START TRANSACTION' || sql === 'COMMIT' || sql === 'ROLLBACK') return { affectedRows: 0 }
     if (sql.startsWith('INSERT INTO')) return insert(sql, params)
+    if (sql.startsWith('DELETE FROM')) return prune(sql, params)
 
     if (/FROM site_registry\.site_config s/.test(sql)) {
       const [env, multiSiteCode, siteCode] = params as string[]

@@ -261,7 +261,10 @@ export default defineTask({
     const connection = await createSeedConnection(getDbConfig())
     try {
       const written = await seedSlice(connection, plan)
-      consola.info(`registry:seed wrote ${written.multiSites} multiSite row and ${written.sites} site rows for env=${env} multiSiteCode=${multiSiteCode}`)
+      // The removal count is reported alongside the writes on purpose: pruning
+      // a stale row is the one destructive thing a seed does, so it must never
+      // happen silently.
+      consola.info(`registry:seed wrote ${written.multiSites} multiSite row and ${written.sites} site rows, removed ${written.sitesRemoved} stale site rows, for env=${env} multiSiteCode=${multiSiteCode}`)
       return { result: { dryRun: false, ...written, findings } }
     }
     finally {

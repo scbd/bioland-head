@@ -44,7 +44,7 @@ const SOURCE = `{
 beforeEach(() => {
   readFile.mockReset().mockResolvedValue(SOURCE)
   createSeedConnection.mockReset()
-  seedSlice.mockReset().mockResolvedValue({ multiSites: 1, sites: 2 })
+  seedSlice.mockReset().mockResolvedValue({ multiSites: 1, sites: 2, sitesRemoved: 1 })
   // configDir is now confined to an operator-configured root, so the root has to
   // exist for the task to accept the payload's directory at all.
   vi.stubEnv('DMSM_CONFIG_DIR', '/synthetic')
@@ -225,7 +225,9 @@ describe('registry:seed', () => {
     // runtime config itself.
     expect(createSeedConnection).toHaveBeenCalledWith({ dbHost: 'db.example.test', dbName: 'i18n_cache' })
     expect(end).toHaveBeenCalledTimes(1)
-    expect(result).toMatchObject({ dryRun: false, multiSites: 1, sites: 2 })
+    // The prune count reaches the task result: removing a stale row is the one
+    // destructive thing a seed does, so it must never be reported as nothing.
+    expect(result).toMatchObject({ dryRun: false, multiSites: 1, sites: 2, sitesRemoved: 1 })
   })
 
   it('closes the connection even when a write fails', async () => {

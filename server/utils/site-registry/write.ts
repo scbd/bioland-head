@@ -41,6 +41,12 @@
  * When every value already matches, MariaDB reports zero affected rows and does
  * not fire `ON UPDATE CURRENT_TIMESTAMP`, so even `updated_at` holds still.
  *
+ * Convergence is two-sided: `seedSlice` also deletes the slice's site rows the
+ * plan no longer names, so re-seeding a source a site was removed from leaves
+ * the registry equal to that source rather than a superset of it. That is the
+ * one place this module destroys a row, and it is bounded to the slice being
+ * written — see `pruneAbsentSites`.
+ *
  * @module server/utils/site-registry/write
  */
 import mariadb from 'mariadb'
@@ -348,16 +354,53 @@ const SITE_VALUE_COLUMNS = [
 ]
 const SITE_UPSERT = upsertStatement(SITE_TABLE, SITE_KEY_COLUMNS, SITE_VALUE_COLUMNS)
 
-/** Run one write, converting any driver failure into a scrubbed error. */
+/**
+ * `DELETE` for the rows of one slice that the plan no longer names.
+ *
+ * `site_code` is a real scalar column and part of the PRIMARY KEY, so this is a
+ * PK range scan over `(env, multi_site_code)` with an in-memory filter — no JSON
+ * column is touched, exactly as `schema.sql` promises of every predicate.
+ *
+ * Every code is a bound parameter, never interpolated, for the same reason the
+ * upserts bind theirs: a site code is derived from the source document.
+ */
+function sitePruneStatement(siteCodeCount: number): string {
+  const placeholders = Array.from({ length: siteCodeCount }, () => '?').join(', ')
+  return `DELETE FROM ${SITE_TABLE} WHERE env = ? AND multi_site_code = ? AND site_code NOT IN (${placeholders})`
+}
+
+/**
+ * How many rows a statement touched, defensively.
+ *
+ * The mariadb driver returns `affectedRows` as a number, but the same result
+ * object carries `insertId` as a `BigInt`, so a driver or option change that
+ * widened this field must not turn a count into `NaN` in an operator's report.
+ * Anything unrecognised is 0 — the prune's success is the DELETE not throwing,
+ * never the shape of its result object.
+ */
+function affectedRows(result: unknown): number {
+  const rows = (result as { affectedRows?: unknown })?.affectedRows
+  if (typeof rows === 'bigint') return Number(rows)
+  return typeof rows === 'number' && Number.isFinite(rows) ? rows : 0
+}
+
+/**
+ * Run one write, converting any driver failure into a scrubbed error.
+ *
+ * Returns the driver's result so the prune can read `affectedRows`. Every other
+ * caller ignores it — an upsert's affected-row count is not a fact this module
+ * reports, because `ON DUPLICATE KEY UPDATE` reports 0, 1 or 2 for the same
+ * converged row depending on what changed.
+ */
 async function runWrite(
   connection: SeedConnectionLike,
   table: string,
   key: Record<string, string>,
   sql: string,
   params: unknown[],
-): Promise<void> {
+): Promise<unknown> {
   try {
-    await connection.query(sql, params)
+    return await connection.query(sql, params)
   }
   catch (error) {
     if (error instanceof RegistryError) throw error
@@ -456,6 +499,65 @@ export async function seedSiteConfig(
   ])
 }
 
+/**
+ * Delete the slice's site rows that the plan no longer names.
+ *
+ * ## Why a delete, and not a flag
+ *
+ * `buildSeedPlan` maps EVERY site under the source block, so `plan.sites` is the
+ * whole slice and never a subset — which is what makes "absent" a fact rather
+ * than a guess. Without this, a site removed, renamed or moved upstream leaves
+ * its `(env, multi_site_code, site_code)` row behind for good: `listSites` keeps
+ * returning it, and the drift re-seed (p02-06) can never make the registry
+ * converge to the source, because an upsert-only writer has no way to subtract.
+ *
+ * Marking the row unpublished instead was considered and rejected: `listSites`
+ * does not filter on `published`, so a soft flag leaves the stale enumeration
+ * exactly as it was and fixes nothing. A `retired_at` column would need a schema
+ * change and a retention contract, which is a bigger decision than this module
+ * gets to make.
+ *
+ * ## What is lost, and why that is acceptable here
+ *
+ * A deleted row takes `last_known_good_settings` / `last_known_good_at` with it,
+ * and that cache is NOT regenerable from the JSON5 source — only p02-05 can
+ * rewrite it, after a successful compose. That is tolerable for a site the
+ * source no longer carries, because such a site is no longer served and its
+ * degraded-mode cache is already dead weight. It is NOT tolerable when the
+ * "absence" is really a broken source, which is what the guard below is for.
+ * `network_summary` is deliberately untouched — p02-07 owns that table's row
+ * shape and its own reconciliation.
+ *
+ * ## Why an empty plan prunes nothing
+ *
+ * A plan with zero sites is the one case where the blast radius is the entire
+ * slice and the evidence is weakest: a truncated or half-edited source with a
+ * `sites: {}` block parses perfectly and is indistinguishable from a network
+ * that genuinely has no sites left. Emptying a slice is therefore a deliberate,
+ * out-of-band act, not something a seeding pass does on its own. The slice row
+ * is still upserted, as it always was.
+ *
+ * @returns how many rows were removed.
+ */
+async function pruneAbsentSites(
+  connection: SeedConnectionLike,
+  env: string,
+  multiSiteCode: string,
+  siteCodes: string[],
+): Promise<number> {
+  if (!siteCodes.length) return 0
+
+  const key = { env, multi_site_code: multiSiteCode }
+  const result = await runWrite(
+    connection,
+    SITE_TABLE,
+    key,
+    sitePruneStatement(siteCodes.length),
+    [env, multiSiteCode, ...siteCodes],
+  )
+  return affectedRows(result)
+}
+
 /** A site record does not belong to the slice being seeded. */
 export class RegistrySeedSliceMismatchError extends RegistryError {
   constructor(expected: Record<string, string>, siteCode: string) {
@@ -516,15 +618,24 @@ export class RegistrySeedSliceMismatchError extends RegistryError {
  * makes the slice all-or-nothing; a `ROLLBACK` failure is swallowed so the
  * original error is what the caller sees.
  *
+ * ## Why the slice is reconciled, not merely upserted
+ *
+ * The upserts alone only ever add and update, so a site the source dropped kept
+ * its row forever and `listSites` kept returning it — a registry that can never
+ * converge to the source. `pruneAbsentSites` removes the slice's rows the plan
+ * does not name, inside this same transaction and after the writes, so the
+ * slice's membership ends up equal to the plan's. See that function for what a
+ * deleted row costs and why an empty plan prunes nothing.
+ *
  * @throws {RegistrySeedSliceMismatchError}       a site is not in this slice.
  * @throws {RegistrySeedIncompleteMultiSiteError} the slice row cannot be read back.
  * @throws {RegistrySeedIncompleteSiteError}      a site cannot satisfy the contract.
- * @returns how many rows were written.
+ * @returns how many rows were written, and how many stale ones were removed.
  */
 export async function seedSlice(
   connection: SeedConnectionLike,
   plan: { multiSite: SeedMultiSiteRecord, sites: SeedSiteRecord[] },
-): Promise<{ multiSites: number, sites: number }> {
+): Promise<{ multiSites: number, sites: number, sitesRemoved: number }> {
   const { env, multiSiteCode } = plan.multiSite
 
   for (const site of plan.sites) {
@@ -551,6 +662,8 @@ export async function seedSlice(
     )
   }
 
+  let sitesRemoved = 0
+
   await connection.query('START TRANSACTION')
   try {
     // Awaited before the loop below: the slice row must exist before any site row
@@ -558,6 +671,13 @@ export async function seedSlice(
     await seedMultiSiteConfig(connection, plan.multiSite)
 
     for (const site of plan.sites) await seedSiteConfig(connection, site)
+
+    // Last, and inside the same transaction: the surviving rows are exactly the
+    // ones just written, and a prune failure rolls the whole slice back rather
+    // than leaving a half-reconciled one behind.
+    sitesRemoved = await pruneAbsentSites(
+      connection, env, multiSiteCode, plan.sites.map(site => site.siteCode),
+    )
 
     await connection.query('COMMIT')
   }
@@ -568,5 +688,5 @@ export async function seedSlice(
     throw error
   }
 
-  return { multiSites: 1, sites: plan.sites.length }
+  return { multiSites: 1, sites: plan.sites.length, sitesRemoved }
 }

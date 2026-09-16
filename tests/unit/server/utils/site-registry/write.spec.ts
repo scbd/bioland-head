@@ -107,6 +107,7 @@ function fakeDb() {
   const rows = new Map<string, Record<string, unknown>>()
   const calls: Array<{ sql: string, params: unknown[] }> = []
   let pending: Map<string, Record<string, unknown>> | null = null
+  let pendingDeletes: Set<string> = new Set()
 
   return {
     rows,
@@ -116,16 +117,40 @@ function fakeDb() {
 
       if (sql === 'START TRANSACTION') {
         pending = new Map()
+        pendingDeletes = new Set()
         return { affectedRows: 0 }
       }
       if (sql === 'COMMIT') {
+        for (const key of pendingDeletes) rows.delete(key)
         for (const [key, row] of pending ?? []) rows.set(key, row)
         pending = null
+        pendingDeletes = new Set()
         return { affectedRows: 0 }
       }
       if (sql === 'ROLLBACK') {
         pending = null
+        pendingDeletes = new Set()
         return { affectedRows: 0 }
+      }
+
+      // The prune. Modelled like the upserts are: committed rows are what the
+      // statement sees, and the removal only lands in `rows` at COMMIT, so a
+      // rollback has to leave a stale row exactly where it was.
+      const pruneMatch = /^DELETE FROM (\S+) WHERE env = \? AND multi_site_code = \? AND site_code NOT IN \(([^)]*)\)$/
+        .exec(sql)
+      if (pruneMatch) {
+        const [, table] = pruneMatch
+        const [env, multiSiteCode, ...keep] = params
+        const prefix = `${table}|${env}|${multiSiteCode}|`
+        let affectedRows = 0
+
+        for (const key of [...rows.keys(), ...(pending?.keys() ?? [])]) {
+          if (!key.startsWith(prefix)) continue
+          if (keep.includes(key.slice(prefix.length))) continue
+          pendingDeletes.add(key)
+          affectedRows += 1
+        }
+        return { affectedRows }
       }
 
       const match = /^INSERT INTO (\S+) \(([^)]+)\) VALUES/.exec(sql)
@@ -582,9 +607,121 @@ describe('transaction', () => {
     await seedSlice(db, plan())
 
     expect(db.calls.map(call => call.sql.split(' ').slice(0, 2).join(' '))).toEqual([
-      'START TRANSACTION', 'INSERT INTO', 'INSERT INTO', 'INSERT INTO', 'COMMIT',
+      'START TRANSACTION', 'INSERT INTO', 'INSERT INTO', 'INSERT INTO', 'DELETE FROM', 'COMMIT',
     ])
     expect(db.rows.size).toBe(3)
+  })
+})
+
+describe('reconciling rows the source dropped', () => {
+  /** The same file with `be` removed — a site deleted, renamed or moved away. */
+  const SOURCE_WITHOUT_BE = SOURCE.replace(
+    /be: \{[\s\S]*?\},\n {6}\/\/ The minimal site/,
+    '// The minimal site',
+  )
+
+  function planWithoutBe() {
+    return buildSeedPlan('stg', 'bl2', parseSeedSource(SOURCE_WITHOUT_BE, '/synthetic/stg.json5'))
+  }
+
+  it('drops the SOURCE_WITHOUT_BE fixture down to one site', () => {
+    // Guards the regex above: a fixture that silently still carried `be` would
+    // make every test below pass for the wrong reason.
+    expect(planWithoutBe().sites.map(site => site.siteCode)).toEqual(['zz'])
+  })
+
+  it('removes a row the reseeded slice no longer names', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+    expect(db.rows.has('site_registry.site_config|stg|bl2|be')).toBe(true)
+
+    const second = await seedSlice(db, planWithoutBe())
+
+    // Regression: the loop only upserted the surviving sites, so `be` kept its
+    // row indefinitely, listSites kept returning it, and the drift re-seed could
+    // never make the registry converge to the source.
+    expect(db.rows.has('site_registry.site_config|stg|bl2|be')).toBe(false)
+    expect(db.rows.has('site_registry.site_config|stg|bl2|zz')).toBe(true)
+    expect(second.sitesRemoved).toBe(1)
+  })
+
+  it('converges to exactly the plan, not a superset of every plan ever seeded', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+    await seedSlice(db, planWithoutBe())
+
+    const siteCodes = [...db.rows.keys()]
+      .filter(key => key.startsWith('site_registry.site_config|'))
+      .map(key => key.split('|').at(-1))
+    expect(siteCodes).toEqual(['zz'])
+  })
+
+  it('leaves another slice and the slice row alone', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+    // A neighbouring slice that must survive a bl2 reseed untouched.
+    db.rows.set('site_registry.site_config|stg|bsl|be', { env: 'stg', multi_site_code: 'bsl', site_code: 'be' })
+    db.rows.set('site_registry.site_config|prod|bl2|be', { env: 'prod', multi_site_code: 'bl2', site_code: 'be' })
+
+    await seedSlice(db, planWithoutBe())
+
+    expect(db.rows.has('site_registry.site_config|stg|bsl|be')).toBe(true)
+    expect(db.rows.has('site_registry.site_config|prod|bl2|be')).toBe(true)
+    expect(db.rows.has('site_registry.multi_site_config|stg|bl2')).toBe(true)
+  })
+
+  it('binds every site code as a parameter and interpolates none of them', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+
+    const prune = db.calls.find(call => call.sql.startsWith('DELETE FROM'))!
+    expect(prune.sql).toBe(
+      'DELETE FROM site_registry.site_config WHERE env = ? AND multi_site_code = ? '
+      + 'AND site_code NOT IN (?, ?)',
+    )
+    expect(prune.params).toEqual(['stg', 'bl2', 'be', 'zz'])
+  })
+
+  it('rolls the removal back with the rest of the slice', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+
+    const failing = planWithoutBe()
+    failing.sites = [...failing.sites, { ...plan().sites[1], siteCode: null as unknown as string }]
+
+    await expect(seedSlice(db, failing)).rejects.toBeInstanceOf(RegistrySeedWriteError)
+
+    // A prune that lands while the slice that justified it is rolled back would
+    // delete a live site for nothing.
+    expect(db.rows.has('site_registry.site_config|stg|bl2|be')).toBe(true)
+    expect(db.calls.at(-1)!.sql).toBe('ROLLBACK')
+  })
+
+  it('prunes nothing when the plan carries no sites at all', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+
+    const empty = { ...plan(), sites: [] }
+    const result = await seedSlice(db, empty)
+
+    // A `sites: {}` block parses perfectly and is indistinguishable from a
+    // truncated source, so emptying a slice stays a deliberate out-of-band act.
+    // Both rows survive, including `be`'s non-regenerable last-known-good cache.
+    expect(db.rows.has('site_registry.site_config|stg|bl2|be')).toBe(true)
+    expect(db.rows.has('site_registry.site_config|stg|bl2|zz')).toBe(true)
+    expect(result.sitesRemoved).toBe(0)
+    expect(db.calls.filter(call => call.sql.startsWith('DELETE FROM'))).toHaveLength(1)
+  })
+
+  it('never names a column another task owns', async () => {
+    const db = fakeDb()
+    await seedSlice(db, plan())
+
+    // The prune does take last_known_good_settings with the row, which is why
+    // the statement must stay keyed on the slice and nothing else.
+    const prune = db.calls.find(call => call.sql.startsWith('DELETE FROM'))!
+    expect(prune.sql).not.toContain('last_known_good')
+    expect(prune.sql).not.toContain('network_summary')
   })
 })
 
