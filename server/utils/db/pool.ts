@@ -53,6 +53,13 @@ export function getDbPool(): import('mariadb').Pool {
       connectionLimit: dbConnectionLimit,
       acquireTimeout: 30000,
       initializationTimeout: 30000,
+      // mariadb defaults this to true, which appends `- parameters:['<value>']`
+      // (the first `debugLen` 256 characters of each bound value) to every
+      // SqlError message. Both consumers bind content as parameters — the
+      // translation cache binds source text, the config registry binds a whole
+      // serialised settings document — so a deadlock or a packet-too-large would
+      // write that content into any log that prints the error. Off, pool-wide.
+      logParam: false,
     })
   }
   return dbPool
