@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { computed, effectScope, nextTick, reactive, ref, watch } from 'vue'
-import { isGoogleTagsEnabled, isGoogleTagsMisconfigured, parseGoogleTagIds } from '../../../../shared/utils/google-tags'
+import { isGoogleTagsBrowserHost, isGoogleTagsEnabled, isGoogleTagsMisconfigured, parseGoogleTagIds } from '../../../../shared/utils/google-tags'
 
+const BASE_HOST = 'chm-cbd.net'
+const TENANT_HOST = `seed.${BASE_HOST}`
+const ALIAS_HOST = 'alias.example.gov'
+const FOREIGN_HOST = 'evil.test'
 const GTAG_IDS = ['G-TEST1234567', 'UA-12345-6', 'AW-123456789']
 const GTM_ID = 'GTM-TEST123'
 const DENIED_AD_CONSENT = {
@@ -16,12 +20,18 @@ afterEach(() => {
 
 async function setupTags (
   tagIds = [...GTAG_IDS, GTM_ID].join(','),
-  { enabled, noSettings = false }: { enabled?: unknown, noSettings?: boolean } = { enabled: true },
+  {
+    enabled, noSettings = false, hostname = TENANT_HOST, redirect,
+  }: { enabled?: unknown, noSettings?: boolean, hostname?: string, redirect?: string } = { enabled: true },
 ) {
   // No env, multisite or publication here on purpose: the plugin reads none of them since
-  // BL-1015. `location.hostname` below still matters - `cookie_domain` is pinned to it.
+  // BL-1015. `siteCode` and `baseHost` generate the one hostname this tenant serves, and
+  // `redirect` adds its dmsm alias; BL-1030 asserts `location.hostname` is one of them.
+  // `cookie_domain` is pinned to that same hostname, which is a separate protection.
   const site = reactive({
     siteCode: 'seed',
+    baseHost: BASE_HOST,
+    redirect,
     biolandSettings: (noSettings ? undefined : {
       googleAnalyticsEnabled: enabled, googleAnalyticsIds: tagIds,
     }) as { googleAnalyticsEnabled?: unknown, googleAnalyticsIds?: string } | undefined,
@@ -30,7 +40,7 @@ async function setupTags (
   const gtag = vi.fn()
   const reload = vi.fn()
   const win: Record<string, unknown> = {
-    location: { hostname: 'seed.chm-cbd.net', reload }, gtag,
+    location: { hostname, reload }, gtag,
   }
   const loadGtm = vi.fn()
   const warn = vi.fn()
@@ -42,7 +52,7 @@ async function setupTags (
     useCookieControl: () => ({ cookiesEnabledIds }),
     useScriptGoogleAnalytics: () => ({ proxy: { gtag } }),
     useScriptGoogleTagManager: loadGtm,
-    computed, watch, isGoogleTagsEnabled, parseGoogleTagIds,
+    computed, watch, isGoogleTagsEnabled, isGoogleTagsBrowserHost, parseGoogleTagIds,
     window: win, document: { cookie: '' },
   }
   for (const [name, value] of Object.entries(globals)) vi.stubGlobal(name, value)
@@ -67,7 +77,7 @@ describe('the Drupal switch is the only control', () => {
     },
   )
 
-  it('loads the configured tags as soon as the switch is on, with no host or env condition', async () => {
+  it('loads the configured tags as soon as the switch is on, with no deployment condition', async () => {
     const { site, gtag, loadGtm } = await setupTags(undefined, { enabled: false })
 
     site.biolandSettings = { ...site.biolandSettings, googleAnalyticsEnabled: true }
@@ -204,5 +214,66 @@ describe('Google tags switch recovery', () => {
     cookiesEnabledIds.value = []
     await nextTick()
     expect(reload).toHaveBeenCalledOnce()
+  })
+})
+
+describe('BL-1030: the browser host must be one this tenant serves', () => {
+  it('loads nothing on a foreign host even with the switch on, consent held, and IDs configured', async () => {
+    // A reverse proxy forwarding `Host: seed.chm-cbd.net` resolves the tenant server-side, so
+    // everything the store carries looks legitimate. Only `location.hostname` gives it away.
+    const { gtag, loadGtm } = await setupTags(undefined, { enabled: true, hostname: FOREIGN_HOST })
+
+    expect(loadGtm).not.toHaveBeenCalled()
+    expect(gtag.mock.calls.filter(([command]) => command === 'config')).toEqual([])
+  })
+
+  it('loads nothing on the tenant host when the switch is off', async () => {
+    const { gtag, loadGtm } = await setupTags(undefined, { enabled: false, hostname: TENANT_HOST })
+
+    expect(loadGtm).not.toHaveBeenCalled()
+    expect(gtag.mock.calls.filter(([command]) => command === 'config')).toEqual([])
+  })
+
+  it('loads on the tenant dmsm redirect alias', async () => {
+    const { gtag, loadGtm } = await setupTags(undefined, {
+      enabled: true, hostname: ALIAS_HOST, redirect: ALIAS_HOST,
+    })
+
+    expect(loadGtm).toHaveBeenCalledOnce()
+    for (const id of GTAG_IDS) {
+      expect(gtag.mock.calls.filter(([command, tagId]) => command === 'config' && tagId === id)).toHaveLength(1)
+    }
+  })
+
+  it('loads nothing on an alias host dmsm never configured', async () => {
+    const { gtag, loadGtm } = await setupTags(undefined, { enabled: true, hostname: ALIAS_HOST })
+
+    expect(loadGtm).not.toHaveBeenCalled()
+    expect(gtag.mock.calls.filter(([command]) => command === 'config')).toEqual([])
+  })
+
+  it('silences tags when a context refetch drops the alias that admitted this host', async () => {
+    const { site, gtag, reload, win } = await setupTags(undefined, {
+      enabled: true, hostname: ALIAS_HOST, redirect: ALIAS_HOST,
+    })
+
+    expect(win['ga-disable-G-TEST1234567']).toBeUndefined()
+
+    site.redirect = undefined
+    await nextTick()
+
+    expect(win['ga-disable-G-TEST1234567']).toBe(true)
+    expect(gtag).toHaveBeenLastCalledWith('consent', 'update', {
+      analytics_storage: 'denied', ...DENIED_AD_CONSENT,
+    })
+    // Losing the alias is not a consent withdrawal.
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  it('still warns about a misconfigured switch on a foreign host', async () => {
+    // The warning is about the Drupal value, not about eligibility, so the host must not hide it.
+    const { warn } = await setupTags(undefined, { enabled: 'true', hostname: FOREIGN_HOST })
+
+    expect(warn).toHaveBeenCalledOnce()
   })
 })

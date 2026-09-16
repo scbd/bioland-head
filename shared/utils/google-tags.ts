@@ -5,23 +5,32 @@
  * `bioland.settings` bag, surfaced to the client as
  * `siteStore.biolandSettings.googleAnalyticsIds`, alongside the administrator's explicit
  * `googleAnalyticsEnabled` switch. Nothing here loads a script: this module only decides which
- * tokens are admissible and whether the administrator has turned measurement on. The loader lives
- * in `app/plugins/google-tags.client.ts`.
+ * tokens are admissible, whether the administrator has turned measurement on, and whether the
+ * browser is on a hostname this tenant serves. The loader lives in
+ * `app/plugins/google-tags.client.ts`.
  *
  * BL-1015 removed the deployment gate that used to sit here (`isGoogleTagsSite`). Tags activated on
  * the presence of IDs, narrowed by rules no administrator could see from the admin UI. The Drupal
  * checkbox is the only control now. Visitor consent is a separate gate and still applies, in the
  * plugin.
  *
- * One control was traded away rather than found redundant, and the next reader should know it. The
- * browser-host half of that gate was BL-946's answer to a specific attacker: a reverse proxy on an
- * origin it owns, forwarding a real tenant's `Host`, so the tenant's live `G-`, `AW-`, `DC-` and
- * `GTM-` IDs execute on that origin. That is unmitigated again, and no server-side check can
- * replace it, because only the browser knows the origin it is really on. It asks where a site may
- * measure, not whether, so it is severable from this module and BL-1030 tracks restoring it.
- * `cookie_domain` is still pinned to the current hostname in the plugin, so such a page cannot link
- * identities with the real site.
+ * BL-1030 restored the other half of BL-946, which asks *where* a site may measure rather than
+ * whether: {@link isGoogleTagsBrowserHost} requires the hostname the visitor's browser is actually
+ * on to be one this tenant serves. The attacker it stops is a reverse proxy on an origin the
+ * attacker owns, forwarding a real tenant's `Host`. `server/utils/context-unified.ts` fails closed
+ * on an unmapped `Host`, but forwarding a *valid* one is a line of proxy config, so the tenant
+ * resolves normally and its live `G-`, `AW-`, `DC-` and `GTM-` IDs would execute on that page -
+ * write access to the tenant's GA4 property and Google Ads conversion stream, and its GTM
+ * container running arbitrary marketing JS, from an origin the tenant does not control. No
+ * server-side check can substitute, because only the visitor's browser knows the origin it is
+ * really on, which is why the assertion is client-side and takes the hostname as an argument.
+ *
+ * The allowed host set comes from dmsm alone - no environment name, no publication flag, no
+ * multisite allowlist, and no hard-coded host template. `cookie_domain` stays pinned to the
+ * current hostname in the plugin, which is a separate protection and still wanted.
  */
+
+import { getGeneratedHostname, normalizeRedirectHost } from './site-host';
 
 /**
  * The only token grammar admitted into a tag loader.
@@ -60,6 +69,104 @@ export interface GoogleTagIds {
  */
 export function isGoogleTagsEnabled(enabled?: unknown): boolean {
     return enabled === true;
+}
+
+/**
+ * The slice of site context the browser-host assertion reads, straight off the site store.
+ *
+ * Every field is `unknown` because all three originate in untyped dmsm operator config: a
+ * partially hydrated store, a missing key, or a value of the wrong type has to fail closed rather
+ * than throw. `siteCode` and `baseHost` are the store's own values, which
+ * `server/utils/context-unified.ts` derives from dmsm; `redirect` is dmsm's `config.redirect`
+ * carried through `app/stores/site.js` verbatim.
+ */
+export interface GoogleTagHostContext {
+    siteCode?: unknown;
+    baseHost?: unknown;
+    redirect?: unknown;
+}
+
+/**
+ * Reduces a candidate host to a bare, lower cased hostname suitable for an exact comparison.
+ *
+ * Used for the browser's `window.location.hostname` and for the generated host, which arrives as
+ * an HTTPS origin, so a scheme is accepted and unwrapped. Redirect aliases use the canonical
+ * `normalizeRedirectHost` contract instead. Anything else fails closed with `null`: a non HTTPS
+ * scheme, embedded credentials, an explicit port, a non root path, a query or a fragment, or a
+ * bare string still carrying `/`, `@`, or `:`. That rejects host confusable input such as
+ * `evil.test/real.chm-cbd.net` or a userinfo trick instead of quietly accepting it.
+ */
+function normalizeGoogleTagHost(rawHost: unknown): string | null {
+    if (typeof rawHost !== 'string' || rawHost.length === 0) return null;
+
+    let hostname: string;
+
+    if (/^[a-z][a-z0-9+.-]*:\/\//i.test(rawHost)) {
+        let url: URL;
+
+        try {
+            url = new URL(rawHost);
+        } catch {
+            return null;
+        }
+
+        if (url.protocol !== 'https:') return null;
+        if (url.username || url.password) return null;
+        if (url.port) return null;
+        if (url.pathname !== '/' && url.pathname !== '') return null;
+        if (url.search || url.hash) return null;
+
+        hostname = url.hostname;
+    } else {
+        hostname = rawHost;
+    }
+
+    if (!hostname || hostname.includes('/') || hostname.includes('@') || hostname.includes(':')) return null;
+
+    return hostname.toLowerCase();
+}
+
+/**
+ * Decides whether the hostname the visitor's browser is on is one this tenant actually serves.
+ *
+ * The allowed set is exactly two hostnames, both derived from dmsm and nothing else:
+ *
+ * 1. The tenant's generated host, the hostname part of
+ *    {@link getGeneratedHostname}`(siteCode, baseHost)`. dmsm owns both halves, so a multisite
+ *    whose `baseHost` is `chm-cbd.net` yields `<siteCode>.chm-cbd.net` without a template here.
+ * 2. The tenant's redirect alias, `normalizeRedirectHost(redirect)`, when dmsm has configured a
+ *    usable one. `app/stores/site.js` carries dmsm's value through unconditionally, so this is
+ *    visible in every environment.
+ *
+ * `browserHost` is an argument rather than a `window` read so this module stays pure and unit
+ * testable; `app/plugins/google-tags.client.ts` passes `window.location.hostname`. It is the one
+ * input a proxy forwarding a tenant `Host` header cannot forge for the visitor.
+ *
+ * Everything fails closed: a missing or non string `siteCode` or `baseHost`, a browser host that
+ * does not normalise, a generated host that does not normalise (a `baseHost` carrying a port or a
+ * path, say), and a hostname matching neither member of the set all return `false`. This asks only
+ * *where* a site may measure - *whether* is the administrator's Drupal checkbox, read by
+ * {@link isGoogleTagsEnabled}, and both are required.
+ */
+export function isGoogleTagsBrowserHost(site?: GoogleTagHostContext | null, browserHost?: string | null): boolean {
+    if (!site || typeof site !== 'object') return false;
+
+    const { siteCode, baseHost, redirect } = site;
+
+    if (typeof siteCode !== 'string' || typeof baseHost !== 'string') return false;
+    if (siteCode.length === 0 || baseHost.length === 0) return false;
+
+    const actualHost = normalizeGoogleTagHost(browserHost);
+
+    if (actualHost === null) return false;
+
+    const generatedHost = normalizeGoogleTagHost(getGeneratedHostname(siteCode, baseHost));
+
+    if (generatedHost !== null && actualHost === generatedHost) return true;
+
+    const redirectAlias = normalizeRedirectHost(redirect);
+
+    return redirectAlias !== null && actualHost === redirectAlias;
 }
 
 /**

@@ -64,9 +64,12 @@ describe('site store hosts', () => {
     ['production', 'custom.example.gov', 'https://custom.example.gov', 'custom.example.gov'],
     ['production', '', 'https://seed.example.test', ''],
     ['production', undefined, 'https://seed.example.test', ''],
-    ['dev', 'custom.example.gov', 'https://seed.example.test', ''],
-    ['stg', 'custom.example.gov', 'https://seed.example.test', ''],
-  ])('initializes env=%s, redirect=%s without changing host or bare redirect', (env, redirect, host, bareRedirect) => {
+    // BL-1030: the bare redirect is dmsm's value in every environment now. `getCanonicalHost`
+    // still owns the env gate, so the hosts below are unchanged - only the alias is visible,
+    // because the browser-host assertion has to know every hostname this tenant serves.
+    ['dev', 'custom.example.gov', 'https://seed.example.test', 'custom.example.gov'],
+    ['stg', 'custom.example.gov', 'https://seed.example.test', 'custom.example.gov'],
+  ])('initializes env=%s, redirect=%s carrying the bare redirect without changing host', (env, redirect, host, bareRedirect) => {
     const store = initialize({ env, config: { redirect, defaultLocale: 'en', locales: ['en', 'fr'] } })
 
     expect(store.env).toBe(env)
@@ -185,7 +188,8 @@ describe('site store hosts', () => {
     expect(store.env).toBe('dev')
     expect(store.host).toBe('https://seed.example.test')
     expect(store.localizedHost).toBe('https://seed.example.test/fr')
-    expect(store.params.redirect).toBe('')
+    // The alias follows dmsm even outside prod; the canonical host still ignores it there.
+    expect(store.params.redirect).toBe('changed.example.gov')
   })
 
   it('keeps identifier precedence and handles absent config', () => {

@@ -1,12 +1,16 @@
 /**
  * Loads the site's configured Google tags, and only when it is allowed to.
  *
- * Two gates, both required, both re-evaluated on every change:
+ * Three gates, all required, all re-evaluated on every change:
  *
  * - **The administrator's switch**, `siteStore.biolandSettings.googleAnalyticsEnabled`, read
- *   strictly through `isGoogleTagsEnabled`. BL-1015 made this the only thing that decides whether
- *   this site measures; see `shared/utils/google-tags.ts` for the gate it replaced and what that
- *   cost. Tag IDs no longer imply consent to measure.
+ *   strictly through `isGoogleTagsEnabled`. BL-1015 made this the only thing that decides *whether*
+ *   this site measures. Tag IDs no longer imply consent to measure.
+ * - **The browser's own hostname**, checked through `isGoogleTagsBrowserHost` against the tenant's
+ *   generated host and its dmsm redirect alias. BL-1030 restored this; it decides *where* a site
+ *   may measure, and it is the only input a reverse proxy forwarding a real tenant `Host` header
+ *   cannot forge for the visitor. `window.location.hostname` is read here and passed in, so the
+ *   util stays pure. See `shared/utils/google-tags.ts` for the attack it stops.
  * - **Visitor consent** via `useCookieControl().cookiesEnabledIds` containing `ga`. Every consent
  *   action in the module funnels through one writer (`CookieControl.vue setCookies`), which sets
  *   `cookiesEnabledIds`, so watching that ref catches grant, per category revoke, and decline all.
@@ -150,6 +154,14 @@ export default defineNuxtPlugin({
 
         const enabled = computed(() => isGoogleTagsEnabled(siteStore.biolandSettings?.googleAnalyticsEnabled));
 
+        // Re-derived rather than read once: a context re-fetch can replace `siteCode`, `baseHost`
+        // or the dmsm `redirect` alias mid-session. `window.location.hostname` cannot change
+        // without a navigation, which would re-run this plugin anyway.
+        const onTenantHost = computed(() => isGoogleTagsBrowserHost(
+            { siteCode: siteStore.siteCode, baseHost: siteStore.baseHost, redirect: siteStore.redirect },
+            window.location.hostname,
+        ));
+
         // Once per session, not per store re-initialisation: the context re-fetch would otherwise
         // repeat this on every locale switch.
         let warnedMisconfigured = false;
@@ -268,9 +280,9 @@ export default defineNuxtPlugin({
             window.location.reload();
         }
 
-        watch([ids, consent, enabled], ([tagIds, hasConsent, isEnabled]) => {
+        watch([ids, consent, enabled, onTenantHost], ([tagIds, hasConsent, isEnabled, isTenantHost]) => {
             const hasIds = tagIds.gtag.length > 0 || tagIds.gtm.length > 0;
-            const shouldLoad = isEnabled && hasConsent && hasIds;
+            const shouldLoad = isEnabled && isTenantHost && hasConsent && hasIds;
 
             if (shouldLoad) {
                 // Unconditional, not `&& !loaded`: a measurement ID added in Drupal mid-session
@@ -300,7 +312,8 @@ export default defineNuxtPlugin({
                 return;
             }
 
-            // Consent is still held, but tags should not load (the switch is off, or no IDs).
+            // Consent is still held, but tags should not load: the switch is off, the browser is
+            // not on a hostname this tenant serves, or there are no IDs.
             if (!loaded) return;
 
             loaded = false;
