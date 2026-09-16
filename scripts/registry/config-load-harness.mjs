@@ -587,6 +587,17 @@ export async function runSweep(options) {
  * Resolve the read statement, falling back to a non-mutating probe when the registry table
  * is absent (it is created by p02-01, which may not be merged where the harness runs).
  *
+ * The live statement selects the whole row, not `site_code`. A key-only projection is served
+ * out of the index that already satisfies the WHERE clause: it decodes no payload and transfers
+ * no document, so it measures a key lookup while `rowsReturned > 0` marks the run as a live
+ * config-read measurement. That is optimistic in exactly the way the timings cannot reveal —
+ * the same failure {@link assertFleetFetchedPayload} exists to catch — and it understates the
+ * per-read cost feeding saturation detection. `*` is used rather than a named payload column
+ * because p02-01's schema is not merged where this harness runs, so the column list is not
+ * knowable here; `*` fetches whatever document the table actually carries, which is what a real
+ * config reader does. Values that come back are handled by the existing negative control
+ * ({@link collectValues} feeding `assertNoConfigValues`), never printed.
+ *
  * @param {{getConnection: Function}} pool - Pool to inspect through.
  * @param {string} table - Registry table name.
  * @param {string} database - Schema to look in.
@@ -604,7 +615,7 @@ export async function resolveReadShape(pool, table, database) {
     if (rows.length) {
       return {
         tableMissing: false,
-        sql: `SELECT site_code FROM \`${table}\` WHERE env = ? AND multi_site_code = ? AND site_code = ? LIMIT 1`,
+        sql: `SELECT * FROM \`${table}\` WHERE env = ? AND multi_site_code = ? AND site_code = ? LIMIT 1`,
         params: key => [key.env, key.multiSiteCode, key.siteCode]
       }
     }

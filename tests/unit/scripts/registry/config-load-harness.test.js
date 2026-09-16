@@ -283,6 +283,17 @@ describe('read shape resolution', () => {
     expect(pool.released.count).toBe(1)
   })
 
+  it('fetches the stored document, not just the key the WHERE clause already matched', async () => {
+    const pool = poolReturning([{ table_name: 'bioland_site_config' }])
+    const shape = await resolveReadShape(pool, 'bioland_site_config', 'i18n_cache')
+
+    // A `SELECT site_code` is answered from the index that already satisfies the WHERE clause:
+    // no payload decode, no document transfer. It would time a key lookup and still be counted
+    // a live config read, which is the one error the timings themselves cannot expose.
+    expect(shape.sql).toMatch(/^SELECT \* FROM /)
+    expect(shape.sql).not.toMatch(/^SELECT\s+site_code\b/)
+  })
+
   it('falls back to a non-mutating probe when the registry table is absent', async () => {
     const pool = poolReturning([])
     const shape = await resolveReadShape(pool, 'bioland_site_config', 'i18n_cache')
