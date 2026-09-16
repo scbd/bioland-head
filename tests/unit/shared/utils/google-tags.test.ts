@@ -169,6 +169,17 @@ describe('isGoogleTagsBrowserHost', () => {
     expect(isGoogleTagsBrowserHost({ ...SITE, redirect }, redirect)).toBe(false)
   })
 
+  // `baseHost` is a deployment value, so a trailing dot on it is a misconfiguration rather than an
+  // attack - but it must not disarm the cross-tenant rule, which it would if the zone were merely
+  // lower cased while the alias had its dot stripped.
+  it('still applies the cross-tenant rule when baseHost carries a trailing dot', () => {
+    const site = { siteCode: 'seed', baseHost: 'chm-cbd.net.' }
+
+    expect(isGoogleTagsBrowserHost({ ...site, redirect: 'site-b.chm-cbd.net' }, 'site-b.chm-cbd.net')).toBe(false)
+    expect(isGoogleTagsBrowserHost({ ...site, redirect: 'chm-cbd.net' }, 'chm-cbd.net')).toBe(false)
+    expect(isGoogleTagsBrowserHost(site, 'seed.chm-cbd.net')).toBe(true)
+  })
+
   it('still admits an alias that happens to be this tenant own generated host', () => {
     expect(isGoogleTagsBrowserHost({ ...SITE, redirect: 'seed.chm-cbd.net' }, 'seed.chm-cbd.net')).toBe(true)
   })

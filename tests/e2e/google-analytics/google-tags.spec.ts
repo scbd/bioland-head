@@ -134,9 +134,12 @@ const MAPPED_HOSTS = new Set([TENANT_HOST, ALIAS_HOST, FOREIGN_HOST])
  * `location.hostname` stays the alias or the attacker origin. That is the one value the proxy
  * cannot forge and the only thing `isGoogleTagsBrowserHost` reads.
  *
- * Redirects are not followed in node: a `location` back to the dev host is rewritten to the
- * hostname the browser asked for, so the browser follows it itself and never navigates off the
- * host under test.
+ * Redirects are followed inside node, where `playwright-core` rewrites the `Host` header per hop,
+ * and only the final response is fulfilled - at the original URL. The browser never sees a
+ * `location`, so it never navigates and `location.hostname` stays the host under test. Handing it
+ * the redirect instead would not work: Playwright does not re-intercept a browser-followed
+ * redirect, so the follow-up request would reach the server with the unrewritten foreign `Host`
+ * and fail closed at 400.
  */
 async function installHostRewrite (page: Page): Promise<void> {
   await page.route('**/*', async (route) => {
@@ -148,19 +151,7 @@ async function installHostRewrite (page: Page): Promise<void> {
     target.hostname = DEV_URL.hostname
 
     try {
-      const response = await route.fetch({ url: target.toString(), maxRedirects: 0 })
-      const headers = { ...response.headers() }
-
-      if (headers.location) {
-        const redirected = new URL(headers.location, target)
-
-        if (redirected.hostname === DEV_URL.hostname) {
-          redirected.hostname = browserHost
-          headers.location = redirected.toString()
-        }
-      }
-
-      await route.fulfill({ response, headers })
+      await route.fulfill({ response: await route.fetch({ url: target.toString() }) })
     } catch {
       // A page closing at test end aborts whatever the app still had in flight, and Playwright
       // reports a throw from a route callback as a test failure. The request is already moot at
@@ -560,6 +551,14 @@ test.describe('BL-1030: only a hostname this tenant serves may measure', () => {
     expect(served.contextFetches).toBeGreaterThan(0)
     expect(new URL(page.url()).hostname).toBe(FOREIGN_HOST)
 
+    // A `seedConsentCookies` that silently seeded nothing on this origin would also produce zero
+    // scripts, so the visitor's analytics consent has to be provably granted here first.
+    const enabledConsent = await page.evaluate(() => decodeURIComponent(
+      document.cookie.split('; ').find(pair => pair.startsWith('ncc_e='))?.slice('ncc_e='.length) ?? '',
+    ))
+
+    expect(enabledConsent.split('~')).toContain('ga')
+
     await expect(googleScripts(page)).toHaveCount(0)
     expect(await readDataLayer(page)).toEqual([])
   })
@@ -572,6 +571,10 @@ test.describe('BL-1030: only a hostname this tenant serves may measure', () => {
 
       await page.goto(`${ALIAS_BASE_URL}${HOME_PATH}`)
       await waitForSiteInitialization(page)
+
+      // Tags loading proves the alias branch only while the browser is still on the alias; had
+      // anything moved it to the tenant host, the generated-host branch would have admitted it.
+      expect(new URL(page.url()).hostname).toBe(ALIAS_HOST)
 
       await expect(googleScripts(page)).toHaveCount(2)
       expect(countConfigCalls(await readDataLayer(page), GTAG_ID)).toBe(1)

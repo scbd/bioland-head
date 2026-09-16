@@ -187,7 +187,21 @@ export function isGoogleTagsBrowserHost(site?: GoogleTagHostContext | null, brow
 
     if (redirectAlias === null) return false;
 
-    const zone = baseHost.toLowerCase();
+    // The zone is normalised by the same function as `browserHost` rather than lower cased, so an
+    // operator `baseHost` written `chm-cbd.net.` still meets an alias the strippers have already
+    // de-dotted. Lower casing alone would leave the trailing dot on one side only, the zone rule
+    // below would never fire, and a sibling's hostname configured here would measure. A `baseHost`
+    // that does not reduce to a bare hostname fails closed rather than skipping the rule.
+    const zone = normalizeBrowserHost(baseHost);
+
+    if (zone === null) return false;
+
+    // An alias inside the multisite zone is this tenant's only when it *is* its generated host.
+    // The bare apex therefore never qualifies: it is the network's own domain, not a tenant
+    // hostname, so a tenant configuring it stops measuring rather than measuring on a name it does
+    // not own. That is deliberately stricter than `getCanonicalHost`
+    // (`shared/utils/site-host.ts`), whose `endsWith(`.${baseHost}`)` test admits the apex -
+    // deciding where to route a request is a weaker question than deciding where to measure.
     const insideMultisiteZone = redirectAlias === zone || redirectAlias.endsWith(`.${zone}`);
 
     if (insideMultisiteZone && redirectAlias !== generatedHost) return false;
