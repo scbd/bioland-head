@@ -175,6 +175,16 @@ async function fetchDmsmConfigCore(siteCode: string): Promise<DmsmConfig | null>
  * Get DMSM config with caching and request coalescing
  * Uses cachedFunction for persistent cache + in-memory deduplication for concurrent requests
  */
+/**
+ * Cache key for the DMSM config `cachedFunction`, in the `context` cache group under the
+ * `get-dmsm-config` name. Exported so `invalidateSiteConfig()` and its tests can derive the
+ * real key shape from this single write path instead of hand-typing a copy that can drift
+ * out of sync with it.
+ */
+export function buildDmsmConfigCacheKey(multiSiteCode: string, siteCode: string): string {
+  return `${multiSiteCode}:${siteCode}`;
+}
+
 const _fetchDmsmConfig = cachedFunction(
   async (_event: H3Event, siteCode: string): Promise<DmsmConfig | null> => {
     return fetchDmsmConfigCore(siteCode);
@@ -184,8 +194,8 @@ const _fetchDmsmConfig = cachedFunction(
     name: "get-dmsm-config",
     group: "context",
     getKey: (_event: H3Event, siteCode: string) => {
-      const { env, multiSiteCode } = useRuntimeConfig().public;
-      return `${multiSiteCode}:${siteCode}`;
+      const { multiSiteCode } = useRuntimeConfig().public;
+      return buildDmsmConfigCacheKey(multiSiteCode, siteCode);
     }
   },
 );

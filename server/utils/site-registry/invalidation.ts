@@ -7,13 +7,13 @@
  * the config on every container at once, with no broadcast, no container discovery and
  * no generation counter. See `docs/adr/0010-shared-cache-mount-config-invalidation.md`.
  *
- * **Staleness bound: 0 seconds.** There is no read-side coherence check to amortize,
- * so there is no window to bound. The entry is gone from the shared volume when this
- * function resolves, and the next read on any container is a miss. Two residuals sit
- * outside that bound and cannot be closed here: a request already past its own cache
- * read finishes on the value it loaded, and the shared volume's own metadata visibility
- * latency applies (zero on a POSIX bind mount; a network volume with client attribute
- * caching adds its own attribute-cache TTL).
+ * **Staleness bound: bounded by the shared volume's metadata visibility latency; zero on
+ * a POSIX bind mount.** The entry is gone from the shared volume when this function
+ * resolves; whether the next read on another container observes that immediately depends
+ * on the mount type (a POSIX bind mount surfaces it with no delay; a network volume with
+ * client attribute caching adds its own attribute-cache TTL on top). A second residual sits
+ * outside that bound regardless of mount type and cannot be closed here: a request already
+ * past its own cache read finishes on the value it loaded.
  *
  * **Per-request cost: zero.** No generation is read, so the config path adds no database
  * round trip, on the cached path or anywhere else. `context-unified.ts:167` (`bypassCache`)
@@ -36,12 +36,40 @@ const CONFIG_CACHE_GROUP = "context";
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**
+ * Boundary either side of a matched site token: start/end of key, or a real segment
+ * separator (`:`, `/`, `.`). Identical on both sides and across every pattern below, so a
+ * site code can only ever match a real segment - never bleed into the tail of a longer,
+ * unrelated token such as a hypothetical sibling site `${sc}-fr`.
+ */
+const LEFT_BOUNDARY = "(?:^|[:/])";
+const RIGHT_BOUNDARY = "(?:[:/.]|$)";
+/**
+ * Optional locale suffix (`-en`) some `getKey` helpers append after the site code
+ * (`server/utils/nitro-cache.js:59-77`); this codebase's locales are plain two-letter
+ * codes with no region variant (`server/utils/drupal/drupal-user.js:144-145`). Bounded to
+ * a single locale-shaped segment so it cannot absorb an arbitrary trailing string the way a
+ * bare "allow a trailing hyphen" class would - a second hyphenated segment (e.g. a sibling
+ * site `${sc}-fr`'s own suffix) still fails the boundary that follows.
+ */
+const LOCALE_SUFFIX = "(?:-[a-z]{2})?";
+/**
+ * Same locale suffix, without the leading hyphen - the concatenated shape appends it
+ * directly (`bl2been` = `bl2` + `be` + `en`, per `nitro-cache.js:48-49,67`'s own reading).
+ */
+const CONCATENATED_LOCALE_SUFFIX = "(?:[a-z]{2})?";
+
+/**
  * Key shapes a site's config entries take inside the `context` group.
  *
  * Nitro composes a cached-function key as `${group}:${name}:${getKey()}.json`, and this
  * codebase's `getKey` helpers emit `msc:sc`, `msc-sc`, and env-prefixed variants of both
- * (`server/utils/nitro-cache.js:59-77`). Matching all of them keeps a renamed cache helper
- * from silently leaving a stale entry behind.
+ * (`context-unified.ts:187-189`, `drupal/index.js:58-66`). The concatenated
+ * `${env}${msc}${sc}` shape is also matched for parity with `nitro-cache.js:48-49,67`'s
+ * documented real example, even though that example itself lives in the `menus` group -
+ * `invalidateSiteConfig` only ever scans `context` (`CONFIG_CACHE_GROUP`), so this guards
+ * against a future `context`-group `getKey` adopting the same shape, not against that
+ * specific `menus` entry. Matching all of them keeps a renamed cache helper from silently
+ * leaving a stale entry behind.
  */
 function buildSitePatterns(env: string, multiSiteCode: string, siteCode: string): RegExp[] {
   const e = escapeRegExp(env.toLowerCase());
@@ -49,9 +77,10 @@ function buildSitePatterns(env: string, multiSiteCode: string, siteCode: string)
   const sc = escapeRegExp(siteCode.toLowerCase());
 
   return [
-    new RegExp(`(?:^|[:/-])${msc}:${sc}(?:[:/.]|$)`, "i"),
-    new RegExp(`(?:^|[:/])${msc}-${sc}(?:[-:/.]|$)`, "i"),
-    new RegExp(`(?:^|[:/])${e}-?${msc}-?${sc}(?:[-:/.]|$)`, "i"),
+    new RegExp(`${LEFT_BOUNDARY}${msc}:${sc}${LOCALE_SUFFIX}${RIGHT_BOUNDARY}`, "i"),
+    new RegExp(`${LEFT_BOUNDARY}${msc}-${sc}${LOCALE_SUFFIX}${RIGHT_BOUNDARY}`, "i"),
+    new RegExp(`${LEFT_BOUNDARY}${e}-?${msc}-?${sc}${LOCALE_SUFFIX}${RIGHT_BOUNDARY}`, "i"),
+    new RegExp(`${LEFT_BOUNDARY}(?:${e})?${msc}${sc}${CONCATENATED_LOCALE_SUFFIX}${RIGHT_BOUNDARY}`, "i"),
   ];
 }
 
@@ -83,6 +112,11 @@ export async function invalidateSiteConfig(env: string, multiSiteCode: string, s
     else
       consola.info(`[invalidate-site-config] dropped ${targets.length} entries for ${env}/${multiSiteCode}/${siteCode}`);
   } catch (error) {
-    consola.error(`[invalidate-site-config] store unreachable for ${env}/${multiSiteCode}/${siteCode}; entries expire on TTL`, error);
+    // Log the message and a stable code only - never the error object itself. unstorage's
+    // fs driver embeds the absolute mount path in its errors, and passing the object to
+    // consola risks that path (container filesystem layout) reaching the logs verbatim.
+    const code = typeof error === "object" && error && "code" in error ? String((error as { code: unknown }).code) : "UNKNOWN";
+    const message = error instanceof Error ? error.message : String(error);
+    consola.error(`[invalidate-site-config] store unreachable for ${env}/${multiSiteCode}/${siteCode}; entries expire on TTL (code=${code}): ${message}`);
   }
 }
