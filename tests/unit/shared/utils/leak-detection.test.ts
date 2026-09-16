@@ -24,6 +24,8 @@ import {
 
 /** Obviously-fake, high-entropy dummy — the shape of a token pasted into a benign field. */
 const FAKE_HIGH_ENTROPY = 'FAKEaZ9qT7vX2mLpQ4wRn8sKdY6bH3jC1uE5gF0i'
+/** The same dummy shape, but carrying a `/` — base64's alphabet includes it, paths use it too. */
+const FAKE_SLASHED_SECRET = 'FAKEaZ9qT7vX/2mLpQ4wRn8sKdY6bH3jC1uE5gF0i'
 const FAKE_MYSQL_URI = 'mysql://fakeuser:fakepw@db.invalid:3306/fake_schema'
 const FAKE_SMTP_URI = 'smtp://fakeuser:fakepw@mail.invalid:587'
 const FAKE_PEM = '-----BEGIN FAKE TESTING KEY-----\nQUJDREVG\n-----END FAKE TESTING KEY-----'
@@ -142,6 +144,106 @@ describe('serialized-form walking', () => {
   it('treats undefined and null payloads as clean', () => {
     expect(findLeaks(undefined)).toEqual([])
     expect(findLeaks(null)).toEqual([])
+  })
+})
+
+describe('credentialed URIs, whatever the scheme', () => {
+  const FAKE_CREDENTIALED = 'https://svcuser:S3cretPw@api.invalid/v1'
+
+  it('flags embedded user:password on a scheme the connection-string list does not know', () => {
+    expect(findLeaks({ geoBonPage: FAKE_CREDENTIALED })).toContainEqual(
+      expect.objectContaining({ path: 'geoBonPage', kind: 'value-credentialed-uri' })
+    )
+  })
+
+  it.each([
+    'ftp://fakeuser:fakepw@files.invalid/dump.sql',
+    'ldap://fakeuser:fakepw@dir.invalid',
+    'mssql://fakeuser:fakepw@db.invalid:1433/fake'
+  ])('flags the near-neighbour scheme in %s', value => {
+    expect(findLeaks({ note: value })).toContainEqual(
+      expect.objectContaining({ path: 'note', kind: 'value-uri' })
+    )
+  })
+
+  it('flags a percent-encoded connection string', () => {
+    const encoded = 'mysql%3A%2F%2Ffakeuser%3Afakepw%40db.invalid%3A3306%2Ffake'
+
+    expect(findLeaks({ note: encoded })).toContainEqual(
+      expect.objectContaining({ path: 'note', kind: 'value-uri' })
+    )
+  })
+
+  it('checks a value with a malformed percent escape as-is rather than throwing', () => {
+    // `decodeURIComponent` throws on `%zz`; the raw form must still be checked.
+    expect(findLeaks({ note: 'a%zz b' })).toEqual([])
+    expect(findLeaks({ note: 'mysql://fakeuser:fakepw@db.invalid/%zz' })).toContainEqual(
+      expect.objectContaining({ kind: 'value-uri' })
+    )
+  })
+
+  it('does not flag a plain URL, a bare host:port, or an email address', () => {
+    expect(findLeaks({ a: 'https://geobon.example.invalid/mn' })).toEqual([])
+    expect(findLeaks({ b: '//cdn.invalid:8443/assets/logo.svg' })).toEqual([])
+    expect(findLeaks({ c: 'mailto:someone@example.invalid' })).toEqual([])
+  })
+
+  it('matches PEM armor case-insensitively', () => {
+    expect(findLeaks({ note: '-----begin fake testing key-----' })).toContainEqual(
+      expect.objectContaining({ kind: 'value-pem' })
+    )
+  })
+})
+
+/**
+ * Block 2 regression.
+ *
+ * The entropy layer used to keep `/`, `-` and `_` INSIDE a token, so a whole URL path collapsed
+ * into one long pseudo-token and cleared the 24-char / 4.0-bit bar purely for being long and
+ * word-varied. `logo` is populated on 211/211 sites, so the gate would have fired on real data —
+ * and the documented remedy ("narrow the allowlist that let it in") would have been wrong advice,
+ * so whoever was on call would have raised the threshold and disarmed the detector.
+ *
+ * The suite missed it because every fixture used `/sites/mn/files/logo.svg`, a 20-character token
+ * that happens to sit just under the length bar.
+ */
+describe('real-world paths, URLs and slugs must not flag', () => {
+  it.each([
+    [
+      'a full CDN logo URL',
+      'https://www.cbd.int/sites/default/files/2019-05/national-biodiversity-clearing-house-logo.png'
+    ],
+    ['a site-relative logo path', '/sites/bs/files/bioland_logo_final_version_2021.svg'],
+    [
+      'a long slugged institution name',
+      'ministry-of-environment-and-sustainable-development-of-the-republic'
+    ]
+  ])('%s', (_label, value) => {
+    expect(findLeaks({ logo: value })).toEqual([])
+  })
+
+  it('still flags an opaque token embedded in a URL path segment', () => {
+    expect(
+      findLeaks({ logo: `https://cdn.invalid/assets/${FAKE_HIGH_ENTROPY}.png` })
+    ).toContainEqual(expect.objectContaining({ kind: 'value-entropy' }))
+  })
+
+  it('still flags an opaque token in a URL query value, whose slashes are payload', () => {
+    expect(findLeaks({ logo: `https://cdn.invalid/a/b?sig=${FAKE_SLASHED_SECRET}` })).toContainEqual(
+      expect.objectContaining({ kind: 'value-entropy' })
+    )
+  })
+
+  it('still flags the base64 payload of a data URI, whose slashes are payload', () => {
+    expect(findLeaks({ logo: `data:image/png;base64,${FAKE_SLASHED_SECRET}` })).toContainEqual(
+      expect.objectContaining({ kind: 'value-entropy' })
+    )
+  })
+
+  it('still flags base64url material whose separators do not make it word-shaped', () => {
+    expect(findLeaks({ note: 'aZ9q-T7vX_2mLp-Q4wRn8sKdY6bH3jC1uE5gF0i' })).toContainEqual(
+      expect.objectContaining({ kind: 'value-entropy' })
+    )
   })
 })
 

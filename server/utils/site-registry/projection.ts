@@ -131,9 +131,6 @@ export type SiteConfig = {
   [K in Exclude<PublicSiteConfigKey, 'hasBl1'>]: DmsmConfig[K]
 } & { hasBl1: boolean }
 
-/** Every top-level theme branch, so a new branch is a compile error rather than a dropped one. */
-type MergedTheme = { [K in keyof Required<SiteTheme>]: SiteTheme[K] }
-
 /**
  * R3 — normalize `hasBl1` to a boolean.
  *
@@ -155,26 +152,42 @@ export function normalizeHasBl1(value: boolean | string | undefined): boolean {
  * branch is used whole. Branches are never deep-merged: a partially overridden `color` branch
  * missing `primaryTextOver` is a rendering bug, not a fallback.
  *
+ * ## The branch set is the UNION of both legs, not a fixed list
+ *
+ * An earlier revision built the result from the eight branches named in `SiteTheme`, which silently
+ * dropped anything else. That was wrong twice over. `app/utils/resolve-theme.js` (`collectGroups`,
+ * :291) unions its contract groups with whatever groups each leg actually carries, `SiteTheme`'s own
+ * JSDoc states unknown groups are pass-through **by design**, and dmsm forwards `config.theme`
+ * whole. Worse, p02-01's registry merge preserves unknown branches, so an enumerated merge here
+ * would hand p03-01 two different themes for one site depending on which code path produced it.
+ *
+ * Precedence stays per-branch `??`, so a branch the site defines wins whole (176/211 observed sites
+ * carry a per-site theme) and an absent one falls back to the network default.
+ *
+ * ## Why the name is not `mergeTheme`
+ *
+ * p02-01 has its own `mergeTheme` in this same directory taking `(multiSiteTheme, siteTheme)` —
+ * the INVERTED argument order, with both parameters typed `SiteTheme | undefined`, so confusing
+ * them would invert precedence with no type error. That function is module-private today, so the
+ * two cannot actually be mixed up by import; the distinct name is cheap insurance for the phase-03
+ * merge, when both land in one module and the private one may be exported.
+ *
  * Returns `undefined` when neither level defines a theme, so the output carries no empty husk.
  */
-export function mergeTheme(
+export function mergeThemeForProjection(
   siteTheme: SiteTheme | undefined,
   multiSiteTheme: SiteTheme | undefined
 ): SiteTheme | undefined {
   if (!siteTheme && !multiSiteTheme) return undefined
 
-  const merged: MergedTheme = {
-    color: siteTheme?.color ?? multiSiteTheme?.color,
-    hero: siteTheme?.hero ?? multiSiteTheme?.hero,
-    text: siteTheme?.text ?? multiSiteTheme?.text,
-    backGround: siteTheme?.backGround ?? multiSiteTheme?.backGround,
-    megaMenu: siteTheme?.megaMenu ?? multiSiteTheme?.megaMenu,
-    homePageWidgets: siteTheme?.homePageWidgets ?? multiSiteTheme?.homePageWidgets,
-    i18n: siteTheme?.i18n ?? multiSiteTheme?.i18n,
-    canAutoTranslate: siteTheme?.canAutoTranslate ?? multiSiteTheme?.canAutoTranslate
-  }
+  const site = (siteTheme ?? {}) as Record<string, unknown>
+  const multiSite = (multiSiteTheme ?? {}) as Record<string, unknown>
+  const branches = new Set([...Object.keys(multiSite), ...Object.keys(site)])
 
-  return merged
+  const merged: Record<string, unknown> = {}
+  for (const branch of branches) merged[branch] = site[branch] ?? multiSite[branch]
+
+  return merged as SiteTheme
 }
 
 /**
@@ -183,6 +196,15 @@ export function mergeTheme(
  * Every key below is named on purpose. Nothing is spread, copied, or filtered: the only way a
  * value reaches the wire is an assignment written here against a key in
  * `PUBLIC_SITE_CONFIG_KEYS`.
+ *
+ * ## No runtime shape validation, deliberately
+ *
+ * `hideHomePageWidgets`, `i18n` and `scbd` are assigned straight through with no runtime check that
+ * they hold the shape their type claims. That is the intended boundary: this function's job is
+ * KEY-level containment (what may ship), and value-level validation belongs to the registry reader
+ * that parses the row — p02-01's `mapSiteRow`, which already fails loudly on a malformed row.
+ * Duplicating it here would either throw on data the registry accepted, or coerce silently, and a
+ * second disagreeing validator is worse than one. The leak assertion covers the security half.
  *
  * @param site the per-site registry record, pre-filter (carries `meta`, `smtpCredentials`, ...)
  * @param multiSiteConfig the multiSite `config` block, pre-filter (carries every never-ship secret)
@@ -206,7 +228,7 @@ export function toPublicConfig(
     continent: site.continent,
     region: site.region,
     env: site.env,
-    theme: mergeTheme(site.theme, multiSiteConfig.theme),
+    theme: mergeThemeForProjection(site.theme, multiSiteConfig.theme),
     hasBl1: normalizeHasBl1(site.hasBl1),
     hasBl2: site.hasBl2,
     geoBonPage: site.geoBonPage,
