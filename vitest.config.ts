@@ -19,7 +19,10 @@ export default defineConfig({
         'server/utils/thesaurus/index.js',
         'server/api/thesaurus/[[]termIdentifier[]]/index.ts',
         'shared/utils/**/*.ts',
-        'app/utils/resolve-theme.js'
+        'app/utils/resolve-theme.js',
+        // p03-01 (D14): the glob is `.ts`-only, so this task's own `.js` module is named explicitly
+        // rather than widening the tree.
+        'server/utils/thesaurus/seed-translation-cache.js'
       ]
     }
   },

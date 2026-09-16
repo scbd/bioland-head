@@ -1,0 +1,2468 @@
+{
+  "labels": [
+    {
+      "identifier": "CCA4B662-8EF4-418D-B327-0D6F418AA703",
+      "label": "Africa - All countries"
+    },
+    {
+      "identifier": "A23DD6C0-44C5-418D-83B5-461D79D2721A",
+      "label": "Africa - Middle Africa"
+    },
+    {
+      "identifier": "0938DB0F-E4BB-464F-ABBB-ADD615BE5371",
+      "label": "Africa - Eastern Africa"
+    },
+    {
+      "identifier": "39AF4BA6-E769-4013-B5F2-91B2E5BACB27",
+      "label": "Africa - Northern Africa"
+    },
+    {
+      "identifier": "BA8BAEF5-821C-43A6-8700-5CC215D4B5B0",
+      "label": "Africa - Southern Africa"
+    },
+    {
+      "identifier": "AEF6F814-52C0-4F1A-9838-5799B021BA26",
+      "label": "Africa - Western Africa"
+    },
+    {
+      "identifier": "E0006E60-E0D9-4196-855F-8456F0C38690",
+      "label": "Africa - African Union"
+    },
+    {
+      "identifier": "46358A41-9D1D-4B13-A5D2-DE9CAA1DF1C7",
+      "label": "Africa - Economic Commission for Africa"
+    },
+    {
+      "identifier": "21C5AE1A-B050-4EEB-8A3D-FE8BC3EB33B1",
+      "label": "Africa - Economic Community of West African States"
+    },
+    {
+      "identifier": "99AB05D6-1FB0-4369-A673-C266A80D3004",
+      "label": "Africa - Southern African Development Community"
+    },
+    {
+      "identifier": "2c311a50-e5ba-4463-b780-2bebc578697b",
+      "label": "Africa - Union Economique et Monétaire Ouest Africaine"
+    },
+    {
+      "identifier": "14E81A9D-73EA-4667-A699-CD78C61B3655",
+      "label": "Americas - All countries"
+    },
+    {
+      "identifier": "E9E917DF-872A-4B01-B152-B019E53D046E",
+      "label": "Americas - Caribbean"
+    },
+    {
+      "identifier": "90DBC1E4-AFD0-4FB4-B9EE-4CA2CB5D2C36",
+      "label": "Americas - Central America"
+    },
+    {
+      "identifier": "8317D3CB-6CAB-4C05-BC2C-2DB93A8FEC6A",
+      "label": "Americas - Northern America"
+    },
+    {
+      "identifier": "C9A535FB-8B15-4BD5-9AC7-9A9783871A5A",
+      "label": "Americas - South America"
+    },
+    {
+      "identifier": "005BDEA9-4063-4CD8-8E56-14D75E02D8A7",
+      "label": "Americas - Amazon Cooperation Treaty"
+    },
+    {
+      "identifier": "9C5E1A4D-E8EE-4C74-B9C9-5C7BCDF6B84A",
+      "label": "Americas - Andean Pact"
+    },
+    {
+      "identifier": "11E24235-03ED-4D1A-A1FE-FF2798B06240",
+      "label": "Americas - Asociacion Latinoamericana de Integracion"
+    },
+    {
+      "identifier": "25806FD6-C329-4878-8032-8832C92B3557",
+      "label": "Americas - Association of Caribbean States"
+    },
+    {
+      "identifier": "89FB902F-5060-4B12-9C84-A2B8F5F45DBF",
+      "label": "Americas - Comision Centroamericana de Ambiente y Desarrollo"
+    },
+    {
+      "identifier": "CFCF6D60-8800-4B1F-B404-5E1FC60CEEB7",
+      "label": "Americas - Economic Commission for Latin America and the Caribbean"
+    },
+    {
+      "identifier": "0D93D0A4-3DE8-49A9-8825-1237ACBCDD60",
+      "label": "Americas - Mercosur"
+    },
+    {
+      "identifier": "6C734879-5007-47F8-A931-C9A90B17DFA5",
+      "label": "Americas - The Caribbean Community (Caricom)"
+    },
+    {
+      "identifier": "3BED3C61-C8C5-49D8-9AFA-0B4D03FC427F",
+      "label": "Asia - All countries"
+    },
+    {
+      "identifier": "1CF17830-479B-42DD-AC6C-974E86EABE15",
+      "label": "Asia - Central Asia"
+    },
+    {
+      "identifier": "8962A223-E1F2-4200-905C-51B6FEF79FFE",
+      "label": "Asia - Eastern Asia"
+    },
+    {
+      "identifier": "B462BE9E-38A6-4DE0-997D-2CC07853379F",
+      "label": "Asia - Southern Asia"
+    },
+    {
+      "identifier": "B6C14B25-FDF6-4FA1-97A2-561D6B43FA80",
+      "label": "Asia - South-Eastern Asia"
+    },
+    {
+      "identifier": "70AD3B5C-9390-4E11-B4FB-60B5591037FA",
+      "label": "Asia - Western Asia"
+    },
+    {
+      "identifier": "99724A74-6CCD-4731-B111-9EEDF2612303",
+      "label": "Asia - Association of Southeast Asian Nations"
+    },
+    {
+      "identifier": "2A2161ED-B501-4022-BDF0-8AC5F0E6A512",
+      "label": "Asia-Pacific - Economic and Social Commission for Asia and the Pacific"
+    },
+    {
+      "identifier": "57FB8FD1-7EBF-4271-9788-3716DAFEE347",
+      "label": "Asia - Economic and Social Commission for Western Asia"
+    },
+    {
+      "identifier": "581432E3-4880-410D-ACBC-44B958B0E5AC",
+      "label": "Asia - South Asia Cooperative Environment Programme"
+    },
+    {
+      "identifier": "613675B2-B56D-454B-8817-54FE2A0DC3AF",
+      "label": "Asia-Pacific - Pacific Small Islands countries"
+    },
+    {
+      "identifier": "884FADBA-3BF3-4D76-AC7B-83E076852CD4",
+      "label": "Europe - All countries"
+    },
+    {
+      "identifier": "11D3515A-2C70-4766-B07C-E538AA16554B",
+      "label": "Europe - Northern Europe"
+    },
+    {
+      "identifier": "3B22777F-BD43-4DED-8379-EB3829BB53A5",
+      "label": "Europe - Southern Europe"
+    },
+    {
+      "identifier": "DB6CE7B5-EE86-41B1-A3A8-726E5A76C4F9",
+      "label": "Europe - Western Europe"
+    },
+    {
+      "identifier": "7DCF92D5-8412-4CFA-A67C-C6AA7A0A69F2",
+      "label": "Europe - Eastern Europe"
+    },
+    {
+      "identifier": "bd12d7fb-91f7-4b2d-996c-e70f18a51f0e",
+      "label": "Europe - European Union member states"
+    },
+    {
+      "identifier": "6DD4D22F-CFAE-4C2C-A2B5-4EC8386925DE",
+      "label": "Europe - Economic Commission for Europe"
+    },
+    {
+      "identifier": "0C201C06-3E4E-4044-85E0-DAE5DCE0F2C1",
+      "label": "Europe - European Free Trade Association"
+    },
+    {
+      "identifier": "C595105F-C5E7-4DF3-A68D-93CC9DAB900F",
+      "label": "Europe - Visegrad Group"
+    },
+    {
+      "identifier": "E5AA1403-308B-495F-9117-9F516F973C77",
+      "label": "Eurasia - Commonwealth of Independent States"
+    },
+    {
+      "identifier": "B52F76F8-B8A4-4381-8A78-E0BAD505AEBE",
+      "label": "Eurasia - Pan-European Biological and Landscape Diversity Strategy"
+    },
+    {
+      "identifier": "284697B9-D1C2-426B-890A-1ADBAC8EC477",
+      "label": "Oceania - All countries"
+    },
+    {
+      "identifier": "E9BAA797-CDAE-497E-A860-87AE784F4C53",
+      "label": "Oceania - Australia and New Zealand"
+    },
+    {
+      "identifier": "743D2F85-8ABA-4F35-BC83-30D295343EA8",
+      "label": "Oceania - Melanesia"
+    },
+    {
+      "identifier": "0451E289-BC9E-4F9D-95C0-B28A20F86BE9",
+      "label": "Oceania - Micronesia"
+    },
+    {
+      "identifier": "9EED1DD1-BA36-41F1-BEF9-63021AB24EBF",
+      "label": "Oceania - Polynesia"
+    },
+    {
+      "identifier": "084D8F39-16B0-4DFC-89F9-FE1A6EE47E9F",
+      "label": "CBD - Parties"
+    },
+    {
+      "identifier": "3AA1250A-8715-436C-B397-75FB0C9AB472",
+      "label": "CBD - Biosafety Protocol Parties"
+    },
+    {
+      "identifier": "1776454D-33DB-460B-A940-AA27A665D832",
+      "label": "CBD - Signatories to the Supplementary Protocol on Liability and Redress"
+    },
+    {
+      "identifier": "FFBF9DAA-79F3-4FEC-8A31-C60317BF7281",
+      "label": "CBD - Parties to the Nagoya Protocol on Access and Benefit-Sharing"
+    },
+    {
+      "identifier": "D50FE62D-8A5E-4407-83F8-AFCAAF708EA4",
+      "label": "CBD Regional Groups - Africa"
+    },
+    {
+      "identifier": "5E5B7AA4-2420-4147-825B-0820F7EC5A4B",
+      "label": "CBD Regional Groups - Asia and the Pacific"
+    },
+    {
+      "identifier": "6BE5B5E1-1ECF-4022-924E-160092951FB8",
+      "label": "CBD Regional Groups - Asia sub-region"
+    },
+    {
+      "identifier": "9DB40F52-ADCC-490C-9945-235CBD45CFAC",
+      "label": "CBD Regional Groups - Pacific sub-region"
+    },
+    {
+      "identifier": "942E40CA-4C23-4D3A-A0B4-736CD0EFCD54",
+      "label": "CBD Regional Groups - Central and Eastern Europe"
+    },
+    {
+      "identifier": "3D0CCC9A-A0A1-4399-8FA2-41D4D649DB0E",
+      "label": "CBD Regional Groups - Latin America and the Caribbean"
+    },
+    {
+      "identifier": "324EE0E0-0874-49CA-814C-7D5470193B40",
+      "label": "CBD Regional Groups - Caribbean sub-region"
+    },
+    {
+      "identifier": "50BDFC43-84FD-4DC9-9BDD-B9C6A3C81539",
+      "label": "CBD Regional Groups - Latin America sub-region"
+    },
+    {
+      "identifier": "0EC2E5AE-25F3-4D3A-B71F-8019BB62ED4B",
+      "label": "CBD Regional Groups - Western Europe and Others"
+    },
+    {
+      "identifier": "C7E6113A-66ED-42E1-B8BB-004EC02D3D22",
+      "label": "Global - Countries with Economies in Transition"
+    },
+    {
+      "identifier": "948125C2-F580-4357-AA0A-B6C636279E96",
+      "label": "Global - Developing countries"
+    },
+    {
+      "identifier": "BF64EC30-A6BE-4967-959F-FFE08A6A2D0A",
+      "label": "Global - Industrialized countries"
+    },
+    {
+      "identifier": "8920655D-3986-465B-837A-CE055B428A74",
+      "label": "Global - Least Developed Countries"
+    },
+    {
+      "identifier": "CE5B4B10-61B5-469B-961B-D541068A4098",
+      "label": "Global - Small Island Developing States"
+    },
+    {
+      "identifier": "209A0CEA-8525-44E8-8DF5-AD8B064F2897",
+      "label": "Global - Arctic countries"
+    },
+    {
+      "identifier": "12B485C4-C805-451A-A444-F6767E2E1B86",
+      "label": "Global - Asia-Pacific Economic Cooperation"
+    },
+    {
+      "identifier": "293E5CA9-15DB-4D83-9CAC-F406F759727A",
+      "label": "Global - La Francophonie"
+    },
+    {
+      "identifier": "BE9DD6CC-F466-4735-A851-160221D6C380",
+      "label": "Global - Organisation for Economic Co-operation and Development"
+    },
+    {
+      "identifier": "EFE67AA8-CB7B-4182-AAE8-A72E5A145D3B",
+      "label": "Global - The Cairns Group"
+    },
+    {
+      "identifier": "C5A18F9B-0E93-4FB3-B37F-67DEB5F3A696",
+      "label": "Global - The Commonwealth"
+    },
+    {
+      "identifier": "AE0C442C-E11D-4CF9-AC83-4712DA612B48",
+      "label": "Inland water ecosystems - Amazon basin countries"
+    },
+    {
+      "identifier": "5E2E72A0-1564-4F07-B085-6409F452EA40",
+      "label": "Inland water ecosystems - Caspian Sea countries"
+    },
+    {
+      "identifier": "50529AA0-D3B6-4F5D-97D4-436699900FBD",
+      "label": "Inland water ecosystems - Danube basin countries"
+    },
+    {
+      "identifier": "D04D887E-6514-41E3-96BA-967CD3208365",
+      "label": "Inland water ecosystems - Ganges-Brahmaputra basin countries"
+    },
+    {
+      "identifier": "57C5F9CB-7E61-4D47-92E9-B0D3BADDAC53",
+      "label": "Inland water ecosystems - Mekong basin countries"
+    },
+    {
+      "identifier": "9CD6B1A8-1A47-46CF-A933-58018A093601",
+      "label": "Inland water ecosystems - Niger basin countries"
+    },
+    {
+      "identifier": "E789DF4A-F71A-413C-BDFE-F33EF91AF1A0",
+      "label": "Inland water ecosystems - Nile basin countries"
+    },
+    {
+      "identifier": "FB9B3E6D-C6C1-40CA-992D-2D42908FF559",
+      "label": "Inland water ecosystems - Zambezi basin countries"
+    },
+    {
+      "identifier": "38CC1BBA-7217-4E33-B9E4-F8C063CD3FD9",
+      "label": "Large marine ecosystems - Arabian Sea countries"
+    },
+    {
+      "identifier": "D5BEB8FF-C718-4AD7-821E-A02171F72429",
+      "label": "Large marine ecosystems - Baltic Sea countries"
+    },
+    {
+      "identifier": "AA724727-4AF7-4D3C-9AD6-B38A45A353A1",
+      "label": "Large marine ecosystems - Black Sea countries"
+    },
+    {
+      "identifier": "5E884201-FBF6-4204-923C-AAC2BF11F2E3",
+      "label": "Large marine ecosystems - Mediterranean countries"
+    },
+    {
+      "identifier": "07C56CEE-BFB1-41EA-972B-1B177D2AAEF7",
+      "label": "Large marine ecosystems - North Sea countries"
+    },
+    {
+      "identifier": "CDFED5B2-F60A-4C51-B00B-548606B2A41B",
+      "label": "Large marine ecosystems - Red Sea countries"
+    },
+    {
+      "identifier": "1F130DD3-A710-406E-A8F3-A0A2D25EC0E1",
+      "label": "Large marine ecosystems - South China Sea countries"
+    },
+    {
+      "identifier": "7AE80876-D08B-4E78-AB2A-56921E1885DF",
+      "label": "Mountains - Alpine countries"
+    },
+    {
+      "identifier": "091FD5C6-AA3D-47A7-BB61-63008D092B8B",
+      "label": "Mountains - Andean countries"
+    },
+    {
+      "identifier": "E5E31D9B-FE56-4807-9CF7-E1154041C5A8",
+      "label": "Mountains - Carpathian countries"
+    },
+    {
+      "identifier": "6F1D5BE4-0F37-4848-8DE4-BE83F714A2AC",
+      "label": "Mountains - Caucasus countries"
+    },
+    {
+      "identifier": "77B4AA2B-B7BF-48D5-B6CE-397207C9060F",
+      "label": "Mountains - Himalayan countries"
+    },
+    {
+      "identifier": "AB9EBE76-796B-45B3-879B-3BA009E983CC",
+      "label": "Convention on Biological Diversity (CBD)"
+    },
+    {
+      "identifier": "6F65B204-500B-4C56-B57D-25CC3DC809F8",
+      "label": "Africa - regions"
+    },
+    {
+      "identifier": "345F2B78-DE28-475B-BA7D-81C3DA020ADF",
+      "label": "Africa - groups"
+    },
+    {
+      "identifier": "0088F30A-723A-4351-A22C-C68BEB0C56F1",
+      "label": "Americas - regions"
+    },
+    {
+      "identifier": "09D072D7-6AF9-447E-85D4-F1F265FEC3C1",
+      "label": "Americas - groups"
+    },
+    {
+      "identifier": "6F901F3F-630D-4C4C-A3CC-BDE5C7876C68",
+      "label": "Asia - regions"
+    },
+    {
+      "identifier": "40CE7EB5-2A58-4F89-A0AF-F485BBC32F81",
+      "label": "Asia - groups"
+    },
+    {
+      "identifier": "3C469DB7-E603-4E16-A828-A22A6E7123F1",
+      "label": "Europe - regions"
+    },
+    {
+      "identifier": "298D96B3-4BFB-4FBB-9E6E-26A40A35B5F6",
+      "label": "Europe - groups"
+    },
+    {
+      "identifier": "952F18B8-BB83-4C7E-9232-7B3E3EA64A3C",
+      "label": "Oceania - regions"
+    },
+    {
+      "identifier": "1C1B2D57-0F0F-423D-99C8-A048051B508C",
+      "label": "Ecosystems"
+    },
+    {
+      "identifier": "311A8E9C-582F-4952-A398-589073DBAC72",
+      "label": "Inland water ecosystems"
+    },
+    {
+      "identifier": "0C874AE8-1AEB-4818-A2F6-E5F7CAD6E265",
+      "label": "Large marine ecosystems"
+    },
+    {
+      "identifier": "38126DBD-8B41-4355-B0E5-643655CBC06E",
+      "label": "Mountains"
+    },
+    {
+      "identifier": "5D13EC43-F3E0-415E-AF67-62CCC85899AF",
+      "label": "Global"
+    },
+    {
+      "identifier": "F9EDDDBE-3FE6-4C47-BB9F-D7091A10E966",
+      "label": "Global - Official development assistance (ODA) countries"
+    },
+    {
+      "identifier": "ad",
+      "label": "Andorra"
+    },
+    {
+      "identifier": "ae",
+      "label": "United Arab Emirates"
+    },
+    {
+      "identifier": "ag",
+      "label": "Antigua and Barbuda"
+    },
+    {
+      "identifier": "al",
+      "label": "Albania"
+    },
+    {
+      "identifier": "am",
+      "label": "Armenia"
+    },
+    {
+      "identifier": "ao",
+      "label": "Angola"
+    },
+    {
+      "identifier": "ar",
+      "label": "Argentina"
+    },
+    {
+      "identifier": "at",
+      "label": "Austria"
+    },
+    {
+      "identifier": "au",
+      "label": "Australia"
+    },
+    {
+      "identifier": "az",
+      "label": "Azerbaijan"
+    },
+    {
+      "identifier": "ba",
+      "label": "Bosnia and Herzegovina"
+    },
+    {
+      "identifier": "bb",
+      "label": "Barbados"
+    },
+    {
+      "identifier": "be",
+      "label": "Belgium"
+    },
+    {
+      "identifier": "bd",
+      "label": "Bangladesh"
+    },
+    {
+      "identifier": "bf",
+      "label": "Burkina Faso"
+    },
+    {
+      "identifier": "bg",
+      "label": "Bulgaria"
+    },
+    {
+      "identifier": "bh",
+      "label": "Bahrain"
+    },
+    {
+      "identifier": "bi",
+      "label": "Burundi"
+    },
+    {
+      "identifier": "bj",
+      "label": "Benin"
+    },
+    {
+      "identifier": "bn",
+      "label": "Brunei Darussalam"
+    },
+    {
+      "identifier": "bo",
+      "label": "Bolivia (Plurinational State of)"
+    },
+    {
+      "identifier": "br",
+      "label": "Brazil"
+    },
+    {
+      "identifier": "bs",
+      "label": "Bahamas"
+    },
+    {
+      "identifier": "bt",
+      "label": "Bhutan"
+    },
+    {
+      "identifier": "bw",
+      "label": "Botswana"
+    },
+    {
+      "identifier": "by",
+      "label": "Belarus"
+    },
+    {
+      "identifier": "bz",
+      "label": "Belize"
+    },
+    {
+      "identifier": "ca",
+      "label": "Canada"
+    },
+    {
+      "identifier": "cg",
+      "label": "Congo"
+    },
+    {
+      "identifier": "ch",
+      "label": "Switzerland"
+    },
+    {
+      "identifier": "cl",
+      "label": "Chile"
+    },
+    {
+      "identifier": "cf",
+      "label": "Central African Republic"
+    },
+    {
+      "identifier": "ci",
+      "label": "Côte d'Ivoire"
+    },
+    {
+      "identifier": "ck",
+      "label": "Cook Islands"
+    },
+    {
+      "identifier": "cm",
+      "label": "Cameroon"
+    },
+    {
+      "identifier": "cn",
+      "label": "China"
+    },
+    {
+      "identifier": "co",
+      "label": "Colombia"
+    },
+    {
+      "identifier": "cr",
+      "label": "Costa Rica"
+    },
+    {
+      "identifier": "cu",
+      "label": "Cuba"
+    },
+    {
+      "identifier": "cv",
+      "label": "Cabo Verde"
+    },
+    {
+      "identifier": "cy",
+      "label": "Cyprus"
+    },
+    {
+      "identifier": "cz",
+      "label": "Czechia"
+    },
+    {
+      "identifier": "de",
+      "label": "Germany"
+    },
+    {
+      "identifier": "dj",
+      "label": "Djibouti"
+    },
+    {
+      "identifier": "dk",
+      "label": "Denmark"
+    },
+    {
+      "identifier": "dm",
+      "label": "Dominica"
+    },
+    {
+      "identifier": "dz",
+      "label": "Algeria"
+    },
+    {
+      "identifier": "ee",
+      "label": "Estonia"
+    },
+    {
+      "identifier": "eg",
+      "label": "Egypt"
+    },
+    {
+      "identifier": "do",
+      "label": "Dominican Republic"
+    },
+    {
+      "identifier": "ec",
+      "label": "Ecuador"
+    },
+    {
+      "identifier": "er",
+      "label": "Eritrea"
+    },
+    {
+      "identifier": "es",
+      "label": "Spain"
+    },
+    {
+      "identifier": "et",
+      "label": "Ethiopia"
+    },
+    {
+      "identifier": "fi",
+      "label": "Finland"
+    },
+    {
+      "identifier": "fj",
+      "label": "Fiji"
+    },
+    {
+      "identifier": "fm",
+      "label": "Micronesia (Federated States of)"
+    },
+    {
+      "identifier": "fr",
+      "label": "France"
+    },
+    {
+      "identifier": "ga",
+      "label": "Gabon"
+    },
+    {
+      "identifier": "gd",
+      "label": "Grenada"
+    },
+    {
+      "identifier": "ge",
+      "label": "Georgia"
+    },
+    {
+      "identifier": "gh",
+      "label": "Ghana"
+    },
+    {
+      "identifier": "gm",
+      "label": "Gambia (the)"
+    },
+    {
+      "identifier": "gn",
+      "label": "Guinea"
+    },
+    {
+      "identifier": "gq",
+      "label": "Equatorial Guinea"
+    },
+    {
+      "identifier": "gr",
+      "label": "Greece"
+    },
+    {
+      "identifier": "gt",
+      "label": "Guatemala"
+    },
+    {
+      "identifier": "gw",
+      "label": "Guinea-Bissau"
+    },
+    {
+      "identifier": "gy",
+      "label": "Guyana"
+    },
+    {
+      "identifier": "hn",
+      "label": "Honduras"
+    },
+    {
+      "identifier": "hr",
+      "label": "Croatia"
+    },
+    {
+      "identifier": "ht",
+      "label": "Haiti"
+    },
+    {
+      "identifier": "hu",
+      "label": "Hungary"
+    },
+    {
+      "identifier": "id",
+      "label": "Indonesia"
+    },
+    {
+      "identifier": "ie",
+      "label": "Ireland"
+    },
+    {
+      "identifier": "il",
+      "label": "Israel"
+    },
+    {
+      "identifier": "in",
+      "label": "India"
+    },
+    {
+      "identifier": "iq",
+      "label": "Iraq"
+    },
+    {
+      "identifier": "ir",
+      "label": "Iran (Islamic Republic of)"
+    },
+    {
+      "identifier": "is",
+      "label": "Iceland"
+    },
+    {
+      "identifier": "it",
+      "label": "Italy"
+    },
+    {
+      "identifier": "jm",
+      "label": "Jamaica"
+    },
+    {
+      "identifier": "jo",
+      "label": "Jordan"
+    },
+    {
+      "identifier": "jp",
+      "label": "Japan"
+    },
+    {
+      "identifier": "ke",
+      "label": "Kenya"
+    },
+    {
+      "identifier": "kg",
+      "label": "Kyrgyzstan"
+    },
+    {
+      "identifier": "kh",
+      "label": "Cambodia"
+    },
+    {
+      "identifier": "ki",
+      "label": "Kiribati"
+    },
+    {
+      "identifier": "km",
+      "label": "Comoros"
+    },
+    {
+      "identifier": "kn",
+      "label": "Saint Kitts and Nevis"
+    },
+    {
+      "identifier": "kp",
+      "label": "Democratic People's Republic of Korea"
+    },
+    {
+      "identifier": "kr",
+      "label": "Republic of Korea"
+    },
+    {
+      "identifier": "kw",
+      "label": "Kuwait"
+    },
+    {
+      "identifier": "kz",
+      "label": "Kazakhstan"
+    },
+    {
+      "identifier": "lb",
+      "label": "Lebanon"
+    },
+    {
+      "identifier": "lr",
+      "label": "Liberia"
+    },
+    {
+      "identifier": "ls",
+      "label": "Lesotho"
+    },
+    {
+      "identifier": "la",
+      "label": "Lao People's Democratic Republic"
+    },
+    {
+      "identifier": "lc",
+      "label": "Saint Lucia"
+    },
+    {
+      "identifier": "li",
+      "label": "Liechtenstein"
+    },
+    {
+      "identifier": "lk",
+      "label": "Sri Lanka"
+    },
+    {
+      "identifier": "lt",
+      "label": "Lithuania"
+    },
+    {
+      "identifier": "lu",
+      "label": "Luxembourg"
+    },
+    {
+      "identifier": "lv",
+      "label": "Latvia"
+    },
+    {
+      "identifier": "ly",
+      "label": "Libya"
+    },
+    {
+      "identifier": "ma",
+      "label": "Morocco"
+    },
+    {
+      "identifier": "mc",
+      "label": "Monaco"
+    },
+    {
+      "identifier": "md",
+      "label": "Republic of Moldova"
+    },
+    {
+      "identifier": "mg",
+      "label": "Madagascar"
+    },
+    {
+      "identifier": "mh",
+      "label": "Marshall Islands"
+    },
+    {
+      "identifier": "mk",
+      "label": "North Macedonia"
+    },
+    {
+      "identifier": "ml",
+      "label": "Mali"
+    },
+    {
+      "identifier": "mm",
+      "label": "Myanmar"
+    },
+    {
+      "identifier": "mn",
+      "label": "Mongolia"
+    },
+    {
+      "identifier": "mr",
+      "label": "Mauritania"
+    },
+    {
+      "identifier": "mt",
+      "label": "Malta"
+    },
+    {
+      "identifier": "mu",
+      "label": "Mauritius"
+    },
+    {
+      "identifier": "mv",
+      "label": "Maldives"
+    },
+    {
+      "identifier": "mw",
+      "label": "Malawi"
+    },
+    {
+      "identifier": "mx",
+      "label": "Mexico"
+    },
+    {
+      "identifier": "my",
+      "label": "Malaysia"
+    },
+    {
+      "identifier": "mz",
+      "label": "Mozambique"
+    },
+    {
+      "identifier": "na",
+      "label": "Namibia"
+    },
+    {
+      "identifier": "ne",
+      "label": "Niger"
+    },
+    {
+      "identifier": "ng",
+      "label": "Nigeria"
+    },
+    {
+      "identifier": "ni",
+      "label": "Nicaragua"
+    },
+    {
+      "identifier": "no",
+      "label": "Norway"
+    },
+    {
+      "identifier": "np",
+      "label": "Nepal"
+    },
+    {
+      "identifier": "nr",
+      "label": "Nauru"
+    },
+    {
+      "identifier": "nu",
+      "label": "Niue"
+    },
+    {
+      "identifier": "nz",
+      "label": "New Zealand"
+    },
+    {
+      "identifier": "om",
+      "label": "Oman"
+    },
+    {
+      "identifier": "pa",
+      "label": "Panama"
+    },
+    {
+      "identifier": "pe",
+      "label": "Peru"
+    },
+    {
+      "identifier": "pg",
+      "label": "Papua New Guinea"
+    },
+    {
+      "identifier": "ph",
+      "label": "Philippines"
+    },
+    {
+      "identifier": "pk",
+      "label": "Pakistan"
+    },
+    {
+      "identifier": "pl",
+      "label": "Poland"
+    },
+    {
+      "identifier": "pt",
+      "label": "Portugal"
+    },
+    {
+      "identifier": "pw",
+      "label": "Palau"
+    },
+    {
+      "identifier": "py",
+      "label": "Paraguay"
+    },
+    {
+      "identifier": "qa",
+      "label": "Qatar"
+    },
+    {
+      "identifier": "ro",
+      "label": "Romania"
+    },
+    {
+      "identifier": "rw",
+      "label": "Rwanda"
+    },
+    {
+      "identifier": "sd",
+      "label": "Sudan"
+    },
+    {
+      "identifier": "se",
+      "label": "Sweden"
+    },
+    {
+      "identifier": "ru",
+      "label": "Russian Federation"
+    },
+    {
+      "identifier": "sa",
+      "label": "Saudi Arabia"
+    },
+    {
+      "identifier": "sb",
+      "label": "Solomon Islands"
+    },
+    {
+      "identifier": "sc",
+      "label": "Seychelles"
+    },
+    {
+      "identifier": "sg",
+      "label": "Singapore"
+    },
+    {
+      "identifier": "si",
+      "label": "Slovenia"
+    },
+    {
+      "identifier": "sl",
+      "label": "Sierra Leone"
+    },
+    {
+      "identifier": "sm",
+      "label": "San Marino"
+    },
+    {
+      "identifier": "sn",
+      "label": "Senegal"
+    },
+    {
+      "identifier": "so",
+      "label": "Somalia"
+    },
+    {
+      "identifier": "sr",
+      "label": "Suriname"
+    },
+    {
+      "identifier": "st",
+      "label": "Sao Tome and Principe"
+    },
+    {
+      "identifier": "sz",
+      "label": "Eswatini"
+    },
+    {
+      "identifier": "td",
+      "label": "Chad"
+    },
+    {
+      "identifier": "sv",
+      "label": "El Salvador"
+    },
+    {
+      "identifier": "sy",
+      "label": "Syrian Arab Republic"
+    },
+    {
+      "identifier": "tg",
+      "label": "Togo"
+    },
+    {
+      "identifier": "th",
+      "label": "Thailand"
+    },
+    {
+      "identifier": "tj",
+      "label": "Tajikistan"
+    },
+    {
+      "identifier": "tm",
+      "label": "Turkmenistan"
+    },
+    {
+      "identifier": "tn",
+      "label": "Tunisia"
+    },
+    {
+      "identifier": "to",
+      "label": "Tonga"
+    },
+    {
+      "identifier": "tr",
+      "label": "Türkiye"
+    },
+    {
+      "identifier": "tt",
+      "label": "Trinidad and Tobago"
+    },
+    {
+      "identifier": "tv",
+      "label": "Tuvalu"
+    },
+    {
+      "identifier": "tz",
+      "label": "United Republic of Tanzania"
+    },
+    {
+      "identifier": "ua",
+      "label": "Ukraine"
+    },
+    {
+      "identifier": "ug",
+      "label": "Uganda"
+    },
+    {
+      "identifier": "uy",
+      "label": "Uruguay"
+    },
+    {
+      "identifier": "uz",
+      "label": "Uzbekistan"
+    },
+    {
+      "identifier": "gb",
+      "label": "United Kingdom of Great Britain and Northern Ireland"
+    },
+    {
+      "identifier": "us",
+      "label": "United States of America"
+    },
+    {
+      "identifier": "va",
+      "label": "Holy See"
+    },
+    {
+      "identifier": "vc",
+      "label": "Saint Vincent and the Grenadines"
+    },
+    {
+      "identifier": "ve",
+      "label": "Venezuela (Bolivarian Republic of)"
+    },
+    {
+      "identifier": "vn",
+      "label": "Viet Nam"
+    },
+    {
+      "identifier": "vu",
+      "label": "Vanuatu"
+    },
+    {
+      "identifier": "ws",
+      "label": "Samoa"
+    },
+    {
+      "identifier": "ye",
+      "label": "Yemen"
+    },
+    {
+      "identifier": "za",
+      "label": "South Africa"
+    },
+    {
+      "identifier": "zm",
+      "label": "Zambia"
+    },
+    {
+      "identifier": "cd",
+      "label": "Democratic Republic of the Congo"
+    },
+    {
+      "identifier": "zw",
+      "label": "Zimbabwe"
+    },
+    {
+      "identifier": "af",
+      "label": "Afghanistan"
+    },
+    {
+      "identifier": "nl",
+      "label": "Netherlands (Kingdom of the)"
+    },
+    {
+      "identifier": "sk",
+      "label": "Slovakia"
+    },
+    {
+      "identifier": "tl",
+      "label": "Timor-Leste"
+    },
+    {
+      "identifier": "me",
+      "label": "Montenegro"
+    },
+    {
+      "identifier": "eu",
+      "label": "European Union"
+    },
+    {
+      "identifier": "ss",
+      "label": "South Sudan"
+    },
+    {
+      "identifier": "rs",
+      "label": "Serbia"
+    },
+    {
+      "identifier": "ps",
+      "label": "State of Palestine"
+    },
+    {
+      "identifier": "86D464C3-B5BB-4B02-85E4-1AAD8D64CD27",
+      "label": "Academic or research institute"
+    },
+    {
+      "identifier": "8830904C-8AF4-4C2F-AADB-363D98D854DA",
+      "label": "Government agency (National/Federal)"
+    },
+    {
+      "identifier": "1C3A4FF4-9AB7-4A34-BE06-E07F575B7A32",
+      "label": "Government agency (Sub-national)"
+    },
+    {
+      "identifier": "EC872EB8-02B0-46E7-AAB0-C79AC629356A",
+      "label": "Indigenous peoples and local communities (IPLC)"
+    },
+    {
+      "identifier": "64432E86-23C9-4D9A-B835-962D8221E6CA",
+      "label": "Inter-governmental organization (IGO)"
+    },
+    {
+      "identifier": "8A265B81-3973-42ED-BB06-40ACC755E496",
+      "label": "Non-governmental organization (NGO)"
+    },
+    {
+      "identifier": "90C29DF8-D863-4255-851D-A7A6E8FDFA8F",
+      "label": "Private sector (business and industry)"
+    },
+    {
+      "identifier": "39EA5BC2-FEC4-4946-A543-A4F6E1A2F330",
+      "label": "Regional economic integration organization"
+    },
+    {
+      "identifier": "692b3eb1-a00c-437d-8903-d9b7714a7514",
+      "label": "UN and other specialized agency of the UN Common System"
+    },
+    {
+      "identifier": "AICHI-TARGET-01",
+      "label": "Aichi-T1. Awareness of biodiversity values"
+    },
+    {
+      "identifier": "AICHI-TARGET-02",
+      "label": "Aichi-T2. Integration of biodiversity values"
+    },
+    {
+      "identifier": "AICHI-TARGET-03",
+      "label": "Aichi-T3. Incentives"
+    },
+    {
+      "identifier": "AICHI-TARGET-04",
+      "label": "Aichi-T4. Use of natural resources"
+    },
+    {
+      "identifier": "AICHI-TARGET-05",
+      "label": "Aichi-T5. Loss of habitats"
+    },
+    {
+      "identifier": "AICHI-TARGET-06",
+      "label": "Aichi-T6. Sustainable fisheries"
+    },
+    {
+      "identifier": "AICHI-TARGET-07",
+      "label": "Aichi-T7. Areas under sustainable management"
+    },
+    {
+      "identifier": "AICHI-TARGET-08",
+      "label": "Aichi-T8. Pollution"
+    },
+    {
+      "identifier": "AICHI-TARGET-09",
+      "label": "Aichi-T9. Invasive Alien Species"
+    },
+    {
+      "identifier": "AICHI-TARGET-10",
+      "label": "Aichi-T10. Vulnerable ecosystems"
+    },
+    {
+      "identifier": "AICHI-TARGET-11",
+      "label": "Aichi-T11. Protected areas"
+    },
+    {
+      "identifier": "AICHI-TARGET-12",
+      "label": "Aichi-T12. Preventing extinctions"
+    },
+    {
+      "identifier": "AICHI-TARGET-13",
+      "label": "Aichi-T13. Agricultural biodiversity"
+    },
+    {
+      "identifier": "AICHI-TARGET-14",
+      "label": "Aichi-T14. Essential ecosystem services"
+    },
+    {
+      "identifier": "AICHI-TARGET-15",
+      "label": "Aichi-T15. Ecosystem resilience"
+    },
+    {
+      "identifier": "AICHI-TARGET-16",
+      "label": "Aichi-T16. Nagoya Protocol on ABS"
+    },
+    {
+      "identifier": "AICHI-TARGET-17",
+      "label": "Aichi-T17. NBSAPs"
+    },
+    {
+      "identifier": "AICHI-TARGET-18",
+      "label": "Aichi-T18. Traditional knowledge"
+    },
+    {
+      "identifier": "AICHI-TARGET-19",
+      "label": "Aichi-T19. Biodiversity knowledge"
+    },
+    {
+      "identifier": "AICHI-TARGET-20",
+      "label": "Aichi-T20. Resource mobilization"
+    },
+    {
+      "identifier": "CBD-SUBJECT-BIOMES",
+      "label": "Biomes"
+    },
+    {
+      "identifier": "CBD-SUBJECT-AGR",
+      "label": "Agricultural Biodiversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-DSHL",
+      "label": "Dry and Sub-Humid Lands"
+    },
+    {
+      "identifier": "CBD-SUBJECT-FOR",
+      "label": "Forest Biodiversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-WTR",
+      "label": "Inland Waters Biodiversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-ISL",
+      "label": "Island Biodiversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-MAR",
+      "label": "Marine and Coastal Biodiversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-MNT",
+      "label": "Mountain Biodiversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-PLR",
+      "label": "Polar Biodiversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-LEGAL-STRUCT",
+      "label": "Legal and Institutional Structure"
+    },
+    {
+      "identifier": "CBD-SUBJECT-CBD",
+      "label": "Secretariat of the Convention on Biological Diversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-COP",
+      "label": "Conference of the Parties"
+    },
+    {
+      "identifier": "CBD-SUBJECT-SBSTTA",
+      "label": "Subsidiary Body on Scientific, Technical and Technological Advice (SBSTTA)"
+    },
+    {
+      "identifier": "CBD-SUBJECT-CPB",
+      "label": "Cartagena Protocol on Biosafety"
+    },
+    {
+      "identifier": "CBD-SUBJECT-NPABS",
+      "label": "Nagoya Protocol on Access and Benefit-sharing"
+    },
+    {
+      "identifier": "CBD-SUBJECT-STRATEGY-PLAN",
+      "label": "Strategy and Planning"
+    },
+    {
+      "identifier": "CBD-SUBJECT-STRAT",
+      "label": "Strategic Plan 2011-2020"
+    },
+    {
+      "identifier": "CBD-SUBJECT-NBSAP",
+      "label": "National Biodiversity Strategies and Action Plans (NBSAPs)"
+    },
+    {
+      "identifier": "CBD-SUBJECT-TARGET",
+      "label": "2010 Biodiversity Target"
+    },
+    {
+      "identifier": "CBD-SUBJECT-IMPL-MON-REPORT",
+      "label": "Implementation, Monitoring and Reporting"
+    },
+    {
+      "identifier": "CBD-SUBJECT-NR",
+      "label": "National Reports"
+    },
+    {
+      "identifier": "CBD-SUBJECT-IND",
+      "label": "Indicators"
+    },
+    {
+      "identifier": "CBD-SUBJECT-GBO",
+      "label": "Global Biodiversity Outlook (GBO)"
+    },
+    {
+      "identifier": "CBD-SUBJECT-PART-INIT-COOP",
+      "label": "Partnerships and initiatives to enhance cooperation"
+    },
+    {
+      "identifier": "CBD-SUBJECT-AICHI-TF",
+      "label": "Aichi targets Task Force"
+    },
+    {
+      "identifier": "CBD-SUBJECT-IND-P",
+      "label": "Biodiversity Indicators Partnership"
+    },
+    {
+      "identifier": "CBD-SUBJECT-LIAISON-GROUP",
+      "label": "Biodiversity Liaison Group"
+    },
+    {
+      "identifier": "CBD-SUBJECT-BIZ",
+      "label": "Business"
+    },
+    {
+      "identifier": "CBD-SUBJECT-NAP-CB",
+      "label": "Capacity-building"
+    },
+    {
+      "identifier": "CBD-SUBJECT-CITY",
+      "label": "Cities and Sub national Authorities"
+    },
+    {
+      "identifier": "CBD-SUBJECT-CHM",
+      "label": "Clearing-House Mechanisms"
+    },
+    {
+      "identifier": "CBD-SUBJECT-STC",
+      "label": "Scientific and Technical Cooperation"
+    },
+    {
+      "identifier": "CBD-SUBJECT-FIN",
+      "label": "Financial Mechanism and Resources Mobilization"
+    },
+    {
+      "identifier": "CBD-SUBJECT-GTI",
+      "label": "Global Taxonomy Initiative"
+    },
+    {
+      "identifier": "CBD-SUBJECT-IMPA",
+      "label": "Impact Assessment"
+    },
+    {
+      "identifier": "CBD-SUBJECT-ILC",
+      "label": "Indigenous peoples and local communities"
+    },
+    {
+      "identifier": "CBD-SUBJECT-JLG",
+      "label": "Joint Liaison Group"
+    },
+    {
+      "identifier": "CBD-SUBJECT-COOP",
+      "label": "Memorandum of Cooperation"
+    },
+    {
+      "identifier": "CBD-SUBJECT-CROSS-CUTTING",
+      "label": "Cross-cutting Issues"
+    },
+    {
+      "identifier": "CBD-SUBJECT-ABS",
+      "label": "Access to Genetic Resources and Benefit-sharing"
+    },
+    {
+      "identifier": "CBD-SUBJECT-DEV",
+      "label": "Biodiversity for Development"
+    },
+    {
+      "identifier": "CBD-SUBJECT-CHPO",
+      "label": "Chemicals and pollution"
+    },
+    {
+      "identifier": "CBD-SUBJECT-CC",
+      "label": "Climate Change and Biodiversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-ETI",
+      "label": "Economics, Trade and Incentive Measures"
+    },
+    {
+      "identifier": "CBD-SUBJECT-ECOA+ECORES",
+      "label": "Ecosystem Approach and Restoration"
+    },
+    {
+      "identifier": "CBD-SUBJECT-EXS",
+      "label": "Ex-Situ Conservation"
+    },
+    {
+      "identifier": "CBD-SUBJECT-GEND",
+      "label": "Gender and Biodiversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-CPB-HTPI",
+      "label": "Handling of Biotechnology"
+    },
+    {
+      "identifier": "CBD-SUBJECT-HH",
+      "label": "Health and Biodiversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-PA",
+      "label": "Protected Areas"
+    },
+    {
+      "identifier": "CBD-SUBJECT-IPR",
+      "label": "Intellectual Property Rights"
+    },
+    {
+      "identifier": "CBD-SUBJECT-IAS",
+      "label": "Invasive Alien Species"
+    },
+    {
+      "identifier": "CBD-SUBJECT-TKIP",
+      "label": "Traditional Knowledge, Innovations and Practices"
+    },
+    {
+      "identifier": "CBD-SUBJECT-TAXONOMY",
+      "label": "Taxonomy"
+    },
+    {
+      "identifier": "CBD-SUBJECT-TOUR",
+      "label": "Tourism"
+    },
+    {
+      "identifier": "CBD-SUBJECT-OUT+CEPA",
+      "label": "Outreach and Education"
+    },
+    {
+      "identifier": "CBD-SUBJECT-IBD",
+      "label": "International Day for Biodiversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-IYB",
+      "label": "International Year of Biodiversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-UNDB",
+      "label": "United Nations Decade on Biodiversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-YOUTH",
+      "label": "Youth"
+    },
+    {
+      "identifier": "BD8F75CA-32D4-427B-A9CE-55079989A0CC",
+      "label": "Executive Secretary"
+    },
+    {
+      "identifier": "3FEF79FF-9EA2-4E3A-BEC9-2991CCDD7F3A",
+      "label": "Executive Secretary Featured"
+    },
+    {
+      "identifier": "CBD-SUBJECT-ECOA",
+      "label": "Ecosystem Approach"
+    },
+    {
+      "identifier": "CBD-SUBJECT-GSPC",
+      "label": "Global Strategy for Plant Conservation"
+    },
+    {
+      "identifier": "CBD-SUBJECT-GURT",
+      "label": "Genetic Use Restriction Technologies"
+    },
+    {
+      "identifier": "CBD-SUBJECT-LR",
+      "label": "Liability and Redress"
+    },
+    {
+      "identifier": "CBD-SUBJECT-SUSE",
+      "label": "Sustainable Use of Biodiversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-TTC",
+      "label": "Transfer of Technology and Cooperation"
+    },
+    {
+      "identifier": "CBD-SUBJECT-ICBD",
+      "label": "Implementation of the Convention on Biological Diversity"
+    },
+    {
+      "identifier": "CBD-SUBJECT-SBI",
+      "label": "Subsidiary Body on Implementation (SBI)"
+    },
+    {
+      "identifier": "CBD-SUBJECT-BTB",
+      "label": "Biosafety and Biotechnology"
+    },
+    {
+      "identifier": "CBD-SUBJECT-SDEV",
+      "label": "Sustainable Development / Millenium Development Goals"
+    },
+    {
+      "identifier": "CBD-SUBJECT-ECORES",
+      "label": "Ecosystem Restoration"
+    },
+    {
+      "identifier": "CBD-SUBJECT-ENDS",
+      "label": "Endangered Species"
+    },
+    {
+      "identifier": "CBD-SUBJECT-XCH",
+      "label": "Exchange of Information"
+    },
+    {
+      "identifier": "CBD-SUBJECT-SSC",
+      "label": "South-South Cooperation"
+    },
+    {
+      "identifier": "CBD-SUBJECT-NEW",
+      "label": "New & Emerging Issues"
+    },
+    {
+      "identifier": "CBD-SUBJECT-INS",
+      "label": "In-Situ Conservation"
+    },
+    {
+      "identifier": "CBD-SUBJECT-COMM",
+      "label": "Communication, Education and Public Awareness"
+    },
+    {
+      "identifier": "CBD-SUBJECT-AICHI",
+      "label": "Aichi Biodiversity Targets "
+    },
+    {
+      "identifier": "CBD-SUBJECT-25TH-ANN",
+      "label": "25th Anniversary"
+    },
+    {
+      "identifier": "CBD-SUBJECT-POST2020",
+      "label": "Post 2020 Framework"
+    },
+    {
+      "identifier": "CBD-SUBJECT-DIGISTRAT",
+      "label": "Digital Strategy"
+    },
+    {
+      "identifier": "CBD-SUBJECT-KM",
+      "label": "Knowledge Management"
+    },
+    {
+      "identifier": "CBD-SUBJECT-KMGBF",
+      "label": "Kunming-Montreal Global Biodiversity Framework"
+    },
+    {
+      "identifier": "CBD-SUBJECT-DSI",
+      "label": "Digital Sequence Information on Genetic Resources"
+    },
+    {
+      "identifier": "528B1187-F1BD-4479-9FB3-ADBD9076D361",
+      "label": "Regional / Multilateral"
+    },
+    {
+      "identifier": "7437F880-7B12-4F26-AA91-CED37250DD0A",
+      "label": "National / Federal"
+    },
+    {
+      "identifier": "DEBB019D-8647-40EC-8AE5-10CA88572F6E",
+      "label": "Sub-national"
+    },
+    {
+      "identifier": "GBF-TARGET-01",
+      "label": "GBF-T01. All areas are planned or managed to bring loss of areas of high biodiversity importance close to zero"
+    },
+    {
+      "identifier": "GBF-TARGET-02",
+      "label": "GBF-T02. 30% of degraded areas are under effective restoration"
+    },
+    {
+      "identifier": "GBF-TARGET-03",
+      "label": "GBF-T03. 30% of areas are effectively conserved"
+    },
+    {
+      "identifier": "GBF-TARGET-04",
+      "label": "GBF-T04. Threatened species are recovering, genetic diversity is being maintained and human-wildlife conflict is being managed"
+    },
+    {
+      "identifier": "GBF-TARGET-05",
+      "label": "GBF-T05. Use, harvesting and trade of wild species is sustainable, safe and legal"
+    },
+    {
+      "identifier": "GBF-TARGET-06",
+      "label": "GBF-T06. Reduce rates of introduction and establishment of invasive alien species by 50%"
+    },
+    {
+      "identifier": "GBF-TARGET-07",
+      "label": "GBF-T07. Pollution reduced, halving nutrient loss and pesticide risk"
+    },
+    {
+      "identifier": "GBF-TARGET-08",
+      "label": "GBF-T08. Minimize impacts of climate change and ocean acidification including through nature-based solutions and/or ecosystem-based approaches"
+    },
+    {
+      "identifier": "GBF-TARGET-09",
+      "label": "GBF-T09. Management of wild species is sustainable and benefits people"
+    },
+    {
+      "identifier": "GBF-TARGET-10",
+      "label": "GBF-T10. Areas under agriculture, aquaculture, fisheries and forestry are managed sustainably"
+    },
+    {
+      "identifier": "GBF-TARGET-11",
+      "label": "GBF-T11. Nature’s contributions to people are restored, maintained and enhanced"
+    },
+    {
+      "identifier": "GBF-TARGET-12",
+      "label": "GBF-T12. Urban green and blue spaces enhanced for human well-being"
+    },
+    {
+      "identifier": "GBF-TARGET-13",
+      "label": "GBF-T13. Fair and equitable sharing of benefits from genetic resources, digital sequence information and associated traditional knowledge"
+    },
+    {
+      "identifier": "GBF-TARGET-14",
+      "label": "GBF-T14. The multiple values of biodiversity are integrated into decision-making at all levels"
+    },
+    {
+      "identifier": "GBF-TARGET-15",
+      "label": "GBF-T15. Businesses assess and disclose biodiversity dependencies, impacts and risks, and reduce negative impacts"
+    },
+    {
+      "identifier": "GBF-TARGET-16",
+      "label": "GBF-T16. Sustainable consumption choices are enabled, and food waste reduced by half"
+    },
+    {
+      "identifier": "GBF-TARGET-17",
+      "label": "GBF-T17. Strengthen biosafety and distribute benefits of biotechnology"
+    },
+    {
+      "identifier": "GBF-TARGET-18",
+      "label": "GBF-T18. Reduce harmful incentives by at least $500 billion per year"
+    },
+    {
+      "identifier": "GBF-TARGET-19",
+      "label": "GBF-T19. Financial resources increased to $200 billion per year, including $ 30 billion through international finance"
+    },
+    {
+      "identifier": "GBF-TARGET-20",
+      "label": "GBF-T20. Capacity-building and development, technology transfer, and technical and scientific cooperation for implementation is strengthened"
+    },
+    {
+      "identifier": "GBF-TARGET-21",
+      "label": "GBF-T21. Data, information and knowledge for decision-making is available"
+    },
+    {
+      "identifier": "GBF-TARGET-22",
+      "label": "GBF-T22. Ensure participation, justice, and rights for indigenous peoples and local communities, women, youth persons with disabilities and environmental defenders"
+    },
+    {
+      "identifier": "GBF-TARGET-23",
+      "label": "GBF-T23. Implementation follows a gender-responsive approach"
+    },
+    {
+      "identifier": "GBF-GOAL-B",
+      "label": "GBF-G-B. Biodiversity is sustainably used and its contributions to people are maintained, enhanced or restored"
+    },
+    {
+      "identifier": "GBF-GOAL-A",
+      "label": "GBF-G-A. Ecosystems are conserved, extinctions are halted and genetic diversity is maintained"
+    },
+    {
+      "identifier": "GBF-GOAL-C",
+      "label": "GBF-G-C. Benefits from the use of genetic resources are shared and substantially increased"
+    },
+    {
+      "identifier": "GBF-GOAL-D",
+      "label": "GBF-G-D. The biodiversity funding gap of 700 billion USD is progressively closed by ensuring adequate means of implementation are available."
+    },
+    {
+      "identifier": "doc-1",
+      "label": "Agenda"
+    },
+    {
+      "identifier": "doc-2",
+      "label": "Statement"
+    },
+    {
+      "identifier": "doc-3",
+      "label": "Terms of Reference"
+    },
+    {
+      "identifier": "doc-4",
+      "label": "Training material"
+    },
+    {
+      "identifier": "doc-5",
+      "label": "Working Document"
+    },
+    {
+      "identifier": "doc-6",
+      "label": "Agreement"
+    },
+    {
+      "identifier": "doc-7",
+      "label": "Assessment"
+    },
+    {
+      "identifier": "doc-8",
+      "label": "Communication"
+    },
+    {
+      "identifier": "doc-9",
+      "label": "Concept note"
+    },
+    {
+      "identifier": "doc-10",
+      "label": "Factsheet"
+    },
+    {
+      "identifier": "doc-11",
+      "label": "List of participants"
+    },
+    {
+      "identifier": "doc-12",
+      "label": "Magazine"
+    },
+    {
+      "identifier": "doc-13",
+      "label": "Meeting report"
+    },
+    {
+      "identifier": "doc-14",
+      "label": "National Biodiversity Strategies and Action Plans (NBSAPs)"
+    },
+    {
+      "identifier": "doc-15",
+      "label": "National Report"
+    },
+    {
+      "identifier": "doc-16",
+      "label": "Notification"
+    },
+    {
+      "identifier": "doc-17",
+      "label": "Presentation"
+    },
+    {
+      "identifier": "doc-18",
+      "label": "Promotional material"
+    },
+    {
+      "identifier": "doc-19",
+      "label": "Publication"
+    },
+    {
+      "identifier": "doc-20",
+      "label": "Report"
+    },
+    {
+      "identifier": "aichiTarget",
+      "label": "Aichi Biodiversity Targets"
+    },
+    {
+      "identifier": "strategicPlanIndicator",
+      "label": "Strategic Plan Indicators"
+    },
+    {
+      "identifier": "marineEbsa",
+      "label": "Marine EBSAs"
+    },
+    {
+      "identifier": "bbiContact",
+      "label": "BBI Contacts"
+    },
+    {
+      "identifier": "bbiOpportunity",
+      "label": "BBI Opportunities"
+    },
+    {
+      "identifier": "bbiProfile",
+      "label": "BBI Providers of Assistance"
+    },
+    {
+      "identifier": "undbActor",
+      "label": "UNDB Actors"
+    },
+    {
+      "identifier": "undbParty",
+      "label": "UNDB Country Profile"
+    },
+    {
+      "identifier": "undbPartner",
+      "label": "UNDB Partner (depreciated)"
+    },
+    {
+      "identifier": "undbAction",
+      "label": "UNDB Actions (depreciated)"
+    },
+    {
+      "identifier": "submission",
+      "label": "Submissions"
+    },
+    {
+      "identifier": "nationalReport6",
+      "label": "Sixth National Report"
+    },
+    {
+      "identifier": "nationalTarget",
+      "label": "National Targets"
+    },
+    {
+      "identifier": "nationalAssessment",
+      "label": "Progress Assessments"
+    },
+    {
+      "identifier": "implementationActivity",
+      "label": "Implementation Activities"
+    },
+    {
+      "identifier": "resourceMobilisation",
+      "label": "Financial Reporting Framework: Reporting on baseline and progress towards 2015"
+    },
+    {
+      "identifier": "resourceMobilisation2020",
+      "label": "Financial Reporting Framework: Reporting on progress towards 2020"
+    },
+    {
+      "identifier": "SDG-GOAL-01",
+      "label": "1. No Poverty"
+    },
+    {
+      "identifier": "SDG-GOAL-01Alt",
+      "label": "End poverty in all its forms everywhere"
+    },
+    {
+      "identifier": "SDG-GOAL-02",
+      "label": "2. Zero Hunger"
+    },
+    {
+      "identifier": "SDG-GOAL-02Alt",
+      "label": "End hunger, achieve food security and improved nutrition and promote sustainable agriculture"
+    },
+    {
+      "identifier": "SDG-GOAL-03",
+      "label": "3. Good Health and Well-being"
+    },
+    {
+      "identifier": "SDG-GOAL-03Alt",
+      "label": "Ensure healthy lives and promote well-being for all at all ages"
+    },
+    {
+      "identifier": "SDG-GOAL-04",
+      "label": "4. Quality Education"
+    },
+    {
+      "identifier": "SDG-GOAL-04Alt",
+      "label": "Ensure inclusive and equitable quality education and promote lifelong learning opportunities for all"
+    },
+    {
+      "identifier": "SDG-GOAL-05",
+      "label": "5. Gender Equality"
+    },
+    {
+      "identifier": "SDG-GOAL-05Alt",
+      "label": "Achieve gender equality and empower all women and girls"
+    },
+    {
+      "identifier": "SDG-GOAL-06",
+      "label": "6. Clean Water and Sanitation"
+    },
+    {
+      "identifier": "SDG-GOAL-06Alt",
+      "label": "Ensure availability and sustainable management of water and sanitation for all"
+    },
+    {
+      "identifier": "SDG-GOAL-07",
+      "label": "7. Affordable and Clean Energy"
+    },
+    {
+      "identifier": "SDG-GOAL-07Alt",
+      "label": "Ensure access to affordable, reliable, sustainable and modern energy for all"
+    },
+    {
+      "identifier": "SDG-GOAL-08",
+      "label": "8. Decent Work and Economic Growth"
+    },
+    {
+      "identifier": "SDG-GOAL-08Alt",
+      "label": "Promote sustained, inclusive and sustainable economic growth, full and productive employment and decent work for all"
+    },
+    {
+      "identifier": "SDG-GOAL-09",
+      "label": "9. Industry, Innovation and Infrastructure"
+    },
+    {
+      "identifier": "SDG-GOAL-09Alt",
+      "label": "Build resilient infrastructure, promote inclusive and sustainable industrialization and foster innovation"
+    },
+    {
+      "identifier": "SDG-GOAL-10",
+      "label": "10. Reduced Inequality"
+    },
+    {
+      "identifier": "SDG-GOAL-10Alt",
+      "label": "Reduce inequality within and among countries"
+    },
+    {
+      "identifier": "SDG-GOAL-11",
+      "label": "11. Sustainable Cities and Communities"
+    },
+    {
+      "identifier": "SDG-GOAL-11Alt",
+      "label": "Make cities and human settlements inclusive, safe, resilient and sustainable"
+    },
+    {
+      "identifier": "SDG-GOAL-12",
+      "label": "12. Responsible Consumption and Production"
+    },
+    {
+      "identifier": "SDG-GOAL-12Alt",
+      "label": "Ensure sustainable consumption and production patterns"
+    },
+    {
+      "identifier": "SDG-GOAL-13",
+      "label": "13. Climate Action"
+    },
+    {
+      "identifier": "SDG-GOAL-13Alt",
+      "label": "Take urgent action to combat climate change and its impacts"
+    },
+    {
+      "identifier": "SDG-GOAL-14",
+      "label": "14. Life Below Water"
+    },
+    {
+      "identifier": "SDG-GOAL-14Alt",
+      "label": "Conserve and sustainably use the oceans, seas and marine resources for sustainable development"
+    },
+    {
+      "identifier": "SDG-GOAL-15",
+      "label": "15. Life on Land"
+    },
+    {
+      "identifier": "SDG-GOAL-15Alt",
+      "label": "Protect, restore and promote sustainable use of terrestrial ecosystems, sustainably manage forests, combat desertification, and halt and reverse land degradation and halt biodiversity loss"
+    },
+    {
+      "identifier": "SDG-GOAL-16",
+      "label": "16. Peace and Justice Strong Institutions"
+    },
+    {
+      "identifier": "SDG-GOAL-16Alt",
+      "label": "Promote peaceful and inclusive societies for sustainable development, provide access to justice for all and build effective, accountable and inclusive institutions at all levels"
+    },
+    {
+      "identifier": "SDG-GOAL-17",
+      "label": "17. Partnerships to achieve the Goal"
+    },
+    {
+      "identifier": "SDG-GOAL-17Alt",
+      "label": "Strengthen the means of implementation and revitalize the Global Partnership for Sustainable Development"
+    },
+    {
+      "identifier": "GBF-TARGET-01Description",
+      "label": "Ensure that all areas are under participatory, integrated, and biodiversity inclusive spatial planning and/or effective management processes addressing land and sea use change, to bring the loss of areas of high biodiversity importance, including ecosystems of high ecological integrity, close to zero by 2030, while respecting the rights of indigenous peoples and local communities."
+    },
+    {
+      "identifier": "GBF-TARGET-02Description",
+      "label": "Ensure that by 2030 at least 30 per cent of areas of degraded terrestrial, inland water, and coastal and marine ecosystems are under effective restoration, in order to enhance biodiversity and ecosystem functions and services, ecological integrity and connectivity."
+    },
+    {
+      "identifier": "GBF-TARGET-03Description",
+      "label": "Ensure and enable that by 2030 at least 30 per cent of terrestrial, inland water, and of coastal and marine areas, especially areas of particular importance for biodiversity and ecosystem functions and services, are effectively conserved and managed through ecologically representative, well-connected and equitably governed systems of protected areas and other effective area-based conservation measures, recognizing indigenous and traditional territories where applicable, and integrated into wider landscapes, seascapes and the ocean, while ensuring that any sustainable use, where appropriate in such areas, is fully consistent with conservation outcomes, recognizing and respecting the rights of indigenous peoples and local communities, including over their traditional territories."
+    },
+    {
+      "identifier": "GBF-TARGET-04Description",
+      "label": "Ensure urgent management actions to halt human induced extinction of known threatened species and for the recovery and conservation of species, in particular threatened species, to significantly reduce extinction risk, as well as to maintain and restore the genetic diversity within and between populations of native, wild and domesticated species to maintain their adaptive potential, including through in situ and ex situ conservation and sustainable management practices, and effectively manage human-wildlife interactions to minimize human-wildlife conflict for coexistence."
+    },
+    {
+      "identifier": "GBF-TARGET-05Description",
+      "label": "Ensure that the use, harvesting and trade of wild species is sustainable, safe and legal, preventing overexploitation, minimizing impacts on non-target species and ecosystems, and reducing the risk of pathogen spill-over, applying the ecosystem approach, while respecting and protecting customary sustainable use by indigenous peoples and local communities."
+    },
+    {
+      "identifier": "GBF-TARGET-06Description",
+      "label": "Eliminate, minimize, reduce and or mitigate the impacts of invasive alien species on biodiversity and ecosystem services by identifying and managing pathways of the introduction of alien species, preventing the introduction and establishment of priority invasive alien species, reducing the rates of introduction and establishment of other known or potential invasive alien species by at least 50 per cent, by 2030, eradicating or controlling invasive alien species especially in priority sites, such as islands. "
+    },
+    {
+      "identifier": "GBF-TARGET-07Description",
+      "label": "Reduce pollution risks and the negative impact of pollution from all sources, by 2030, to levels that are not harmful to biodiversity and ecosystem functions and services, considering cumulative effects, including: reducing excess nutrients lost to the environment by at least half including through more efficient nutrient cycling and use; reducing the overall risk from pesticides and highly hazardous chemicals by at least half including through integrated pest management, based on science, taking into account food security and livelihoods; and also preventing, reducing, and working towards eliminating plastic pollution."
+    },
+    {
+      "identifier": "GBF-TARGET-08Description",
+      "label": "Minimize the impact of climate change and ocean acidification on biodiversity and increase its resilience through mitigation, adaptation, and disaster risk reduction actions, including through nature-based solution and/or ecosystem-based approaches, while minimizing negative and fostering positive impacts of climate action on biodiversity. "
+    },
+    {
+      "identifier": "GBF-TARGET-09Description",
+      "label": "Ensure that the management and use of wild species are sustainable, thereby providing social, economic and environmental benefits for people, especially those in vulnerable situations and those most dependent on biodiversity, including through sustainable biodiversity-based activities, products and services that enhance biodiversity, and protecting and encouraging customary sustainable use by indigenous peoples and local communities."
+    },
+    {
+      "identifier": "GBF-TARGET-10Description",
+      "label": "Ensure that areas under agriculture, aquaculture, fisheries and forestry are managed sustainably, in particular through the sustainable use of biodiversity, including through a substantial increase of the application of biodiversity friendly practices, such as sustainable intensification, agroecological and other innovative approaches contributing to the resilience and long-term efficiency and productivity of these production systems and to food security, conserving and restoring biodiversity and maintaining nature’s contributions to people, including ecosystem functions and services ."
+    },
+    {
+      "identifier": "GBF-TARGET-11Description",
+      "label": "Restore, maintain and enhance nature’s contributions to people, including ecosystem functions and services, such as regulation of air, water, and climate, soil health, pollination and reduction of disease risk, as well as protection from natural hazards and disasters, through nature-based solutions and/or ecosystem-based approaches for the benefit of all people and nature. "
+    },
+    {
+      "identifier": "GBF-TARGET-12Description",
+      "label": "Significantly increase the area and quality and connectivity of, access to, and benefits from green and blue spaces in urban and densely populated areas sustainably, by mainstreaming the conservation and sustainable use of biodiversity, and ensure biodiversity-inclusive urban planning, enhancing native biodiversity, ecological connectivity and integrity, and improving human health and well-being and connection to nature and contributing to inclusive and sustainable urbanization and the provision of ecosystem functions and services."
+    },
+    {
+      "identifier": "GBF-TARGET-13Description",
+      "label": "Take effective legal, policy, administrative and capacity-building measures at all levels, as appropriate, to ensure the fair and equitable sharing of benefits that arise from the utilization of genetic resources and from digital sequence information on genetic resources, as well as traditional knowledge associated with genetic resources, and facilitating appropriate access to genetic resources, and by 2030 facilitating a significant increase of the benefits shared, in accordance with applicable international access and benefit-sharing instruments."
+    },
+    {
+      "identifier": "GBF-TARGET-14Description",
+      "label": "Ensure the full integration of biodiversity and its multiple values into policies, regulations, planning and development processes, poverty eradication strategies, strategic environmental assessments, environmental impact assessments and, as appropriate, national accounting, within and across all levels of government and across all sectors, in particular those with significant impacts on biodiversity, progressively aligning all relevant public and private activities, fiscal and financial flows with the goals and targets of this framework."
+    },
+    {
+      "identifier": "GBF-TARGET-15Description",
+      "label": "Take legal, administrative or policy measures to encourage and enable business, and in particular to ensure that large and transnational companies and financial institutions: \n\n(a) Regularly monitor, assess, and transparently disclose their risks, dependencies and impacts on biodiversity, including with requirements for all large as well as transnational companies and financial institutions along their operations, supply and value chains and portfolios;\n\n(b) Provide information needed to consumers to promote sustainable consumption patterns; \n\n(c) Report on compliance with access and benefit-sharing regulations and measures, as applicable;\n\nin order to progressively reduce negative impacts on biodiversity, increase positive impacts, reduce biodiversity-related risks to business and financial institutions, and promote actions to ensure sustainable patterns of production."
+    },
+    {
+      "identifier": "GBF-TARGET-16Description",
+      "label": "Ensure that people are encouraged and enabled to make sustainable consumption choices including by establishing supportive policy, legislative or regulatory frameworks, improving education and access to relevant and accurate information and alternatives, and by 2030, reduce the global footprint of consumption in an equitable manner, including through halving global food waste, significantly reducing overconsumption and substantially reducing waste generation, in order for all people to live well in harmony with Mother Earth."
+    },
+    {
+      "identifier": "GBF-TARGET-17Description",
+      "label": "Establish, strengthen capacity for, and implement in all countries biosafety measures as set out in Article 8(g) of the Convention on Biological Diversity and measures for the handling of biotechnology and distribution of its benefits as set out in Article 19 of the Convention."
+    },
+    {
+      "identifier": "GBF-TARGET-18Description",
+      "label": "Identify by 2025, and eliminate, phase out or reform incentives, including subsidies, harmful for biodiversity, in a proportionate, just, fair, effective and equitable way, while substantially and progressively reducing them by at least 500 billion United States dollars per year by 2030, starting with the most harmful incentives, and scale up positive incentives for the conservation and sustainable use of biodiversity."
+    },
+    {
+      "identifier": "GBF-TARGET-19Description",
+      "label": "Substantially and progressively increase the level of financial resources from all sources, in an effective, timely and easily accessible manner, including domestic, international, public and private resources, in accordance with Article 20 of the Convention, to implement national biodiversity strategies and action plans, by 2030 mobilizing at least 200 billion United States dollars per year, including by:\n\n(a) Increasing total biodiversity related international financial resources from developed countries, including official development assistance, and from countries that voluntarily assume obligations of developed country Parties, to developing countries, in particular the least developed countries and small island developing States, as well as countries with economies in transition, to at least US$ 20 billion per year by 2025, and to at least US$ 30 billion per year by 2030;\n\n(b) Significantly increasing domestic resource mobilization, facilitated by the preparation and implementation of national biodiversity finance plans or similar instruments according to national needs, priorities and circumstances;\n\n(c) Leveraging private finance, promoting blended finance, implementing strategies for raising new and additional resources, and encouraging the private sector to invest in biodiversity, including through impact funds and other instruments;\n\n(d) Stimulating innovative schemes such as payment for ecosystem services, green bonds, biodiversity offsets and credits, benefit-sharing mechanisms, with environmental and social safeguards;\n\n(e) Optimizing co-benefits and synergies of finance targeting the biodiversity and climate crises;\n\n(f) Enhancing the role of collective actions, including by indigenous peoples and local communities, Mother Earth centric actions[1]  and non-market-based approaches including community based natural resource management and civil society cooperation and solidarity aimed at the conservation of biodiversity;\n\n(g) Enhancing the effectiveness, efficiency and transparency of resource provision and use.\n\n***\n\n[1] Mother Earth-centric actions: Ecocentric and rights-based approach enabling the implementation of actions towards harmonic and complementary relationships between peoples and nature, promoting the continuity of all living beings and their communities and ensuring the non-commodification of environmental functions of Mother Earth."
+    },
+    {
+      "identifier": "GBF-TARGET-20Description",
+      "label": "Strengthen capacity-building and development, access to and transfer of technology, and promote development of and access to innovation and technical and scientific cooperation, including through South-South, North-South and triangular cooperation, to meet the needs for effective implementation, particularly in developing countries, fostering joint technology development and joint scientific research programmes for the conservation and sustainable use of biodiversity and strengthening scientific research and monitoring capacities, commensurate with the ambition of the goals and targets of the framework."
+    },
+    {
+      "identifier": "GBF-TARGET-21Description",
+      "label": "Ensure that the best available data, information and knowledge, are accessible to decision makers, practitioners and the public to guide effective and equitable governance, integrated and participatory management of biodiversity, and to strengthen communication, awareness-raising, education, monitoring, research and knowledge management and, also in this context, traditional knowledge, innovations, practices and technologies of indigenous peoples and local communities should only be accessed with their free, prior and informed consent[1], in accordance with national legislation.\n\n***\n\n[1] Free, prior and informed consent refers to the tripartite terminology of “prior and informed consent” or “free, prior and informed consent” or “approval and involvement."
+    },
+    {
+      "identifier": "GBF-TARGET-22Description",
+      "label": "Ensure the full, equitable, inclusive, effective and gender-responsive representation and participation in decision-making, and access to justice and information related to biodiversity by indigenous peoples and local communities, respecting their cultures and their rights over lands, territories, resources, and traditional knowledge, as well as by women and girls, children and youth, and persons with disabilities and ensure the full protection of environmental human rights defenders."
+    },
+    {
+      "identifier": "GBF-TARGET-23Description",
+      "label": "Ensure gender equality in the implementation of the framework through a gender-responsive approach where all women and girls have equal opportunity and capacity to contribute to the three objectives of the Convention, including by recognizing their equal rights and access to land and natural resources and their full, equitable, meaningful and informed participation and leadership at all levels of action, engagement, policy and decision-making related to biodiversity."
+    },
+    {
+      "identifier": "GBF-GOAL-BDescription",
+      "label": "Biodiversity is sustainably used and managed and nature’s contributions to people, including ecosystem functions and services, are valued, maintained and enhanced, with those currently in decline being restored, supporting the achievement of sustainable development for the benefit of present and future generations by 2050."
+    },
+    {
+      "identifier": "GBF-GOAL-ADescription",
+      "label": "The integrity, connectivity and resilience of all ecosystems are maintained, enhanced, or restored, substantially increasing the area of natural ecosystems by 2050; Human induced extinction of known threatened species is halted, and, by 2050, the extinction rate and risk of all species are reduced tenfold and the abundance of native wild species is increased to healthy and resilient levels; The genetic diversity within populations of wild and domesticated species is maintained, safeguarding their adaptive potential."
+    },
+    {
+      "identifier": "GBF-GOAL-CDescription",
+      "label": "The monetary and non-monetary benefits from the utilization of genetic resources, and digital sequence information on genetic resources, and of traditional knowledge associated with genetic resources, as applicable, are shared fairly and equitably, including, as appropriate with indigenous peoples and local communities, and substantially increased by 2050, while ensuring traditional knowledge associated with genetic resources is appropriately protected, thereby contributing to the conservation and sustainable use of biodiversity, in accordance with internationally agreed access and benefit-sharing instruments"
+    },
+    {
+      "identifier": "GBF-GOAL-DDescription",
+      "label": "Adequate means of implementation, including financial resources, capacity-building, technical and scientific cooperation,  and access to and transfer of technology  to fully implement the Kunming-Montreal global biodiversity framework  are secured and equitably accessible to all Parties, especially developing countries,  in particular the least developed countries and small island developing States, as well as countries with economies in transition, progressively closing the biodiversity finance gap of 700 billion dollars per year, and aligning financial flows with the Kunming-Montreal Global Biodiversity Framework and the 2050 Vision for Biodiversity."
+    },
+    {
+      "identifier": "pdfNotice",
+      "label": "This browser does not support PDFs. Please download the PDF to view it: "
+    },
+    {
+      "identifier": "downloadPdf",
+      "label": "Download PDF"
+    },
+    {
+      "identifier": "media",
+      "label": "Media"
+    },
+    {
+      "identifier": "heroHeader",
+      "label": "hero header"
+    },
+    {
+      "identifier": "bioland-context-description",
+      "label": "These cookies are required for the Bioland/Biosafty Land tool to function correctly. Because a single instance of the tool serves multiple websites, a context cookie is used to identify which website is being accessed. A session cookie keeps you logged in after authentication. Additional cookies store your language preference and viewport size to help the tool render content correctly on the server. Without these cookies, the website cannot operate as intended."
+    },
+    {
+      "identifier": "bioland-context-cookies",
+      "label": "Bioland / Biosafety Land Tool Context Cookies"
+    },
+    {
+      "identifier": "cookie-control-description",
+      "label": "We use our own cookies and third-party cookies so that we can display this website correctly and better understand how this website is used, with a view to improving the services we offer.  A decision on cookie usage permissions can be changed anytime using the cookie button that will appear after a selection has been made on this banner."
+    },
+    {
+      "identifier": "cookie-control-title",
+      "label": "Cookies"
+    },
+    {
+      "identifier": "B18CE475-8D23-4DEC-A9F1-13F0243C9233",
+      "label": "Biosafety policy and regulation"
+    },
+    {
+      "identifier": "E3E3E362-4E46-4C4A-A2A3-EABBDDAA2DEE",
+      "label": "Advance informed agreement (AIA)"
+    },
+    {
+      "identifier": "50D167CC-A994-49E2-8880-E800EF916629",
+      "label": "Compliance and Enforcement"
+    },
+    {
+      "identifier": "8431E752-F266-4823-B3DE-BF7194972FC0",
+      "label": "Import / Export"
+    },
+    {
+      "identifier": "1D4567E7-C615-4A49-BD1A-7CF6AD25CC63",
+      "label": "Liability and redress"
+    },
+    {
+      "identifier": "D49B70BD-0F37-4210-A8BF-0830BBB6FBC6",
+      "label": "Multilateral agreements"
+    },
+    {
+      "identifier": "8C1E3A36-665B-4AA9-B3B3-CDDF231EE677",
+      "label": "National administrative frameworks"
+    },
+    {
+      "identifier": "80FAE3F3-E18F-409A-B315-4187C0629A75",
+      "label": "National decision-making system"
+    },
+    {
+      "identifier": "D8C01307-E811-45B3-B975-196AB38FC580",
+      "label": "National policies"
+    },
+    {
+      "identifier": "2EF48E2B-969C-489B-B1A9-60F3A47EF41D",
+      "label": "National/Domestic regulatory frameworks or guidelines"
+    },
+    {
+      "identifier": "3E6C8E0A-BA06-4178-9E25-09D84084292E",
+      "label": "Precautionary approach (Principle 15 of Rio Declaration)"
+    },
+    {
+      "identifier": "AF0A23FB-455E-4707-8B3D-B5B179D1C34B",
+      "label": "Transit"
+    },
+    {
+      "identifier": "5A1A07F7-FF4B-4302-AC9F-711DA47B215B",
+      "label": "Capacity-building and financial resources"
+    },
+    {
+      "identifier": "B0880127-6D27-44C3-A990-19287C2C702B",
+      "label": "Cooperation and coordination mechanism"
+    },
+    {
+      "identifier": "656331D5-FF72-4108-B6A3-FB1CC9A14052",
+      "label": "Financial mechanisms and resources"
+    },
+    {
+      "identifier": "ECF2DE30-D5D6-4EFA-9270-DFA820BC19DF",
+      "label": "Institutional capacity development"
+    },
+    {
+      "identifier": "D73DB044-2BBD-4E24-8D01-7B0A32BEA8F8",
+      "label": "Project design, monitoring and evaluation"
+    },
+    {
+      "identifier": "991CC439-197B-431D-8984-A7543E7F3F59",
+      "label": "Technology transfer"
+    },
+    {
+      "identifier": "7C19514C-799F-4EB5-B519-5CA01834E936",
+      "label": "Training"
+    },
+    {
+      "identifier": "837523BF-6ED8-42FC-A39D-197442BD736B",
+      "label": "Information-sharing and management"
+    },
+    {
+      "identifier": "6449D16B-F360-4ED5-9EB5-F97F060AA3A7",
+      "label": "BCH Central Portal"
+    },
+    {
+      "identifier": "FBD8C753-524E-469B-9D58-50A453F4D139",
+      "label": "BCH National nodes"
+    },
+    {
+      "identifier": "DCE288FB-F51C-4FC4-AF9F-93D62754A1F1",
+      "label": "Biosafety databases"
+    },
+    {
+      "identifier": "45749AC4-AC93-44F1-8E33-BA4B24D9A8DE",
+      "label": "Additional sources of biosafety information"
+    },
+    {
+      "identifier": "F4B40E3C-6804-43E1-AF68-BCE9C2ACF7ED",
+      "label": "LMO use and transboundary movement"
+    },
+    {
+      "identifier": "B936AD00-3CD0-490A-9D66-DA10B80C8250",
+      "label": "Contained use"
+    },
+    {
+      "identifier": "C54C6F4F-D98D-4EF4-B774-769BADB749B0",
+      "label": "Emergency measures"
+    },
+    {
+      "identifier": "F30B1E3C-EDE1-44FE-97FF-747C762FAE31",
+      "label": "Field trials"
+    },
+    {
+      "identifier": "42200E36-CB8C-4FBE-A3CB-586F4A3F9011",
+      "label": "Handling, transport, packaging and identification"
+    },
+    {
+      "identifier": "8583C5CA-2A05-4D2F-9ACA-44DAF51489C1",
+      "label": "Illegal transboundary movement"
+    },
+    {
+      "identifier": "87E3084F-0DD1-4C48-9B0D-1C9881B367F2",
+      "label": "LMOs for introduction into the environment (Environmental releases)"
+    },
+    {
+      "identifier": "FB024900-2C4A-49F7-9DFB-E2AE6EB531B6",
+      "label": "LMOs for pharmaceuticals"
+    },
+    {
+      "identifier": "6F1F8C6E-7E43-4C26-990F-1635DD926004",
+      "label": "LMOs for use as food or feed or for processing"
+    },
+    {
+      "identifier": "349B6D55-71E2-49CD-A0A2-FA5EFAD97FA5",
+      "label": "LMOs or specific traits that may have adverse effects"
+    },
+    {
+      "identifier": "72996848-9814-4369-A394-AD41153DAA51",
+      "label": "LMOs or specific traits that are not likely to have adverse effects"
+    },
+    {
+      "identifier": "47F386B1-B6B4-4F74-9F57-684A83CC0348",
+      "label": "Unintentional transboundary movement"
+    },
+    {
+      "identifier": "0CBE5BD3-84C8-4197-A39A-360EC8841631",
+      "label": "Public awareness, education and participation"
+    },
+    {
+      "identifier": "05634D5F-FA57-40B8-8B92-F1FD0F6328EA",
+      "label": "Access to information"
+    },
+    {
+      "identifier": "5FD5809B-B84C-486D-BDA6-DD36669D51CF",
+      "label": "Biosafety education"
+    },
+    {
+      "identifier": "FC4A5699-237F-4317-AE56-11C1F97AC54C",
+      "label": "Communication"
+    },
+    {
+      "identifier": "69044988-FD11-49D0-83A0-0FF821A86DB6",
+      "label": "Public participation"
+    },
+    {
+      "identifier": "FE5DBA24-A98B-47BC-8F27-092516E398EB",
+      "label": "Public awareness"
+    },
+    {
+      "identifier": "2A6F3EC5-775B-477C-A88E-80CE7DF522E0",
+      "label": "Scientific and technical issues"
+    },
+    {
+      "identifier": "36BF56BD-221F-41F6-884A-BF2A2AAE0FC6",
+      "label": "Food and feed safety"
+    },
+    {
+      "identifier": "322D5C12-15AB-45EF-9B16-3776295D2B88",
+      "label": "Human health"
+    },
+    {
+      "identifier": "26BE9246-191F-48B8-829A-52A87AEEBF1D",
+      "label": "Detection"
+    },
+    {
+      "identifier": "D1011562-2F50-4EC5-A312-B066A3F3B0D6",
+      "label": "Environmental monitoring"
+    },
+    {
+      "identifier": "7198E79B-BA3A-4FBE-9C3E-69914C78477A",
+      "label": "Sampling"
+    },
+    {
+      "identifier": "FBAF958B-14BF-45DD-BC6D-D34A9953BCEF",
+      "label": "Risk assessment"
+    },
+    {
+      "identifier": "EBED94CD-27E5-4E41-8595-304C970F2A60",
+      "label": "Risk management"
+    },
+    {
+      "identifier": "CC16EA96-352B-4A31-ADBE-49C2DD912569",
+      "label": "Socio-economic and trade issues"
+    },
+    {
+      "identifier": "1AEBFA9C-621E-4CA3-BBE2-A891F96FD7EC",
+      "label": "Bioethics"
+    },
+    {
+      "identifier": "6F2AF399-1719-470B-B518-4838D3D192F5",
+      "label": "Coexistence"
+    },
+    {
+      "identifier": "A25D0042-57BA-423C-B122-CD282D4159C3",
+      "label": "Intellectual property rights"
+    },
+    {
+      "identifier": "D6861167-A5FD-44AE-A0B9-6B5FA876FAFF",
+      "label": "Social and/or economic assessments"
+    },
+    {
+      "identifier": "ADAE3310-22E2-4F86-A689-FB47C18AD50E",
+      "label": "Trade rules and standards"
+    }
+  ]
+}
