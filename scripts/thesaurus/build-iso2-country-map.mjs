@@ -10,9 +10,9 @@
  *    It is excluded by exact key match, never by a generic "self-referential value" heuristic, so a
  *    future genuinely self-referential country code would not be swallowed by accident. That leaves
  *    198 genuine ISO-2 country-code keys.
- * 2. The CBD API's `countries` domain (`getApiUrl('countries')`, reused from
- *    `server/utils/thesaurus/config.ts` rather than hardcoding the URL a second time) was probed live
- *    against `GET {base}/countries/terms`. It returns a flat JSON array of 198 items. Each item's
+ * 2. The CBD API's `countries` domain (see {@link DEFAULT_COUNTRIES_URL}, which a unit test pins to
+ *    `getApiUrl('countries')` in `server/utils/thesaurus/config.ts` so the two cannot drift) was
+ *    probed live against `GET {base}/countries/terms`. It returns a flat JSON array of 198 items. Each item's
  *    `identifier` field is EMPIRICALLY CONFIRMED to already be the lowercase ISO-2 code verbatim
  *    (e.g. `{ identifier: "ad", name: "Andorra", ... }`) — not a GUID, not a differently-cased
  *    variant. This was confirmed by inspection of the raw response, not assumed from `config.ts`'s
@@ -28,12 +28,61 @@
 import { writeFileSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { getApiUrl } from '../../server/utils/thesaurus/config.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '../..');
 const LOCALE_FILE = path.join(REPO_ROOT, 'i18n/locales/en.json');
 const OUTPUT_FILE = path.join(REPO_ROOT, 'server/assets/thesaurus-aliases/iso2-countries.json');
+
+/**
+ * The `countries` domain URL.
+ *
+ * Deliberately NOT imported from `server/utils/thesaurus/config.ts`: this is a plain `.mjs`
+ * generator and `package.json` supports Node >= 20, which cannot execute TypeScript natively, so a
+ * direct `.ts` import fails with ERR_UNKNOWN_FILE_EXTENSION on a supported local runtime. Vitest
+ * and the Node 24 Docker image both transform the import and would have masked that.
+ *
+ * The single-source guarantee is kept by assertion instead of by import:
+ * `tests/unit/server/utils/thesaurus/aliases/iso2-countries.test.ts` runs under Vitest (which does
+ * resolve the `.ts`) and fails if this default ever drifts from `getApiUrl('countries')`.
+ * `THESAURUS_COUNTRIES_URL` overrides it for a non-default environment.
+ */
+export const DEFAULT_COUNTRIES_URL = 'https://api.cbd.int/api/v2013/thesaurus/domains/countries/terms';
+const getCountriesUrl = () => process.env.THESAURUS_COUNTRIES_URL || DEFAULT_COUNTRIES_URL;
+
+/** Guard against a runaway or hostile response body. */
+const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
+
+/**
+ * Read a response body while enforcing {@link MAX_RESPONSE_BYTES} in ACTUAL BYTES as chunks
+ * arrive, rather than buffering the whole payload first and then measuring `String.length`
+ * (UTF-16 code units, not bytes). The stream is cancelled the moment the cap is exceeded.
+ */
+async function readBodyWithByteCap(response, maxBytes) {
+  const declared = Number(response.headers.get('content-length'));
+  if (Number.isFinite(declared) && declared > maxBytes) {
+    throw new Error(`countries domain response declared ${declared} bytes (> ${maxBytes}); refusing to read`);
+  }
+  if (!response.body) return await response.text();
+
+  const reader = response.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        throw new Error(`countries domain response exceeded ${maxBytes} bytes; refusing to parse`);
+      }
+      chunks.push(value);
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+  return new TextDecoder('utf-8').decode(Buffer.concat(chunks));
+}
 
 /** The exact, auditable false-positive exclusion: this key, not a generic heuristic. */
 const FALSE_POSITIVE_KEYS = new Set(['or']);
@@ -101,18 +150,13 @@ async function main() {
     );
   }
 
-  const url = getApiUrl('countries');
+  const url = getCountriesUrl();
   console.log(`Fetching live countries domain from ${url} ...`);
   const response = await fetch(url, { signal: AbortSignal.timeout(10_000) });
   if (!response.ok) {
     throw new Error(`countries domain fetch failed: ${response.status} ${response.statusText}`);
   }
-  const MAX_RESPONSE_BYTES = 5 * 1024 * 1024; // guard against a runaway/hostile response body
-  const body = await response.text();
-  if (body.length > MAX_RESPONSE_BYTES) {
-    throw new Error(`countries domain response exceeded ${MAX_RESPONSE_BYTES} bytes; refusing to parse`);
-  }
-  const countryTerms = JSON.parse(body);
+  const countryTerms = JSON.parse(await readBodyWithByteCap(response, MAX_RESPONSE_BYTES));
 
   const result = buildMap(genuine, countryTerms);
   const unmappedCount = Array.isArray(result._unmapped) ? result._unmapped.length : 0;

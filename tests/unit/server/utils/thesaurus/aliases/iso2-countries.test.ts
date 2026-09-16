@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { getGenuineIso2Keys, buildMap } from '../../../../../../scripts/thesaurus/build-iso2-country-map.mjs'
+import { DEFAULT_COUNTRIES_URL } from '../../../../../../scripts/thesaurus/build-iso2-country-map.mjs'
+import { getApiUrl } from '../../../../../../server/utils/thesaurus/config'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(__dirname, '../../../../../..')
@@ -116,6 +118,13 @@ describe('buildMap', () => {
     const result = buildMap(['ad'], [{ identifier: 'ad', name: 'Andorra' }])
     expect(result).toEqual({ ad: 'ad' })
     expect(result._unmapped).toBeUndefined()
+  })
+
+  // The generator is a plain .mjs run under Node >= 20, which cannot import config.ts natively, so
+  // it carries its own default URL. This test is the single-source guarantee: it runs under Vitest
+  // (which does resolve the .ts) and fails the moment the two definitions drift apart.
+  it('keeps the generator default URL pinned to getApiUrl("countries")', () => {
+    expect(DEFAULT_COUNTRIES_URL).toBe(getApiUrl('countries'))
   })
 
   it('produces alphabetically sorted keys for a stable, reviewable diff', () => {
