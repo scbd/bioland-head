@@ -2,6 +2,17 @@
 
 export const useContentTypeMenus = async (ctx, bypassMultiplier = true) => {
     try {
+        // Once per call, not once per process: this replaces a warn that fired for every content
+        // type in the menu, so a misconfigured site still logs on each uncached mega-menu request.
+        // That is the intended trade -- the log is how the misconfiguration gets noticed -- but do
+        // not read it as a one-shot.
+        if (!ctx.biolandSettings?.megaMenu?.contentTypeMenus) {
+            consola.warn(
+                'useContentTypeMenus - missing biolandSettings.megaMenu.contentTypeMenus; check DMSM runTime.biolandSettings, using default length of 6',
+                { siteCode: ctx.siteCode, env: ctx.env, multiSiteCode: ctx.multiSiteCode }
+            );
+        }
+
         const session = await useDrupalLogin(ctx.siteCode).catch(() => null);
 
         return makeTypeMap(await getAllContentTypeMenus(ctx, bypassMultiplier, session), ctx);
@@ -25,10 +36,7 @@ export const useContentTypeMenus = async (ctx, bypassMultiplier = true) => {
 function getContentTypeMenuLength(ctx, drupalInternalId) {
     const contentTypeSettings = ctx.biolandSettings?.megaMenu?.contentTypeMenus;
 
-    if (!contentTypeSettings) {
-        consola.error('getContentTypeMenuLength - missing biolandSettings.megaMenu.contentTypeMenus, using default length of 6');
-        return 6;
-    }
+    if (!contentTypeSettings) return 6;
     
     const lengthMap = Object.fromEntries(
         Object.entries(contentTypeSettings).map(([key, config]) => [key, config.maxMenus])

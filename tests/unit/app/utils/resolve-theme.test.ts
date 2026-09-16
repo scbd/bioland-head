@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { runInNewContext } from 'node:vm'
+import { parse } from '@vue/compiler-sfc'
+import * as ts from 'typescript'
 import { resolveTheme } from '../../../../app/utils/resolve-theme'
+import { parseColor } from '../../../../app/utils/color-contrast'
 
 import effectiveValues from './fixtures/theme-effective-values.json'
 
@@ -601,6 +606,23 @@ describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
             expect(theme.color.secondary).toBe(networkTheme.color.secondary)
         })
 
+        it.each([
+            ['a trailing declaration', 'red;background-image:url(https://elsewhere.test/x)'],
+            ['a closing brace',        '#fff}body{background:url(https://elsewhere.test/x)'],
+            ['a bare url()',           'url(https://elsewhere.test/x)'],
+        ])('an authored color.primary carrying %s falls through rather than reaching a style', (_label, primary) => {
+            // These values are editor-supplied and end up interpolated into inline styles and
+            // --bs-* custom properties, so a shape check is the thing standing between the theme
+            // form and an outbound request from every visitor's browser.
+            const theme = resolveTheme(siteConfig, { color: { primary } })
+
+            expect(theme.color.primary).toBe(networkTheme.color.primary)
+        })
+
+        it.each(['#fff', '#ABC', '#7b6f82', '#Ab12Cd'])('keeps consumer-safe hex %s unchanged', primary => {
+            expect(resolveTheme(siteConfig, { color: { primary } }).color.primary).toBe(primary)
+        })
+
         it('an authored megaMenu.maxColumns of 0 falls through — 0 collapses the grid', () => {
             const theme = resolveTheme(siteConfig, { megaMenu: { maxColumns: 0 } })
 
@@ -615,7 +637,244 @@ describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
         })
     })
 
-    describe('hero — derived only when absent from every source', () => {
+    describe('consumer-safe color formats (BL-1011 / BL-1012)', () => {
+        const unsupportedColors = [
+            'rebeccapurple', 'transparent', 'currentColor', 'notacolor',
+            'rgb(123, 45, 67)', 'rgba(123, 45, 67, 0.5)', 'rgb(123 45 67 / 50%)',
+            'hsl(120, 50%, 50%)', 'hsla(120, 50%, 50%, 0.5)', 'hsl(120 50% 50%)',
+            '#1', '#12', '#1234', '#12345', '#1234567', '#12345678', '#123456789',
+            '#ggg', 'abcdef', ' #abc', '#abc ', '\t#abcdef', '#abc\n', '#abcdef\r\n'
+        ]
+
+        it.each(unsupportedColors)('falls through per color leaf for %j in every leg', invalid => {
+            for (const key of ['primary', 'secondary'] as const) {
+                const sibling = key === 'primary' ? 'secondary' : 'primary'
+                const supplied = { color: { [key]: invalid, [sibling]: '#AbC' } }
+                const snapshot = structuredClone(supplied)
+                for (const theme of [
+                    resolveTheme(withRunTime(networkTheme, beTheme), supplied),
+                    resolveTheme(withRunTime(networkTheme, supplied)),
+                    resolveTheme({ runTime: { theme: supplied } })
+                ]) {
+                    expect(theme.color[sibling]).toBe('#AbC')
+                    expect(theme.color[key]).not.toBe(invalid)
+                    expect(theme.hero.primary).not.toContain(invalid)
+                    expect(theme.hero.secondary).toBe(theme.hero.primary[1])
+                }
+                expect(resolveTheme(withRunTime(networkTheme, beTheme), supplied).color[key]).toBe(beTheme.color[key])
+                expect(resolveTheme(withRunTime(networkTheme, supplied)).color[key]).toBe(networkTheme.color[key])
+                expect(resolveTheme({ runTime: { theme: supplied } }).color[key])
+                    .toBe(key === 'primary' ? '#009edb' : undefined)
+                expect(supplied).toEqual(snapshot)
+            }
+        })
+
+        it.each(unsupportedColors)('rejects %j in scalar and legacy hero slots without losing the usable sibling', invalid => {
+            for (const key of ['primary', 'secondary'] as const) {
+                const index = key === 'primary' ? 0 : 1
+                const sibling = key === 'primary' ? 'secondary' : 'primary'
+                const scalar = resolveTheme(withRunTime(networkTheme, beTheme), {
+                    hero: { [key]: invalid, [sibling]: '#AbC' }
+                })
+                expect(scalar.hero.primary[index]).toBe(beTheme.hero.primary[index])
+                expect(scalar.hero.primary[1 - index]).toBe('#AbC')
+                expect(scalar.hero.secondary).toBe(scalar.hero.primary[1])
+
+                const pair = index === 0 ? [invalid, '#AbC'] : ['#AbC', invalid]
+                const supplied = { hero: { primary: pair }, color: beTheme.color }
+                const snapshot = structuredClone(supplied)
+                for (const theme of [
+                    resolveTheme(withRunTime(networkTheme), supplied),
+                    resolveTheme(withRunTime(networkTheme, supplied)),
+                    resolveTheme({ runTime: { theme: supplied } })
+                ]) {
+                    expect(theme.hero.primary[index]).toBe(beTheme.color[key])
+                    expect(theme.hero.primary[1 - index]).toBe('#AbC')
+                    expect(theme.hero.secondary).toBe(theme.hero.primary[1])
+                }
+                expect(supplied).toEqual(snapshot)
+            }
+        })
+
+        // Execute each real consumer's pure conversion initializer, not a copied implementation.
+        const converters = [
+            '../../../../app/components/page/header/hero-image.vue',
+            '../../../../app/components/cards/media/hero.vue'
+        ].map(path => {
+            const { descriptor } = parse(readFileSync(new URL(path, import.meta.url), 'utf8'))
+            const script = ts.createSourceFile(path, descriptor.scriptSetup!.content, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS)
+            const declarations = script.statements.filter(ts.isVariableStatement)
+                .flatMap(statement => [...statement.declarationList.declarations])
+            const initializer = declarations.find(declaration => declaration.name.getText(script) === 'hexToRgb')!.initializer!
+
+            return runInNewContext(`(${initializer.getText(script)})`) as (color: string) => string
+        })
+
+        it.each([
+            ['#abc', [170, 187, 204]],
+            ['#AbC', [170, 187, 204]],
+            ['#123456', [18, 52, 86]],
+            ['#Ab12Cd', [171, 18, 205]]
+        ] as const)('resolved %s yields exact RGB channels in all three consumers', (color, channels) => {
+            for (const authored of [
+                { color: { primary: color, secondary: color } },
+                { hero: { primary: color, secondary: color } },
+                { hero: { primary: [color, color] } }
+            ]) {
+                const theme = resolveTheme({}, authored)
+                expect(theme.hero.primary).toEqual([color, color])
+                for (const slot of theme.hero.primary) {
+                    for (const convert of converters) expect(convert(slot)).toBe(channels.join(', '))
+                    expect(parseColor(slot)).toEqual({ r: channels[0], g: channels[1], b: channels[2] })
+                }
+            }
+        })
+    })
+
+    describe('hero — Drupal authors the pair directly (BL-1011)', () => {
+
+        it('uses both authored scalar slots over the inherited pair and the Drupal colors', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), {
+                hero : { primary: '#aaaaaa', secondary: '#bbbbbb' },
+                color: { primary: '#06dbad', secondary: '#889262' }
+            })
+
+            expect(theme.hero.primary).toEqual(['#aaaaaa', '#bbbbbb'])
+        })
+
+        it('keeps the inherited slot Drupal did not author, and does not colour-override it', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), {
+                hero : { primary: '#aaaaaa' },
+                color: { primary: '#06dbad', secondary: '#889262' }
+            })
+
+            // Belgium's own #CBB279, not the authored colour.secondary: authoring either hero slot
+            // means the editor reached the hero directly, so the colour shim stops standing in.
+            expect(theme.hero.primary).toEqual(['#aaaaaa', '#CBB279'])
+        })
+
+        it('authoring only hero.secondary leaves the inherited primary alone', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), {
+                hero : { secondary: '#bbbbbb' },
+                color: { primary: '#06dbad' }
+            })
+
+            expect(theme.hero.primary).toEqual(['#7b6f82', '#bbbbbb'])
+        })
+
+        it.each([
+            ['empty string', ''],
+            ['whitespace', '   '],
+            ['number', 42],
+            ['null', null],
+            ['object', { primary: '#aaaaaa' }]
+        ])('an unusable authored hero.primary (%s) falls through to today\u2019s behaviour', (_label, primary) => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), {
+                hero : { primary },
+                color: { primary: '#06dbad' }
+            })
+
+            // Exactly what the colour-override path produces with no hero authored at all.
+            expect(theme.hero.primary[0]).toBe('#06dbad')
+        })
+
+        it('an authored hero.primary in the LEGACY array shape still wins outright', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), {
+                hero : { primary: ['#aaaaaa', '#bbbbbb'] },
+                color: { primary: '#06dbad' }
+            })
+
+            // Pre-existing behaviour, deliberately preserved: the authored leg may still carry the
+            // ordered pair (a site seeded before the Theme tab split it into two scalars), and it
+            // is an explicit hero, so the colour override stands down.
+            expect(theme.hero.primary).toEqual(['#aaaaaa', '#bbbbbb'])
+        })
+
+        it('hero.secondary on the result always matches slot 1 of the pair', () => {
+            for (const authored of [
+                undefined,
+                { color: { primary: '#06dbad' } },
+                { hero: { primary: '#aaaaaa', secondary: '#bbbbbb' } },
+                { hero: { secondary: '#bbbbbb' } }
+            ]) {
+                const theme = resolveTheme(withRunTime(networkTheme, beTheme), authored)
+
+                expect(theme.hero.secondary).toBe(theme.hero.primary[1])
+            }
+        })
+
+        it('the pair is still an array of two on a site with no network hero and no Drupal hero', () => {
+            const theme = resolveTheme({}, {})
+
+            expect(Array.isArray(theme.hero.primary)).toBe(true)
+            expect(theme.hero.primary).toHaveLength(2)
+        })
+
+        it('an authored hero does not alter the colour group itself', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), {
+                hero : { primary: '#aaaaaa', secondary: '#bbbbbb' },
+                color: { primary: '#06dbad' }
+            })
+
+            expect(theme.color.primary).toBe('#06dbad')
+            expect(theme.color.secondary).toBe('#889262')
+        })
+    })
+
+    describe('hero — Drupal colors override inherited palette slots', () => {
+
+        it('uses the saved Drupal primary over the legacy Belgium hero primary', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), { color: { primary: '#06dbad' } })
+
+            expect(theme.hero.primary).toEqual(['#06dbad', '#CBB279'])
+        })
+
+        it('uses both Drupal colors over an inherited site hero', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), {
+                color: { primary: '#06dbad', secondary: '#889262' }
+            })
+
+            expect(theme.hero.primary).toEqual(['#06dbad', '#889262'])
+        })
+
+        it('changes only the secondary hero slot when only secondary is authored', () => {
+            const theme = resolveTheme(withRunTime(networkTheme, beTheme), { color: { secondary: '#abcdef' } })
+
+            expect(theme.hero.primary).toEqual(['#7b6f82', '#abcdef'])
+        })
+
+        it('uses Drupal colors over an inherited network hero', () => {
+            const theme = resolveTheme(siteConfig, { color: { primary: '#06dbad' } })
+
+            expect(theme.hero.primary).toEqual(['#06dbad', '#16c56e'])
+        })
+
+        it('ignores inherited color groups and leaves when overriding the hero', () => {
+            for (const authored of [
+                Object.create({ color: { primary: '#06dbad' } }),
+                { color: Object.create({ primary: '#06dbad' }) }
+            ]) {
+                expect(resolveTheme(withRunTime(networkTheme, beTheme), authored).hero.primary)
+                    .toEqual(['#7b6f82', '#CBB279'])
+            }
+        })
+
+        it('does not let an inherited hero suppress an own Drupal color', () => {
+            const authored = Object.assign(Object.create({ hero: { primary: ['#111111', '#222222'] } }), {
+                color: { primary: '#06dbad' }
+            })
+
+            expect(resolveTheme(withRunTime(networkTheme, beTheme), authored).hero.primary)
+                .toEqual(['#06dbad', '#CBB279'])
+        })
+
+        it.each([undefined, {}, { color: { primary: ' ', secondary: null } }])(
+            'keeps the legacy palette when Drupal supplies no usable colors: %j',
+            authored => {
+                expect(resolveTheme(withRunTime(networkTheme, beTheme), authored).hero.primary)
+                    .toEqual(['#7b6f82', '#CBB279'])
+            }
+        )
 
         it('derives from the AUTHORED colors when no leg authors a hero', () => {
             const config = { runTime: { theme: { color: networkTheme.color } } }

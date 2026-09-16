@@ -38,8 +38,8 @@
         "megaMenu.horizontalCardMax": 2,
         "megaMenu.forums": true,
         "i18n.maxLangBeforeWrap": 4,
-        "_comment_hero": "NOT derived from the authored colors. The network leg authors hero.primary, and ADR 0012 derives only when hero is absent from EVERY source, so the network hero passes through. A site wanting a matching hero must author one.",
-        "hero.primary": ["#009edb", "#16c56e"]
+        "_comment_hero": "Drupal colors override inherited hero slots when Drupal has no explicit hero palette, so saving colors also updates the hero tint.",
+        "hero.primary": ["#7b6f82", "#889262"]
       }
     },
 

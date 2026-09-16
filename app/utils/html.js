@@ -22,7 +22,80 @@ DOMPurify.addHook('uponSanitizeElement', (node, data)=>
 
     return node.parentNode.parentNode.removeChild(node.parentNode);//node;
   });
-  
+
+// Drupal's XSS filter strips the `data:` scheme off inline base64 images but keeps the
+// payload, so bodies arrive holding src="image/jpeg;base64,/9j/...". The browser resolves
+// that as a RELATIVE url and requests hundreds of KB of base64 as a path: the edge answers
+// 414/494 and tears down the shared HTTP/2 connection, which fails every other asset
+// multiplexed on it (ERR_HTTP2_PROTOCOL_ERROR). Put the scheme back so the image renders,
+// and drop the src outright when the payload is not a plain base64 image.
+// Raster types only: an editor's inline image is never svg, and svg carries a document we have
+// no reason to re-attach. Optional media-type parameters are tolerated because a stripped
+// `image/jpeg;charset=utf-8;base64,` would otherwise slip past and still be requested as a path.
+const base64ImageTypes  = 'png|jpe?g|gif|webp|avif|bmp|x-icon|vnd\\.microsoft\\.icon';
+const base64ImageParams = '(?:;[a-z0-9.+=-]+)*';
+const base64ImagePrefix = new RegExp(`^image\\/(?:${base64ImageTypes})${base64ImageParams};base64,`, 'i');
+const base64ImageSrc    = new RegExp(`^image\\/(?:${base64ImageTypes})${base64ImageParams};base64,[a-z0-9+/=\\s]+$`, 'i');
+
+// Anything schemeless and longer than a sane url is the same hazard even when it is not a shape
+// we recognise, so it is dropped rather than left for the browser to request.
+const maxUrlLength      = 2048;
+const hasUsableScheme   = /^(?:https?:|data:|\/|#)/i;
+
+// `srcset` is a candidate list, so a guard anchored to the whole attribute only ever sees the
+// first candidate: `"/a.jpg 1x, image/jpeg;base64,AAAA... 2x"` starts with a usable scheme and
+// keeps its stripped payload, which the browser still requests as a path. Match the stripped
+// shape at any candidate boundary instead, and length-check each url token rather than the
+// joined value. A stripped payload carries its own comma (`;base64,`), so the candidates are
+// split on whitespace as well: a base64 payload never contains any.
+const base64ImageCandidate = new RegExp(`(?:^|[\\s,])image\\/(?:${base64ImageTypes})${base64ImageParams};base64,`, 'i');
+
+const hasOversizedCandidate = value => value
+  .split(/[\s,]+/)
+  .some(token => token.length > maxUrlLength && !hasUsableScheme.test(token));
+
+const repairBase64Image = (node, attr) =>
+  {
+    const value = node.getAttribute(attr) || '';
+
+    if(!value) return;
+
+    // srcset wins over src in the browser, so a candidate list carrying a stripped payload is
+    // removed outright rather than repaired: the repaired src is what should render.
+    if(attr === 'srcset'){
+      if(base64ImageCandidate.test(value) || hasOversizedCandidate(value)) node.removeAttribute(attr);
+
+      return;
+    }
+
+    if(base64ImagePrefix.test(value)){
+      // `base64ImageSrc` is the ONLY thing standing between an editor's payload and the rendered
+      // document. This hook runs in `afterSanitizeAttributes`, so the write below lands after
+      // DOMPurify has already applied `ALLOWED_URI_REGEXP` and is never re-validated -- and
+      // DOMPurify would not catch it anyway: its DATA_URI_TAGS rule accepts ANY `data:` value on
+      // `<img src>`, `data:text/html` and `data:image/svg+xml` included. Widening
+      // `base64ImageTypes` therefore re-attaches an attacker-authored document with nothing left
+      // to stop it. Keep the type list raster-only and the payload class free of `<`, `>`, `:`,
+      // `,`, `%` and quotes.
+      if(node.tagName?.toLowerCase() === 'img' && attr === 'src' && base64ImageSrc.test(value)) node.setAttribute(attr, `data:${value}`);
+      else node.removeAttribute(attr);
+
+      return;
+    }
+
+    if(value.length > maxUrlLength && !hasUsableScheme.test(value)) node.removeAttribute(attr);
+  };
+
+DOMPurify.addHook('afterSanitizeAttributes', (node)=>
+  {
+    if(!node.getAttribute) return node;
+
+    repairBase64Image(node, 'src');
+    repairBase64Image(node, 'srcset');
+
+    return node;
+  });
+
 
 export const hasBchEmbed = (html) => {
   const bchEmbedRegex = /<div\b[^>]*\bclass=["'][^"']*scbd-chm-embed[^"']*["'][^>]*>/i;

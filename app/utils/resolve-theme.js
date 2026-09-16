@@ -79,11 +79,23 @@
  *
  * ## Hero rule
  *
- * `hero.primary` is *derived* as `[color.primary, color.secondary]` ONLY when it is absent from
- * every leg. An authored hero passes through untouched: live prod site `be` carries
- * `hero.primary[1] = "#CBB279"`, which is not its `color.secondary`, so an always-derive rule
- * would visibly change that site. A partially authored hero keeps its authored slots and has only
- * the missing slots filled from the derived pair. An authored slot that is present but not a usable
+ * Drupal now authors the hero directly, as two scalar hex strings — `hero.primary` and
+ * `hero.secondary` (drupal-module-bioland `BiolandThemeContract::KEY_HERO_PRIMARY` /
+ * `KEY_HERO_SECONDARY`). Those win outright, per slot. They are the only leg that can supply them:
+ * the legacy network theme spells the hero as ONE key holding an ordered pair,
+ * `hero.primary: [primary, secondary]`, which is why an authored *scalar* `hero.primary` and an
+ * inherited *array* `hero.primary` are distinguished here by type rather than by leg.
+ *
+ * Everything below is the pre-existing behaviour, unchanged, and still runs for every slot Drupal
+ * did not author — which is every slot on every site that has never saved the Theme tab, and one
+ * slot on a site that saved only half the pair.
+ *
+ * Without a Drupal `hero.primary`, each usable Drupal color overrides the corresponding inherited
+ * hero slot. The Theme form exposes colors but no hero fields, so keeping the legacy hero palette
+ * would hide saved color changes. Unauthored slots retain the legacy palette, including Belgium's
+ * custom secondary `#CBB279`. An explicit Drupal hero still wins over Drupal colors.
+ * A partially authored hero keeps its authored slots and has only the missing slots filled from
+ * the resolved color pair. An authored slot that is present but not a usable
  * colour string (number, object, `''`, …) is treated like a missing slot: `hero-image.vue` and
  * `cards/media/hero.vue` call `.replace` on each entry, so a non-string would throw during render.
  *
@@ -125,7 +137,7 @@ const freezeOwnMap = (entries) => Object.freeze(Object.assign(Object.create(null
 const CONTRACT_LEAVES = freezeOwnMap({
     color          : Object.freeze(['primary', 'secondary']),
     backGround     : Object.freeze(['secondary']),
-    hero           : Object.freeze(['primary']),
+    hero           : Object.freeze(['primary', 'secondary']),
     megaMenu       : Object.freeze(['maxColumns', 'maxRowsPerColumn', 'horizontalCardMax', 'forums']),
     i18n           : Object.freeze(['maxLangBeforeWrap']),
     homePageWidgets: Object.freeze(['columns'])
@@ -142,8 +154,19 @@ const CONTRACT_GROUPS = Object.freeze(Object.keys(CONTRACT_LEAVES));
 
 const isPresent = value => value !== undefined && value !== null;
 
-/** A colour a browser can actually apply. `''` interpolated into a style declaration voids it. */
-const isUsableColor = value => typeof value === 'string' && value.trim() !== '';
+/**
+ * A colour every consumer can parse, not just one a browser can apply.
+ *
+ * Shape-checked, not merely non-empty: these values come from the Drupal theme form and are
+ * interpolated into inline styles and `--bs-*` custom properties, so a value such as
+ * `red;background-image:url(https://elsewhere/x)` would otherwise ride along as a second
+ * declaration. The hero components' hexToRgb and color-contrast.js share support for 3/6-digit
+ * hex, matching Drupal's color pickers. Other CSS formats and alpha hex fall through per slot.
+ * Validate the returned string unchanged: trimming only for validation would let padded values
+ * reach the hex-only consumers (and `$` alone also accepts a final newline).
+ */
+const COLOR_SHAPE   = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+const isUsableColor = value => typeof value === 'string' && value === value.trim() && COLOR_SHAPE.test(value);
 
 /** A column count that yields at least one column. `0` collapses the mega-menu grid to nothing. */
 const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(value) >= 1;
@@ -315,17 +338,60 @@ const resolveOpaqueGroup = (legs, group) => {
 };
 
 /**
- * Derive-when-absent hero. Fills only the slots no leg authored with a usable colour string.
- * A present-but-unusable slot (e.g. `42`) falls through to the derived colour for that index —
- * the hero consumers call `.replace` on each entry, so a non-string is a render crash.
- * @param {Array|undefined} authored - the merged `hero.primary`, if any leg supplied one.
+ * Drupal colors replace inherited hero slots unless Drupal supplies its own hero palette.
+ * Missing or unusable slots derive from resolved colors so hero consumers can safely use them.
+ * @param {Array<object>} legs - the resolution legs, highest precedence first.
  * @param {object} color - the resolved color group.
+ * @param {object|undefined} authoredTheme - the validated Drupal theme.
  */
-const resolveHeroPrimary = (authored, color) => {
-    const derived = [color.primary, color.secondary];
-    const source  = Array.isArray(authored) ? authored : [];
+const resolveHeroPrimary = (legs, color, authoredTheme) => {
+    // The inherited pair, found by SHAPE rather than by taking the merged leaf. Drupal's scalar
+    // `hero.primary` sits at the same path as the network's ordered pair and would otherwise shadow
+    // it — which would cost a half-authored site the inherited colour in the slot it did NOT
+    // author, the one case that is supposed to be left exactly as it was.
+    // OWN properties only, exactly as resolveLeaf reads every other leaf: a `hero` or a `primary`
+    // reached through the prototype chain is not something a leg supplied, and treating it as one
+    // would let an inherited palette suppress a real authored colour.
+    const ownHeroPrimary = leg => (
+        isPlainObject(leg) && Object.hasOwn(leg, 'hero') && isPlainObject(leg.hero) && Object.hasOwn(leg.hero, 'primary')
+            ? leg.hero.primary
+            : undefined
+    );
 
-    return [0, 1].map(i => (isUsableColor(source[i]) ? source[i] : derived[i]));
+    const source = legs.map(ownHeroPrimary).find(Array.isArray) ?? [];
+    const authoredLeg = authoredTheme ? [authoredTheme] : [];
+
+    // The Drupal-authored slots, by name. Only a usable colour STRING counts: an inherited
+    // `hero.primary` is an array at this same path, and a site mid-migration can carry the array
+    // while Drupal has authored nothing, so the type is what separates the two shapes.
+    const authoredSlot = key => {
+        const value = resolveLeaf(authoredLeg, 'hero', key);
+
+        return isUsableColor(value) ? value : undefined;
+    };
+
+    // Whether Drupal reached the hero directly, in EITHER shape: a usable scalar in either slot,
+    // or an own ordered pair (the legacy shape, still accepted in the authored leg). When it did,
+    // the colour shim below stands down for both slots — the colours are no longer the editor's
+    // only way to reach the hero, and letting them keep overriding the other half would silently
+    // blend two deliberate choices.
+    //
+    // Usability, not presence, exactly as the per-slot rule above: an authored `hero.primary: ''`
+    // is not a hero the editor can have meant, so it leaves today's behaviour untouched rather
+    // than suppressing the colour override with a value nothing can render.
+    const heroIsAuthoredInDrupal = authoredSlot('primary') !== undefined
+        || authoredSlot('secondary') !== undefined
+        || Array.isArray(ownHeroPrimary(authoredTheme));
+
+    return ['primary', 'secondary'].map((key, i) => {
+        const explicit = authoredSlot(key);
+
+        if (explicit !== undefined) return explicit;
+
+        const override = heroIsAuthoredInDrupal ? undefined : resolveLeaf(authoredLeg, 'color', key);
+
+        return override ?? (isUsableColor(source[i]) ? source[i] : color[key]);
+    });
 };
 
 const MAX_AUTHORED_THEME_DEPTH = 64;
@@ -377,8 +443,12 @@ export function resolveTheme(config, authoredTheme) {
         resolved[group] = Object.fromEntries(leaves.map(leaf => [leaf, resolveLeaf(legs, group, leaf)]));
     }
 
-    // Hero is the one group with a derivation rule rather than a plain default.
-    resolved.hero.primary = resolveHeroPrimary(resolved.hero.primary, resolved.color);
+    // Hero also follows Drupal colors when its own palette has not been explicitly authored there.
+    resolved.hero.primary = resolveHeroPrimary(legs, resolved.color, authored);
+    // `hero.primary` stays the ordered pair every consumer indexes (`hero.primary[0]` / `[1]` at
+    // cards/media/hero.vue:65-66). `hero.secondary` is kept in step with it rather than left as the
+    // raw authored leaf, so the two can never disagree about slot 1.
+    resolved.hero.secondary = resolved.hero.primary[1];
 
     return resolved;
 }
