@@ -112,3 +112,53 @@ describe('resolveFromSnapshot', () => {
     })
   })
 })
+
+/**
+ * `p03-05` acceptance criterion: "Flipping NUXT_THESAURUS_LABEL_SOURCE=snapshot restores every
+ * removed label from the archive." Every other test above exercises a small hand-written fixture
+ * standing in for the real archive (written before `p03-05` existed); THIS block instead loads the
+ * actual committed `server/assets/thesaurus-label-snapshot.json` p03-05 produced and proves the real
+ * consumer (`resolveFromSnapshot`, selected by the D12 env flag in `resolve-terms.ts`) restores real
+ * removed labels from it — not just that the archive file exists and parses.
+ */
+describe('resolveFromSnapshot against the real p03-05 archive', () => {
+  it('restores a real removed label, in a real non-English locale, from the committed archive', async () => {
+    vi.resetModules()
+    const realArchive = (await import('../../../../../server/assets/thesaurus-label-snapshot.json')).default as Record<
+      string,
+      Record<string, string>
+    >
+    const [identifier, byLocale] = Object.entries(realArchive)[0]
+    const [locale, expectedLabel] = Object.entries(byLocale).find(([code]) => code !== 'en')!
+
+    stubAssets(JSON.stringify(realArchive))
+    const fresh = await import('../../../../../server/utils/thesaurus/snapshot-source')
+
+    const out = await fresh.resolveFromSnapshot([identifier], locale)
+
+    expect(out[identifier]).toEqual({ value: expectedLabel.trim(), source: 'api' })
+    // The label deleted from i18n/locales/<locale>.json by p03-05 must genuinely be gone from the
+    // live file — otherwise this test would pass even if the archive were stale or wrong.
+    const liveLocale = (await import(`../../../../../i18n/locales/${locale}.json`)).default as Record<string, string>
+    expect(Object.prototype.hasOwnProperty.call(liveLocale, identifier)).toBe(false)
+  })
+
+  it('restores every identifier the real archive carries for English, matching the archive exactly', async () => {
+    vi.resetModules()
+    const realArchive = (await import('../../../../../server/assets/thesaurus-label-snapshot.json')).default as Record<
+      string,
+      Record<string, string>
+    >
+    stubAssets(JSON.stringify(realArchive))
+    const fresh = await import('../../../../../server/utils/thesaurus/snapshot-source')
+
+    const identifiers = Object.keys(realArchive)
+    const out = await fresh.resolveFromSnapshot(identifiers, 'en')
+
+    for (const identifier of identifiers) {
+      // `resolveFromSnapshot` trims whitespace (see its own trim() call); a couple of real en.json
+      // values carry incidental trailing whitespace, so the expectation trims the same way.
+      expect(out[identifier]).toEqual({ value: realArchive[identifier].en.trim(), source: 'api' })
+    }
+  })
+})
