@@ -64,6 +64,10 @@ export default defineNuxtConfig({
     i18nDbConnectionLimit: process.env.I18N_DB_CONNECTION_LIMIT
       ? parseInt(process.env.I18N_DB_CONNECTION_LIMIT)
       : 5,
+    // Boot-time warm start (p04-02): hydrate the `tr` cache tier from existing MariaDB
+    // `i18n_cache` rows so a fresh container does not start fully cold. Default on; set
+    // NUXT_HYDRATE_I18N_CACHE=false to disable without a redeploy.
+    hydrateI18nCache: true,
     // Local dev: Drupal session cookie bypass (e.g., SSESSxxx=yyy)
     localDrupalSession: process.env.NUXT_LOCAL_DRUPAL_SESSION || "",
     public: {
