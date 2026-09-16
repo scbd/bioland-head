@@ -7,21 +7,25 @@ import { expect, test } from '@nuxt/test-utils/playwright'
  * ## Prerequisites, and why this file skips instead of failing
  *
  * Both routes talk to the `site_registry` database, and the ingest route needs a
- * push token the deployment's operator sets by hand (Plan Rule 26 — no `.env*`
- * file is written by this task). A developer machine without
- * `NUXT_NETWORK_SUMMARY_PUSH_TOKEN` exported, or without the registry schema
+ * token the deployment's operator sets by hand (Plan Rule 26 — no `.env*` file is
+ * written by this task). A developer machine without
+ * `NUXT_NETWORK_SUMMARY_INGEST_TOKENS` exported, or without the registry schema
  * applied, cannot exercise this at all, and a hard failure there would say
  * nothing about the code. So the file skips loudly with the variable name — never
  * a value — and the route logic itself stays gated by
  * `tests/unit/server/api/site-registry/network-routes.spec.ts`.
  *
- * Export the same token the server was started with, in the scoped
- * `<env>[/<multiSiteCode>]:<token>` form, and point `E2E_NETWORK_SUMMARY_SCOPE`
- * at the slice it authorises:
+ * Start the server with the **receiver** variable — the scoped
+ * `<env>[/<multiSiteCode>]:<token>` list — then give this file the bare token and
+ * point `E2E_NETWORK_SUMMARY_SCOPE` at the slice it authorises:
  *
- *     NUXT_NETWORK_SUMMARY_PUSH_TOKEN='dev:<token>' \
+ *     NUXT_NETWORK_SUMMARY_INGEST_TOKENS='dev/e2e-bl2:<token>' \
  *     E2E_NETWORK_SUMMARY_TOKEN='<token>' \
  *     E2E_NETWORK_SUMMARY_SCOPE='dev/e2e-bl2' yarn test:e2e
+ *
+ * The scope's env must match the server's own `runtimeConfig.public.env`, or the
+ * read route answers 403: a token scoped to another env may push its own slice
+ * but may not read this deployment's whole store.
  *
  * The slice this writes is a synthetic one (`e2e-bl2` by default), so it never
  * collides with a real deployment's rows.
@@ -124,5 +128,30 @@ test.describe('CHM Network summary ingest and read', () => {
 
     const after = await (await request.get(ROUTE, { headers: { [HEADER]: TOKEN! } })).json()
     expect(after).toEqual(before)
+  })
+
+  test('an empty push is refused and does not erase the stored slice', async ({ request }) => {
+    const before = await (await request.get(ROUTE, { headers: { [HEADER]: TOKEN! } })).json()
+
+    const refused = await request.post(ROUTE, {
+      headers: { [HEADER]: TOKEN! },
+      data: payload({ sites: [] }),
+    })
+    expect(refused.status()).toBe(400)
+
+    const after = await (await request.get(ROUTE, { headers: { [HEADER]: TOKEN! } })).json()
+    expect(after).toEqual(before)
+  })
+
+  test('an oversized body is refused before it is parsed', async ({ request }) => {
+    // Well past the 1 MiB cap, and syntactically invalid JSON on top: a 413
+    // proves the read was abandoned rather than buffered and handed to a parser
+    // (which would have answered 400).
+    const oversized = await request.post(ROUTE, {
+      headers: { [HEADER]: TOKEN!, 'content-type': 'application/json' },
+      data: `[${'x'.repeat(2 * 1024 * 1024)}`,
+    })
+
+    expect(oversized.status()).toBe(413)
   })
 })

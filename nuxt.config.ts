@@ -247,15 +247,28 @@ export default defineNuxtConfig({
   nitro: {
     logLevel: resolvedLogLevel,
     experimental: { tasks: true },
-    // Shared append point: every scheduled task registers here. If this block
-    // conflicts with a sibling branch, keep BOTH sides' entries — never drop,
-    // replace, or re-time one to clear the conflict.
+    // Shared append point: every scheduled task registers here.
+    //
+    // MERGE RULE — a sibling branch (p02-06) creates this same block. Resolve any
+    // conflict by keeping both sides' entries INSIDE THIS ONE `scheduledTasks`
+    // object. Two `scheduledTasks` keys in one object literal is not a merge: the
+    // later key silently wins and the earlier one's tasks never register. If both
+    // sides schedule the same cron expression, merge their task-name arrays into
+    // that one key. Never drop, replace, or re-time an entry to clear a conflict.
     scheduledTasks: {
       // Hourly. The CHM Network view is low-traffic and slow-changing, so an
       // hour bounds staleness at 60 minutes for 24 writes per deployment per
-      // day. Scheduling it per deployment is a manual operator step: the task
+      // day. Configuring it per deployment is a manual operator step: the task
       // reports `skipped` unless NUXT_NETWORK_SUMMARY_TARGET_URL and
-      // NUXT_NETWORK_SUMMARY_PUSH_TOKEN are set in that deployment's env.
+      // NUXT_NETWORK_SUMMARY_PUSH_TOKEN (the sender's BARE token — the receiver
+      // holds the scope:token list as NUXT_NETWORK_SUMMARY_INGEST_TOKENS) are
+      // both set in that deployment's env.
+      //
+      // Every replica fires this, so N replicas issue N concurrent pushes at the
+      // top of the hour. Harmless today — each is one transaction replacing one
+      // slice with identical content, and the ingest route serialises writes per
+      // process — but it is N times the work for one result. If replica counts
+      // grow, move the schedule to a single leader rather than re-timing here.
       "0 * * * *": ["network-summary-push"],
     },
     devStorage: {

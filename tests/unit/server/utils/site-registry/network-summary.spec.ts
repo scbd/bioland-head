@@ -31,11 +31,15 @@ const {
   NETWORK_SUMMARY_TABLE,
   NETWORK_SUMMARY_TOKEN_HEADER,
   NetworkSummaryInvalidError,
+  NetworkSummarySliceLimitError,
+  NetworkSummaryTooLargeError,
   buildNetworkSummary,
   parseNetworkSummaryPayload,
   pushNetworkSummary,
+  readCappedBodyText,
   readNetworkSummary,
   resolveNetworkSummaryScope,
+  scopeAllowsRead,
   scopeAllowsSlice,
   writeNetworkSummary,
 } = mod
@@ -183,9 +187,16 @@ describe('baseHost comes from the per-slice column', () => {
     driverReturns()
     await writeNetworkSummary(summary)
 
+    // Both rows ride one batched INSERT, so walk the flattened parameter list
+    // seven at a time and check each row group's base_host slot.
     const inserts = dbQuery.mock.calls.filter(call => String(call[0]).includes('INSERT'))
-    expect(inserts).toHaveLength(2)
-    for (const [, params] of inserts) expect(params[6]).toBe('cbddev.xyz')
+    expect(inserts).toHaveLength(1)
+
+    const params = inserts[0][1] as unknown[]
+    expect(params).toHaveLength(14)
+    for (let row = 0; row < params.length; row += 7) {
+      expect(params[row + 6]).toBe('cbddev.xyz')
+    }
   })
 
   it.each([
@@ -318,9 +329,37 @@ describe('token auth', () => {
     expect(resolveNetworkSummaryScope(CONFIGURED, PROD_SECRET)).toEqual({ env: 'prod', multiSiteCode: 'bl2' })
   })
 
-  it('ignores malformed configuration entries', () => {
-    expect(resolveNetworkSummaryScope(`no-separator,:${DEV_SECRET},qa:${DEV_SECRET},dev:`, DEV_SECRET)).toBeNull()
-    expect(resolveNetworkSummaryScope(` dev:${DEV_SECRET} , junk `, DEV_SECRET)).toEqual({ env: 'dev' })
+  it('ignores malformed configuration entries, warning once and never printing one', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+
+    try {
+      expect(resolveNetworkSummaryScope(`no-separator,:${DEV_SECRET},qa:${DEV_SECRET},dev:`, DEV_SECRET)).toBeNull()
+      expect(resolveNetworkSummaryScope(` dev:${DEV_SECRET} , junk `, DEV_SECRET)).toEqual({ env: 'dev' })
+
+      // Silence would turn a stray character in the receiver's env into a
+      // permanent 401 with nothing in the log; repeating it per request would
+      // be noise. So: at most once per process, and never an entry verbatim.
+      expect(warn.mock.calls.length).toBeLessThanOrEqual(1)
+      for (const [message] of warn.mock.calls) {
+        expect(String(message)).toContain('NUXT_NETWORK_SUMMARY_INGEST_TOKENS')
+        expect(String(message)).not.toContain(DEV_SECRET)
+      }
+    }
+    finally {
+      warn.mockRestore()
+    }
+  })
+
+  it('splits a scope entry on the first colon, so a token may contain one', () => {
+    // lastIndexOf would read `dev:aa:bb` as the scope `dev:aa`, reject the
+    // entry, and 401 forever with no diagnostic.
+    const colonToken = `${DEV_SECRET}:with:colons`
+    expect(resolveNetworkSummaryScope(`dev:${colonToken}`, colonToken)).toEqual({ env: 'dev' })
+  })
+
+  it('trims a presented token, so a trailing newline is not a permanent 401', () => {
+    expect(resolveNetworkSummaryScope(CONFIGURED, `${DEV_SECRET}\n`)).toEqual({ env: 'dev' })
+    expect(resolveNetworkSummaryScope(CONFIGURED, '   ')).toBeNull()
   })
 
   it('rejects a scope whose multiSiteCode is malformed', () => {
@@ -361,13 +400,13 @@ describe('atomic slice replace', () => {
   it('binds the caller\'s slice key on every inserted row', async () => {
     await writeNetworkSummary(parseNetworkSummaryPayload(validPayload()))
 
-    const inserts = dbQuery.mock.calls.slice(1)
-    expect(inserts).toHaveLength(2)
-    for (const [, params] of inserts) {
-      expect((params as unknown[]).slice(0, 2)).toEqual(['dev', 'bl2'])
-    }
-    expect(inserts[0][1]).toEqual(['dev', 'bl2', 'be', 'Belgium CHM', 0, 1, 'cbddev.xyz'])
-    expect(inserts[1][1]).toEqual(['dev', 'bl2', 'seed', null, 1, 0, 'cbddev.xyz'])
+    // [0] DELETE, [1] the per-env slice count, [2..] the batched INSERTs.
+    const inserts = dbQuery.mock.calls.slice(2)
+    expect(inserts).toHaveLength(1)
+    expect(inserts[0][1]).toEqual([
+      'dev', 'bl2', 'be', 'Belgium CHM', 0, 1, 'cbddev.xyz',
+      'dev', 'bl2', 'seed', null, 1, 0, 'cbddev.xyz',
+    ])
   })
 
   it('never interpolates a value into the SQL text', async () => {
@@ -382,6 +421,7 @@ describe('atomic slice replace', () => {
   it('rolls back and leaves the previous rows intact when a write fails', async () => {
     dbQuery.mockReset()
     dbQuery.mockResolvedValueOnce({ affectedRows: 2 })          // DELETE
+    dbQuery.mockResolvedValueOnce([{ slices: 1 }])               // slice count
     dbQuery.mockRejectedValueOnce(new Error('connection lost'))  // first INSERT
 
     await expect(writeNetworkSummary(parseNetworkSummaryPayload(validPayload())))
@@ -401,10 +441,42 @@ describe('atomic slice replace', () => {
       .rejects.toBeInstanceOf(RegistryUnavailableError)
   })
 
-  it('writes nothing at all for an empty slice beyond the delete', async () => {
-    await writeNetworkSummary(parseNetworkSummaryPayload(validPayload({ sites: [] })))
-    expect(dbQuery).toHaveBeenCalledOnce()
+  it('writes nothing beyond the delete and the slice count for an empty slice', async () => {
+    // Constructed directly, not through the parser: the ingest route can no
+    // longer produce an empty slice (see the empty-push tests), but
+    // writeNetworkSummary must still be well-behaved if one reaches it.
+    await writeNetworkSummary({ env: 'dev', multiSiteCode: 'bl2', baseHost: 'cbddev.xyz', sites: [] })
+    expect(dbQuery).toHaveBeenCalledTimes(2)
     expect(commit).toHaveBeenCalledOnce()
+  })
+
+  it('refuses to create more slices than an env may hold', async () => {
+    dbQuery.mockReset()
+    dbQuery.mockResolvedValueOnce({ affectedRows: 0 })   // DELETE
+    dbQuery.mockResolvedValueOnce([{ slices: 16 }])      // the env is already full
+    dbQuery.mockResolvedValue([])
+
+    await expect(writeNetworkSummary(parseNetworkSummaryPayload(validPayload())))
+      .rejects.toBeInstanceOf(NetworkSummarySliceLimitError)
+
+    // Nothing was inserted and the existing slices were left alone.
+    expect(dbQuery).toHaveBeenCalledTimes(2)
+    expect(rollback).toHaveBeenCalledOnce()
+    expect(commit).not.toHaveBeenCalled()
+  })
+
+  it('batches inserts rather than one round trip per row', async () => {
+    const sites = Array.from({ length: 450 }, (_, i) => ({
+      siteCode: `s${i}`, name: null, scbd: false, published: true,
+    }))
+
+    await writeNetworkSummary(parseNetworkSummaryPayload(validPayload({ sites })))
+
+    // DELETE, the slice count, then ceil(450 / 200) = 3 INSERTs — not 450.
+    expect(dbQuery).toHaveBeenCalledTimes(5)
+    const [sql, params] = dbQuery.mock.calls[2]
+    expect(String(sql).match(/\(\?, \?, \?, \?, \?, \?, \?, CURRENT_TIMESTAMP\)/g)).toHaveLength(200)
+    expect(params as unknown[]).toHaveLength(200 * 7)
   })
 })
 
@@ -488,7 +560,7 @@ describe('the push', () => {
 
   it('sends the token in a header and never in the URL or body', async () => {
     process.env.NUXT_NETWORK_SUMMARY_TARGET_URL = 'https://prod.test/api/site-registry/network'
-    process.env.NUXT_NETWORK_SUMMARY_PUSH_TOKEN = `dev:${DEV_SECRET}`
+    process.env.NUXT_NETWORK_SUMMARY_PUSH_TOKEN = DEV_SECRET
     buildDriverReturns([{ site_code: 'be', name: 'Belgium', scbd: 0, published: 1 }])
 
     await expect(pushNetworkSummary()).resolves.toMatchObject({ status: 'pushed', sites: 1 })
@@ -497,7 +569,9 @@ describe('the push', () => {
     expect(call.url).toBe('https://prod.test/api/site-registry/network')
     expect(call.url).not.toContain(DEV_SECRET)
     expect(call.options.method).toBe('POST')
-    expect(call.options.headers[NETWORK_SUMMARY_TOKEN_HEADER]).toBe(`dev:${DEV_SECRET}`)
+    // The sender's variable is the BARE token, sent verbatim — the scope:token
+    // list belongs to the receiver under a different name.
+    expect(call.options.headers[NETWORK_SUMMARY_TOKEN_HEADER]).toBe(DEV_SECRET)
     expect(JSON.stringify(call.options.body)).not.toContain(DEV_SECRET)
     expect(Object.keys(call.options.body).sort()).toEqual(['baseHost', 'env', 'multiSiteCode', 'sites'])
   })
@@ -505,7 +579,7 @@ describe('the push', () => {
   it('reports a failure without throwing, so previous rows stay in place', async () => {
     process.env.NUXT_NETWORK_SUMMARY_TARGET_URL = 'https://prod.test/api/site-registry/network'
     process.env.NUXT_NETWORK_SUMMARY_PUSH_TOKEN = `dev:${DEV_SECRET}`
-    buildDriverReturns([])
+    buildDriverReturns([{ site_code: 'be', name: 'Belgium', scbd: 0, published: 1 }])
     fetchImpl.mockRejectedValueOnce(new Error('403 Forbidden'))
 
     await expect(pushNetworkSummary()).resolves.toMatchObject({
@@ -518,7 +592,7 @@ describe('the push', () => {
     // otherwise carry NUXT_NETWORK_SUMMARY_TARGET_URL — userinfo included.
     process.env.NUXT_NETWORK_SUMMARY_TARGET_URL = 'https://pusher:dummynotreal@prod.test/api/site-registry/network'
     process.env.NUXT_NETWORK_SUMMARY_PUSH_TOKEN = `dev:${DEV_SECRET}`
-    buildDriverReturns([])
+    buildDriverReturns([{ site_code: 'be', name: 'Belgium', scbd: 0, published: 1 }])
     fetchImpl.mockRejectedValueOnce(new Error(
       '[POST] "https://pusher:dummynotreal@prod.test/api/site-registry/network": 401 Unauthorized',
     ))
@@ -530,6 +604,29 @@ describe('the push', () => {
     expect(result.reason).not.toContain('dummynotreal')
     expect(result.reason).not.toContain('prod.test')
     expect(findLeak(result)).toBeNull()
+  })
+
+  it('skips an empty summary rather than publishing one that would erase the slice', async () => {
+    process.env.NUXT_NETWORK_SUMMARY_TARGET_URL = 'https://prod.test/api/site-registry/network'
+    process.env.NUXT_NETWORK_SUMMARY_PUSH_TOKEN = `dev:${DEV_SECRET}`
+    buildDriverReturns([])
+
+    await expect(pushNetworkSummary()).resolves.toMatchObject({
+      status: 'skipped', env: 'dev', multiSiteCode: 'bl2', sites: 0,
+    })
+    expect(fetchCalls).toHaveLength(0)
+  })
+
+  it('trims a token carrying a trailing newline rather than presenting it verbatim', async () => {
+    process.env.NUXT_NETWORK_SUMMARY_TARGET_URL = ' https://prod.test/api/site-registry/network\n'
+    process.env.NUXT_NETWORK_SUMMARY_PUSH_TOKEN = `${DEV_SECRET}\n`
+    buildDriverReturns([{ site_code: 'be', name: 'Belgium', scbd: 0, published: 1 }])
+
+    await expect(pushNetworkSummary()).resolves.toMatchObject({ status: 'pushed' })
+
+    const [call] = fetchCalls
+    expect(call.url).toBe('https://prod.test/api/site-registry/network')
+    expect(call.options.headers[NETWORK_SUMMARY_TOKEN_HEADER]).toBe(DEV_SECRET)
   })
 
   it('reports a build failure as a failed push rather than throwing', async () => {
@@ -667,6 +764,84 @@ function findLeak(payload: unknown): string | null {
 function assertNoLeak(payload: unknown) {
   expect(findLeak(payload), 'published surface must not carry a secret-shaped value').toBeNull()
 }
+
+describe('an empty push cannot erase a stored slice', () => {
+  it('rejects an empty sites array at the ingest boundary', () => {
+    // The Block this phase was held on: `sites: []` validated, then
+    // `writeNetworkSummary` DELETEd the slice and INSERTed nothing, so a
+    // deployment whose site rows were not yet seeded erased its own column in
+    // the receiver — baseHost and updatedAt with it.
+    expect(() => parseNetworkSummaryPayload(validPayload({ sites: [] })))
+      .toThrow(/body\.sites — must not be empty/)
+  })
+
+  it('leaves the stored rows untouched, because the write is never reached', async () => {
+    expect(() => parseNetworkSummaryPayload(validPayload({ sites: [] })))
+      .toThrow(NetworkSummaryInvalidError)
+
+    // No DELETE, no transaction: validation threw before the write path.
+    expect(dbQuery).not.toHaveBeenCalled()
+    expect(beginTransaction).not.toHaveBeenCalled()
+  })
+})
+
+describe('the read scope', () => {
+  it('admits only a token scoped to the reading deployment\'s own env', () => {
+    const devScope = resolveNetworkSummaryScope(CONFIGURED, DEV_SECRET)!
+    const prodScope = resolveNetworkSummaryScope(CONFIGURED, PROD_SECRET)!
+
+    // Prod issues dev a write token; it must not read back prod's whole store.
+    expect(scopeAllowsRead(devScope, 'prod')).toBe(false)
+    expect(scopeAllowsRead(devScope, 'dev')).toBe(true)
+
+    // A multiSiteCode-narrowed scope still reads its own env's whole store.
+    expect(scopeAllowsRead(prodScope, 'prod')).toBe(true)
+    expect(scopeAllowsRead(prodScope, 'dev')).toBe(false)
+
+    // An unknown deployment env admits nobody rather than everybody.
+    expect(scopeAllowsRead(devScope, '')).toBe(false)
+  })
+})
+
+describe('the body cap', () => {
+  async function* chunks(...parts: string[]) {
+    for (const part of parts) yield Buffer.from(part, 'utf8')
+  }
+
+  it('reads a body under the limit', async () => {
+    await expect(readCappedBodyText(chunks('{"a":', '1}'), undefined, 64)).resolves.toBe('{"a":1}')
+  })
+
+  it('refuses a declared content-length over the limit before reading anything', async () => {
+    let read = 0
+    const source = {
+      async* [Symbol.asyncIterator]() {
+        read += 1
+        yield Buffer.from('x', 'utf8')
+      },
+    }
+
+    await expect(readCappedBodyText(source, String(4 * 1024 * 1024), 64))
+      .rejects.toBeInstanceOf(NetworkSummaryTooLargeError)
+    expect(read).toBe(0)
+  })
+
+  it('stops mid-stream once the running total passes the limit', async () => {
+    let produced = 0
+    async function* endless() {
+      while (produced < 1000) {
+        produced += 1
+        yield Buffer.alloc(32, 0x61)
+      }
+    }
+
+    await expect(readCappedBodyText(endless(), undefined, 64))
+      .rejects.toBeInstanceOf(NetworkSummaryTooLargeError)
+
+    // Three 32-byte chunks is all it took: the body was never buffered whole.
+    expect(produced).toBeLessThanOrEqual(3)
+  })
+})
 
 describe('the leak gate over the published surface', () => {
   it('passes against a read response', async () => {

@@ -41,10 +41,24 @@
  *
  * ## Auth model (all three surfaces)
  *
- * `NUXT_NETWORK_SUMMARY_PUSH_TOKEN` is a comma-separated list of
- * `scope:token` entries, where scope is `<env>` or `<env>/<multiSiteCode>`:
+ * Two variables, two formats, two roles — deliberately **not** one name, because
+ * a receiver's value and a sender's value are not interchangeable:
  *
- *     dev:<token-a>,stg/bsl:<token-b>
+ * - **Receiver** — `NUXT_NETWORK_SUMMARY_INGEST_TOKENS`: a comma-separated list
+ *   of `scope:token` entries, where scope is `<env>` or `<env>/<multiSiteCode>`.
+ *   Prod sets this; it is the set of credentials prod will accept, and it must
+ *   include an entry for prod itself so prod can read its own store.
+ *
+ *       dev:<token-a>,stg/bsl:<token-b>,prod:<token-c>
+ *
+ * - **Sender** — `NUXT_NETWORK_SUMMARY_PUSH_TOKEN`: one **bare** token, sent
+ *   verbatim in the header. Dev sets it to the token half of its own entry in
+ *   the receiver's list — `<token-a>`, never `dev:<token-a>`.
+ *
+ * One shared name would 401 forever: the sender would ship the whole entry while
+ * the receiver compares against the token half alone. Both are trimmed on read
+ * and on send, so a trailing newline out of a Docker env file is not a silent
+ * permanent 401.
  *
  * The token travels in the `x-network-summary-token` **request header** only,
  * never a query parameter (C7) — the existing `api-key` query-string convention
@@ -56,13 +70,24 @@
  * The matched entry's scope is **authoritative**: it, not the payload, decides
  * which slice the caller may write. A dev token therefore cannot write prod's
  * slice even though the payload declares its own `env` — see
- * `scopeAllowsSlice`. The read route requires a valid token too, because it
- * enumerates every site in the deployment.
+ * `scopeAllowsSlice`. The **read** route is scoped too: a token authorises
+ * reading only when its scope names the reading deployment's own env, so dev's
+ * write credential cannot be turned around to enumerate prod's whole
+ * cross-environment inventory, unpublished rows included.
+ *
+ * A scope with no `multiSiteCode` covers every slice in its env, so the number
+ * of slices one env may hold is capped (`MAX_SLICES_PER_ENV`) — otherwise an
+ * env-only credential could create slices until the receiver's disk filled.
  *
  * Both env vars are **manual deployment-env edits** (Plan Rule 26); this module
  * reads them from `process.env` rather than `useRuntimeConfig()` because the
  * task contract restricts the `nuxt.config.ts` diff to the scheduled-task
- * registration alone. Neither value is ever logged.
+ * registration alone. That argument is not fully consistent — `pushNetworkSummary`
+ * already calls `useRuntimeConfig()` for `env` and `multiSiteCode` — so **p03-04
+ * should move both variables into `runtimeConfig`** once it is free to touch
+ * `nuxt.config.ts`. Until then the `NUXT_` prefix is a naming convention only:
+ * there is no matching `runtimeConfig` key, so Nuxt never maps either value.
+ * Neither is ever logged.
  *
  * ## Fail safe: stale, never broken
  *
@@ -72,6 +97,26 @@
  * together) — so a slice is never truncated, blanked, or half-overwritten. Each
  * row stamps `updated_at`, and the read response exposes it per slice so p03-04
  * can render staleness instead of pretending freshness.
+ *
+ * A *successful* push of an empty slice would defeat all of that, so an empty
+ * `sites` array is refused on both ends: the sender reports `skipped` rather
+ * than publishing one, and the ingest route rejects one with a 400. The
+ * motivating case is this phase — a deployment whose `multi_site_config` row is
+ * seeded but whose `site_config` rows are not would otherwise push nothing and
+ * erase its own column in prod, `baseHost` and `updatedAt` with it, leaving
+ * p03-04 nothing to render staleness from. Stale beats erased. Genuinely
+ * retiring a slice is therefore a deliberate operator action against the table,
+ * not something an empty scheduled push can do by accident.
+ *
+ * ## What this boundary does NOT defend against (p03-04 inherits it)
+ *
+ * A compromised dev deployment can still put a prod-rendered link to an
+ * attacker-chosen hostname on the CHM Network page: `baseHost` and `siteCode`
+ * are validated as hostname-shaped, but nothing checks *which* hostname. The
+ * host pattern forbids `:` and `/`, so there is no `javascript:` URL and no path
+ * injection, and `NuxtLink` adds `rel="noopener"` — this is a phishing surface,
+ * not XSS. It is inert until p03-04 renders these rows; that phase inherits the
+ * decision of whether to allowlist hostnames.
  *
  * ## Push interval
  *
@@ -103,6 +148,12 @@ const MULTI_SITE_CONFIG_TABLE = `${SITE_REGISTRY_DB}.multi_site_config`
 /** The header the push token travels in. Never a query parameter (C7). */
 export const NETWORK_SUMMARY_TOKEN_HEADER = 'x-network-summary-token'
 
+/** Receiver side: the `scope:token` list of credentials this deployment accepts. */
+export const NETWORK_SUMMARY_INGEST_TOKENS_VAR = 'NUXT_NETWORK_SUMMARY_INGEST_TOKENS'
+
+/** Sender side: this deployment's own bare token, sent verbatim in the header. */
+export const NETWORK_SUMMARY_PUSH_TOKEN_VAR = 'NUXT_NETWORK_SUMMARY_PUSH_TOKEN'
+
 /** Deployment environments a slice may claim. An unknown token is rejected. */
 const ALLOWED_ENVS = new Set(['dev', 'stg', 'prod'])
 
@@ -115,6 +166,37 @@ const MAX_STRING_LENGTH = 255
 
 /** A slice larger than this is a bug or an abuse attempt, not a network. */
 const MAX_SITES_PER_SLICE = 2000
+
+/**
+ * How many distinct slices one env may hold in the receiver's table.
+ *
+ * `MAX_SITES_PER_SLICE` bounds one slice; without this, an env-only credential
+ * (`dev:<token>`, the documented shape) could mint a fresh `multiSiteCode` per
+ * request and write 2000 rows into each until the receiver's disk filled. The
+ * network runs a handful of multi-site codes per env, so this is generous for a
+ * real deployment and tight against a compromised one.
+ */
+const MAX_SLICES_PER_ENV = 16
+
+/**
+ * Rows per `INSERT`. 2000 single-row round trips hold one of the shared
+ * 5-connection pool's connections for the whole transaction while the
+ * translation workload competes for the same pool against a 30s acquire
+ * timeout; batching turns that into ten statements.
+ */
+const INSERT_CHUNK_SIZE = 200
+
+/**
+ * The largest ingest body that will be read, in bytes.
+ *
+ * A maximal legitimate slice — 2000 sites at the 255-character column width —
+ * does not approach this. The cap exists because the size of the *parsed*
+ * payload is checked far too late to help: without it, a valid token POSTing a
+ * multi-gigabyte array would OOM the receiver's Nitro process before any
+ * validation ran. Neither h3 nor this app's `nuxt.config.ts` sets a request-size
+ * limit, so the route enforces one itself.
+ */
+export const MAX_NETWORK_SUMMARY_BODY_BYTES = 1024 * 1024
 
 /** The four published per-site fields. Exactly these keys, in this order. */
 const SITE_KEYS = ['siteCode', 'name', 'scbd', 'published'] as const
@@ -158,6 +240,31 @@ export class NetworkSummaryInvalidError extends RegistryError {
   }
 }
 
+/**
+ * The request body was refused before it was read. Separate from
+ * `NetworkSummaryInvalidError` because the route answers 413, not 400, and
+ * because nothing has been parsed at the point this is thrown.
+ */
+export class NetworkSummaryTooLargeError extends RegistryError {
+  constructor(reason: string) {
+    super('NETWORK_SUMMARY_TOO_LARGE', `Network summary body rejected: ${reason}`)
+  }
+}
+
+/**
+ * The write would push this env past `MAX_SLICES_PER_ENV`. The caller's token is
+ * valid and scoped correctly; the env is simply full, so this is a 409 rather
+ * than a 403 — and the existing slices are left untouched.
+ */
+export class NetworkSummarySliceLimitError extends RegistryError {
+  constructor(env: string) {
+    super(
+      'NETWORK_SUMMARY_SLICE_LIMIT',
+      `Network summary slice limit reached: ${env} already holds ${MAX_SLICES_PER_ENV} slices`,
+    )
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* Auth                                                                        */
 /* -------------------------------------------------------------------------- */
@@ -174,9 +281,17 @@ function secretEquals(a: string, b: string): boolean {
   return timingSafeEqual(digest(a), digest(b))
 }
 
-/** Parse one `scope:token` entry. Returns `null` for an unusable entry. */
+/**
+ * Parse one `scope:token` entry. Returns `null` for an unusable entry.
+ *
+ * Split on the **first** colon, not the last: a scope never contains one
+ * (`ALLOWED_ENVS` and `MULTI_SITE_CODE_PATTERN` both forbid it), whereas a token
+ * generated by an operator's password manager easily might. Splitting on the
+ * last colon would read `dev:aa:bb` as the scope `dev:aa`, reject it, and 401
+ * silently forever.
+ */
 function parseScopeEntry(entry: string): { scope: NetworkSummaryScope, token: string } | null {
-  const separator = entry.lastIndexOf(':')
+  const separator = entry.indexOf(':')
   if (separator <= 0) return null
 
   const scopeText = entry.slice(0, separator).trim()
@@ -197,24 +312,48 @@ function parseScopeEntry(entry: string): { scope: NetworkSummaryScope, token: st
  * Every configured entry is compared, with no early exit on the first match, so
  * the number of comparisons does not depend on which token was presented.
  *
- * @param configured the raw `NUXT_NETWORK_SUMMARY_PUSH_TOKEN` value.
+ * A configured entry that cannot be parsed is skipped, and the skip is reported
+ * once per process: a silent skip turns a stray character in the receiver's env
+ * into a permanent 401 with nothing in the log to explain it. The warning counts
+ * positions and never prints an entry, which would print a token.
+ *
+ * @param configured the raw `NUXT_NETWORK_SUMMARY_INGEST_TOKENS` value.
  * @param presented  the token from the request header.
  */
 export function resolveNetworkSummaryScope(
   configured: string | undefined,
   presented: string | undefined,
 ): NetworkSummaryScope | null {
-  if (!configured || !presented) return null
+  const candidate = presented?.trim()
+  if (!configured || !candidate) return null
 
   let matched: NetworkSummaryScope | null = null
+  const skipped: number[] = []
 
-  for (const entry of configured.split(',')) {
+  for (const [index, entry] of configured.split(',').entries()) {
     const parsed = parseScopeEntry(entry.trim())
-    if (!parsed) continue
-    if (secretEquals(parsed.token, presented) && !matched) matched = parsed.scope
+    if (!parsed) {
+      skipped.push(index)
+      continue
+    }
+    if (secretEquals(parsed.token, candidate) && !matched) matched = parsed.scope
   }
 
+  if (skipped.length) warnSkippedEntries(skipped)
+
   return matched
+}
+
+/** Reported once per process: repeating it on every request would be noise. */
+let warnedSkippedEntries = false
+
+function warnSkippedEntries(positions: number[]): void {
+  if (warnedSkippedEntries) return
+  warnedSkippedEntries = true
+  console.warn(
+    `[network-summary] ignoring unparseable ${NETWORK_SUMMARY_INGEST_TOKENS_VAR} `
+    + `entries at position(s) ${positions.join(', ')}; expected <env>[/<multiSiteCode>]:<token>`,
+  )
 }
 
 /**
@@ -234,14 +373,44 @@ export function scopeAllowsSlice(
   return scope.multiSiteCode === undefined || scope.multiSiteCode === multiSiteCode
 }
 
+/**
+ * Whether a token's scope permits reading this deployment's whole store.
+ *
+ * The read is unfiltered by design — it returns every slice the deployment
+ * holds, published and unpublished rows alike — so possessing *any* valid
+ * ingest credential must not be enough. Prod issues dev a write token; without
+ * this check that same token reads back prod's complete cross-environment site
+ * inventory, which is precisely the lower-trust boundary the ingest scoping
+ * exists to hold.
+ *
+ * So the reader must present a credential scoped to the reading deployment's
+ * own env. A `multiSiteCode`-narrowed scope still reads the whole store: the
+ * response is not per-slice filtered, and narrowing a write credential says
+ * nothing about read breadth within its own env.
+ *
+ * @param deploymentEnv `runtimeConfig.public.env` of the deployment serving the read.
+ */
+export function scopeAllowsRead(scope: NetworkSummaryScope, deploymentEnv: string): boolean {
+  return Boolean(deploymentEnv) && scope.env === deploymentEnv
+}
+
 /* -------------------------------------------------------------------------- */
 /* Validation                                                                  */
 /* -------------------------------------------------------------------------- */
 
+/** Key names safe to name back to the caller: short, and identifier-shaped. */
+const SAFE_KEY_NAME_PATTERN = /^[A-Za-z0-9_-]{1,64}$/
+
 function assertExactKeys(value: Record<string, unknown>, allowed: readonly string[], where: string) {
   for (const key of Object.keys(value)) {
     if (!allowed.includes(key)) {
-      throw new NetworkSummaryInvalidError(`${where}.${key}`, 'unexpected key')
+      // Naming the offending key is the whole diagnostic value of this error, so
+      // it is named — but the key is attacker-supplied, so only an
+      // identifier-shaped one is reflected. Anything else is described, not
+      // echoed. (`statusMessage` is sanitised by h3 and this is post-auth, so
+      // this is defence in depth rather than the only control.)
+      const field = SAFE_KEY_NAME_PATTERN.test(key) ? `${where}.${key}` : where
+      throw new NetworkSummaryInvalidError(field, 'unexpected key')
     }
   }
 }
@@ -304,6 +473,14 @@ export function parseNetworkSummaryPayload(raw: unknown): NetworkSummary {
   if (raw.sites.length > MAX_SITES_PER_SLICE) {
     throw new NetworkSummaryInvalidError('body.sites', `exceeds ${MAX_SITES_PER_SLICE} entries`)
   }
+  // An empty push is refused rather than applied: `writeNetworkSummary` would
+  // DELETE the slice and INSERT nothing, so a deployment whose site rows are not
+  // yet seeded would erase its own column in the receiver — baseHost and
+  // updatedAt included. Stale beats erased. Retiring a slice for real is an
+  // operator action against the table, not a scheduled push.
+  if (raw.sites.length === 0) {
+    throw new NetworkSummaryInvalidError('body.sites', 'must not be empty; an empty push would erase the stored slice')
+  }
 
   const seen = new Set<string>()
   const sites = raw.sites.map((entry, index) => {
@@ -324,6 +501,49 @@ export function parseNetworkSummaryPayload(raw: unknown): NetworkSummary {
   })
 
   return { env, multiSiteCode, baseHost, sites }
+}
+
+/**
+ * Read a request body into a string, refusing anything over `limit` bytes
+ * **while it streams** rather than after it has been buffered.
+ *
+ * `readBody`/`readRawBody` buffer and (for `readBody`) parse the entire request
+ * first, so a size check afterwards — including the `MAX_SITES_PER_SLICE` cap in
+ * `parseNetworkSummaryPayload` — happens long after the memory has been
+ * committed. This consumes the incoming stream chunk by chunk and throws the
+ * moment the running total passes the limit, so an oversized body costs one
+ * chunk, not its own size.
+ *
+ * The declared `content-length` is checked first as a cheap early out; it is not
+ * trusted as the only check, because a chunked request declares none.
+ *
+ * @param source          the request stream (`event.node.req`).
+ * @param declaredLength  the request's `content-length` header, if any.
+ * @throws {NetworkSummaryTooLargeError} the body is, or claims to be, too large.
+ */
+export async function readCappedBodyText(
+  source: AsyncIterable<Uint8Array | string> | undefined,
+  declaredLength: string | undefined,
+  limit: number = MAX_NETWORK_SUMMARY_BODY_BYTES,
+): Promise<string> {
+  const declared = Number(declaredLength)
+  if (Number.isFinite(declared) && declared > limit) {
+    throw new NetworkSummaryTooLargeError(`content-length exceeds ${limit} bytes`)
+  }
+
+  if (!source) throw new NetworkSummaryInvalidError('body', 'expected a JSON object')
+
+  const chunks: Buffer[] = []
+  let total = 0
+
+  for await (const chunk of source) {
+    const buffer = typeof chunk === 'string' ? Buffer.from(chunk, 'utf8') : Buffer.from(chunk)
+    total += buffer.length
+    if (total > limit) throw new NetworkSummaryTooLargeError(`body exceeds ${limit} bytes`)
+    chunks.push(buffer)
+  }
+
+  return Buffer.concat(chunks).toString('utf8')
 }
 
 /* -------------------------------------------------------------------------- */
@@ -428,7 +648,11 @@ export async function buildNetworkSummary(
     throw new RegistryUnavailableError('buildNetworkSummary', error)
   }
   finally {
-    if (conn) await conn.release()
+    // A throw from release() would escape past the catch above and reach the
+    // caller as a bare driver error instead of a RegistryUnavailableError; the
+    // pool reclaims the connection on its own, so it is swallowed here. Mirrors
+    // the same guard in server/utils/site-registry/index.ts.
+    if (conn) await conn.release().catch(() => undefined)
   }
 }
 
@@ -450,9 +674,20 @@ export async function buildNetworkSummary(
  * write a slice other than the one the caller's token already authorised in
  * `scopeAllowsSlice`.
  *
+ * **Slice count.** After the `DELETE`, and still inside the transaction, the
+ * env's remaining slices are counted: an env-only credential must not be able to
+ * mint a new `multiSiteCode` per request until the table fills the disk. The
+ * count excludes this slice precisely because the `DELETE` already removed it,
+ * so re-pushing an existing slice is never refused by the cap.
+ *
+ * **Batched inserts.** Rows go in `INSERT_CHUNK_SIZE` at a time. One round trip
+ * per row would hold a connection from the shared 5-connection pool for 2000
+ * sequential round trips while the translation workload waits on the same pool.
+ *
  * Driver errors are wrapped so a mariadb `SqlError` — which can echo bound
  * parameter values — never propagates its own message into a log.
  *
+ * @throws {NetworkSummarySliceLimitError} the env already holds its maximum slices.
  * @throws {RegistryUnavailableError} the write could not be completed.
  */
 export async function writeNetworkSummary(summary: NetworkSummary): Promise<void> {
@@ -470,20 +705,41 @@ export async function writeNetworkSummary(summary: NetworkSummary): Promise<void
       [summary.env, summary.multiSiteCode],
     )
 
-    for (const site of summary.sites) {
+    const countRows = await conn.query(
+      `SELECT COUNT(DISTINCT multi_site_code) AS slices
+         FROM ${NETWORK_SUMMARY_TABLE}
+        WHERE env = ?`,
+      [summary.env],
+    ) as Record<string, unknown>[]
+
+    const otherSlices = Number(
+      (Array.isArray(countRows) ? countRows[0]?.slices : 0) ?? 0,
+    )
+    if (Number.isFinite(otherSlices) && otherSlices >= MAX_SLICES_PER_ENV) {
+      throw new NetworkSummarySliceLimitError(summary.env)
+    }
+
+    for (let offset = 0; offset < summary.sites.length; offset += INSERT_CHUNK_SIZE) {
+      const chunk = summary.sites.slice(offset, offset + INSERT_CHUNK_SIZE)
+
+      // One placeholder group per row, so every value is still bound — the SQL
+      // text grows with the row COUNT and never with any row's content.
+      const values = chunk.map(() => '(?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)').join(', ')
+      const params = chunk.flatMap(site => [
+        summary.env,
+        summary.multiSiteCode,
+        site.siteCode,
+        site.name,
+        site.scbd ? 1 : 0,
+        site.published ? 1 : 0,
+        summary.baseHost,
+      ])
+
       await conn.query(
         `INSERT INTO ${NETWORK_SUMMARY_TABLE}
            (env, multi_site_code, site_code, name, scbd, published, base_host, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-        [
-          summary.env,
-          summary.multiSiteCode,
-          site.siteCode,
-          site.name,
-          site.scbd ? 1 : 0,
-          site.published ? 1 : 0,
-          summary.baseHost,
-        ],
+         VALUES ${values}`,
+        params,
       )
     }
 
@@ -503,7 +759,11 @@ export async function writeNetworkSummary(summary: NetworkSummary): Promise<void
     throw new RegistryUnavailableError('writeNetworkSummary', error)
   }
   finally {
-    if (conn) await conn.release()
+    // A throw from release() would escape past the catch above and reach the
+    // caller as a bare driver error instead of a RegistryUnavailableError; the
+    // pool reclaims the connection on its own, so it is swallowed here. Mirrors
+    // the same guard in server/utils/site-registry/index.ts.
+    if (conn) await conn.release().catch(() => undefined)
   }
 }
 
@@ -591,7 +851,11 @@ export async function readNetworkSummary(): Promise<NetworkSummary[]> {
     throw new RegistryUnavailableError('readNetworkSummary', error)
   }
   finally {
-    if (conn) await conn.release()
+    // A throw from release() would escape past the catch above and reach the
+    // caller as a bare driver error instead of a RegistryUnavailableError; the
+    // pool reclaims the connection on its own, so it is swallowed here. Mirrors
+    // the same guard in server/utils/site-registry/index.ts.
+    if (conn) await conn.release().catch(() => undefined)
   }
 }
 
@@ -616,18 +880,29 @@ export interface NetworkSummaryPushResult {
  * from `process.env` (both **manual** deployment-env edits, Plan Rule 26). A
  * deployment with neither configured — prod itself, for instance — is not
  * misconfigured, it simply does not publish, so that is a `skipped`, not a
- * failure.
+ * failure. `NUXT_NETWORK_SUMMARY_PUSH_TOKEN` is the **bare** token here and is
+ * sent verbatim; the receiver's `scope:token` list lives under the different
+ * name `NUXT_NETWORK_SUMMARY_INGEST_TOKENS`.
+ *
+ * An empty summary is `skipped` too, and never sent: publishing one would delete
+ * the slice at the far end and insert nothing, erasing a column the receiver
+ * still needs. The receiver refuses one as well; this is the near half of that.
  *
  * Never throws and never logs a token or the target URL: a failure returns
  * `failed` with a reason, leaving the receiving deployment's previous rows
  * untouched, because nothing is deleted there until a request succeeds.
  */
 export async function pushNetworkSummary(): Promise<NetworkSummaryPushResult> {
-  const targetUrl = process.env.NUXT_NETWORK_SUMMARY_TARGET_URL
-  const token = process.env.NUXT_NETWORK_SUMMARY_PUSH_TOKEN
+  const targetUrl = process.env.NUXT_NETWORK_SUMMARY_TARGET_URL?.trim()
+  // Trimmed on this side too: a trailing newline out of a Docker env file would
+  // otherwise be presented verbatim and 401 against a receiver that trims.
+  const token = process.env[NETWORK_SUMMARY_PUSH_TOKEN_VAR]?.trim()
 
   if (!targetUrl || !token) {
-    return { status: 'skipped', reason: 'NUXT_NETWORK_SUMMARY_TARGET_URL or NUXT_NETWORK_SUMMARY_PUSH_TOKEN is unset' }
+    return {
+      status: 'skipped',
+      reason: `NUXT_NETWORK_SUMMARY_TARGET_URL or ${NETWORK_SUMMARY_PUSH_TOKEN_VAR} is unset`,
+    }
   }
 
   const { env, multiSiteCode } = useRuntimeConfig().public as { env?: string, multiSiteCode?: string }
@@ -637,6 +912,16 @@ export async function pushNetworkSummary(): Promise<NetworkSummaryPushResult> {
 
   try {
     const summary = await buildNetworkSummary(env, multiSiteCode)
+
+    if (summary.sites.length === 0) {
+      return {
+        status: 'skipped',
+        reason: 'this deployment has no sites to publish; an empty push would erase the stored slice',
+        env,
+        multiSiteCode,
+        sites: 0,
+      }
+    }
 
     await $fetch(targetUrl, {
       method: 'POST',

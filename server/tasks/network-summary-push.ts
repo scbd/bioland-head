@@ -9,11 +9,24 @@
  * nothing a reader could notice while multiplying the exposure of the one
  * cross-deployment write path in the plan.
  *
- * **Scheduling this task per deployment is a manual operator step.** The
- * registration below runs wherever the app runs, but a deployment only publishes
- * once `NUXT_NETWORK_SUMMARY_TARGET_URL` and `NUXT_NETWORK_SUMMARY_PUSH_TOKEN`
- * are set in its environment; without them the task reports `skipped` and does
- * nothing. Prod, the receiving deployment, is expected to stay in that state.
+ * **Configuring this per deployment is a manual operator step.** The registration
+ * runs wherever the app runs, but what each deployment does depends on two
+ * differently-named variables — a sender's and a receiver's, never one name for
+ * both:
+ *
+ * - **Sending deployment (dev, stg).** Set `NUXT_NETWORK_SUMMARY_TARGET_URL` to
+ *   the receiver's `/api/site-registry/network`, and
+ *   `NUXT_NETWORK_SUMMARY_PUSH_TOKEN` to its own **bare** token — the token half
+ *   of its entry in the receiver's list, `<token-a>`, never `dev:<token-a>`.
+ *   Without both, the task reports `skipped` and does nothing.
+ * - **Receiving deployment (prod).** Set `NUXT_NETWORK_SUMMARY_INGEST_TOKENS` to
+ *   the comma-separated `scope:token` list it accepts, including an entry for
+ *   prod itself so prod can read its own store:
+ *   `dev:<token-a>,stg/bsl:<token-b>,prod:<token-c>`. Prod sets no target URL and
+ *   no push token, so its own copy of this task stays `skipped` — as intended.
+ *
+ * A deployment that has no sites yet also reports `skipped`: publishing an empty
+ * summary would erase its column at the receiver, so it is refused on both ends.
  *
  * The task never throws: `pushNetworkSummary` returns a result instead, so a
  * failed push logs loudly and leaves the receiving deployment's previous rows in
