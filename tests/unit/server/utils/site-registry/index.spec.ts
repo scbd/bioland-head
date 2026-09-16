@@ -561,6 +561,21 @@ describe('writeLastKnownGoodSettings', () => {
     expect(params).toEqual(['{"googleAnalyticsIds":"G-FAKE"}', 'prod', 'bl2', 'be'])
   })
 
+  // site_config.updated_at is ON UPDATE CURRENT_TIMESTAMP and documented as the
+  // re-seed timestamp. Assigning it its own value suppresses that auto-update,
+  // so compose-rate cache writes cannot make a stale row look freshly seeded.
+  it('preserves the re-seed timestamp instead of letting ON UPDATE stamp it', async () => {
+    driverReturns({ affectedRows: 1 })
+
+    await writeLastKnownGoodSettings('prod', 'bl2', 'be', { googleAnalyticsIds: 'G-FAKE' })
+
+    const [sql] = dbQuery.mock.calls[0]
+    expect(sql).toMatch(/updated_at\s*=\s*updated_at/)
+    // and the cache keeps its own timestamp column
+    expect(sql).toMatch(/last_known_good_at\s*=\s*CURRENT_TIMESTAMP/)
+    expect(sql).not.toMatch(/updated_at\s*=\s*CURRENT_TIMESTAMP/)
+  })
+
   it('throws when the site row does not exist, rather than silently writing nothing', async () => {
     driverReturns({ affectedRows: 0 })
 
@@ -584,8 +599,35 @@ describe('writeLastKnownGoodSettings', () => {
   })
 
   it('throws on a value that serialises to undefined', async () => {
-    await expect(writeLastKnownGoodSettings('prod', 'bl2', 'be', undefined))
+    await expect(writeLastKnownGoodSettings('prod', 'bl2', 'be', { toJSON: () => undefined }))
       .rejects.toThrow(/serialises to undefined/)
+  })
+
+  // A non-object write is accepted by JSON.stringify but unreadable afterwards:
+  // readLastKnownGoodSettings runs the column through parseObjectColumn, so an
+  // array or a primitive throws on every later read and a JSON null is
+  // indistinguishable from a column that was never written.
+  it.each([
+    ['null', null],
+    ['an array', []],
+    ['a number', 7],
+    ['a string', 'nope'],
+    ['a boolean', true],
+    ['undefined', undefined],
+  ])('refuses to persist %s, which no read could recover', async (_label, doc) => {
+    driverReturns({ affectedRows: 1 })
+
+    const error = await writeLastKnownGoodSettings('prod', 'bl2', 'be', doc).catch(e => e)
+
+    expect(error).toBeInstanceOf(RegistryRowMalformedError)
+    expect(error.message).toMatch(/expected a JSON object/)
+    expect(dbQuery).not.toHaveBeenCalled()
+  })
+
+  it('does not echo the rejected value when reporting a non-object document', async () => {
+    const error = await writeLastKnownGoodSettings('prod', 'bl2', 'be', 'G-FAKE').catch(e => e)
+
+    expect(error.message).not.toContain('G-FAKE')
   })
 
   it.each(['dataBase', 'dns', 'drupal', 'defaultSmtpCredentials', 'panoramaKey', 'meta'])(

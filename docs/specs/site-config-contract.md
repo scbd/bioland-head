@@ -129,11 +129,21 @@ stripped before the anonymous response.
 `site.theme` carries the same leaf shape as `config.theme` minus `canAutoTranslate`.
 
 `redirect` is stored on every site but is **absent from `publicSiteProperties`**
-(`dmsm/server/utils/config/index.js`), and bioland-head fetches the site route unauthenticated
-(`fetchDmsmConfigCore` uses a plain `$fetch`), so the route takes `readSitePublic` and `redirect`
-never reaches the head today. `buildSiteContext` nevertheless reads `config.redirect` — it is dead
-on the public path, and would start behaving differently the moment anything restores the key. See
-the allowed-difference list for the successor's decision.
+(`dmsm/server/utils/config/index.js`). This applies to **both** anonymous read paths in the
+tracked dmsm source (commit `5dc27a8f2fd787445fda36f4aae65432f5dde542`):
+
+- The per-site route selects `readSitePublic`; `fetchDmsmConfigCore` uses a plain `$fetch`.
+- The all-sites route selects `readMultiSitePublic`; `redirect-host-index.ts` fetches it with
+  `$fetchBaseOptions`, which supplies no authentication header.
+- Both readers call `mapPublicMultiSite`, whose `mapPublicMultiSiteSite` filters site and
+  `runTime` keys through the same `publicSiteProperties` list.
+
+The head has consumers for `redirect` in both `buildSiteContext` and the reverse-host index,
+which skip/fall back when the key is absent. Their existence does not prove that the public
+producer emits it. In this source revision neither public response carries it; authenticated
+admin reads are a different contract. This is source evidence, not verification of the deployed
+dmsm revision. If deployment differs, reconcile that producer before approving the parity gate;
+do not silently introduce a new public field. See the allowed-difference list below.
 
 Site-level `smtpCredentials` is read off the **site** object by `mapRunTimeMultiSiteSite` as the
 override for `defaultSmtpCredentials`. R2's `runTime` never-ship list already catches the name, so
@@ -192,8 +202,13 @@ today, and the successor must keep a head-side allowlist for the same reason.
 - The module MUST emit camelCase keys. `google_analytics_ids` MUST arrive as `googleAnalyticsIds`.
   A snake_case top-level key in the document is a contract violation.
 - The document MUST carry an integer `version`, starting at `1`. A consumer MUST reject a document
-  with a missing or non-integer `version` rather than guess.
-- The document MUST carry `siteCode` and an ISO-8601 `generated` timestamp.
+  with a missing, non-integer or non-positive `version` rather than guess.
+- The document MUST carry `siteCode` and an ISO-8601 `generated` timestamp. The wire format is
+  `YYYY-MM-DDTHH:mm:ss` with optional fractional seconds (`.` followed by one or more digits),
+  followed by `Z` or a numeric offset (`±HH:mm` or `±HHmm`). Calendar dates MUST exist, including
+  Gregorian leap-year rules; hours are `00`–`23`, minutes and seconds `00`–`59` (also for offset
+  hours/minutes respectively). Date-only, timezone-less and locale-dependent date strings are not
+  wire timestamps. The example uses UTC; offsets and sub-millisecond fractions remain valid.
 - Per-language site names go under `config.systemSite.translations.{langcode}.name`.
 - The response MUST be cache-tagged so a config save invalidates it.
 - The api key MUST travel in a request header, never `?api-key=`.
@@ -360,12 +375,12 @@ p03-01 diffs registry payload against dmsm payload. p02-10 encodes this table.
 | `generated` timestamp | per-response |
 
 **`redirect` — the successor's decision.** The projection MUST NOT emit `redirect`, matching
-today's stripped behavior, so parity holds on all 222 sites. Restoring it is a deliberate,
-separate change, not a side effect of the migration: `buildSiteContext` reads `config.redirect`
-and would begin acting on a value it has never received, and `redirect` is operator-supplied free
-text that the canonical-host validator already has to defend against. If a site genuinely needs a
-redirect on the public path, that is its own ticket, with the head-side behavior change reviewed
-on its own merits.
+both public readers in the source revision above. Restoring it is a deliberate, separate change,
+not a side effect of the migration: `buildSiteContext` and `redirect-host-index.ts` would begin
+acting on a value those public readers strip, and `redirect` is operator-supplied free text that
+the canonical-host validator already has to defend against. A requirement to enable custom-domain
+routing through this field needs its own producer/consumer change, with the head-side behavior
+reviewed on its own merits; it is not evidence that the existing public payload includes the key.
 
 **Fails the gate — no exception:**
 
