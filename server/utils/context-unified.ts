@@ -9,7 +9,8 @@ import { camelCase } from "change-case/keys";
  */
 
 import type { H3Event } from "h3";
-import type { SiteContext, DmsmConfig, ContextCookie } from "~/shared/types";
+import type { SiteContext, DmsmConfig, ContextCookie } from "#shared/types";
+import { getDmsmCacheKey } from "#shared/types";
 import { getSiteSettings } from "./drupal/index.js";
 import { sanitizeBiolandSettings } from "./bioland-settings";
 
@@ -176,15 +177,12 @@ async function fetchDmsmConfigCore(siteCode: string): Promise<DmsmConfig | null>
  * Uses cachedFunction for persistent cache + in-memory deduplication for concurrent requests
  */
 /**
- * Cache key for the DMSM config `cachedFunction`, in the `context` cache group under the
- * `get-dmsm-config` name. Exported so `invalidateSiteConfig()` and its tests can derive the
- * real key shape from this single write path instead of hand-typing a copy that can drift
- * out of sync with it.
+ * The DMSM config `cachedFunction` lives in the `context` cache group under the
+ * `get-dmsm-config` name, and keys each entry with `getDmsmCacheKey()`
+ * (`shared/types/context.ts`). That builder is the single write path for this shape:
+ * `invalidateSiteConfig()` and its tests derive the on-disk key from it rather than
+ * hand-typing a copy that can drift out of sync.
  */
-export function buildDmsmConfigCacheKey(multiSiteCode: string, siteCode: string): string {
-  return `${multiSiteCode}:${siteCode}`;
-}
-
 const _fetchDmsmConfig = cachedFunction(
   async (_event: H3Event, siteCode: string): Promise<DmsmConfig | null> => {
     return fetchDmsmConfigCore(siteCode);
@@ -193,9 +191,12 @@ const _fetchDmsmConfig = cachedFunction(
     maxAge: CACHE_TTL.FIVE_MINUTES, // 5 minutes cache
     name: "get-dmsm-config",
     group: "context",
+    // `env` is required even though one container serves one env: the Nitro FS cache
+    // volume (`nuxt.config.ts` `storage.cache` base `./cache`) may be shared across
+    // envs, so an env-less key would be ambiguous the moment that volume is reused.
     getKey: (_event: H3Event, siteCode: string) => {
-      const { multiSiteCode } = useRuntimeConfig().public;
-      return buildDmsmConfigCacheKey(multiSiteCode, siteCode);
+      const { env, multiSiteCode } = useRuntimeConfig().public;
+      return getDmsmCacheKey(env, multiSiteCode, siteCode);
     }
   },
 );
@@ -213,7 +214,9 @@ export async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypa
   }
 
   const { env, multiSiteCode } = useRuntimeConfig().public;
-  const cacheKey = `${multiSiteCode}:${siteCode}`;
+  // Same builder as `_fetchDmsmConfig`'s `getKey` above, so both keys agree on shape
+  // and `env` never drifts out of one of the two independently again.
+  const cacheKey = getDmsmCacheKey(env, multiSiteCode, siteCode);
 
   // Check if there's already a request in-flight for this key
   const pending = pendingDmsmRequests.get(cacheKey);

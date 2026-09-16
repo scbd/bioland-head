@@ -8,7 +8,7 @@
 import crypto from 'crypto'
 import { TranslateClient, TranslateTextCommand, TranslateDocumentCommand, ListLanguagesCommand } from '@aws-sdk/client-translate'
 import { mapLocaleFromDrupal } from './locale.js'
-import mariadb from 'mariadb'
+import { getDbPool } from '../db/pool.ts'
 
 const SOURCE_LOCALE = 'en'
 const CACHE_KEY_MAX_LENGTH = 499
@@ -20,9 +20,6 @@ let supportedLanguagesCache = null
 /** @type {TranslateClient|null} AWS Translate client instance */
 let translateClient = null
 
-/** @type {mariadb.Pool|null} MariaDB connection pool */
-let dbPool = null
-
 /**
  * Get runtime configuration with defaults
  * @returns {Object}
@@ -31,12 +28,6 @@ function getConfig() {
   const config = useRuntimeConfig()
   return {
     awsRegion: config.awsRegion || 'us-east-1',
-    dbHost: config.i18nDbHost,
-    dbPort: config.i18nDbPort || 3306,
-    dbUser: config.i18nDbUser,
-    dbPassword: config.i18nDbPassword,
-    dbName: config.i18nDbName || 'i18n_cache',
-    dbConnectionLimit: config.i18nDbConnectionLimit || 5,
   }
 }
 
@@ -50,28 +41,6 @@ function getTranslateClient() {
     translateClient = new TranslateClient({ region: awsRegion })
   }
   return translateClient
-}
-
-/**
- * Initialize MariaDB connection pool (singleton)
- * @returns {mariadb.Pool}
- */
-function getDbPool() {
-  if (!dbPool) {
-    const { dbHost, dbPort, dbUser, dbPassword, dbName, dbConnectionLimit } = getConfig()
-
-    dbPool = mariadb.createPool({
-      host: dbHost,
-      port: dbPort,
-      user: dbUser,
-      password: dbPassword,
-      database: dbName,
-      connectionLimit: dbConnectionLimit,
-      acquireTimeout: 30000,
-      initializationTimeout: 30000,
-    })
-  }
-  return dbPool
 }
 
 /**
@@ -377,15 +346,4 @@ export async function translateText(text, targetLocale, sourceLocale = SOURCE_LO
   )
 
   return translated
-}
-
-/**
- * Close database connection pool
- * Call this when shutting down the application
- */
-export async function closeDbPool() {
-  if (dbPool) {
-    await dbPool.end()
-    dbPool = null
-  }
 }

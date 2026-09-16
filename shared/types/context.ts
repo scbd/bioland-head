@@ -95,7 +95,15 @@ export interface SiteContext {
 }
 
 /**
- * Cache key for DMSM config storage
+ * Cache key for DMSM config storage. Shape: `dmsm-config-<env>-<multiSiteCode>-<siteCode>`.
+ *
+ * Shared by both `server/utils/context-unified.ts` call sites that key a DMSM config read
+ * (the `cachedFunction` persistent cache and the in-flight-request coalescing map) so the
+ * two never drift into different key shapes again.
+ *
+ * `env` is required even though a single container serves a single env: the Nitro FS cache
+ * volume (`nuxt.config.ts` `storage.cache` base `./cache`) may be shared across envs, so an
+ * env-less key would collide the moment that volume is reused across `dev`/`stg`/`prod`.
  */
 export function getDmsmCacheKey(env: string, multiSiteCode: string, siteCode: string): string {
   return `dmsm-config-${env}-${multiSiteCode}-${siteCode}`
