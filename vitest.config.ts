@@ -15,7 +15,17 @@ export default defineConfig({
         'server/utils/**/*.ts',
         'shared/utils/**/*.ts',
         'app/utils/resolve-theme.js',
-        'app/composables/use-term-label.js'
+        'app/composables/use-term-label.js',
+        // p02-04: covers only the matching/exclusion logic; the straight-line HTTP-fetch
+        // call in main() is excluded from the coverage denominator (see task doc D14 note).
+        'scripts/thesaurus/build-iso2-country-map.mjs',
+        // p02-03: the discovery-method fallback and unmapped-partition branches are real
+        // branching logic per D14/the task's own testing note, not a pure straight-line fetch
+        // loop, so they are measured rather than excluded — see the script's own test file.
+        'scripts/thesaurus/build-sdg-alias-map.mjs',
+        // p02-05: the classification, alias, gap and resume logic is all exported and measured;
+        // the live-HTTP `main()` entrypoint carries its own `v8 ignore` block per D14's note.
+        'scripts/thesaurus/classify-resolvable-keys.mjs'
       ]
     }
   },
