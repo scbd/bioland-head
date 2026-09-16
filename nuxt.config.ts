@@ -247,6 +247,17 @@ export default defineNuxtConfig({
   nitro: {
     logLevel: resolvedLogLevel,
     experimental: { tasks: true },
+    // Shared append point — other tasks add their own cron entries here.
+    // Resolve any merge conflict by keeping BOTH sides' entries, never by
+    // dropping or re-timing one.
+    // Adding an entry here is also what makes Nitro bundle the tasks runtime
+    // into .output/ and start a scheduler there — `experimental.tasks` alone
+    // does not. So this DOES fire in a deployed container, and
+    // registry:drift-check stays inert until REGISTRY_DRIFT_CHECK_ENABLED=true
+    // (see server/tasks/registry/drift-check.ts).
+    scheduledTasks: {
+      "*/15 * * * *": ["registry:drift-check"],
+    },
     devStorage: {
       cache: { driver: "fs", base: "./.nuxt/cache" }
     },
