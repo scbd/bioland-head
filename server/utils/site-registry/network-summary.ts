@@ -187,16 +187,55 @@ const MAX_SLICES_PER_ENV = 16
 const INSERT_CHUNK_SIZE = 200
 
 /**
+ * Worst-case JSON bytes one `MAX_STRING_LENGTH` free-text field costs on the wire.
+ *
+ * `MAX_STRING_LENGTH` bounds UTF-16 code units, not bytes, because the column it
+ * mirrors is `VARCHAR(255)` in `utf8mb4` — 255 *characters*. A serialiser may
+ * spend up to six bytes on one unit (`\uXXXX`), and raw UTF-8 needs at most
+ * three for a BMP unit or four across a surrogate pair (two bytes per unit), so
+ * six is the ceiling either way. Plus the two quotes.
+ */
+const MAX_JSON_TEXT_FIELD_BYTES = MAX_STRING_LENGTH * 6 + 2
+
+/**
+ * Worst-case JSON bytes for `siteCode`: `SITE_CODE_PATTERN` admits at most 64
+ * lowercase ASCII characters, none of which JSON escapes. Plus the two quotes.
+ */
+const MAX_JSON_CODE_FIELD_BYTES = 64 + 2
+
+/** Keys, punctuation and both boolean literals of one `sites[]` entry, rounded up. */
+const SITE_ENTRY_OVERHEAD_BYTES = 64
+
+/** Worst-case bytes one accepted `sites[]` entry occupies. */
+const MAX_SITE_ENTRY_BYTES
+  = SITE_ENTRY_OVERHEAD_BYTES + MAX_JSON_CODE_FIELD_BYTES + MAX_JSON_TEXT_FIELD_BYTES
+
+/** `env`, `multiSiteCode`, `baseHost`, their keys and the outer braces, rounded up hard. */
+const PAYLOAD_ENVELOPE_BYTES = 4096
+
+/**
  * The largest ingest body that will be read, in bytes.
  *
- * A maximal legitimate slice — 2000 sites at the 255-character column width —
- * does not approach this. The cap exists because the size of the *parsed*
- * payload is checked far too late to help: without it, a valid token POSTing a
- * multi-gigabyte array would OOM the receiver's Nitro process before any
- * validation ran. Neither h3 nor this app's `nuxt.config.ts` sets a request-size
- * limit, so the route enforces one itself.
+ * The cap exists because the size of the *parsed* payload is checked far too
+ * late to help: without it, a valid token POSTing a multi-gigabyte array would
+ * OOM the receiver's Nitro process before any validation ran. Neither h3 nor
+ * this app's `nuxt.config.ts` sets a request-size limit, so the route enforces
+ * one itself.
+ *
+ * It is **derived from the validation contract rather than picked**, so the two
+ * cannot disagree: a payload `parseNetworkSummaryPayload` would accept must
+ * never be refused unread. A flat 1 MiB was not safe here — the contract permits
+ * 2000 sites whose `name` is 255 *characters*, and 255 CJK characters is 765
+ * bytes of UTF-8 (1530 if escaped), so an entirely legitimate non-ASCII network
+ * serialised past 1 MiB and took a permanent 413. Every term below is a
+ * worst-case, so the product is a ceiling, not an estimate.
+ *
+ * The one thing it does not budget for is gratuitous whitespace between JSON
+ * tokens, which no `JSON.stringify` output — including `pushNetworkSummary`'s —
+ * ever produces. A pretty-printed body is not part of the accepted shape.
  */
-export const MAX_NETWORK_SUMMARY_BODY_BYTES = 1024 * 1024
+export const MAX_NETWORK_SUMMARY_BODY_BYTES
+  = PAYLOAD_ENVELOPE_BYTES + MAX_SITES_PER_SLICE * MAX_SITE_ENTRY_BYTES
 
 /** The four published per-site fields. Exactly these keys, in this order. */
 const SITE_KEYS = ['siteCode', 'name', 'scbd', 'published'] as const

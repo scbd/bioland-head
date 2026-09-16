@@ -28,6 +28,7 @@ vi.stubGlobal('$fetch', fetchImpl)
 
 const mod = await import('../../../../../server/utils/site-registry/network-summary')
 const {
+  MAX_NETWORK_SUMMARY_BODY_BYTES,
   NETWORK_SUMMARY_TABLE,
   NETWORK_SUMMARY_TOKEN_HEADER,
   NetworkSummaryInvalidError,
@@ -886,6 +887,54 @@ describe('the body cap', () => {
 
     // Three 32-byte chunks is all it took: the body was never buffered whole.
     expect(produced).toBeLessThanOrEqual(3)
+  })
+
+  /**
+   * The cap and `parseNetworkSummaryPayload` describe the same accepted shape,
+   * so anything validation admits must fit under it. `name` is bounded in UTF-16
+   * code units to match its `VARCHAR(255)` utf8mb4 column, which counts
+   * characters — so the maximal legitimate payload is multi-byte, not ASCII.
+   */
+  function maximalSlice(name: string) {
+    return {
+      env: 'dev',
+      multiSiteCode: 'bl2',
+      baseHost: 'a'.repeat(255),
+      sites: Array.from({ length: 2000 }, (_, index) => ({
+        siteCode: `s${index}`,
+        name,
+        scbd: true,
+        published: true,
+      })),
+    }
+  }
+
+  it('admits a maximal CJK slice that satisfies every validation constraint', () => {
+    // 2000 sites, each named with 255 CJK characters: 765 bytes of UTF-8 apiece,
+    // about 1.57 MiB in all. The previous flat 1 MiB cap took a permanent 413 on
+    // this while validation accepted it without complaint.
+    const payload = maximalSlice('網'.repeat(255))
+
+    expect(() => parseNetworkSummaryPayload(payload)).not.toThrow()
+    expect(Buffer.byteLength(JSON.stringify(payload), 'utf8'))
+      .toBeLessThanOrEqual(MAX_NETWORK_SUMMARY_BODY_BYTES)
+  })
+
+  it('admits the worst-case escaped serialisation of the same shape', () => {
+    // `name` is bounded but not patterned, so a control character is accepted and
+    // costs six bytes as `\uXXXX` — the ceiling every term of the cap is sized on.
+    const payload = maximalSlice(''.repeat(255))
+
+    expect(() => parseNetworkSummaryPayload(payload)).not.toThrow()
+    expect(Buffer.byteLength(JSON.stringify(payload), 'utf8'))
+      .toBeLessThanOrEqual(MAX_NETWORK_SUMMARY_BODY_BYTES)
+  })
+
+  it('still refuses a body an order of magnitude past the accepted shape', async () => {
+    await expect(readCappedBodyText(
+      chunks('x'.repeat(64)),
+      String(MAX_NETWORK_SUMMARY_BODY_BYTES * 10),
+    )).rejects.toBeInstanceOf(NetworkSummaryTooLargeError)
   })
 })
 
