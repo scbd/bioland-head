@@ -37,7 +37,36 @@
  *       translation burst cannot starve them. Cost: it raises the total connection count
  *       against the same server and duplicates the credential surface.
  *
- * The harness prints timings and counts only. Values read out of the database are used
+ * ## What p03-02 inherits, and what it must re-derive
+ *
+ * **Inherit the shape.** Shape (a), the race wrapper, is the right mechanism, and that
+ * conclusion needs no measurement: a second pool relieves pool exhaustion by adding
+ * connections to the same constrained server and by duplicating the credential surface, while
+ * the race wrapper needs neither. Its one trap — the losing `getConnection()` resolving later
+ * — is released here rather than leaked, and a test fails if that release is removed.
+ *
+ * **Inherit its known gap too.** Shape (a) unpins the Nitro worker but sheds no queued demand:
+ * the abandoned `getConnection()` stays in the pool's queue and is still served when its turn
+ * comes. Under a sustained cold fleet the queue therefore keeps growing even though every
+ * caller has already failed fast. p03-02 needs a queue-depth bound, not only a timer.
+ *
+ * **Do NOT inherit the numbers.** Any `connectionLimit` or config-acquire-timeout figure
+ * produced before a live run is simulated and provisional. The pool double hands out
+ * connections through `Promise.resolve` at zero cost — no TCP, no auth handshake, the cost
+ * `initializationTimeout` (`translate/index.js:71`) exists for — and its query cost does not
+ * vary with concurrency, so it has no throughput knee and never enforces a server-side
+ * `max_connections`. A double with free connections and flat query cost concludes "raise the
+ * limit" for every input, which is exactly the recommendation it must not be trusted to make.
+ * Re-derive both values from a real run against a real `i18n_cache`, with real `site_code`s so
+ * each read fetches a payload, and check the result against `max_connections` — the total is
+ * containers x `connectionLimit`, per pool.
+ *
+ * ## Safety
+ *
+ * `--env` is a query value, not a connection target: the target comes from `I18N_DB_HOST`.
+ * {@link assertSafeTarget} refuses to run when the host does not match the claimed `--env`
+ * unless `HARNESS_I_UNDERSTAND_PROD_LOAD=1` is set, so `--env stg` cannot be a false safety
+ * signal over a production `--env-file`. The harness prints timings and counts only. Values read out of the database are used
  * solely as input to the negative control in `harness-report.mjs`, which throws if any of
  * them — or any credential-shaped string — reaches the summary or the results file. No pool
  * setting is changed by this script and it has no runtime caller.
@@ -49,9 +78,10 @@
  * @module scripts/registry/config-load-harness
  */
 
-import { writeFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { dirname } from 'node:path'
 import { argv, env as processEnv, exit, stdout } from 'node:process'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { assertNoConfigValues, buildResults, formatSummary, summarizeLevel } from './harness-report.mjs'
 
 /** Default fleet sizes per multiSiteCode (211 bl2 sites, 11 bsl sites). */
@@ -61,10 +91,130 @@ export const FLEET_SIZES = { bl2: 211, bsl: 11 }
 export const POOL_ACQUIRE_TIMEOUT_MS = 30000
 
 /**
+ * Default results path. It lands under the gitignored `.agents/temp/` scratch tree rather than
+ * the repo root, so a careless `git add -A` cannot commit a run artifact.
+ */
+export const DEFAULT_OUT = fileURLToPath(new URL('../../.agents/temp/config-load-harness-results.json', import.meta.url))
+
+/**
+ * Upper bounds on every knob that costs connections, sockets or CPU, so a typo cannot turn
+ * the harness into a denial-of-service tool against the database it is measuring.
+ */
+export const LIMITS = {
+  sites: 5000,
+  concurrency: 500,
+  translationWorkers: 64,
+  translationHoldMs: 60000,
+  connectionLimit: 200,
+  acquireTimeoutMs: 600000,
+  configAcquireTimeoutMs: 600000,
+  dedicatedPoolSize: 200,
+  acquireWaitThresholdMs: 600000
+}
+
+/** Floor on a translation hold, so `SELECT SLEEP(0)` cannot busy-spin the load workers. */
+export const MIN_TRANSLATION_HOLD_MS = 10
+
+/**
+ * Substrings that must appear in `I18N_DB_HOST` for a given `--env`. `prod` has none on
+ * purpose: there is no host spelling that makes an unattended production load run safe, so it
+ * always requires the explicit override.
+ */
+export const ENV_HOST_MARKERS = {
+  dev: ['dev', 'local'],
+  stg: ['stg', 'staging'],
+  prod: []
+}
+
+/** Environment variable an operator must set to run against a host the `--env` does not match. */
+export const PROD_LOAD_OVERRIDE = 'HARNESS_I_UNDERSTAND_PROD_LOAD'
+
+/**
+ * Assert the harness is pointed at the environment the operator says it is.
+ *
+ * `--env` is only a **query value** bound into the WHERE clause; the connection target comes
+ * entirely from `I18N_DB_HOST/USER/PASSWORD`. Without this check `--env stg` is a false safety
+ * signal: `node --env-file=.env.production ... --env stg --with-translation-load` would hit
+ * production at full load while the summary header printed `stg`, putting unbounded
+ * connection-holding workers onto the same 5-connection pool the live translation workload
+ * uses — precisely the Nitro-worker-pinning outage this harness exists to characterise.
+ *
+ * The host is asserted on, never printed or returned: secrecy of the target is correct, but
+ * silence about the mismatch is not.
+ *
+ * @param {object} options - Target check.
+ * @param {string} options.env - The `--env` the operator claims.
+ * @param {string|undefined} options.host - `I18N_DB_HOST`.
+ * @param {boolean} options.withTranslationLoad - Whether the load generator is requested.
+ * @param {string|undefined} [options.override] - Value of {@link PROD_LOAD_OVERRIDE}.
+ * @returns {{matched: boolean, overridden: boolean}} How the target was cleared.
+ * @throws {Error} When the host does not match `--env` and no override is present.
+ */
+export function assertSafeTarget({ env, host, withTranslationLoad, override }) {
+  if (!host) throw Object.assign(new Error('I18N_DB_HOST is not set'), { code: 'HARNESS_NO_HOST' })
+
+  const markers = ENV_HOST_MARKERS[env]
+
+  if (!markers) {
+    throw Object.assign(
+      new Error(`unknown --env ${env}; expected one of ${Object.keys(ENV_HOST_MARKERS).join(', ')}`),
+      { code: 'HARNESS_UNKNOWN_ENV' }
+    )
+  }
+
+  const matched = markers.some(marker => host.toLowerCase().includes(marker))
+  const overridden = override === '1'
+
+  if (matched) return { matched, overridden }
+
+  if (!overridden) {
+    throw Object.assign(
+      new Error(
+        `I18N_DB_HOST does not match --env ${env}. Refusing${withTranslationLoad ? ' to put load on' : ' to read'} an unconfirmed target. ` +
+        `Fix --env, or set ${PROD_LOAD_OVERRIDE}=1 if you really mean this host.`
+      ),
+      { code: 'HARNESS_TARGET_MISMATCH' }
+    )
+  }
+
+  return { matched, overridden }
+}
+
+/**
+ * Parse one numeric flag, rejecting the non-numeric input that would otherwise degrade into a
+ * silently empty run: `--sites abc` becomes NaN, then an empty fleet, then all-null
+ * percentiles, then a results file and exit 0 reporting success on zero measurements.
+ *
+ * @param {string} name - Flag name, for the error message.
+ * @param {unknown} raw - Raw flag value.
+ * @param {number} fallback - Value when the flag is absent.
+ * @param {{min?: number, max?: number, integer?: boolean}} [bounds] - Accepted range.
+ * @returns {number} The validated value.
+ * @throws {Error} When the value is not a number in range.
+ */
+export function numericFlag(name, raw, fallback, bounds = {}) {
+  if (raw === undefined) return fallback
+
+  const { min = 0, max = Number.MAX_SAFE_INTEGER, integer = true } = bounds
+  const value = Number(raw)
+
+  if (!Number.isFinite(value) || (integer && !Number.isInteger(value)) || value < min || value > max) {
+    throw Object.assign(
+      new Error(`--${name} must be ${integer ? 'an integer' : 'a number'} between ${min} and ${max}`),
+      { code: 'HARNESS_BAD_ARG' }
+    )
+  }
+
+  return value
+}
+
+/**
  * Parse harness CLI arguments.
  *
  * @param {string[]} args - Argument list (without node and script path).
  * @returns {object} Normalised options.
+ * @throws {Error} When any numeric flag is non-numeric or out of range, or `--table` is not a
+ *   bare identifier (it is the one value interpolated into SQL rather than bound).
  */
 export function parseArgs(args) {
   const flags = new Map()
@@ -83,26 +233,47 @@ export function parseArgs(args) {
   }
 
   const multiSiteCode = flags.get('multi-site-code') ?? 'bl2'
-  const number = (name, fallback) => (flags.has(name) ? Number(flags.get(name)) : fallback)
+  const number = (name, fallback, bounds) => numericFlag(name, flags.get(name), fallback, bounds)
+  const table = flags.get('table') ?? 'bioland_site_config'
+
+  // `table` is the one value interpolated into SQL rather than bound (a table name cannot be a
+  // placeholder). Existence is already checked parameterized against information_schema, so
+  // this is defence in depth rather than a live hole, but an unbounded identifier has no
+  // business reaching a backticked position.
+  if (!/^[A-Za-z0-9_]+$/.test(table)) {
+    throw Object.assign(new Error('--table must match /^[A-Za-z0-9_]+$/'), { code: 'HARNESS_BAD_ARG' })
+  }
+
+  const concurrencies = (flags.get('concurrency') ?? '25')
+    .split(',')
+    .map((value, index) => numericFlag(`concurrency[${index}]`, value.trim(), 0, { min: 1, max: LIMITS.concurrency }))
+
+  if (!concurrencies.length) {
+    throw Object.assign(new Error('--concurrency must list at least one level'), { code: 'HARNESS_BAD_ARG' })
+  }
+
+  const levelOrder = flags.get('level-order') ?? 'random'
+
+  if (!['random', 'ascending'].includes(levelOrder)) {
+    throw Object.assign(new Error('--level-order must be random or ascending'), { code: 'HARNESS_BAD_ARG' })
+  }
 
   return {
     env: flags.get('env') ?? 'stg',
     multiSiteCode,
-    siteCount: number('sites', FLEET_SIZES[multiSiteCode] ?? FLEET_SIZES.bl2),
-    concurrencies: (flags.get('concurrency') ?? '25')
-      .split(',')
-      .map(value => Number(value.trim()))
-      .filter(value => Number.isInteger(value) && value > 0),
+    siteCount: number('sites', FLEET_SIZES[multiSiteCode] ?? FLEET_SIZES.bl2, { min: 1, max: LIMITS.sites }),
+    concurrencies,
+    levelOrder,
     withTranslationLoad: flags.get('with-translation-load') === 'true',
-    translationWorkers: number('translation-workers', 4),
-    translationHoldMs: number('translation-hold-ms', 250),
-    connectionLimit: number('connection-limit', Number(processEnv.I18N_DB_CONNECTION_LIMIT) || 5),
-    acquireTimeoutMs: number('acquire-timeout-ms', POOL_ACQUIRE_TIMEOUT_MS),
-    configAcquireTimeoutMs: number('config-acquire-timeout-ms', 0),
-    dedicatedPoolSize: number('dedicated-pool-size', 0),
-    acquireWaitThresholdMs: number('acquire-wait-threshold-ms', 100),
-    table: flags.get('table') ?? 'bioland_site_config',
-    out: flags.get('out') ?? 'config-load-harness-results.json'
+    translationWorkers: number('translation-workers', 4, { min: 1, max: LIMITS.translationWorkers }),
+    translationHoldMs: number('translation-hold-ms', 250, { min: MIN_TRANSLATION_HOLD_MS, max: LIMITS.translationHoldMs }),
+    connectionLimit: number('connection-limit', Number(processEnv.I18N_DB_CONNECTION_LIMIT) || 5, { min: 1, max: LIMITS.connectionLimit }),
+    acquireTimeoutMs: number('acquire-timeout-ms', POOL_ACQUIRE_TIMEOUT_MS, { min: 1, max: LIMITS.acquireTimeoutMs }),
+    configAcquireTimeoutMs: number('config-acquire-timeout-ms', 0, { min: 0, max: LIMITS.configAcquireTimeoutMs }),
+    dedicatedPoolSize: number('dedicated-pool-size', 0, { min: 0, max: LIMITS.dedicatedPoolSize }),
+    acquireWaitThresholdMs: number('acquire-wait-threshold-ms', 100, { min: 0, max: LIMITS.acquireWaitThresholdMs }),
+    table,
+    out: flags.get('out') ?? DEFAULT_OUT
   }
 }
 
@@ -118,6 +289,49 @@ export function buildFleet({ env, multiSiteCode, siteCount }) {
     multiSiteCode,
     siteCode: `${multiSiteCode}-site-${String(index + 1).padStart(4, '0')}`
   }))
+}
+
+/**
+ * Build the cold fleet from **real** `site_code`s where the registry table exists.
+ *
+ * A synthesised `bl2-site-0001` matches no row, so every "config read" would be a zero-row
+ * index probe — no payload fetch, no row decode, no result transfer — while a real cold read
+ * pulls a whole config document. Measuring the probe and calling it a config read makes the
+ * whole run optimistic in a way the timings cannot reveal, so the real codes are selected when
+ * they are available and the synthesised fleet is only the fallback for the table-absent probe
+ * mode (p02-01 may not be merged where the harness runs).
+ *
+ * @param {object} options - Fleet options.
+ * @param {{getConnection: Function}} options.pool - Pool to select through.
+ * @param {boolean} options.tableMissing - Whether the registry table is absent.
+ * @param {string} options.table - Validated registry table name.
+ * @param {string} options.env - Config env.
+ * @param {string} options.multiSiteCode - Fleet code.
+ * @param {number} options.siteCount - Requested fleet size.
+ * @returns {Promise<{keys: Array<object>, synthesised: boolean}>} The fleet and its provenance.
+ */
+export async function resolveFleet({ pool, tableMissing, table, env, multiSiteCode, siteCount }) {
+  if (tableMissing) return { keys: buildFleet({ env, multiSiteCode, siteCount }), synthesised: true }
+
+  const connection = await pool.getConnection()
+
+  try {
+    const rows = await connection.query(
+      `SELECT site_code FROM \`${table}\` WHERE env = ? AND multi_site_code = ? ORDER BY site_code LIMIT ?`,
+      [env, multiSiteCode, siteCount]
+    )
+
+    const keys = (Array.isArray(rows) ? rows : [])
+      .map(row => row?.site_code)
+      .filter(siteCode => typeof siteCode === 'string' && siteCode.length)
+      .map(siteCode => ({ env, multiSiteCode, siteCode }))
+
+    if (!keys.length) return { keys: buildFleet({ env, multiSiteCode, siteCount }), synthesised: true }
+
+    return { keys, synthesised: false }
+  } finally {
+    connection?.release?.()
+  }
 }
 
 /**
@@ -242,9 +456,12 @@ function collectValues(rows, seenValues) {
  * @param {number} [options.errorBackoffMs=25] - Pause after a failed query, so a load that
  *   cannot run at all (bad grant, missing table) idles instead of spinning a tight loop that
  *   would hammer the pool and distort the config-read timings it is meant to contend with.
+ * @param {number} [options.yieldMs=1] - Pause after a *successful* query. A near-zero hold
+ *   makes `SELECT SLEEP(0)` return instantly, so without this the success path busy-spins
+ *   exactly the way the error path would without `errorBackoffMs`.
  * @returns {{stop: () => Promise<{queries: number, errors: number}>}} Handle to stop the load.
  */
-export function startTranslationLoad({ pool, workers, holdMs, sql, params, errorBackoffMs = 25 }) {
+export function startTranslationLoad({ pool, workers, holdMs, sql, params, errorBackoffMs = 25, yieldMs = 1 }) {
   const counters = { queries: 0, errors: 0 }
   let running = true
 
@@ -264,8 +481,10 @@ export function startTranslationLoad({ pool, workers, holdMs, sql, params, error
         connection?.release?.()
       }
 
-      if (failed && running && errorBackoffMs > 0) {
-        await new Promise(resolve => setTimeout(resolve, errorBackoffMs))
+      const pauseMs = failed ? errorBackoffMs : yieldMs
+
+      if (running && pauseMs > 0) {
+        await new Promise(resolve => setTimeout(resolve, pauseMs))
       }
     }
   }
@@ -289,7 +508,7 @@ export function startTranslationLoad({ pool, workers, holdMs, sql, params, error
  * @returns {Promise<object>} Level summary from {@link summarizeLevel}.
  */
 export async function runLevel(options) {
-  const { keys, concurrency, now = () => performance.now(), acquireWaitThresholdMs = 100, acquireTimeoutMs = POOL_ACQUIRE_TIMEOUT_MS } = options
+  const { keys, concurrency, sweepPosition = null, now = () => performance.now(), acquireWaitThresholdMs = 100, acquireTimeoutMs = POOL_ACQUIRE_TIMEOUT_MS } = options
   const reads = []
   const queue = [...keys]
   const startedAt = now()
@@ -301,25 +520,64 @@ export async function runLevel(options) {
     }
   }
 
-  await Promise.all(Array.from({ length: Math.min(concurrency, keys.length) }, worker))
+  // An 11-key fleet cannot run 25 ways, so the *effective* worker count is what was measured
+  // and what gets reported; the requested value is kept beside it rather than substituted for it.
+  const effectiveConcurrency = Math.min(concurrency, keys.length)
+
+  await Promise.all(Array.from({ length: effectiveConcurrency }, worker))
 
   return summarizeLevel(
-    { concurrency, reads, wallMs: now() - startedAt },
+    {
+      concurrency: effectiveConcurrency,
+      requestedConcurrency: concurrency,
+      sweepPosition,
+      reads,
+      wallMs: now() - startedAt
+    },
     { acquireWaitThresholdMs, acquireTimeoutMs }
   )
 }
 
 /**
- * Sweep the concurrency levels in ascending order.
+ * Order the sweep's concurrency levels.
+ *
+ * A strictly ascending sweep re-reads the same keys at each level, so the InnoDB buffer pool is
+ * warm by the later levels and higher concurrency is measured against progressively cheaper
+ * queries — "more concurrency stays fine" then partly measures ordering rather than the pool.
+ * Randomising the order does not remove the warming, but it stops it from correlating with
+ * concurrency, and the executed order is reported so the artifact says which run this was.
+ *
+ * @param {number[]} concurrencies - Requested levels.
+ * @param {'random'|'ascending'} [order='random'] - Ordering strategy.
+ * @param {() => number} [random=Math.random] - Injectable randomness.
+ * @returns {number[]} The levels in execution order.
+ */
+export function orderLevels(concurrencies, order = 'random', random = Math.random) {
+  const levels = [...concurrencies]
+
+  if (order === 'ascending') return levels.sort((a, b) => a - b)
+
+  for (let index = levels.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(random() * (index + 1))
+
+    ;[levels[index], levels[swap]] = [levels[swap], levels[index]]
+  }
+
+  return levels
+}
+
+/**
+ * Sweep the concurrency levels, in randomised order by default.
  *
  * @param {object} options - Sweep options; `concurrencies` plus everything {@link runLevel} takes.
- * @returns {Promise<object[]>} One level summary per concurrency, ascending.
+ * @returns {Promise<object[]>} One level summary per concurrency, in execution order.
  */
 export async function runSweep(options) {
   const levels = []
+  const order = orderLevels(options.concurrencies, options.levelOrder ?? 'ascending', options.random)
 
-  for (const concurrency of [...options.concurrencies].sort((a, b) => a - b)) {
-    levels.push(await runLevel({ ...options, concurrency }))
+  for (const [position, concurrency] of order.entries()) {
+    levels.push(await runLevel({ ...options, concurrency, sweepPosition: position }))
   }
 
   return levels
@@ -362,6 +620,39 @@ export async function resolveReadShape(pool, table, database) {
 }
 
 /**
+ * Fail the run when the fleet fetched no payload at all.
+ *
+ * A key that matches no row makes the "config read" a zero-row index probe: no payload fetch,
+ * no row decode, no result transfer, while a real cold read pulls a whole config document. The
+ * timings of such a run look excellent and mean nothing, and nothing else in the report would
+ * reveal it — so an all-zero `rowsReturned` is an error, not a result. The table-absent probe
+ * mode is exempt: there it measures acquire contention on purpose and says so in the summary.
+ *
+ * @param {object} options - Run outcome.
+ * @param {object[]} options.levels - Level summaries.
+ * @param {boolean} options.tableMissing - Whether the registry table is absent.
+ * @param {boolean} options.synthesised - Whether the fleet fell back to synthesised keys.
+ * @returns {void}
+ * @throws {Error} When every read across every level returned zero rows.
+ */
+export function assertFleetFetchedPayload({ levels, tableMissing, synthesised }) {
+  if (tableMissing) return
+
+  const rowsReturned = levels.reduce((sum, level) => sum + (level.rowsReturned ?? 0), 0)
+
+  if (rowsReturned > 0) return
+
+  throw Object.assign(
+    new Error(
+      synthesised
+        ? 'fleet returned zero rows: the synthesised site_codes match no row, so every read was an empty index probe rather than a config read'
+        : 'fleet returned zero rows: no read fetched a payload, so the timings measure nothing'
+    ),
+    { code: 'HARNESS_EMPTY_FLEET' }
+  )
+}
+
+/**
  * Entry point: connect, sweep, report, and write the machine-readable results file.
  *
  * @param {string[]} [args] - CLI arguments.
@@ -369,6 +660,14 @@ export async function resolveReadShape(pool, table, database) {
  */
 export async function main(args = argv.slice(2)) {
   const options = parseArgs(args)
+
+  assertSafeTarget({
+    env: options.env,
+    host: processEnv.I18N_DB_HOST,
+    withTranslationLoad: options.withTranslationLoad,
+    override: processEnv[PROD_LOAD_OVERRIDE]
+  })
+
   const { default: mariadb } = await import('mariadb')
   const database = processEnv.I18N_DB_NAME || 'i18n_cache'
 
@@ -388,12 +687,18 @@ export async function main(args = argv.slice(2)) {
   const configPool = options.dedicatedPoolSize ? createPool(options.dedicatedPoolSize) : sharedPool
   const seenValues = new Set()
   const startedAt = new Date().toISOString()
+  let load = null
+
+  // Without a listener the pool's own `error` event is unhandled, and Node prints a formatted
+  // stack — the one place a connection detail could reach stdout past the bare-code handler
+  // below.
+  for (const pool of new Set([sharedPool, configPool])) pool.on?.('error', () => {})
 
   try {
     const shape = await resolveReadShape(configPool, options.table, database)
-    const keys = buildFleet(options)
+    const { keys, synthesised } = await resolveFleet({ ...options, ...shape, pool: configPool })
 
-    const load = options.withTranslationLoad
+    load = options.withTranslationLoad
       ? startTranslationLoad({
         pool: sharedPool,
         workers: options.translationWorkers,
@@ -404,7 +709,9 @@ export async function main(args = argv.slice(2)) {
       : null
 
     const levels = await runSweep({ ...options, ...shape, pool: configPool, keys, seenValues })
-    const translation = load ? await load.stop() : null
+    const translation = await load?.stop() ?? null
+
+    load = null
 
     const results = {
       ...buildResults({
@@ -414,20 +721,28 @@ export async function main(args = argv.slice(2)) {
         levels,
         startedAt,
         finishedAt: new Date().toISOString(),
-        liveMeasurement: true
+        poolDouble: false,
+        levelOrderExecuted: levels.map(level => level.concurrency)
       }),
       translation
     }
+
+    assertFleetFetchedPayload({ levels, tableMissing: shape.tableMissing, synthesised })
 
     const serialized = JSON.stringify(results, null, 2)
     const summary = formatSummary(results)
 
     assertNoConfigValues(`${serialized}\n${summary}`, [...seenValues])
+    mkdirSync(dirname(options.out), { recursive: true })
     writeFileSync(options.out, `${serialized}\n`)
     stdout.write(`${summary}\nresults: ${options.out}\n`)
 
     return 0
   } finally {
+    // A throw mid-sweep must not leave the load generator looping: the workers would outlive
+    // the run the operator believes they stopped, and `pool.end()` below would race an endless
+    // acquire/backoff loop.
+    await load?.stop().catch(() => {})
     await sharedPool.end().catch(() => {})
     if (configPool !== sharedPool) await configPool.end().catch(() => {})
   }
