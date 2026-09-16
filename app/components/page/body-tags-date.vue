@@ -74,12 +74,12 @@
         <div v-if="tags?.subjects?.length" class="mb-2">
             <h5 >{{t("Thematic Areas")}}</h5>
             
-            <span  v-for="(subject,i) in tags.subjects" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ t(subject.identifier) }}</span>
+            <span  v-for="(subject,i) in tags.subjects" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ subjectLabels.get(subject.identifier)?.value ?? subject.identifier }}</span>
         </div>
         <div v-if="tags?.bchSubjects?.length" class="mb-2">
             <h5 >{{t("Biosafety Thematic Areas")}}</h5>
-            
-            <span  v-for="(subject,i) in tags.bchSubjects" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ t(subject.identifier) }}</span>
+
+            <span  v-for="(subject,i) in tags.bchSubjects" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ subjectLabels.get(subject.identifier)?.value ?? subject.identifier }}</span>
         </div>
     </div>
 </template>
@@ -99,6 +99,27 @@
     });
 
     const {  getGbfUrl, tags }   = useDocumentHelpers(pageStore.page);
+
+    /**
+     * Batch-resolve subject/bchSubject identifiers via {@link useTermLabel} in one microtask tick (so
+     * `server/utils/thesaurus/request-batcher.ts` collapses them into a single upstream call), indexed by
+     * identifier. Local to this component; see `app/composables/use-term-label.js` for the D5 miss-fallback
+     * and SSR/hydration contract this shares.
+     *
+     * @param   {string[]} identifiers
+     * @returns {Promise<Map<string, import('vue').ComputedRef<string>>>}
+     */
+    async function useSubjectLabels(identifiers) {
+        const ids    = [...new Set(identifiers.filter(Boolean))];
+        const labels = await Promise.all(ids.map((id) => useTermLabel(() => id)));
+
+        return new Map(ids.map((id, i) => [id, labels[i]]));
+    }
+
+    const subjectLabels = await useSubjectLabels([
+        ...(tags.value?.subjects ?? []).map((subject) => subject.identifier),
+        ...(tags.value?.bchSubjects ?? []).map((subject) => subject.identifier)
+    ]);
 </script>
 
 <style lang="scss" scoped>

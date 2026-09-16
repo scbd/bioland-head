@@ -28,7 +28,7 @@
             </NuxtLink>
 
             <section v-if="tags?.subjects" class="mt-1">
-                <span v-for="(subject, i) in tags.subjects" :key="i" class="badge bg-primary me-1">{{ t(subject.identifier) }}</span>
+                <span v-for="(subject, i) in tags.subjects" :key="i" class="badge bg-primary me-1">{{ subjectLabels.get(subject.identifier)?.value ?? subject.identifier }}</span>
             </section>
 
             <hr class="my-2" v-if="tags?.subjects || tags?.sdgs || tags?.gbfTargets"/>
@@ -53,6 +53,26 @@
     const   imageDefaults      = useMediaCardImageDefaults();
 
     const { getGbfUrl, descriptionTruncated, imageAlt, tags, imageSrc, linkTo } = useMediaRecord(record);
+
+    /**
+     * Batch-resolve subject identifiers via {@link useTermLabel} in one microtask tick (so
+     * `server/utils/thesaurus/request-batcher.ts` collapses them into a single upstream call), indexed by
+     * identifier. Local to this component; see `app/composables/use-term-label.js` for the D5 miss-fallback
+     * and SSR/hydration contract this shares.
+     *
+     * @param   {string[]} identifiers
+     * @returns {Promise<Map<string, import('vue').ComputedRef<string>>>}
+     */
+    async function useSubjectLabels(identifiers) {
+        const ids    = [...new Set(identifiers.filter(Boolean))];
+        const labels = await Promise.all(ids.map((id) => useTermLabel(() => id)));
+
+        return new Map(ids.map((id, i) => [id, labels[i]]));
+    }
+
+    const subjectLabels = await useSubjectLabels(
+        (tags.value?.subjects ?? []).map((subject) => subject.identifier)
+    );
 
     // Hero media stores description in fieldDescription.value, not description
     const heroDescription = computed(() => record.value?.fieldDescription?.value || record.value?.description || '');
