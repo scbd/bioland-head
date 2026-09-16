@@ -664,6 +664,38 @@ export function assertFleetFetchedPayload({ levels, tableMissing, synthesised })
 }
 
 /**
+ * Fail the run when the requested translation load never executed a single query.
+ *
+ * `--with-translation-load` is a claim the summary repeats verbatim ("translation load: on"),
+ * but nothing downstream checks that the load actually ran. If every background query fails —
+ * the usual cause being an account that cannot execute `SELECT SLEEP(?)` — the workers error,
+ * back off, and error again for the whole sweep, `stop()` returns `{queries: 0, errors: N}`, and
+ * the harness still writes a successful artifact. The config timings in it were collected with
+ * no contention at all, yet they are indistinguishable from a run that had it, so they can be
+ * quoted as live evidence for a contended fleet. An all-errors load is a failed run, not a
+ * quiet one.
+ *
+ * @param {object} options - Run outcome.
+ * @param {boolean} options.withTranslationLoad - Whether the load was requested.
+ * @param {{queries: number, errors: number}|null} options.translation - Counters from `stop()`.
+ * @returns {void}
+ * @throws {Error} When the load was requested but completed no successful query.
+ */
+export function assertTranslationLoadRan({ withTranslationLoad, translation }) {
+  if (!withTranslationLoad) return
+
+  if ((translation?.queries ?? 0) > 0) return
+
+  throw Object.assign(
+    new Error(
+      `--with-translation-load ran no successful query (${translation?.errors ?? 0} errors): ` +
+      'the config timings were collected without the requested contention and must not be read as a contended run'
+    ),
+    { code: 'HARNESS_LOAD_NEVER_RAN' }
+  )
+}
+
+/**
  * Entry point: connect, sweep, report, and write the machine-readable results file.
  *
  * @param {string[]} [args] - CLI arguments.
@@ -739,6 +771,7 @@ export async function main(args = argv.slice(2)) {
     }
 
     assertFleetFetchedPayload({ levels, tableMissing: shape.tableMissing, synthesised })
+    assertTranslationLoadRan({ withTranslationLoad: options.withTranslationLoad, translation })
 
     const serialized = JSON.stringify(results, null, 2)
     const summary = formatSummary(results)

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   assertFleetFetchedPayload,
   assertSafeTarget,
+  assertTranslationLoadRan,
   buildFleet,
   orderLevels,
   parseArgs,
@@ -234,6 +235,31 @@ describe('translation load', () => {
     expect(counters.queries).toBeGreaterThan(0)
     // Two workers yielding 5ms over ~100ms is tens; a spin on SELECT SLEEP(0) is thousands.
     expect(counters.queries).toBeLessThan(200)
+  })
+
+  it('fails a run whose requested load errored on every query instead of shipping it as contended', async () => {
+    const pool = {
+      getConnection: () => Promise.resolve({
+        query: () => Promise.reject(Object.assign(new Error('denied'), { code: 'ER_TABLEACCESS_DENIED_ERROR' })),
+        release: () => {}
+      })
+    }
+
+    const load = startTranslationLoad({ pool, workers: 2, holdMs: 10, sql: 'x', params: [], errorBackoffMs: 20 })
+
+    await sleep(60)
+
+    const translation = await load.stop()
+
+    expect(translation.queries).toBe(0)
+    // The summary would otherwise say "translation load: on" over timings taken with none of it.
+    expect(() => assertTranslationLoadRan({ withTranslationLoad: true, translation }))
+      .toThrow(/without the requested contention/)
+  })
+
+  it('stays quiet when the load ran, and when none was requested', () => {
+    expect(() => assertTranslationLoadRan({ withTranslationLoad: true, translation: { queries: 12, errors: 3 } })).not.toThrow()
+    expect(() => assertTranslationLoadRan({ withTranslationLoad: false, translation: null })).not.toThrow()
   })
 })
 
