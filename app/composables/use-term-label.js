@@ -76,13 +76,14 @@ function currentLocale() {
  *
  * @param   {string} identifier
  * @param   {string} locale
+ * @param   {string} [domain] - `dataSourceConfigs` key selecting that domain's label-field order.
  * @returns {Promise<{ value: string, source: string } | null>}
  */
-async function resolveOnServer(identifier, locale) {
+async function resolveOnServer(identifier, locale, domain) {
   try {
     const getTermLabel = useRequestEvent()?.context?.[TERM_LABEL_CONTEXT_KEY];
     if (typeof getTermLabel !== 'function') return null;
-    const label = await getTermLabel(identifier, locale);
+    const label = await getTermLabel(identifier, locale, domain);
     return label && typeof label.value === 'string' ? label : null;
   } catch {
     return null;
@@ -98,12 +99,12 @@ async function resolveOnServer(identifier, locale) {
  * @param   {string} locale
  * @returns {Promise<{ value: string, source: string } | null>}
  */
-async function resolveOnClient(identifier, locale) {
+async function resolveOnClient(identifier, locale, domain) {
   try {
     const resolved = await $fetch('/api/thesaurus/terms', {
       method: 'POST',
       query: { locale },
-      body: { ids: [identifier] }
+      body: domain ? { ids: [identifier], domain } : { ids: [identifier] }
     });
     const label = resolved?.[identifier];
     return label && typeof label.value === 'string' ? label : null;
@@ -119,7 +120,12 @@ async function resolveOnClient(identifier, locale) {
  * resolved value (Suspense), so nothing renders a placeholder that a later tick has to swap out. The
  * returned ref stays reactive, so a value another caller resolves later still propagates.
  *
+ * `domain` selects that domain's `labelFields` order. It matters wherever the default
+ * `shortTitle -> title -> name` order picks the wrong field: `countries` terms carry the ISO-2 code as
+ * `shortTitle`, so without `domain: 'countries'` a country badge renders `BE` rather than `Belgium`.
+ *
  * @param   {import('vue').MaybeRefOrGetter<string>} identifier - Thesaurus identifier, e.g. `GBF-TARGET-01`.
+ * @param   {string} [domain] - `dataSourceConfigs` key, e.g. `countries`.
  * @returns {Promise<import('vue').ComputedRef<string>>} The label, falling back to the raw identifier.
  *
  * @example
@@ -127,7 +133,7 @@ async function resolveOnClient(identifier, locale) {
  * const label = await useTermLabel(() => props.identifier);
  * // <template>{{ label }}</template>
  */
-export async function useTermLabel(identifier) {
+export async function useTermLabel(identifier, domain) {
   const labels = useState(TERM_LABEL_STATE_KEY, () => ({}));
 
   const label = computed(() => {
@@ -144,11 +150,11 @@ export async function useTermLabel(identifier) {
   const locale = currentLocale();
 
   // Path 2 — `useRequestEvent()` is undefined on the client, so this is a no-op there by construction.
-  let resolved = await resolveOnServer(id, locale);
+  let resolved = await resolveOnServer(id, locale, domain);
 
   // Path 3 — client only. The `import.meta.server` guard is what stops a *failed* server resolve from
   // turning into a pointless server-to-self HTTP call: during SSR a miss degrades to the identifier.
-  if (!resolved && !import.meta.server) resolved = await resolveOnClient(id, locale);
+  if (!resolved && !import.meta.server) resolved = await resolveOnClient(id, locale, domain);
 
   if (resolved) labels.value[id] = resolved;
 

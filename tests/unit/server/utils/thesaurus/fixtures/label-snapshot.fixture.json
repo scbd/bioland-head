@@ -1,0 +1,10 @@
+{
+  "_comment": "Fixture archive standing in for the real snapshot archive, which is a p03-05 deliverable that does not exist yet. Used only by resolve-terms.test.ts and snapshot-source.test.ts.",
+  "GBF-TARGET-01": {
+    "en": "Plan and Manage all Areas",
+    "fr": "GBF-T01. Planifier"
+  },
+  "GBF-GOAL-A": {
+    "en": "Goal A"
+  }
+}

@@ -105,8 +105,11 @@
     const links = ref([])
     const countryCode = siteStore?.config?.country;
 
+    /** Resolved country label (D3/D5) — falls back to the raw code on a miss. */
+    const countryLabel = await useTermLabel(() => countryCode);
+
     if(siteStore?.config?.geoBonPage)
-        links.value.push({ name: t('Browse EBV Datasets for')+' '+`${t(countryCode)}`,  to: { path: localPath(siteStore?.config?.geoBonPage||'/node/116') },           external: false })
+        links.value.push({ name: t('Browse EBV Datasets for')+' '+`${countryLabel.value}`,  to: { path: localPath(siteStore?.config?.geoBonPage||'/node/116') },           external: false })
 
     links.value.push( { name: t('EBV Data Portal'),       to: { path: `https://portal.geobon.org/home?country=${countryCode}` }, external: true  });
 

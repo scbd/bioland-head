@@ -3,9 +3,9 @@
 
         <div class="card-body mb-1" style="max-height: 300px; overflow:hidden;">
             <div v-if="hasCountries"  class="text-center mb-2">
-                <p class="h5 mb-1 text-muted">{{t(countryCode)}}</p>
+                <p class="h5 mb-1 text-muted">{{countryLabel}}</p>
                 <NuxtLink  v-if="hasCountries && !noFlag" class="me-1" :to="`https://www.cbd.int/countries/?country=${countryCode}`" target="_blank" external>
-                    <NuxtImg :alt="`${t(countryCode)}'s flag'`" :title="`${t(countryCode)}'s flag'`" :src="getFlagUrl(countryCode)"  class="flag"/>
+                    <NuxtImg :alt="`${countryLabel}'s flag'`" :title="`${countryLabel}'s flag'`" :src="getFlagUrl(countryCode)"  class="flag"/>
                 </NuxtLink>
 
    
@@ -46,6 +46,8 @@
  
     const countryCode = computed(()=>record?.value?.government? record.value.government.replace('country:','') : '');
 
+    /** Resolved country label (D3/D5) — reactive to `countryCode`, falls back to the raw code on a miss. */
+    const countryLabel = await useTermLabel(() => countryCode.value);
 
     const summary = computed(()=> {
         if(record.value?.summary?.[locale.value]) return record.value.summary[locale.value];

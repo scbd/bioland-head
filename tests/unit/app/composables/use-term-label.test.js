@@ -80,7 +80,7 @@ describe('use-term-label', () => {
       const label = await useTermLabel('GBF-GOAL-A')
 
       expect(requestEvent.context.getTermLabel).toHaveBeenCalledTimes(1)
-      expect(requestEvent.context.getTermLabel).toHaveBeenCalledWith('GBF-GOAL-A', 'en')
+      expect(requestEvent.context.getTermLabel).toHaveBeenCalledWith('GBF-GOAL-A', 'en', undefined)
       expect(label.value).toBe('Goal A')
       expect(payload.state['GBF-GOAL-A']).toEqual({ value: 'Goal A', source: 'api' })
       expect(fetchMock).not.toHaveBeenCalled()
@@ -92,7 +92,18 @@ describe('use-term-label', () => {
 
       await useTermLabel('GBF-GOAL-A')
 
-      expect(requestEvent.context.getTermLabel).toHaveBeenCalledWith('GBF-GOAL-A', 'fr')
+      expect(requestEvent.context.getTermLabel).toHaveBeenCalledWith('GBF-GOAL-A', 'fr', undefined)
+    })
+
+    it('forwards an explicit domain so countries render the title, not the ISO-2 shortTitle', async () => {
+      // countries terms carry the ISO-2 code as shortTitle, so the default
+      // shortTitle -> title -> name order renders "BE" instead of "Belgium".
+      requestEvent = serverEvent(async () => ({ value: 'Belgium', source: 'api' }))
+
+      const label = await useTermLabel('be', 'countries')
+
+      expect(requestEvent.context.getTermLabel).toHaveBeenCalledWith('be', 'en', 'countries')
+      expect(label.value).toBe('Belgium')
     })
 
     it('a second call for the same id reads the payload instead of resolving again', async () => {

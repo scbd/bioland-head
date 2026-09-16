@@ -42,7 +42,7 @@
                             <li v-if="!isSingleType"><span :style="typeStyle" :id="`${baseId}-type`" class="fw-bold text-uppercase">{{getDocumentTypeName(aLine)}}</span><template v-if="getRealmText(aLine)"> - <span :style="getRealmStyle(aLine)" :id="`${baseId}-realm`" class="fw-bold text-uppercase">{{getRealmText(aLine)}}</span></template></li>
                             <li v-if="aLine?.tags?.countries?.length" v-for="(aCountry,i) in aLine.tags?.countries" :id="`${baseId}-country-${i}`" :key="i"   class="text-uppercase" >
                                 <NuxtLink :to="`https://www.cbd.int/countries/?country=${aCountry.identifier}`" target="_blank" external :id="`${baseId}-country-link-${i}`">
-                                    {{t(aCountry.identifier)}}
+                                    {{countryLabel(aCountry.identifier)}}
                                 </NuxtLink>
                             </li>
                         </ul>
@@ -117,6 +117,16 @@
         ...(aLine.value?.tags?.subjects ?? []).map((subject) => subject.identifier),
         ...(aLine.value?.tags?.bchSubjects ?? []).map((bchSubject) => bchSubject.identifier)
     ]);
+
+    /**
+     * Resolved country labels (D3/D5), keyed on the shared `term-labels` payload state so every badge
+     * reads a single pre-resolved lookup instead of each `v-for` iteration awaiting its own composable call.
+     */
+    const termLabels = useState(TERM_LABEL_STATE_KEY, () => ({}));
+    await Promise.all((aLine.value?.tags?.countries || []).map((aCountry) => useTermLabel(() => aCountry.identifier, 'countries')));
+    function countryLabel(identifier) {
+        return termLabels.value?.[identifier]?.value ?? identifier;
+    }
 
     const isChm         = computed(()=> aLine.value?.realms?.length);
     const isContentType = computed(()=>!!contentTypes[type]);

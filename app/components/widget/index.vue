@@ -25,7 +25,7 @@
             </div>
             <div class="card-footer">
                 <span v-if="record?.city" :style="bgStyle" class="badge me-1"> {{record.city}}</span>
-                <span v-if="record?.country" class="badge bg-secondary me-1"> {{t(record?.countryIdentifier || record?.country?.identifier ||  record?.country)}}</span>
+                <span v-if="record?.country" class="badge bg-secondary me-1"> {{countryLabel}}</span>
 
                 <NuxtLink  v-for="(aTarget,i) in record?.tags?.gbfTargets || []" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
                     <LazyGbfIcon :identifier="aTarget.identifier" size="xs" class="me-1"/>
@@ -87,5 +87,8 @@
         ...(tags.value?.subjects ?? []).map((subject) => subject.identifier),
         ...(tags.value?.bchSubjects ?? []).map((subject) => subject.identifier)
     ]);
+
+    /** Resolved country label (D3/D5) — falls back to the raw identifier on a miss. */
+    const countryLabel = await useTermLabel(() => record.value?.countryIdentifier || record.value?.country?.identifier || record.value?.country, 'countries');
 </script>
 

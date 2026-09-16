@@ -82,7 +82,9 @@ export const dataSourceConfigs: Record<string, DataSourceConfig> = {
   // API-based domains (path relative to the gaiaApi thesaurus domains base)
   // `shortTitle` here is an internal abbreviation (`AFR - Middle`), not a label — D17 override.
   regions:         { source: 'api', path: 'regions/terms', searchable: true, labelFields: ['title', 'shortTitle', 'name'], sanitizer: { type: 'AdministrativeArea' } },
-  countries:       { source: 'api', path: 'countries/terms', searchable: true, sanitizer: { type: 'Country', transform: (item) => ({
+  // `labelFields`: countries carry the ISO-2 code as `shortTitle` (e.g. shortTitle.en 'BE',
+  // title.en 'Belgium'), so the default shortTitle-first order would render the code as the label.
+  countries:       { source: 'api', path: 'countries/terms', searchable: true, labelFields: ['title', 'shortTitle', 'name'], sanitizer: { type: 'Country', transform: (item) => ({
     image: `https://flagcdn.com/${item.identifier?.toLowerCase()}.svg`,
     url: `https://www.cbd.int/countries/${item.identifier?.toLowerCase()}`
   })}},

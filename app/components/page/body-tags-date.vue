@@ -67,7 +67,7 @@
                     
                     <span   :style="bgStyle" class="badge text-wrap  me-1 w-100">
                         <NuxtImg :alt="aCountry.name" :src="getFlagUrl(aCountry.identifier)"  class="flag mb-1"/>
-                        <br>{{t(aCountry.identifier)}}</span>
+                        <br>{{countryLabel(aCountry.identifier)}}</span>
                 </NuxtLink>
             </section>
         </div>
@@ -120,6 +120,16 @@
         ...(tags.value?.subjects ?? []).map((subject) => subject.identifier),
         ...(tags.value?.bchSubjects ?? []).map((subject) => subject.identifier)
     ]);
+
+    /**
+     * Resolved country labels (D3/D5), keyed on the shared `term-labels` payload state so every badge
+     * reads a single pre-resolved lookup instead of each `v-for` iteration awaiting its own composable call.
+     */
+    const termLabels = useState(TERM_LABEL_STATE_KEY, () => ({}));
+    await Promise.all((tags.value?.countries || []).map((aCountry) => useTermLabel(() => aCountry.identifier, 'countries')));
+    function countryLabel(identifier) {
+        return termLabels.value?.[identifier]?.value ?? identifier;
+    }
 </script>
 
 <style lang="scss" scoped>
