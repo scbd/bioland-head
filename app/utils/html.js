@@ -29,25 +29,46 @@ DOMPurify.addHook('uponSanitizeElement', (node, data)=>
 // 414/494 and tears down the shared HTTP/2 connection, which fails every other asset
 // multiplexed on it (ERR_HTTP2_PROTOCOL_ERROR). Put the scheme back so the image renders,
 // and drop the src outright when the payload is not a plain base64 image.
-const base64ImagePrefix = /^image\/[a-z0-9.+-]+;base64,/i;
-const base64ImageSrc    = /^image\/[a-z0-9.+-]+;base64,[a-z0-9+/=\s]+$/i;
+// Raster types only: an editor's inline image is never svg, and svg carries a document we have
+// no reason to re-attach. Optional media-type parameters are tolerated because a stripped
+// `image/jpeg;charset=utf-8;base64,` would otherwise slip past and still be requested as a path.
+const base64ImageTypes  = 'png|jpe?g|gif|webp|avif|bmp|x-icon|vnd\\.microsoft\\.icon';
+const base64ImageParams = '(?:;[a-z0-9.+=-]+)*';
+const base64ImagePrefix = new RegExp(`^image\\/(?:${base64ImageTypes})${base64ImageParams};base64,`, 'i');
+const base64ImageSrc    = new RegExp(`^image\\/(?:${base64ImageTypes})${base64ImageParams};base64,[a-z0-9+/=\\s]+$`, 'i');
+
+// Anything schemeless and longer than a sane url is the same hazard even when it is not a shape
+// we recognise, so it is dropped rather than left for the browser to request.
+const maxUrlLength      = 2048;
+const hasUsableScheme   = /^(?:https?:|data:|\/|#)/i;
+
+const repairBase64Image = (node, attr) =>
+  {
+    const value = node.getAttribute(attr) || '';
+
+    if(!value) return;
+
+    if(base64ImagePrefix.test(value)){
+      // srcset wins over src in the browser, so a schemeless candidate list is removed outright
+      // rather than repaired: the repaired src is what should render.
+      if(node.tagName?.toLowerCase() === 'img' && attr === 'src' && base64ImageSrc.test(value)) node.setAttribute(attr, `data:${value}`);
+      else node.removeAttribute(attr);
+
+      return;
+    }
+
+    if(value.length > maxUrlLength && !hasUsableScheme.test(value)) node.removeAttribute(attr);
+  };
 
 DOMPurify.addHook('afterSanitizeAttributes', (node)=>
   {
     if(!node.getAttribute) return node;
 
-    const src = node.getAttribute('src') || '';
-
-    if(!base64ImagePrefix.test(src)) return node;
-
-    const tag = node.tagName?.toLowerCase();
-
-    if((tag === 'img' || tag === 'source') && base64ImageSrc.test(src)) node.setAttribute('src', `data:${src}`);
-    else node.removeAttribute('src');
+    repairBase64Image(node, 'src');
+    repairBase64Image(node, 'srcset');
 
     return node;
   });
-
 
 
 export const hasBchEmbed = (html) => {

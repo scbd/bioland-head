@@ -69,9 +69,40 @@ describe('html', () => {
     })
 
     it('drops a schemeless base64 src on a non image element', () => {
-      const input  = '<embed src="image/jpeg;base64,/9j/4AAQSkZJRg==">'
+      // <video> rather than <embed>: DOMPurify removes <embed> wholesale, so that fixture would
+      // pass with the hook deleted and proves nothing about this branch.
+      expect(htmlSanitize('<video src="image/jpeg;base64,/9j/4AAQSkZJRg==">')).toBe('<video></video>')
+    })
 
-      expect(htmlSanitize(input)).not.toContain('base64')
+    it('drops a schemeless base64 srcset so the repaired src is what renders', () => {
+      const input  = '<img srcset="image/jpeg;base64,/9j/4AAQSkZJRg==" src="image/jpeg;base64,/9j/4AAQSkZJRg==">'
+      const result = htmlSanitize(input)
+
+      expect(result).not.toContain('srcset')
+      expect(result).toContain('src="data:image/jpeg;base64,/9j/4AAQSkZJRg=="')
+    })
+
+    it('repairs a payload carrying media-type parameters', () => {
+      const input  = '<img src="image/jpeg;charset=utf-8;base64,/9j/4AAQSkZJRg==">'
+
+      expect(htmlSanitize(input)).toContain('src="data:image/jpeg;charset=utf-8;base64,/9j/4AAQSkZJRg=="')
+    })
+
+    it('does not re-attach a schemeless svg payload', () => {
+      // Left inert rather than repaired: an svg is a document, not an editor's inline image.
+      expect(htmlSanitize('<img src="image/svg+xml;base64,PHN2Zz48L3N2Zz4=">')).not.toContain('data:')
+    })
+
+    it('drops an oversized svg payload rather than leaving it to be requested', () => {
+      const input = `<img src="image/svg+xml;base64,${'A'.repeat(4000)}">`
+
+      expect(htmlSanitize(input)).not.toContain('src=')
+    })
+
+    it('drops any oversized schemeless src the browser would request as a path', () => {
+      const input  = `<img src="image/png;q=1,text/html;base64,${'A'.repeat(4000)}">`
+
+      expect(htmlSanitize(input)).not.toContain('src=')
     })
   })
 })
