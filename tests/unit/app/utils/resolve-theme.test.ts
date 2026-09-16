@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { runInNewContext } from 'node:vm'
+import { parse } from '@vue/compiler-sfc'
+import * as ts from 'typescript'
 import { resolveTheme } from '../../../../app/utils/resolve-theme'
+import { parseColor } from '../../../../app/utils/color-contrast'
 
 import effectiveValues from './fixtures/theme-effective-values.json'
 
@@ -614,11 +619,8 @@ describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
             expect(theme.color.primary).toBe(networkTheme.color.primary)
         })
 
-        it('keeps the colour shapes the theme form actually produces', () => {
-            expect(resolveTheme(siteConfig, { color: { primary: '#fff' } }).color.primary).toBe('#fff')
-            expect(resolveTheme(siteConfig, { color: { primary: '#7b6f82' } }).color.primary).toBe('#7b6f82')
-            expect(resolveTheme(siteConfig, { color: { primary: 'rgb(123 45 67 / 50%)' } }).color.primary).toBe('rgb(123 45 67 / 50%)')
-            expect(resolveTheme(siteConfig, { color: { primary: 'rebeccapurple' } }).color.primary).toBe('rebeccapurple')
+        it.each(['#fff', '#ABC', '#7b6f82', '#Ab12Cd'])('keeps consumer-safe hex %s unchanged', primary => {
+            expect(resolveTheme(siteConfig, { color: { primary } }).color.primary).toBe(primary)
         })
 
         it('an authored megaMenu.maxColumns of 0 falls through — 0 collapses the grid', () => {
@@ -632,6 +634,100 @@ describe('resolveTheme — biolandSettings.theme leg (p02-01)', () => {
 
             expect(theme.color.primary).toBe(networkTheme.color.primary)
             expect(theme.color.secondary).toBe('#889262')
+        })
+    })
+
+    describe('consumer-safe color formats (BL-1011 / BL-1012)', () => {
+        const unsupportedColors = [
+            'rebeccapurple', 'transparent', 'currentColor', 'notacolor',
+            'rgb(123, 45, 67)', 'rgba(123, 45, 67, 0.5)', 'rgb(123 45 67 / 50%)',
+            'hsl(120, 50%, 50%)', 'hsla(120, 50%, 50%, 0.5)', 'hsl(120 50% 50%)',
+            '#1', '#12', '#1234', '#12345', '#1234567', '#12345678', '#123456789',
+            '#ggg', 'abcdef', ' #abc', '#abc ', '\t#abcdef', '#abc\n', '#abcdef\r\n'
+        ]
+
+        it.each(unsupportedColors)('falls through per color leaf for %j in every leg', invalid => {
+            for (const key of ['primary', 'secondary'] as const) {
+                const sibling = key === 'primary' ? 'secondary' : 'primary'
+                const supplied = { color: { [key]: invalid, [sibling]: '#AbC' } }
+                const snapshot = structuredClone(supplied)
+                for (const theme of [
+                    resolveTheme(withRunTime(networkTheme, beTheme), supplied),
+                    resolveTheme(withRunTime(networkTheme, supplied)),
+                    resolveTheme({ runTime: { theme: supplied } })
+                ]) {
+                    expect(theme.color[sibling]).toBe('#AbC')
+                    expect(theme.color[key]).not.toBe(invalid)
+                    expect(theme.hero.primary).not.toContain(invalid)
+                    expect(theme.hero.secondary).toBe(theme.hero.primary[1])
+                }
+                expect(resolveTheme(withRunTime(networkTheme, beTheme), supplied).color[key]).toBe(beTheme.color[key])
+                expect(resolveTheme(withRunTime(networkTheme, supplied)).color[key]).toBe(networkTheme.color[key])
+                expect(resolveTheme({ runTime: { theme: supplied } }).color[key])
+                    .toBe(key === 'primary' ? '#009edb' : undefined)
+                expect(supplied).toEqual(snapshot)
+            }
+        })
+
+        it.each(unsupportedColors)('rejects %j in scalar and legacy hero slots without losing the usable sibling', invalid => {
+            for (const key of ['primary', 'secondary'] as const) {
+                const index = key === 'primary' ? 0 : 1
+                const sibling = key === 'primary' ? 'secondary' : 'primary'
+                const scalar = resolveTheme(withRunTime(networkTheme, beTheme), {
+                    hero: { [key]: invalid, [sibling]: '#AbC' }
+                })
+                expect(scalar.hero.primary[index]).toBe(beTheme.hero.primary[index])
+                expect(scalar.hero.primary[1 - index]).toBe('#AbC')
+                expect(scalar.hero.secondary).toBe(scalar.hero.primary[1])
+
+                const pair = index === 0 ? [invalid, '#AbC'] : ['#AbC', invalid]
+                const supplied = { hero: { primary: pair }, color: beTheme.color }
+                const snapshot = structuredClone(supplied)
+                for (const theme of [
+                    resolveTheme(withRunTime(networkTheme), supplied),
+                    resolveTheme(withRunTime(networkTheme, supplied)),
+                    resolveTheme({ runTime: { theme: supplied } })
+                ]) {
+                    expect(theme.hero.primary[index]).toBe(beTheme.color[key])
+                    expect(theme.hero.primary[1 - index]).toBe('#AbC')
+                    expect(theme.hero.secondary).toBe(theme.hero.primary[1])
+                }
+                expect(supplied).toEqual(snapshot)
+            }
+        })
+
+        // Execute each real consumer's pure conversion initializer, not a copied implementation.
+        const converters = [
+            '../../../../app/components/page/header/hero-image.vue',
+            '../../../../app/components/cards/media/hero.vue'
+        ].map(path => {
+            const { descriptor } = parse(readFileSync(new URL(path, import.meta.url), 'utf8'))
+            const script = ts.createSourceFile(path, descriptor.scriptSetup!.content, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS)
+            const declarations = script.statements.filter(ts.isVariableStatement)
+                .flatMap(statement => [...statement.declarationList.declarations])
+            const initializer = declarations.find(declaration => declaration.name.getText(script) === 'hexToRgb')!.initializer!
+
+            return runInNewContext(`(${initializer.getText(script)})`) as (color: string) => string
+        })
+
+        it.each([
+            ['#abc', [170, 187, 204]],
+            ['#AbC', [170, 187, 204]],
+            ['#123456', [18, 52, 86]],
+            ['#Ab12Cd', [171, 18, 205]]
+        ] as const)('resolved %s yields exact RGB channels in all three consumers', (color, channels) => {
+            for (const authored of [
+                { color: { primary: color, secondary: color } },
+                { hero: { primary: color, secondary: color } },
+                { hero: { primary: [color, color] } }
+            ]) {
+                const theme = resolveTheme({}, authored)
+                expect(theme.hero.primary).toEqual([color, color])
+                for (const slot of theme.hero.primary) {
+                    for (const convert of converters) expect(convert(slot)).toBe(channels.join(', '))
+                    expect(parseColor(slot)).toEqual({ r: channels[0], g: channels[1], b: channels[2] })
+                }
+            }
         })
     })
 
