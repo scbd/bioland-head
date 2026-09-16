@@ -287,6 +287,36 @@ describe('config-only acquire timeout (shape a)', () => {
     // release in acquireConnection was present or deleted. A connection leaked per timed-out
     // read is slow-motion pool exhaustion, which is worse than the problem shape (a) solves.
     expect(pool.state.inUse).toBe(0)
+    expect(read.failedPhase).toBe('acquire')
+  })
+})
+
+describe('failure phase attribution', () => {
+  it('keeps a slow failed query out of acquire latency instead of reporting a false near-timeout', async () => {
+    const pool = {
+      getConnection: () => Promise.resolve({
+        query: async () => {
+          await sleep(60)
+          throw Object.assign(new Error('gone away'), { code: 'ER_QUERY_INTERRUPTED' })
+        },
+        release: () => {}
+      })
+    }
+
+    const read = await timedConfigRead({
+      ...readShape,
+      pool,
+      key: { env: 'stg', multiSiteCode: 'bsl', siteCode: 'bsl-site-0001' }
+    })
+
+    expect(read.ok).toBe(false)
+    expect(read.failedPhase).toBe('query')
+    expect(read.timedOut).toBe(false)
+    // The whole 60ms used to land in acquireMs, the sole input to acquireWaitCount and
+    // acquireNearTimeoutCount, so a failing query could be reported as pool saturation.
+    expect(read.acquireMs).toBeLessThan(30)
+    expect(read.queryMs).toBeGreaterThanOrEqual(50)
+    expect(read.totalMs).toBeGreaterThanOrEqual(read.queryMs)
   })
 })
 

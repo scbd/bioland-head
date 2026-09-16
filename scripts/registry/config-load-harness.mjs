@@ -381,16 +381,23 @@ export async function acquireConnection(pool, timeoutMs) {
  * @param {number} [options.configAcquireTimeoutMs=0] - Shape (a) timeout, 0 to disable.
  * @param {Function} [options.now] - Clock returning milliseconds.
  * @param {Set<string>} [options.seenValues] - Collector for the negative control.
- * @returns {Promise<object>} Per-read record — timings and status only.
+ * @returns {Promise<object>} Per-read record — timings and status only. `failedPhase` says
+ *   which phase threw, so an acquire failure is never read as a slow query or the reverse.
  */
 export async function timedConfigRead({ pool, key, sql, params, configAcquireTimeoutMs = 0, now = () => performance.now(), seenValues }) {
   const startedAt = now()
   let connection = null
+  // Kept outside the try so the catch can still tell the two phases apart. Without it a query
+  // that fails after a fast acquire books its whole elapsed time as acquire wait, which is the
+  // single input to acquireWaitCount, acquireNearTimeoutCount and therefore detectSaturation —
+  // one slow failing query would be reported as pool saturation that never happened.
+  let acquiredAt = null
 
   try {
     connection = await acquireConnection(pool, configAcquireTimeoutMs)
 
-    const acquiredAt = now()
+    acquiredAt = now()
+
     const rows = await connection.query(sql, params(key))
     const finishedAt = now()
 
@@ -403,19 +410,22 @@ export async function timedConfigRead({ pool, key, sql, params, configAcquireTim
       rowCount: Array.isArray(rows) ? rows.length : 0,
       ok: true,
       timedOut: false,
+      failedPhase: null,
       errorCode: null
     }
   } catch (error) {
     const failedAt = now()
     const code = error?.code ?? 'UNKNOWN'
+    const failedDuringAcquire = acquiredAt === null
 
     return {
-      acquireMs: failedAt - startedAt,
-      queryMs: 0,
+      acquireMs: (failedDuringAcquire ? failedAt : acquiredAt) - startedAt,
+      queryMs: failedDuringAcquire ? 0 : failedAt - acquiredAt,
       totalMs: failedAt - startedAt,
       rowCount: 0,
       ok: false,
-      timedOut: code === 'CONFIG_ACQUIRE_TIMEOUT' || code === 'ER_GET_CONNECTION_TIMEOUT',
+      timedOut: failedDuringAcquire && (code === 'CONFIG_ACQUIRE_TIMEOUT' || code === 'ER_GET_CONNECTION_TIMEOUT'),
+      failedPhase: failedDuringAcquire ? 'acquire' : 'query',
       errorCode: code
     }
   } finally {
