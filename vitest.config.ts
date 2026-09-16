@@ -19,7 +19,10 @@ export default defineConfig({
         'server/utils/thesaurus/index.js',
         'server/api/thesaurus/[[]termIdentifier[]]/index.ts',
         'shared/utils/**/*.ts',
-        'app/utils/resolve-theme.js'
+        'app/utils/resolve-theme.js',
+        // p02-04: covers only the matching/exclusion logic; the straight-line HTTP-fetch
+        // call in main() is excluded from the coverage denominator (see task doc D14 note).
+        'scripts/thesaurus/build-iso2-country-map.mjs'
       ]
     }
   },
