@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import labelSnapshotFixture from './fixtures/label-snapshot.fixture.json'
 
 /**
  * Plain Vitest (`environment: 'node'`) with `vi.stubGlobal` for the Nitro auto-imports, matching
@@ -104,6 +105,8 @@ beforeEach(async () => {
     }
   })
   stubFetcher(fetcher)
+  // Default: flag unset -> 'api', the regression baseline every other describe block relies on.
+  vi.stubGlobal('useRuntimeConfig', () => ({ thesaurusLabelSource: undefined }))
   mod = await import('../../../../../server/utils/thesaurus/resolve-terms')
 })
 
@@ -635,5 +638,90 @@ describe('resolveAlias', () => {
     const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
     await fresh.loadAliasMaps()
     expect(fresh.resolveAlias('SDG-GOAL-01')).toBe('SDG-GOAL-01')
+  })
+})
+
+describe('resolveTerms — D12 snapshot rollback flag', () => {
+  const seedSnapshotArchive = () => assets.set('thesaurus-label-snapshot.json', JSON.stringify(labelSnapshotFixture))
+
+  it('with the flag unset, resolves via the live API path exactly like p02-01 (regression guard)', async () => {
+    const out = await mod.resolveTerms(['GBF-GOAL-A'], 'en')
+    expect(out['GBF-GOAL-A']).toEqual({ value: 'Goal A', source: 'api' })
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
+
+  it("with thesaurusLabelSource: 'snapshot', resolves from the fixture archive and never calls the live API", async () => {
+    seedSnapshotArchive()
+    vi.stubGlobal('useRuntimeConfig', () => ({ thesaurusLabelSource: 'snapshot' }))
+    vi.resetModules()
+    const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
+
+    const out = await fresh.resolveTerms(['GBF-TARGET-01'], 'fr')
+    expect(out['GBF-TARGET-01']).toEqual({ value: 'GBF-T01. Planifier', source: 'api' })
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+
+  it("caches a snapshot hit in the api tier with a one-year lifetime, same as a live-API hit", async () => {
+    seedSnapshotArchive()
+    vi.stubGlobal('useRuntimeConfig', () => ({ thesaurusLabelSource: 'snapshot' }))
+    vi.resetModules()
+    const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
+
+    await fresh.resolveTerms(['GBF-GOAL-A'], 'en')
+    const stored = store.get(fresh.buildLabelKey('api', 'GBF-GOAL-A', 'en')) as { expiresAt: number, source: string }
+    expect(stored.source).toBe('api')
+    expect(stored.expiresAt - Date.now()).toBeGreaterThan(300 * 24 * 60 * 60 * 1000)
+  })
+
+  it("degrades per D5 when the snapshot archive has no entry for the id, writing the fb tier", async () => {
+    seedSnapshotArchive()
+    vi.stubGlobal('useRuntimeConfig', () => ({ thesaurusLabelSource: 'snapshot' }))
+    vi.resetModules()
+    const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
+
+    const out = await fresh.resolveTerms(['NO-SUCH-TERM'], 'en')
+    expect(out['NO-SUCH-TERM']).toEqual({ value: 'NO-SUCH-TERM', source: 'identifier' })
+    expect(fetcher).not.toHaveBeenCalled()
+    const stored = store.get(fresh.buildLabelKey('fb', 'NO-SUCH-TERM', 'en')) as { expiresAt: number }
+    expect(stored.expiresAt - Date.now()).toBeLessThanOrEqual(60_000)
+  })
+
+  it('degrades every id per D5 when the snapshot archive itself is missing, never crashing', async () => {
+    vi.stubGlobal('useRuntimeConfig', () => ({ thesaurusLabelSource: 'snapshot' }))
+    vi.resetModules()
+    const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
+
+    const out = await fresh.resolveTerms(['GBF-GOAL-A'], 'en')
+    expect(out['GBF-GOAL-A']).toEqual({ value: 'GBF-GOAL-A', source: 'identifier' })
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+
+  it.each(['bogus', '', undefined])('falls back to the api path for an unknown flag value %j, never throwing', async (value) => {
+    seedSnapshotArchive()
+    vi.stubGlobal('useRuntimeConfig', () => ({ thesaurusLabelSource: value }))
+    vi.resetModules()
+    const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
+
+    const out = await fresh.resolveTerms(['GBF-GOAL-A'], 'en')
+    expect(out['GBF-GOAL-A']).toEqual({ value: 'Goal A', source: 'api' })
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
+
+  it('never throws when useRuntimeConfig itself throws, falling back to the api path', async () => {
+    vi.stubGlobal('useRuntimeConfig', () => { throw new Error('runtime config unavailable') })
+    vi.resetModules()
+    const fresh = await import('../../../../../server/utils/thesaurus/resolve-terms')
+
+    const out = await fresh.resolveTerms(['GBF-GOAL-A'], 'en')
+    expect(out['GBF-GOAL-A']).toEqual({ value: 'Goal A', source: 'api' })
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
+
+  it('a cache hit short-circuits before the flag is even consulted', async () => {
+    const future = Date.now() + 60_000
+    seed('api', 'GBF-GOAL-A', 'en', 'cached-value', 'api', future)
+    vi.stubGlobal('useRuntimeConfig', () => { throw new Error('must not be called') })
+    const out = await mod.resolveTerms(['GBF-GOAL-A'], 'en')
+    expect(out['GBF-GOAL-A']).toEqual({ value: 'cached-value', source: 'api' })
   })
 })

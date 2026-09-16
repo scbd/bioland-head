@@ -26,6 +26,7 @@ import type { H3Event } from 'h3';
 import { CACHE_TTL } from '#shared/utils/constants';
 import { consola } from 'consola';
 import { dataSourceConfigs } from './config';
+import { resolveFromSnapshot } from './snapshot-source';
 
 /**
  * Provenance of a resolved label.
@@ -314,6 +315,14 @@ async function writeTier(
  * write and label pick is isolated, and an unresolvable id degrades to `{ value: id, source: 'identifier' }`
  * with a warning carrying only the identifier and the locale (D5).
  *
+ * **D12 rollback flag** — `useRuntimeConfig().thesaurusLabelSource` (`NUXT_THESAURUS_LABEL_SOURCE`) selects
+ * where a cache miss is resolved from: the literal string `'snapshot'` reads {@link resolveFromSnapshot}'s
+ * committed archive instead of the live `getThesaurusByKey` API, so a production degradation is recovered
+ * by flipping an env var on the running container. Any other value — unset, a typo, an unrecognized string
+ * — safely falls back to the existing `'api'` behavior; this default is what keeps the flag byte-identical
+ * to pre-`p02-07` behavior when unset. The cache namespaces and TTLs are the same regardless of source.
+ *
+
  * @param ids    - Thesaurus identifiers (GUIDs or slugs). Non-string and empty entries are ignored.
  * @param locale - Requested locale code, e.g. `fr`.
  * @param event  - Optional H3 event, forwarded to `getThesaurusByKey` for its request-scoped cache.
@@ -383,6 +392,47 @@ export async function resolveTerms(
       else canonical.set(canonicalId, [id]);
     }
     if (canonical.size === 0) return resolved;
+
+    // D12 rollback flag: 'snapshot' reads a committed archive instead of the live API, so a production
+    // degradation is recovered by flipping an env var on the running container, no revert, no redeploy.
+    // Any value other than the literal string 'snapshot' — unset, a typo, an unrecognized string —
+    // resolves via the existing 'api' behavior below. `useRuntimeConfig` is wrapped because a config
+    // failure must degrade to the always-safe default, never bubble up through this never-throw function.
+    let labelSource: 'api' | 'snapshot' = 'api';
+    try {
+      if (useRuntimeConfig().thesaurusLabelSource === 'snapshot') labelSource = 'snapshot';
+    } catch {
+      /* config unavailable — fall back to the api path */
+    }
+
+    if (labelSource === 'snapshot') {
+      // The three cache namespaces and TTLs are unaffected by this flag — only *where the value comes
+      // from on a miss* changes, never how it's cached. A snapshot hit is written to the `api` tier with
+      // the same 1-year lifetime as a live-API hit; a snapshot miss degrades through the same `degrade`
+      // helper (D5) as the live-API path, into the `fb` tier.
+      let snapshotResults: Record<string, ResolvedLabel>;
+      try {
+        snapshotResults = await resolveFromSnapshot([...canonical.keys()], loc);
+      } catch {
+        snapshotResults = Object.create(null);
+      }
+      for (const [canonicalId, requestedIds] of canonical) {
+        const label = snapshotResults[canonicalId];
+        for (const id of requestedIds) {
+          try {
+            if (label && label.source !== 'identifier') {
+              resolved[id] = label;
+              await writeTier(storage, 'api', id, loc, label, now + ONE_YEAR_MS);
+            } else {
+              await degrade(storage, id, loc, now, resolved, 'resolveTerms: snapshot has no entry for identifier');
+            }
+          } catch {
+            await degrade(storage, id, loc, now, resolved);
+          }
+        }
+      }
+      return resolved;
+    }
 
     // Pass 2 — one batch fetch for everything still missing.
     const byIdentifier = await fetchByIdentifier([...canonical.keys()], event);
