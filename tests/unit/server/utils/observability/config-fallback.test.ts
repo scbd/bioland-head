@@ -140,6 +140,22 @@ describe('the documented 5-minute clustering query', () => {
 
   const at = () => emitted().map(record => new Date(record.at).getTime()).sort((a, b) => a - b);
 
+  /** Same as `at()`, but keeping the fleet each timestamp belongs to. */
+  const atByFleet = () => emitted()
+    .map(record => ({ ms: new Date(record.at).getTime(), fleet: `${record.env}:${record.multiSiteCode}` }))
+    .sort((a, b) => a.ms - b.ms);
+
+  /**
+   * What `| filter env=<env> and multiSiteCode=<multiSiteCode> | sort at | delta = at -
+   * prev(at) | filter delta < 5m` computes — adjacency within one fleet only.
+   */
+  const violationsByAdjacencyScoped = (env: string, multiSiteCode: string) => {
+    const fleet = `${env}:${multiSiteCode}`;
+    const times = atByFleet().filter(row => row.fleet === fleet).map(row => row.ms);
+
+    return times.filter((ms, index) => index > 0 && ms - times[index - 1] < FIVE_MINUTES).length;
+  };
+
   /** What `| bin(at, 5m) | stats count(*) by window | filter inWindow > 1` computes. */
   const violationsByWallClockBin = () => {
     const bins = new Map<number, number>();
@@ -197,6 +213,24 @@ describe('the documented 5-minute clustering query', () => {
     });
 
     expect(violationsByAdjacency()).toBe(0);
+  });
+
+  /**
+   * Query 1 (the gate count) scopes to `env=<env> and multiSiteCode=<multiSiteCode>` before
+   * grouping by reason. Query 3 must scope the same way before sorting and diffing, or two
+   * unrelated events from two different fleets — e.g. `stg/bl2` and `prod/bsl` — landing
+   * within 5 minutes of each other read as a false clustering violation and can block a
+   * rollout that never actually clustered within either fleet.
+   */
+  it('two events from different env/multiSiteCode fleets 30 seconds apart are not a real cluster', () => {
+    vi.setSystemTime(new Date('2026-09-15T12:04:50.000Z'));
+    recordConfigFallback({ ...base, env: 'stg', multiSiteCode: 'bl2' });
+    vi.setSystemTime(new Date('2026-09-15T12:05:20.000Z'));
+    recordConfigFallback({ ...base, env: 'prod', multiSiteCode: 'bsl' });
+
+    expect(violationsByAdjacency()).toBe(1);
+    expect(violationsByAdjacencyScoped('stg', 'bl2')).toBe(0);
+    expect(violationsByAdjacencyScoped('prod', 'bsl')).toBe(0);
   });
 });
 

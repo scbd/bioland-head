@@ -77,10 +77,14 @@ import type {
  * field is what makes clause 2 answerable, but a `bin(at, 5m)` bucketing answers a
  * different question: `12:04:50` and `12:05:20` are 30 seconds apart yet land in
  * different bins, each with a count of one, so a boundary-straddling pair — roughly half
- * of all genuine violations — reads as clean. Sort and diff consecutive events instead:
+ * of all genuine violations — reads as clean. Sort and diff consecutive events instead —
+ * scoped to the same fleet as query 1, or an unrelated pair of events from two different
+ * `env`/`multiSiteCode` deployments landing within 5 minutes of each other reads as a
+ * false clustering violation:
  *
  * ```
  * event="config.source.fallback" and reason="registry-unreachable"
+ *   | filter env=<env> and multiSiteCode=<multiSiteCode>
  *   | sort at
  *   | delta = at - prev(at)
  *   | filter delta < 5m
