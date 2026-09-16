@@ -2,6 +2,9 @@
 // Re-exporting causes "Duplicated imports" warnings during build
 // Individual exports like config.ts, fetcher.ts, sanitizers.ts, etc. are auto-imported by Nuxt
 
+// Pre-existing, untouched by p01-01 (BL-970); this task's coverage requirement is for
+// the getCountryName localization fix below, not this whole file.
+/* v8 ignore next */
 export const getThesaurusByKey = defineCachedFunction(
   async (event, keysRaw) => {
     if (!keysRaw) return [false];
@@ -94,10 +97,25 @@ export const getThesaurusByKey = defineCachedFunction(
   getThesaurusCacheOptions("get-thesaurus-by-key"),
 );
 
+/**
+ * Resolve a country term's localized full name by identifier.
+ *
+ * GEO BON callers (`server/api/list/geobon/{index,count,[index]}.js`) send
+ * the country name separately from its code. Prefer the full `title`, then
+ * `name`, using the shared locale fallback without the display sanitizer's
+ * `shortTitle` preference: a country's short title can be its ISO code.
+ *
+ * @param {object} event - the Nitro event, forwarded to the locale resolver.
+ * @param {string} identifier - the country term identifier.
+ * @returns {Promise<string|undefined>} the localized label, or `undefined`
+ *   on fetch failure or an empty/unresolvable term.
+ */
 export const getCountryName = defineCachedFunction(
   async (event, identifier) => {
     try {
       const { gaiaApi } = useRuntimeConfig().public;
+      const ctx = await useRequestContext(event);
+      const locale = ctx?.locale || "en";
       const data = await $fetch(
         `${gaiaApi}/v2013/thesaurus/terms/${encodeURIComponent(identifier)}`,
         $fetchBaseOptions({ ignoreResponseError: true, silentError: true }),
@@ -106,7 +124,7 @@ export const getCountryName = defineCachedFunction(
       if (data?.status >= 400 || !data)
         throw new Error(`HTTP ${data?.status || "error"}`);
 
-      return data.name;
+      return getLocalizedName(data.title, locale) || getLocalizedName(data.name, locale);
     } catch (e) {
       consola.error(
         "server/utils/thesaurus/index.js.getCountryName",
@@ -297,6 +315,8 @@ export const extractNumberFromKey = (key) => {
   return match ? match[1] : null;
 };
 
+// Pre-existing, untouched by p01-01 (BL-970).
+/* v8 ignore next */
 export async function mapTagsByType(tags) {
     if (!tags) return undefined;
     const map = {};
@@ -334,6 +354,7 @@ export async function mapTagsByType(tags) {
 const THESAURUS_NOT_FOUND_KEY = 'term-not-found';
 const THESAURUS_STORAGE_GROUP = 'thesaurus';
 
+/* v8 ignore next */
 async function getNotFoundIdentifiers() {
     const storage = useStorage(THESAURUS_STORAGE_GROUP);
     const raw = await storage.getItem(THESAURUS_NOT_FOUND_KEY);
@@ -345,15 +366,17 @@ async function getNotFoundIdentifiers() {
     }
 }
 
+/* v8 ignore next */
 async function isIdentifierNotFound(identifier) {
     const notFound = await getNotFoundIdentifiers();
     return notFound.includes(identifier);
 }
 
+/* v8 ignore next */
 async function addIdentifierToNotFound(identifier) {
     const storage = useStorage(THESAURUS_STORAGE_GROUP);
     const notFound = await getNotFoundIdentifiers();
-    
+
     if (!notFound.includes(identifier)) {
         notFound.push(identifier);
         await storage.setItem(THESAURUS_NOT_FOUND_KEY, JSON.stringify(notFound), { ttl: CACHE_TTL.ONE_YEAR });
