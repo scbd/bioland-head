@@ -33,12 +33,21 @@ const body = {
   bl2: {
     config: {
       multiSiteCode: 'bl2',
+      // `name` and `baseHost` are both required by seedSlice's preflight:
+      // readMultiSiteConfig throws on either being NULL, so a slice seeded
+      // without them reports success and then reads back as a hard failure.
+      name: 'Bioland 2',
       baseHost: 'example.test',
       defaultLocale: 'en',
       locales: ['en'],
       dataBase: { password: DUMMY_DB_PASSWORD },
     },
-    sites: { be: { siteCode: 'be', country: 'BE' }, gt: { siteCode: 'gt', country: 'GT' } },
+    // Sites carry their own name/defaultLocale/locales — they are not inherited
+    // from `config`, and seedSlice refuses a site missing any of the three.
+    sites: {
+      be: { siteCode: 'be', name: 'Belgium', country: 'BE', defaultLocale: 'en', locales: ['en'] },
+      gt: { siteCode: 'gt', name: 'Guatemala', country: 'GT', defaultLocale: 'en', locales: ['en'] },
+    },
   },
 }
 
@@ -410,6 +419,39 @@ describe('runDriftCheck outcomes', () => {
     expect(sql).toMatch(/WHERE env = \? AND multi_site_code = \?/)
     expect(sql).toMatch(/site_code NOT IN \(\?, \?\)/)
     expect(params).toEqual(['stg', 'bl2', 'be', 'gt'])
+  })
+
+  it('opens exactly one transaction and issues exactly one prune for the whole apply', async () => {
+    // MariaDB has no nested transactions. When the seeder opened its own, its
+    // START TRANSACTION implicitly committed this one and its COMMIT committed
+    // the seed — so the rollback below became a no-op and the stale-config race
+    // was back. A second DELETE was the same symptom at the prune: two
+    // statements, with `retired` reporting the second one's 0.
+    const { connection, statements } = fakeConnection({ retiredRows: 1 })
+    const alert = await runDriftCheck({}, deps({ connect: async () => connection }))
+
+    expect(alert.outcome).toBe('reseeded')
+    expect(statements.filter(sql => sql === 'START TRANSACTION')).toHaveLength(1)
+    expect(statements.filter(sql => sql === 'COMMIT')).toHaveLength(1)
+    expect(statements.filter(sql => RETIRE.test(sql))).toHaveLength(1)
+    // The real count reaches the operator rather than being masked by a second
+    // delete that finds nothing left to remove.
+    expect(alert.rows).toEqual({ multiSites: 1, sites: 2, retired: 1 })
+  })
+
+  it('rolls the row writes back when the apply does not commit, with no inner commit to defeat it', async () => {
+    const { connection, statements } = fakeConnection({ commitRows: 0, retiredRows: 1 })
+    const alert = await runDriftCheck({}, deps({ connect: async () => connection }))
+
+    expect(alert.outcome).toBe('reseed-uncommitted')
+    // A nested COMMIT anywhere would have made the rollback cosmetic.
+    expect(statements).not.toContain('COMMIT')
+    expect(statements.filter(sql => sql === 'START TRANSACTION')).toHaveLength(1)
+
+    const rollback = statements.indexOf('ROLLBACK')
+    statements.forEach((sql, index) => {
+      if (/^INSERT INTO/.test(sql) || RETIRE.test(sql)) expect(index).toBeLessThan(rollback)
+    })
   })
 
   it('retires nothing when the new plan has no sites at all', async () => {
