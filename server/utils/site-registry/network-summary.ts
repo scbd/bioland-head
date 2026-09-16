@@ -723,6 +723,12 @@ export async function buildNetworkSummary(
  * per row would hold a connection from the shared 5-connection pool for 2000
  * sequential round trips while the translation workload waits on the same pool.
  *
+ * **Privileges.** This is the only registry path that inserts or deletes, so it
+ * is the only one `SELECT`/`UPDATE` on `site_registry.*` does not cover: it also
+ * needs `INSERT, DELETE` on `network_summary` specifically. Without that grant
+ * every accepted push rolls back access-denied. `server/assets/schema.sql`
+ * carries the provisioning contract.
+ *
  * Driver errors are wrapped so a mariadb `SqlError` — which can echo bound
  * parameter values — never propagates its own message into a log.
  *

@@ -8,7 +8,11 @@
  * server as `i18n_cache` (ADR 0008), reached over the existing shared pool with
  * cross-database qualified names. No new credentials, no new env vars, and no
  * second pool — the only operational prerequisite is a grant on
- * `site_registry.*` for the existing `I18N_DB_USER`.
+ * `site_registry` for the existing `I18N_DB_USER`. Grants are database-scoped in
+ * MariaDB, so the existing `i18n_cache` access carries none of it;
+ * `server/assets/schema.sql` documents the exact set, which is `SELECT, UPDATE`
+ * on the database plus `INSERT, DELETE` on `network_summary` alone for the
+ * ingest path.
  *
  * ## Timeout behaviour (C13) — read this before "fixing" it
  *
