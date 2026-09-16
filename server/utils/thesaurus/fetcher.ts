@@ -2,7 +2,7 @@
  * Thesaurus Data Fetcher (Refactored)
  * Simplified fetcher using unified config
  */
-import { dataSourceConfigs, searchableDomains, isValidDomain } from './config';
+import { searchableDomains, isValidDomain, getApiUrl } from './config';
 import { sanitizeItems, getSanitizer } from './sanitizers';
 import { ecosystemTypes } from './ecosystems';
 import { documentStates, orgTypeOther, gbfTargets } from './static-data';
@@ -25,11 +25,11 @@ const staticData: Record<string, any[]> = {
 
 /** Fetch from API */
 async function fetchFromApi(domain: string, locale = 'en'): Promise<SanitizedItem[]> {
-  const config = dataSourceConfigs[domain];
-  if (!config?.url) return [];
+  const url = getApiUrl(domain);
+  if (!url) return [];
 
   try {
-    const data = await $fetch<any[]>(config.url, $fetchBaseOptions());
+    const data = await $fetch<any[]>(url, $fetchBaseOptions());
     if (!Array.isArray(data)) return [];
     
     let result = sanitizeItems(data, domain, locale);
