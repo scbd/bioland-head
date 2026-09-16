@@ -57,13 +57,13 @@
  * exactly the silent failure this task exists to prevent. A failed re-seed
  * leaves `source_hash` at its old value, so the next run retries.
  *
- * Inside the commit the same rule applies one level down. The multiSite
+ * Inside the apply the same rule applies one level down. The multiSite
  * `source_hash` is the only value that gates re-detection, so it is written
- * **last** and the pair runs in one transaction: written first, a crash before
- * the second statement would leave the slice row claiming to be current while
- * the site rows carried the old generation, and no later tick would re-detect
- * it. The commit is also **verified** — a zero-row match means the claim was
- * lost or the row is gone, so the hash never landed, and that is
+ * **last**, and the row writes run in the same transaction: written first, a
+ * crash before the remaining statements would leave the slice row claiming to
+ * be current while the site rows were stale, and no later tick would re-detect
+ * it. The hash write is also **verified** — a zero-row match means the claim was
+ * lost or the row is gone, so nothing is committed at all, and that is
  * `reseed-uncommitted`, not `reseeded`.
  *
  * ## Concurrency
@@ -73,11 +73,19 @@
  * needs no new primitive: a conditional `UPDATE` that bumps `config_generation`
  * only while it still equals the value this run read **and** `source_hash` still
  * differs. Among racers that read the *same* generation, exactly one update
- * affects a row. That is weaker than mutual exclusion: a re-seed that overruns
- * the interval lets the next tick read generation G+1 and claim it while the
- * first is still writing. The writes are idempotent upserts of the same derived
- * rows so they converge, but a lease column would be the stronger guard if that
- * ever stops being true.
+ * affects a row.
+ *
+ * That is weaker than mutual exclusion, and deliberately so. A run that starts
+ * after the first claim but before its commit reads the already-bumped
+ * generation while `source_hash` is still old, so the predicate lets it claim
+ * the slice too. Exclusivity is therefore **not** what keeps the registry
+ * consistent — the second half of the guard is: the row writes and the hash
+ * publication happen in **one transaction** (`applyReseed`), whose last
+ * statement re-checks the claimed generation. Whichever racer loses that check
+ * rolls its own writes back, so the surviving rows are always the ones whose
+ * hash was published, even when the two runs saw different source content.
+ * A lease column would let the loser skip the wasted work, but it is not needed
+ * for correctness.
  *
  * A lost claim is not assumed to be a lost race. The slice is re-read: if a
  * racer really did win, its hash is now stored and this run reports
@@ -424,11 +432,12 @@ export async function readSliceState(
  * Take the single-writer claim by bumping the generation, but only while the
  * row still looks the way this run read it.
  *
- * A failed re-seed leaves the bump in place. That is deliberate: a re-seed can
- * fail part-written, so rows really may have changed, and rolling the counter
- * back would tell a future consumer that nothing happened when something did.
- * `source_hash` — not the generation — is what gates re-detection, so the retry
- * loop is unaffected. The cost is that a persistently failing slice inflates the
+ * A failed re-seed leaves the bump in place. That is deliberate, and load-
+ * bearing: the bump is what makes a racer's own claimed generation stale, so
+ * `applyReseed`'s final check can reject it and roll its writes back. Rolling
+ * the counter back on failure would hand that racer a claim that still looks
+ * current. `source_hash` — not the generation — is what gates re-detection, so
+ * the retry loop is unaffected. The cost is that a persistently failing slice inflates the
  * counter by one per tick, which a `BIGINT` absorbs for far longer than this
  * system will exist; a consumer that ever treats a bump as "invalidate caches"
  * must pair the generation with `source_hash` rather than trust it alone.
@@ -451,28 +460,58 @@ export async function claimReseed(
   return affectedRows(result) > 0
 }
 
+/** What one apply did: whether the drift key landed, and what it wrote. */
+export interface ReseedResult { committed: boolean, rows: { multiSites: number, sites: number } }
+
 /**
- * Record the new hash — called only after the re-seed succeeded.
+ * Apply the whole re-seed — **row writes and hash publication in one
+ * transaction** — and report whether the drift key landed.
  *
- * Both statements run in one transaction, site rows first and the multiSite
- * `source_hash` last, because that hash is the only value that gates
- * re-detection: written first, a crash before the second statement would leave
- * the slice permanently claiming to be current while its site rows were stale,
- * and no later tick would notice. Written last and transactionally, every crash
- * point leaves `source_hash` old and the next tick retries.
+ * ## Why the seed itself is inside the transaction
  *
- * @returns `false` when the multiSite update matched no row — the claim was lost
- *   or the row is gone, so nothing was committed and the drift key is unchanged.
+ * The claim is not mutual exclusion (see `claimReseed`), so two runs can hold
+ * what each believes is the claim: the second reads the already-bumped
+ * generation while `source_hash` is still the old value, which satisfies the
+ * claim predicate a second time. If the row writes were autocommitted outside
+ * this transaction, the loser could overwrite the winner's rows *after* the
+ * winner published its hash — leaving the registry with the loser's row
+ * contents under the winner's `source_hash`, which every later tick reads as
+ * `no-drift`. Stale forever, silently, which is the exact failure this task
+ * exists to prevent.
+ *
+ * Wrapping the seed makes the loser harmless instead: its generation check
+ * fails, the whole apply rolls back, and its row writes are undone. Exactly one
+ * racer's writes ever survive, and they are the ones whose hash is stored.
+ *
+ * Racers serialise on the site rows in plan order, so they block rather than
+ * deadlock; a deadlock the engine does break surfaces as a scrubbed error,
+ * becomes `reseed-failed`, and the next tick retries.
+ *
+ * ## Why the hash is written last
+ *
+ * The multiSite `source_hash` is the only value that gates re-detection:
+ * written first, a crash before the remaining statements would leave the slice
+ * permanently claiming to be current while its rows were stale, and no later
+ * tick would notice. Written last, every crash point leaves `source_hash` old
+ * and the next tick retries.
+ *
+ * @returns `committed: false` when the multiSite update matched no row — the
+ *   claim was lost or the row is gone. Nothing persisted: the rows rolled back
+ *   with the hash, so `rows` describes what was attempted and discarded.
  */
-export async function commitReseed(
+export async function applyReseed(
   connection: SeedConnectionLike,
-  env: string,
-  multiSiteCode: string,
+  plan: SeedPlan,
   generation: number,
   hash: string,
-): Promise<boolean> {
+  seed: typeof seedSlice = seedSlice,
+): Promise<ReseedResult> {
+  const { env, multiSiteCode } = plan.multiSite
+
   await connection.query('START TRANSACTION')
   try {
+    const rows = await seed(connection, plan)
+
     await connection.query(
       `UPDATE ${SITE_TABLE} SET config_generation = config_generation + 1, source_hash = ?
         WHERE env = ? AND multi_site_code = ?`,
@@ -486,11 +525,11 @@ export async function commitReseed(
 
     if (affectedRows(result) < 1) {
       await connection.query('ROLLBACK')
-      return false
+      return { committed: false, rows }
     }
 
     await connection.query('COMMIT')
-    return true
+    return { committed: true, rows }
   }
   catch (error) {
     await connection.query('ROLLBACK').catch(() => {})
@@ -607,10 +646,12 @@ export async function runDriftCheck(
       return alertOf('claim-failed', at, { ...drifted, configGeneration: after?.configGeneration ?? null })
     }
 
+    // Rows and hash apply together or not at all, so a racer that lost the
+    // generation cannot leave its rows behind under the winner's hash.
     const generation = state.configGeneration + 1
-    let rows: { multiSites: number, sites: number }
+    let applied: ReseedResult
     try {
-      rows = await seedSlice(connection, plan)
+      applied = await applyReseed(connection, plan, generation, hash.hash)
     }
     catch (error) {
       return alertOf('reseed-failed', at, {
@@ -620,25 +661,14 @@ export async function runDriftCheck(
       })
     }
 
-    // Only now is the hash safe to store: a failure above leaves it at the old
-    // value so the next tick retries instead of believing itself finished.
-    try {
-      const committed = await commitReseed(connection, env, multiSiteCode, generation, hash.hash)
-      if (committed) return alertOf('reseeded', at, { ...drifted, configGeneration: generation, rows })
+    if (applied.committed) {
+      return alertOf('reseeded', at, { ...drifted, configGeneration: generation, rows: applied.rows })
+    }
 
-      // The rows were written but the drift key was not, so the next tick sees
-      // the same drift and re-applies. Never `reseeded`: the one write the whole
-      // design rests on did not land.
-      return alertOf('reseed-uncommitted', at, { ...drifted, configGeneration: generation, rows })
-    }
-    catch (error) {
-      return alertOf('reseed-failed', at, {
-        ...drifted,
-        configGeneration: generation,
-        rows,
-        failureClass: scrubFailureClass(error),
-      })
-    }
+    // The drift key did not land, so the rows rolled back with it and the next
+    // tick sees the same drift. Never `reseeded`, and `rows` stays null because
+    // nothing persisted.
+    return alertOf('reseed-uncommitted', at, { ...drifted, configGeneration: generation })
   }
   finally {
     await connection.end().catch(() => {})

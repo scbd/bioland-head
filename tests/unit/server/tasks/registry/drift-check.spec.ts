@@ -379,6 +379,47 @@ describe('runDriftCheck outcomes', () => {
     // Rolled back, so the site rows do not keep a hash the slice row never got.
     expect(statements).toContain('ROLLBACK')
     expect(statements).not.toContain('COMMIT')
+    // Nothing persisted, so the alert must not claim rows were written.
+    expect(alert.rows).toBeNull()
+  })
+
+  it('rolls the seed back with the hash when a racer took the generation first', async () => {
+    // The claim is not mutual exclusion: a second container can read the bumped
+    // generation while source_hash is still old and claim the same slice. If its
+    // row writes were autocommitted it could overwrite the winner's rows after
+    // the winner published its hash, leaving old contents under a current hash —
+    // no-drift forever. The seed must be inside the transaction the generation
+    // check guards.
+    const { connection, statements } = fakeConnection({ commitRows: 0 })
+    const alert = await runDriftCheck({}, deps({ connect: async () => connection }))
+
+    expect(alert.outcome).toBe('reseed-uncommitted')
+
+    const begin = statements.indexOf('START TRANSACTION')
+    const insert = statements.findIndex(sql => /^INSERT INTO/.test(sql))
+    const rollback = statements.indexOf('ROLLBACK')
+
+    expect(insert).toBeGreaterThan(begin)
+    expect(rollback).toBeGreaterThan(insert)
+    expect(statements).not.toContain('COMMIT')
+  })
+
+  it('never leaves seeded rows outside the transaction the hash write guards', async () => {
+    const { connection, statements } = fakeConnection()
+    await runDriftCheck({}, deps({ connect: async () => connection }))
+
+    const open = statements.indexOf('START TRANSACTION')
+    const close = statements.indexOf('COMMIT')
+
+    expect(open).toBeGreaterThanOrEqual(0)
+    expect(close).toBeGreaterThan(open)
+    // Every row write sits between the two, so a lost generation undoes them all.
+    statements.forEach((sql, index) => {
+      if (/^INSERT INTO|^UPDATE \S+\.site_config/.test(sql)) {
+        expect(index).toBeGreaterThan(open)
+        expect(index).toBeLessThan(close)
+      }
+    })
   })
 
   it('commits the drift key transactionally, and writes it last', async () => {
