@@ -252,6 +252,34 @@ function labelStorage(): ReturnType<typeof useStorage> | null {
   }
 }
 
+/**
+ * Locale allowlist gate for background translation (p04-01 security fix, BL-1004).
+ *
+ * `enqueueTranslation` drives a billed AWS Translate call, and this function's `loc` argument is
+ * caller-supplied with only a `.trim()` (see {@link resolveTerms}). Without a gate, an unauthenticated
+ * caller can walk every `(id, locale)` pair through a real AWS call — not `checkSupportedLocales`
+ * (`server/utils/translate/index.js`), which only proves AWS *can* translate a locale, so it still lets
+ * a caller sweep across all ~75 AWS-supported languages. What actually bounds the blast radius is the
+ * requesting site's own configured locale list ({@link SiteContext.locales}, sourced from DMSM
+ * `bioland.settings` and typically far narrower than AWS's catalogue) — a locale the site never serves
+ * has no legitimate reason to be translated on its behalf. `checkSupportedLocales` is reused instead as
+ * the defense-in-depth gate inside `enqueueTranslation` itself, where "is this an AWS-supported locale"
+ * is exactly the right question (see `translation-queue.ts`).
+ *
+ * Fails closed: no `event` (a direct/unit-test caller) or a `useRequestContext` failure both resolve to
+ * `false` rather than guessing a locale is fine — `01.context.ts` middleware has already resolved and
+ * cached `event.context.site` for every real request, so this is a cache hit, not a fresh DMSM fetch.
+ */
+async function isLocaleAllowedForSite(event: H3Event | undefined, locale: string): Promise<boolean> {
+  if (!event) return false;
+  try {
+    const ctx = await useRequestContext(event);
+    return Array.isArray(ctx?.locales) && ctx.locales.includes(locale);
+  } catch {
+    return false;
+  }
+}
+
 /** Read one tier. Returns `null` on a miss, an expired envelope, a malformed envelope, or any error. */
 async function readTier(
   storage: ReturnType<typeof useStorage> | null,
@@ -275,7 +303,7 @@ async function readTier(
 }
 
 /** Write one tier, write-behind style. A storage failure must never surface to the caller. */
-async function writeTier(
+export async function writeTier(
   storage: ReturnType<typeof useStorage> | null,
   tier: CacheTier,
   id: string,
@@ -340,6 +368,11 @@ export async function resolveTerms(
     const storage = labelStorage();
     await loadAliasMaps();
 
+    // Computed at most once per call, and only if a fallback branch below actually needs it — most
+    // calls resolve every id from cache or the `api` tier and never reach the translation seam.
+    let localeAllowed: Promise<boolean> | undefined;
+    const getLocaleAllowed = (): Promise<boolean> => (localeAllowed ??= isLocaleAllowedForSite(event, loc));
+
     // Pass 1 — cache. Reads fan out across ids (this sits on the SSR critical path from p02-06 on, and the
     // sequential form cost up to 3N round trips before the batch fetch could even start); the tiers stay
     // ordered per id so a hit on `api` never pays for a `tr`/`fb` read.
@@ -400,9 +433,14 @@ export async function resolveTerms(
           if (english) {
             resolved[id] = { value: english, source: 'fallback' };
             await writeTier(storage, 'fb', id, loc, resolved[id], now + ONE_MINUTE_MS);
-            // Fire-and-forget: enqueueTranslation's contract guarantees it never rejects, so this
-            // never needs an await or a .catch() — see translation-queue.ts (p04-01).
-            void enqueueTranslation(id, loc, english);
+            // Gated on the requesting site's own configured locales (BL-1004) — see
+            // isLocaleAllowedForSite's doc comment for why the site allowlist, not
+            // checkSupportedLocales, is the right gate here. Fire-and-forget: enqueueTranslation's
+            // contract guarantees it never rejects, so this never needs an await or a .catch() — see
+            // translation-queue.ts (p04-01).
+            if (await getLocaleAllowed()) {
+              void enqueueTranslation(id, loc, english);
+            }
             continue;
           }
           await degrade(storage, id, loc, now, resolved, 'resolveTerms: no usable label field');

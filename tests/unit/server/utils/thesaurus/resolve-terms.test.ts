@@ -5,6 +5,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
  * `tests/unit/server/utils/context.test.js`. There is no `@nuxt/test-utils` runtime harness in this repo.
  */
 
+// `enqueueTranslation` is mocked at the module boundary so the BL-1004 allowlist-gate tests below can
+// assert whether it was called without a real AWS/DB call ever firing.
+const enqueueTranslation = vi.fn()
+vi.mock('../../../../../server/utils/thesaurus/translation-queue', () => ({
+  enqueueTranslation: (...args: unknown[]) => enqueueTranslation(...args)
+}))
+
 // --- fixtures: the four live response shapes (see phase-02/context.md § Live API facts) -----------------
 /** 6-language coverage. */
 const SIX_LANG = {
@@ -80,6 +87,7 @@ beforeEach(async () => {
   })
   vi.stubGlobal('consola', { warn, error: vi.fn(), debug: vi.fn(), info: vi.fn() })
   vi.stubGlobal('getThesaurusByKey', fetcher)
+  enqueueTranslation.mockReset()
   mod = await import('../../../../../server/utils/thesaurus/resolve-terms')
 })
 
@@ -234,6 +242,47 @@ describe('resolveTerms — cache namespaces and TTL', () => {
     )
     const out = await mod.resolveTerms(['GBF-GOAL-A'], 'en')
     expect(out['GBF-GOAL-A']).toEqual({ value: 'from-string', source: 'api' })
+  })
+})
+
+describe('resolveTerms — background translation is gated on the site allowlist (BL-1004)', () => {
+  it('never enqueues a translation when no event is available (fails closed)', async () => {
+    const out = await mod.resolveTerms(['GBF-GOAL-A'], 'fr')
+    expect(out['GBF-GOAL-A']).toEqual({ value: 'Goal A', source: 'fallback' })
+    expect(enqueueTranslation).not.toHaveBeenCalled()
+  })
+
+  it('enqueues a translation when the requested locale is in the site\'s configured locales', async () => {
+    vi.stubGlobal('useRequestContext', vi.fn(async () => ({ locales: ['en', 'fr', 'es'] })))
+    const event = { path: '/fr' } as never
+    const out = await mod.resolveTerms(['GBF-GOAL-A'], 'fr', event)
+    expect(out['GBF-GOAL-A']).toEqual({ value: 'Goal A', source: 'fallback' })
+    expect(enqueueTranslation).toHaveBeenCalledWith('GBF-GOAL-A', 'fr', 'Goal A')
+  })
+
+  it('never enqueues a translation for a locale outside the site\'s configured locales', async () => {
+    vi.stubGlobal('useRequestContext', vi.fn(async () => ({ locales: ['en', 'es'] })))
+    const event = { path: '/fr' } as never
+    const out = await mod.resolveTerms(['GBF-GOAL-A'], 'fr', event)
+    expect(out['GBF-GOAL-A']).toEqual({ value: 'Goal A', source: 'fallback' })
+    expect(enqueueTranslation).not.toHaveBeenCalled()
+  })
+
+  it('fails closed when useRequestContext itself throws', async () => {
+    vi.stubGlobal('useRequestContext', vi.fn(async () => { throw new Error('dmsm unreachable') }))
+    const event = { path: '/fr' } as never
+    const out = await mod.resolveTerms(['GBF-GOAL-A'], 'fr', event)
+    expect(out['GBF-GOAL-A']).toEqual({ value: 'Goal A', source: 'fallback' })
+    expect(enqueueTranslation).not.toHaveBeenCalled()
+  })
+
+  it('resolves the site allowlist once per call even across multiple ids needing translation', async () => {
+    const useRequestContext = vi.fn(async () => ({ locales: ['en', 'fr'] }))
+    vi.stubGlobal('useRequestContext', useRequestContext)
+    const event = { path: '/fr' } as never
+    await mod.resolveTerms(['GBF-GOAL-A', 'REGION-AFR-MIDDLE'], 'fr', event)
+    expect(useRequestContext).toHaveBeenCalledTimes(1)
+    expect(enqueueTranslation).toHaveBeenCalledTimes(2)
   })
 })
 

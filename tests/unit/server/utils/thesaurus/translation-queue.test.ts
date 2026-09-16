@@ -10,11 +10,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const translateWithAws = vi.fn()
 const saveCachedTranslations = vi.fn()
 const getCacheKey = vi.fn((text: string) => text)
+const checkSupportedLocales = vi.fn()
 
 vi.mock('../../../../../server/utils/translate/index.js', () => ({
   translateWithAws: (...args: unknown[]) => translateWithAws(...args),
   saveCachedTranslations: (...args: unknown[]) => saveCachedTranslations(...args),
-  getCacheKey: (...args: unknown[]) => getCacheKey(...args)
+  getCacheKey: (...args: unknown[]) => getCacheKey(...args),
+  checkSupportedLocales: (...args: unknown[]) => checkSupportedLocales(...args)
 }))
 
 /** Flush both microtasks and any pending macrotask hop (storage/DB mocks resolve immediately). */
@@ -47,6 +49,10 @@ beforeEach(async () => {
   saveCachedTranslations.mockReset()
   getCacheKey.mockReset()
   getCacheKey.mockImplementation((text: string) => text)
+  checkSupportedLocales.mockReset()
+  // Default: every requested locale is AWS-supported, so the existing suite's `fr` pairs are
+  // unaffected by the BL-1004 locale-support gate unless a test overrides this.
+  checkSupportedLocales.mockImplementation((locales: string[]) => Promise.resolve({ supported: locales, unsupported: [] }))
 
   queue = await import('../../../../../server/utils/thesaurus/translation-queue')
   ;({ buildLabelKey } = await import('../../../../../server/utils/thesaurus/resolve-terms'))
@@ -79,14 +85,20 @@ describe('enqueueTranslation — in-flight dedupe', () => {
     expect(translateWithAws).toHaveBeenCalledTimes(2)
   })
 
-  it('leaves no lingering in-flight entry after a failure settles, so a later call re-fires AWS', async () => {
+  it('leaves no lingering in-flight entry after a failure settles, so a later call past the backoff window re-fires AWS', async () => {
+    // The BL-1004 negative cache (see the dedicated describe block below) intentionally suppresses an
+    // immediate re-fire right after a failure; this test instead proves the separate `inFlight`
+    // dedupe map itself never leaks a "busy" entry, by advancing past the backoff window first.
+    vi.useFakeTimers()
     translateWithAws.mockRejectedValueOnce(new Error('aws down')).mockResolvedValueOnce('traduit')
     saveCachedTranslations.mockResolvedValue(undefined)
 
     await queue.enqueueTranslation('GBF-GOAL-A', 'fr', 'Goal A')
+    vi.advanceTimersByTime(queue.FAILURE_BACKOFF_MS + 1)
     await queue.enqueueTranslation('GBF-GOAL-A', 'fr', 'Goal A')
 
     expect(translateWithAws).toHaveBeenCalledTimes(2)
+    vi.useRealTimers()
   })
 })
 
@@ -192,5 +204,102 @@ describe('enqueueTranslation — bounded queue depth', () => {
       id: `overflow-${queue.MAX_TRANSLATION_QUEUE_DEPTH}`,
       locale: 'fr'
     })
+  })
+})
+
+describe('enqueueTranslation — AWS locale-support gate (BL-1004)', () => {
+  it('never calls translateWithAws for a locale AWS does not support', async () => {
+    checkSupportedLocales.mockResolvedValue({ supported: [], unsupported: ['xx'] })
+
+    await expect(queue.enqueueTranslation('GBF-GOAL-A', 'xx', 'Goal A')).resolves.toBeUndefined()
+
+    expect(translateWithAws).not.toHaveBeenCalled()
+    expect(warn).toHaveBeenCalledWith('translation-queue: locale not supported by AWS Translate, skipping', {
+      id: 'GBF-GOAL-A',
+      locale: 'xx'
+    })
+  })
+
+  it('never calls translateWithAws when the support check itself throws', async () => {
+    checkSupportedLocales.mockRejectedValue(new Error('aws unreachable'))
+
+    await expect(queue.enqueueTranslation('GBF-GOAL-A', 'fr', 'Goal A')).resolves.toBeUndefined()
+
+    expect(translateWithAws).not.toHaveBeenCalled()
+    expect(warn).toHaveBeenCalledWith('translation-queue: locale support check failed, skipping', {
+      id: 'GBF-GOAL-A',
+      locale: 'fr'
+    })
+  })
+
+  it('still calls translateWithAws for a locale AWS supports', async () => {
+    translateWithAws.mockResolvedValue('traduit')
+    saveCachedTranslations.mockResolvedValue(undefined)
+
+    await queue.enqueueTranslation('GBF-GOAL-A', 'fr', 'Goal A')
+
+    expect(checkSupportedLocales).toHaveBeenCalledWith(['fr'])
+    expect(translateWithAws).toHaveBeenCalledWith('Goal A', 'fr')
+  })
+})
+
+describe('enqueueTranslation — negative cache for transient failures (BL-1004)', () => {
+  it('does not produce an unbounded re-attempt loop: a failed pair is skipped on the next call within the backoff window', async () => {
+    translateWithAws.mockRejectedValue(new Error('aws down'))
+
+    await queue.enqueueTranslation('GBF-GOAL-A', 'fr', 'Goal A')
+    expect(translateWithAws).toHaveBeenCalledTimes(1)
+
+    // A later call for the same pair, after the first has settled and left `inFlight`, must not
+    // re-attempt AWS while the failure marker is still fresh — this is what stops the retry storm.
+    await queue.enqueueTranslation('GBF-GOAL-A', 'fr', 'Goal A')
+    expect(translateWithAws).toHaveBeenCalledTimes(1)
+    expect(warn).toHaveBeenCalledWith('translation-queue: skipping recently-failed pair', {
+      id: 'GBF-GOAL-A',
+      locale: 'fr'
+    })
+  })
+
+  it('retries again once the failure backoff window has expired', async () => {
+    vi.useFakeTimers()
+    translateWithAws.mockRejectedValueOnce(new Error('aws down')).mockResolvedValueOnce('traduit')
+    saveCachedTranslations.mockResolvedValue(undefined)
+
+    await queue.enqueueTranslation('GBF-GOAL-A', 'fr', 'Goal A')
+    expect(translateWithAws).toHaveBeenCalledTimes(1)
+
+    vi.advanceTimersByTime(queue.FAILURE_BACKOFF_MS + 1)
+
+    await queue.enqueueTranslation('GBF-GOAL-A', 'fr', 'Goal A')
+    expect(translateWithAws).toHaveBeenCalledTimes(2)
+
+    vi.useRealTimers()
+  })
+
+  it('does not mark a failure on a locale-support skip, since no AWS call was ever attempted', async () => {
+    checkSupportedLocales.mockResolvedValue({ supported: [], unsupported: ['xx'] })
+
+    await queue.enqueueTranslation('GBF-GOAL-A', 'xx', 'Goal A')
+
+    checkSupportedLocales.mockResolvedValue({ supported: ['xx'], unsupported: [] })
+    translateWithAws.mockResolvedValue('traduit')
+    saveCachedTranslations.mockResolvedValue(undefined)
+
+    await queue.enqueueTranslation('GBF-GOAL-A', 'xx', 'Goal A')
+    expect(translateWithAws).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('queueStorage — no mount available', () => {
+  it('still resolves the translation without throwing when useStorage itself throws', async () => {
+    vi.stubGlobal('useStorage', () => {
+      throw new Error('no mount configured')
+    })
+    translateWithAws.mockResolvedValue('traduit')
+    saveCachedTranslations.mockResolvedValue(undefined)
+
+    await expect(queue.enqueueTranslation('GBF-GOAL-A', 'fr', 'Goal A')).resolves.toBeUndefined()
+
+    expect(translateWithAws).toHaveBeenCalledWith('Goal A', 'fr')
   })
 })

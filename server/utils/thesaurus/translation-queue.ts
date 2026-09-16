@@ -28,16 +28,41 @@
  * the same number and reasoning as the existing AWS cost/rate-limit ceiling) without calling that
  * function or adding a queue/semaphore package.
  *
- * **Never blocks the request path.** `enqueueTranslation` is synchronous up to the point of returning
- * a promise; all AWS/DB work happens after that promise is handed back, and the promise it returns
- * always *resolves* (never rejects) so a caller that does not await it never produces an unhandled-
- * rejection warning.
+ * **Never blocks the request path.** The caller (`resolveTerms`) never awaits `enqueueTranslation`, so
+ * nothing here can stall a response — but the call itself is not *entirely* free of the request's own
+ * call stack: `pump` -> `runJob` runs synchronously up to its own first `await` (the {@link
+ * checkSupportedLocales} / negative-cache reads below), so those checks execute before
+ * `enqueueTranslation` hands its promise back. That work is a cache/map lookup, not network I/O, so it
+ * is cheap; only the AWS `TranslateText`/`TranslateDocument` call and the DB save happen strictly after.
+ *
+ * **Locale-support gate (BL-1004).** Every job re-validates its locale against AWS Translate's
+ * supported-language set via {@link checkSupportedLocales} before spending a call — `resolveTerms`
+ * already gates on the requesting site's *configured* locales (a stricter, site-scoped allowlist; see
+ * its `isLocaleAllowedForSite`), but this module has no `event` to consult that list, so it re-applies
+ * the one check it *can* make independently: never call AWS for a locale AWS itself does not support.
+ * This is defense in depth, not a substitute for the site gate — a future caller that reaches
+ * `enqueueTranslation` directly, bypassing `resolveTerms`, still cannot turn an obviously-invalid locale
+ * into a permanent retry generator.
+ *
+ * **Negative cache for transient failures (BL-1004).** A locale that AWS *does* support can still fail
+ * transiently (throttling, a network blip). Before p04-01's fix, every later request for the same
+ * `(id, locale)` pair re-entered this module and re-attempted the AWS call the moment `resolveTerms`'s
+ * 1-minute `fb` cache entry expired, forever, with no backoff. A short-TTL failure marker
+ * ({@link FAILURE_BACKOFF_MS}) now makes the next few attempts within that window a no-op instead —
+ * long enough to meaningfully cut retry volume for a page a crawler keeps re-fetching, short enough that
+ * a genuine recovery (AWS back up, or the transient error was one-off) is not hidden for long.
  */
-import { getCacheKey, saveCachedTranslations, translateWithAws } from '../translate/index.js';
-import { buildLabelKey } from './resolve-terms';
+import { checkSupportedLocales, getCacheKey, saveCachedTranslations, translateWithAws } from '../translate/index.js';
+import { LABEL_CACHE_VERSION, writeTier } from './resolve-terms';
 
 const STORAGE_GROUP = 'thesaurus';
 const SIX_MONTHS_MS = 1000 * 60 * 60 * 24 * 30 * 6;
+/**
+ * How long a transient AWS/DB failure suppresses re-attempts for the same `(id, locale)` pair.
+ * Meaningfully longer than `resolveTerms`'s 1-minute `fb` TTL (so it actually reduces retry volume
+ * beyond that existing implicit backoff) while short enough that a real recovery surfaces quickly.
+ */
+export const FAILURE_BACKOFF_MS = 1000 * 60 * 5;
 
 /** Max concurrent AWS calls in flight at once — mirrors `createTranslator`'s own default. */
 const CONCURRENCY = 5;
@@ -86,6 +111,48 @@ function queueStorage(): ReturnType<typeof useStorage> | null {
   }
 }
 
+/**
+ * Key for the transient-failure negative cache. Percent-encoded for the same reason as
+ * `resolve-terms.ts`'s `buildLabelKey`: `id`/`locale` can themselves contain `:`, and `unstorage` folds
+ * `/`/`\` into `:` at the driver boundary, so an unescaped join could collide two distinct pairs onto
+ * one key.
+ */
+function buildFailureKey(id: string, locale: string): string {
+  return `label:tr-fail:${LABEL_CACHE_VERSION}:${encodeURIComponent(id)}:${encodeURIComponent(locale)}`;
+}
+
+/** Read the negative cache. Returns `false` on a miss, an expired entry, or any storage error. */
+async function hasRecentFailure(
+  storage: ReturnType<typeof useStorage> | null,
+  id: string,
+  locale: string,
+  now: number
+): Promise<boolean> {
+  if (!storage) return false;
+  try {
+    const raw = await storage.getItem(buildFailureKey(id, locale));
+    const stored = (typeof raw === 'string' ? JSON.parse(raw) : raw) as { expiresAt?: number } | null;
+    return typeof stored?.expiresAt === 'number' && now <= stored.expiresAt;
+  } catch {
+    return false;
+  }
+}
+
+/** Write the negative cache. A storage failure must never surface to the caller. */
+async function markFailure(
+  storage: ReturnType<typeof useStorage> | null,
+  id: string,
+  locale: string,
+  now: number
+): Promise<void> {
+  if (!storage) return;
+  try {
+    await storage.setItem(buildFailureKey(id, locale), { expiresAt: now + FAILURE_BACKOFF_MS });
+  } catch {
+    /* cache writes are best-effort; a failed write only costs an extra retry */
+  }
+}
+
 /** Drain {@link pendingJobs} while a concurrency lane is free. */
 function pump(): void {
   while (activeCount < CONCURRENCY && pendingJobs.length > 0) {
@@ -106,30 +173,44 @@ function pump(): void {
  */
 async function runJob(job: QueuedJob): Promise<void> {
   const { id, locale, englishText, settle } = job;
+  const storage = queueStorage();
   try {
+    const now = Date.now();
+
+    // Negative cache: a locale that transiently failed recently is skipped without hitting AWS again.
+    if (await hasRecentFailure(storage, id, locale, now)) {
+      warn('translation-queue: skipping recently-failed pair', { id, locale });
+      return;
+    }
+
+    // Locale-support gate (BL-1004) — see module docs for why this, not the site allowlist, is the
+    // right check at this seam. A check failure (e.g. AWS unreachable) is treated the same as
+    // "unsupported": skip rather than spend a call we cannot first verify is legitimate.
+    try {
+      const { supported } = await checkSupportedLocales([locale]);
+      if (!supported.includes(locale)) {
+        warn('translation-queue: locale not supported by AWS Translate, skipping', { id, locale });
+        return;
+      }
+    } catch {
+      warn('translation-queue: locale support check failed, skipping', { id, locale });
+      return;
+    }
+
     let translated: string;
     try {
       translated = await translateWithAws(englishText, locale);
     } catch {
-      // AWS failure: log and return without writing any `tr` entry — no poisoned/empty cache write.
-      // The existing 1-minute `fb` TTL (p02-01) expires on its own and the next request re-attempts.
+      // AWS failure: log, mark the negative cache, and return without writing any `tr` entry — no
+      // poisoned/empty cache write. The next attempt is suppressed for FAILURE_BACKOFF_MS instead of
+      // re-firing on every request the moment the 1-minute `fb` TTL (p02-01) expires.
       warn('translation-queue: AWS translation failed', { id, locale });
+      await markFailure(storage, id, locale, now);
       return;
     }
 
     // Write the `tr` entry the instant AWS succeeds — this does not depend on the DB step below.
-    const storage = queueStorage();
-    if (storage) {
-      try {
-        await storage.setItem(buildLabelKey('tr', id, locale), {
-          value: translated,
-          source: 'translation',
-          expiresAt: Date.now() + SIX_MONTHS_MS
-        });
-      } catch {
-        /* cache writes are best-effort; a failed write only costs a re-resolve later */
-      }
-    }
+    await writeTier(storage, 'tr', id, locale, { value: translated, source: 'translation' }, Date.now() + SIX_MONTHS_MS);
 
     // Separate try/catch: a DB failure must never delete or skip the `tr` entry already written above.
     try {
