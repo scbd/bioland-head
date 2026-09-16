@@ -50,6 +50,13 @@ const RIGHT_BOUNDARY = "(?:[:/.]|$)";
  * a single locale-shaped segment so it cannot absorb an arbitrary trailing string the way a
  * bare "allow a trailing hyphen" class would - a second hyphenated segment (e.g. a sibling
  * site `${sc}-fr`'s own suffix) still fails the boundary that follows.
+ *
+ * Applied only to the hyphen-joined shapes. A colon-joined key never carries a
+ * hyphen-joined locale: every real `context`-group `getKey` emits the locale as its own
+ * `:` segment (`${msc}:${sc}:${locale}` - `nitro-cache.js:169`, `drupal/index.js:64`), and
+ * `RIGHT_BOUNDARY` already accepts that `:`. Allowing `-xx` after a colon-joined site code
+ * would make `${msc}:${sc}` indistinguishable from a distinct hyphenated sibling site's own
+ * config key (`bl2:be-fr`), breaking this function's one-site scope.
  */
 const LOCALE_SUFFIX = "(?:-[a-z]{2})?";
 /**
@@ -77,7 +84,7 @@ function buildSitePatterns(env: string, multiSiteCode: string, siteCode: string)
   const sc = escapeRegExp(siteCode.toLowerCase());
 
   return [
-    new RegExp(`${LEFT_BOUNDARY}${msc}:${sc}${LOCALE_SUFFIX}${RIGHT_BOUNDARY}`, "i"),
+    new RegExp(`${LEFT_BOUNDARY}${msc}:${sc}${RIGHT_BOUNDARY}`, "i"),
     new RegExp(`${LEFT_BOUNDARY}${msc}-${sc}${LOCALE_SUFFIX}${RIGHT_BOUNDARY}`, "i"),
     new RegExp(`${LEFT_BOUNDARY}${e}-?${msc}-?${sc}${LOCALE_SUFFIX}${RIGHT_BOUNDARY}`, "i"),
     new RegExp(`${LEFT_BOUNDARY}(?:${e})?${msc}${sc}${CONCATENATED_LOCALE_SUFFIX}${RIGHT_BOUNDARY}`, "i"),

@@ -123,6 +123,40 @@ describe('invalidateSiteConfig', () => {
     expect(await containerB.getItem('context:site-context:bl2-be-fr-en.json')).not.toBeNull()
   })
 
+  it('leaves a hyphenated sibling site\'s own config key alone', async () => {
+    // `be-fr` is a distinct site, not site `be` with a locale suffix: a hyphen can appear in
+    // a site code because the code comes from a host label / query / cookie
+    // (context-unified.ts:41-95), never from a fixed alphabet. Its real config key is the
+    // colon-joined `bl2:be-fr`, which the colon pattern used to match because it accepted an
+    // optional `-xx` locale before the terminator. Colon-joined keys carry the locale as its
+    // own `:` segment instead, so that suffix only ever created this collision.
+    await containerA.setItem(configKey('bl2', 'be-fr'), { value: { siteName: 'sibling site be-fr' } })
+
+    await invalidateSiteConfig('prod', 'bl2', 'be')
+
+    expect(await containerB.getItem(configKey('bl2', 'be-fr'))).not.toBeNull()
+    expect(await containerB.getItem(configKey('bl2', 'be'))).toBeNull()
+  })
+
+  it('still invalidates a hyphenated site when it is the target', async () => {
+    await containerA.setItem(configKey('bl2', 'be-fr'), { value: { siteName: 'sibling site be-fr' } })
+
+    await invalidateSiteConfig('prod', 'bl2', 'be-fr')
+
+    expect(await containerB.getItem(configKey('bl2', 'be-fr'))).toBeNull()
+    expect(await containerB.getItem(configKey('bl2', 'be'))).not.toBeNull()
+  })
+
+  it('still matches the colon-joined locale segment', async () => {
+    // `${msc}:${sc}:${locale}` is the real shape from nitro-cache.js:169 and
+    // drupal/index.js:64 - RIGHT_BOUNDARY's `:` covers it without a locale suffix.
+    await containerA.setItem('context:get-site-settings:bl2:be:en.json', { value: 1 })
+
+    await invalidateSiteConfig('prod', 'bl2', 'be')
+
+    expect(await containerB.getItem('context:get-site-settings:bl2:be:en.json')).toBeNull()
+  })
+
   it('is not defeated by the 60s `completed:` marker in 00.cache-clear.ts', async () => {
     // That middleware returns early for 60s once any container finishes a clear
     // (server/middleware/00.cache-clear.ts:59-62). A fresh marker is seeded here; this
