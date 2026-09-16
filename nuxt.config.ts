@@ -247,6 +247,17 @@ export default defineNuxtConfig({
   nitro: {
     logLevel: resolvedLogLevel,
     experimental: { tasks: true },
+    // Shared append point: every scheduled task registers here. If this block
+    // conflicts with a sibling branch, keep BOTH sides' entries — never drop,
+    // replace, or re-time one to clear the conflict.
+    scheduledTasks: {
+      // Hourly. The CHM Network view is low-traffic and slow-changing, so an
+      // hour bounds staleness at 60 minutes for 24 writes per deployment per
+      // day. Scheduling it per deployment is a manual operator step: the task
+      // reports `skipped` unless NUXT_NETWORK_SUMMARY_TARGET_URL and
+      // NUXT_NETWORK_SUMMARY_PUSH_TOKEN are set in that deployment's env.
+      "0 * * * *": ["network-summary-push"],
+    },
     devStorage: {
       cache: { driver: "fs", base: "./.nuxt/cache" }
     },
