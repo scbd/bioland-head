@@ -114,6 +114,62 @@ async function installPageRecorder (page: Page): Promise<void> {
   })
 }
 
+/** Every hostname `--host-resolver-rules` points at the dev server. */
+const MAPPED_HOSTS = new Set([TENANT_HOST, ALIAS_HOST, FOREIGN_HOST])
+
+/**
+ * Serve the mapped hostnames from the dev server without letting it see them.
+ *
+ * `--host-resolver-rules` only moves the TCP connection; the browser still sends
+ * `Host: alias.example.test:3330`, and `server/utils/context-unified.ts` fails that closed with a
+ * 400 - it is neither an internal host nor a suffix of the dev `baseHost`, and the dmsm reverse
+ * index has never heard of it. Without this the SSR document is an error page, which would make
+ * the positive cases fail and, worse, make the foreign-origin case pass for the wrong reason: an
+ * error page trivially carries no Google script, so it proves nothing about the gate.
+ *
+ * So every request to a mapped hostname is refetched from node against the name the dev server is
+ * actually bound to, exactly as the `/api/context` handler below already does, and fulfilled at
+ * the original URL. The server therefore renders the real tenant page - which is precisely what a
+ * reverse proxy forwarding a valid tenant `Host` achieves - while the browser's own
+ * `location.hostname` stays the alias or the attacker origin. That is the one value the proxy
+ * cannot forge and the only thing `isGoogleTagsBrowserHost` reads.
+ *
+ * Redirects are not followed in node: a `location` back to the dev host is rewritten to the
+ * hostname the browser asked for, so the browser follows it itself and never navigates off the
+ * host under test.
+ */
+async function installHostRewrite (page: Page): Promise<void> {
+  await page.route('**/*', async (route) => {
+    const target = new URL(route.request().url())
+    const browserHost = target.hostname
+
+    if (!MAPPED_HOSTS.has(browserHost)) return route.continue()
+
+    target.hostname = DEV_URL.hostname
+
+    try {
+      const response = await route.fetch({ url: target.toString(), maxRedirects: 0 })
+      const headers = { ...response.headers() }
+
+      if (headers.location) {
+        const redirected = new URL(headers.location, target)
+
+        if (redirected.hostname === DEV_URL.hostname) {
+          redirected.hostname = browserHost
+          headers.location = redirected.toString()
+        }
+      }
+
+      await route.fulfill({ response, headers })
+    } catch {
+      // A page closing at test end aborts whatever the app still had in flight, and Playwright
+      // reports a throw from a route callback as a test failure. The request is already moot at
+      // that point, so drop it rather than fail a test that has finished asserting.
+      await route.abort().catch(() => {})
+    }
+  })
+}
+
 /**
  * Intercept the client context re-fetch so the administrator's switch and the configured tag IDs
  * are under the test's control, and stub every Google endpoint so no real request is made.
@@ -124,8 +180,18 @@ async function installPageRecorder (page: Page): Promise<void> {
  * always written, so a real dmsm alias on the dev site can never leak into a case that did not
  * ask for one. The navigation URL, not the payload, decides the browser host.
  */
-async function installRoutes (page: Page, overrides: ContextOverrides = {}): Promise<void> {
+async function installRoutes (page: Page, overrides: ContextOverrides = {}): Promise<{ contextFetches: number }> {
+  // Registered first so it runs last: Playwright dispatches matching handlers in reverse
+  // registration order, and the two specific handlers below must win over this catch-all.
+  await installHostRewrite(page)
+
+  // A zero-script assertion is only meaningful on a page that really rendered this tenant, so the
+  // cases that make one count the context re-fetches they served.
+  const served = { contextFetches: 0 }
+
   await page.route('**/api/context/**', async (route) => {
+    served.contextFetches += 1
+
     // `--host-resolver-rules` is a browser flag, and `route.fetch` runs in node, which would try
     // to resolve the real tenant name and hang the request the `site` plugin awaits. Fetch the
     // dev server by the name it is actually bound to; the site is resolved off the first host
@@ -158,6 +224,8 @@ async function installRoutes (page: Page, overrides: ContextOverrides = {}): Pro
       body: 'window.__gtagStub = 1;',
     })
   })
+
+  return served
 }
 
 async function readDataLayer (page: Page): Promise<DataLayerEntry[]> {
@@ -476,11 +544,21 @@ test.describe('BL-1030: only a hostname this tenant serves may measure', () => {
     // the visitor's consent all look legitimate. Only the browser's own hostname gives it away.
     await seedConsentCookies(context, FOREIGN_BASE_URL)
     await installPageRecorder(page)
-    await installRoutes(page, { enabled: true })
+    const served = await installRoutes(page, { enabled: true })
 
-    await page.goto(`${FOREIGN_BASE_URL}${HOME_PATH}`)
+    const response = await page.goto(`${FOREIGN_BASE_URL}${HOME_PATH}`)
+
     await waitForSiteInitialization(page)
     await page.waitForLoadState('networkidle')
+
+    // The gate, not a failure, has to be what loaded nothing. An error page carries no Google
+    // script either, so this case is only evidence once the visitor is provably on a rendered
+    // tenant page: a 200 rather than the fail-closed 400, the tenant's own chrome in the DOM, and
+    // a client context re-fetch served with the switch on and the IDs configured.
+    expect(response?.status()).toBe(200)
+    await expect(page.locator('#__nuxt header').first()).toBeVisible()
+    expect(served.contextFetches).toBeGreaterThan(0)
+    expect(new URL(page.url()).hostname).toBe(FOREIGN_HOST)
 
     await expect(googleScripts(page)).toHaveCount(0)
     expect(await readDataLayer(page)).toEqual([])
