@@ -13,13 +13,11 @@ const ADS_ID = 'AW-123456789'
 const LEGACY_ID = 'UA-12345-6'
 const CONFIGURED_TAG_IDS = `${GTAG_ID},${GTM_ID},${ADS_ID},${LEGACY_ID},bad-id`
 
-// BL-1030 restored the browser-host half of the gate, so a tag only loads on a hostname this
-// tenant actually serves: `<siteCode>.<baseHost>` or its dmsm redirect alias. That means these
-// tests have to run on the real tenant name rather than on `<siteCode>.localhost`.
-// `--host-resolver-rules` points that name, the alias, and a foreign origin at whatever the dev
-// server is already bound to, so no /etc/hosts entry and no test-only bypass in product code is
-// needed. Every case, negative ones included, runs on the tenant host unless the host is the
-// condition under test, so only one thing varies at a time.
+// The browser-host gate is gone: the Drupal switch and visitor consent are the only conditions,
+// so a tag loads on whatever hostname the visitor is on. These tests still run on the real tenant
+// name via `--host-resolver-rules`, which points that name, an alias and a foreign origin at
+// whatever the dev server is bound to, because consent cookies are `Secure` and an HTTPS origin is
+// needed to write them. The host is held constant everywhere except where it is the thing varied.
 const DEV_URL = new URL(E2E_BASE_URL)
 const SITE_LABEL = DEV_URL.hostname.split('.')[0]
 const TENANT_BASE_HOST = 'chm-cbd.net'
@@ -127,15 +125,14 @@ const MAPPED_HOSTS = new Set([TENANT_HOST, ALIAS_HOST, FOREIGN_HOST])
  * `Host: alias.example.test:3330`, and `server/utils/context-unified.ts` fails that closed with a
  * 400 - it is neither an internal host nor a suffix of the dev `baseHost`, and the dmsm reverse
  * index has never heard of it. Without this the SSR document is an error page, which would make
- * the positive cases fail and, worse, make the foreign-origin case pass for the wrong reason: an
- * error page trivially carries no Google script, so it proves nothing about the gate.
+ * every case fail for the wrong reason - an error page carries no Google script whatever the
+ * plugin decides.
  *
  * So every request to a mapped hostname is refetched from node against the name the dev server is
  * actually bound to, exactly as the `/api/context` handler below already does, and fulfilled at
  * the original URL. The server therefore renders the real tenant page - which is precisely what a
  * reverse proxy forwarding a valid tenant `Host` achieves - while the browser's own
- * `location.hostname` stays the alias or the attacker origin. That is the one value the proxy
- * cannot forge and the only thing `isGoogleTagsBrowserHost` reads.
+ * `location.hostname` stays the alias or the foreign origin under test.
  *
  * Redirects are followed inside node, where `playwright-core` rewrites the `Host` header per hop,
  * and only the final response is fulfilled - at the original URL. The browser never sees a
@@ -535,12 +532,12 @@ test.describe('BL-1015: the Drupal switch is the only control', () => {
   }
 })
 
-test.describe('BL-1030: only a hostname this tenant serves may measure', () => {
+test.describe('the hostname is not a condition', () => {
   test.setTimeout(60000)
 
-  test('a foreign origin forwarding a real tenant Host loads nothing', async ({ context, page }) => {
-    // The proxy's `Host` resolves the tenant server-side, so the payload, the switch, the IDs and
-    // the visitor's consent all look legitimate. Only the browser's own hostname gives it away.
+  test('tags load on a foreign origin forwarding a real tenant Host', async ({ context, page }) => {
+    // The browser-host assertion used to stop exactly this: a proxy on an origin the tenant does
+    // not own, forwarding a valid `Host`. With the gate removed the tenant's tags run there.
     await seedConsentCookies(context, FOREIGN_BASE_URL)
     await installPageRecorder(page)
     const interceptions = await installRoutes(page, { enabled: true })
@@ -548,63 +545,25 @@ test.describe('BL-1030: only a hostname this tenant serves may measure', () => {
     const response = await page.goto(`${FOREIGN_BASE_URL}${HOME_PATH}`)
 
     await waitForSiteInitialization(page, interceptions)
-    await page.waitForLoadState('networkidle')
 
-    // The gate, not a failure, has to be what loaded nothing. An error page carries no Google
-    // script either, so this case is only evidence once the visitor is provably on a rendered
-    // tenant page: a 200 rather than the fail-closed 400, the tenant's own chrome in the DOM, and
-    // a client context re-fetch served with the switch on and the IDs configured.
     expect(response?.status()).toBe(200)
-    await expect(page.locator('#__nuxt header').first()).toBeVisible()
-    expect(interceptions.contextFetches).toBeGreaterThan(0)
     expect(new URL(page.url()).hostname).toBe(FOREIGN_HOST)
 
-    // A `seedConsentCookies` that silently seeded nothing on this origin would also produce zero
-    // scripts, so the visitor's analytics consent has to be provably granted here first.
-    const enabledConsent = await page.evaluate(() => decodeURIComponent(
-      document.cookie.split('; ').find(pair => pair.startsWith('ncc_e='))?.slice('ncc_e='.length) ?? '',
-    ))
-
-    expect(enabledConsent.split('~')).toContain('ga')
-
-    await expect(googleScripts(page)).toHaveCount(0)
-    expect(await readDataLayer(page)).toEqual([])
+    await expect(googleScripts(page)).toHaveCount(2)
+    expect(countConfigCalls(await readDataLayer(page), GTAG_ID)).toBe(1)
   })
 
-  for (const redirect of [ALIAS_HOST, 'Alias.Example.TEST', 'Alias.Example.TEST.']) {
-    test(`the tenant alias configured as ${redirect} loads tags on that alias`, async ({ context, page }) => {
-      await seedConsentCookies(context, ALIAS_BASE_URL)
-      await installPageRecorder(page)
-      const interceptions = await installRoutes(page, { enabled: true, redirect })
+  test('tags load on an alias host dmsm never configured', async ({ context, page }) => {
+    await seedConsentCookies(context, ALIAS_BASE_URL)
+    await installPageRecorder(page)
+    const interceptions = await installRoutes(page, { enabled: true })
 
-      await page.goto(`${ALIAS_BASE_URL}${HOME_PATH}`)
-      await waitForSiteInitialization(page, interceptions)
+    await page.goto(`${ALIAS_BASE_URL}${HOME_PATH}`)
+    await waitForSiteInitialization(page, interceptions)
 
-      // Tags loading proves the alias branch only while the browser is still on the alias; had
-      // anything moved it to the tenant host, the generated-host branch would have admitted it.
-      expect(new URL(page.url()).hostname).toBe(ALIAS_HOST)
+    expect(new URL(page.url()).hostname).toBe(ALIAS_HOST)
 
-      await expect(googleScripts(page)).toHaveCount(2)
-      expect(countConfigCalls(await readDataLayer(page), GTAG_ID)).toBe(1)
-    })
-  }
-
-  for (const [label, redirect] of [
-    ['no alias at all', undefined],
-    ['some other tenant alias', 'other.example.test'],
-    ['a non-canonical HTTPS alias', `https://${ALIAS_HOST}/`],
-  ] as const) {
-    test(`an alias host loads nothing with ${label}`, async ({ context, page }) => {
-      await seedConsentCookies(context, ALIAS_BASE_URL)
-      await installPageRecorder(page)
-      const interceptions = await installRoutes(page, { enabled: true, redirect })
-
-      await page.goto(`${ALIAS_BASE_URL}${HOME_PATH}`)
-      await waitForSiteInitialization(page, interceptions)
-      await page.waitForLoadState('networkidle')
-
-      await expect(googleScripts(page)).toHaveCount(0)
-      expect(await readDataLayer(page)).toEqual([])
-    })
-  }
+    await expect(googleScripts(page)).toHaveCount(2)
+    expect(countConfigCalls(await readDataLayer(page), GTAG_ID)).toBe(1)
+  })
 })
