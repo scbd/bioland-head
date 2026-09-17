@@ -12,8 +12,11 @@
     }));
 </script>
 <style scoped>
+    /* The language bar (top: 21px) and hero (margin-top) assume a 21px-tall banner. */
     .dev-site {
-        padding: 1rem;
+        height: 21px;
+        line-height: 21px;
+        padding: 0 1rem;
         text-align: center;
         font-size: .7rem;
     }
