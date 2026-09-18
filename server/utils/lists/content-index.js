@@ -53,11 +53,14 @@ const getFacetsInDefaultLocale = defineCachedFunction(async (ctx, uuids) => {
   }
 }, {
     ...getListCacheOptions('get-facets-in-default-locale'),
-    getKey: (event, ctx ) => {
-            const { siteCode } = ctx;
-            const { multiSiteCode } = useRuntimeConfig().public;
+    // Same arguments as the resolver: (ctx, uuids). The previous (event, ctx) signature
+    // read `siteCode` off the uuids array, so every site and every uuid set shared the
+    // single key `bl2:undefined`. The uuid set has to be part of the key - a different
+    // page of results is a different answer.
+    getKey: (ctx, uuids) => {
+        const { multiSiteCode } = useRuntimeConfig().public;
 
-        return `${multiSiteCode}:${siteCode}`;
+        return `${multiSiteCode}:${ctx.siteCode}:${ctx.defaultLocale || 'en'}:${identifierToKey([...uuids].sort())}`;
     }
 });
 

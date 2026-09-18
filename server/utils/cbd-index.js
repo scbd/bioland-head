@@ -160,7 +160,10 @@ export const getAllBySchemas = defineCachedFunction(
     (ctx, schemas, countries = []) => queryScbdIndex({ ...ctx, schemas, countries, rowsPerPage: 5000 }),
     {
         ...getListCacheOptions('get-all-by-schemas'),
-        getKey: (ctx) => `${ctx.multiSiteCode}-${ctx.siteCode}-${ctx.locale}${toSortedKebab(ctx.schemas)}${toSortedKebab(ctx.countries)}`
+        // getKey receives the resolver's arguments. schemas/countries are the 2nd and 3rd
+        // of those, not ctx members - reading them off ctx keyed every schema query for a
+        // site to the same entry, so whichever list was fetched first was served to all.
+        getKey: (ctx, schemas, countries) => `${ctx.multiSiteCode}-${ctx.siteCode}-${ctx.locale}${toSortedKebab(schemas)}${toSortedKebab(countries)}`
     }
 );
 

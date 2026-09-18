@@ -198,7 +198,7 @@ export const getKeyIdentifier = async (event, identifier) => {
  * @returns {string} - Safe cache key string (max ~37 chars for long identifiers)
  * @throws {Error} - If identifier is falsy or an empty array
  */
-function identifierToKey(identifier) {
+export function identifierToKey(identifier) {
     // Validate identifier
     if (!identifier || (Array.isArray(identifier) && identifier.length === 0)) {
         throw new Error('identifierToKey: identifier is required and cannot be empty');
