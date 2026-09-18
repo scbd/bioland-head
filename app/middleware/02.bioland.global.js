@@ -121,9 +121,65 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   pStore.initialize(pData);
 
+  stashDocumentCacheTtl();
+
   if(menuData?.value)
     menuStore.loadAllMenus(menuData.value);
 
+
+  /**
+   * Work out whether this document may carry an age-tiered Cache-Control, and stash the TTL for
+   * `server/plugins/document-cache-ttl.ts` to apply (BL-1059).
+   *
+   * Only the DECISION happens here, because only here is the Drupal node in hand.
+   * `server/middleware/cache-control.js` runs before the node is fetched, so the flat 15s it stamps
+   * is the best it can do. The header WRITE deliberately happens later, in a `beforeResponse` hook:
+   * that is the last point where the final status code and the final header are both known, so it
+   * cannot hand a long TTL to an error page or quietly weaken a `no-store` set after this runs.
+   *
+   * The gate itself lives in `shouldTierDocument` as a pure function, so each rule is unit-testable.
+   * Two of its inputs are worth spelling out here:
+   *
+   * - The session cookie, NOT `meStore.isAuthenticated`. `server/middleware/auth.js` computes that
+   *   flag as `!isContentManager && isAuthenticated`, so it is FALSE for content managers, site
+   *   managers and administrators - exactly the users whose HTML carries edit affordances, their
+   *   email and a CSRF token in the SSR payload. Gating on it would have shipped those responses to
+   *   a shared CDN. The flag is still consulted as a second layer.
+   * - `to.path`, not `siteStore.isHomePage`. The getter reaches for `useRoute()` inside a Pinia
+   *   getter after several awaits, and matches on the store's locale rather than the URL's - so a
+   *   `/fr` home request while the store held `en` would miss the cap entirely.
+   *
+   * The home page is capped at the youngest tier: its own node is usually years old, but it renders
+   * live widgets (latest news, discussions, GBIF) whose data is fetched during SSR and baked into
+   * the payload.
+   *
+   * @returns {void}
+   */
+  function stashDocumentCacheTtl(){
+    if(!import.meta.server) return;
+
+    const event = nuxtApp.ssrContext?.event;
+
+    if(!event) return;
+
+    const permitted = shouldTierDocument({
+      isServer      : true,
+      hasSession    : hasDrupalSessionCookie(event.node?.req?.headers?.cookie) || meStore.isAuthenticated,
+      isBypass      : 'seachain-taisce' in (to.query || {}),
+      isContentPage : pStore.isPage || pStore.isMediaPage,
+    });
+
+    if(!permitted) return;
+
+    const tiered = resolveDocumentCacheTtl(pStore.page?.changed);
+
+    if(tiered === null) return;
+
+    const locales = useRuntimeConfig().public.locales?.map(({ code })=> code) || [];
+    const isHome  = to.path === '/' || to.path === siteStore.homePath || locales.some((code)=> to.path === `/${code}`);
+
+    event.context.documentCacheTtl = isHome ? Math.min(tiered, CACHE_TTL.FIVE_MINUTES) : tiered;
+  }
 
   /**
    * Validates that the URL has a proper locale prefix (e.g., /en/, /fr/).

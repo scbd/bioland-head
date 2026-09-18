@@ -4,6 +4,10 @@
 .nuxt
 .nitro
 .cache
+# `/cache` (no dot) is the production runtime cache: nuxt.config.ts points storageBase there for
+# non-dev builds, so running .output/server locally writes it to the repo root. Anchored, so it
+# cannot also swallow a future source directory such as server/utils/cache/.
+/cache
 dist
 
 # Node dependencies

@@ -439,6 +439,10 @@ export const CACHE_TTL = {
   ONE_MINUTE: 60, // 1 minute
   FIVE_MINUTES: 60 * 5,
   MENUS: 60 * 5, // 5 minutes
+  ONE_HOUR: 60 * 60, // 1 hour
+  ONE_DAY: 60 * 60 * 24, // 1 day
+  ONE_WEEK: 60 * 60 * 24 * 7, // 7 days
+  ONE_MONTH: 60 * 60 * 24 * 30, // 30 days
   CBD_API: 60 * 60 * 24, // 24 hours
   CBD_API_LONG: 60 * 60 * 24 * 30 * 1, // 1 month
   DRUPAL_LANGUAGES: 60 * 60 * 24 * 30, // 30 days
