@@ -9,7 +9,12 @@ export default defineEventHandler(async (event) => {
 
             const { siteCode, localizedHost } = { ...ctx, ...query };
 
-            if(!siteCode || localizedHost.includes('undefined')) return createError({ statusCode: 404, statusMessage: 'Server.drupal.menus.index-bch: no context derived' });
+            if(!siteCode || localizedHost.includes('undefined')) throw createError({ statusCode: 404, statusMessage: 'Server.drupal.menus.index-bch: no context derived' });
+
+            // A Drupal menu failure is not cached (see below); this short in-process backoff
+            // stops every request during the outage from firing the full fan-out again.
+            if (isBackingOff(`menus:${siteCode}`))
+                throw createError({ statusCode: 503, statusMessage: 'Menus temporarily unavailable', data: { siteCode, reason: 'menus-failure-backoff' } });
             
             const allRequests = (await Promise.allSettled([
                 $fetch('/api/menus/bch',           $fetchBaseOptions({ query, method:'get', headers })),
@@ -20,8 +25,14 @@ export default defineEventHandler(async (event) => {
             ]))
             const rejected = allRequests.filter(({ status }) => status === 'rejected');
 
-            for (const a of rejected)
-                consola.error('menus/index.js index - ', a);
+            for (const { reason } of rejected)
+                consola.error('menus/index.js index - ', { name: reason?.name, message: reason?.message, status: reason?.status ?? reason?.statusCode ?? reason?.response?.status });
+
+            // See index-chm: a failed Drupal menu must not be cached as an empty nav.
+            if (allRequests[1].status === 'rejected') {
+                rememberFailure(`menus:${siteCode}`, MENUS_FAILURE_BACKOFF_MS);
+                throw allRequests[1].reason;
+            }
 
             const [  bch, menus, contentTypes,  languages, systemPages] = allRequests.map(({ value }) => value || []);
 

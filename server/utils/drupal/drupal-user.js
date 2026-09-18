@@ -1,8 +1,11 @@
+import crypto from 'crypto';
+
 /**
  * Default anonymous user object returned when no authenticated session exists
  * @type {{userID: number, name: string, email: string, isAuthenticated: boolean, roles: Array}}
  */
 const anonUser = { userID: 1, name: 'anonymous', email: '@anonymous', isAuthenticated: false, roles: [] }
+const USER_FAILURE_BACKOFF_MS = 30_000;
 
 /**
  * Internal uncached user fetcher - retrieves user data from Drupal JSON:API
@@ -51,8 +54,8 @@ async function _getUser(event) {
         if(!m?.links?.me) return anonUser
 
         if(!m?.links?.me?.href) {
-            console.error('/api/me/getUser: no href property on m.links.me:', JSON.stringify(m?.links?.me, null, 2));
-            return anonUser;
+            // A `me` link with no href is a malformed answer, not an anonymous session.
+            throw new Error(`/api/me/getUser: no href property on m.links.me: ${JSON.stringify(m?.links?.me)}`);
         }
 
         const   userUri     = `${m.links.me.href}?include=roles,user_picture`;
@@ -61,9 +64,17 @@ async function _getUser(event) {
 
         return  mapUserFromDrupal(user, token, event);
     }catch(e){
-        console.error(e);
+        // Never log the raw FetchError: its `options.headers` carries the forwarded Cookie.
+        console.error('/api/me/getUser failed', { name: e?.name, message: e?.message, status: e?.status ?? e?.statusCode ?? e?.response?.status });
 
-        return anonUser;
+        // Remember the failure here, where Drupal actually failed - not in getUser, where a
+        // tenant-resolution error from the cache key would also land.
+        rememberFailure(`user:${sessionHashFor(getHeader(event, 'Cookie') || '')}`, USER_FAILURE_BACKOFF_MS);
+
+        // Rethrow: this runs inside defineCachedFunction keyed by session, so resolving
+        // anonUser here would cache "logged out" for that editor, on every container, for
+        // CACHE_TTL.USERS. getUser turns the rejection into anonUser for this request only.
+        throw e;
     }   
 }
 
@@ -76,8 +87,8 @@ async function _getUser(event) {
  * **Important:** Only authenticated users are cached. Anonymous users bypass this entirely
  * via the `getUser` wrapper to avoid caching the same anonUser object repeatedly.
  * 
- * **Note:** Cannot use `shouldBypassAndInvalidateCache` here due to circular dependency -
- * that function checks `event.context.me` which is set AFTER `getUser` is called.
+ * **Note:** Nothing here may consult `event.context.me` - it is set by the auth middleware
+ * AFTER `getUser` returns.
  * 
  * @private
  * @type {function(H3Event): Promise<Object>}
@@ -123,9 +134,19 @@ export const getUser = async (event) => {
   // No session = anonymous user (skip cache and DB calls)
   if (!hasSession) return anonUser;
 
-  // Has session = fetch and cache
-  return await _getCachedUser(event);
+  // Has session = fetch and cache. A failed lookup is anonymous for THIS request only -
+  // _getUser throws so the failure is never written to the shared cache. A short
+  // in-process backoff per session keeps a Drupal outage from turning every request into
+  // a fresh login + retried fetches (fetch-options retries GETs 3x).
+  if (isBackingOff(`user:${sessionHashFor(cookies)}`)) return anonUser;
+
+  return await _getCachedUser(event).catch(() => anonUser);
 };
+
+/** Same hash the users cache key uses, so backoff and cache agree on what a session is. */
+function sessionHashFor(cookies) {
+  return crypto.createHash('md5').update(cookies.match(/S?SESS[^=]*=([^;]+)/)?.[1] || '').digest('hex');
+}
 
 
 /**

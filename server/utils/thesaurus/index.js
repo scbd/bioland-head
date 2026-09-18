@@ -4,7 +4,9 @@
 
 export const getThesaurusByKey = defineCachedFunction(
   async (event, keysRaw) => {
-    if (!keysRaw) return [false];
+    // Every failure path below throws. `[false]` used to be returned instead and was
+    // cached for CACHE_TTL.THESAURUS (7 days) on the shared store, hiding the tags of
+    // every document that shared those keys, on every container, for a week.
     try {
       const { gaiaApi } = useRuntimeConfig().public;
       const keys = Array.isArray(keysRaw)
@@ -84,11 +86,13 @@ export const getThesaurusByKey = defineCachedFunction(
           );
       });
 
-      return successfulResults.length > 0 ? successfulResults : [false];
+      if (successfulResults.length === 0 && promiseDetails.length > 0)
+        throw new Error(`getThesaurusByKey: all ${promiseDetails.length} lookups failed`);
+
+      return successfulResults;
     } catch (e) {
       consola.error("getThesaurusByKey", e);
-
-      return [false];
+      throw e;
     }
   },
   getThesaurusCacheOptions("get-thesaurus-by-key"),
@@ -318,6 +322,10 @@ export async function mapTagsByType(tags) {
 
         const category = categoryPatterns.find(({ test }) => test(tag.identifier));
         const key = category?.key || await getDomainByIdentifier(tag.identifier);
+
+        // `null` means the source map could not be built right now - skip the tag for
+        // this render but do not remember it as not-found.
+        if (key === null) continue;
 
         // If no domain found, add to not-found cache and skip
         if (key === undefined) {

@@ -32,25 +32,21 @@ const getFacetsInDefaultLocale = defineCachedFunction(async (ctx, uuids) => {
   const uuidFilter = uuids .map((uuid) => `filter[id][value][]=${encodeURIComponent(uuid)}`) .join("&");
   const uri = `${host}${defaultLocalePath}/jsonapi/node/content?fields[node--content]=field_tags&filter[id][operator]=IN&${uuidFilter}`;
 
-  try {
-    const response = await $fetch( uri, $fetchBaseOptions({ method: "get", headers: { "Content-Type": "application/json" }, }), );
-    const tagsMap = new Map();
+  // A failed bulk fetch throws so nothing is cached; the caller treats it as "no tags"
+  // for this render only. Resolving `{}` here used to cache the outage for CACHE_TTL.LISTS.
+  const response = await $fetch( uri, $fetchBaseOptions({ method: "get", headers: { "Content-Type": "application/json" }, }), );
+  const tagsMap = new Map();
 
-    if (response?.data) {
-        for (const node of response.data) {
-            const fieldTags = node?.field_tags || node?.fieldTags;
+  if (response?.data) {
+      for (const node of response.data) {
+          const fieldTags = node?.field_tags || node?.fieldTags;
 
-            if (fieldTags) tagsMap.set(node.id, fieldTags);
-        }
-    }
-
-    // Convert Map to plain object for caching (Map doesn't serialize well)
-    return Object.fromEntries(tagsMap);
-  } catch (e) {
-    // Bulk fetch failed - return empty object, tags are optional
-    consola.warn("getFacetsInDefaultLocale failed:", e.message);
-    return {};
+          if (fieldTags) tagsMap.set(node.id, fieldTags);
+      }
   }
+
+  // Convert Map to plain object for caching (Map doesn't serialize well)
+  return Object.fromEntries(tagsMap);
 }, {
     ...getListCacheOptions('get-facets-in-default-locale'),
     getKey: (event, ctx ) => {
@@ -83,7 +79,9 @@ function mapData(event,ctx){
         }
         
         // Fetch all missing field_tags in a single bulk query (returns plain object for caching)
-        const bulkTagsObj = uuidsNeedingTags.length > 0 ? await getFacetsInDefaultLocale(ctx, uuidsNeedingTags) : {};
+        const bulkTagsObj = uuidsNeedingTags.length > 0
+            ? await getFacetsInDefaultLocale(ctx, uuidsNeedingTags).catch((e) => { consola.warn("getFacetsInDefaultLocale failed:", e.message); return {}; })
+            : {};
 
         // Now process all docs with tags (either from original doc or bulk fetch)
         for (const aDoc of results.data){
@@ -100,7 +98,7 @@ function mapData(event,ctx){
 
                 // Only fetch thesaurus data if we have keys
                 if(keys.length)
-                    promises.push(getThesaurusByKey(event, keys).then(async (p)=>{aDoc.tags = await mapTagsByType(p) || {};}));
+                    promises.push(getThesaurusByKey(event, keys).catch(() => []).then(async (p)=>{aDoc.tags = await mapTagsByType(p) || {};}));
             }
         }
         await Promise.all(promises);

@@ -28,7 +28,9 @@ export default cachedEventHandler(async (event) => {
                                 'Accept': 'application/json',
                             }
             
-            const options = { ...$fetchBaseOptions, headers, silentError };
+            // `{ ...$fetchBaseOptions }` spread the function itself, so no retry/timeout
+            // options were ever applied - call it.
+            const options = $fetchBaseOptions({ headers, silentError });
             const data    = (await $fetch(uri, options ).then(({ solutions }) => solutions)).map(({ solution }) => solution).map((s) => mapPanoData(s, panoLocale));
 
             return data.slice(0, 5)
@@ -37,7 +39,9 @@ export default cachedEventHandler(async (event) => {
 
             consola.warn( `server/api/list/panorama fetch api error: https://panorama.solutions/en/api/v1/solutions`, e.message );
 
-            return [];
+            // Rethrow so the outage is not cached as "no solutions" for CACHE_TTL.EXTERNAL
+            // (30 days); the widget already handles a failed fetch via useLazyFetch's `error`.
+            throw e;
 
         }
     },

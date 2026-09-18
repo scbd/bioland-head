@@ -30,7 +30,14 @@ async function _getSiteSettings (ctx) {
     const uri            = `${host}/${encodeURIComponent(ctx.locale)}/jsonapi/site/site?api-key=${encodeURIComponent(apiKey)}`
 
     const resp = await $fetch(uri, $fetchBaseOptions({query}))
-    const name = resp?.data?.name
+
+    // Drupal in maintenance mode (or a proxy error page) answers 200 with HTML. Caching
+    // `{ siteName: undefined, homePath: undefined }` from that for 30 days breaks home
+    // routing for every container, so refuse anything that is not a JSON:API document.
+    if (!resp || typeof resp !== 'object' || !resp.data || typeof resp.data !== 'object')
+        throw new Error(`Site settings response for ${ctx.siteCode} (${ctx.locale}) is not a JSON:API document`)
+
+    const name = resp.data.name
 
     const settings = {
         siteName: name === '_' ? '' : name,

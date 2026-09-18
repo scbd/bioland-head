@@ -196,29 +196,27 @@ const thesaurusSourceMap = {
 /**
  * Fetch a single domain's terms from the API
  * Each domain is cached separately with `${domainName}-domain` naming
+ *
+ * A failed or malformed fetch throws rather than resolving `[]`: the empty list would be
+ * cached for CACHE_TTL.THESAURUS (7 days) on the shared store, `buildThesaurusSourceMap`
+ * would bake it in, and every identifier from that domain would then be pushed into the
+ * 1-year not-found list as "unknown".
  */
 const fetchDomainTerms = defineCachedFunction(
   async (domainName) => {
     const url = thesaurusApiUrls[domainName];
-    if (!url) return [];
+    if (!url) return []; // not configured as an API domain - a real, stable answer
 
-    try {
-      const response = await $fetch(url, {
-        mode: 'cors',
-        ignoreResponseError: true,
-      });
+    const response = await $fetch(url, { mode: 'cors' });
 
-      // Handle different response formats (CBD API vs UN SDG API)
-      const items = Array.isArray(response) ? response : [];
-      
-      // Extract identifiers from the domain
-      return items
-        .map(item => item?.identifier)
-        .filter(Boolean);
-    } catch (e) {
-      consola.warn(`fetchDomainTerms: Failed to fetch ${domainName}`, e.message);
-      return [];
-    }
+    // Handle different response formats (CBD API vs UN SDG API)
+    if (!Array.isArray(response))
+      throw new Error(`fetchDomainTerms: ${domainName} returned ${response === null ? 'null' : typeof response}, expected an array`);
+
+    // Extract identifiers from the domain
+    return response
+      .map(item => item?.identifier)
+      .filter(Boolean);
   },
   {
     ...getThesaurusCacheOptions('domain'),
@@ -242,14 +240,19 @@ export const buildThesaurusSourceMap = defineCachedFunction(
       })
     );
 
+    // A partial map is a poisoned map: every identifier from the missing domain reads as
+    // "not found" and gets remembered as such. Only a complete build may be cached.
+    const failed = domainResults.filter((r) => r.status === 'rejected');
+    if (failed.length) {
+      const reasons = failed.map((r) => r.reason?.message || String(r.reason));
+      throw new Error(`buildThesaurusSourceMap: ${failed.length}/${apiDomains.length} domains failed: ${reasons.join('; ')}`);
+    }
+
     // Build dynamic map from API results
-    for (const result of domainResults) {
-      if (result.status === 'fulfilled') {
-        const { domainName, identifiers } = result.value;
-        for (const identifier of identifiers) {
-          if (identifier && !dynamicMap[identifier]) {
-            dynamicMap[identifier] = domainName;
-          }
+    for (const { value: { domainName, identifiers } } of domainResults) {
+      for (const identifier of identifiers) {
+        if (identifier && !dynamicMap[identifier]) {
+          dynamicMap[identifier] = domainName;
         }
       }
     }
@@ -270,11 +273,44 @@ export const buildThesaurusSourceMap = defineCachedFunction(
  * @param {string} identifier - The thesaurus identifier to look up
  * @returns {Promise<string|undefined>} - The domain name or undefined if not found
  */
+/**
+ * Last complete map this process built, served while a rebuild is failing so a thesaurus
+ * API blip degrades to slightly stale data instead of dropped tags. In-process only - the
+ * shared cache must never hold a partial map (see buildThesaurusSourceMap).
+ */
+let lastGoodSourceMap = null;
+let sourceMapFailedUntil = 0;
+const SOURCE_MAP_RETRY_MS = 60_000;
+
+/**
+ * Get the domain name for a given identifier
+ * Builds/retrieves the source map from cache and looks up the identifier
+ *
+ * @param {string} identifier - The thesaurus identifier to look up
+ * @returns {Promise<string|undefined|null>} - The domain name; `undefined` when the map is
+ *   complete and the identifier is genuinely unknown; `null` when the map could not be
+ *   built, so the caller must not treat the identifier as not-found.
+ */
 export async function getDomainByIdentifier(identifier) {
   if (!identifier) return undefined;
-  
-  const sourceMap = await buildThesaurusSourceMap();
-  return sourceMap[identifier];
+
+  // Honour the backoff even before any build has succeeded: on a cold start with one
+  // thesaurus API down, mapTagsByType would otherwise rebuild (and re-fetch the dead
+  // domain) once per tag, per request.
+  if (Date.now() < sourceMapFailedUntil)
+    return (lastGoodSourceMap || thesaurusSourceMap)[identifier] ?? null;
+
+  try {
+    const sourceMap = await buildThesaurusSourceMap();
+    lastGoodSourceMap = sourceMap;
+    sourceMapFailedUntil = 0;
+    return sourceMap[identifier];
+  } catch (e) {
+    sourceMapFailedUntil = Date.now() + SOURCE_MAP_RETRY_MS;
+    consola.warn(`getDomainByIdentifier: source map unavailable, ${lastGoodSourceMap ? 'using last good build' : 'falling back to the static map'} - ${e?.message}`);
+    const fallback = lastGoodSourceMap || thesaurusSourceMap;
+    return fallback[identifier] ?? null;
+  }
 }
 
 /**

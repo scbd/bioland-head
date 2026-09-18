@@ -13,8 +13,10 @@ export default defineCachedEventHandler(
 
             const { siteCode, localizedHost } = context;
 
+            // Thrown, not returned: a returned H3Error leaves res.statusCode at 200, so
+            // defineCachedEventHandler would cache the error body as a successful response.
             if (!siteCode || localizedHost.includes('undefined'))
-                return createError({ statusCode: 404, statusMessage: 'Server.menus: no context derived', });
+                throw createError({ statusCode: 404, statusMessage: 'Server.menus: no context derived', });
 
             if (isBchSite)
                 return $fetch( '/api/menus/index-bch', $fetchBaseOptions({ query, method: 'get', headers }), );
@@ -25,5 +27,7 @@ export default defineCachedEventHandler(
             passError(event, e);
         }
     },
-    getMenusCacheOptions('menus-index', CACHE_TTL.MENUS_LONG)
+    // SWR on: with the composite now failing hard when Drupal's menu is down, serve the last
+    // good nav past its maxAge and let nitro log the refresh error instead of 500ing the nav.
+    getMenusCacheOptions('menus-index', true)
 );

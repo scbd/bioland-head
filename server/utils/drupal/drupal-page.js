@@ -294,11 +294,13 @@ function mapData(event,ctx){
                     media.path = p;
             }))
             if(media.field_tags || media.fieldTags)
-                promises.push(getThesaurusByKey(event, media?.field_tags?.value || media?.fieldTags?.value).then(async (p)=>{ media.tags = await mapTagsByType(p) ;}));
+                promises.push(getThesaurusByKey(event, media?.field_tags?.value || media?.fieldTags?.value).catch(() => []).then(async (p)=>{ media.tags = await mapTagsByType(p) ;}));
         }
 
         if(document.field_tags?.value || document.fieldTags?.value)
-            promises.push(getThesaurusByKey(event, document.field_tags?.value || document.fieldTags?.value).then(async (p)=>{ document.tags = await mapTagsByType(p) ;}));
+            // Tags are decoration: a thesaurus outage must not fail the page, and must not be
+            // cached as "no tags" either - getThesaurusByKey throws so nothing is stored.
+            promises.push(getThesaurusByKey(event, document.field_tags?.value || document.fieldTags?.value).catch(() => []).then(async (p)=>{ document.tags = await mapTagsByType(p) ;}));
 
         await Promise.all(promises);
 
