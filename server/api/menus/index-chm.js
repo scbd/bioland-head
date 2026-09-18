@@ -9,7 +9,12 @@ export default defineEventHandler(async (event) => {
 
             const { siteCode, localizedHost } = { ...ctx, ...query };
 
-            if(!siteCode || localizedHost.includes('undefined')) return createError({ statusCode: 404, statusMessage: 'Server.drupal.menus.index-chm: no context derived' });
+            if(!siteCode || localizedHost.includes('undefined')) throw createError({ statusCode: 404, statusMessage: 'Server.drupal.menus.index-chm: no context derived' });
+
+            // A Drupal menu failure is not cached (see below); this short in-process backoff
+            // stops every request during the outage from firing the full fan-out again.
+            if (isBackingOff(`menus:${siteCode}`))
+                throw createError({ statusCode: 503, statusMessage: 'Menus temporarily unavailable', data: { siteCode, reason: 'menus-failure-backoff' } });
             
             const allRequests = (await Promise.allSettled([
                 $fetch('/api/menus/absch',         $fetchBaseOptions({ query, method:'get', headers })),
@@ -27,8 +32,16 @@ export default defineEventHandler(async (event) => {
             ]))
             const rejected = allRequests.filter(({ status }) => status === 'rejected');
 
-            for (const a of rejected)
-                consola.error('menus/index.js index - ', a);
+            for (const { reason } of rejected)
+                consola.error('menus/index.js index - ', { name: reason?.name, message: reason?.message, status: reason?.status ?? reason?.statusCode ?? reason?.response?.status });
+
+            // The Drupal menu is the navigation itself. If it failed, fail the composite so
+            // /api/menus does not cache an empty nav for every container for CACHE_TTL.MENUS;
+            // the other sources are optional and degrade to [].
+            if (allRequests[2].status === 'rejected') {
+                rememberFailure(`menus:${siteCode}`, MENUS_FAILURE_BACKOFF_MS);
+                throw allRequests[2].reason;
+            }
 
             const [ absch, bch, menus, nr, nrSix, nbsap, nfps, contentTypes,  forums , languages, systemPages, nt7 ] = allRequests.map(({ value }) => value || []);
 

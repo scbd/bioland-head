@@ -223,6 +223,23 @@ function identifierToKey(identifier) {
 
 
 /**
+ * Cache-entry validator shared by every options helper below.
+ *
+ * Nitro's default only rejects `undefined`, so a resolver that swallows a failure and
+ * returns `null` gets that null written to the shared store and served to every
+ * container until it expires - and under SWR, past that. A miss must throw instead;
+ * this is the backstop for the ones that still slip through. It applies to
+ * defineCachedFunction users; cachedEventHandler replaces `validate` with nitro's own
+ * (status < 400, body defined), which already refuses error responses.
+ *
+ * Empty arrays/objects stay cacheable on purpose: "this site has no X" is a real answer.
+ *
+ * @param {{ value?: unknown }} entry - Nitro cache entry
+ * @returns {boolean} - false when the entry must be neither written nor served
+ */
+export const rejectNullish = (entry) => entry?.value !== undefined && entry?.value !== null;
+
+/**
  * Generate base cache options for Nitro's defineCachedFunction/cachedEventHandler
  * 
  * @param {string} group - Cache group name for organization
@@ -234,7 +251,8 @@ function identifierToKey(identifier) {
 export const getBaseCacheOptions = (group, name, swr = true, maxAge = CACHE_TTL.FIVE_MINUTES ) => ({
     base: 'cache',
     varies:['host', 'x-forwarded-host'],
-    maxAge, name, group, getKey, swr
+    maxAge, name, group, getKey, swr,
+    validate: rejectNullish,
 })
 
 
@@ -325,8 +343,17 @@ export const getUserCacheOptions = (name, swr = false, maxAge = CACHE_TTL.USERS)
         name,
         group: 'users',
         swr,
-        getKey: (event) => {
-            const { multiSiteCode, siteCode } = event?.context?.site || {};
+        validate: rejectNullish,
+        // Resolve the tenant here rather than reading event.context.site: that field is unset
+        // when 00.cache-clear resolves the user (it runs before 01.context) and on /api paths,
+        // which collapsed the key to `undefined:undefined:<hash>` - one tenant's cached admin
+        // identity then answered for another tenant with the same cookie.
+        getKey: async (event) => {
+            const { multiSiteCode, siteCode } = await useRequestContext(event);
+
+            if (!multiSiteCode || !siteCode)
+                throw new Error(`getUserCacheOptions: cannot key a user without a tenant (multiSiteCode=${multiSiteCode}, siteCode=${siteCode})`);
+
             const cookies = getHeader(event, 'Cookie') || '';
             // Extract session cookie hash for unique user identification
             const sessionMatch = cookies.match(/S?SESS[^=]*=([^;]+)/);
