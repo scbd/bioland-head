@@ -6,7 +6,8 @@ export default defineEventHandler((event) => {
     const day   = 60 * 60 * 24;
     const week  = 60 * 60 * 24 * 7;
 
-    const isMenusApi         = pathname.match(/\/api\/menus\//);
+    // `/api/menus` (the composite the app actually calls) as well as `/api/menus/<leg>`.
+    const isMenusApi         = pathname.match(/\/api\/menus(\/|$)/);
     const isMenuLanguagesApi = pathname.match(/\/api\/menus\/languages/);
     const isListsApi         = pathname.match(/\/api\/list\//);
 

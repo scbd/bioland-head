@@ -126,6 +126,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   if(menuData?.value)
     menuStore.loadAllMenus(menuData.value);
 
+  refreshMenusIfDocumentStale();
+
 
   /**
    * Work out whether this document may carry an age-tiered Cache-Control, and stash the TTL for
@@ -151,7 +153,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
    *
    * The home page is capped at the youngest tier: its own node is usually years old, but it renders
    * live widgets (latest news, discussions, GBIF) whose data is fetched during SSR and baked into
-   * the payload.
+   * the payload. Every other system page (search variants, news, credits, forums, sitemaps) is not
+   * tiered at all: they are shells whose body is other content, so their `changed` date is
+   * meaningless as a staleness signal.
    *
    * @returns {void}
    */
@@ -162,11 +166,21 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
     if(!event) return;
 
+    // Stamped on every server render, tiered or not, so the client can tell how old the HTML it
+    // hydrated from is (see refreshMenusIfDocumentStale).
+    nuxtApp.payload.renderedAt = Date.now();
+
+    const locales = useRuntimeConfig().public.locales?.map(({ code })=> code) || [];
+    const isHome  = to.path === '/' || to.path === siteStore.homePath || locales.some((code)=> to.path === `/${code}`);
+
     const permitted = shouldTierDocument({
       isServer      : true,
       hasSession    : hasDrupalSessionCookie(event.node?.req?.headers?.cookie) || meStore.isAuthenticated,
       isBypass      : 'seachain-taisce' in (to.query || {}),
       isContentPage : pStore.isPage || pStore.isMediaPage,
+      // Home is itself a system_pages term, but it is the one shell worth tiering: it is the
+      // highest-traffic page and the 5-minute cap below already bounds its staleness.
+      isSystemPage  : pStore.isSystemPage && !isHome,
     });
 
     if(!permitted) return;
@@ -175,10 +189,33 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
     if(tiered === null) return;
 
-    const locales = useRuntimeConfig().public.locales?.map(({ code })=> code) || [];
-    const isHome  = to.path === '/' || to.path === siteStore.homePath || locales.some((code)=> to.path === `/${code}`);
-
     event.context.documentCacheTtl = isHome ? Math.min(tiered, CACHE_TTL.FIVE_MINUTES) : tiered;
+  }
+
+  /**
+   * On hydration, replace the menus baked into a stale tiered document with fresh ones.
+   *
+   * The document may have sat at the CDN for up to `DOCUMENT_MAX_TTL`; the menus API is cached
+   * for `CACHE_TTL.MENUS`. When the HTML is older than that, one request to `/api/menus` brings the
+   * navigation back within its own TTL without giving up the long document TTL. The request is
+   * answered from the Nitro `menus-index` cache (keyed by Host and locale, not by page), so it costs
+   * an origin round-trip but not a Drupal fan-out. Fire-and-forget: navigation never waits on it,
+   * and a failure leaves the server-rendered menus in place.
+   *
+   * Runs once per page load: `isHydrating` stays true until suspense resolves, and a redirecting
+   * middleware can re-enter this one before then.
+   *
+   * @returns {void}
+   */
+  function refreshMenusIfDocumentStale(){
+    if(!import.meta.client || !nuxtApp.isHydrating || nuxtApp._staleMenusRefreshed) return;
+    if(!documentIsStaleFor(nuxtApp.payload?.renderedAt, CACHE_TTL.MENUS)) return;
+
+    nuxtApp._staleMenusRefreshed = true;
+
+    $fetch(`/api/menus`, { query: clone(siteStore.params) })
+      .then((menus)=> { if(menus) menuStore.loadAllMenus(menus); })
+      .catch((e)=> console.debug('[02.bioland] stale-menu refresh failed', e?.statusCode || e?.message));
   }
 
   /**

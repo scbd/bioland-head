@@ -95,6 +95,21 @@ describe('Cache Control Middleware', () => {
     })
   })
 
+  // Note: any `/api/menus*` path also contains `/api/me`, so before the trailing-slash fix the
+  // bare `/api/menus` composite fell into the isMeApi branch and was sent with `no-store`.
+  describe('Menus API paths', () => {
+    it.each(['/api/menus', '/api/menus/drupal', '/api/menus/languages'])('caches %s for five minutes at the CDN', (path) => {
+      global.getRequestURL.mockReturnValue(new URL(`http://localhost${path}?locale=en`))
+
+      cacheControlMiddleware(mockEvent)
+
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Cache-Control',
+        'max-age=300, stale-if-error=604800, stale-while-revalidate=86400'
+      )
+    })
+  })
+
   describe('Bypass cache query parameters', () => {
     it.each(['bypass-cache=1', 'bypass-cache=false', 'seachain-taisce', 'seachain-taisce='])(
       'should keep default caching for ignored or empty query %s', (query) => {
