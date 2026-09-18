@@ -8,6 +8,7 @@ import {
   resolveDocumentCacheTtl,
   shouldTierDocument,
   weakensExistingDirective,
+  documentIsStaleFor,
 } from '../../../../shared/utils/document-cache-ttl'
 
 // Fixed "now" so no assertion depends on the wall clock.
@@ -186,11 +187,37 @@ describe('shouldTierDocument', () => {
     ['a session cookie means the HTML may be per-user', { hasSession: true }],
     ['the cache bypass must stay uncacheable', { isBypass: true }],
     ['aggregates render live results, not the node', { isContentPage: false }],
+    ['system pages are shells assembled from other content at render time', { isSystemPage: true }],
   ])('refuses when %s', (_label, override) => {
     expect(shouldTierDocument({ ...permitted, ...override })).toBe(false)
   })
 
+  it('treats a missing isSystemPage as an ordinary content page', () => {
+    expect(shouldTierDocument({ ...permitted, isSystemPage: undefined })).toBe(true)
+  })
+
   it('refuses when several gates fail at once', () => {
     expect(shouldTierDocument({ isServer: true, hasSession: true, isBypass: true, isContentPage: false })).toBe(false)
+  })
+})
+
+describe('documentIsStaleFor', () => {
+  const now = Date.parse('2026-09-18T12:00:00Z')
+
+  it('is stale once the render is older than the window', () => {
+    expect(documentIsStaleFor(now - 6 * 60 * 1000, CACHE_TTL.MENUS, now)).toBe(true)
+  })
+
+  it('is fresh inside the window, including exactly at the boundary', () => {
+    expect(documentIsStaleFor(now - 60 * 1000, CACHE_TTL.MENUS, now)).toBe(false)
+    expect(documentIsStaleFor(now - CACHE_TTL.MENUS * 1000, CACHE_TTL.MENUS, now)).toBe(false)
+  })
+
+  it.each([undefined, null, '2026-09-18T11:00:00Z', NaN, Infinity])('reads an unusable stamp (%j) as fresh - a skipped refresh costs nothing', (stamp) => {
+    expect(documentIsStaleFor(stamp, CACHE_TTL.MENUS, now)).toBe(false)
+  })
+
+  it('reads a future stamp as fresh rather than negative-stale', () => {
+    expect(documentIsStaleFor(now + 60_000, CACHE_TTL.MENUS, now)).toBe(false)
   })
 })

@@ -101,19 +101,45 @@ export function weakensExistingDirective(existing: unknown): boolean {
  *   long-lived copy under the very key used to escape a stale one.
  * - `isContentPage`: aggregates (search, forum and NCP listings, CHM network) render live results
  *   into a container whose own `changed` date says nothing about them.
+ * - `isSystemPage`: every `taxonomy_term--system_pages` term (home, the search variants, news,
+ *   credits, forums, the sitemaps, ...) is a shell whose body is assembled from other content at
+ *   render time. Its `changed` date is the shell's, not the content's, so none of them may be
+ *   tiered - `isContentPage` alone only catches the ones with a dedicated getter.
  */
 export function shouldTierDocument({
     isServer,
     hasSession,
     isBypass,
     isContentPage,
+    isSystemPage = false,
 }: {
     isServer: boolean;
     hasSession: boolean;
     isBypass: boolean;
     isContentPage: boolean;
+    isSystemPage?: boolean;
 }): boolean {
-    return isServer && !hasSession && !isBypass && isContentPage;
+    return isServer && !hasSession && !isBypass && isContentPage && !isSystemPage;
+}
+
+/**
+ * Is a server-rendered document older than `maxAgeSeconds`?
+ *
+ * A tiered document bakes the navigation into its payload, so a page cached for a day at the CDN
+ * shows a day-old menu. Rather than pull every TTL down to the menus' 5 minutes, the client asks
+ * this on hydration and refreshes the menus from `/api/menus` (itself CDN-cached for
+ * `CACHE_TTL.MENUS`) when the HTML it was handed is older than that.
+ *
+ * `renderedAt` is the epoch-ms the server stamped on the payload; anything unusable (missing,
+ * non-finite, in the future) reads as "not stale", because a spurious refresh costs one cached
+ * request and a spurious skip costs nothing at all.
+ */
+export function documentIsStaleFor(renderedAt: unknown, maxAgeSeconds: number, now: number = Date.now()): boolean {
+    if (typeof renderedAt !== "number" || !Number.isFinite(renderedAt)) return false;
+
+    const ageMs = now - renderedAt;
+
+    return ageMs > maxAgeSeconds * 1000;
 }
 
 /**
