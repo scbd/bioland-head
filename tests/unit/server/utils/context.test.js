@@ -26,7 +26,7 @@ beforeEach(async () => {
   // Per-Site config is an external fixture here; the index suite uses real Nitro caching.
   vi.stubGlobal('cachedFunction', (fn, options) => (...args) => { options.getKey(...args); return fn(...args) })
   vi.stubGlobal('$fetch', vi.fn(async () => config))
-  vi.stubGlobal('consola', { error: vi.fn(), debug: vi.fn(), warn: vi.fn() })
+  vi.stubGlobal('consola', { error: vi.fn(), debug: vi.fn(), warn: vi.fn(), info: vi.fn() })
   vi.stubGlobal('resolveSiteCodeByHost', vi.fn(async () => null))
   // #81 moved redirect gating into shared site-host helpers called as Nitro
   // auto-imports; stub them with the real implementations under plain vitest.
@@ -303,7 +303,7 @@ describe('Context Utilities', () => {
       const warn = vi.fn()
       vi.stubGlobal('getCanonicalHost', canonicalHost)
       vi.stubGlobal('normalizeRedirectHost', siteHost.normalizeRedirectHost)
-      vi.stubGlobal('consola', { debug: vi.fn(), error, warn })
+      vi.stubGlobal('consola', { debug: vi.fn(), error, warn, info: vi.fn() })
 
       try {
         for (const [env, redirect, host] of [
@@ -377,6 +377,43 @@ describe('Context Utilities', () => {
       const contexts = await Promise.all([1, 2].map(() => contextModule.useRequestContext(eventFor({ host: 'be.localhost' }))))
       expect(contexts.map(context => context.siteCode)).toEqual(['be', 'be'])
       expect($fetch).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('per-Site config miss is never cached', () => {
+    let cacheOptions, cachedResolver
+
+    beforeEach(async () => {
+      vi.resetModules()
+      vi.stubGlobal('cachedFunction', (fn, options) => {
+        cachedResolver = fn
+        cacheOptions = options
+        return (...args) => { options.getKey(...args); return fn(...args) }
+      })
+      contextModule = await import('../../../../server/utils/context-unified')
+    })
+
+    it.each([null, undefined])('refuses to cache a %s config', (value) => {
+      expect(cacheOptions.validate({ value })).toBe(false)
+    })
+
+    it('caches a real config', () => {
+      expect(cacheOptions.validate({ value: config })).toBe(true)
+    })
+
+    it.each([null, new Error('Fixture DMSM unavailable')])('rejects instead of resolving a miss, so Nitro stores nothing', async (result) => {
+      if (result instanceof Error) $fetch.mockRejectedValue(result)
+      else $fetch.mockResolvedValue(result)
+      await expect(cachedResolver(eventFor({ host: 'be.localhost' }), 'be')).rejects.toThrow(/be/)
+      expect(consola.error).toHaveBeenCalled()
+    })
+
+    it.each([null, new Error('Fixture DMSM unavailable')])('still hands callers null for a miss', async (result) => {
+      if (result instanceof Error) $fetch.mockRejectedValue(result)
+      else $fetch.mockResolvedValue(result)
+      const event = eventFor({ host: 'be.localhost' })
+      expect(await contextModule.getCachedDmsmConfig(event, 'be')).toBeNull()
+      expect(await contextModule.getCachedDmsmConfig(event, 'be', true)).toBeNull()
     })
   })
 

@@ -53,7 +53,7 @@ beforeEach(() => {
   vi.stubGlobal('$fetch', fetchFixture)
   vi.stubGlobal('$fetchBaseOptions', (options = {}) => ({ retry: 0, ...options }))
   vi.stubGlobal('CACHE_TTL', CACHE_TTL)
-  vi.stubGlobal('consola', { error: errors, warn: vi.fn() })
+  vi.stubGlobal('consola', { error: errors, warn: vi.fn(), info: vi.fn(), debug: vi.fn() })
   vi.stubGlobal('cachedFunction', loadCache(() => storage, () => ({ captureError: vi.fn() }), hash, isEvent))
   // #81 moved redirect gating into shared site-host helpers called as Nitro
   // auto-imports; stub them with the real implementations under plain vitest.
