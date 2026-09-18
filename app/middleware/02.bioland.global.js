@@ -121,9 +121,63 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   pStore.initialize(pData);
 
+  applyDocumentCacheTtl();
+
   if(menuData?.value)
     menuStore.loadAllMenus(menuData.value);
 
+
+  /**
+   * Overrides the flat document Cache-Control set by `server/middleware/cache-control.js` with an
+   * age-tiered TTL derived from the Drupal node's `changed` date (BL-1059).
+   *
+   * That middleware cannot do this itself: it runs before the node is fetched, so the only TTL it
+   * can pick is a flat one. Here the node is in hand, so an old page can safely be cached for far
+   * longer than a page edited this morning - which is what stops nearly every visitor triggering a
+   * 3-5s origin render.
+   *
+   * Deliberately skipped in four cases, each of which would be a correctness bug, not a missed
+   * optimisation:
+   * - Client-side navigation. There is no response to set a header on.
+   * - Authenticated requests. The rendered HTML carries edit affordances and other per-user state;
+   *   handing that to a shared CDN for up to a month would leak it to anonymous visitors. At the
+   *   old 15s TTL this was near-harmless, at a month it is not.
+   * - Aggregate routes - search, the forum and NCP listings, the CHM network page. Their node's
+   *   `changed` date describes the container, not the live results rendered into it, so tiering by
+   *   it would pin a stale result set at the CDN. `pageStore.isPage` already draws exactly this
+   *   line for rendering, so it is reused rather than restated.
+   * - An untrusted `changed` date. `resolveDocumentCacheTtl` returns null, and the middleware's
+   *   existing 15s default stands.
+   *
+   * The home page is a special case: its own node is usually years old, but it renders live widgets
+   * (latest news, discussions, GBIF) whose data is fetched during SSR and baked into the payload.
+   * Tiering it by node age would serve week-old news, so its TTL is capped at the youngest tier.
+   *
+   * @returns {void}
+   */
+  function applyDocumentCacheTtl(){
+    if(!import.meta.server) return;
+
+    if(meStore.isAuthenticated) return;
+
+    if(!pStore.isPage && !pStore.isMediaPage) return;
+
+    const tiered = resolveDocumentCacheTtl(pStore.page?.changed);
+
+    if(tiered === null) return;
+
+    const ttl = siteStore.isHomePage ? Math.min(tiered, CACHE_TTL.FIVE_MINUTES) : tiered;
+
+    // Read off the captured nuxtApp rather than useRequestEvent(): this runs after several awaits,
+    // where a composable can no longer resolve the Nuxt context. Writing the raw node header is also
+    // what server/middleware/cache-control.js does, so the two stay symmetrical - h3's
+    // setResponseHeader is a server-only auto-import and is not available in app middleware.
+    const res = nuxtApp.ssrContext?.event?.node?.res;
+
+    if(!res || res.headersSent) return;
+
+    res.setHeader('Cache-Control', buildDocumentCacheControl(ttl));
+  }
 
   /**
    * Validates that the URL has a proper locale prefix (e.g., /en/, /fr/).

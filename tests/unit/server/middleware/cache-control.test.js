@@ -480,4 +480,32 @@ describe('Cache Control Middleware', () => {
       )
     })
   })
+
+  describe('Catch-all scope (BL-1059)', () => {
+    const day = 60 * 60 * 24
+    const week = 60 * 60 * 24 * 7
+
+    // The age-tiered document TTL is applied during SSR, in app/middleware/02.bioland.global.js,
+    // precisely so this middleware's `else` branch does not have to change. That branch is the
+    // catch-all for every non-asset, non-menus/lists route, so widening it to buy longer HTML
+    // caching would also over-cache dynamic JSON that has no `changed` date to tier by.
+    it.each([
+      ['/api/context/asean/en'],
+      ['/api/nt7'],
+      ['/api/page/home'],
+    ])('keeps %s on CACHE_TTL.DEFAULT, not a document tier', (path) => {
+      global.getRequestURL.mockReturnValue(new URL(`http://localhost${path}`))
+
+      cacheControlMiddleware(mockEvent)
+
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Cache-Control',
+        `max-age=${CACHE_TTL.DEFAULT}, stale-if-error=${week}, stale-while-revalidate=${day}`
+      )
+    })
+
+    it('pins CACHE_TTL.DEFAULT at 15s so raising it cannot pass silently', () => {
+      expect(CACHE_TTL.DEFAULT).toBe(15)
+    })
+  })
 })
