@@ -248,10 +248,17 @@ export default defineNuxtConfig({
     logLevel: resolvedLogLevel,
     experimental: { tasks: true },
     devStorage: {
-      cache: { driver: "fs", base: "./.nuxt/cache" }
+      cache: { driver: "fs", base: "./.nuxt/cache" },
+      "cache-clear": { driver: "fs", base: "./.nuxt/cache/cache-clear" },
     },
     storage: {
-      cache: { driver: "fs", base: storageBase }
+      cache: { driver: "fs", base: storageBase },
+      // Coordination markers for server/middleware/00.cache-clear.ts. Unmounted, this base
+      // fell back to Nitro's in-memory driver, so the "another container is already
+      // clearing" check only ever saw the current process. Nested under the cache mount
+      // so it rides the same shared volume; clearSiteCache scans by group and never
+      // reaches it.
+      "cache-clear": { driver: "fs", base: `${storageBase}/cache-clear` },
     },
   },
   experimental: {

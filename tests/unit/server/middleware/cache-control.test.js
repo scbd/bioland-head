@@ -1,10 +1,15 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, afterAll, afterEach } from 'vitest'
 import { CACHE_TTL } from '../../../../shared/utils/constants.ts'
+import { hasCacheAdminRole } from '../../../../server/utils/nitro-cache.js'
+
+const adminUser = { roles: ['site_manager'] }
+const memberUser = { roles: ['authenticated', 'contributor'] }
 
 // Bind Nuxt auto-imports before importing the middleware in plain-Node Vitest.
 vi.stubGlobal('defineEventHandler', vi.fn((handler) => handler))
 vi.stubGlobal('getRequestURL', vi.fn())
 vi.stubGlobal('CACHE_TTL', CACHE_TTL)
+vi.stubGlobal('hasCacheAdminRole', hasCacheAdminRole)
 
 // Mock h3 module
 vi.mock('h3', () => ({
@@ -111,10 +116,11 @@ describe('Cache Control Middleware', () => {
       }
     )
 
-    it('should set no-cache when seachain-taisce query param is present', () => {
+    it('should set no-cache when a cache admin sends seachain-taisce', () => {
       global.getRequestURL.mockReturnValue(
         new URL('http://localhost/api/page?seachain-taisce=true')
       )
+      mockEvent.context = { me: adminUser }
 
       cacheControlMiddleware(mockEvent)
 
@@ -128,6 +134,7 @@ describe('Cache Control Middleware', () => {
       global.getRequestURL.mockReturnValue(
         new URL('http://localhost/api/page?seachain-taisce=false')
       )
+      mockEvent.context = { me: adminUser }
 
       cacheControlMiddleware(mockEvent)
 
@@ -307,11 +314,30 @@ describe('Cache Control Middleware', () => {
       )
     })
 
+    it.each([
+      ['anonymous', undefined],
+      ['a signed-in non-admin', memberUser],
+      ['a user with no roles array', { name: 'x' }],
+    ])('should ignore seachain-taisce from %s - the CDN bypass is admin-only', (_who, me) => {
+      global.getRequestURL.mockReturnValue(
+        new URL('http://localhost/api/page?seachain-taisce=1')
+      )
+      mockEvent.context = { me }
+
+      cacheControlMiddleware(mockEvent)
+
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Cache-Control',
+        'max-age=15, stale-if-error=604800, stale-while-revalidate=86400'
+      )
+    })
+
     it.each(['/style.css', '/api/menus/main'])(
       'should prioritize seachain-taisce query over caching for %s', (path) => {
         global.getRequestURL.mockReturnValue(
           new URL(`http://localhost${path}?seachain-taisce=1`)
         )
+        mockEvent.context = { me: adminUser }
 
         cacheControlMiddleware(mockEvent)
 
@@ -455,6 +481,7 @@ describe('Cache Control Middleware', () => {
       global.getRequestURL.mockReturnValue(
         new URL('http://localhost/api/page?id=123&seachain-taisce=1&lang=en')
       )
+      mockEvent.context = { me: adminUser }
 
       cacheControlMiddleware(mockEvent)
 

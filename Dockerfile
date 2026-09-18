@@ -69,8 +69,12 @@ COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/.output ./.output
 COPY --from=build /usr/src/app/node_modules/sharp ./.output/server/node_modules/sharp
 
-# Create cache directory (permissions will be fixed manually from host)
-RUN mkdir -p /usr/src/app/cache
+# Cache directory for Nitro's fs storage (nuxt.config storage.cache -> ./cache).
+# The process runs as `nuxt`, so the image must hand it the directory: with no mount
+# or a fresh named volume (which copies image ownership on first use) writes otherwise
+# fail with EACCES/ENOENT and nothing is ever cached. A bind mount keeps the host
+# directory's ownership; make that uid/gid 999 (nuxt:nodejs) on the host.
+RUN mkdir -p /usr/src/app/cache && chown -R nuxt:nodejs /usr/src/app/cache
 
 ENV PORT=8000
 ENV NUXT_HOST=0.0.0.0
