@@ -108,6 +108,10 @@ export async function useRequestContext( event: H3Event, options?: RequestContex
   const config = await getCachedDmsmConfig(event, siteCode, options?.bypassCache);
 
   if (!config) {
+    // The user-visible symptom. fetchDmsmConfigCore has already logged the cause;
+    // this line ties it to the request that 404d so the two can be correlated.
+    consola.error(`[dmsm] serving 404 - no config for ${siteCode}`, { siteCode, path: event?.path, host: event?.node?.req?.headers?.host, bypassCache: !!options?.bypassCache });
+
     throw createError({
       statusCode: 404,
       statusMessage: "Not Found",
@@ -150,25 +154,85 @@ export async function useRequestContext( event: H3Event, options?: RequestContex
 const pendingDmsmRequests = new Map<string, Promise<DmsmConfig | null>>();
 
 /**
- * Core DMSM fetch logic - shared by cached and direct fetch paths
+ * Thrown when DMSM has no config for a site, or could not be reached at all.
+ *
+ * It is thrown rather than returned so the miss never reaches the cache. A `null`
+ * return value passes nitro's default `validate` and gets written to the `fs`-backed
+ * cache store, and because `cachedFunction` is SWR by default that stale `null` keeps
+ * being served past its maxAge - so a single failed fetch (DMSM cold, egress not up
+ * yet on a restart) 404s every tenant until the entry is cleared by hand.
  */
-async function fetchDmsmConfigCore(siteCode: string): Promise<DmsmConfig | null> {
+class DmsmConfigUnavailableError extends Error {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "DmsmConfigUnavailableError";
+  }
+}
+
+/**
+ * Flattens an unknown throwable into something that survives JSON log transport.
+ *
+ * `consola.error(msg, err)` loses the interesting fields once logs are shipped, and
+ * the distinction we need here - DNS/connect refused vs a 4xx/5xx from DMSM vs an
+ * empty 200 - lives in exactly those fields.
+ */
+function describeThrowable(e: unknown): Record<string, unknown> {
+  const err = e as Record<string, any> | null | undefined;
+
+  return {
+    errName: err?.name,
+    errMessage: err?.message,
+    // ofetch surfaces HTTP failures here; undici/network failures leave them undefined.
+    status: err?.status ?? err?.statusCode ?? err?.response?.status,
+    statusText: err?.statusText ?? err?.response?.statusText,
+    // ECONNREFUSED / ENOTFOUND / UND_ERR_CONNECT_TIMEOUT land on the code, often on the cause.
+    code: err?.code ?? err?.cause?.code,
+    causeName: err?.cause?.name,
+    causeMessage: err?.cause?.message,
+    responseBody: (typeof err?.data === "string" ? err.data : JSON.stringify(err?.data ?? null)).slice(0, 500),
+  };
+}
+
+/**
+ * Core DMSM fetch logic - shared by cached and direct fetch paths.
+ * Resolves only with a real config; every miss throws.
+ *
+ * Every outcome is logged at INFO or above on purpose: production runs at
+ * LOG_LEVEL.INFO, caching means this is at most one line per Site per maxAge, and
+ * the whole deployment 404s when it goes wrong - so the cost of the noise is far
+ * below the cost of not knowing which leg failed.
+ */
+async function fetchDmsmConfigCore(siteCode: string): Promise<DmsmConfig> {
   const { env, multiSiteCode, dmsm } = useRuntimeConfig().public;
 
+  const uri = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}/${encodeURIComponent(siteCode)}`;
+  // A blank env/multiSiteCode/dmsm builds a plausible-looking but wrong URI
+  // (".../config///be"), so name it before the request rather than after.
+  const missingRuntimeConfig = (["dmsm", "env", "multiSiteCode"] as const).filter((k) => !({ dmsm, env, multiSiteCode })[k]);
+
+  if (missingRuntimeConfig.length)
+    consola.error(`[dmsm] runtime config is incomplete - the request URI cannot be correct`, { siteCode, missing: missingRuntimeConfig, dmsm, env, multiSiteCode, uri });
+
+  const startedAt = Date.now();
+  let data: DmsmConfig | null;
+
   try {
-    const uri = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}/${encodeURIComponent(siteCode)}`;
-    const data = await $fetch<DmsmConfig>(uri);
-
-    if (!data) {
-      consola.error(`Site ${siteCode} not found in DMSM config for ${env}/${multiSiteCode}`);
-      return null;
-    }
-
-    return data;
+    data = await $fetch<DmsmConfig>(uri);
   } catch (e) {
-    consola.error(`Failed to fetch DMSM config for ${siteCode}:`, e);
-    return null;
+    consola.error(`[dmsm] fetch threw for ${siteCode}`, { siteCode, uri, dmsm, env, multiSiteCode, ms: Date.now() - startedAt, ...describeThrowable(e) });
+    throw new DmsmConfigUnavailableError(`Failed to fetch DMSM config for ${siteCode}`, { cause: e });
   }
+
+  if (!data) {
+    // A 204/empty body reaches here as a successful request with nothing in it -
+    // a different failure from the throw above, and easy to confuse with it.
+    consola.error(`[dmsm] fetch returned an empty body for ${siteCode}`, { siteCode, uri, dmsm, env, multiSiteCode, ms: Date.now() - startedAt, received: typeof data });
+    throw new DmsmConfigUnavailableError(`Site ${siteCode} not found in DMSM config for ${env}/${multiSiteCode}`);
+  }
+
+  consola.info(`[dmsm] fetched config for ${siteCode}`, { siteCode, uri, ms: Date.now() - startedAt, locales: data.locales, defaultLocale: data.defaultLocale });
+
+  return data;
 }
 
 /**
@@ -176,13 +240,17 @@ async function fetchDmsmConfigCore(siteCode: string): Promise<DmsmConfig | null>
  * Uses cachedFunction for persistent cache + in-memory deduplication for concurrent requests
  */
 const _fetchDmsmConfig = cachedFunction(
-  async (_event: H3Event, siteCode: string): Promise<DmsmConfig | null> => {
+  async (_event: H3Event, siteCode: string): Promise<DmsmConfig> => {
     return fetchDmsmConfigCore(siteCode);
   },
   {
     maxAge: CACHE_TTL.FIVE_MINUTES, // 5 minutes cache
     name: "get-dmsm-config",
     group: "context",
+    // Only a real config is cacheable. Rejecting nullish values also marks any
+    // already-poisoned entry on disk as expired, so previously cached misses
+    // re-fetch instead of being served stale forever under SWR.
+    validate: (entry) => entry.value !== undefined && entry.value !== null,
     getKey: (_event: H3Event, siteCode: string) => {
       const { env, multiSiteCode } = useRuntimeConfig().public;
       return `${multiSiteCode}:${siteCode}`;
@@ -199,7 +267,7 @@ export async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypa
   // Bypass cache if requested - fetch directly without caching or coalescing
   if (bypassCache) {
     consola.debug(`Bypassing DMSM cache for siteCode: ${siteCode}`);
-    return fetchDmsmConfigCore(siteCode);
+    return fetchDmsmConfigCore(siteCode).catch(() => null);
   }
 
   const { env, multiSiteCode } = useRuntimeConfig().public;
@@ -211,8 +279,11 @@ export async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypa
     return pending;
   }
 
-  // Start new request and track it
+  // Start new request and track it. fetchDmsmConfigCore has already logged the
+  // reason, and callers treat a missing config as a 404, so collapse the
+  // rejection back to null here and keep this function's contract total.
   const promise = _fetchDmsmConfig(event, siteCode)
+    .catch(() => null)
     .finally(() => {
       // Clean up after completion (success or failure)
       pendingDmsmRequests.delete(cacheKey);
