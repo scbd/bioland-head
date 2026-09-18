@@ -269,4 +269,5 @@ export default [
   "ye.chm-cbd.net",
   "zm.chm-cbd.net",
   "zw.chm-cbd.net",
+  "asean.chm-cbd.net"
 ];

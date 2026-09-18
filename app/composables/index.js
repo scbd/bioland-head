@@ -32,7 +32,9 @@ export const useGetCachedData= () =>  {
         const nuxtApp    = useNuxtApp();
         
         return (key) => { 
-            return nuxtApp?.payload?.data[key] || nuxtApp?.static?.data[key];
+            const data = nuxtApp?.payload?.data?.[key];
+            // Nuxt treats only undefined as a cache miss; null is a resolved empty result.
+            return data !== undefined ? data : nuxtApp?.static?.data?.[key];
         }
 }
 export const useDateFormat = () => (date, format = 'yyyy LLL dd')=>{
