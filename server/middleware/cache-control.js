@@ -14,7 +14,11 @@ export default defineEventHandler((event) => {
     const isCommentsApi = pathname.match(/\/api\/comments\//);
     const isMeApi       = !isMenusApi && pathname.match(/\/api\/me/);
     const isForumsApi   = pathname.match(/\/api\/forums\/[a-f0-9\-]+\/[a-f0-9\-]+/);
-    const byPassCache   = !!searchParams.get('seachain-taisce') || false;
+    // Only cache admins may push `no-store` through the CDN. Ungated, any visitor could add
+    // the param and force every request in the chain (cache-forward-query forwards it) to
+    // miss CloudFront and render at the origin. auth.js runs before this middleware, so
+    // event.context.me is already resolved for the paths that matter.
+    const byPassCache   = !!searchParams.get('seachain-taisce') && hasCacheAdminRole(event.context?.me);
 
     const isIpx        = pathname.match(/\/_ipx\//);
     const isNuxt       = pathname.match(/\/_nuxt\//);

@@ -3,10 +3,25 @@ import clone from 'lodash.clonedeep';
 
 
 /**
+ * Cache groups that hold per-Site entries and are therefore candidates for clearSiteCache.
+ *
+ * `users` (one file per session, never Site-keyed reliably), `nitro` internals and the
+ * `cache-clear` markers are deliberately absent. The unstorage fs driver ignores the base
+ * passed to getKeys() and always walks the whole tree, so this list does not save reads -
+ * it saves running six regexes over every session file, and it makes the contract explicit.
+ */
+export const SITE_SCOPED_CACHE_GROUPS = ['context', 'menus', 'lists', 'external', 'external-short', 'thesaurus', 'sitemaps'];
+
+/**
  * Clear all cache entries for a specific site
  * 
  * Finds and removes all cached items matching the multiSiteCode and siteCode across
- * all cache groups (context, menus, lists, external, external-short, thesaurus, users).
+ * the per-Site cache groups (SITE_SCOPED_CACHE_GROUPS).
+ *
+ * Why a scan and not a write-time index: the store is a shared filesystem with several
+ * writers and no atomic read-modify-write, so an index file would lose updates exactly when
+ * two containers warm the same Site - and a clear that misses keys is worse than a slower
+ * one. Prefix filtering is also what a Redis SCAN would do later.
  * 
  * Cache keys use various formats depending on the cached function:
  * - Colon-separated: `bl2:be:en`, `bl2:be`
@@ -39,7 +54,9 @@ export async function clearSiteCache(event, options = {}) {
     }
     
     const storage = useStorage('cache');
-    const allKeys = await storage.getKeys();
+    // One walk of the store (the fs driver ignores a base argument), then narrow to the
+    // per-Site groups before any pattern matching.
+    const allKeys = (await storage.getKeys()).filter((key) => SITE_SCOPED_CACHE_GROUPS.some((group) => key.startsWith(`${group}:`)));
     
     // Build regex patterns to match all key format variations
     // Patterns found in codebase:
@@ -52,8 +69,9 @@ export async function clearSiteCache(event, options = {}) {
     // 7. `:bl2:be:` or `/bl2/be/` - nested path format with colons or slashes
     // 8. `bl2:be:sessionId` - colon with session (users cache)
     
-    const msc = multiSiteCode.toLowerCase();
-    const sc = siteCode.toLowerCase();
+    const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const msc = escapeRegExp(multiSiteCode.toLowerCase());
+    const sc = escapeRegExp(siteCode.toLowerCase());
     
     // Create patterns that catch all variations
     const patterns = [
@@ -76,13 +94,8 @@ export async function clearSiteCache(event, options = {}) {
         new RegExp(`[:/]${msc}[:/]${sc}(?:[:/]|\\.|$)`, 'i'), // /bl2/be/ or :bl2:be:
     ];
     
-    // Filter keys that match any pattern, excluding user session cache
-    const matchingKeys = allKeys.filter(key => {
-        // Skip user session cache (users:get-cached-user:...)
-        if (/users[:/]get-cached-user/i.test(key)) return false;
-        
-        return patterns.some(pattern => pattern.test(key));
-    });
+    // Filter keys that match any pattern
+    const matchingKeys = allKeys.filter(key => patterns.some(pattern => pattern.test(key)));
     
     const deleted = [];
     const errors = [];
@@ -117,39 +130,18 @@ export async function clearSiteCache(event, options = {}) {
 
 
 /**
- * Global cache invalidation/bypass function for all cached functions
- * Checks if cache should be invalidated/bypassed based on query params and user roles
- * 
- * Cache will be invalidated/bypassed when:
- * - seachain-taisce query param is present AND
- * - User has one of the admin roles (administrator, site_manager, content_manager, scbd_staff)
- * 
- * @param {Object} event - H3 event object
- * @returns {boolean} - True if cache should be invalidated/bypassed
+ * Roles allowed to clear or bypass caches. One list, shared by the cache-clear middleware
+ * and the Cache-Control bypass.
  */
-export async function shouldBypassAndInvalidateCache(event) {
-//    await deleteCaches(event);
-    const { searchParams } = new URL(getRequestURL(event));
-    const seachainTaisce = searchParams.get('seachain-taisce');
-    
-    if (!seachainTaisce) return false;
-    return true
-    try {
-        // Use already-populated event.context.me from auth middleware (avoids calling getUser again)
-        const user = event.context?.me;
-        
-        if (!user) return false;
-        
-        const adminRoles = ['administrator', 'site_manager', 'content_manager', 'scbd_staff'];
-        const hasAdminRole = user?.roles?.some(role => adminRoles.includes(role));
-        
-        return hasAdminRole;
-    } catch (e) {
-        return false;
-    }
-}
+export const CACHE_ADMIN_ROLES = ['administrator', 'site_manager', 'content_manager', 'scbd_staff'];
 
-
+/**
+ * Whether a resolved user may clear or bypass caches.
+ *
+ * @param {{ roles?: string[] } | null | undefined} user - `event.context.me` as set by the auth middleware
+ * @returns {boolean}
+ */
+export const hasCacheAdminRole = (user) => Array.isArray(user?.roles) && user.roles.some((role) => CACHE_ADMIN_ROLES.includes(role));
 
 /**
  * Generate a cache key based on the request context

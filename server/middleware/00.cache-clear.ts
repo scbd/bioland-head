@@ -12,9 +12,12 @@ import type { H3Event } from 'h3'
  * - Request coordination: Concurrent requests with same value wait for completion
  * - CDN bypass: Stores value on event.context for forwarding to internal requests
  * 
- * Storage keys (in 'cache-clear' base):
+ * Storage keys (in 'cache-clear' base, mounted on the shared cache volume in nuxt.config):
  * - `pending:{value}` - Timestamp when clear started (for in-progress tracking)
  * - `completed:{value}` - Timestamp when clear completed (TTL: 60s)
+ *
+ * The fs driver ignores TTLs, so markers older than COMPLETED_TTL are pruned on each run
+ * to keep the directory from growing one file per login.
  */
 
 const STORAGE_BASE = 'cache-clear'
@@ -22,15 +25,25 @@ const PENDING_TTL = 30 // seconds - max time a clear can be "pending"
 const COMPLETED_TTL = 60 // seconds - how long to remember completed clears
 
 /**
- * Check if user has admin permissions for cache clearing
+ * Check if user has admin permissions for cache clearing (shared role list in nitro-cache.js)
  */
 function hasAdminPermission(event: H3Event): boolean {
-  const user = event.context?.me
-  
-  if (!user) return false
-  
-  const adminRoles = ['administrator', 'site_manager', 'content_manager', 'scbd_staff']
-  return user?.roles?.some((role: string) => adminRoles.includes(role)) ?? false
+  return hasCacheAdminRole(event.context?.me)
+}
+
+/**
+ * Remove pending/completed markers past their useful life. One tiny file per clear on a
+ * store that never expires anything adds up; a login page adds one per sign-in.
+ */
+async function pruneStaleMarkers(storage: ReturnType<typeof useStorage>): Promise<void> {
+  const now = Date.now()
+  const keys = await storage.getKeys()
+
+  await Promise.all(keys.map(async (key) => {
+    const ttl = key.startsWith('pending:') ? PENDING_TTL : COMPLETED_TTL
+    const at = await storage.getItem<number>(key)
+    if (typeof at !== 'number' || (now - at) > ttl * 1000) await storage.removeItem(key)
+  }))
 }
 
 export default defineEventHandler(async (event) => {
@@ -46,6 +59,11 @@ export default defineEventHandler(async (event) => {
   
   // No bypass param - nothing to do
   if (!seachainTaisce) return
+
+  // The value becomes a storage key (`pending:<value>`); anything outside this shape is either
+  // an unstorage `..` rejection (a 500 for the requester) or nested directories the pruner
+  // never visits. Legitimate values are timestamps or short tokens.
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(seachainTaisce)) return
 
   // Store value on event.context for CDN bypass on internal requests
   // The cache-forward-query plugin will pick this up
@@ -92,6 +110,8 @@ export default defineEventHandler(async (event) => {
 
   // Mark as pending (with timestamp for staleness detection)
   await storage.setItem(pendingKey, Date.now())
+
+  await pruneStaleMarkers(storage).catch((error) => consola.warn('[cache-clear] Marker prune failed:', error))
 
   try {
     // Perform the cache clear
