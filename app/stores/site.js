@@ -121,9 +121,11 @@ export const useSiteStore = defineStore('site', {
             const hasCountry = config?.country || (config?.countries? config?.countries[0] : undefined);
 
             if(config?.logo)  return config.logo;
-        
-            if(hasCountry) return getFlagUrl(hasCountry)
-        
+
+            // getFlagUrl is same-origin relative (BL-1071); schema.org/Open Graph
+            // consumers of this getter need an absolute URL, so prefix with the host.
+            if(hasCountry) return `${this.getHost(true)}${getFlagUrl(hasCountry)}`
+
             return 'https://seed.chm-cbd.net/sites/default/files/images/country/flag/xx.png'
         },
         host(){
