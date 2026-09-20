@@ -143,10 +143,14 @@ const headerStyle = reactive({
   'border-bottom-width': '4px'
 });
 
+// BL-1074: raw primary text can fail WCAG AA on white (e.g. #B7C800 ~1.8:1) —
+// darken just enough to clear 4.5:1, matching app/composables/theme.js's linkStyle.
+const linkOnSurfaceColor = accessibleColor(siteStore.primaryColor, '#ffffff');
+
 const linkStyle = reactive({
-    color: siteStore.primaryColor,
+    color: linkOnSurfaceColor,
     'text-decoration': 'underline',
-    'text-decoration-color': siteStore.primaryColor,
+    'text-decoration-color': linkOnSurfaceColor,
 });
 
 // Calculate Bootstrap column classes based on slides per view (SSR-safe)
