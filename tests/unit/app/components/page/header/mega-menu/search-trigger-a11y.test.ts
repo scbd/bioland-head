@@ -22,6 +22,13 @@ function extractTag(source: string, id: string) {
   return { tag: match[1], attrs: match[2] }
 }
 
+// The mobile brand link carries no id, so anchor on its distinctive class instead.
+function extractTagByClass(source: string, className: string) {
+  const match = source.match(new RegExp(`<(\\w+)[^>]*\\bclass="${className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"([^>]*)>`))
+  if (!match) throw new Error(`Could not locate element with class="${className}"`)
+  return { tag: match[1], attrs: match[2] }
+}
+
 describe('BL-1072 header search trigger accessibility', () => {
   it('renders the desktop search trigger as a focusable, keyboard-activatable button', () => {
     const { tag, attrs } = extractTag(titleSearchSource, 'page-header-title-search-desktop-search-btn')
@@ -47,5 +54,41 @@ describe('BL-1072 header search trigger accessibility', () => {
 
     expect(tag).toBe('NuxtLink')
     expect(attrs).not.toContain('aria-label')
+  })
+
+  it('renders the large-layout search trigger as a focusable, keyboard-activatable button', () => {
+    const { tag, attrs } = extractTag(titleSearchSource, 'page-header-title-search-large-search-btn')
+
+    expect(tag).toBe('button')
+    expect(attrs).toContain('type="button"')
+    expect(attrs).toContain(`:aria-label="t('Search this site')"`)
+    expect(attrs).toContain('v-on:click="onClick(queryText)"')
+  })
+
+  it('lets the visible brand name stand as the accessible name of the mobile home link', () => {
+    const { tag, attrs } = extractTagByClass(titleSearchSource, 'me-0 pe-0 navbar-brand-small fw-bold')
+
+    expect(tag).toBe('NuxtLink')
+    expect(attrs).not.toContain('aria-label')
+  })
+
+  it('lets the visible brand name stand as the accessible name of the large-layout home link', () => {
+    const { tag, attrs } = extractTag(titleSearchSource, 'page-header-title-search-large-brand-home')
+
+    expect(tag).toBe('NuxtLink')
+    expect(attrs).not.toContain('aria-label')
+  })
+
+  it('keeps aria-label on logo-only links that render no visible text', () => {
+    const logoOnlyIds = [
+      'page-header-title-search-mobile-home-link',
+      'page-header-title-search-desktop-logo-link',
+      'page-header-title-search-large-logo-link',
+    ]
+
+    for (const id of logoOnlyIds) {
+      const { attrs } = extractTag(titleSearchSource, id)
+      expect(attrs).toContain(`:aria-label="t('Home')"`)
+    }
   })
 })
