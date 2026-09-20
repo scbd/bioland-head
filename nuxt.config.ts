@@ -66,6 +66,12 @@ export default defineNuxtConfig({
       : 5,
     // Local dev: Drupal session cookie bypass (e.g., SSESSxxx=yyy)
     localDrupalSession: process.env.NUXT_LOCAL_DRUPAL_SESSION || "",
+    // BL-1069 request instrumentation. A request at or over timingSlowMs is logged at warn
+    // by server/plugins/02.request-timing.ts; everything else stays at debug.
+    timingSlowMs: Number.parseInt(process.env.NUXT_TIMING_SLOW_MS || "", 10) || 1000,
+    // Server-Timing carries per-leg upstream latency through the CDN to every visitor, so it
+    // is opt-in per environment rather than on by default.
+    timingHeader: process.env.NUXT_TIMING_HEADER === "true",
     public: {
       isLocalHost:
         process.env.NUXT_PUBLIC_IS_LOCAL_HOST === "true" ? true : false,
