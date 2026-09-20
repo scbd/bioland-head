@@ -11,7 +11,7 @@
             :quality="20"
             sizes="100vw sm:552px md:992px lg:1330px xl:1600px"
             format="webp,avif"
-            preload
+            :preload="{ fetchPriority: 'high' }"
             loading="eager"
         />
 
