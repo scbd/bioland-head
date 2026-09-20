@@ -54,7 +54,7 @@
                 <h6 class="card-subtitle text-muted mb-1">{{t('EBV dataset')}}</h6>
 
                 <div v-if="hasImg" :style="backgroundStyles" class="bg-light">
-                    <NuxtLink :to="goTo" external target="_blank"><div style="width:100%;height:200px;"></div></NuxtLink> 
+                    <NuxtLink :to="goTo" :aria-label="record.name" external target="_blank"><div style="width:100%;height:200px;"></div></NuxtLink>
                 </div>
 
                 <div class="card-body">
