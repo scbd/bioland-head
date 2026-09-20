@@ -1,3 +1,5 @@
+import { DOCUMENT_VARY } from '../../shared/utils/document-cache-ttl'
+
 /**
  * Per-tenant robots.txt (BL-1070)
  *
@@ -11,6 +13,16 @@
  * or any failure resolving the Site's context all fail closed to `Disallow: /` - flipping a Site to
  * indexable is a product decision the reviewer makes by publishing it in DMSM, not something this
  * route infers.
+ *
+ * `/robots.txt` is one fixed path shared by every tenant, but the body is derived from Host. A
+ * shared/CDN cache that does not key on Host would otherwise serve one tenant's `Allow: /` to an
+ * unpublished sibling - the opposite of what the gate above exists to prevent. Reuse the same
+ * `Vary` this codebase already applies to every other publicly-cached, Host-derived response
+ * (`shared/utils/document-cache-ttl.ts` `DOCUMENT_VARY`, applied in
+ * `server/plugins/document-cache-ttl.ts`) rather than hand-rolling `Vary: Host` - the extra
+ * `Accept-Language` dimension is harmless here (robots.txt does not vary by locale), it just
+ * fragments the cache key slightly more than strictly necessary, and staying on the shared
+ * constant keeps one Vary policy for every Host-derived response instead of two to maintain.
  */
 
 const DISALLOW_ALL = 'User-agent: *\nDisallow: /\n';
@@ -18,6 +30,7 @@ const DISALLOW_ALL = 'User-agent: *\nDisallow: /\n';
 export default defineEventHandler(async (event) => {
   setResponseHeader(event, 'Content-Type', 'text/plain; charset=utf-8');
   setResponseHeader(event, 'Cache-Control', `public, max-age=${CACHE_TTL.ONE_HOUR}`);
+  setResponseHeader(event, 'Vary', DOCUMENT_VARY);
 
   let ctx;
   try {
@@ -32,7 +45,15 @@ export default defineEventHandler(async (event) => {
     return DISALLOW_ALL;
   }
 
-  const sitemapUrl = `${ctx.host}/${ctx.defaultLocale}/sitemap.xml`;
+  // `defaultLocale` reaches us from an untyped `$fetch<DmsmConfig>` (context-unified.ts) with no
+  // runtime validation, so a malformed DMSM response could otherwise emit a broken
+  // `.../undefined/sitemap.xml` directive. A missing Sitemap line is safer than a wrong one.
+  const defaultLocale = ctx.defaultLocale;
+  if (typeof defaultLocale !== 'string' || !defaultLocale) {
+    return 'User-agent: *\nAllow: /\n';
+  }
+
+  const sitemapUrl = `${ctx.host}/${defaultLocale}/sitemap.xml`;
 
   return `User-agent: *\nAllow: /\n\nSitemap: ${sitemapUrl}\n`;
 });

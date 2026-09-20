@@ -79,4 +79,27 @@ describe('server/routes/robots.txt', () => {
     expect(setHeaders['Content-Type']).toBe('text/plain; charset=utf-8')
     expect(setHeaders['Cache-Control']).toBe('public, max-age=3600')
   })
+
+  it('sets Vary: Accept-Encoding, Host, Accept-Language on the allow response, so a Host-keyless cache cannot leak one tenant\'s Allow to another', async () => {
+    await handler({})
+
+    expect(setHeaders['Vary']).toBe('Accept-Encoding, Host, Accept-Language')
+  })
+
+  it('sets the same Vary header on the disallow response', async () => {
+    ctx!.config = { published: false }
+
+    await handler({})
+
+    expect(setHeaders['Vary']).toBe('Accept-Encoding, Host, Accept-Language')
+  })
+
+  it('omits the Sitemap line rather than emitting a broken URL when defaultLocale is missing', async () => {
+    ctx!.defaultLocale = undefined
+
+    const body = await handler({})
+
+    expect(body).toBe('User-agent: *\nAllow: /\n')
+    expect(body).not.toContain('undefined')
+  })
 })
