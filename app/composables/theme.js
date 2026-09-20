@@ -4,7 +4,11 @@ export function useTheme(record){
     const nuxtApp   = useNuxtApp();
     const siteStore = useSiteStore (nuxtApp.$pinia);
 
-    const primaryColorStyle   = reactive({ 'color': siteStore.primaryColor, 'border-top': `${siteStore.primaryColor} .5rem solid`});
+    // BL-1074: the border-top stays the raw brand primary (a fill/decoration, not
+    // text), but the h2 text color needs the accessible variant — these page-title
+    // headings render at 2rem (32px), clearing the WCAG large-text size cutoff, so
+    // the 3:1 large-text threshold applies rather than the 4.5:1 normal-text one.
+    const primaryColorStyle   = reactive({ 'color': accessibleColor(siteStore.primaryColor, '#ffffff', { large: true }), 'border-top': `${siteStore.primaryColor} .5rem solid`});
 
     const badgePrimaryStyle = computed(() => ({
       'background-color': siteStore.primaryColor,

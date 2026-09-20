@@ -208,5 +208,14 @@ describe('color-contrast', () => {
     it('falls back to the input unchanged when the surface is unparseable', () => {
       expect(accessibleColor('#B7C800', 'notacolor')).toBe('#B7C800')
     })
+
+    it('falls back to pure black when darkening can never reach the target (loop exhaustion)', () => {
+      // A near-black surface caps the achievable ratio near 1:1 no matter how much
+      // the color is darkened — the target (4.5:1) is unreachable, so the search
+      // exhausts DARKEN_STEPS and the documented black fallback applies.
+      const result = accessibleColor('#010101', '#000000')
+
+      expect(result).toBe('#000000')
+    })
   })
 })
