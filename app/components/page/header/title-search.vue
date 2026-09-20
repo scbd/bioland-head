@@ -33,7 +33,7 @@
                 <NuxtLink id="page-header-title-search-desktop-logo-link" class="me-2" :to="localePath(`/`)" :aria-label="t('Home')"  >
                     <NuxtImg  :alt="name" height="64" width="100%" format="webp" class="logo" :src="logo"  />
                 </NuxtLink>
-                <NuxtLink id="page-header-title-search-desktop-brand-link" class="me-0 pe-0 navbar-brand"  :class="{ hero: hasHeroImage }" :to="localePath(`/`)" :aria-label="t('Home')" >
+                <NuxtLink id="page-header-title-search-desktop-brand-link" class="me-0 pe-0 navbar-brand"  :class="{ hero: hasHeroImage }" :to="localePath(`/`)" >
                     {{name}}
                 </NuxtLink>
                 <span class="navbar-brand line align-self-stretch" :class="{ hero: hasHeroImage }" aria-hidden="true"> &nbsp; </span>
@@ -69,9 +69,9 @@
                 <div id="page-header-title-search-desktop-search-box" class="input-group" :class="{ hero: hasHeroImage }" style="margin-left:2rem;margin-right:-2rem;">
                     <input id="page-header-title-search-desktop-search-input" @keyup.enter="()=>{onClick(queryText);}" type="text" v-model="queryText" class="form-control" :class="{ hero: hasHeroImage }" :placeholder="t('Search this site')" aria-label="search" >
 
-                    <span id="page-header-title-search-desktop-search-btn" v-on:click="onClick(queryText)" class="input-group-text"  :class="{ hero: hasHeroImage }"  :aria-label="t('Search this site')"  >
+                    <button id="page-header-title-search-desktop-search-btn" type="button" v-on:click="onClick(queryText)" class="input-group-text"  :class="{ hero: hasHeroImage }"  :aria-label="t('Search this site')"  >
                         <LazyIcon name="search" class="white-icon" :class="{ hero: hasHeroImage }"/>&nbsp;
-                    </span>
+                    </button>
                 </div>
             </div>
         </div> 
