@@ -123,8 +123,15 @@ export const useSiteStore = defineStore('site', {
             if(config?.logo)  return config.logo;
 
             // getFlagUrl is same-origin relative (BL-1071); schema.org/Open Graph
-            // consumers of this getter need an absolute URL, so prefix with the host.
-            if(hasCountry) return `${this.getHost(true)}${getFlagUrl(hasCountry)}`
+            // consumers of this getter need an absolute URL, so prefix with the host. getHost
+            // can return '' during incomplete SSR init (see its own guard) - falling through
+            // to the seed default keeps this getter always-absolute instead of silently
+            // emitting a relative URL into JSON-LD. Only called when actually needed, since
+            // getHost can throw for a malformed siteCode/baseHost in other init paths.
+            if(hasCountry){
+                const host = this.getHost(true);
+                if(host) return `${host}${getFlagUrl(hasCountry)}`
+            }
 
             return 'https://seed.chm-cbd.net/sites/default/files/images/country/flag/xx.png'
         },
