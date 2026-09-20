@@ -11,7 +11,7 @@
                 <div v-if="!(limitedMenus.length > 1) && pageLoaded" id="page-header-language-bar-single" class="col-sm-7 d-flex justify-content-end">
                     <ul id="page-header-language-bar-single-nav" class="nav" >
                         <li v-for="(aMenu,index) in limitedMenus" :id="`page-header-language-bar-single-item-${index}`" :key="`${index}-${aMenu.code}`"  class="nav-item d-none d-sm-block">
-                            <NuxtLink v-if="aMenu.code !== 'xx'" class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}">&nbsp;</NuxtLink>
+                            <NuxtLink v-if="aMenu.code !== 'xx'" class="nav-link" active-class="lang-active" :to="{path: pageStore?.page?.aliases[aMenu.code] || '/', query}" :aria-label="aMenu.nativeName">&nbsp;</NuxtLink>
                         </li>
                     </ul>
                 </div>

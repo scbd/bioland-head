@@ -8,11 +8,11 @@
         <div v-if="recordExists" class="card " >
             <h6 class="card-subtitle text-muted mb-1">{{type}}</h6>
             <div  v-if="hasImg" :style="backgroundStyles" class=" bg-light">
-                    <NuxtLink  :to="goTo"   :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
+                    <NuxtLink  :to="goTo"  :aria-label="record.title"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink>
             </div>
             <ClientOnly  v-if="!hasImg">
                 <div  :style="backgroundStyles" class=" bg-light">
-                    <NuxtLink  :to="goTo"   :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink> 
+                    <NuxtLink  :to="goTo"  :aria-label="record.title"  :external="external" :target="external? '_blank': ''"><div style="width:100%;height:200px;"></div></NuxtLink>
                 </div>
             </ClientOnly>
             <div class="card-body">
@@ -27,7 +27,7 @@
                 <span v-if="record?.city" :style="bgStyle" class="badge me-1"> {{record.city}}</span>
                 <span v-if="record?.country" class="badge bg-secondary me-1"> {{t(record?.countryIdentifier || record?.country?.identifier ||  record?.country)}}</span>
 
-                <NuxtLink  v-for="(aTarget,i) in record?.tags?.gbfTargets || []" :key="i"  :to="getGbfUrl(aTarget.identifier)" target="_blank" external>
+                <NuxtLink  v-for="(aTarget,i) in record?.tags?.gbfTargets || []" :key="i"  :to="getGbfUrl(aTarget.identifier)" :aria-label="`GBF Target ${aTarget.identifier}`" target="_blank" external>
                     <LazyGbfIcon :identifier="aTarget.identifier" size="xs" class="me-1"/>
                 </NuxtLink>
 
