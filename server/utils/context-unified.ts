@@ -16,6 +16,7 @@ import { sanitizeBiolandSettings } from "./bioland-settings";
 import { drupalPathPrefix } from "#shared/utils/drupal-path-prefix";
 import { boundedTtlMap } from "./bounded-ttl-map.js";
 import { useDmsmUrl } from "./dmsm-url";
+import { timePhase } from "./request-timing";
 
 
 interface RequestContextOptions { /** Explicit siteCode (skips host extraction) - used by context API route */ siteCode?: string; /** Explicit locale (skips path/cookie resolution) */ locale?: string; /** Bypass DMSM config cache - forces fresh fetch from DMSM API */ bypassCache?: boolean; }
@@ -138,7 +139,7 @@ export async function useRequestContext( event: H3Event, options?: RequestContex
   }
 
   // 2. Get DMSM config (cached unless bypassed)
-  const config = await getCachedDmsmConfig(event, siteCode, options?.bypassCache);
+  const config = await timePhase(event, "dmsm", () => getCachedDmsmConfig(event, siteCode, options?.bypassCache));
 
   if (!config) {
     // The user-visible symptom. fetchDmsmConfigCore has already logged the cause;
@@ -672,7 +673,7 @@ async function buildSiteContext(params: { siteCode: string; locale: string; conf
   let siteName: string | undefined;
   let homePath: string | undefined;
   try {
-    const settings = await getSiteSettings({  siteCode,  locale,  config,  host,  localizedHost, env, multiSiteCode, }, event);
+    const settings = await timePhase(event, "drupal-settings", () => getSiteSettings({  siteCode,  locale,  config,  host,  localizedHost, env, multiSiteCode, }, event));
 
     siteName = settings.siteName;
     homePath = settings.homePath;
