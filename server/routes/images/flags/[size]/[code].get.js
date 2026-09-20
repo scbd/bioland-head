@@ -18,6 +18,9 @@
  * - Redirects are rejected (`redirect: 'error'`) rather than followed, the response is
  *   dropped unless its Content-Type is actually an image, and the upstream fetch is
  *   time-bounded - all fail-closed guards against a misbehaving or compromised upstream.
+ * - The response body is streamed and the byte count actually read is capped at
+ *   MAX_FLAG_BYTES, not just the declared Content-Length - a missing or lying header is
+ *   exactly the case worth defending against on a public route with a buffered read.
  */
 
 // Matches the sprite sizes cbd.int actually serves under /images/flags/<size>/.
@@ -26,6 +29,11 @@ const ALLOWED_FLAG_SIZES = new Set([16, 24, 32, 48, 64, 96, 128, 144, 192, 256])
 // ISO 3166-1 alpha-2 country codes are the only shape this app ever passes (see
 // app/utils/flag-url.js callers) - two letters, nothing else.
 const COUNTRY_CODE_PATTERN = /^[A-Za-z]{2}$/
+
+// A real flag PNG at the largest allowlisted size (256px) is on the order of tens of KB.
+// 512 KB clears that with generous headroom while still bounding a misbehaving/compromised
+// upstream instead of buffering an unbounded response.
+const MAX_FLAG_BYTES = 512 * 1024
 
 export default defineEventHandler(async (event) => {
     const rawSize = getRouterParam(event, 'size')
@@ -48,25 +56,56 @@ export default defineEventHandler(async (event) => {
         // a redirect off the fixed cbd.int flag path (this route has no reason to ever
         // follow one). A bounded timeout keeps a slow/hanging upstream from tying up a
         // Nitro worker.
-        response = await $fetch.raw(upstreamUrl, {
-            method       : 'GET',
-            redirect     : 'error',
-            responseType : 'arrayBuffer',
-            timeout      : 5000,
-            headers      : {},
+        response = await fetch(upstreamUrl, {
+            method   : 'GET',
+            redirect : 'error',
+            headers  : {},
+            signal   : AbortSignal.timeout(5000),
         })
     }
     catch {
         throw createError({ statusCode: 502, statusMessage: 'Flag image unavailable' })
     }
 
+    if (!response.ok || !response.body)
+        throw createError({ statusCode: 502, statusMessage: 'Flag image unavailable' })
+
     const contentType = response.headers.get('content-type') || ''
     if (!contentType.startsWith('image/'))
         throw createError({ statusCode: 502, statusMessage: 'Flag image unavailable' })
+
+    // Reject upfront when the upstream is honest about an oversized body, but don't trust
+    // that header alone - it can be missing or wrong.
+    const declaredLength = Number(response.headers.get('content-length'))
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_FLAG_BYTES)
+        throw createError({ statusCode: 502, statusMessage: 'Flag image too large' })
+
+    const reader = response.body.getReader()
+    const chunks = []
+    let bytesRead = 0
+
+    try {
+        for (;;) {
+            const { done, value } = await reader.read()
+            if (done) break
+
+            bytesRead += value.byteLength
+            if (bytesRead > MAX_FLAG_BYTES) {
+                await reader.cancel()
+                throw createError({ statusCode: 502, statusMessage: 'Flag image too large' })
+            }
+
+            chunks.push(value)
+        }
+    }
+    catch (error) {
+        if (error?.statusCode) throw error
+        throw createError({ statusCode: 502, statusMessage: 'Flag image unavailable' })
+    }
 
     setResponseHeader(event, 'Content-Type', contentType)
     // Same allowlisted (size, code) pair always resolves to the same bytes.
     setResponseHeader(event, 'Cache-Control', 'public, max-age=31536000, immutable')
 
-    return Buffer.from(response._data)
+    return Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)))
 })
