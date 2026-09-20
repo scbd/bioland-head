@@ -1,8 +1,8 @@
 <template>
-    <div class="position-relative">
-       
-        <!-- Show placeholder during SSR and loading, hide after if widget disabled -->
-        <template v-if="!isHydrated || (isHydrated && showWidget && loading)">
+    <div ref="widgetRoot" class="position-relative">
+
+        <!-- Show placeholder during SSR, before the widget scrolls into view, and while loading -->
+        <template v-if="!isHydrated || !isVisible || (isHydrated && showWidget && loading)">
             <div class="text-capitalize placeholder-glow">
                 <h4 class="bm-3"><span class="placeholder" style="width:50px;"></span></h4>
             </div>
@@ -31,17 +31,17 @@
             </div>
         </template>
 
-        <!-- Actual content after hydration - only if widget enabled -->
-        <div class="mb-4" v-else-if="isHydrated && showWidget && !error">
+        <!-- Actual content after hydration - only once visible and if widget enabled -->
+        <div class="mb-4" v-else-if="isHydrated && isVisible && showWidget && !error">
                 <div class="text-capitalize">
                     <h4 :style="style" class="bm-3">{{t('GBIF')}} </h4>
                 </div>
 
 
                 <div style="height:300px; width:100%;">
-                    <LMap ref="map" :zoom="zoom" :center="center" :use-global-leaflet="false" >
-                        <LTileLayer url="https://tile.gbif.org/3857/omt/{z}/{x}/{y}@2x.png?style=gbif-classic" layer-type="base" />
-                        <LTileLayer :url="url" layer-type="base" />
+                    <LMap ref="map" :zoom="zoom" :center="center" :use-global-leaflet="false">
+                        <LTileLayer :url="baseTileUrl" layer-type="base" />
+                        <LTileLayer :url="occurrenceTileUrl" layer-type="base" />
                     </LMap>
                 </div>
                 <div v-if="data" class="d-flex justify-content-between text-primary mt-2 mb-3">
@@ -75,6 +75,8 @@
 </template>
 <script setup>
     import clone   from 'lodash.clonedeep';
+    import { useIntersectionObserver } from '@vueuse/core';
+    import { buildGbifBaseTileUrl, buildGbifOccurrenceTileUrl } from '~/utils/gbif-tile-url';
 
     const { t }     = useI18n();
     const siteStore = useSiteStore();
@@ -84,16 +86,32 @@
     const showWidget     = computed(()=> siteStore?.biolandSettings?.homeWidgets?.gbifWidget?.enable);
     const getCachedData  = useGetCachedData();
     const map            = ref(null);
+    const widgetRoot      = ref(null);
 
     // Track client hydration to prevent hydration mismatch
     const isHydrated = ref(false);
+    // Deferred: the map sits below the fold, so nothing GBIF-related fetches until it scrolls into view
+    const isVisible         = ref(false);
+    const devicePixelRatio  = ref(1);
+
     onMounted(() => {
         isHydrated.value = true;
+        devicePixelRatio.value = window.devicePixelRatio || 1;
+    });
+
+    const { stop: stopObservingVisibility } = useIntersectionObserver(widgetRoot, ([entry]) => {
+        if (!entry?.isIntersecting)
+            return;
+
+        isVisible.value = true;
+        execute();
+        stopObservingVisibility();
     });
 
     const { style, colorStyle, linkStyle} = useTheme();
 
-    const url = computed(()=> `https://api.gbif.org/v2/map/occurrence/adhoc/{z}/{x}/{y}@2x.png?style=classic-noborder.poly&bin=hex&country=${config?.value?.identifier}&hasCoordinate=true&hasGeospatialIssue=false&advanced=false&srs=EPSG%3A3857`);
+    const baseTileUrl       = computed(()=> buildGbifBaseTileUrl(devicePixelRatio.value));
+    const occurrenceTileUrl = computed(()=> buildGbifOccurrenceTileUrl(config?.value?.identifier, devicePixelRatio.value));
 
     function getCountry(){
         const { countries, country:c } = siteStore.params;
@@ -137,10 +155,11 @@
 
     const links = [ viewAllLink.value ];
     const query = clone({...siteStore.params });
-    
-    const { data, status, error } =  await useLazyFetch(`/api/list/gbif`, {  method: 'GET', query, key: 'gbif-widget', getCachedData });
 
-    const loading = computed(()=> status.value === 'pending'); 
+    // immediate:false - the fetch fires from the IntersectionObserver callback in onMounted, once the widget scrolls into view
+    const { data, status, error, execute } =  await useLazyFetch(`/api/list/gbif`, {  method: 'GET', query, key: 'gbif-widget', getCachedData, immediate: false });
+
+    const loading = computed(()=> status.value === 'pending');
 </script>
 <style scoped>
     .hide{ color:white; }
