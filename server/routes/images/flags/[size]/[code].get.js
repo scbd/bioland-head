@@ -67,18 +67,29 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 502, statusMessage: 'Flag image unavailable' })
     }
 
-    if (!response.ok || !response.body)
+    if (!response.ok) {
+        // Drain/cancel before rejecting - an unread body on a rejected response is a leaked
+        // upstream socket, worst exactly when the upstream is already misbehaving.
+        await response.body?.cancel()
+        throw createError({ statusCode: 502, statusMessage: 'Flag image unavailable' })
+    }
+
+    if (!response.body)
         throw createError({ statusCode: 502, statusMessage: 'Flag image unavailable' })
 
     const contentType = response.headers.get('content-type') || ''
-    if (!contentType.startsWith('image/'))
+    if (!contentType.startsWith('image/')) {
+        await response.body.cancel()
         throw createError({ statusCode: 502, statusMessage: 'Flag image unavailable' })
+    }
 
     // Reject upfront when the upstream is honest about an oversized body, but don't trust
     // that header alone - it can be missing or wrong.
     const declaredLength = Number(response.headers.get('content-length'))
-    if (Number.isFinite(declaredLength) && declaredLength > MAX_FLAG_BYTES)
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_FLAG_BYTES) {
+        await response.body.cancel()
         throw createError({ statusCode: 502, statusMessage: 'Flag image too large' })
+    }
 
     const reader = response.body.getReader()
     const chunks = []
@@ -90,6 +101,10 @@ export default defineEventHandler(async (event) => {
             if (done) break
 
             bytesRead += value.byteLength
+            // Checked after buffering one chunk, not before - a single already-read chunk
+            // (bounded in practice by undici's own chunk size) can land the cumulative count
+            // just over MAX_FLAG_BYTES before this fires. Deliberate: the cap is "at most one
+            // chunk over", not byte-exact, in exchange for not pre-inspecting each chunk.
             if (bytesRead > MAX_FLAG_BYTES) {
                 await reader.cancel()
                 throw createError({ statusCode: 502, statusMessage: 'Flag image too large' })
