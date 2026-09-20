@@ -22,26 +22,32 @@ const fakeEvent = {}
 
 // Builds a fetch Response stand-in whose body streams the given chunk sizes (bytes), one
 // chunk per reader.read() call, so the route's byte-counting loop can be exercised directly.
+// `bodyCancel` is a spy so a test can assert the response body was drained/cancelled on a
+// rejected exit path instead of leaked.
 function fakeUpstreamResponse({
     contentType = 'image/png',
     contentLength,
     chunkSizes = [4],
     ok = true,
+    hasBody = true,
 }: {
     contentType?: string
     contentLength?: number
     chunkSizes?: number[]
     ok?: boolean
+    hasBody?: boolean
 } = {}) {
     const headers = new Map<string, string>([['content-type', contentType]])
     if (contentLength !== undefined) headers.set('content-length', String(contentLength))
 
     let index = 0
+    const bodyCancel = vi.fn(async () => {})
 
     return {
         ok,
         headers: { get: (key: string) => headers.get(key.toLowerCase()) ?? null },
-        body: {
+        body: hasBody ? {
+            cancel: bodyCancel,
             getReader: () => ({
                 read: async () => {
                     if (index >= chunkSizes.length) return { done: true, value: undefined }
@@ -52,7 +58,8 @@ function fakeUpstreamResponse({
                 },
                 cancel: async () => {},
             }),
-        },
+        } : null,
+        bodyCancel,
     }
 }
 
@@ -142,14 +149,35 @@ describe('server/routes/images/flags/[size]/[code]', () => {
         await expect(handler(fakeEvent)).rejects.toMatchObject({ statusCode: 502 })
     })
 
+    it('cancels the response body when the upstream response is not ok', async () => {
+        const upstream = fakeUpstreamResponse({ ok: false })
+        fetchMock.mockResolvedValueOnce(upstream)
+        await expect(handler(fakeEvent)).rejects.toMatchObject({ statusCode: 502 })
+        expect(upstream.bodyCancel).toHaveBeenCalledOnce()
+    })
+
     it('returns 502 when the upstream response is not an image', async () => {
         fetchMock.mockResolvedValueOnce(fakeUpstreamResponse({ contentType: 'text/html' }))
         await expect(handler(fakeEvent)).rejects.toMatchObject({ statusCode: 502 })
     })
 
+    it('cancels the response body when the upstream response is not an image', async () => {
+        const upstream = fakeUpstreamResponse({ contentType: 'text/html' })
+        fetchMock.mockResolvedValueOnce(upstream)
+        await expect(handler(fakeEvent)).rejects.toMatchObject({ statusCode: 502 })
+        expect(upstream.bodyCancel).toHaveBeenCalledOnce()
+    })
+
     it('rejects upfront when Content-Length declares a body over the cap', async () => {
         fetchMock.mockResolvedValueOnce(fakeUpstreamResponse({ contentLength: 600 * 1024 }))
         await expect(handler(fakeEvent)).rejects.toMatchObject({ statusCode: 502 })
+    })
+
+    it('cancels the response body when Content-Length declares a body over the cap', async () => {
+        const upstream = fakeUpstreamResponse({ contentLength: 600 * 1024 })
+        fetchMock.mockResolvedValueOnce(upstream)
+        await expect(handler(fakeEvent)).rejects.toMatchObject({ statusCode: 502 })
+        expect(upstream.bodyCancel).toHaveBeenCalledOnce()
     })
 
     it('aborts a stream that exceeds the cap even with no Content-Length', async () => {
