@@ -31,25 +31,30 @@ export function useTheme(record){
     }
 
 }
+const quality =  60;
 // Card thumbnails render at 200-250px wide — quality 35 keeps them visually
 // indistinguishable from 60 while cutting payload, bringing them toward the
-// hero image's quality 20 (BL-1081).
-const quality =  35;
+// hero image's quality 20 (BL-1081). Scoped to card consumers only
+// (useWidgetCardImageDefaults / useMediaCardImageDefaults) — usePageSideImageDefaults
+// renders up to 700px wide and defaultImageOptions feeds a cover-fit background
+// image (app/components/widget/geobon.vue) of unverified render size, so both
+// keep the original `quality`.
+const cardQuality =  35;
 const fit     = 'outside';
 const format  = 'webp';
 
 const widgetCards = {
-    xs: { height: 217, width: 200, fit, quality, format },
-    sm: { height: 313, width: 200, fit, quality, format },
-    md: { height: 350, width: 200, fit, quality, format },
-    lg: { height: 350, width: 200, fit, quality, format },
-    xl: { height: 350, width: 200, fit, quality, format },
+    xs: { height: 217, width: 200, fit, quality: cardQuality, format },
+    sm: { height: 313, width: 200, fit, quality: cardQuality, format },
+    md: { height: 350, width: 200, fit, quality: cardQuality, format },
+    lg: { height: 350, width: 200, fit, quality: cardQuality, format },
+    xl: { height: 350, width: 200, fit, quality: cardQuality, format },
 };
 export const defaultImageOptions = {
     height : 350     ,
     width  : 232     ,
     fit    : 'outside',
-    quality: 35       ,
+    quality: 60       ,
     format : 'webp'
 };
 
@@ -141,12 +146,12 @@ export function useWidgetCardImageDefaults() {
     const viewport = useViewport();
 
     const sizeMap = {
-        xs:  { height: 217, width: 200, fit, quality, format: 'webp' },
-        sm:  { height: 313, width: 200, fit, quality, format: 'webp' },
-        md:  { height: 350, width: 200, fit, quality, format: 'webp' },
-        lg:  { height: 350, width: 200, fit, quality, format: 'webp' },
-        xl:  { height: 350, width: 200, fit, quality, format: 'webp' },
-        xxl: { height: 350, width: 200, fit, quality, format: 'webp' },
+        xs:  { height: 217, width: 200, fit, quality: cardQuality, format: 'webp' },
+        sm:  { height: 313, width: 200, fit, quality: cardQuality, format: 'webp' },
+        md:  { height: 350, width: 200, fit, quality: cardQuality, format: 'webp' },
+        lg:  { height: 350, width: 200, fit, quality: cardQuality, format: 'webp' },
+        xl:  { height: 350, width: 200, fit, quality: cardQuality, format: 'webp' },
+        xxl: { height: 350, width: 200, fit, quality: cardQuality, format: 'webp' },
     };
     return computed(() => sizeMap[viewport.breakpoint.value]);
 }
@@ -155,12 +160,12 @@ export function useMediaCardImageDefaults() {
   const viewport = useViewport();
 
   const sizeMap = {
-    xs: { height: 405, width: 250, fit, quality, format },
-    sm: { height: 601, width: 250, fit, quality, format },
-    md: { height: 319, width: 250, fit, quality, format },
-    lg: { height: 315, width: 250, fit, quality, format },
-    xl: { height: 315, width: 250, fit, quality, format },
-    xxl: { height: 315, width: 250, fit, quality, format },
+    xs: { height: 405, width: 250, fit, quality: cardQuality, format },
+    sm: { height: 601, width: 250, fit, quality: cardQuality, format },
+    md: { height: 319, width: 250, fit, quality: cardQuality, format },
+    lg: { height: 315, width: 250, fit, quality: cardQuality, format },
+    xl: { height: 315, width: 250, fit, quality: cardQuality, format },
+    xxl: { height: 315, width: 250, fit, quality: cardQuality, format },
   };
   return computed(() => sizeMap[viewport.breakpoint.value]);
 }
