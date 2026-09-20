@@ -1016,8 +1016,17 @@ $utilities: map-merge(
 //   }
 // }
 
-// Swiper pagination - WCAG target-size compliance (min 24x24px)
-.swiper-pagination-bullet {
-  width: 24px !important;
-  height: 24px !important;
+// Swiper pagination - WCAG 2.2 AA target-size compliance (min 24x24 CSS px hit area).
+// <swiper-container>/<swiper-slide> are Swiper Element custom elements with a shadow
+// root, so a light-DOM class selector like .swiper-pagination-bullet never reaches the
+// bullets rendered inside it. Swiper Element exposes them as shadow parts instead
+// (part="bullet" / part="bullet-active" - see node_modules/swiper/modules/pagination.mjs),
+// so ::part() is the selector that actually crosses the shadow boundary from here.
+// Padding (not width/height) grows the hit area to 24x24 while background-clip keeps
+// the painted dot at its original 8px so the carousel's visual appearance is unchanged.
+swiper-container::part(bullet),
+swiper-container::part(bullet-active) {
+  box-sizing: content-box;
+  padding: 8px;
+  background-clip: content-box;
 }

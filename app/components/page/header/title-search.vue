@@ -340,6 +340,18 @@
     text-decoration: none;
     padding: 0;
 }
+/* WCAG 2.2 AA target-size (BL-1075): the CBD / CHM sub-brand links sit inline with no
+   vertical padding, so their hit area falls under the 24x24 CSS px minimum and the two
+   links are flagged against each other. padding-block on an inline anchor grows only
+   that anchor's own hit box (it does not add to the line-height used by the surrounding
+   flow), so the header does not reflow. margin-inline-end keeps the two targets apart
+   horizontally as well. */
+#page-header-title-search-desktop-cbd-links > a.navbar-subbrand {
+    padding-block: 0.25rem;
+}
+#page-header-title-search-desktop-cbd-links > a.navbar-subbrand:first-child {
+    margin-inline-end: 0.5rem;
+}
 .navbar-subbrand-small {
     color: rgba(255,255,255,.67);
     font-size: 1rem;
