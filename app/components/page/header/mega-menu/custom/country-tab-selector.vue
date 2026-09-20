@@ -6,7 +6,7 @@
 
                 <div id="page-header-mega-menu-custom-country-tab-selector-flag-box" class="flag-box">
                     <Transition :name="fadeName">
-                        <NuxtImg  v-if="!hide" :src="logo" class="flag"/>
+                        <NuxtImg  v-if="!hide" :src="logo" provider="none" width="96" height="96" class="flag"/>
                     </Transition>
                     &nbsp;
                 </div>
