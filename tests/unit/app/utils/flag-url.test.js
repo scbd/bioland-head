@@ -3,16 +3,20 @@ import { getFlagUrl } from '../../../../app/utils/flag-url'
 
 describe('flag-url', () => {
   describe('getFlagUrl', () => {
-    it('returns a flag URL for a valid country code', () => {
-      expect(getFlagUrl('BE')).toBe('https://www.cbd.int/images/flags/96/flag-BE-96.png')
+    it('returns a same-origin flag URL for a valid country code', () => {
+      expect(getFlagUrl('BE')).toBe('/images/flags/96/BE')
+    })
+
+    it('never points at cbd.int directly (BL-1071 third-party-cookie fix)', () => {
+      expect(getFlagUrl('BE')).not.toContain('cbd.int')
     })
 
     it('uses default size of 96', () => {
-      expect(getFlagUrl('US')).toContain('/96/flag-US-96.png')
+      expect(getFlagUrl('US')).toContain('/96/US')
     })
 
     it('accepts a custom size', () => {
-      expect(getFlagUrl('CA', 48)).toBe('https://www.cbd.int/images/flags/48/flag-CA-48.png')
+      expect(getFlagUrl('CA', 48)).toBe('/images/flags/48/CA')
     })
 
     it('returns empty string for null', () => {
@@ -28,7 +32,7 @@ describe('flag-url', () => {
     })
 
     it('preserves lowercase country codes', () => {
-      expect(getFlagUrl('be')).toBe('https://www.cbd.int/images/flags/96/flag-be-96.png')
+      expect(getFlagUrl('be')).toBe('/images/flags/96/be')
     })
   })
 })

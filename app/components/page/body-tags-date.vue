@@ -66,7 +66,7 @@
                 <NuxtLink   :to="`https://www.cbd.int/countries/?country=${aCountry.identifier}`" target="_blank" external>
                     
                     <span   :style="bgStyle" class="badge text-wrap  me-1 w-100">
-                        <NuxtImg :alt="aCountry.name" :src="getFlagUrl(aCountry.identifier)"  class="flag mb-1"/>
+                        <NuxtImg :alt="aCountry.name" :src="getFlagUrl(aCountry.identifier)" provider="none" width="96" height="96" class="flag mb-1"/>
                         <br>{{t(aCountry.identifier)}}</span>
                 </NuxtLink>
             </section>

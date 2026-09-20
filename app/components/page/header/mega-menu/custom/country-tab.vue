@@ -9,7 +9,7 @@
                         <div class="text-center">
 
                             <h5 class="my-1 text-muted">{{t(selectedCountry)}}</h5>
-                            <NuxtImg  v-if="!hide" :alt="`Flag of ${t(selectedCountry)}`" :title="`Flag of ${t(selectedCountry)}`" :src="logo" class="flag"/>
+                            <NuxtImg  v-if="!hide" :alt="`Flag of ${t(selectedCountry)}`" :title="`Flag of ${t(selectedCountry)}`" :src="logo" provider="none" width="96" height="96" class="flag"/>
                         </div>
                     </Transition>
                     &nbsp;
