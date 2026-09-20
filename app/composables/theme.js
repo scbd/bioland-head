@@ -31,7 +31,10 @@ export function useTheme(record){
     }
 
 }
-const quality =  60;
+// Card thumbnails render at 200-250px wide — quality 35 keeps them visually
+// indistinguishable from 60 while cutting payload, bringing them toward the
+// hero image's quality 20 (BL-1081).
+const quality =  35;
 const fit     = 'outside';
 const format  = 'webp';
 
@@ -42,11 +45,11 @@ const widgetCards = {
     lg: { height: 350, width: 200, fit, quality, format },
     xl: { height: 350, width: 200, fit, quality, format },
 };
-export const defaultImageOptions = { 
+export const defaultImageOptions = {
     height : 350     ,
     width  : 232     ,
     fit    : 'outside',
-    quality: 60       ,
+    quality: 35       ,
     format : 'webp'
 };
 
