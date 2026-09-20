@@ -6,7 +6,7 @@
                 <h4 class="bm-3"><span class="placeholder col-4"></span></h4>
             </div>
             <div class="card">
-                <h6 class="card-subtitle text-muted mb-1 placeholder-glow"><span class="placeholder col-5"></span></h6>
+                <p class="card-subtitle h6 text-muted mb-1 placeholder-glow"><span class="placeholder col-5"></span></p>
                 <!-- Map placeholder -->
                 <div class="bg-light placeholder-glow" style="width:100%;height:200px;">
                     <span class="placeholder w-100 h-100"></span>
@@ -51,7 +51,7 @@
             </div>
 
             <div class="card">
-                <h6 class="card-subtitle text-muted mb-1">{{t('EBV dataset')}}</h6>
+                <p class="card-subtitle h6 text-muted mb-1">{{t('EBV dataset')}}</p>
 
                 <div v-if="hasImg" :style="backgroundStyles" class="bg-light">
                     <NuxtLink :to="goTo" external target="_blank"><div style="width:100%;height:200px;"></div></NuxtLink> 
