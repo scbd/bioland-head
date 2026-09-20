@@ -4,7 +4,11 @@ export function useTheme(record){
     const nuxtApp   = useNuxtApp();
     const siteStore = useSiteStore (nuxtApp.$pinia);
 
-    const primaryColorStyle   = reactive({ 'color': siteStore.primaryColor, 'border-top': `${siteStore.primaryColor} .5rem solid`});
+    // BL-1074: the border-top stays the raw brand primary (a fill/decoration, not
+    // text), but the h2 text color needs the accessible variant — these page-title
+    // headings render at 2rem (32px), clearing the WCAG large-text size cutoff, so
+    // the 3:1 large-text threshold applies rather than the 4.5:1 normal-text one.
+    const primaryColorStyle   = reactive({ 'color': accessibleColor(siteStore.primaryColor, '#ffffff', { large: true }), 'border-top': `${siteStore.primaryColor} .5rem solid`});
 
     const badgePrimaryStyle = computed(() => ({
       'background-color': siteStore.primaryColor,
@@ -18,9 +22,16 @@ export function useTheme(record){
     const bgStyle             = reactive({ 'background-color': siteStore.secondaryColor });
     const c2Style             = reactive({ 'color': siteStore?.theme?.color?.secondaryTextOver });
 
+    // Text on a white/light surface needs more contrast than the raw brand primary
+    // reliably gives (e.g. #B7C800 is ~1.8:1 on white). --bl-link-on-surface is the
+    // primary darkened just enough to clear WCAG AA (4.5:1) for that use — the raw
+    // primary is kept everywhere else (fills, borders, badges) where contrast rules
+    // differ and brand identity should not be flattened. See BL-1074.
+    const linkOnSurfaceColor = accessibleColor(siteStore.primaryColor, '#ffffff');
+
     const style           = reactive({ '--bs-primary': siteStore.primaryColor, })
-    const colorStyle      = reactive({ color: siteStore.primaryColor, })
-    const linkStyle       = reactive({ '--bs-primary': siteStore.primaryColor, color: siteStore.primaryColor, 'text-decoration': `underline ${siteStore.primaryColor}` })
+    const colorStyle      = reactive({ '--bl-link-on-surface': linkOnSurfaceColor, color: linkOnSurfaceColor, })
+    const linkStyle       = reactive({ '--bs-primary': siteStore.primaryColor, '--bl-link-on-surface': linkOnSurfaceColor, color: linkOnSurfaceColor, 'text-decoration': `underline ${linkOnSurfaceColor}` })
     const arrowFill       = reactive({ '--bs-primary': siteStore.primaryColor, 'fill': siteStore.primaryColor,  color: siteStore.primaryColor, })
     const headerLinkStyle = reactive({ '--bs-primary': siteStore.primaryColor });
     const pageTypeStyle   = reactive({ '--bs-primary': siteStore.primaryColor });
