@@ -5,10 +5,6 @@
             <p>{{ t(cookie.description) }}</p>
            
 
-            <div v-if="cookie.targetCookieIds">
-            <b>Cookie ids: </b>
-            <span v-text="cookie?.targetCookieIds?.join(', ')" />
-            </div>
         </template>
         <template #bar>
             <h2>{{t('cookie-control-title')}}</h2>
