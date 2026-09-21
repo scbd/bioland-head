@@ -46,24 +46,13 @@
     const { t }        = useI18n();
     const meStore      = useMeStore();
     const pageStore    = usePageStore();
-
-    // Per-user cookie key so the preference is tied to the logged-in user.
-    // Falls back to a generic key for anonymous users.
-    const userKey       = computed(() => meStore.userID || meStore.email || 'anon');
-    const cookieName    = computed(() => `hideSystemPageWarning_${userKey.value}`);
-
-    // Cookie to remember "don't show again" preference (1 year, site-wide path)
-    const hideWarningCookie = useCookie(cookieName.value, {
-        maxAge  : 60 * 60 * 24 * 365, // 1 year
-        path    : '/',
-        sameSite: 'lax',
-        default : () => false,
-        watch   : true
-    });
-
-    // Local state for the session dismissal
-    const sessionDismissed = ref(false);
-    const dontShowAgain    = ref(hideWarningCookie.value === true || hideWarningCookie.value === 'true');
+    const {
+        isWarningHidden,
+        dontShowAgain,
+        sessionDismissed,
+        onDontShowAgainChange,
+        dismiss
+    } = useSystemPageWarning();
     
     // Determine if this is a system page or content type page that user cannot edit
     const isRestrictedPage = computed(() => {
@@ -78,8 +67,8 @@
     
     // Main computed: show warning when all conditions met
     const showWarning = computed(() => {
-        // Don't show if cookie says to hide
-        if (hideWarningCookie.value === true || hideWarningCookie.value === 'true') {
+        // Don't show if preference says to hide
+        if (isWarningHidden.value) {
             return false;
         }
         
@@ -92,17 +81,6 @@
         // who cannot edit system pages, when on a restricted page
         return isContentManagerLevel.value && isRestrictedPage.value;
     });
-    
-    // Handle dismiss button click
-    function dismiss() {
-        // Just dismiss for this session (cookie is set immediately on checkbox click)
-        sessionDismissed.value = true;
-    }
-    
-    // Handle checkbox change - set/unset cookie immediately
-    function onDontShowAgainChange() {
-        hideWarningCookie.value = dontShowAgain.value;
-    }
 </script>
 
 <style lang="scss" scoped>
