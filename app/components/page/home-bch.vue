@@ -17,6 +17,7 @@
                         :hideArrowsCount="3"
                         :schemas="[44, 5, 45, 46, 47]"
                         :title="$t('National Biosafety Framework')"
+                        :viewMoreText="$t('View more on the National Biosafety Framework')"
                         :mobileSlidesOffsetBefore="40"
                         :slidesOffsetBefore="20"
                     />
