@@ -31,7 +31,7 @@ export function useTheme(record){
     }
 
 }
-const quality =  60;
+const quality =  80;
 const fit     = 'outside';
 const format  = 'webp';
 
@@ -46,7 +46,7 @@ export const defaultImageOptions = {
     height : 350     ,
     width  : 232     ,
     fit    : 'outside',
-    quality: 60       ,
+    quality: 80       ,
     format : 'webp'
 };
 
@@ -138,12 +138,12 @@ export function useWidgetCardImageDefaults() {
     const viewport = useViewport();
 
     const sizeMap = {
-        xs:  { height: 217, width: 200, fit, quality, format: 'webp' },
-        sm:  { height: 313, width: 200, fit, quality, format: 'webp' },
-        md:  { height: 350, width: 200, fit, quality, format: 'webp' },
-        lg:  { height: 350, width: 200, fit, quality, format: 'webp' },
-        xl:  { height: 350, width: 200, fit, quality, format: 'webp' },
-        xxl: { height: 350, width: 200, fit, quality, format: 'webp' },
+        xs:  { height: 217, width: 200, fit, quality: 80, format: 'webp' },
+        sm:  { height: 313, width: 200, fit, quality: 80, format: 'webp' },
+        md:  { height: 350, width: 200, fit, quality: 80, format: 'webp' },
+        lg:  { height: 350, width: 200, fit, quality: 80, format: 'webp' },
+        xl:  { height: 350, width: 200, fit, quality: 80, format: 'webp' },
+        xxl: { height: 350, width: 200, fit, quality: 80, format: 'webp' },
     };
     return computed(() => sizeMap[viewport.breakpoint.value]);
 }
@@ -152,12 +152,12 @@ export function useMediaCardImageDefaults() {
   const viewport = useViewport();
 
   const sizeMap = {
-    xs: { height: 405, width: 250, fit, quality, format },
-    sm: { height: 601, width: 250, fit, quality, format },
-    md: { height: 319, width: 250, fit, quality, format },
-    lg: { height: 315, width: 250, fit, quality, format },
-    xl: { height: 315, width: 250, fit, quality, format },
-    xxl: { height: 315, width: 250, fit, quality, format },
+    xs: { height: 405, width: 350, fit, quality: 80, format, densities: '1x 2x' },
+    sm: { height: 601, width: 350, fit, quality: 80, format, densities: '1x 2x' },
+    md: { height: 350, width: 350, fit, quality: 80, format, densities: '1x 2x' },
+    lg: { height: 350, width: 350, fit, quality: 80, format, densities: '1x 2x' },
+    xl: { height: 350, width: 350, fit, quality: 80, format, densities: '1x 2x' },
+    xxl: { height: 350, width: 350, fit, quality: 80, format, densities: '1x 2x' },
   };
   return computed(() => sizeMap[viewport.breakpoint.value]);
 }
