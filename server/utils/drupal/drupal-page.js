@@ -1,4 +1,5 @@
 
+import { createHash } from 'node:crypto';
 import { camelCase } from 'change-case/keys';
 
 const localizationExceptionPaths =  [];
@@ -131,9 +132,16 @@ function isAliasPath(path) {
     return !numericPatterns.some(pattern => pattern.test(path));
 }
 
-// Cached value for "no other locale owns this alias". Not null: rejectNullish refuses to
-// store null, and a permanent 404 must stop paying the full sweep on every request.
+// "No other locale owns this alias". Never written to the shared fs cache (one file per
+// arbitrary path, and the fs driver ignores ttl); kept in a bounded in-process map instead.
 const ALIAS_NOT_FOUND = false;
+
+// ofetch drops its own timeout when a signal is passed, so one hung locale would hold the
+// shared in-flight sweep open indefinitely.
+const TRANSLATE_PATH_TIMEOUT_MS = 5000;
+const ALIAS_MISS_MAX_ENTRIES    = 1000;
+
+const aliasMisses = new Map();
 
 /**
  * Ask one locale's router/translate-path for the alias. Never rejects: lookups still in
@@ -146,7 +154,7 @@ async function translatePathInLocale(host, locale, aliasPath, signal) {
 
     try {
         // silentError: a 404 here is the expected answer for most locales, not an error line.
-        const data = await $fetch(uri, $fetchBaseOptions({ signal, silentError: true }));
+        const data = await $fetch(uri, $fetchBaseOptions({ signal: AbortSignal.any([signal, AbortSignal.timeout(TRANSLATE_PATH_TIMEOUT_MS)]), silentError: true }));
 
         return data?.entity ? { locale, entityPath: data.entity.path || aliasPath } : ALIAS_NOT_FOUND;
     } catch (error) {
@@ -183,7 +191,7 @@ async function _findAliasInOtherLocales(ctx, aliasPath) {
             const result = await lookup;
 
             if (result?.locale) {
-                consola.info(`findAliasInOtherLocales: Alias "${aliasPath}" resolved in locale "${result.locale}"`);
+                consola.info(`findAliasInOtherLocales: Alias ${JSON.stringify(aliasPath)} resolved in locale "${result.locale}"`);
                 return result;
             }
             failure ??= result?.error;
@@ -191,36 +199,65 @@ async function _findAliasInOtherLocales(ctx, aliasPath) {
 
         if (failure) throw failure;
 
-        consola.debug(`findAliasInOtherLocales: Alias "${aliasPath}" not found in any locale`);
+        consola.debug(`findAliasInOtherLocales: Alias ${JSON.stringify(aliasPath)} not found in any locale`);
         return ALIAS_NOT_FOUND;
     } finally {
         controller.abort();
     }
 }
 
+// The path is hashed: unstorage key normalization merges `/`, `\`, `:`, rewrites `,` and
+// truncates at `?`, and `..` makes the fs driver throw. The site prefix stays readable so
+// clearSiteCache still matches.
+function aliasCacheKey(ctx, aliasPath) {
+    const { multiSiteCode, siteCode, locale } = ctx;
+
+    if (!multiSiteCode || !siteCode || !locale)
+        throw new Error(`findAliasInOtherLocales cache key missing: multiSiteCode=${multiSiteCode}, siteCode=${siteCode}, locale=${locale}`);
+
+    const pathHash = createHash('sha1').update(aliasPath).digest('hex').slice(0, 16);
+
+    return `${multiSiteCode}:${siteCode}:${locale}:${pathHash}`;
+}
+
 /**
  * Cached cross-locale alias lookup. Nitro shares one in-flight resolution per key, so
- * concurrent requests for the same alias run a single sweep. Hits live for
- * CACHE_TTL.ALIAS_FALLBACK_HIT; misses expire after CACHE_TTL.ALIAS_FALLBACK_MISS so a
- * newly added alias is picked up without a cache clear.
+ * concurrent requests for the same alias run a single sweep. Only hits are stored, for
+ * CACHE_TTL.ALIAS_FALLBACK_HIT.
  */
 const findAliasInOtherLocalesCached = defineCachedFunction(_findAliasInOtherLocales, {
     ...getBaseCacheOptions('context', 'find-alias-in-other-locales', false, CACHE_TTL.ALIAS_FALLBACK_HIT),
-    // Same arguments as the resolver: (ctx, aliasPath).
-    getKey: (ctx, aliasPath) => {
-        const { multiSiteCode, siteCode, locale } = ctx;
-
-        if (!multiSiteCode || !siteCode || !locale)
-            throw new Error(`findAliasInOtherLocales cache key missing: multiSiteCode=${multiSiteCode}, siteCode=${siteCode}, locale=${locale}`);
-
-        return `${multiSiteCode}:${siteCode}:${locale}:${identifierToKey(aliasPath)}`;
-    },
-    validate: (entry) => rejectNullish(entry)
-        && (entry.value !== ALIAS_NOT_FOUND || Date.now() - (entry.mtime || 0) <= CACHE_TTL.ALIAS_FALLBACK_MISS * 1000),
+    getKey  : aliasCacheKey,
+    validate: (entry) => rejectNullish(entry) && entry.value !== ALIAS_NOT_FOUND,
 });
 
+// Misses expire after CACHE_TTL.ALIAS_FALLBACK_MISS so a newly added alias is picked up
+// without a cache clear.
+function isRecentMiss(key) {
+    const expires = aliasMisses.get(key);
+
+    if (expires === undefined) return false;
+    if (Date.now() <= expires) return true;
+
+    aliasMisses.delete(key);
+    return false;
+}
+
+function recordMiss(key) {
+    aliasMisses.delete(key);
+    if (aliasMisses.size >= ALIAS_MISS_MAX_ENTRIES) aliasMisses.delete(aliasMisses.keys().next().value);
+    aliasMisses.set(key, Date.now() + CACHE_TTL.ALIAS_FALLBACK_MISS * 1000);
+}
+
 async function findAliasInOtherLocales(ctx, aliasPath) {
-    return (await findAliasInOtherLocalesCached(ctx, aliasPath)) || null;
+    const key = aliasCacheKey(ctx, aliasPath);
+
+    if (isRecentMiss(key)) return null;
+
+    const match = await findAliasInOtherLocalesCached(ctx, aliasPath);
+
+    if (match === ALIAS_NOT_FOUND) recordMiss(key);
+    return match || null;
 }
 
 async function getPageIdentifiers(ctx,  headers){
@@ -248,7 +285,7 @@ async function getPageIdentifiers(ctx,  headers){
             if (isAliasPath(cleanPath)) {
                 // A failed sweep is not cached; answer with the original error as before.
                 const aliasMatch = await findAliasInOtherLocales(ctx, cleanPath).catch((e) => {
-                    consola.warn(`findAliasInOtherLocales: lookup for "${cleanPath}" failed`, e?.statusCode ?? e?.message);
+                    consola.warn(`findAliasInOtherLocales: lookup for ${JSON.stringify(cleanPath)} failed`, e?.statusCode ?? e?.message);
                     return null;
                 });
 
