@@ -4,6 +4,49 @@ import { camelCase } from 'change-case/keys';
 
 const localizationExceptionPaths =  [];
 
+/**
+ * Rate-limit repeated identical log lines: prints first occurrence per key per 60s window,
+ * and on next print after window expires, appends "(suppressed N)".
+ * Bounded map (max 500 keys, FIFO eviction).
+ */
+function createRateLimiter() {
+    const map = new Map();
+    const maxKeys = 500;
+
+    return function logOnce(key, level, ...args) {
+        const now = Date.now();
+        const entry = map.get(key);
+
+        // First time or window expired: print and reset
+        if (!entry || now >= entry.windowExpires) {
+            // If there were suppressions and args contains an object, convert to string with count
+            if (entry && entry.count > 0 && typeof args[0] === 'object') {
+                const msg = `${JSON.stringify(args[0])} (suppressed ${entry.count})`;
+                consola[level](msg);
+            } else if (entry && entry.count > 0) {
+                // String args: append to last arg
+                args[args.length - 1] = (args[args.length - 1] || '') + ` (suppressed ${entry.count})`;
+                consola[level](...args);
+            } else {
+                // First occurrence: print normally
+                consola[level](...args);
+            }
+
+            // Evict oldest if at capacity
+            if (map.size >= maxKeys) {
+                map.delete(map.keys().next().value);
+            }
+
+            map.set(key, { windowExpires: now + 60000, count: 0 });
+        } else {
+            // Within window: increment suppression counter
+            entry.count++;
+        }
+    };
+}
+
+const logOnce = createRateLimiter();
+
 export async function getPageData(ctx, event){
     try{
 
@@ -33,12 +76,21 @@ export async function getPageData(ctx, event){
 
         return  await mapData(event, ctx)(data);
     }catch(e){
-        const { localizedHost } = ctx;
+        const { localizedHost, siteCode, path } = ctx;
+        const isExpectedOutcome = (e.statusCode === 404) ||
+                                  (e.statusCode === 503 && e.statusMessage === 'Drupal login unavailable');
 
-        consola.error('getPageData',e);
+        if (isExpectedOutcome) {
+            // Log expected outcomes as single-line warns, no stack; rate-limited
+            const key = `${siteCode}:${e.statusCode}:${JSON.stringify(path)}`;
+            logOnce(key, 'warn', { siteCode, path: JSON.stringify(path), statusCode: e.statusCode, statusMessage: e.statusMessage });
+        } else {
+            // Unexpected failures: full error with stack
+            consola.error('getPageData', e);
+        }
 
-        throw createError({ 
-            statusCode   : e.statusCode, 
+        throw createError({
+            statusCode   : e.statusCode,
             statusMessage: e.statusMessage,
             message      : `Server.util.drupal-page.getPageData: failed to get page identifiers for site/path: ${localizedHost}${ctx.path}`,
             data         : e
@@ -303,7 +355,7 @@ async function findAliasInOtherLocales(ctx, aliasPath) {
 
 async function getPageIdentifiers(ctx,  headers){
     try{
-        const { localizedHost, path, host, locale, locales } = ctx;
+        const { localizedHost, path, host, locale, locales, siteCode } = ctx;
 
         if(!localizedHost || localizedHost?.includes('undefined')) 
             throw createError({ 
@@ -337,8 +389,17 @@ async function getPageIdentifiers(ctx,  headers){
 
         let data;
         try {
-            data = await $fetch(uri, $fetchBaseOptions({ headers}));
+            // silentError: true suppresses the auto-log for a 404 since it's expected when an
+            // alias doesn't resolve in the requested locale; log a debug line instead.
+            const result = await $fetch(uri, $fetchBaseOptions({ headers, silentError: true }));
+            data = result;
         } catch (fetchError) {
+            // Log 404s at debug level since they're expected for many aliases; rate-limit per path
+            if (fetchError.statusCode === 404) {
+                const debugKey = `${siteCode}:404:${JSON.stringify(cleanPath)}`;
+                logOnce(debugKey, 'debug', `getPageIdentifiers: 404 for ${JSON.stringify(cleanPath)} in locale "${locale}"`);
+            }
+
             // If router/translate-path fails and this looks like an alias path,
             // try to find it in other locales
             if (isAlias) {
@@ -399,11 +460,21 @@ async function getPageIdentifiers(ctx,  headers){
 
         return redirect? { ...returnValues, redirect} : returnValues;
     }catch(e){
-        const { host } = ctx;
-        consola.error('getPageIdentifiers',e);
+        const { host, siteCode, path } = ctx;
+        const isExpectedOutcome = (e.statusCode === 404) ||
+                                  (e.statusCode === 503 && e.statusMessage === 'Drupal login unavailable');
 
-        throw createError({ 
-            statusCode   : e.statusCode, 
+        if (isExpectedOutcome) {
+            // Log expected outcomes as single-line warns, no stack; rate-limited
+            const key = `${siteCode}:${e.statusCode}:${JSON.stringify(path)}`;
+            logOnce(key, 'warn', { siteCode, path: JSON.stringify(path), statusCode: e.statusCode, statusMessage: e.statusMessage });
+        } else {
+            // Unexpected failures: full error with stack
+            consola.error('getPageIdentifiers', e);
+        }
+
+        throw createError({
+            statusCode   : e.statusCode,
             statusMessage: e.statusMessage,
             message      : `Server.util.drupal-page.getPageIdentifiers: failed to get page identifiers for site/path: ${host}${ctx.path}`,
             data: e,

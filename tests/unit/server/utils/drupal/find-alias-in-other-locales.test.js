@@ -361,3 +361,82 @@ describe('requested-locale alias-fallback redirect cache (BL-1116)', () => {
     expect(primaryCalls()).toHaveLength(1)
   })
 })
+
+describe('expected failure logging (BL-1117)', () => {
+  it('passes silentError: true to primary lookup and logs 404 at debug level', async () => {
+    await expect(drupalPage.getPageData({ ...baseCtx, path: '/en/nowhere' }, event)).rejects.toMatchObject({ statusCode: 404 })
+
+    const [, opts] = primaryCalls()[0]
+    expect(opts.silentError).toBe(true)
+    // Debug is called for the 404 in the primary lookup
+    expect(consola.debug).toHaveBeenCalledWith(expect.stringContaining('404'))
+    expect(consola.debug).toHaveBeenCalledWith(expect.stringContaining('/nowhere'))
+  })
+
+  it('logs getPageData 404 as single-line warn with no Error object', async () => {
+    // Craft a context where the main page fetch will fail with 404
+    $fetch.mockImplementation((uri) => {
+      if (uri.includes('/router/translate-path')) return Promise.resolve({ entity: { id: '123', path: '/test', type: 'node', bundle: 'content', canonical: 'http://test/en/test', label: 'Test' } })
+      // Main page data fetch fails
+      return Promise.reject(Object.assign(new Error('Not found'), { statusCode: 404 }))
+    })
+
+    await expect(drupalPage.getPageData({ ...baseCtx, path: '/en/test' }, event)).rejects.toMatchObject({ statusCode: 404 })
+
+    expect(consola.warn).toHaveBeenCalledWith({ siteCode: 'asean', path: expect.any(String), statusCode: 404, statusMessage: undefined })
+  })
+
+  it('logs getPageIdentifiers 503 Drupal login unavailable as single-line warn', async () => {
+    $fetch.mockImplementation(() => Promise.reject(Object.assign(new Error('Service Unavailable'), { statusCode: 503, statusMessage: 'Drupal login unavailable' })))
+
+    await expect(drupalPage.getPageData({ ...baseCtx }, event)).rejects.toMatchObject({ statusCode: 503 })
+
+    expect(consola.warn).toHaveBeenCalledWith({ siteCode: 'asean', path: expect.any(String), statusCode: 503, statusMessage: 'Drupal login unavailable' })
+  })
+
+  it('logs unexpected 500 errors with consola.error stack', async () => {
+    $fetch.mockImplementation(() => Promise.reject(Object.assign(new Error('Internal Server Error'), { statusCode: 500 })))
+
+    await expect(drupalPage.getPageData({ ...baseCtx }, event)).rejects.toMatchObject({ statusCode: 500 })
+
+    // Error is logged from getPageIdentifiers, not as warn
+    expect(consola.error).toHaveBeenCalledWith('getPageIdentifiers', expect.any(Error))
+  })
+
+  it('rate-limits repeated identical warn lines: first print, then suppressed inside window, then suppressed count on next print', async () => {
+    const now = Date.now()
+    let mockNow = now
+
+    vi.spyOn(Date, 'now').mockImplementation(() => mockNow)
+    $fetch.mockImplementation(() => Promise.reject(Object.assign(new Error('Not found'), { statusCode: 404 })))
+
+    // First request: logs both debug (primary + sweep not found) and warn
+    await expect(drupalPage.getPageData({ ...baseCtx, path: '/en/nowhere' }, event)).rejects.toMatchObject({ statusCode: 404 })
+    expect(consola.debug).toHaveBeenCalledTimes(2)
+    expect(consola.warn).toHaveBeenCalledTimes(1)
+    const firstWarnCall = consola.warn.mock.calls[0][0]
+    expect(firstWarnCall).toHaveProperty('statusCode', 404)
+
+    // Second request (same path, within 60s): rate-limited, no new calls
+    consola.warn.mockClear()
+    consola.debug.mockClear()
+    await expect(drupalPage.getPageData({ ...baseCtx, path: '/en/nowhere' }, event)).rejects.toMatchObject({ statusCode: 404 })
+    expect(consola.debug).not.toHaveBeenCalled()
+    expect(consola.warn).not.toHaveBeenCalled()
+
+    // Third request (after 60s window): logs again with suppressed count
+    consola.warn.mockClear()
+    consola.debug.mockClear()
+    mockNow = now + 60001
+    await expect(drupalPage.getPageData({ ...baseCtx, path: '/en/nowhere' }, event)).rejects.toMatchObject({ statusCode: 404 })
+    // Both debug calls print again with suppressed count appended
+    expect(consola.debug.mock.calls.length).toBeGreaterThanOrEqual(1)
+    expect(consola.warn).toHaveBeenCalledTimes(1)
+    const thirdWarnCall = consola.warn.mock.calls[0][0]
+    expect(typeof thirdWarnCall).toBe('string')
+    // getPageIdentifiers and getPageData both call with same key, so count=3 (2 calls in second request)
+    expect(thirdWarnCall).toMatch(/suppressed [0-9]+/)
+
+    Date.now.mockRestore()
+  })
+})
