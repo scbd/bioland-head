@@ -9,7 +9,7 @@
 export function parseFocalPoint(value) {
   if (typeof value !== 'string') return null
 
-  const match = value.trim().match(/^(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)$/)
+  const match = value.trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/)
 
   if (!match) return null
 

@@ -11,6 +11,14 @@ describe('hero-focal-point', () => {
       expect(parseFocalPoint('12, 88')).toEqual({ x: 12, y: 88 })
     })
 
+    it('parses a pair with a space before the comma', () => {
+      expect(parseFocalPoint('12 ,88')).toEqual({ x: 12, y: 88 })
+    })
+
+    it('parses a pair with spaces on both sides of the comma', () => {
+      expect(parseFocalPoint(' 12 , 88 ')).toEqual({ x: 12, y: 88 })
+    })
+
     it('parses decimal percentages', () => {
       expect(parseFocalPoint('12.5,87.5')).toEqual({ x: 12.5, y: 87.5 })
     })
