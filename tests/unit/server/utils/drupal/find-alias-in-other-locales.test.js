@@ -333,6 +333,21 @@ describe('requested-locale alias-fallback redirect cache (BL-1116)', () => {
     expect(primaryCalls()).toHaveLength(0)
   })
 
+  it('bypasses the redirect cache for an authenticated session; anonymous still hits it (BL-1116 F2)', async () => {
+    await expect(drupalPage.getPageData({ ...baseCtx }, event)).resolves.toEqual({ redirect: '/vi/mang-chm' })
+    $fetch.mockClear()
+
+    const authEvent = { context: { headers: { Cookie: 'SESSabc123=xyz' } } }
+    await expect(drupalPage.getPageData({ ...baseCtx }, authEvent)).resolves.toEqual({ redirect: '/vi/mang-chm' })
+    expect(primaryCalls()).toHaveLength(1)
+    expect(sweepCalls()).toHaveLength(0)
+
+    $fetch.mockClear()
+    await expect(drupalPage.getPageData({ ...baseCtx }, event)).resolves.toEqual({ redirect: '/vi/mang-chm' })
+    expect(primaryCalls()).toHaveLength(0)
+    expect(sweepCalls()).toHaveLength(0)
+  })
+
   it('does not short-circuit normal (non-redirect) alias resolution', async () => {
     // The alias resolves directly in the requested locale, so getPageIdentifiers never
     // enters the redirect branch that writes the cache - the primary translate-path call

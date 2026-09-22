@@ -141,7 +141,30 @@ const ALIAS_NOT_FOUND = false;
 const TRANSLATE_PATH_TIMEOUT_MS = 5000;
 const ALIAS_MISS_MAX_ENTRIES    = 1000;
 
-const aliasMisses = new Map();
+// Shared shape behind aliasMisses and aliasRedirects below: a bounded in-process map where
+// each entry expires on its own TTL, oldest entry evicted first once maxEntries is reached.
+function boundedTtlMap(maxEntries) {
+    const map = new Map();
+
+    return {
+        get(key) {
+            const entry = map.get(key);
+
+            if (!entry) return undefined;
+            if (Date.now() <= entry.expires) return entry.value;
+
+            map.delete(key);
+            return undefined;
+        },
+        set(key, value, ttlMs) {
+            map.delete(key);
+            if (map.size >= maxEntries) map.delete(map.keys().next().value);
+            map.set(key, { value, expires: Date.now() + ttlMs });
+        },
+    };
+}
+
+const aliasMisses = boundedTtlMap(ALIAS_MISS_MAX_ENTRIES);
 
 /**
  * Ask one locale's router/translate-path for the alias. Never rejects: lookups still in
@@ -234,19 +257,11 @@ const findAliasInOtherLocalesCached = defineCachedFunction(_findAliasInOtherLoca
 // Misses expire after CACHE_TTL.ALIAS_FALLBACK_MISS so a newly added alias is picked up
 // without a cache clear.
 function isRecentMiss(key) {
-    const expires = aliasMisses.get(key);
-
-    if (expires === undefined) return false;
-    if (Date.now() <= expires) return true;
-
-    aliasMisses.delete(key);
-    return false;
+    return aliasMisses.get(key) !== undefined;
 }
 
 function recordMiss(key) {
-    aliasMisses.delete(key);
-    if (aliasMisses.size >= ALIAS_MISS_MAX_ENTRIES) aliasMisses.delete(aliasMisses.keys().next().value);
-    aliasMisses.set(key, Date.now() + CACHE_TTL.ALIAS_FALLBACK_MISS * 1000);
+    aliasMisses.set(key, true, CACHE_TTL.ALIAS_FALLBACK_MISS * 1000);
 }
 
 // A crawler rotates each alias through every locale (/km/x, /lo/x, ...): before this, only
@@ -256,22 +271,23 @@ function recordMiss(key) {
 // by multiSiteCode/siteCode/requested-locale/path - bounded and evicted the same shape as
 // aliasMisses above. Only the redirect case is cached; normal page resolution is unaffected.
 const ALIAS_REDIRECT_MAX_ENTRIES = 1000;
-const aliasRedirects = new Map();
+const aliasRedirects = boundedTtlMap(ALIAS_REDIRECT_MAX_ENTRIES);
 
 function getCachedAliasRedirect(key) {
-    const entry = aliasRedirects.get(key);
-
-    if (!entry) return undefined;
-    if (Date.now() <= entry.expires) return entry.redirect;
-
-    aliasRedirects.delete(key);
-    return undefined;
+    return aliasRedirects.get(key);
 }
 
 function recordAliasRedirect(key, redirect) {
-    aliasRedirects.delete(key);
-    if (aliasRedirects.size >= ALIAS_REDIRECT_MAX_ENTRIES) aliasRedirects.delete(aliasRedirects.keys().next().value);
-    aliasRedirects.set(key, { redirect, expires: Date.now() + CACHE_TTL.ALIAS_REDIRECT * 1000 });
+    aliasRedirects.set(key, redirect, CACHE_TTL.ALIAS_REDIRECT * 1000);
+}
+
+// An authenticated request must always re-run the header-bearing primary translate-path
+// lookup: a cached anonymous redirect could hide an unpublished requested-locale alias
+// from an editor who is entitled to see it. Anonymous traffic keeps the fast cached path.
+function isAuthenticatedRequest(headers) {
+    const cookie = headers?.Cookie || headers?.cookie;
+
+    return typeof cookie === 'string' && /S?SESS/.test(cookie);
 }
 
 async function findAliasInOtherLocales(ctx, aliasPath) {
@@ -302,7 +318,8 @@ async function getPageIdentifiers(ctx,  headers){
         const uri        = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanPath||'/')}`;
 
         const isAlias          = isAliasPath(cleanPath);
-        const aliasRedirectKey = isAlias ? aliasCacheKey(ctx, cleanPath) : null;
+        const isAuthenticated  = isAuthenticatedRequest(headers);
+        const aliasRedirectKey = isAlias && !isAuthenticated ? aliasCacheKey(ctx, cleanPath) : null;
         const cachedRedirect   = aliasRedirectKey ? getCachedAliasRedirect(aliasRedirectKey) : undefined;
 
         if (cachedRedirect) {
@@ -336,7 +353,7 @@ async function getPageIdentifiers(ctx,  headers){
                     const redirectPath = `/${aliasMatch.locale}${cleanPath}`;
                     consola.info(`Alias "${cleanPath}" found in locale "${aliasMatch.locale}", redirecting`);
 
-                    recordAliasRedirect(aliasRedirectKey, redirectPath);
+                    if (aliasRedirectKey) recordAliasRedirect(aliasRedirectKey, redirectPath);
 
                     return {
                         uuid: null,
