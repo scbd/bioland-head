@@ -131,46 +131,96 @@ function isAliasPath(path) {
     return !numericPatterns.some(pattern => pattern.test(path));
 }
 
+// Cached value for "no other locale owns this alias". Not null: rejectNullish refuses to
+// store null, and a permanent 404 must stop paying the full sweep on every request.
+const ALIAS_NOT_FOUND = false;
+
+/**
+ * Ask one locale's router/translate-path for the alias. Never rejects: lookups still in
+ * flight are abandoned once an earlier locale answers, so a rejection would go unhandled.
+ *
+ * @returns {Promise<{locale: string, entityPath: string}|false|{error: Error}>}
+ */
+async function translatePathInLocale(host, locale, aliasPath, signal) {
+    const uri = `${host}/${locale}/router/translate-path?path=${encodeURIComponent(aliasPath)}`;
+
+    try {
+        // silentError: a 404 here is the expected answer for most locales, not an error line.
+        const data = await $fetch(uri, $fetchBaseOptions({ signal, silentError: true }));
+
+        return data?.entity ? { locale, entityPath: data.entity.path || aliasPath } : ALIAS_NOT_FOUND;
+    } catch (error) {
+        return error?.statusCode === 404 ? ALIAS_NOT_FOUND : { error };
+    }
+}
+
 /**
  * Search for an alias across all locales when it doesn't resolve in the requested locale.
  * This handles cases where content only has an alias in one language.
- * 
- * Tries the router/translate-path endpoint with each available locale until one succeeds.
- * 
+ *
+ * Every other locale is asked at once, and the answers are read in configured locale
+ * order so the winner (and therefore the cached redirect) does not depend on which
+ * Drupal response lands first. Throws when no locale owns the alias and at least one
+ * could not be asked, so an outage is never cached as a miss (BL-1066).
+ *
  * @param {Object} ctx - The request context
  * @param {string} aliasPath - The alias path to search for (without locale prefix)
- * @returns {Promise<{locale: string, entityPath: string}|null>} Found locale and entity path, or null
+ * @returns {Promise<{locale: string, entityPath: string}|false>} Found locale and entity path, or ALIAS_NOT_FOUND
  */
-async function findAliasInOtherLocales(ctx, aliasPath) {
+async function _findAliasInOtherLocales(ctx, aliasPath) {
     const { host, locale: requestedLocale, locales } = ctx;
-    
-    if (!locales || locales.length === 0) return null;
-    
-    // Try each locale except the one that already failed
-    const otherLocales = locales.filter(l => l !== requestedLocale);
-    
-    consola.debug(`findAliasInOtherLocales: Trying locales [${otherLocales.join(', ')}] for alias "${aliasPath}"`);
-    
-    for (const tryLocale of otherLocales) {
-        try {
-            const localizedHost = `${host}/${tryLocale}`;
-            const uri = `${localizedHost}/router/translate-path?path=${encodeURIComponent(aliasPath)}`;
-            
-            const data = await $fetch(uri, $fetchBaseOptions());
-            
-            // If we got here without error, the path resolved in this locale
-            if (data?.entity) {
-                consola.info(`findAliasInOtherLocales: Alias "${aliasPath}" resolved in locale "${tryLocale}"`);
-                return { locale: tryLocale, entityPath: data.entity.path || aliasPath };
+    const otherLocales = (locales || []).filter(l => l !== requestedLocale);
+
+    if (!otherLocales.length) return ALIAS_NOT_FOUND;
+
+    const controller = new AbortController();
+    const lookups    = otherLocales.map(tryLocale => translatePathInLocale(host, tryLocale, aliasPath, controller.signal));
+
+    try {
+        let failure;
+
+        for (const lookup of lookups) {
+            const result = await lookup;
+
+            if (result?.locale) {
+                consola.info(`findAliasInOtherLocales: Alias "${aliasPath}" resolved in locale "${result.locale}"`);
+                return result;
             }
-        } catch (e) {
-            // This locale also didn't work, continue to next
-            consola.debug(`findAliasInOtherLocales: Alias not found in locale "${tryLocale}"`);
+            failure ??= result?.error;
         }
+
+        if (failure) throw failure;
+
+        consola.debug(`findAliasInOtherLocales: Alias "${aliasPath}" not found in any locale`);
+        return ALIAS_NOT_FOUND;
+    } finally {
+        controller.abort();
     }
-    
-    consola.debug(`findAliasInOtherLocales: Alias "${aliasPath}" not found in any locale`);
-    return null;
+}
+
+/**
+ * Cached cross-locale alias lookup. Nitro shares one in-flight resolution per key, so
+ * concurrent requests for the same alias run a single sweep. Hits live for
+ * CACHE_TTL.ALIAS_FALLBACK_HIT; misses expire after CACHE_TTL.ALIAS_FALLBACK_MISS so a
+ * newly added alias is picked up without a cache clear.
+ */
+const findAliasInOtherLocalesCached = defineCachedFunction(_findAliasInOtherLocales, {
+    ...getBaseCacheOptions('context', 'find-alias-in-other-locales', false, CACHE_TTL.ALIAS_FALLBACK_HIT),
+    // Same arguments as the resolver: (ctx, aliasPath).
+    getKey: (ctx, aliasPath) => {
+        const { multiSiteCode, siteCode, locale } = ctx;
+
+        if (!multiSiteCode || !siteCode || !locale)
+            throw new Error(`findAliasInOtherLocales cache key missing: multiSiteCode=${multiSiteCode}, siteCode=${siteCode}, locale=${locale}`);
+
+        return `${multiSiteCode}:${siteCode}:${locale}:${identifierToKey(aliasPath)}`;
+    },
+    validate: (entry) => rejectNullish(entry)
+        && (entry.value !== ALIAS_NOT_FOUND || Date.now() - (entry.mtime || 0) <= CACHE_TTL.ALIAS_FALLBACK_MISS * 1000),
+});
+
+async function findAliasInOtherLocales(ctx, aliasPath) {
+    return (await findAliasInOtherLocalesCached(ctx, aliasPath)) || null;
 }
 
 async function getPageIdentifiers(ctx,  headers){
@@ -196,8 +246,12 @@ async function getPageIdentifiers(ctx,  headers){
             // If router/translate-path fails and this looks like an alias path,
             // try to find it in other locales
             if (isAliasPath(cleanPath)) {
-                const aliasMatch = await findAliasInOtherLocales(ctx, cleanPath);
-                
+                // A failed sweep is not cached; answer with the original error as before.
+                const aliasMatch = await findAliasInOtherLocales(ctx, cleanPath).catch((e) => {
+                    consola.warn(`findAliasInOtherLocales: lookup for "${cleanPath}" failed`, e?.statusCode ?? e?.message);
+                    return null;
+                });
+
                 if (aliasMatch) {
                     // Found the alias in another locale - redirect to that locale's version
                     const redirectPath = `/${aliasMatch.locale}${cleanPath}`;

@@ -1,4 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+// drupal-page.js builds its cached alias lookup at import time.
+vi.hoisted(() => {
+  globalThis.CACHE_TTL = {}
+  globalThis.getBaseCacheOptions = () => ({})
+  globalThis.defineCachedFunction = (fn) => fn
+})
+
 import { backfillAttachments, getSearchParams } from '../../../../server/utils/drupal/drupal-page.js'
 
 // Test the isAliasPath helper function logic
