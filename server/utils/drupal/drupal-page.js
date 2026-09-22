@@ -36,7 +36,7 @@ export async function getPageData(ctx, event){
                 consola.warn(`getPageData: login unavailable, using plain language map`, {
                     siteCode:   ctx.siteCode,
                     statusCode: e.statusCode,
-                    message:    e.statusMessage
+                    message:    e.statusMessage || e.message
                 });
 
                 const { type: aliasType, id: aliasId } = entityTypeAndId(data);
