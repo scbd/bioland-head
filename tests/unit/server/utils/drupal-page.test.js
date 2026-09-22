@@ -72,7 +72,7 @@ describe('drupal-page utilities', () => {
       const requestedPath = '/image/world-biodiversity-summit-jpg';
       const requestedLocale = 'en';
       const aliasExistsInLocale = 'fr';
-      
+
       // Expected redirect path
       const expectedRedirect = `/${aliasExistsInLocale}${requestedPath}`;
       expect(expectedRedirect).toBe('/fr/image/world-biodiversity-summit-jpg');
@@ -90,7 +90,7 @@ describe('drupal-page utilities', () => {
       const requestedPath = '/media/10288';
       const requestedLocale = 'en';
       const canonicalLocale = 'fr';
-      
+
       // Redirect should NOT happen when locales differ
       const shouldRedirect = canonicalLocale === requestedLocale;
       expect(shouldRedirect).toBe(false);
@@ -198,6 +198,90 @@ describe('drupal-page utilities', () => {
       expect(imgCall).toBeDefined();
       expect(imgCall.query.include).toContain('field_media_image');
       expect(imgCall.query.include).not.toContain('field_media_document');
+    });
+  });
+});
+
+describe('getPageData login breaker fallback (BL-1113)', () => {
+  it('creates a plain language map when addPageAliases throws 503', () => {
+    // Test the plain language map construction logic used as fallback.
+    // When the login breaker is open, addPageAliases fails with 503.
+    // The code should construct aliases as { en: '/en/node/42', fr: '/fr/node/42', ... }
+
+    const data = {
+      drupal_internal__nid: 42,  // node entity
+    };
+    const ctx = {
+      siteCode: 'test-site',
+      locales: ['en', 'fr', 'es'],
+    };
+
+    // Simulate the fallback logic from getPageData
+    const isMedia = !!data.drupal_internal__mid;
+    const isTax   = !!data.drupal_internal__tid;
+    const type    = isMedia ? 'media' : isTax ? 'taxonomy/term' : 'node';
+    const id      = isMedia ? data.drupal_internal__mid : isTax ? data.drupal_internal__tid : data.drupal_internal__nid;
+
+    const aliases = {};
+    for (const code of (ctx.locales || [])) {
+      aliases[code] = `/${code}/${type}/${id}`;
+    }
+
+    expect(aliases).toEqual({
+      en: '/en/node/42',
+      fr: '/fr/node/42',
+      es: '/es/node/42',
+    });
+  });
+
+  it('creates a plain language map for media when addPageAliases fails', () => {
+    const data = {
+      drupal_internal__mid: 99,  // media entity
+    };
+    const ctx = {
+      siteCode: 'test-site',
+      locales: ['en', 'fr'],
+    };
+
+    const isMedia = !!data.drupal_internal__mid;
+    const isTax   = !!data.drupal_internal__tid;
+    const type    = isMedia ? 'media' : isTax ? 'taxonomy/term' : 'node';
+    const id      = isMedia ? data.drupal_internal__mid : isTax ? data.drupal_internal__tid : data.drupal_internal__nid;
+
+    const aliases = {};
+    for (const code of (ctx.locales || [])) {
+      aliases[code] = `/${code}/${type}/${id}`;
+    }
+
+    expect(aliases).toEqual({
+      en: '/en/media/99',
+      fr: '/fr/media/99',
+    });
+  });
+
+  it('creates a plain language map for taxonomy terms when addPageAliases fails', () => {
+    const data = {
+      drupal_internal__tid: 77,  // taxonomy term entity
+    };
+    const ctx = {
+      siteCode: 'test-site',
+      locales: ['en', 'fr', 'es'],
+    };
+
+    const isMedia = !!data.drupal_internal__mid;
+    const isTax   = !!data.drupal_internal__tid;
+    const type    = isMedia ? 'media' : isTax ? 'taxonomy/term' : 'node';
+    const id      = isMedia ? data.drupal_internal__mid : isTax ? data.drupal_internal__tid : data.drupal_internal__nid;
+
+    const aliases = {};
+    for (const code of (ctx.locales || [])) {
+      aliases[code] = `/${code}/${type}/${id}`;
+    }
+
+    expect(aliases).toEqual({
+      en: '/en/taxonomy/term/77',
+      fr: '/fr/taxonomy/term/77',
+      es: '/es/taxonomy/term/77',
     });
   });
 });

@@ -26,8 +26,32 @@ export async function getPageData(ctx, event){
         const { data } = await $fetch(uri, $fetchBaseOptions({ query, headers }));
 
         data.label = label;
-        
-        await addPageAliases(ctx,data).then((aliases)=> data.aliases=aliases)
+
+        try {
+            await addPageAliases(ctx, data).then((aliases) => data.aliases = aliases);
+        } catch (e) {
+            // When the Drupal login breaker is open, mapAliasByLocale fails with a 503.
+            // Fall back to a plain language map: { en: '/en/node/123', fr: '/fr/node/123', ... }
+            if (e.statusCode === 503) {
+                consola.warn(`getPageData: login unavailable, using plain language map`, {
+                    siteCode:   ctx.siteCode,
+                    statusCode: e.statusCode,
+                    message:    e.statusMessage || e.message
+                });
+
+                const isMedia = !!data.drupal_internal__mid;
+                const isTax   = !!data.drupal_internal__tid;
+                const type    = isMedia ? 'media' : isTax ? 'taxonomy/term' : 'node';
+                const id      = isMedia ? data.drupal_internal__mid : isTax ? data.drupal_internal__tid : data.drupal_internal__nid;
+
+                data.aliases = {};
+                for (const code of (ctx.locales || [])) {
+                    data.aliases[code] = `/${code}/${type}/${id}`;
+                }
+            } else {
+                throw e;
+            }
+        }
         
         if(data.type === 'taxonomy_term--system_pages' && !data?.parent[0].id !== 'virtual' ) await getChildren(ctx, data);
 
