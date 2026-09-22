@@ -36,14 +36,14 @@ export async function getPageData(ctx, event){
                 consola.warn(`getPageData: login unavailable, using plain language map`, {
                     siteCode:   ctx.siteCode,
                     statusCode: e.statusCode,
-                    message:    e.statusMessage || e.message
+                    message:    e.statusMessage
                 });
 
-                const { type, id } = entityTypeAndId(data);
+                const { type: aliasType, id: aliasId } = entityTypeAndId(data);
 
                 data.aliases = {};
-                if (id) for (const code of (ctx.locales || [])) {
-                    data.aliases[code] = `/${code}/${type}/${id}`;
+                if (aliasId) for (const code of (ctx.locales || [])) {
+                    data.aliases[code] = `/${code}/${aliasType}/${aliasId}`;
                 }
             } else {
                 throw e;

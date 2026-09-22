@@ -72,7 +72,7 @@ describe('drupal-page utilities', () => {
       const requestedPath = '/image/world-biodiversity-summit-jpg';
       const requestedLocale = 'en';
       const aliasExistsInLocale = 'fr';
-
+      
       // Expected redirect path
       const expectedRedirect = `/${aliasExistsInLocale}${requestedPath}`;
       expect(expectedRedirect).toBe('/fr/image/world-biodiversity-summit-jpg');
@@ -90,7 +90,7 @@ describe('drupal-page utilities', () => {
       const requestedPath = '/media/10288';
       const requestedLocale = 'en';
       const canonicalLocale = 'fr';
-
+      
       // Redirect should NOT happen when locales differ
       const shouldRedirect = canonicalLocale === requestedLocale;
       expect(shouldRedirect).toBe(false);
