@@ -249,6 +249,31 @@ function recordMiss(key) {
     aliasMisses.set(key, Date.now() + CACHE_TTL.ALIAS_FALLBACK_MISS * 1000);
 }
 
+// A crawler rotates each alias through every locale (/km/x, /lo/x, ...): before this, only
+// the cross-locale sweep (findAliasInOtherLocalesCached) was cached, so the requested-locale
+// router/translate-path lookup still ran uncached on every one of those requests (BL-1116).
+// This caches the redirect DECISION itself - keyed by aliasCacheKey, so it already varies
+// by multiSiteCode/siteCode/requested-locale/path - bounded and evicted the same shape as
+// aliasMisses above. Only the redirect case is cached; normal page resolution is unaffected.
+const ALIAS_REDIRECT_MAX_ENTRIES = 1000;
+const aliasRedirects = new Map();
+
+function getCachedAliasRedirect(key) {
+    const entry = aliasRedirects.get(key);
+
+    if (!entry) return undefined;
+    if (Date.now() <= entry.expires) return entry.redirect;
+
+    aliasRedirects.delete(key);
+    return undefined;
+}
+
+function recordAliasRedirect(key, redirect) {
+    aliasRedirects.delete(key);
+    if (aliasRedirects.size >= ALIAS_REDIRECT_MAX_ENTRIES) aliasRedirects.delete(aliasRedirects.keys().next().value);
+    aliasRedirects.set(key, { redirect, expires: Date.now() + CACHE_TTL.ALIAS_REDIRECT * 1000 });
+}
+
 async function findAliasInOtherLocales(ctx, aliasPath) {
     const key = aliasCacheKey(ctx, aliasPath);
 
@@ -276,13 +301,30 @@ async function getPageIdentifiers(ctx,  headers){
         const cleanPath  = removeLocalizationFromPath(ctx, path);
         const uri        = `${localizedHost}/router/translate-path?path=${encodeURIComponent(cleanPath||'/')}`;
 
+        const isAlias          = isAliasPath(cleanPath);
+        const aliasRedirectKey = isAlias ? aliasCacheKey(ctx, cleanPath) : null;
+        const cachedRedirect   = aliasRedirectKey ? getCachedAliasRedirect(aliasRedirectKey) : undefined;
+
+        if (cachedRedirect) {
+            return {
+                uuid: null,
+                id: null,
+                type: null,
+                bundle: null,
+                pagePath: path,
+                path,
+                label: null,
+                redirect: cachedRedirect
+            };
+        }
+
         let data;
         try {
             data = await $fetch(uri, $fetchBaseOptions({ headers}));
         } catch (fetchError) {
             // If router/translate-path fails and this looks like an alias path,
             // try to find it in other locales
-            if (isAliasPath(cleanPath)) {
+            if (isAlias) {
                 // A failed sweep is not cached; answer with the original error as before.
                 const aliasMatch = await findAliasInOtherLocales(ctx, cleanPath).catch((e) => {
                     consola.warn(`findAliasInOtherLocales: lookup for ${JSON.stringify(cleanPath)} failed`, e?.statusCode ?? e?.message);
@@ -293,7 +335,9 @@ async function getPageIdentifiers(ctx,  headers){
                     // Found the alias in another locale - redirect to that locale's version
                     const redirectPath = `/${aliasMatch.locale}${cleanPath}`;
                     consola.info(`Alias "${cleanPath}" found in locale "${aliasMatch.locale}", redirecting`);
-                    
+
+                    recordAliasRedirect(aliasRedirectKey, redirectPath);
+
                     return {
                         uuid: null,
                         id: null,
