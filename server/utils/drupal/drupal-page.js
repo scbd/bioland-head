@@ -39,13 +39,10 @@ export async function getPageData(ctx, event){
                     message:    e.statusMessage || e.message
                 });
 
-                const isMedia = !!data.drupal_internal__mid;
-                const isTax   = !!data.drupal_internal__tid;
-                const type    = isMedia ? 'media' : isTax ? 'taxonomy/term' : 'node';
-                const id      = isMedia ? data.drupal_internal__mid : isTax ? data.drupal_internal__tid : data.drupal_internal__nid;
+                const { type, id } = entityTypeAndId(data);
 
                 data.aliases = {};
-                for (const code of (ctx.locales || [])) {
+                if (id) for (const code of (ctx.locales || [])) {
                     data.aliases[code] = `/${code}/${type}/${id}`;
                 }
             } else {
@@ -91,12 +88,14 @@ function hasLocalizationException({ path }){
 
     return false
 }
+function entityTypeAndId(data){
+    if(data.drupal_internal__nid) return { type: 'node',          id: data.drupal_internal__nid };
+    if(data.drupal_internal__tid) return { type: 'taxonomy/term', id: data.drupal_internal__tid };
+
+    return { type: 'media', id: data.drupal_internal__mid };
+}
 async function addPageAliases(ctx,data){
-    const isMedia = !!data.drupal_internal__mid 
-    const isTax   = !!data.drupal_internal__tid
-    const isNode  = !!data.drupal_internal__nid
-    const type    = isNode? 'node' : isTax? 'taxonomy/term' : 'media';
-    const id   = isNode? data.drupal_internal__nid : isTax? data.drupal_internal__tid : data.drupal_internal__mid;
+    const { type, id } = entityTypeAndId(data);
 
     return mapAliasByLocale(ctx, type, id)
 }
