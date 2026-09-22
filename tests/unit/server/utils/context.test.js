@@ -417,6 +417,58 @@ describe('Context Utilities', () => {
     })
   })
 
+  describe('DMSM revalidation backoff (BL-1115)', () => {
+    let cachedResolver
+
+    beforeEach(async () => {
+      vi.resetModules()
+      vi.stubGlobal('cachedFunction', (fn, options) => {
+        cachedResolver = fn
+        return (...args) => { options.getKey(...args); return fn(...args) }
+      })
+      vi.useFakeTimers()
+      contextModule = await import('../../../../server/utils/context-unified')
+    })
+
+    afterEach(() => vi.useRealTimers())
+
+    it('makes zero DMSM fetches for a Site retried inside the backoff window, then fetches again once it elapses', async () => {
+      $fetch.mockRejectedValue(new Error('Fixture DMSM unavailable'))
+      const event = eventFor({ host: 'be.localhost' })
+
+      await expect(cachedResolver(event, 'be')).rejects.toThrow(/be/)
+      expect($fetch).toHaveBeenCalledTimes(1)
+
+      vi.advanceTimersByTime(CACHE_TTL.ONE_MINUTE * 1000 - 1)
+      await expect(cachedResolver(event, 'be')).rejects.toThrow(/be/)
+      expect($fetch).toHaveBeenCalledTimes(1)
+
+      vi.advanceTimersByTime(2)
+      $fetch.mockResolvedValueOnce(config)
+      await expect(cachedResolver(event, 'be')).resolves.toEqual(config)
+      expect($fetch).toHaveBeenCalledTimes(2)
+    })
+
+    it('never caches the backed-off failure as config', async () => {
+      $fetch.mockRejectedValue(new Error('Fixture DMSM unavailable'))
+      const event = eventFor({ host: 'be.localhost' })
+
+      await expect(cachedResolver(event, 'be')).rejects.toThrow(/be/)
+      await expect(contextModule.getCachedDmsmConfig(event, 'be')).resolves.toBeNull()
+    })
+
+    it('backs off per Site, not globally', async () => {
+      $fetch.mockRejectedValue(new Error('Fixture DMSM unavailable'))
+      const event = eventFor({ host: 'be.localhost' })
+
+      await expect(cachedResolver(event, 'be')).rejects.toThrow(/be/)
+      expect($fetch).toHaveBeenCalledTimes(1)
+
+      await expect(cachedResolver(event, 'fr')).rejects.toThrow(/fr/)
+      expect($fetch).toHaveBeenCalledTimes(2)
+    })
+  })
+
   describe('getCountryCode', () => {
     it('returns country if present', () => {
       expect(contextModule.getCountryCode({ country: 'BE' })).toBe('BE')

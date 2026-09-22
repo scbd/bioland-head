@@ -235,13 +235,56 @@ async function fetchDmsmConfigCore(siteCode: string): Promise<DmsmConfig> {
   return data;
 }
 
+/** How long a failed revalidation backs off before DMSM is probed again for that Site. */
+const DMSM_REVALIDATION_BACKOFF_MS = CACHE_TTL.ONE_MINUTE * 1000;
+
+/**
+ * Per-Site, in-process backoff after a failed revalidation. Keyed (not just per-process)
+ * because `_fetchDmsmConfig` is itself keyed by env+multiSiteCode+siteCode.
+ */
+const dmsmRevalidationBackoff = new Map<string, { untilTs: number; error: DmsmConfigUnavailableError }>();
+
+/**
+ * Wraps fetchDmsmConfigCore so a failed revalidation backs off for DMSM_REVALIDATION_BACKOFF_MS
+ * before trying again, instead of being retried on every request.
+ *
+ * Nitro's SWR `cachedFunction` (see node_modules/nitropack/dist/runtime/internal/cache.mjs)
+ * serves a stale entry immediately and kicks the resolver in the background whenever the
+ * entry is past maxAge; `pending[key]` only coalesces requests that overlap an in-flight
+ * resolution, so once one fails and clears `pending`, the very next request starts a brand
+ * new resolution - that is the thundering herd from BL-1115. Short-circuiting the resolver
+ * itself (rather than `shouldInvalidateCache`, which only controls when nitro decides to
+ * call the resolver, not what it does once called) keeps the fix local to this one function
+ * and touches nothing nitro writes to the shared cache: on backoff we rethrow the previous
+ * failure without calling DMSM, so `validate` below still rejects it and BL-1065 still holds
+ * (a failure is never stored as config). When there is no stale entry, nitro awaits this
+ * rejection synchronously either way, so callers still see DmsmConfigUnavailableError.
+ */
+async function fetchDmsmConfigWithBackoff(siteCode: string): Promise<DmsmConfig> {
+  const { env, multiSiteCode } = useRuntimeConfig().public;
+  const backoffKey = `${env}:${multiSiteCode}:${siteCode}`;
+  const backoff = dmsmRevalidationBackoff.get(backoffKey);
+
+  if (backoff && Date.now() < backoff.untilTs)
+    throw backoff.error;
+
+  try {
+    const config = await fetchDmsmConfigCore(siteCode);
+    dmsmRevalidationBackoff.delete(backoffKey);
+    return config;
+  } catch (e) {
+    dmsmRevalidationBackoff.set(backoffKey, { untilTs: Date.now() + DMSM_REVALIDATION_BACKOFF_MS, error: e as DmsmConfigUnavailableError });
+    throw e;
+  }
+}
+
 /**
  * Get DMSM config with caching and request coalescing
  * Uses cachedFunction for persistent cache + in-memory deduplication for concurrent requests
  */
 const _fetchDmsmConfig = cachedFunction(
   async (_event: H3Event, siteCode: string): Promise<DmsmConfig> => {
-    return fetchDmsmConfigCore(siteCode);
+    return fetchDmsmConfigWithBackoff(siteCode);
   },
   {
     maxAge: CACHE_TTL.FIVE_MINUTES, // 5 minutes cache
