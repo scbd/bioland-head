@@ -418,10 +418,12 @@ describe('Context Utilities', () => {
   })
 
   describe('DMSM revalidation backoff (BL-1115)', () => {
-    let cachedResolver
+    let cachedResolver, staleEntry
 
     beforeEach(async () => {
       vi.resetModules()
+      staleEntry = { value: config }
+      vi.stubGlobal('useStorage', () => ({ getItem: vi.fn(async () => staleEntry) }))
       vi.stubGlobal('cachedFunction', (fn, options) => {
         cachedResolver = fn
         return (...args) => { options.getKey(...args); return fn(...args) }
@@ -455,6 +457,39 @@ describe('Context Utilities', () => {
 
       await expect(cachedResolver(event, 'be')).rejects.toThrow(/be/)
       await expect(contextModule.getCachedDmsmConfig(event, 'be')).resolves.toBeNull()
+    })
+
+    it('retries DMSM on the very next request for a Site with no stale entry', async () => {
+      staleEntry = null
+      $fetch.mockRejectedValue(new Error('Fixture DMSM unavailable'))
+      const event = eventFor({ host: 'be.localhost' })
+
+      await expect(cachedResolver(event, 'be')).rejects.toThrow(/be/)
+      $fetch.mockResolvedValueOnce(config)
+      await expect(cachedResolver(event, 'be')).resolves.toEqual(config)
+      expect($fetch).toHaveBeenCalledTimes(2)
+    })
+
+    it('logs the short-circuit at debug level', async () => {
+      $fetch.mockRejectedValue(new Error('Fixture DMSM unavailable'))
+      const event = eventFor({ host: 'be.localhost' })
+
+      await expect(cachedResolver(event, 'be')).rejects.toThrow(/be/)
+      await expect(cachedResolver(event, 'be')).rejects.toThrow(/be/)
+      expect(consola.debug).toHaveBeenCalledWith(expect.stringContaining('backed off'), { siteCode: 'be', remainingMs: CACHE_TTL.ONE_MINUTE * 1000 })
+    })
+
+    it('caps the backoff map at 500 Sites, evicting the oldest first', async () => {
+      $fetch.mockRejectedValue(new Error('Fixture DMSM unavailable'))
+      const event = eventFor({ host: 'be.localhost' })
+
+      for (let i = 0; i <= 500; i++) await expect(cachedResolver(event, `s${i}`)).rejects.toThrow()
+      expect($fetch).toHaveBeenCalledTimes(501)
+
+      await expect(cachedResolver(event, 's500')).rejects.toThrow()
+      expect($fetch).toHaveBeenCalledTimes(501)
+      await expect(cachedResolver(event, 's0')).rejects.toThrow()
+      expect($fetch).toHaveBeenCalledTimes(502)
     })
 
     it('backs off per Site, not globally', async () => {

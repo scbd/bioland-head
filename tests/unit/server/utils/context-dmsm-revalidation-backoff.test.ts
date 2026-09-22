@@ -46,6 +46,7 @@ beforeEach(() => {
   vi.stubGlobal('$fetch', fetchFixture)
   vi.stubGlobal('CACHE_TTL', CACHE_TTL)
   vi.stubGlobal('consola', { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() })
+  vi.stubGlobal('useStorage', () => storage)
   vi.stubGlobal('cachedFunction', loadCache(() => storage, () => ({ captureError: vi.fn() }), hash, isEvent))
 })
 
@@ -103,7 +104,7 @@ describe('DMSM config revalidation backoff through the real serialized Nitro SWR
     expect(entry?.value).toEqual(staleConfig)
   })
 
-  it('still hands the caller nothing for a Site with no stale entry, in and out of the backoff window', async () => {
+  it('does not back off a Site with no stale entry, so a recovered DMSM is picked up on the next request', async () => {
     const getCachedDmsmConfig = await importFresh()
     const event = eventFor()
 
@@ -112,13 +113,9 @@ describe('DMSM config revalidation backoff through the real serialized Nitro SWR
     await drain()
     expect(fetchFixture).toHaveBeenCalledTimes(1)
 
-    // Inside the backoff window, still no config to serve - the miss surfaces every time.
-    expect(await getCachedDmsmConfig(event, 'unseen')).toBeNull()
-    await drain()
-    expect(fetchFixture).toHaveBeenCalledTimes(1)
-
-    vi.setSystemTime(Date.now() + CACHE_TTL.ONE_MINUTE * 1000 + 1)
-    expect(await getCachedDmsmConfig(event, 'unseen')).toBeNull()
+    // Nothing stale to serve, so nitro awaits the resolver: it must retry DMSM, not replay the failure.
+    fetchFixture.mockResolvedValue(freshConfig)
+    expect(await getCachedDmsmConfig(event, 'unseen')).toEqual(freshConfig)
     await drain()
     expect(fetchFixture).toHaveBeenCalledTimes(2)
   })
