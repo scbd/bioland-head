@@ -1,6 +1,6 @@
 import net   from 'node:net';
 import https from 'node:https';
-import { Agent, buildConnector } from 'undici';
+import { Agent, buildConnector, errors } from 'undici';
 
 // BL-1149: inside a swarm stack the head reaches Drupal on the stack-private network
 // (NUXT_DRUPAL_INTERNAL_URL, e.g. http://drupal-internal) instead of going back out through
@@ -11,6 +11,10 @@ import { Agent, buildConnector } from 'undici';
 // Hostnames of Drupal tenant origins, fed from the DMSM-derived canonical hosts. Bounded by the
 // number of Sites in DMSM; anything not in here (redirect targets, other APIs) is never swapped.
 const drupalHosts = new Set();
+
+// Same bound as undici's default connect timeout on the public path, so an unreachable
+// internal service fails as fast as an unreachable public one instead of hanging on the OS.
+const CONNECT_TIMEOUT_MS = 1000 * 10;
 
 let transport; // undefined = not built yet, null = disabled
 
@@ -38,22 +42,34 @@ function getTransport () {
 
   const { hostname, port } = new URL(drupalInternalUrl);
   const internalPort       = Number(port) || 80;
-  const connectInternal    = () => net.connect(internalPort, hostname);
   const connectPublic      = buildConnector({});
+
+  const connectInternal = () => {
+    const socket = net.connect(internalPort, hostname);
+    const timer  = setTimeout(() => socket.destroy(new errors.ConnectTimeoutError(`connect timeout to ${hostname}:${internalPort}`)), CONNECT_TIMEOUT_MS);
+
+    socket.once('connect', () => clearTimeout(timer));
+    socket.once('close', () => clearTimeout(timer));
+
+    return socket;
+  };
 
   // A redirect to a host that is not a Drupal tenant keeps normal DNS + TLS.
   const dispatcher = new Agent({
     connect: (opts, callback) => {
       if (!isDrupalHost(opts.hostname)) return connectPublic(opts, callback);
 
-      const socket  = connectInternal();
-      const onError = (error) => callback(error, null);
+      const socket = connectInternal();
+      let settled  = false;
+      const settle = (error) => {
+        if (settled) return;
+        settled = true;
+        socket.off('error', settle);
+        callback(error || null, error ? null : socket);
+      };
 
-      socket.once('error', onError);
-      socket.once('connect', () => {
-        socket.off('error', onError);
-        callback(null, socket);
-      });
+      socket.once('error', settle);
+      socket.once('connect', () => settle());
     },
   });
 
