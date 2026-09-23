@@ -7,7 +7,7 @@ import {
   getDrupalInternalTransport,
   applyDrupalInternalFetch,
   drupalInternalSuperagent,
-  resetDrupalInternal,
+  __resetDrupalInternalForTests,
 } from '~/server/utils/drupal/drupal-internal.js'
 import { $fetchBaseOptions } from '~/server/utils/fetch-options'
 
@@ -41,10 +41,10 @@ const setInternalUrl = (drupalInternalUrl) => {
   globalThis.useRuntimeConfig = () => ({ drupalInternalUrl, public: {} })
 }
 
-beforeEach(() => resetDrupalInternal())
+beforeEach(() => __resetDrupalInternalForTests())
 
-afterEach(() => {
-  resetDrupalInternal()
+afterEach(async () => {
+  await __resetDrupalInternalForTests()
   delete globalThis.useRuntimeConfig
 })
 

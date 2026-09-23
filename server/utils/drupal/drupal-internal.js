@@ -166,10 +166,12 @@ export function drupalInternalSuperagent (req) {
   req.set('X-Forwarded-Proto', 'https');
 }
 
-/** Test-only: drop the cached transport and registered hosts. */
-export function resetDrupalInternal () {
-  transport?.dispatcher.close();
-  transport?.httpsAgent.destroy();
+/** Test-only (never call from app code): drop the cached transport and registered hosts. */
+export async function __resetDrupalInternalForTests () {
+  const current = transport;
+
   transport = undefined;
   drupalHosts.clear();
+  current?.httpsAgent.destroy();
+  await current?.dispatcher.close();
 }
