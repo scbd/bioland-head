@@ -52,7 +52,7 @@ export default defineEventHandler(async (event) => {
     }
     function isSiteUp({url, defaultLocale}){
 
-        return $fetch(`${url}/${defaultLocale}`, $fetchBaseOptions())
+        return $fetch(`${url}/${drupalPathPrefix(defaultLocale)}`, $fetchBaseOptions())
             .then((r) =>r.includes(testWord(defaultLocale)))
             .catch(() => false);
     }

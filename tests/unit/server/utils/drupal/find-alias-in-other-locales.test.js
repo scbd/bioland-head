@@ -370,6 +370,27 @@ describe('requested-locale alias-fallback redirect cache (BL-1116)', () => {
   })
 })
 
+describe('canonical redirect under the Drupal fil prefix (BL-1126)', () => {
+  const tlCtx = { ...baseCtx, locale: 'tl', locales: ['en', 'tl'], localizedHost: 'https://asean.test/fil' }
+  const canonicalAt = (canonical) => $fetch.mockImplementation((uri) => uri.includes('/router/translate-path')
+    ? Promise.resolve({ entity: { uuid: 'u', type: 'node', bundle: 'content', canonical } })
+    : Promise.resolve({ data: { label: 'x' } }))
+
+  it('redirects a tl node path to the /tl alias Drupal reports as /fil', async () => {
+    canonicalAt('https://asean.test/fil/about')
+
+    await expect(drupalPage.getPageData({ ...tlCtx, path: '/tl/node/1' }, event)).resolves.toEqual({ redirect: '/tl/about' })
+  })
+
+  it('does not redirect when the /fil canonical is the requested /tl path', async () => {
+    canonicalAt('https://asean.test/fil/about')
+
+    const result = await drupalPage.getPageData({ ...tlCtx, path: '/tl/about' }, event).catch((e) => e)
+
+    expect(result?.redirect).toBeUndefined()
+  })
+})
+
 describe('expected failure logging (BL-1117)', () => {
   // The structured single-line warns from logFailure; the alias sweep logs its own string warns.
   const structuredWarns = () => consola.warn.mock.calls.filter(([arg]) => typeof arg === 'object')

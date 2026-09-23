@@ -1,3 +1,5 @@
+import { appPathFromDrupalPath } from '#shared/utils/drupal-path-prefix';
+
 /**
  * Composable that provides a safe locale path function
  * Checks if href already has a locale prefix before localizing
@@ -11,6 +13,9 @@ export function useSafeLocalePath(localize = ref(true)) {
 
     const safeLocalePath = (href) => {
         if (!href) return href;
+
+        // Drupal-returned links carry the Drupal prefix (/fil/x); map it to the app locale (/tl/x).
+        href = appPathFromDrupalPath(href);
 
         // Get the site's available locales from the store
         const siteLocales = siteStore.allLocales || [];

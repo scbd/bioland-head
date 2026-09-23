@@ -87,7 +87,7 @@
     </div>
 </template>
 <script setup>
-import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
+    import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
     import { TransitionGroup } from 'vue';
     
     const   meStore   = useMeStore();

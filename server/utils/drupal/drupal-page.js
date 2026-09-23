@@ -1,7 +1,7 @@
 
 import { createHash } from 'node:crypto';
 import { camelCase } from 'change-case/keys';
-import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
+import { appPathFromDrupalPath, drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
 
 const localizationExceptionPaths =  [];
 
@@ -462,7 +462,8 @@ async function getPageIdentifiers(ctx,  headers){
 
         const { uuid, id, type, bundle,  canonical } = data?.entity || {};
         const aUrl = new URL(canonical);
-        const canonicalPathname = aUrl.pathname;
+        // Canonical comes back under the Drupal prefix (/fil/x for tl); compare and redirect in app locale terms.
+        const canonicalPathname = appPathFromDrupalPath(aUrl.pathname);
         
         // Extract locale from canonical path (e.g., '/en/some-alias' -> 'en')
         const canonicalPathParts = canonicalPathname.split('/');
@@ -479,7 +480,8 @@ async function getPageIdentifiers(ctx,  headers){
         // 4. Canonical locale matches requested locale (don't redirect to different locale)
         const shouldRedirect = !data?.isHomePath && 
                                !isJustLocale &&
-                               !canonical.endsWith(path) && 
+                               !canonical.endsWith(path) &&
+                               !canonicalPathname.endsWith(path) &&
                                canonicalLocale === locale;
         
         const redirect = shouldRedirect ? canonicalPathname : '';

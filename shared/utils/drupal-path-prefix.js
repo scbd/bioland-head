@@ -14,6 +14,13 @@
  */
 const DRUPAL_PATH_PREFIXES = Object.freeze({ tl: 'fil' });
 
+const APP_LOCALES_BY_DRUPAL_PREFIX = Object.freeze(
+  Object.fromEntries(Object.entries(DRUPAL_PATH_PREFIXES).map(([locale, prefix]) => [prefix, locale]))
+);
+
+// Own keys only, so request-supplied values like 'constructor' never hit Object.prototype.
+const lookup = (map, key) => (Object.hasOwn(map, key) ? map[key] : undefined);
+
 /**
  * Drupal URL path prefix for an app locale. Unmapped locales pass through unchanged.
  *
@@ -21,5 +28,22 @@ const DRUPAL_PATH_PREFIXES = Object.freeze({ tl: 'fil' });
  * @returns {string} Path prefix segment without slashes (e.g. 'fil', 'zh', 'en')
  */
 export function drupalPathPrefix(locale) {
-  return DRUPAL_PATH_PREFIXES[locale] || locale;
+  return lookup(DRUPAL_PATH_PREFIXES, locale) || locale;
+}
+
+/**
+ * Inverse of drupalPathPrefix for a root-relative path Drupal returned: rewrites a leading
+ * Drupal prefix segment to the app locale (`/fil/about` -> `/tl/about`). Anything else,
+ * including absolute URLs and unmapped prefixes, is returned unchanged.
+ *
+ * @param {string} path - Root-relative path from Drupal (menu href, canonical pathname)
+ * @returns {string} The same path under the app locale prefix
+ */
+export function appPathFromDrupalPath(path) {
+  if (typeof path !== 'string') return path;
+
+  const match  = /^\/([^/?#]+)(?=[/?#]|$)/.exec(path);
+  const locale = match && lookup(APP_LOCALES_BY_DRUPAL_PREFIX, match[1]);
+
+  return locale ? `/${locale}${path.slice(match[0].length)}` : path;
 }

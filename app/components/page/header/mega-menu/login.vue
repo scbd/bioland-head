@@ -80,7 +80,6 @@
     const   siteStore     = useSiteStore();
 
     const   viewport      = useViewport();
-    const   localePath     = useLocalePath (           );
     const   props         = defineProps({ aMenu: { type: Object }, show: { type: Boolean } });
     const { aMenu, show   }    = toRefs(props);
     const   route         = useRoute();
@@ -101,11 +100,11 @@
     });
 
 
-    const publishUrl   = computed(() => siteStore.host + localePath(`/admin/content`  +`?destination=${encodeURIComponent(route.path)}`));
-    const structureUrl = computed(() => siteStore.host + localePath(`/admin/structure`+`?destination=${encodeURIComponent(route.path)}`));
-    const configureUrl = computed(() => siteStore.host + localePath(`/admin/config`   +`?destination=${encodeURIComponent(route.path)}`));
-    const peopleUrl    = computed(() => siteStore.host + localePath(`/admin/people`   +`?destination=${encodeURIComponent(route.path)}`));
-    const reportsUrl   = computed(() => siteStore.host + localePath(`/admin/reports`  +`?destination=${encodeURIComponent(route.path)}`));
+    const publishUrl   = computed(() => `${siteStore.localizedHost}/admin/content?destination=${encodeURIComponent(route.path)}`);
+    const structureUrl = computed(() => `${siteStore.localizedHost}/admin/structure?destination=${encodeURIComponent(route.path)}`);
+    const configureUrl = computed(() => `${siteStore.localizedHost}/admin/config?destination=${encodeURIComponent(route.path)}`);
+    const peopleUrl    = computed(() => `${siteStore.localizedHost}/admin/people?destination=${encodeURIComponent(route.path)}`);
+    const reportsUrl   = computed(() => `${siteStore.localizedHost}/admin/reports?destination=${encodeURIComponent(route.path)}`);
 
 
     const { data, status, error, refresh } =  await useFetch(`${siteStore.localizedHost}/system/menu/account/linkset`, {  method: 'GET', headers, key: 'logout-url', getCachedData });
@@ -120,7 +119,7 @@
         const menus       = data?.value?.linkset[0]?.item || []
         const accountMenu = menus?.find(item => item?.href?.includes('/logout'));
 
-        if(!hasSessionCookieClient() || !accountMenu?.href) return siteStore.host+localePath(`/user/logout/confirm?destination=${encodeURIComponent(route.path)}`);
+        if(!hasSessionCookieClient() || !accountMenu?.href) return `${siteStore.localizedHost}/user/logout/confirm?destination=${encodeURIComponent(route.path)}`;
 
         return `${siteStore.host}${accountMenu?.href}&destination=${encodeURIComponent(route.path)}`;
 
