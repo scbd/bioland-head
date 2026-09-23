@@ -20,6 +20,8 @@ export default defineConfig({
     alias: {
       '~': resolve(__dirname, '.'),
       '~/': resolve(__dirname, './'),
+      // Nuxt's rootDir alias, used by server routes such as server/api/list/latest-bch-resources.js.
+      '~~': resolve(__dirname, '.'),
       // Nuxt's built-in alias for the shared/ layer, mirrored so specs can import
       // modules that use it (e.g. server/plugins/00.assert-public-runtime-config.ts).
       '#shared': resolve(__dirname, './shared')

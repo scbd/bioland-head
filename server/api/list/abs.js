@@ -1,3 +1,4 @@
+import { mergeQueryIntoContext } from '../../utils/merge-query-into-context';
 /**
  * ABS (Access and Benefit-Sharing) list API endpoint.
  *
@@ -23,7 +24,7 @@ export default defineEventHandler(async (event) => {
     const ctx   = await useRequestContext(event);
     const abs   = true;
 
-    return await queryScbdIndex({ ...ctx, ...query }, {},  false, abs);
+    return await queryScbdIndex(mergeQueryIntoContext(ctx, query), {},  false, abs);
     
   } catch (e) {
     passError(event, e);

@@ -1,3 +1,4 @@
+import { internalQuery } from '../../utils/merge-query-into-context';
 export default defineCachedEventHandler(
     async (event) => {
         try {
@@ -6,12 +7,12 @@ export default defineCachedEventHandler(
             const { multiSiteCode } = useRuntimeConfig().public;
             const query             = getQuery(event);
             const ctx               = await useRequestContext(event);
-            const context           = { ...ctx, ...query };
-            const isBchSite         = ['bch', 'bsl'].includes(multiSiteCode) || context?.isBchSite || false;
+            const forwarded         = internalQuery(ctx, query);
+            const isBchSite         = ['bch', 'bsl'].includes(multiSiteCode) || ctx?.isBchSite || false;
 
             const headers = { Cookie: getHeader(event, 'Cookie') };
 
-            const { siteCode, localizedHost } = context;
+            const { siteCode, localizedHost } = ctx;
 
             // Thrown, not returned: a returned H3Error leaves res.statusCode at 200, so
             // defineCachedEventHandler would cache the error body as a successful response.
@@ -19,9 +20,9 @@ export default defineCachedEventHandler(
                 throw createError({ statusCode: 404, statusMessage: 'Server.menus: no context derived', });
 
             if (isBchSite)
-                return await $fetch( '/api/menus/index-bch', $fetchBaseOptions({ query, method: 'get', headers }), );
+                return await $fetch( '/api/menus/index-bch', $fetchBaseOptions({ query: forwarded, method: 'get', headers }), );
             else
-                return await $fetch( '/api/menus/index-chm', $fetchBaseOptions({ query, method: 'get', headers }), );
+                return await $fetch( '/api/menus/index-chm', $fetchBaseOptions({ query: forwarded, method: 'get', headers }), );
         } catch (e) {
             consola.error(e);
             passError(event, e);

@@ -1,3 +1,4 @@
+import { mergeQueryIntoContext } from '../../utils/merge-query-into-context';
 /**
  * BCH (Biosafety Clearing-House) list API endpoint.
  *
@@ -23,7 +24,7 @@ export default defineEventHandler(async (event) => {
     const ctx   = await useRequestContext(event);
     const bch   = true;
 
-    return await queryScbdIndex({ ...ctx, ...query }, {}, bch);
+    return await queryScbdIndex(mergeQueryIntoContext(ctx, query), {}, bch);
     
   } catch (e) {
     passError(event, e);

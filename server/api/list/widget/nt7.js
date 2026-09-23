@@ -1,3 +1,4 @@
+import { mergeQueryIntoContext } from '../../../utils/merge-query-into-context';
 import clone from 'lodash.clonedeep';
 
 // Seeded random function for consistent results within time windows
@@ -12,11 +13,12 @@ export default cachedEventHandler(async (event) => {
         const ctx              = await useRequestContext(event);
 
         const schemas = ['nationalTarget7'];
-        const countries = ({ ...ctx, ...query }).countries;
+        const merged    = mergeQueryIntoContext(ctx, query);
+        const countries = merged.countries;
         
         // Fetch with all fields (getAllBySchemas doesn't support field selection)
         // Field filtering happens at index query level in cbd-index.js
-        const response = await getAllBySchemas({ ...ctx, ...query, countries, realms: ['ORT'] }, schemas, countries);
+        const response = await getAllBySchemas({ ...merged, countries, realms: ['ORT'] }, schemas, countries);
 
 
 

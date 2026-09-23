@@ -1,3 +1,4 @@
+import { mergeQueryIntoContext } from '../../../utils/merge-query-into-context';
 
 
 export default defineEventHandler(async (event) => {
@@ -8,9 +9,8 @@ export default defineEventHandler(async (event) => {
         if(query?.schemas?.length && !query?.drupalInternalIds?.length)
             query.drupalInternalIds = Array.isArray(query.schemas)? query.schemas : [query.schemas];
 
-        // Merge context and query, with query taking precedence for locale-related params
-        // This ensures client-provided locale (from i18n) is used when available
-        return await useContentTypeIndex(event, { ...ctx, ...query });
+        // Server context wins over the query (BL-1135); a served client locale is already adopted by useRequestContext.
+        return await useContentTypeIndex(event, mergeQueryIntoContext(ctx, query));
     }
     catch (e) {
         passError(event, e);

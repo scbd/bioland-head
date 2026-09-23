@@ -1,4 +1,5 @@
 import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
+import { toAllowedChmNetworkOrigin } from '../../utils/chm-network-origins';
 
 export default defineEventHandler(async (event) => {
     try{
@@ -6,7 +7,12 @@ export default defineEventHandler(async (event) => {
 
         const locales  = Array.isArray(queryCtx.locales)? queryCtx.locales : ([queryCtx.locales]);
 
-        const ctx      = { ...queryCtx, locales };
+        // BL-1135: `url` is fetched server-side, so only a CHM-network Site origin DMSM knows is accepted.
+        const url      = await toAllowedChmNetworkOrigin(queryCtx.url);
+
+        if (!url) throw createError({ statusCode: 400, statusMessage: 'Bad Request', message: 'url is not a CHM-network site' });
+
+        const ctx      = { ...queryCtx, locales, url };
 
         const result = await getStatus(ctx);
 

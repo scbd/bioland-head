@@ -1,3 +1,4 @@
+import { internalQuery } from '../../utils/merge-query-into-context';
 export default defineEventHandler(async (event) => {
         try{
 
@@ -7,7 +8,8 @@ export default defineEventHandler(async (event) => {
 
             const headers = { Cookie: getHeader(event, 'Cookie')};
 
-            const { siteCode, localizedHost } = { ...ctx, ...query };
+            const { siteCode, localizedHost } = ctx;
+            const   forwarded = internalQuery(ctx, query);
 
             if(!siteCode || localizedHost.includes('undefined')) throw createError({ statusCode: 404, statusMessage: 'Server.drupal.menus.index-chm: no context derived' });
 
@@ -17,18 +19,18 @@ export default defineEventHandler(async (event) => {
                 throw createError({ statusCode: 503, statusMessage: 'Menus temporarily unavailable', data: { siteCode, reason: 'menus-failure-backoff' } });
             
             const allRequests = (await Promise.allSettled([
-                $fetch('/api/menus/absch',         $fetchBaseOptions({ query, method:'get', headers })),
-                $fetch('/api/menus/bch',           $fetchBaseOptions({ query, method:'get', headers })),
-                $fetch('/api/menus/drupal',        $fetchBaseOptions({ query, method:'get', headers })),
-                $fetch('/api/menus/nr',            $fetchBaseOptions({ query, method:'get', headers })),
-                $fetch('/api/menus/nr6',           $fetchBaseOptions({ query, method:'get', headers })),
-                $fetch('/api/menus/nbsap',         $fetchBaseOptions({ query, method:'get', headers })),
-                $fetch('/api/menus/focal-points',  $fetchBaseOptions({ query, method:'get', headers })),
-                $fetch('/api/menus/content-types', $fetchBaseOptions({ query, method:'get', headers })),
-                $fetch('/api/menus/topics',        $fetchBaseOptions({ query, method:'get', headers })),
-                $fetch('/api/menus/languages',     $fetchBaseOptions({ query, method:'get', headers })),
-                $fetch('/api/menus/system-pages',  $fetchBaseOptions({ query, method:'get', headers })),
-                $fetch('/api/menus/nt7',           $fetchBaseOptions({ query, method:'get', headers }))
+                $fetch('/api/menus/absch',         $fetchBaseOptions({ query: forwarded, method:'get', headers })),
+                $fetch('/api/menus/bch',           $fetchBaseOptions({ query: forwarded, method:'get', headers })),
+                $fetch('/api/menus/drupal',        $fetchBaseOptions({ query: forwarded, method:'get', headers })),
+                $fetch('/api/menus/nr',            $fetchBaseOptions({ query: forwarded, method:'get', headers })),
+                $fetch('/api/menus/nr6',           $fetchBaseOptions({ query: forwarded, method:'get', headers })),
+                $fetch('/api/menus/nbsap',         $fetchBaseOptions({ query: forwarded, method:'get', headers })),
+                $fetch('/api/menus/focal-points',  $fetchBaseOptions({ query: forwarded, method:'get', headers })),
+                $fetch('/api/menus/content-types', $fetchBaseOptions({ query: forwarded, method:'get', headers })),
+                $fetch('/api/menus/topics',        $fetchBaseOptions({ query: forwarded, method:'get', headers })),
+                $fetch('/api/menus/languages',     $fetchBaseOptions({ query: forwarded, method:'get', headers })),
+                $fetch('/api/menus/system-pages',  $fetchBaseOptions({ query: forwarded, method:'get', headers })),
+                $fetch('/api/menus/nt7',           $fetchBaseOptions({ query: forwarded, method:'get', headers }))
             ]))
             const rejected = allRequests.filter(({ status }) => status === 'rejected');
 

@@ -1,3 +1,4 @@
+import { mergeQueryIntoContext } from '../../../utils/merge-query-into-context';
 export default defineEventHandler(async (event) => {
         try{
             const query      = getQuery      (event);
@@ -7,7 +8,7 @@ export default defineEventHandler(async (event) => {
 
             await addForumIdentifierToContext(ctx)
 
-            return await useDrupalForums({...ctx,...query })
+            return await useDrupalForums(mergeQueryIntoContext(ctx, query))
         }
         catch (e) {
             passError(event, e);

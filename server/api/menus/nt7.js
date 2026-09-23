@@ -1,3 +1,4 @@
+import { mergeQueryIntoContext } from '../../utils/merge-query-into-context';
 import clone from 'lodash.clonedeep';
 
 export default defineCachedEventHandler(
@@ -8,7 +9,8 @@ export default defineCachedEventHandler(
 
         const promises = [];
         const schemas = ["nationalTarget7"];
-        const allCountries = { ...ctx, ...query }.countries;
+        const merged = mergeQueryIntoContext(ctx, query);
+        const allCountries = merged.countries;
         const countryMap = {};
 
         for (const country of Array.isArray(allCountries)
@@ -18,7 +20,7 @@ export default defineCachedEventHandler(
 
             promises.push(
             getAllBySchemas(
-                { ...ctx, ...query, countries },
+                { ...merged, countries },
                 schemas,
                 countries,
             ).then((response) => {
