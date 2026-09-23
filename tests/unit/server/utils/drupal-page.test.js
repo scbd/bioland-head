@@ -249,7 +249,7 @@ describe('drupal-page utilities', () => {
       path         : '/en/some-alias',
     }
     const anon = { context: { headers: {} } }
-    const auth = { context: { headers: { Cookie: 'SESSabc=xyz' } } }
+    const auth = { context: { headers: { Cookie: `SSESS${'a1'.repeat(16)}=abc` } } }
     const drupalError = (statusCode) => Object.assign(new Error(`${statusCode}`), { statusCode })
 
     let drupalPage, primary
@@ -294,11 +294,13 @@ describe('drupal-page utilities', () => {
 
     it('times out the primary lookup and treats the timeout as an upstream error', async () => {
       const timeoutSpy = vi.spyOn(AbortSignal, 'timeout')
-      primary = () => Promise.reject(Object.assign(new Error('aborted'), { name: 'TimeoutError' }))
+      // Real ofetch wraps the abort as a FetchError whose cause is the TimeoutError.
+      primary = () => Promise.reject(Object.assign(new Error('x'), { name: 'FetchError', cause: Object.assign(new Error(), { name: 'TimeoutError' }) }))
 
-      await expect(drupalPage.getPageData({ ...ctx }, anon)).rejects.toBeDefined()
+      await expect(drupalPage.getPageData({ ...ctx }, anon)).rejects.toMatchObject({ statusCode: 504 })
       expect(timeoutSpy).toHaveBeenCalledWith(5000)
       expect(primaryCalls()[0][1].signal).toBeInstanceOf(AbortSignal)
+      expect(primaryCalls()[0][1].retry).toBe(0)
       expect(sweepCalls()).toHaveLength(0)
 
       globalThis.$fetch.mockClear()
@@ -320,6 +322,29 @@ describe('drupal-page utilities', () => {
       await expect(drupalPage.getPageData(other, auth)).rejects.toMatchObject({ statusCode: 500 })
       await expect(drupalPage.getPageData(other, anon)).rejects.toMatchObject({ statusCode: 500 })
       expect(primaryCalls()).toHaveLength(2)
+    })
+
+    it.each(['x=SESSION', 'notSESS=1'])('treats Cookie %s as anonymous, so a 500 is remembered', async (Cookie) => {
+      primary = () => Promise.reject(drupalError(500))
+      const lookalike = { context: { headers: { Cookie } } }
+
+      await expect(drupalPage.getPageData({ ...ctx }, lookalike)).rejects.toMatchObject({ statusCode: 500 })
+      globalThis.$fetch.mockClear()
+      await expect(drupalPage.getPageData({ ...ctx }, lookalike)).rejects.toMatchObject({ statusCode: 503 })
+      expect(globalThis.$fetch).not.toHaveBeenCalled()
+    })
+
+    it('does not remember a 500 from a lookup against another locale\'s host (getPageThumb)', async () => {
+      primary = () => Promise.reject(drupalError(500))
+      const es    = { ...ctx, locale: 'es', locales: ['en', 'es'], localizedHost: 'https://asean.test/es', path: '/es/some-alias' }
+      const thumb = { ...es, localizedHost: 'https://asean.test/en' }
+      globalThis.$fetch.mockImplementation((uri) => uri.includes('/router/translate-path') && !uri.includes('/es/router') ? primary() : Promise.reject(drupalError(404)))
+
+      await expect(drupalPage.getPageThumb(thumb)).rejects.toMatchObject({ statusCode: 500 })
+      globalThis.$fetch.mockClear()
+
+      await expect(drupalPage.getPageData({ ...es }, anon)).rejects.toMatchObject({ statusCode: 404 })
+      expect(globalThis.$fetch.mock.calls.some(([uri]) => uri.startsWith('https://asean.test/es/router/translate-path'))).toBe(true)
     })
   });
 });
