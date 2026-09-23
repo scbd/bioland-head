@@ -23,6 +23,14 @@ import type { H3Event } from 'h3'
  * aliases are content-editor-driven and nothing in this codebase can prove no site
  * will ever alias a page to exactly `/v2`. Only extension- and known-prefix-based
  * signals are used, never a single ambiguous literal segment.
+ *
+ * Also fast-404s Drupal-only paths (`router`, `system`, `jsonapi`, `admin`, and the
+ * Drupal user-account routes) before SSR: during a Drupal deploy window Traefik hands
+ * the head a page request for `router/translate-path` itself (or a `system/menu/*
+ * /linkset` request), and without this the head resolves it as a page, calls
+ * `getPageIdentifiers` -> `router/translate-path` on Drupal, and recurses on its own
+ * output - or forwards it to Drupal and gets a 500 back. Matched as whole path segments
+ * (with an optional leading locale) so real aliases like `/systems-thinking` still pass.
  */
 
 // Paths under these prefixes are never candidates for a fast 404: internal Nuxt/Nitro
@@ -69,6 +77,16 @@ const BLOCKED_SEGMENTS = [
 // `.gitignore`, `.env.local`, ... No real Drupal alias starts with `wp-` or a dot.
 const BLOCKED_PARTIAL_PREFIXES = ['/wp-', '/.git', '/.env']
 
+// Path prefixes that only ever resolve on Drupal, never as a Nuxt page or Drupal content
+// alias - Drupal's internal routing API, its menu/linkset API, JSON:API, and its admin
+// UI. Matched as a WHOLE segment (via matchesSegment) so `/systems-thinking` and
+// `/routers-guide` still pass through as real aliases.
+const DRUPAL_ONLY_PREFIXES = ['/router', '/system', '/jsonapi', '/admin']
+
+// Drupal's own user-account routes (login/logout/register/password reset) - Drupal
+// content aliases never live at these exact paths.
+const DRUPAL_ONLY_EXACT_PATHS = new Set(['/user/login', '/user/logout', '/user/register', '/user/password'])
+
 // Canonicalizes the request path so encoding/casing tricks cannot slip past the matchers:
 // drops the query, decodes up to three times so double-encoding (`%252e`) cannot hide a
 // dot (keeping the last good value if an escape is malformed), collapses repeated
@@ -90,10 +108,13 @@ function normalizePath(path: string): string {
   return (collapsed.slice(0, lastSlash + 1) + lastSegment).toLowerCase() || '/'
 }
 
-// Strips a single optional leading locale segment (`/en`, `/fr-CA`, ...) so the rest of
-// the classification runs on the real path, matching how Nuxt i18n prefixes routes.
+// Strips a single optional leading locale segment (`/en`, `/fr-CA`, `/zh-hans`, `/fil`,
+// ...) so the rest of the classification runs on the real path, matching how Nuxt i18n
+// prefixes routes and mirroring the Traefik locale rule (incl. the tl -> fil mapping
+// from BL-1126). `zh-hans`/`fil` are checked before the generic 2-letter form since
+// neither fits its `XX` or `XX-XX` shape.
 function stripLocale(pathname: string): string {
-  return pathname.replace(/^\/[a-z]{2}(-[A-Za-z]{2})?(?=\/|$)/, '') || '/'
+  return pathname.replace(/^\/(zh-hans|fil|[a-z]{2}(-[a-z]{2})?)(?=\/|$)/, '') || '/'
 }
 
 function isAllowedSitemap(pathname: string): boolean {
@@ -117,6 +138,13 @@ function hasBlockedPrefix(pathname: string): boolean {
   )
 }
 
+function isDrupalOnlyPath(pathname: string): boolean {
+  return (
+    DRUPAL_ONLY_PREFIXES.some((prefix) => matchesSegment(pathname, prefix)) ||
+    DRUPAL_ONLY_EXACT_PATHS.has(pathname)
+  )
+}
+
 export default defineEventHandler((event: H3Event) => {
   const pathname = normalizePath(event.path)
 
@@ -128,7 +156,11 @@ export default defineEventHandler((event: H3Event) => {
   // Check the known-prefix list against the RAW path too: a 2-letter scanner prefix like
   // `/xy/` is itself indistinguishable from a locale segment (`/xy` + `/` lookahead), so
   // stripping first would hide it. Extensions never suffer this ambiguity.
-  const isBlocked = hasBlockedExtension(withoutLocale) || hasBlockedPrefix(withoutLocale) || hasBlockedPrefix(pathname)
+  const isBlocked =
+    hasBlockedExtension(withoutLocale) ||
+    hasBlockedPrefix(withoutLocale) ||
+    hasBlockedPrefix(pathname) ||
+    isDrupalOnlyPath(withoutLocale)
   if (!isBlocked) return
 
   consola.debug(`[scanner-404] Fast 404 for scanner-shaped path: ${JSON.stringify(pathname).slice(0, 200)}`)
