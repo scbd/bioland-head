@@ -1,5 +1,5 @@
 import http from 'node:http'
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
 import { $fetch } from 'ofetch'
 import SA from 'superagent'
 import {
@@ -14,9 +14,15 @@ import { $fetchBaseOptions } from '~/server/utils/fetch-options'
 // A stand-in for the stack's drupal service: plain http, echoes what it received.
 let server
 let port
+let publicServer
+let publicPort
 
 beforeAll(async () => {
   server = http.createServer((req, res) => {
+    if (req.url === '/redirect-out') {
+      res.writeHead(302, { location: `http://127.0.0.1:${publicPort}/elsewhere` })
+      return res.end()
+    }
     if (req.url === '/user/login') {
       res.setHeader('set-cookie', 'SSESSabc=1; path=/; secure; HttpOnly')
       return res.end('{}')
@@ -31,9 +37,20 @@ beforeAll(async () => {
   })
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
   port = server.address().port
+
+  // A non-Drupal host a redirect can point at; it must be reached over the public connector.
+  publicServer = http.createServer((req, res) => {
+    res.setHeader('content-type', 'application/json')
+    res.end(JSON.stringify({ via: 'public', path: req.url, host: req.headers.host }))
+  })
+  await new Promise((resolve) => publicServer.listen(0, '127.0.0.1', resolve))
+  publicPort = publicServer.address().port
 })
 
-afterAll(() => new Promise((resolve) => server.close(resolve)))
+afterAll(async () => {
+  await new Promise((resolve) => server.close(resolve))
+  await new Promise((resolve) => publicServer.close(resolve))
+})
 
 const TENANT = 'ca.example.test'
 
@@ -41,11 +58,15 @@ const setInternalUrl = (drupalInternalUrl) => {
   globalThis.useRuntimeConfig = () => ({ drupalInternalUrl, public: {} })
 }
 
-beforeEach(() => __resetDrupalInternalForTests())
+beforeEach(async () => {
+  await __resetDrupalInternalForTests()
+  globalThis.consola = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() }
+})
 
 afterEach(async () => {
   await __resetDrupalInternalForTests()
   delete globalThis.useRuntimeConfig
+  delete globalThis.consola
 })
 
 describe('drupal-internal transport', () => {
@@ -81,6 +102,40 @@ describe('drupal-internal transport', () => {
     const body = await $fetch(`https://${TENANT}/jsonapi/node/page`, $fetchBaseOptions())
 
     expect(body).toEqual({ path: '/jsonapi/node/page', host: TENANT, proto: 'https', cookie: null })
+  })
+
+  it.each([
+    ['an https URL', 'https://drupal-internal'],
+    ['a non-http scheme', 'ftp://drupal-internal'],
+    ['an unparseable value', 'not a url'],
+  ])('disables the transport and logs once for %s', (_, drupalInternalUrl) => {
+    setInternalUrl(drupalInternalUrl)
+    registerDrupalHost(`https://${TENANT}`)
+
+    expect(getDrupalInternalTransport(`https://${TENANT}/jsonapi`)).toBeNull()
+    expect(getDrupalInternalTransport(`https://${TENANT}/jsonapi`)).toBeNull()
+    expect(globalThis.consola.error).toHaveBeenCalledTimes(1)
+  })
+
+  it('fails fast with a connect error when the internal service is down', async () => {
+    setInternalUrl('http://127.0.0.1:1')
+    registerDrupalHost(`https://${TENANT}`)
+
+    const startedAt = Date.now()
+    const error     = await $fetch(`https://${TENANT}/jsonapi`, $fetchBaseOptions({ retry: 0 })).catch((e) => e)
+
+    expect(error).toBeInstanceOf(Error)
+    expect(error.cause?.code ?? error.cause?.cause?.code).toBe('ECONNREFUSED')
+    expect(Date.now() - startedAt).toBeLessThan(5000)
+  })
+
+  it('follows a redirect to a non-Drupal host over the public connector', async () => {
+    setInternalUrl(`http://127.0.0.1:${port}`)
+    registerDrupalHost(`https://${TENANT}`)
+
+    const body = await $fetch(`https://${TENANT}/redirect-out`, $fetchBaseOptions({ retry: 0 }))
+
+    expect(body).toEqual({ via: 'public', path: '/elsewhere', host: `127.0.0.1:${publicPort}` })
   })
 
   it('keeps the Secure Drupal session cookie on the superagent client', async () => {
