@@ -18,7 +18,12 @@ export default cachedEventHandler(async (event) => {
         
         // Fetch with all fields (getAllBySchemas doesn't support field selection)
         // Field filtering happens at index query level in cbd-index.js
-        const response = await getAllBySchemas({ ...merged, countries, realms: ['ORT'] }, schemas, countries);
+        //
+        // BL-1135 D1: getAllBySchemas caches on multiSiteCode+siteCode+locale+schemas+countries
+        // only. Passing `merged` here would leak client query keys (freeText/filters/page) into
+        // the cached upstream body under a cache key that ignores them, poisoning the cache
+        // across requests with different filters. Build the argument from ctx only.
+        const response = await getAllBySchemas({ ...ctx, countries, realms: ['ORT'] }, schemas, countries);
 
 
 

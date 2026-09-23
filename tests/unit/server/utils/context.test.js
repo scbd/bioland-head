@@ -249,6 +249,28 @@ describe('Context Utilities', () => {
       config.defaultLocale = ''
       expect((await contextModule.useRequestContext(eventFor({ host: 'be.localhost' }, '/fr'))).locale).toBe('')
     })
+
+    // BL-1135 D3: a rejected `?locale=` is silently dropped by design (resolveLocale falls
+    // through to path/cookie/default) - that used to leave DMSM config drift (a locale the
+    // client expects but siteLocales never lists) with no signal. Warn, but rate-limited once
+    // per (siteCode, locale) per process so a hot path can't spam the logs.
+    it('warns once per (siteCode, locale) when a query locale the site does not serve is rejected (D3)', async () => {
+      const requestFor = () => contextModule.useRequestContext(eventFor({ host: 'be.localhost' }, '/es/page?locale=xx'))
+
+      await requestFor()
+      await requestFor()
+
+      expect(consola.warn).toHaveBeenCalledTimes(1)
+      expect(consola.warn).toHaveBeenCalledWith(
+        expect.stringContaining('locale'),
+        expect.objectContaining({ siteCode: 'be', requestedLocale: 'xx', siteLocales: ['en', 'es', 'fr'] })
+      )
+    })
+
+    it('does not warn when the query locale is one the site serves', async () => {
+      await contextModule.useRequestContext(eventFor({ host: 'be.localhost' }, '/es/page?locale=fr'))
+      expect(consola.warn).not.toHaveBeenCalled()
+    })
   })
 
   describe('normalizeCountries', () => {

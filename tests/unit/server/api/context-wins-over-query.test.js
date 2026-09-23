@@ -128,6 +128,13 @@ const MODULES = {
 
 const load = async (path) => (await MODULES[path]()).default
 
+// BL-1135 D1: getAllBySchemas caches on multiSiteCode+siteCode+locale+schemas+countries only
+// (see server/utils/cbd-index.js getKey), so a client filter (freeText/filters/page) reaching
+// it would be applied to the upstream body but ignored by the cache key - the next unfiltered
+// request for the same site/locale would then be served the filtered result. These two handlers
+// must build the getAllBySchemas argument from ctx only, never from the merged query.
+const CACHE_KEY_SCOPED_HANDLERS = new Set(['list/widget/nt7.js', 'menus/nt7.js'])
+
 describe('BL-1135 handlers merging query into context', () => {
   it.each(MERGING_HANDLERS)('%s keeps ctx hosts and site over the query (%s)', async (path, spy, argIndex) => {
     await (await load(path))({})
@@ -141,7 +148,13 @@ describe('BL-1135 handlers merging query into context', () => {
         expect(merged[key], key).toEqual(CTX[key])
 
       expect(merged.redirect, 'redirect').toBeUndefined()
-      expect(merged).toMatchObject(LEGIT)
+
+      if (CACHE_KEY_SCOPED_HANDLERS.has(path)) {
+        // D1 fix: no client query key reaches the narrowly-keyed getAllBySchemas cache.
+        for (const key of Object.keys(LEGIT)) expect(merged[key], key).toBeUndefined()
+      } else {
+        expect(merged).toMatchObject(LEGIT)
+      }
     }
   })
 

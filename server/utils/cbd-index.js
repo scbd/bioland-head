@@ -294,7 +294,9 @@ function getAllQuery(ctx){
         realms = [...realms, 'ORT'];
     }
     const filters                 = Array.isArray(passedFilters)? passedFilters : passedFilters? [ passedFilters ] : '';
-    const countryString           = Array.isArray(countries)? countries.join(' ')+` ${country}` : country;
+    // BL-1135 D1: on a multi-country site `country` is undefined (only `countries` is set), and
+    // unconditionally appending it produced a literal "undefined" token in the query string.
+    const countryString           = Array.isArray(countries)? [...countries, country].filter(Boolean).join(' ') : country;
     const hasCbdSchemas           = schemas?.length? schemas.some((s)=>cbdSchemas.includes(s)): false;
     const cbdSchemaQueryText      = hasCbdSchemas? `(schema_s:(${cbdSchemas.filter(filterSchemas(schemas)).join(' ')}))` : '';
     const hasOtherSchemas         = schemas?.length? schemas.some((s)=>allSchemas.includes(s)): false;
