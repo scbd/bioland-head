@@ -935,16 +935,7 @@
   "Selected": "Таңдалған",
   "In Progress": "Жүргізілуде",
   "Testing": "Тестілеу",
-  "Type": "Түрі",
-  "Key": "Кілт",
-  "Summary": "Қорытынды",
-  "Assignee": "Жіберуші",
-  "Priority": "Басымдылық",
-  "Progress": "Прогресс",
   "Created": "Құрылған",
-  "Unassigned": "Тағайындалмаған",
-  "No description available": "Сипаттама жоқ",
-  "Work Overview": "Жұмысқа шолу",
   "Bug": "Қате",
   "Task": "Тапсырма",
   "Story": "Әңгіме",
@@ -961,7 +952,6 @@
   "Medium": "Орташа",
   "Low": "Төмен",
   "Lowest": "Ең төменгі",
-  "Selected For Development": "Даму үшін таңдалған",
   "View More ": {
     "": {
       "": {

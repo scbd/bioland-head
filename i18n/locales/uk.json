@@ -935,16 +935,7 @@
   "Selected": "Вибрані",
   "In Progress": "У розробці",
   "Testing": "Тестування",
-  "Type": "Тип",
-  "Key": "Ключ",
-  "Summary": "Резюме",
-  "Assignee": "Присвоювач",
-  "Priority": "Пріоритет",
-  "Progress": "Прогрес",
   "Created": "Створено",
-  "Unassigned": "Неприсвоєно",
-  "No description available": "Опис відсутній",
-  "Work Overview": "Огляд роботи",
   "Bug": "Помилка",
   "Task": "Завдання",
   "Story": "Історія",
@@ -961,7 +952,6 @@
   "Medium": "Середній",
   "Low": "Низький",
   "Lowest": "Найнижчий",
-  "Selected For Development": "Відібрано для розвитку",
   "View More ": {
     "": {
       "": {

@@ -935,16 +935,7 @@
   "Selected": "تم اختياره",
   "In Progress": "قيد التقدم",
   "Testing": "الاختبار",
-  "Type": "النوع",
-  "Key": "مفتاح",
-  "Summary": "ملخص",
-  "Assignee": "المحال إليه",
-  "Priority": "الأولوية",
-  "Progress": "التقدم",
   "Created": "تم إنشاؤه",
-  "Unassigned": "غير المعين",
-  "No description available": "لا يوجد وصف متاح",
-  "Work Overview": "نظرة عامة على العمل",
   "Bug": "علة",
   "Task": "مهمة",
   "Story": "قصة",
@@ -961,7 +952,6 @@
   "Medium": "متوسط",
   "Low": "منخفض",
   "Lowest": "الأدنى",
-  "Selected For Development": "تم اختياره للتطوير",
   "View More ": {
     "": {
       "": {

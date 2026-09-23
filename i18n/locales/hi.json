@@ -935,16 +935,7 @@
   "Selected": "चयनित",
   "In Progress": "प्रगति पर है",
   "Testing": "टेस्टिंग",
-  "Type": "टाइप करें",
-  "Key": "चाबी",
-  "Summary": "सारांश",
-  "Assignee": "असाइनी",
-  "Priority": "प्राथमिकता",
-  "Progress": "प्रगति",
   "Created": "बनाया गया",
-  "Unassigned": "असाइन नहीं किया गया",
-  "No description available": "कोई विवरण उपलब्ध नहीं",
-  "Work Overview": "कार्य अवलोकन",
   "Bug": "बग",
   "Task": "टास्क",
   "Story": "स्टोरी",
@@ -961,7 +952,6 @@
   "Medium": "मीडियम",
   "Low": "निम्न",
   "Lowest": "सबसे कम",
-  "Selected For Development": "विकास के लिए चुना गया",
   "View More ": {
     "": {
       "": {

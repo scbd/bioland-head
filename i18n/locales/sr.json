@@ -935,16 +935,7 @@
   "Selected": "Izabrano",
   "In Progress": "U toku",
   "Testing": "Testiranje",
-  "Type": "Tip",
-  "Key": "Ključ",
-  "Summary": "Rezime",
-  "Assignee": "Primaocnik",
-  "Priority": "Prioritet",
-  "Progress": "Napredak",
   "Created": "Stvoreno",
-  "Unassigned": "Nedodeljeno",
-  "No description available": "Opis nije dostupan",
-  "Work Overview": "Pregled rada",
   "Bug": "Bug",
   "Task": "Zadatak",
   "Story": "Priča",
@@ -961,7 +952,6 @@
   "Medium": "Srednje",
   "Low": "Niska",
   "Lowest": "Najniži",
-  "Selected For Development": "Izabran za razvoj",
   "View More ": {
     "": {
       "": {

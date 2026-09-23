@@ -935,16 +935,7 @@
   "Selected": "निवडलेला",
   "In Progress": "प्रगतीत आहे",
   "Testing": "चाचणी",
-  "Type": "प्रकार",
-  "Key": "की",
-  "Summary": "सारांश",
-  "Assignee": "निवडणूक",
-  "Priority": "प्राथमिक",
-  "Progress": "प्रगती",
   "Created": "तयार केले",
-  "Unassigned": "नियुक्त",
-  "No description available": "वर्णन उपलब्ध नाही",
-  "Work Overview": "कामाचे विहंगा",
   "Bug": "बग",
   "Task": "कार्य",
   "Story": "कथा",
@@ -961,7 +952,6 @@
   "Medium": "मध्यम",
   "Low": "कमी",
   "Lowest": "सर्वात कमी",
-  "Selected For Development": "विकासासाठी निवडले",
   "View More ": {
     "": {
       "": {

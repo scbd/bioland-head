@@ -48,7 +48,6 @@ export default defineNuxtConfig({
     apiUserPass: process.env.API_USER_PASS,
     apiKey: process.env.API_KEY,
     panoramaKey: process.env.PANORAMA_KEY,
-    jiraToken: process.env.JIRA_TOKEN,
     // AWS Translate Configuration
     awsRegion: process.env.AWS_REGION || "us-east-1",
     awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,

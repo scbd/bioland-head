@@ -935,16 +935,7 @@
   "Selected": "Выбранный",
   "In Progress": "В разработке",
   "Testing": "Тестирование",
-  "Type": "Тип",
-  "Key": "Ключ",
-  "Summary": "Резюме",
-  "Assignee": "Правопреемник",
-  "Priority": "Приоритет",
-  "Progress": "Прогресс",
   "Created": "Создан",
-  "Unassigned": "Неназначен",
-  "No description available": "Описание отсутствует",
-  "Work Overview": "Обзор работы",
   "Bug": "Баг",
   "Task": "Задание",
   "Story": "История",
@@ -961,7 +952,6 @@
   "Medium": "Средняя",
   "Low": "Низкий",
   "Lowest": "Самый низкий",
-  "Selected For Development": "Выбрано для разработки",
   "View More ": {
     "": {
       "": {

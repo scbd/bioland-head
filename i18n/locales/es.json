@@ -935,16 +935,7 @@
   "Selected": "Seleccionado",
   "In Progress": "En progreso",
   "Testing": "Probando",
-  "Type": "Tipo",
-  "Key": "Clave",
-  "Summary": "Resumen",
-  "Assignee": "Cesionario",
-  "Priority": "Prioridad",
-  "Progress": "Progreso",
   "Created": "Creado",
-  "Unassigned": "Sin asignar",
-  "No description available": "No hay descripción disponible",
-  "Work Overview": "Descripción general del trabajo",
   "Bug": "Insecto",
   "Task": "Tarea",
   "Story": "Historia",
@@ -961,7 +952,6 @@
   "Medium": "Mediano",
   "Low": "Bajo",
   "Lowest": "El más bajo",
-  "Selected For Development": "Seleccionado para el desarrollo",
   "View More ": {
     "": {
       "": {

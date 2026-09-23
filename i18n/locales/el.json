@@ -935,16 +935,7 @@
   "Selected": "Επιλεγμένο",
   "In Progress": "Σε εξέλιξη",
   "Testing": "Δοκιμή",
-  "Type": "Τύπος",
-  "Key": "Κλειδί",
-  "Summary": "Περίληψη",
-  "Assignee": "Εκδοχέας",
-  "Priority": "Προτεραιότητα",
-  "Progress": "Πρόοδος",
   "Created": "Δημιουργήθηκε",
-  "Unassigned": "Μη εκχωρημένος",
-  "No description available": "Δεν υπάρχει διαθέσιμη περιγραφή",
-  "Work Overview": "Επισκόπηση εργασίας",
   "Bug": "Σφάλμα",
   "Task": "Εργασία",
   "Story": "Ιστορία",
@@ -961,7 +952,6 @@
   "Medium": "Μεσαίο",
   "Low": "Χαμηλή",
   "Lowest": "Χαμηλότερη",
-  "Selected For Development": "Επιλέχθηκε για ανάπτυξη",
   "View More ": {
     "": {
       "": {

@@ -935,16 +935,7 @@
   "Selected": "נבחר",
   "In Progress": "בעיצומה",
   "Testing": "בדיקה",
-  "Type": "סוג",
-  "Key": "מפתח",
-  "Summary": "סיכום",
-  "Assignee": "הנמען",
-  "Priority": "עדיפות",
-  "Progress": "התקדמות",
   "Created": "נוצר",
-  "Unassigned": "לא מוקצה",
-  "No description available": "אין תיאור זמין",
-  "Work Overview": "סקירת עבודה",
   "Bug": "באג",
   "Task": "משימה",
   "Story": "סיפור",
@@ -961,7 +952,6 @@
   "Medium": "בינוני",
   "Low": "נמוך",
   "Lowest": "הנמוך ביותר",
-  "Selected For Development": "נבחר לפיתוח",
   "View More ": {
     "": {
       "": {

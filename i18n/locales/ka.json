@@ -935,16 +935,7 @@
   "Selected": "შერჩეული",
   "In Progress": "მიმდინარეობს",
   "Testing": "ტესტირება",
-  "Type": "ტიპი",
-  "Key": "გასაღები",
-  "Summary": "რეზიუმე",
-  "Assignee": "გადაცემის მიმღები",
-  "Priority": "პრიორიტეტ",
-  "Progress": "პროგრესი",
   "Created": "შექმნილია",
-  "Unassigned": "დაუნიშნული",
-  "No description available": "აღწერა არ არსებობს",
-  "Work Overview": "სამუშაოს მიმოხილ",
   "Bug": "შეცდომა",
   "Task": "ამოცანა",
   "Story": "სიუჟეტი",
@@ -961,7 +952,6 @@
   "Medium": "საშუალო",
   "Low": "დაბალი",
   "Lowest": "ყველაზე დაბალი",
-  "Selected For Development": "შერჩეულია განვითარებისთვის",
   "View More ": {
     "": {
       "": {
