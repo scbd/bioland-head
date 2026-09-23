@@ -1,4 +1,5 @@
 import { colors } from "consola/utils";
+import { applyDrupalInternalFetch } from "./drupal/drupal-internal.js";
 
 // Query parameters whose values must never reach a log line (the Drupal site-settings
 // call carries `api-key` in its URL).
@@ -50,6 +51,8 @@ function shouldLogServerOutRequests () {
 }
 
 async function onRequest({ request, options }) {
+  applyDrupalInternalFetch({ request, options });
+
   const { logAll, logServerOutRequests }  = useRuntimeConfig().public;
 
   // if(logAll || logServerOutRequests)

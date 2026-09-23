@@ -1,4 +1,5 @@
 import SA  from 'superagent';
+import { drupalInternalSuperagent, registerDrupalHost } from './drupal-internal.js';
 
 // cacheId -> { agent, promise, evictTimer, failedAt, failCount }
 const $http = {};
@@ -21,7 +22,7 @@ const GLOBAL_FAILURES_BEFORE_BACKOFF = 5;
 const $global = { failedAt: undefined, failCount: 0 };
 
 const login = async (uri, name, pass) => {
-  const saAgent = SA.agent();
+  const saAgent = SA.agent().use(drupalInternalSuperagent);
 
   await saAgent.post(uri)
           .set('Content-Type', 'application/json')
@@ -172,6 +173,8 @@ export const useDrupalLogin = async (siteCode, forceNew = false) => {
   const canonicalHost = config
     ? getCanonicalHost({ siteCode, baseHost, env, redirect: config.redirect })
     : getGeneratedHostname(siteCode, baseHost);
+
+  registerDrupalHost(canonicalHost);
 
   // Drupal's SESS*/SSESS* cookie is host-bound, so the Host is part of the cache identity: a Site
   // gaining, losing, or changing its redirect keys to a new entry rather than reusing a session

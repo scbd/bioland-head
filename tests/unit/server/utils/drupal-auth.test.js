@@ -37,10 +37,13 @@ vi.mock('superagent', () => {
       },
     }
 
-    return {
+    const saAgent = {
+      use:  () => saAgent,
       post: (uri) => { postCalls.push(uri); return request },
       get:  () => request,
     }
+
+    return saAgent
   }
 
   return { default: { agent } }

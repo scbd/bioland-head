@@ -71,6 +71,10 @@ export default defineNuxtConfig({
     // DMSM API base URL, server-only (NUXT_DMSM). Read via server/utils/dmsm-url.ts, which
     // still honours the legacy NUXT_PUBLIC_DMSM until every stack is renamed.
     dmsm: "https://dmsm.cbddev.xyz/api",
+    // Server-only (NUXT_DRUPAL_INTERNAL_URL, e.g. http://drupal-internal). Set: server-side Drupal
+    // calls keep the tenant https URL but connect over the stack network. Empty (local dev default):
+    // Drupal is reached at the public tenant URL as before. See server/utils/drupal/drupal-internal.js.
+    drupalInternalUrl: "",
     public: {
       isLocalHost:
         process.env.NUXT_PUBLIC_IS_LOCAL_HOST === "true" ? true : false,

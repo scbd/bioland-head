@@ -1,4 +1,5 @@
 import { camelCase } from "change-case/keys";
+import { registerDrupalHost } from "./drupal/drupal-internal.js";
 /**
  * Unified Server Context Resolution
  *
@@ -616,6 +617,7 @@ async function buildSiteContext(params: { siteCode: string; locale: string; conf
   warnOnRejectedRedirect(siteCode, config.redirect);
 
   const host = getCanonicalHost({ siteCode, baseHost, env, redirect: config.redirect });
+  registerDrupalHost(host);
   const pathPrefix    = `/${drupalPathPrefix(locale)}`;
   const localizedHost = `${host}${pathPrefix}`;
 
