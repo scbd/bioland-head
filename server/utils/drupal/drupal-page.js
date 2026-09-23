@@ -2,6 +2,7 @@
 import { createHash } from 'node:crypto';
 import { camelCase } from 'change-case/keys';
 import { appPathFromDrupalPath, drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
+import { hasDrupalSessionCookie } from '#shared/utils/document-cache-ttl';
 import { boundedTtlMap } from '../bounded-ttl-map.js';
 
 const localizationExceptionPaths =  [];
@@ -47,7 +48,8 @@ const LOGGED = Symbol('drupal-page.logged');
 // repeat of an outcome Drupal already gave once, not a new failure to alarm on.
 const isExpectedFailure = (e) => e?.statusCode === 404 ||
                                  e?.remembered ||
-                                 (e?.statusCode === 503 && e?.statusMessage === 'Drupal login unavailable');
+                                 (e?.statusCode === 503 && e?.statusMessage === 'Drupal login unavailable') ||
+                                 (e?.statusCode === 504 && e?.statusMessage === TRANSLATE_PATH_TIMED_OUT);
 
 /**
  * Log a failure once: expected outcomes as a single-line, rate-limited warn with no stack;
@@ -274,6 +276,7 @@ const ALIAS_NOT_FOUND = false;
 // ofetch drops its own timeout when a signal is passed, so one hung locale would hold the
 // shared in-flight sweep open indefinitely.
 const TRANSLATE_PATH_TIMEOUT_MS = 5000;
+const TRANSLATE_PATH_TIMED_OUT  = 'Drupal translate-path timed out';
 const ALIAS_MISS_MAX_ENTRIES    = 1000;
 
 const aliasMisses = boundedTtlMap(ALIAS_MISS_MAX_ENTRIES);
@@ -396,10 +399,35 @@ function recordAliasRedirect(key, redirect) {
 // An authenticated request must always re-run the header-bearing primary translate-path
 // lookup: a cached anonymous redirect could hide an unpublished requested-locale alias
 // from an editor who is entitled to see it. Anonymous traffic keeps the fast cached path.
+// A real session cookie NAME (SESS/SSESS + hash), not any header containing "SESS".
 function isAuthenticatedRequest(headers) {
-    const cookie = headers?.Cookie || headers?.cookie;
+    return hasDrupalSessionCookie(headers?.Cookie || headers?.cookie);
+}
 
-    return typeof cookie === 'string' && /S?SESS/.test(cookie);
+// A Drupal 5xx or a timeout on the requested-locale lookup is not a 404, so it never sweeps
+// other locales (BL-1143); without this, every repeat hit re-asked a failing Drupal. Kept
+// in process for CACHE_TTL.ALIAS_UPSTREAM_ERROR, never in shared storage, anonymous only.
+const ALIAS_UPSTREAM_ERROR_MAX_ENTRIES = 1000;
+const aliasUpstreamErrors = boundedTtlMap(ALIAS_UPSTREAM_ERROR_MAX_ENTRIES);
+
+const isTimeout = (e) => e?.name === 'TimeoutError' || e?.cause?.name === 'TimeoutError';
+const isUpstreamError = (e) => e?.statusCode >= 500 || isTimeout(e);
+
+// getPageThumb asks the EN host with ctx.locale unchanged; aliasCacheKey is keyed by locale,
+// so only a lookup against the locale's own host may read or write the map. Thumbnail
+// lookups on non-en pages are therefore never remembered, same as before BL-1143.
+const isOwnLocaleHost = ({ host, locale, localizedHost }) => localizedHost === `${host}/${drupalPathPrefix(locale)}`;
+
+function throwIfRecentUpstreamError(key) {
+    if (!aliasUpstreamErrors.get(key)) return;
+
+    const err = createError({
+        statusCode   : 503,
+        statusMessage: 'Service Unavailable',
+        message      : 'router/translate-path recently failed upstream; not retrying yet',
+    });
+    err.remembered = true;
+    throw err;
 }
 
 async function findAliasInOtherLocales(ctx, aliasPath) {
@@ -447,21 +475,33 @@ async function getPageIdentifiers(ctx,  headers){
             };
         }
 
+        const upstreamErrorKey = aliasRedirectKey && isOwnLocaleHost(ctx) ? aliasRedirectKey : null;
+
+        if (upstreamErrorKey) throwIfRecentUpstreamError(upstreamErrorKey);
+
         let data;
         try {
             // silentError: true suppresses the auto-log for a 404 since it's expected when an
             // alias doesn't resolve in the requested locale; log a debug line instead.
-            data = await $fetch(uri, $fetchBaseOptions({ headers, silentError: true }));
+            data = await $fetch(uri, $fetchBaseOptions({ headers, signal: AbortSignal.timeout(TRANSLATE_PATH_TIMEOUT_MS), silentError: true }));
         } catch (fetchError) {
+            // A status-less network error (ECONNREFUSED) is deliberately neither swept nor
+            // remembered: a refused connection is cheap and should recover on the next hit.
+            if (upstreamErrorKey && isUpstreamError(fetchError))
+                aliasUpstreamErrors.set(upstreamErrorKey, true, CACHE_TTL.ALIAS_UPSTREAM_ERROR * 1000);
+
+            if (isTimeout(fetchError))
+                throw createError({ statusCode: 504, statusMessage: TRANSLATE_PATH_TIMED_OUT, cause: fetchError });
+
             // Log 404s at debug level since they're expected for many aliases; rate-limit per path
             if (fetchError.statusCode === 404) {
                 const debugKey = `${siteCode}:404:${JSON.stringify(cleanPath)}`;
                 logOnce(debugKey, 'debug', `getPageIdentifiers: 404 for ${JSON.stringify(cleanPath)} in locale "${locale}"`);
             }
 
-            // If router/translate-path fails and this looks like an alias path,
-            // try to find it in other locales
-            if (isAlias) {
+            // Only a 404 means "not this locale": sweep the others. Any other failure is
+            // rethrown as-is, so a Drupal 500 no longer fans out to every locale (BL-1143).
+            if (isAlias && fetchError.statusCode === 404) {
                 // A failed sweep is not cached; answer with the original error as before.
                 const aliasMatch = await findAliasInOtherLocales(ctx, cleanPath).catch((e) => {
                     consola.warn(`findAliasInOtherLocales: lookup for ${JSON.stringify(cleanPath)} failed`, e?.statusCode ?? e?.message);
