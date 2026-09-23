@@ -83,8 +83,29 @@ export async function getPageData(ctx, event){
         const { data } = await $fetch(uri, $fetchBaseOptions({ query, headers }));
 
         data.label = label;
-        
-        await addPageAliases(ctx,data).then((aliases)=> data.aliases=aliases)
+
+        try {
+            await addPageAliases(ctx, data).then((aliases) => data.aliases = aliases);
+        } catch (e) {
+            // When the Drupal login breaker is open, mapAliasByLocale fails with a 503.
+            // Fall back to a plain language map: { en: '/en/node/123', fr: '/fr/node/123', ... }
+            if (e.statusCode === 503) {
+                consola.warn(`getPageData: login unavailable, using plain language map`, {
+                    siteCode:   ctx.siteCode,
+                    statusCode: e.statusCode,
+                    message:    e.statusMessage || e.message
+                });
+
+                const { type: aliasType, id: aliasId } = entityTypeAndId(data);
+
+                data.aliases = {};
+                if (aliasId) for (const code of (ctx.locales || [])) {
+                    data.aliases[code] = `/${code}/${aliasType}/${aliasId}`;
+                }
+            } else {
+                throw e;
+            }
+        }
         
         if(data.type === 'taxonomy_term--system_pages' && !data?.parent[0].id !== 'virtual' ) await getChildren(ctx, data);
 
@@ -124,12 +145,14 @@ function hasLocalizationException({ path }){
 
     return false
 }
+function entityTypeAndId(data){
+    if(data.drupal_internal__nid) return { type: 'node',          id: data.drupal_internal__nid };
+    if(data.drupal_internal__tid) return { type: 'taxonomy/term', id: data.drupal_internal__tid };
+
+    return { type: 'media', id: data.drupal_internal__mid };
+}
 async function addPageAliases(ctx,data){
-    const isMedia = !!data.drupal_internal__mid 
-    const isTax   = !!data.drupal_internal__tid
-    const isNode  = !!data.drupal_internal__nid
-    const type    = isNode? 'node' : isTax? 'taxonomy/term' : 'media';
-    const id   = isNode? data.drupal_internal__nid : isTax? data.drupal_internal__tid : data.drupal_internal__mid;
+    const { type, id } = entityTypeAndId(data);
 
     return mapAliasByLocale(ctx, type, id)
 }

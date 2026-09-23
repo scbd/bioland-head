@@ -147,8 +147,8 @@ function getById ({ identifier, siteCode, localizedHost, locale } ){
                             }
                             catch(e){
                                 throw createError({
-                                    statusCode: e.response?.status || 500,
-                                    statusMessage: e.response?.statusText || 'Internal Server Error',
+                                    statusCode: e.response?.status || e.statusCode || 500,
+                                    statusMessage: e.response?.statusText || e.statusMessage || 'Internal Server Error',
                                     message: `usePathAlias.getById: ${e.message || 'Failed to get path alias by ID'}`,
                                     data: e.response
                                 })
