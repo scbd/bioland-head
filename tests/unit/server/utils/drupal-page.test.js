@@ -300,7 +300,6 @@ describe('drupal-page utilities', () => {
       await expect(drupalPage.getPageData({ ...ctx }, anon)).rejects.toMatchObject({ statusCode: 504 })
       expect(timeoutSpy).toHaveBeenCalledWith(5000)
       expect(primaryCalls()[0][1].signal).toBeInstanceOf(AbortSignal)
-      expect(primaryCalls()[0][1].retry).toBe(0)
       expect(sweepCalls()).toHaveLength(0)
 
       globalThis.$fetch.mockClear()
@@ -322,6 +321,26 @@ describe('drupal-page utilities', () => {
       await expect(drupalPage.getPageData(other, auth)).rejects.toMatchObject({ statusCode: 500 })
       await expect(drupalPage.getPageData(other, anon)).rejects.toMatchObject({ statusCode: 500 })
       expect(primaryCalls()).toHaveLength(2)
+    })
+
+    it('remembers a 502 that is the final outcome of the primary lookup', async () => {
+      globalThis.$fetch.mockImplementationOnce(() => Promise.reject(drupalError(502)))
+
+      await expect(drupalPage.getPageData({ ...ctx }, anon)).rejects.toMatchObject({ statusCode: 502 })
+      globalThis.$fetch.mockClear()
+      await expect(drupalPage.getPageData({ ...ctx }, anon)).rejects.toMatchObject({ statusCode: 503 })
+      expect(globalThis.$fetch).not.toHaveBeenCalled()
+    })
+
+    it('remembers a 500 for app locale tl asked under the Drupal fil host', async () => {
+      primary = () => Promise.reject(drupalError(500))
+      const tl = { ...ctx, locale: 'tl', locales: ['en', 'tl'], localizedHost: 'https://asean.test/fil', path: '/tl/some-alias' }
+      globalThis.$fetch.mockImplementation((uri) => uri.startsWith('https://asean.test/fil/') ? primary() : Promise.reject(drupalError(404)))
+
+      await expect(drupalPage.getPageData({ ...tl }, anon)).rejects.toMatchObject({ statusCode: 500 })
+      globalThis.$fetch.mockClear()
+      await expect(drupalPage.getPageData({ ...tl }, anon)).rejects.toMatchObject({ statusCode: 503 })
+      expect(globalThis.$fetch).not.toHaveBeenCalled()
     })
 
     it.each(['x=SESSION', 'notSESS=1'])('treats Cookie %s as anonymous, so a 500 is remembered', async (Cookie) => {

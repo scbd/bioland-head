@@ -414,7 +414,8 @@ const isTimeout = (e) => e?.name === 'TimeoutError' || e?.cause?.name === 'Timeo
 const isUpstreamError = (e) => e?.statusCode >= 500 || isTimeout(e);
 
 // getPageThumb asks the EN host with ctx.locale unchanged; aliasCacheKey is keyed by locale,
-// so only a lookup against the locale's own host may read or write the map.
+// so only a lookup against the locale's own host may read or write the map. Thumbnail
+// lookups on non-en pages are therefore never remembered, same as before BL-1143.
 const isOwnLocaleHost = ({ host, locale, localizedHost }) => localizedHost === `${host}/${drupalPathPrefix(locale)}`;
 
 function throwIfRecentUpstreamError(key) {
@@ -482,7 +483,7 @@ async function getPageIdentifiers(ctx,  headers){
         try {
             // silentError: true suppresses the auto-log for a 404 since it's expected when an
             // alias doesn't resolve in the requested locale; log a debug line instead.
-            data = await $fetch(uri, $fetchBaseOptions({ headers, signal: AbortSignal.timeout(TRANSLATE_PATH_TIMEOUT_MS), retry: 0, silentError: true }));
+            data = await $fetch(uri, $fetchBaseOptions({ headers, signal: AbortSignal.timeout(TRANSLATE_PATH_TIMEOUT_MS), silentError: true }));
         } catch (fetchError) {
             // A status-less network error (ECONNREFUSED) is deliberately neither swept nor
             // remembered: a refused connection is cheap and should recover on the next hit.
