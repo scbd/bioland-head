@@ -935,16 +935,7 @@
   "Selected": "Seçilmiş",
   "In Progress": "Devamında",
   "Testing": "Test",
-  "Type": "Tür",
-  "Key": "Anahtar",
-  "Summary": "Özet",
-  "Assignee": "Atanan",
-  "Priority": "Öncelik",
-  "Progress": "İlerleme",
   "Created": "Oluşturuldu",
-  "Unassigned": "Atanmamış",
-  "No description available": "Açıklama mevcut değil",
-  "Work Overview": "İşe Genel Bakış",
   "Bug": "Böcek",
   "Task": "Görev",
   "Story": "Öykü",
@@ -961,7 +952,6 @@
   "Medium": "Orta",
   "Low": "Düşük",
   "Lowest": "En düşük",
-  "Selected For Development": "Geliştirme İçin Seçildi",
   "View More ": {
     "": {
       "": {

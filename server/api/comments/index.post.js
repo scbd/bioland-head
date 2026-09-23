@@ -26,8 +26,12 @@ export default defineEventHandler(async (event) => {
         return resp;
 
         async function postComment(event){
-            const { locale: localeCtx } = await useRequestContext(event);
-            const   locale              = localeChosen || localeCtx;
+            const { locale: localeCtx, locales } = await useRequestContext(event);
+            // BL-1133: localeChosen is client-supplied and goes straight into the Drupal
+            // URL path below - only accept it when it is one of the site's actual locales,
+            // otherwise a value like '../x' could target another same-host Drupal path
+            // while still carrying the visitor's forwarded session cookie.
+            const   locale               = locales?.includes(localeChosen) ? localeChosen : localeCtx;
             const   uri                 = `${context.host}/${drupalPathPrefix(locale)}${typeMap[entityType]}`;
             const   method              = 'post';
 

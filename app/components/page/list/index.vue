@@ -87,6 +87,7 @@
     </div>
 </template>
 <script setup>
+    import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
     import { TransitionGroup } from 'vue';
     
     const   meStore   = useMeStore();
@@ -171,6 +172,7 @@
         ...initialQuery,
         ...siteStore.params,
         locale: locale.value,
+        localizedHost: `${siteStore.host}/${drupalPathPrefix(locale.value)}`,
         freeText: initialQuery?.freeText || '',
         page: initialQuery?.page || 1,
         rowsPerPage: initialQuery?.rowsPerPage || 10,

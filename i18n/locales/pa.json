@@ -935,16 +935,7 @@
   "Selected": "ਚੁਣਿਆ",
   "In Progress": "ਪ੍ਰਗਤੀ ਵਿੱਚ",
   "Testing": "ਟੈਸਟਿੰਗ",
-  "Type": "ਕਿਸਮ",
-  "Key": "ਕੁੰਜੀ",
-  "Summary": "ਸੰਖੇਪ",
-  "Assignee": "ਨਿਰਧਾਰਤ",
-  "Priority": "ਤਰਜੀਹ",
-  "Progress": "ਤਰੱਕੀ",
   "Created": "ਬਣਾਇਆ",
-  "Unassigned": "ਅਣ-ਨਿਰਧਾਰਤ",
-  "No description available": "ਕੋਈ ਵੇਰਵਾ ਉਪਲਬਧ ਨਹੀਂ",
-  "Work Overview": "ਕੰਮ ਦੀ ਸੰਖੇਪ ਜਾਣਕਾਰੀ",
   "Bug": "ਬੱਗ",
   "Task": "ਟਾਸਕ",
   "Story": "ਕਹਾਣੀ",
@@ -961,7 +952,6 @@
   "Medium": "ਮੱਧਮ",
   "Low": "ਘੱਟ",
   "Lowest": "ਸਭ ਤੋਂ ਘੱਟ",
-  "Selected For Development": "ਵਿਕਾਸ ਲਈ ਚੁਣਿਆ ਗਿਆ",
   "View More ": {
     "": {
       "": {

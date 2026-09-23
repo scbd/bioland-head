@@ -935,16 +935,7 @@
   "Selected": "Udvalgt",
   "In Progress": "Igangværende",
   "Testing": "Afprøvning",
-  "Type": "Type",
-  "Key": "Nøgle",
-  "Summary": "Resumé",
-  "Assignee": "Erhverver",
-  "Priority": "Prioritet",
-  "Progress": "Fremskridt",
   "Created": "Oprettet",
-  "Unassigned": "Ikke tildelt",
-  "No description available": "Ingen beskrivelse tilgængelig",
-  "Work Overview": "Arbejdsoversigt",
   "Bug": "Bug",
   "Task": "Opgave",
   "Story": "Historie",
@@ -961,7 +952,6 @@
   "Medium": "Medium",
   "Low": "Lav",
   "Lowest": "Laveste",
-  "Selected For Development": "Udvalgt til udvikling",
   "View More ": {
     "": {
       "": {

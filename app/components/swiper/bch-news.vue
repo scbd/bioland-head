@@ -47,6 +47,7 @@ import { Pagination  }   from 'swiper/modules';
 import { useWindowSize } from '@vueuse/core';
 import 'swiper/css';
 import clone from 'lodash.clonedeep';
+import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
 
 const swiperRef = ref(null);
 
@@ -99,8 +100,9 @@ const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ 
 
 // Override locale with current i18n locale to ensure correct locale is sent to API
 const query = computed(() => clone({ 
-    ...siteStore.params, 
-    locale: locale.value
+    ...siteStore.params,
+    locale: locale.value,
+    localizedHost: `${siteStore.host}/${drupalPathPrefix(locale.value)}`
 }));
 
 const { data:slides, status } = await useFetch(() => `/api/list/latest-bch`, {  

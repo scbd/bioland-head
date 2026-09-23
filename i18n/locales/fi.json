@@ -935,16 +935,7 @@
   "Selected": "Valittu",
   "In Progress": "Käynnissä",
   "Testing": "Testaus",
-  "Type": "Tyyppi",
-  "Key": "Avain",
-  "Summary": "Yhteenveto",
-  "Assignee": "Vastaanottaja",
-  "Priority": "Prioriteetti",
-  "Progress": "Edistyminen",
   "Created": "Luotu",
-  "Unassigned": "Määrittämätön",
-  "No description available": "Ei kuvausta saatavilla",
-  "Work Overview": "Työn yleiskatsaus",
   "Bug": "Bugi",
   "Task": "Tehtävä",
   "Story": "Tarina",
@@ -961,7 +952,6 @@
   "Medium": "Keskikokoinen",
   "Low": "Matala",
   "Lowest": "Alin",
-  "Selected For Development": "Valittu Kehitettäväksi",
   "View More ": {
     "": {
       "": {

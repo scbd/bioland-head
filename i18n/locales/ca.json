@@ -935,16 +935,7 @@
   "Selected": "Seleccionats",
   "In Progress": "En curs",
   "Testing": "Proves",
-  "Type": "Tipus",
-  "Key": "Clau",
-  "Summary": "Resum",
-  "Assignee": "Cessionari",
-  "Priority": "Prioritat",
-  "Progress": "Progrés",
   "Created": "Creat",
-  "Unassigned": "No assignat",
-  "No description available": "No hi ha descripció disponible",
-  "Work Overview": "Visió general del treball",
   "Bug": "Error",
   "Task": "Tasca",
   "Story": "Història",
@@ -961,7 +952,6 @@
   "Medium": "Mitjà",
   "Low": "Baixa",
   "Lowest": "Més baix",
-  "Selected For Development": "Seleccionat per al desenvolupament",
   "View More ": {
     "": {
       "": {

@@ -935,16 +935,7 @@
   "Selected": "Selectat",
   "In Progress": "În curs",
   "Testing": "Testare",
-  "Type": "Tip",
-  "Key": "Cheie",
-  "Summary": "Rezumat",
-  "Assignee": "Cesionar",
-  "Priority": "Prioritate",
-  "Progress": "Progresul",
   "Created": "Creat",
-  "Unassigned": "Neatribuit",
-  "No description available": "Nu există descriere disponibilă",
-  "Work Overview": "Prezentare generală a lucrărilor",
   "Bug": "Bug",
   "Task": "Sarcină",
   "Story": "Poveste",
@@ -961,7 +952,6 @@
   "Medium": "Mediu",
   "Low": "Scăzut",
   "Lowest": "Cel mai mic",
-  "Selected For Development": "Selectat pentru dezvoltare",
   "View More ": {
     "": {
       "": {

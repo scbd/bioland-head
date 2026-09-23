@@ -935,16 +935,7 @@
   "Selected": "ఎంపిక చేయబడింది",
   "In Progress": "పురోగతిలో",
   "Testing": "పరీక్ష",
-  "Type": "రకం",
-  "Key": "కీ",
-  "Summary": "సారాంశం",
-  "Assignee": "అప్పగించబడిన",
-  "Priority": "ప్రాధాన్యత",
-  "Progress": "పురోగతి",
   "Created": "సృష్టించబడింది",
-  "Unassigned": "కేటాయించబడలేదు",
-  "No description available": "వివరణ అందుబాటులో లేదు",
-  "Work Overview": "పని అవలోకనం",
   "Bug": "బగ్",
   "Task": "టాస్క్",
   "Story": "కథ",
@@ -961,7 +952,6 @@
   "Medium": "మీడియం",
   "Low": "తక్కువ",
   "Lowest": "అత్యల్ప",
-  "Selected For Development": "అభివృద్ధి కోసం ఎంపిక చేయబడింది",
   "View More ": {
     "": {
       "": {

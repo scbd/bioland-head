@@ -935,16 +935,7 @@
   "Selected": "Vald",
   "In Progress": "Pågående",
   "Testing": "Testning",
-  "Type": "Typ",
-  "Key": "Nyckel",
-  "Summary": "Sammanfattning",
-  "Assignee": "Förvärvare",
-  "Priority": "Prioritet",
-  "Progress": "Framsteg",
   "Created": "Skapat",
-  "Unassigned": "Ej tilldelad",
-  "No description available": "Ingen beskrivning tillgänglig",
-  "Work Overview": "Arbetsöversikt",
   "Bug": "Bugg",
   "Task": "Uppgift",
   "Story": "Berättelse",
@@ -961,7 +952,6 @@
   "Medium": "Medium",
   "Low": "Låg",
   "Lowest": "Lägsta",
-  "Selected For Development": "Vald för utveckling",
   "View More ": {
     "": {
       "": {
