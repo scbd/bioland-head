@@ -10,9 +10,9 @@ import type { H3Event } from 'h3'
  * `router/translate-path` lookup, a cross-locale alias sweep, then an error-page
  * render - all for a path that was never going to resolve.
  *
- * This runs FIRST (00, sorted ahead of every other numbered/lettered middleware)
- * so a blocked path never reaches 01.context.ts - the middleware that resolves
- * site context via a DMSM/Drupal call. It depends on nothing: pure path
+ * This runs before every 01.* middleware (after 00.cache-clear, which makes no Drupal
+ * call for these paths) so a blocked path never reaches 01.context.ts - the middleware
+ * that resolves site context via a DMSM/Drupal call. It depends on nothing: pure path
  * classification, no site/auth context required.
  *
  * Real Drupal aliases never carry a dot-extension for downloadable content - e.g.
@@ -50,19 +50,42 @@ const BLOCKED_EXTENSIONS = new Set([
 
 // Known vulnerability-scanner path prefixes seen in the prod capture. Kept short and
 // data-driven; bare `/v2` is intentionally excluded - see the file header.
-const BLOCKED_PREFIXES = [
-  '/wp-',
+// Matched as a WHOLE path segment so real aliases like `/wapato-national-park` pass:
+// an entry matches the segment itself or anything beneath it. An entry ending in `/`
+// only matches when it has a child segment (bare `/h5`, `/vendor` stay allowed).
+const BLOCKED_SEGMENTS = [
   '/wordpress',
   '/cgi-bin',
+  '/wap',
+  '/phpmyadmin',
   '/ipfs/',
   '/h5/',
-  '/wap',
   '/xy/',
-  '/phpmyadmin',
-  '/.git',
-  '/.env',
   '/vendor/',
 ]
+
+// Intentionally PARTIAL prefixes, matched without a segment boundary: `/wp-` must catch
+// `wp-login.php`, `wp-admin`, `wp-content`, `wp-json`, ...; `/.git` and `/.env` must catch
+// `.gitignore`, `.env.local`, ... No real Drupal alias starts with `wp-` or a dot.
+const BLOCKED_PARTIAL_PREFIXES = ['/wp-', '/.git', '/.env']
+
+// Canonicalizes the request path so encoding/casing tricks cannot slip past the matchers:
+// drops the query, decodes once (keeping the raw path if it is malformed), collapses
+// repeated slashes, strips `;matrix` params and trailing dots from the last segment,
+// and lowercases.
+function normalizePath(path: string): string {
+  const raw = path.split('?')[0] || '/'
+  let decoded = raw
+  try {
+    decoded = decodeURIComponent(raw)
+  } catch {
+    // Malformed escape sequence: classify the raw path as-is.
+  }
+  const collapsed = decoded.replace(/\/{2,}/g, '/')
+  const lastSlash = collapsed.lastIndexOf('/')
+  const lastSegment = collapsed.slice(lastSlash + 1).replace(/;.*$/, '').replace(/\.+$/, '')
+  return (collapsed.slice(0, lastSlash + 1) + lastSegment).toLowerCase() || '/'
+}
 
 // Strips a single optional leading locale segment (`/en`, `/fr-CA`, ...) so the rest of
 // the classification runs on the real path, matching how Nuxt i18n prefixes routes.
@@ -79,12 +102,20 @@ function hasBlockedExtension(pathname: string): boolean {
   return !!match && BLOCKED_EXTENSIONS.has(match[1].toLowerCase())
 }
 
+function matchesSegment(pathname: string, segment: string): boolean {
+  if (segment.endsWith('/')) return pathname.startsWith(segment)
+  return pathname === segment || pathname.startsWith(`${segment}/`)
+}
+
 function hasBlockedPrefix(pathname: string): boolean {
-  return BLOCKED_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+  return (
+    BLOCKED_SEGMENTS.some((segment) => matchesSegment(pathname, segment)) ||
+    BLOCKED_PARTIAL_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+  )
 }
 
 export default defineEventHandler((event: H3Event) => {
-  const pathname = event.path.split('?')[0] || '/'
+  const pathname = normalizePath(event.path)
 
   if (PASSTHROUGH_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return
   if (isAllowedSitemap(pathname)) return
@@ -97,10 +128,12 @@ export default defineEventHandler((event: H3Event) => {
   const isBlocked = hasBlockedExtension(withoutLocale) || hasBlockedPrefix(withoutLocale) || hasBlockedPrefix(pathname)
   if (!isBlocked) return
 
-  consola.debug(`[scanner-404] Fast 404 for scanner-shaped path: ${pathname}`)
+  consola.debug(`[scanner-404] Fast 404 for scanner-shaped path: ${JSON.stringify(pathname.slice(0, 200))}`)
 
+  // no-store: a false positive must never be CDN-cached as a 404 for every visitor.
   event.node.res.statusCode = 404
   event.node.res.setHeader('Content-Type', 'text/plain; charset=utf-8')
-  event.node.res.setHeader('Cache-Control', 'public, max-age=300')
-  event.node.res.end('Not Found')
+  event.node.res.setHeader('Cache-Control', 'no-store')
+  if (event.method === 'HEAD') event.node.res.end()
+  else event.node.res.end('Not Found')
 })
