@@ -18,8 +18,8 @@ vi.stubGlobal('createError', vi.fn((config) => new Error(config.statusMessage)))
 vi.stubGlobal('$fetch', vi.fn())
 vi.stubGlobal('$fetchBaseOptions', vi.fn(() => ({})))
 vi.stubGlobal('getExternalCacheOptions', vi.fn(() => ({})))
-vi.stubGlobal('passError', vi.fn())
-vi.stubGlobal('consola', { warn: vi.fn() })
+vi.stubGlobal('passError', vi.fn((event, e) => { throw e }))
+vi.stubGlobal('consola', { warn: vi.fn(), error: vi.fn() })
 
 let handler
 
@@ -65,20 +65,15 @@ describe('server/api/list/panorama', () => {
     expect(globalThis.passError).not.toHaveBeenCalled()
   })
 
-  it('routes a fetch rejection through passError and logs a warning', async () => {
+  it('routes a fetch rejection through passError and rejects', async () => {
     const upstreamError = new Error('API unavailable')
     globalThis.$fetch.mockRejectedValue(upstreamError)
     globalThis.getQuery.mockReturnValue({ countries: 'GB' })
 
     const event = { id: 'event' }
 
-    // Before BL-1128 the handler would rethrow the error, letting it escape.
-    // Now passError handles it and the handler resolves.
-    await expect(handler(event)).resolves.toBeUndefined()
+    // The handler catches the fetch error, calls passError which throws.
+    await expect(handler(event)).rejects.toThrow(upstreamError)
     expect(globalThis.passError).toHaveBeenCalledWith(event, upstreamError)
-    expect(globalThis.consola.warn).toHaveBeenCalledWith(
-      expect.stringContaining('server/api/list/panorama fetch api error'),
-      'API unavailable'
-    )
   })
 })

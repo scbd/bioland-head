@@ -36,10 +36,7 @@ export default cachedEventHandler(async (event) => {
             return await data.slice(0, 5)
         }
         catch (e) {
-
-            consola.warn( `server/api/list/panorama fetch api error: https://panorama.solutions/en/api/v1/solutions`, e.message );
             passError(event, e);
-
         }
     },
     getExternalCacheOptions('panorama')
