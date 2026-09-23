@@ -69,6 +69,8 @@ describe('drupal-internal transport', () => {
     expect(getDrupalInternalTransport(`https://CA.Example.Test/jsonapi`)).not.toBeNull()
     expect(getDrupalInternalTransport('https://api.cbd.int/api/v2013/thesaurus')).toBeNull()
     expect(getDrupalInternalTransport(`http://${TENANT}/jsonapi`)).toBeNull()
+    expect(getDrupalInternalTransport(`https://${TENANT}:443/jsonapi`)).not.toBeNull()
+    expect(getDrupalInternalTransport(`https://${TENANT}:8443/jsonapi`)).toBeNull()
     expect(getDrupalInternalTransport('not a url')).toBeNull()
   })
 

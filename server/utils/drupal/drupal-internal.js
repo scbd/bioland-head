@@ -40,6 +40,11 @@ export const registerDrupalHost = (origin) => {
 
 const isDrupalHost = (hostname) => drupalHosts.has(String(hostname || '').toLowerCase());
 
+// Tenants are served on the default https port; an explicit other port is not the tenant edge.
+const isDefaultHttpsPort = (port) => port === undefined || port === null || port === '' || String(port) === '443';
+
+const isInternalTarget = (hostname, port) => isDefaultHttpsPort(port) && isDrupalHost(hostname);
+
 // The internal hop is plain TCP by design; anything else would be dialled as http on port 80.
 // A bad value disables the transport (logged once, then cached as null) so traffic stays public.
 function parseInternalUrl (value) {
@@ -86,7 +91,7 @@ function getTransport () {
   // A redirect to a host that is not a Drupal tenant keeps normal DNS + TLS.
   const dispatcher = new Agent({
     connect: (opts, callback) => {
-      if (!isDrupalHost(opts.hostname)) return connectPublic(opts, callback);
+      if (opts.protocol !== 'https:' || !isInternalTarget(opts.hostname, opts.port)) return connectPublic(opts, callback);
 
       const socket = connectInternal();
       let settled  = false;
@@ -104,7 +109,7 @@ function getTransport () {
 
   class InternalHttpsAgent extends https.Agent {
     createConnection (options, callback) {
-      return isDrupalHost(options.host) ? connectInternal() : super.createConnection(options, callback);
+      return isInternalTarget(options.host, options.port) ? connectInternal() : super.createConnection(options, callback);
     }
   }
 
@@ -125,7 +130,7 @@ export function getDrupalInternalTransport (request) {
   try {
     const url = new URL(String(request?.url ?? request ?? ''));
 
-    return url.protocol === 'https:' && isDrupalHost(url.hostname) ? current : null;
+    return url.protocol === 'https:' && isInternalTarget(url.hostname, url.port) ? current : null;
   } catch {
     return null;
   }
