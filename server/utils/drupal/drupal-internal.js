@@ -33,6 +33,24 @@ export const registerDrupalHost = (origin) => {
 
 const isDrupalHost = (hostname) => drupalHosts.has(String(hostname || '').toLowerCase());
 
+// The internal hop is plain TCP by design; anything else would be dialled as http on port 80.
+// A bad value disables the transport (logged once, then cached as null) so traffic stays public.
+function parseInternalUrl (value) {
+  let url;
+
+  try {
+    url = new URL(value);
+  } catch {
+    consola.error('[drupal-internal] NUXT_DRUPAL_INTERNAL_URL is not a valid URL, using public transport');
+    return null;
+  }
+
+  if (url.protocol === 'http:') return url;
+
+  consola.error('[drupal-internal] NUXT_DRUPAL_INTERNAL_URL must be http://, using public transport', { protocol: url.protocol });
+  return null;
+}
+
 function getTransport () {
   if (transport !== undefined) return transport;
 
@@ -40,7 +58,11 @@ function getTransport () {
 
   if (!drupalInternalUrl) return (transport = null);
 
-  const { hostname, port } = new URL(drupalInternalUrl);
+  const internalUrl = parseInternalUrl(drupalInternalUrl);
+
+  if (!internalUrl) return (transport = null);
+
+  const { hostname, port } = internalUrl;
   const internalPort       = Number(port) || 80;
   const connectPublic      = buildConnector({});
 
