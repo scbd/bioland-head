@@ -451,6 +451,7 @@ export const CACHE_TTL = {
   ALIAS_FALLBACK_HIT: 60 * 60 * 24, // 1 day
   ALIAS_FALLBACK_MISS: 60 * 10, // 10 minutes
   ALIAS_REDIRECT: 60 * 10, // 10 minutes
+  ALIAS_UPSTREAM_ERROR: 60, // 1 minute: in-process only, damps retries of a primary lookup that hit a Drupal 5xx or timed out
   EXTERNAL: 60 * 60 * 24 * 30, // 30 days
   EXTERNAL_SHORT: 60 * 60 * 24, // 1 day
   THESAURUS: 60 * 60 * 24 * 7, // 7 days

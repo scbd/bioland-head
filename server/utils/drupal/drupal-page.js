@@ -402,6 +402,27 @@ function isAuthenticatedRequest(headers) {
     return typeof cookie === 'string' && /S?SESS/.test(cookie);
 }
 
+// A Drupal 5xx or a timeout on the requested-locale lookup is not a 404, so it never sweeps
+// other locales (BL-1143); without this, every repeat hit re-asked a failing Drupal. Kept
+// in process for CACHE_TTL.ALIAS_UPSTREAM_ERROR, never in shared storage, anonymous only.
+const ALIAS_UPSTREAM_ERROR_MAX_ENTRIES = 1000;
+const aliasUpstreamErrors = boundedTtlMap(ALIAS_UPSTREAM_ERROR_MAX_ENTRIES);
+
+const isTimeout = (e) => e?.name === 'TimeoutError' || e?.cause?.name === 'TimeoutError';
+const isUpstreamError = (e) => e?.statusCode >= 500 || isTimeout(e);
+
+function throwIfRecentUpstreamError(key) {
+    if (!aliasUpstreamErrors.get(key)) return;
+
+    const err = createError({
+        statusCode   : 503,
+        statusMessage: 'Service Unavailable',
+        message      : 'router/translate-path recently failed upstream; not retrying yet',
+    });
+    err.remembered = true;
+    throw err;
+}
+
 async function findAliasInOtherLocales(ctx, aliasPath) {
     const key = aliasCacheKey(ctx, aliasPath);
 
@@ -447,21 +468,26 @@ async function getPageIdentifiers(ctx,  headers){
             };
         }
 
+        if (aliasRedirectKey) throwIfRecentUpstreamError(aliasRedirectKey);
+
         let data;
         try {
             // silentError: true suppresses the auto-log for a 404 since it's expected when an
             // alias doesn't resolve in the requested locale; log a debug line instead.
-            data = await $fetch(uri, $fetchBaseOptions({ headers, silentError: true }));
+            data = await $fetch(uri, $fetchBaseOptions({ headers, signal: AbortSignal.timeout(TRANSLATE_PATH_TIMEOUT_MS), silentError: true }));
         } catch (fetchError) {
+            if (aliasRedirectKey && isUpstreamError(fetchError))
+                aliasUpstreamErrors.set(aliasRedirectKey, true, CACHE_TTL.ALIAS_UPSTREAM_ERROR * 1000);
+
             // Log 404s at debug level since they're expected for many aliases; rate-limit per path
             if (fetchError.statusCode === 404) {
                 const debugKey = `${siteCode}:404:${JSON.stringify(cleanPath)}`;
                 logOnce(debugKey, 'debug', `getPageIdentifiers: 404 for ${JSON.stringify(cleanPath)} in locale "${locale}"`);
             }
 
-            // If router/translate-path fails and this looks like an alias path,
-            // try to find it in other locales
-            if (isAlias) {
+            // Only a 404 means "not this locale": sweep the others. Any other failure is
+            // rethrown as-is, so a Drupal 500 no longer fans out to every locale (BL-1143).
+            if (isAlias && fetchError.statusCode === 404) {
                 // A failed sweep is not cached; answer with the original error as before.
                 const aliasMatch = await findAliasInOtherLocales(ctx, cleanPath).catch((e) => {
                     consola.warn(`findAliasInOtherLocales: lookup for ${JSON.stringify(cleanPath)} failed`, e?.statusCode ?? e?.message);

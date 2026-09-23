@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest'
+import { CACHE_TTL as REAL_CACHE_TTL } from '../../../../shared/utils/constants'
 
 // drupal-page.js builds its cached alias lookup at import time.
 vi.hoisted(() => {
@@ -233,5 +234,92 @@ describe('drupal-page utilities', () => {
       expect(imgCall.query.include).toContain('field_media_image');
       expect(imgCall.query.include).not.toContain('field_media_document');
     });
+  });
+
+  // BL-1143: a primary translate-path failure that is not a 404 used to fan out to every
+  // other locale, and the primary lookup itself had no timeout.
+  describe('primary translate-path failure handling (BL-1143)', () => {
+    const ctx = {
+      multiSiteCode: 'bl2',
+      siteCode     : 'asean',
+      host         : 'https://asean.test',
+      localizedHost: 'https://asean.test/en',
+      locale       : 'en',
+      locales      : ['en', 'fr', 'vi'],
+      path         : '/en/some-alias',
+    }
+    const anon = { context: { headers: {} } }
+    const auth = { context: { headers: { Cookie: 'SESSabc=xyz' } } }
+    const drupalError = (statusCode) => Object.assign(new Error(`${statusCode}`), { statusCode })
+
+    let drupalPage, primary
+
+    const primaryCalls = () => globalThis.$fetch.mock.calls.filter(([uri]) => uri.startsWith(`${ctx.localizedHost}/router/translate-path`))
+    const sweepCalls   = () => globalThis.$fetch.mock.calls.filter(([uri]) => !uri.startsWith(`${ctx.localizedHost}/`))
+
+    beforeEach(async () => {
+      vi.resetModules()
+      primary = () => Promise.reject(drupalError(404))
+      globalThis.$fetch = vi.fn((uri) => uri.startsWith(`${ctx.localizedHost}/`) ? primary() : Promise.reject(drupalError(404)))
+      globalThis.$fetchBaseOptions = (opts = {}) => opts
+      vi.stubGlobal('consola', { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() })
+      vi.stubGlobal('createError', (e) => Object.assign(new Error(e.message), e))
+      vi.stubGlobal('CACHE_TTL', REAL_CACHE_TTL)
+      vi.stubGlobal('removeLocalizationFromPath', (await import('~/server/utils/drupal/index.js')).removeLocalizationFromPath)
+      drupalPage = await import('../../../../server/utils/drupal/drupal-page.js')
+    })
+
+    afterEach(() => {
+      delete globalThis.$fetch
+      delete globalThis.$fetchBaseOptions
+      vi.restoreAllMocks()
+    })
+
+    it('still sweeps other locales on a primary 404', async () => {
+      await expect(drupalPage.getPageData({ ...ctx }, anon)).rejects.toMatchObject({ statusCode: 404 })
+      expect(sweepCalls()).toHaveLength(2)
+    })
+
+    it('does not sweep on a primary 500, rethrows it, and makes zero Drupal calls on a repeat inside the window', async () => {
+      primary = () => Promise.reject(drupalError(500))
+
+      await expect(drupalPage.getPageData({ ...ctx }, anon)).rejects.toMatchObject({ statusCode: 500 })
+      expect(primaryCalls()).toHaveLength(1)
+      expect(sweepCalls()).toHaveLength(0)
+
+      globalThis.$fetch.mockClear()
+      await expect(drupalPage.getPageData({ ...ctx }, anon)).rejects.toMatchObject({ statusCode: 503 })
+      expect(globalThis.$fetch).not.toHaveBeenCalled()
+    })
+
+    it('times out the primary lookup and treats the timeout as an upstream error', async () => {
+      const timeoutSpy = vi.spyOn(AbortSignal, 'timeout')
+      primary = () => Promise.reject(Object.assign(new Error('aborted'), { name: 'TimeoutError' }))
+
+      await expect(drupalPage.getPageData({ ...ctx }, anon)).rejects.toBeDefined()
+      expect(timeoutSpy).toHaveBeenCalledWith(5000)
+      expect(primaryCalls()[0][1].signal).toBeInstanceOf(AbortSignal)
+      expect(sweepCalls()).toHaveLength(0)
+
+      globalThis.$fetch.mockClear()
+      await expect(drupalPage.getPageData({ ...ctx }, anon)).rejects.toMatchObject({ statusCode: 503 })
+      expect(globalThis.$fetch).not.toHaveBeenCalled()
+    })
+
+    it('never serves an authenticated request from the upstream-error map', async () => {
+      primary = () => Promise.reject(drupalError(500))
+      await expect(drupalPage.getPageData({ ...ctx }, anon)).rejects.toMatchObject({ statusCode: 500 })
+
+      globalThis.$fetch.mockClear()
+      await expect(drupalPage.getPageData({ ...ctx }, auth)).rejects.toMatchObject({ statusCode: 500 })
+      expect(primaryCalls()).toHaveLength(1)
+
+      // An authenticated failure is not recorded either: a fresh anonymous alias still asks Drupal.
+      globalThis.$fetch.mockClear()
+      const other = { ...ctx, path: '/en/other-alias' }
+      await expect(drupalPage.getPageData(other, auth)).rejects.toMatchObject({ statusCode: 500 })
+      await expect(drupalPage.getPageData(other, anon)).rejects.toMatchObject({ statusCode: 500 })
+      expect(primaryCalls()).toHaveLength(2)
+    })
   });
 });
