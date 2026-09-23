@@ -10,6 +10,9 @@ import { Agent, buildConnector, errors } from 'undici';
 
 // Hostnames of Drupal tenant origins, fed from the DMSM-derived canonical hosts. Bounded by the
 // number of Sites in DMSM; anything not in here (redirect targets, other APIs) is never swapped.
+// Routing is best-effort: a host is only known once this process has built that Site's context (a
+// request served for it, or a Drupal login), so e.g. chm-network status fetching sites this
+// process has not served yet still goes public until they are. Public is always correct.
 const drupalHosts = new Set();
 
 // Same bound as undici's default connect timeout on the public path, so an unreachable
