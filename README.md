@@ -344,11 +344,17 @@ Supported RTL languages: `am`, `ar`, `az`, `he`, `fa`, `ur`, `mv`, `ku`
 ## Docker
 
 ```bash
-# Build image
-docker build --platform linux/amd64 -t scbd/bioland-head:dev-$(date +%Y-%m-%d) .
+# Build image (stamps GIT_COMMIT/BUILD_DATE so the running container logs and labels its build)
+yarn build:image
+
+# Override the image name/tag base (defaults to scbd/bioland-head, tagged with the short SHA)
+IMAGE=scbd/bioland-head yarn build:image
+
+# Equivalent manual command
+docker build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) -t scbd/bioland-head:$(git rev-parse --short HEAD) .
 
 # Run container
-docker run -p 3000:3000 scbd/bioland-head:dev-2025-12-12
+docker run -p 3000:3000 scbd/bioland-head:<short-sha>
 ```
 
 ## Contributing
