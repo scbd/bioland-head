@@ -1,22 +1,48 @@
 import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
 
+const ENVS        = new Set(['dev', 'stg', 'prod']);
+const SITE_CODE   = /^[a-z0-9-]{1,32}$/;
+const LOCALE_CODE = /^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i;
+
+// The Site's host and locales come from DMSM, never from the query string: taking a raw URL let
+// any caller make this server fetch an arbitrary (including internal) address (BL-1134).
 export default defineEventHandler(async (event) => {
+    const { siteCode, env } = getQuery(event);
+
+    if (typeof env !== 'string' || !ENVS.has(env) || typeof siteCode !== 'string' || !SITE_CODE.test(siteCode))
+        throw createError({ statusCode: 400, statusMessage: 'siteCode and env (dev|stg|prod) are required' });
+
     try{
-        const queryCtx = getQuery (event);
-
-        const locales  = Array.isArray(queryCtx.locales)? queryCtx.locales : ([queryCtx.locales]);
-
-        const ctx      = { ...queryCtx, locales };
-
+        const ctx    = await resolveSite(siteCode, env);
         const result = await getStatus(ctx);
 
-        consola.success(result)
         if(result?.counts?.total < 0) result.latestSeedConfiguration = false;
 
         return  result
     }
     catch (e) {
-        passError(event, e);
+        return passError(event, e);
+    }
+
+    async function resolveSite(siteCode, env){
+        const { dmsm, multiSiteCode } = useRuntimeConfig().public;
+        const { config, sites }       = await $fetch(`${dmsm}/config/${env}/${multiSiteCode}`, $fetchBaseOptions());
+        const site                    = sites && Object.hasOwn(sites, siteCode) ? sites[siteCode] : null;
+
+        if(!site) throw createError({ statusCode: 404, statusMessage: 'Unknown site' });
+
+        const locales = (Array.isArray(site.locales) ? site.locales : [site.locales]).filter(isLocale);
+
+        if(!isLocale(site.defaultLocale) || !locales.length)
+            throw createError({ statusCode: 422, statusMessage: 'Site has no valid locales' });
+
+        const url = getCanonicalHost({ siteCode: site.siteCode ?? siteCode, baseHost: config?.baseHost, env, redirect: site.redirect });
+
+        return { url, defaultLocale: site.defaultLocale, locales, migration: !!(site.published && site.hasBl1) };
+    }
+
+    function isLocale(locale){
+        return typeof locale === 'string' && LOCALE_CODE.test(locale);
     }
 
     async function getStatus(ctx){
@@ -94,6 +120,3 @@ export default defineEventHandler(async (event) => {
             // .catch(() => false);
     }
 })
-
-
-//http://lk.localhost:3000/api/chm-network/status?url=https://lk.bl2.cbddev.xyz&defaultLocale=en&locales=fr&locales=en

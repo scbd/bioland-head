@@ -58,10 +58,10 @@
         index: { type: Number} ,
         parentIndex: { type: Number} ,
         site: { type: Object, default: false } ,
-        url: { type: String, default: false } ,
+        env: { type: String, required: true } ,
         hide: { type: Boolean, default: false } ,
     });
-    const { index, site, url, parentIndex } = toRefs(props);
+    const { index, site, env, parentIndex } = toRefs(props);
     const { t, locale }   = useI18n();
     const statusData = ref({});
 
@@ -70,8 +70,6 @@
     const isTranslated         = ref(false);
     const hasLatestSeedVersion = ref(false);
     const success = ref(false);
-  
-    const migration = ref(false)
 
     onMounted(mounted);
 
@@ -79,10 +77,7 @@
 
     async function mounted(){
         setTimeout(async () => {
-            const { defaultLocale, locales, published, hasBl1 } = site.value
-            migration.value = !!(published && hasBl1);
-
-            const query = migration.value? { url:url.value, defaultLocale, locales, migration }:{ url:url.value, defaultLocale, locales}
+            const query = { siteCode: site.value.siteCode, env: env.value };
             const data  =  await  $fetchRetry(`/api/chm-network/status`, { query, method: 'GET',key: `chm-network-stats-widget-${index.value}`, getCachedData });
  
             statusData.value= data
