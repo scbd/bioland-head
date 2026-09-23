@@ -935,16 +935,7 @@
   "Selected": "Сонгосон",
   "In Progress": "Ажиллаж байна",
   "Testing": "Туршилт",
-  "Type": "Төрөл",
-  "Key": "Түлхүүр",
-  "Summary": "Хураангуй",
-  "Assignee": "Хүлээн авагч",
-  "Priority": "Тэргүүлэх чиглэл",
-  "Progress": "Ахиц дэвшил",
   "Created": "Бүтээсэн",
-  "Unassigned": "Товлогдоогүй",
-  "No description available": "Тодорхойлолт байхгүй",
-  "Work Overview": "Ажлын тойм",
   "Bug": "Алдаа",
   "Task": "Даалгавар",
   "Story": "Түүх",
@@ -961,7 +952,6 @@
   "Medium": "Дунд",
   "Low": "Бага",
   "Lowest": "Хамгийн бага",
-  "Selected For Development": "Хөгжлийн зориулалтаар сонгогдсон",
   "View More ": {
     "": {
       "": {

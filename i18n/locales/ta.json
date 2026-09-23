@@ -935,16 +935,7 @@
   "Selected": "தேர்ந்தெடுக்கப்பட்டது",
   "In Progress": "முன்னேற்றத்தில்",
   "Testing": "சோதனை",
-  "Type": "வகை",
-  "Key": "விசை",
-  "Summary": "சுருக்கம்",
-  "Assignee": "ஒப்படைப்பாளர்",
-  "Priority": "முன்னுரிமை",
-  "Progress": "முன்னேற்றம்",
   "Created": "உருவாக்கப்பட்டது",
-  "Unassigned": "ஒதுக்கப்படாத",
-  "No description available": "எந்த விளக்கமும் கிடைக்கவில்லை",
-  "Work Overview": "வேலை கண்ணோட்டம்",
   "Bug": "பிழை",
   "Task": "பணி",
   "Story": "கதை",
@@ -961,7 +952,6 @@
   "Medium": "நடுத்தர",
   "Low": "குறைந்த",
   "Lowest": "மிகக் குறைந்த",
-  "Selected For Development": "வளர்ச்சிக்கு தேர்ந்தெடுக்க",
   "View More ": {
     "": {
       "": {

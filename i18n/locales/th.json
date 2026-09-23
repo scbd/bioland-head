@@ -935,16 +935,7 @@
   "Selected": "เลือกไว้",
   "In Progress": "กำลังดำเนินการ",
   "Testing": "การทดสอบ",
-  "Type": "ประเภท",
-  "Key": "กุญแจ",
-  "Summary": "สรุป",
-  "Assignee": "ผู้รับมอบหมาย",
-  "Priority": "ลำดับความสำคัญ",
-  "Progress": "ความคืบหน้า",
   "Created": "สร้างขึ้น",
-  "Unassigned": "ไม่ได้รับมอบหมาย",
-  "No description available": "ไม่มีคำอธิบาย",
-  "Work Overview": "ภาพรวมการทำงาน",
   "Bug": "ข้อผิดพลาด",
   "Task": "งาน",
   "Story": "เรื่องราว",
@@ -961,7 +952,6 @@
   "Medium": "ปานกลาง",
   "Low": "ต่ำ",
   "Lowest": "ต่ำสุด",
-  "Selected For Development": "คัดเลือกสำหรับการพัฒนา",
   "View More ": {
     "": {
       "": {

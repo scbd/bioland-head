@@ -935,16 +935,7 @@
   "Selected": "Wybrany",
   "In Progress": "W toku",
   "Testing": "Testowanie",
-  "Type": "Typ",
-  "Key": "Klucz",
-  "Summary": "Podsumowanie",
-  "Assignee": "Cesjonariusz",
-  "Priority": "Priorytet",
-  "Progress": "Postęp",
   "Created": "Utworzony",
-  "Unassigned": "Nieprzypisane",
-  "No description available": "Brak dostępnego opisu",
-  "Work Overview": "Przegląd pracy",
   "Bug": "Błąd",
   "Task": "Zadanie",
   "Story": "Opowieść",
@@ -961,7 +952,6 @@
   "Medium": "Średni",
   "Low": "Niski",
   "Lowest": "Najniższy",
-  "Selected For Development": "Wybrany do rozwoju",
   "View More ": {
     "": {
       "": {

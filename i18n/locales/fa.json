@@ -935,16 +935,7 @@
   "Selected": "انتخاب شده",
   "In Progress": "در حال پیشرفت",
   "Testing": "تست",
-  "Type": "نوع",
-  "Key": "کلید",
-  "Summary": "خلاصه",
-  "Assignee": "واگذار کننده",
-  "Priority": "اولویت",
-  "Progress": "پیشرفت",
   "Created": "ایجاد شده",
-  "Unassigned": "اختصاص داده نشده",
-  "No description available": "توضیحات موجود نیست",
-  "Work Overview": "نمای کلی کار",
   "Bug": "اشکال",
   "Task": "وظیفه",
   "Story": "داستان",
@@ -961,7 +952,6 @@
   "Medium": "متوسط",
   "Low": "کم",
   "Lowest": "کمترین",
-  "Selected For Development": "انتخاب شده برای توسعه",
   "View More ": {
     "": {
       "": {

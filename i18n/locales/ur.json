@@ -935,16 +935,7 @@
   "Selected": "منتخب",
   "In Progress": "جاری ہے",
   "Testing": "ٹیسٹنگ",
-  "Type": "قسم",
-  "Key": "کلید",
-  "Summary": "خلاصہ",
-  "Assignee": "تفویض کرنے والا",
-  "Priority": "ترجیح",
-  "Progress": "پیشرفت",
   "Created": "تخلیق",
-  "Unassigned": "غیر تفویض",
-  "No description available": "کوئی تفصیل دستیاب نہیں",
-  "Work Overview": "کام کا جائزہ",
   "Bug": "بگ",
   "Task": "ٹاسک",
   "Story": "کہانی",
@@ -961,7 +952,6 @@
   "Medium": "میڈیم",
   "Low": "کم",
   "Lowest": "سب سے کم",
-  "Selected For Development": "ترقی کے لئے منتخب",
   "View More ": {
     "": {
       "": {

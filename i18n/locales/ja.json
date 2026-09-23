@@ -935,16 +935,7 @@
   "Selected": "選択済み",
   "In Progress": "進行中",
   "Testing": "テスト",
-  "Type": "タイプ",
-  "Key": "キー",
-  "Summary": "サマリー",
-  "Assignee": "譲受人",
-  "Priority": "優先度",
-  "Progress": "進捗",
   "Created": "作成されました",
-  "Unassigned": "未割り当て",
-  "No description available": "説明はありません",
-  "Work Overview": "作業概要",
   "Bug": "バグ",
   "Task": "タスク",
   "Story": "ストーリー",
@@ -961,7 +952,6 @@
   "Medium": "ミディアム",
   "Low": "低い",
   "Lowest": "最低",
-  "Selected For Development": "開発対象として選択されました",
   "View More ": {
     "": {
       "": {

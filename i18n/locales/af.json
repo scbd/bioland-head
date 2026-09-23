@@ -935,16 +935,7 @@
   "Selected": "Geselekteer",
   "In Progress": "In die gang",
   "Testing": "Toetsing",
-  "Type": "tipe",
-  "Key": "sleutel",
-  "Summary": "Opsomming",
-  "Assignee": "Toesigner",
-  "Priority": "Prioriteit",
-  "Progress": "Vooruitgang",
   "Created": "Geskep",
-  "Unassigned": "Ontoegewys",
-  "No description available": "Geen beskrywing beskikbaar nie",
-  "Work Overview": "Werk Oorsig",
   "Bug": "Bug",
   "Task": "Taak",
   "Story": "Verhaal",
@@ -961,7 +952,6 @@
   "Medium": "Medium",
   "Low": "Laag",
   "Lowest": "Laagste",
-  "Selected For Development": "Gekies vir ontwikkeling",
   "View More ": {
     "": {
       "": {

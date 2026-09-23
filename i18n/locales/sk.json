@@ -935,16 +935,7 @@
   "Selected": "Vybrané",
   "In Progress": "Prebieha",
   "Testing": "Testovanie",
-  "Type": "Typ",
-  "Key": "Kľúč",
-  "Summary": "Zhrnutie",
-  "Assignee": "Nadobúdateľ",
-  "Priority": "Priorita",
-  "Progress": "Pokrok",
   "Created": "Vytvorené",
-  "Unassigned": "Nepriradené",
-  "No description available": "Nie je k dispozícii žiadny popis",
-  "Work Overview": "Prehľad práce",
   "Bug": "Chyba",
   "Task": "Úloha",
   "Story": "Príbeh",
@@ -961,7 +952,6 @@
   "Medium": "Stredný",
   "Low": "Nízka",
   "Lowest": "Najnižšia",
-  "Selected For Development": "Vybrané pre vývoj",
   "View More ": {
     "": {
       "": {

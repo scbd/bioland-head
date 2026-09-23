@@ -935,16 +935,7 @@
   "Selected": "Valin",
   "In Progress": "Í gangi",
   "Testing": "Prófun",
-  "Type": "Tegund",
-  "Key": "Lykillinn",
-  "Summary": "Samantekt",
-  "Assignee": "Framsalshafi",
-  "Priority": "Forgangur",
-  "Progress": "Framfarir",
   "Created": "Búið",
-  "Unassigned": "Óúthlutað",
-  "No description available": "Engin lýsing í boði",
-  "Work Overview": "Yfirlit yfir vinnu",
   "Bug": "Galla",
   "Task": "Verkefni",
   "Story": "Saga",
@@ -961,7 +952,6 @@
   "Medium": "Miðlungs",
   "Low": "Lágt",
   "Lowest": "Lægsta",
-  "Selected For Development": "Valin til þróunar",
   "View More ": {
     "": {
       "": {

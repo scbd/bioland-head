@@ -935,16 +935,7 @@
   "Selected": "Pasirinktas",
   "In Progress": "Vyksta",
   "Testing": "Testavimas",
-  "Type": "Tipas",
-  "Key": "Raktas",
-  "Summary": "Santrauka",
-  "Assignee": "Perėmėjas",
-  "Priority": "Prioritetas",
-  "Progress": "Pažanga",
   "Created": "Sukurta",
-  "Unassigned": "Nepriskirtas",
-  "No description available": "Nėra aprašymo",
-  "Work Overview": "Darbo apžvalga",
   "Bug": "Klaida",
   "Task": "Užduotis",
   "Story": "Istorija",
@@ -961,7 +952,6 @@
   "Medium": "Vidutinė",
   "Low": "Žemas",
   "Lowest": "Žemiausia",
-  "Selected For Development": "Pasirinktas plėtrai",
   "View More ": {
     "": {
       "": {
