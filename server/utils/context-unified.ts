@@ -26,12 +26,25 @@ const REJECTED_LOCALE_WARN_TTL_MS = 24 * 60 * 60 * 1000;
 const rejectedLocaleWarnings = boundedTtlMap(500);
 
 function warnRejectedLocaleOnce(siteCode: string, requestedLocale: string, siteLocales: string[]): void {
+  // Validate that requestedLocale is a plausible locale code before logging.
+  // Only log for strings matching /^[a-z]{2,3}(-[a-z0-9]{2,8})?$/i with max length 10.
+  // This prevents log injection / log flooding from attacker-supplied values like '../../etc'
+  // or overly-long strings.
+  if (!isPlausibleLocaleCode(requestedLocale)) return;
+
   const key = `${siteCode}:${requestedLocale}`;
 
   if (rejectedLocaleWarnings.get(key)) return;
 
   rejectedLocaleWarnings.set(key, true, REJECTED_LOCALE_WARN_TTL_MS);
   consola.warn(`[dmsm] rejected unsupported query locale`, { siteCode, requestedLocale, siteLocales });
+}
+
+function isPlausibleLocaleCode(value: unknown): boolean {
+  if (typeof value !== 'string') return false;
+  if (value.length > 10) return false;
+  // Pattern: 2-3 letters, optionally followed by hyphen and 2-8 alphanumeric chars
+  return /^[a-z]{2,3}(-[a-z0-9]{2,8})?$/i.test(value);
 }
 
 /**

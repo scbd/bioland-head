@@ -271,6 +271,40 @@ describe('Context Utilities', () => {
       await contextModule.useRequestContext(eventFor({ host: 'be.localhost' }, '/es/page?locale=fr'))
       expect(consola.warn).not.toHaveBeenCalled()
     })
+
+    it('does not warn for malformed/invalid locale codes (BL-1135 log injection)', async () => {
+      const malformed = [
+        '../../etc', // path traversal
+        'x'.repeat(200), // too long
+        '123', // digits only
+        '1en', // starts with digit
+        'a', // only 1 letter
+        'a-', // hyphen with no suffix
+        'en-', // hyphen with no suffix
+        'en--us', // double hyphen
+        'en_us', // underscore instead of hyphen
+      ]
+
+      for (const locale of malformed) {
+        consola.warn.mockClear()
+        await contextModule.useRequestContext(eventFor({ host: 'be.localhost' }, `/es/page?locale=${encodeURIComponent(locale)}`))
+        expect(consola.warn).not.toHaveBeenCalled(`Expected no warning for malformed locale: ${locale}`)
+      }
+    })
+
+    it('still warns for valid locale codes that the site does not serve', async () => {
+      const validCodes = ['xx', 'pt', 'pt-br', 'zh', 'zh-hans']
+
+      for (const locale of validCodes) {
+        consola.warn.mockClear()
+        await contextModule.useRequestContext(eventFor({ host: 'be.localhost' }, `/es/page?locale=${locale}`))
+        expect(consola.warn).toHaveBeenCalledTimes(1)
+        expect(consola.warn).toHaveBeenCalledWith(
+          expect.stringContaining('locale'),
+          expect.objectContaining({ siteCode: 'be', requestedLocale: locale })
+        )
+      }
+    })
   })
 
   describe('normalizeCountries', () => {
