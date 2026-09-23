@@ -6,8 +6,8 @@ const localizationExceptionPaths =  [];
 
 /**
  * Rate-limit repeated identical log lines: prints first occurrence per key per 60s window,
- * and on next print after window expires, appends "(suppressed N)".
- * Bounded map (max 500 keys, FIFO eviction).
+ * and on next print after window expires, reports the suppressed count.
+ * Bounded map (max 500 keys, FIFO eviction on insert of a new key).
  */
 function createRateLimiter() {
     const map = new Map();
@@ -17,35 +17,49 @@ function createRateLimiter() {
         const now = Date.now();
         const entry = map.get(key);
 
-        // First time or window expired: print and reset
-        if (!entry || now >= entry.windowExpires) {
-            // If there were suppressions and args contains an object, convert to string with count
-            if (entry && entry.count > 0 && typeof args[0] === 'object') {
-                const msg = `${JSON.stringify(args[0])} (suppressed ${entry.count})`;
-                consola[level](msg);
-            } else if (entry && entry.count > 0) {
-                // String args: append to last arg
-                args[args.length - 1] = (args[args.length - 1] || '') + ` (suppressed ${entry.count})`;
-                consola[level](...args);
-            } else {
-                // First occurrence: print normally
-                consola[level](...args);
-            }
-
-            // Evict oldest if at capacity
-            if (map.size >= maxKeys) {
-                map.delete(map.keys().next().value);
-            }
-
-            map.set(key, { windowExpires: now + 60000, count: 0 });
-        } else {
-            // Within window: increment suppression counter
+        if (entry && now < entry.windowExpires) {
             entry.count++;
+            return;
         }
+
+        if (entry?.count) {
+            const last = args.length - 1;
+
+            if (typeof args[0] === 'object') args[0] = { ...args[0], suppressed: entry.count };
+            else args[last] = `${args[last] ?? ''} (suppressed ${entry.count})`;
+        }
+
+        if (!entry && map.size >= maxKeys) map.delete(map.keys().next().value);
+
+        map.set(key, { windowExpires: now + 60000, count: 0 });
+        consola[level](...args);
     };
 }
 
 const logOnce = createRateLimiter();
+
+// Marks an error already logged by an inner catch so an outer catch does not log it again.
+const LOGGED = Symbol('drupal-page.logged');
+
+const isExpectedFailure = (e) => e?.statusCode === 404 ||
+                                 (e?.statusCode === 503 && e?.statusMessage === 'Drupal login unavailable');
+
+/**
+ * Log a failure once: expected outcomes as a single-line, rate-limited warn with no stack;
+ * anything else as a full consola.error. Skips errors an inner catch already logged.
+ */
+function logFailure(label, { siteCode, path }, e) {
+    if (e?.[LOGGED]) return;
+
+    if (!isExpectedFailure(e)) return consola.error(label, e);
+
+    const key = `${siteCode}:${e.statusCode}:${JSON.stringify(path)}`;
+
+    logOnce(key, 'warn', { siteCode, path: JSON.stringify(path), statusCode: e.statusCode, statusMessage: e.statusMessage });
+}
+
+// Non-enumerable symbol: invisible to JSON serialization and to what callers read off the error.
+const markLogged = (error) => Object.defineProperty(error, LOGGED, { value: true });
 
 export async function getPageData(ctx, event){
     try{
@@ -76,18 +90,9 @@ export async function getPageData(ctx, event){
 
         return  await mapData(event, ctx)(data);
     }catch(e){
-        const { localizedHost, siteCode, path } = ctx;
-        const isExpectedOutcome = (e.statusCode === 404) ||
-                                  (e.statusCode === 503 && e.statusMessage === 'Drupal login unavailable');
+        const { localizedHost } = ctx;
 
-        if (isExpectedOutcome) {
-            // Log expected outcomes as single-line warns, no stack; rate-limited
-            const key = `${siteCode}:${e.statusCode}:${JSON.stringify(path)}`;
-            logOnce(key, 'warn', { siteCode, path: JSON.stringify(path), statusCode: e.statusCode, statusMessage: e.statusMessage });
-        } else {
-            // Unexpected failures: full error with stack
-            consola.error('getPageData', e);
-        }
+        logFailure('getPageData', ctx, e);
 
         throw createError({
             statusCode   : e.statusCode,
@@ -391,8 +396,7 @@ async function getPageIdentifiers(ctx,  headers){
         try {
             // silentError: true suppresses the auto-log for a 404 since it's expected when an
             // alias doesn't resolve in the requested locale; log a debug line instead.
-            const result = await $fetch(uri, $fetchBaseOptions({ headers, silentError: true }));
-            data = result;
+            data = await $fetch(uri, $fetchBaseOptions({ headers, silentError: true }));
         } catch (fetchError) {
             // Log 404s at debug level since they're expected for many aliases; rate-limit per path
             if (fetchError.statusCode === 404) {
@@ -460,26 +464,17 @@ async function getPageIdentifiers(ctx,  headers){
 
         return redirect? { ...returnValues, redirect} : returnValues;
     }catch(e){
-        const { host, siteCode, path } = ctx;
-        const isExpectedOutcome = (e.statusCode === 404) ||
-                                  (e.statusCode === 503 && e.statusMessage === 'Drupal login unavailable');
+        const { host } = ctx;
 
-        if (isExpectedOutcome) {
-            // Log expected outcomes as single-line warns, no stack; rate-limited
-            const key = `${siteCode}:${e.statusCode}:${JSON.stringify(path)}`;
-            logOnce(key, 'warn', { siteCode, path: JSON.stringify(path), statusCode: e.statusCode, statusMessage: e.statusMessage });
-        } else {
-            // Unexpected failures: full error with stack
-            consola.error('getPageIdentifiers', e);
-        }
+        logFailure('getPageIdentifiers', ctx, e);
 
-        throw createError({
+        throw markLogged(createError({
             statusCode   : e.statusCode,
             statusMessage: e.statusMessage,
             message      : `Server.util.drupal-page.getPageIdentifiers: failed to get page identifiers for site/path: ${host}${ctx.path}`,
             data: e,
             fatal:  true
-        });
+        }));
     }
 }
 

@@ -363,6 +363,9 @@ describe('requested-locale alias-fallback redirect cache (BL-1116)', () => {
 })
 
 describe('expected failure logging (BL-1117)', () => {
+  // The structured single-line warns from logFailure; the alias sweep logs its own string warns.
+  const structuredWarns = () => consola.warn.mock.calls.filter(([arg]) => typeof arg === 'object')
+
   it('passes silentError: true to primary lookup and logs 404 at debug level', async () => {
     await expect(drupalPage.getPageData({ ...baseCtx, path: '/en/nowhere' }, event)).rejects.toMatchObject({ statusCode: 404 })
 
@@ -376,7 +379,7 @@ describe('expected failure logging (BL-1117)', () => {
   it('logs getPageData 404 as single-line warn with no Error object', async () => {
     // Craft a context where the main page fetch will fail with 404
     $fetch.mockImplementation((uri) => {
-      if (uri.includes('/router/translate-path')) return Promise.resolve({ entity: { id: '123', path: '/test', type: 'node', bundle: 'content', canonical: 'http://test/en/test', label: 'Test' } })
+      if (uri.includes('/router/translate-path')) return Promise.resolve({ entity: { id: '123', path: '/test', type: 'node', bundle: 'content', canonical: 'https://test/en/test', label: 'Test' } })
       // Main page data fetch fails
       return Promise.reject(Object.assign(new Error('Not found'), { statusCode: 404 }))
     })
@@ -386,12 +389,36 @@ describe('expected failure logging (BL-1117)', () => {
     expect(consola.warn).toHaveBeenCalledWith({ siteCode: 'asean', path: expect.any(String), statusCode: 404, statusMessage: undefined })
   })
 
-  it('logs getPageIdentifiers 503 Drupal login unavailable as single-line warn', async () => {
+  it('logs getPageIdentifiers 503 Drupal login unavailable as one single-line warn', async () => {
     $fetch.mockImplementation(() => Promise.reject(Object.assign(new Error('Service Unavailable'), { statusCode: 503, statusMessage: 'Drupal login unavailable' })))
 
     await expect(drupalPage.getPageData({ ...baseCtx }, event)).rejects.toMatchObject({ statusCode: 503 })
 
+    expect(structuredWarns()).toHaveLength(1)
     expect(consola.warn).toHaveBeenCalledWith({ siteCode: 'asean', path: expect.any(String), statusCode: 503, statusMessage: 'Drupal login unavailable' })
+  })
+
+  it('throws the same error shape as before the logging change', async () => {
+    const cause = Object.assign(new Error('Service Unavailable'), { statusCode: 503, statusMessage: 'Drupal login unavailable' })
+    $fetch.mockImplementation(() => Promise.reject(cause))
+
+    const err = await drupalPage.getPageData({ ...baseCtx }, event).catch((e) => e)
+
+    expect(Object.keys(err).sort()).toEqual(['data', 'statusCode', 'statusMessage'])
+    expect(err).toMatchObject({
+      statusCode   : 503,
+      statusMessage: 'Drupal login unavailable',
+      message      : 'Server.util.drupal-page.getPageData: failed to get page identifiers for site/path: https://asean.test/en/en/mang-chm',
+    })
+    expect(Object.keys(err.data).sort()).toEqual(['data', 'fatal', 'statusCode', 'statusMessage'])
+    expect(err.data).toMatchObject({
+      statusCode   : 503,
+      statusMessage: 'Drupal login unavailable',
+      message      : 'Server.util.drupal-page.getPageIdentifiers: failed to get page identifiers for site/path: https://asean.test/en/mang-chm',
+      fatal        : true,
+    })
+    expect(err.data.data).toBe(cause)
+    expect(JSON.parse(JSON.stringify(err.data))).toEqual({ statusCode: 503, statusMessage: 'Drupal login unavailable', fatal: true, data: { statusCode: 503, statusMessage: 'Drupal login unavailable' } })
   })
 
   it('logs unexpected 500 errors with consola.error stack', async () => {
@@ -399,8 +426,21 @@ describe('expected failure logging (BL-1117)', () => {
 
     await expect(drupalPage.getPageData({ ...baseCtx }, event)).rejects.toMatchObject({ statusCode: 500 })
 
-    // Error is logged from getPageIdentifiers, not as warn
+    // Logged once, from getPageIdentifiers; getPageData does not log it again
+    expect(consola.error).toHaveBeenCalledTimes(1)
     expect(consola.error).toHaveBeenCalledWith('getPageIdentifiers', expect.any(Error))
+    expect(structuredWarns()).toHaveLength(0)
+  })
+
+  it.each([401, 403])('logs %i through consola.error, never as a suppressed warn', async (statusCode) => {
+    $fetch.mockImplementation(() => Promise.reject(Object.assign(new Error('Denied'), { statusCode })))
+
+    await expect(drupalPage.getPageData({ ...baseCtx }, event)).rejects.toMatchObject({ statusCode })
+    await expect(drupalPage.getPageData({ ...baseCtx }, event)).rejects.toMatchObject({ statusCode })
+
+    expect(consola.error).toHaveBeenCalledTimes(2)
+    expect(consola.error).toHaveBeenCalledWith('getPageIdentifiers', expect.objectContaining({ statusCode }))
+    expect(structuredWarns()).toHaveLength(0)
   })
 
   it('rate-limits repeated identical warn lines: first print, then suppressed inside window, then suppressed count on next print', async () => {
@@ -432,10 +472,8 @@ describe('expected failure logging (BL-1117)', () => {
     // Both debug calls print again with suppressed count appended
     expect(consola.debug.mock.calls.length).toBeGreaterThanOrEqual(1)
     expect(consola.warn).toHaveBeenCalledTimes(1)
-    const thirdWarnCall = consola.warn.mock.calls[0][0]
-    expect(typeof thirdWarnCall).toBe('string')
-    // getPageIdentifiers and getPageData both call with same key, so count=3 (2 calls in second request)
-    expect(thirdWarnCall).toMatch(/suppressed [0-9]+/)
+    // Still the structured object; suppressed equals the one failed request inside the window
+    expect(consola.warn).toHaveBeenCalledWith({ siteCode: 'asean', path: expect.any(String), statusCode: 404, statusMessage: undefined, suppressed: 1 })
 
     Date.now.mockRestore()
   })
