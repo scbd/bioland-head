@@ -42,7 +42,10 @@ const logOnce = createRateLimiter();
 // Marks an error already logged by an inner catch so an outer catch does not log it again.
 const LOGGED = Symbol('drupal-page.logged');
 
+// A memo-served uuid miss (BL-1122) is always expected, whatever its status: it is a
+// repeat of an outcome Drupal already gave once, not a new failure to alarm on.
 const isExpectedFailure = (e) => e?.statusCode === 404 ||
+                                 e?.remembered ||
                                  (e?.statusCode === 503 && e?.statusMessage === 'Drupal login unavailable');
 
 /**
@@ -64,23 +67,34 @@ const markLogged = (error) => Object.defineProperty(error, LOGGED, { value: true
 
 // A dangling reference (404) or an unpublished node (403) answers the same for ~5 minutes,
 // but BL-1065 keeps failures out of the shared cache, so each render re-asked Drupal
-// (BL-1122). Remember those two outcomes per by-UUID URI (site + locale + entity type +
-// uuid) in process only. Never 5xx or network errors, and never for a signed-in request:
-// an editor may be entitled to the unpublished node.
+// (BL-1122). Remember those two outcomes, keyed by the full by-UUID request URI (host,
+// locale, entity type, bundle, uuid, and any sub-path such as /field_attachments; query
+// excluded) in process only. Never 5xx or network errors, and never for a signed-in
+// request: an editor may be entitled to the unpublished node.
 const UUID_MISS_TTL_MS      = 5 * 60 * 1000;
 const UUID_MISS_MAX_ENTRIES = 1000;
 const uuidMisses            = boundedTtlMap(UUID_MISS_MAX_ENTRIES);
+
+// A 403 is only remembered when Drupal itself answered it as a JSON:API error document —
+// a proxy/WAF block or an IP ban on the head's egress answers with a plain 403 (no
+// JSON:API body) and must not be memo-served for 5 minutes after the block lifts.
+function isJsonApiErrorDocument(e) {
+    if (Array.isArray(e?.data?.errors)) return true;
+
+    const contentType = e?.response?.headers?.get?.('content-type') || '';
+    return contentType.includes('application/vnd.api+json');
+}
 
 export async function fetchEntityByUuid(uri, options) {
     const key  = isAuthenticatedRequest(options?.headers) ? null : uri;
     const miss = key && uuidMisses.get(key);
 
-    if (miss) throw createError(miss);
+    if (miss) throw createError({ ...miss, remembered: true });
 
     try {
         return await $fetch(uri, options);
     } catch (e) {
-        if (key && (e?.statusCode === 403 || e?.statusCode === 404))
+        if (key && (e?.statusCode === 404 || (e?.statusCode === 403 && isJsonApiErrorDocument(e))))
             uuidMisses.set(key, { statusCode: e.statusCode, statusMessage: e.statusMessage }, UUID_MISS_TTL_MS);
         throw e;
     }

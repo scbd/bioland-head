@@ -73,15 +73,14 @@ async function getSiteSettingsOrRecentFailure(ctx) {
   const key    = siteSettingsKey(ctx);
   const failed = siteSettingsFailures.get(key);
 
-  if (failed) throw failed;
+  // Store a redacted description (not the error object) and throw a fresh createError per
+  // hit, tagged so the caller can log a memo hit differently from a real fetch failure.
+  if (failed) throw createError({ ...failed, remembered: true });
 
   try {
-    const settings = await _getSiteSettings(ctx);
-
-    siteSettingsFailures.delete(key);
-    return settings;
+    return await _getSiteSettings(ctx);
   } catch (e) {
-    if (e?.statusCode >= 400 && e.statusCode < 500) siteSettingsFailures.set(key, e, SITE_SETTINGS_FAILURE_TTL_MS);
+    if (e?.statusCode >= 400 && e.statusCode < 500) siteSettingsFailures.set(key, describeError(e), SITE_SETTINGS_FAILURE_TTL_MS);
     throw e;
   }
 }

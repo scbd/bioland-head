@@ -62,13 +62,13 @@ describe('getSiteSettings failure memo (BL-1122)', () => {
     expect($fetch).toHaveBeenCalledTimes(3)
   })
 
-  it('a success clears the remembered failure', async () => {
+  it('retries after the window expires, and a later failure is not memo-served from before', async () => {
     vi.useFakeTimers()
     $fetch.mockResolvedValueOnce('<html>maintenance</html>')
     await expect(drupal.getSiteSettings(ctx, {})).rejects.toThrow()
     vi.advanceTimersByTime(61_000)
     $fetch.mockResolvedValueOnce(good).mockRejectedValueOnce(Object.assign(new Error('boom'), { statusCode: 404 }))
-    await drupal.getSiteSettings(ctx, {})
+    await expect(drupal.getSiteSettings(ctx, {})).resolves.toEqual({ siteName: 'Belgium', homePath: '/node/1' })
     await expect(drupal.getSiteSettings(ctx, {})).rejects.toThrow(/boom/)
     expect($fetch).toHaveBeenCalledTimes(3)
   })
