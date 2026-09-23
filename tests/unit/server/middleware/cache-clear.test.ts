@@ -91,7 +91,33 @@ describe('00.cache-clear middleware', () => {
     store.items.set('completed:recent', 1_000_000 - 10_000)
     store.items.set('completed:garbage', 'not-a-timestamp')
     await handler(eventFor())
-    expect([...store.items.keys()].sort()).toEqual(['completed:abc', 'completed:recent'])
+    expect([...store.items.keys()].sort()).toEqual(['completed:abc', 'completed:garbage', 'completed:recent'])
+  })
+
+  it('never prunes a marker whose read came back null', async () => {
+    store.items.set('completed:old', 1_000_000 - 120_000)
+    store.getItem.mockImplementation(async (k: string) => (k === 'completed:old' ? null : store.items.get(k) ?? null))
+    await handler(eventFor())
+    expect(store.items.has('completed:old')).toBe(true)
+    expect(store.removeItem).not.toHaveBeenCalledWith('completed:old')
+  })
+
+  it('skips the clear without a 500 or any marker deletion when the marker store is down', async () => {
+    const down = new Error("Stream isn't writeable and enableOfflineQueue options is false")
+    store.items.set('completed:old', 1_000_000 - 120_000)
+    for (const fn of [store.getItem, store.setItem, store.removeItem, store.getKeys]) fn.mockRejectedValue(down)
+    await expect(handler(eventFor())).resolves.toBeUndefined()
+    expect(clearSiteCache).not.toHaveBeenCalled()
+    expect(store.removeItem).not.toHaveBeenCalled()
+    expect(store.items.has('completed:old')).toBe(true)
+    expect(warn).toHaveBeenCalledWith(expect.stringMatching(/skipping cache clear/), down)
+  })
+
+  it('does not clear as if it held the lock when the pending marker write fails', async () => {
+    store.setItem.mockRejectedValue(new Error('Command timed out'))
+    await expect(handler(eventFor())).resolves.toBeUndefined()
+    expect(clearSiteCache).not.toHaveBeenCalled()
+    expect(warn).toHaveBeenCalledWith(expect.stringMatching(/Pending marker write failed/), expect.any(Error))
   })
 
   it('still finishes the clear when pruning fails', async () => {
