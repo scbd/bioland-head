@@ -38,10 +38,7 @@ export default cachedEventHandler(async (event) => {
         catch (e) {
 
             consola.warn( `server/api/list/panorama fetch api error: https://panorama.solutions/en/api/v1/solutions`, e.message );
-
-            // Rethrow so the outage is not cached as "no solutions" for CACHE_TTL.EXTERNAL
-            // (30 days); the widget already handles a failed fetch via useLazyFetch's `error`.
-            throw e;
+            passError(event, e);
 
         }
     },
