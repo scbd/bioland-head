@@ -50,6 +50,18 @@ describe('00.scanner-404 middleware', () => {
       '/WP-LOGIN.PHP',
       '/wp-login.php?foo=bar',
       '/%2e%65nv',
+      '/km/router/translate-path?path=%2Frouter%2Ftranslate-path',
+      '/en/system/menu/our-targets/linkset',
+      '/jsonapi/node/page',
+      '/en/user/login',
+      '/km/%252Frouter/translate-path',
+      '/user/login/',
+      '/en/user/logout/',
+      '/admin',
+      '/jsonapi',
+      '/router',
+      '/en/user/register',
+      '/en/user/password',
     ])('returns a fast plain-text 404 for %s without touching $fetch', (path) => {
       const event = eventFor(path)
       const result = handler(event)
@@ -104,6 +116,12 @@ describe('00.scanner-404 middleware', () => {
       '/en/some-alias?page=2',
       '/en//some-alias',
       '/en/bad%E0%A4%A',
+      '/en/key-biodiversity-areas',
+      '/en/user/some-alias-page',
+      '/en/systems-thinking',
+      '/en/routers-guide',
+      '/en/administration-guide',
+      '/en/jsonapi-something',
     ])('passes through %s untouched', (path) => {
       const event = eventFor(path)
       const result = handler(event)
