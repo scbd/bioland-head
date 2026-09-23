@@ -1,3 +1,5 @@
+import { useDmsmUrl } from "./dmsm-url";
+
 type RedirectIndexScope = { dmsm: string; env: string; multiSiteCode: string };
 type RedirectEntries = Array<[string, string]>;
 const redirectIndexKey = ({ env, multiSiteCode }: RedirectIndexScope) => `redirect-index:${env}:${multiSiteCode}`;
@@ -85,8 +87,8 @@ const fetchRedirectIndex = cachedFunction(async (scope: RedirectIndexScope): Pro
 export async function resolveSiteCodeByHost(hostname: string): Promise<string | null> {
   let key = "";
   try {
-    const { dmsm, env, multiSiteCode } = useRuntimeConfig().public;
-    const scope = { dmsm, env, multiSiteCode };
+    const { env, multiSiteCode } = useRuntimeConfig().public;
+    const scope = { dmsm: useDmsmUrl(), env, multiSiteCode };
     key = redirectIndexKey(scope);
     let pending = pendingByKey.get(key);
     if (!pending) {

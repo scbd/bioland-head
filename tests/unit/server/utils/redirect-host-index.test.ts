@@ -49,7 +49,7 @@ beforeEach(() => {
   runtime = { env: 'prod', multiSiteCode: 'bl2', dmsm: 'https://dmsm.example.test', baseHost: 'generated.example.test' }
   fetchFixture = vi.fn().mockResolvedValue(payload())
   errors = vi.fn()
-  vi.stubGlobal('useRuntimeConfig', () => ({ public: runtime }))
+  vi.stubGlobal('useRuntimeConfig', () => { const { dmsm, ...pub } = runtime; return { dmsm, public: pub } })
   vi.stubGlobal('$fetch', fetchFixture)
   vi.stubGlobal('$fetchBaseOptions', (options = {}) => ({ retry: 0, ...options }))
   vi.stubGlobal('CACHE_TTL', CACHE_TTL)
@@ -106,7 +106,7 @@ describe('redirect Host index through real serialized Nitro cache', () => {
 
   it.each([['be.attacker.example', 400, undefined], ['chm.example.gov', 200, 'be'], ['be.localhost', 200, 'be']])('hermetic H3 page request for %s uses real middleware/context/index/cache', async (host, status, siteCode) => {
     const resolve = await importFresh()
-    vi.stubGlobal('useRuntimeConfig', () => ({ public: { ...runtime, baseHost: 'test.example.com', locales: [{ code: 'en' }] } }))
+    vi.stubGlobal('useRuntimeConfig', () => ({ dmsm: runtime.dmsm, public: { ...runtime, baseHost: 'test.example.com', locales: [{ code: 'en' }] } }))
     for (const [name, fn] of Object.entries({ defineEventHandler, getRequestHost, getRequestHeader, getQuery, parseCookies, createError })) vi.stubGlobal(name, fn)
     vi.stubGlobal('resolveSiteCodeByHost', resolve)
     fetchFixture.mockImplementation(async (url) => {

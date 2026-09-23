@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vites
 import { getCanonicalHost } from '~/shared/utils/site-host'
 
 // Bind the Nitro auto-imports the route relies on before importing it in plain-Node Vitest.
-const runtimeConfig = { public: { dmsm: 'https://dmsm.test', multiSiteCode: 'bsl' } }
+const runtimeConfig = { dmsm: 'https://dmsm.test', public: { multiSiteCode: 'bsl' } }
 const fetchedUrls: string[] = []
 const dmsmByEnv: Record<string, unknown> = {}
 
