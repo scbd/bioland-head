@@ -29,7 +29,11 @@ async function _getSiteSettings (ctx) {
     const query          = { jsonapi_include: 1 };
     const uri            = `${host}/${encodeURIComponent(ctx.locale)}/jsonapi/site/site?api-key=${encodeURIComponent(apiKey)}`
 
-    const resp = await $fetch(uri, $fetchBaseOptions({query}))
+    // A FetchError's message embeds the full URL, api-key included, and its data is the raw
+    // response body; rethrow a redacted copy so no caller or nitro handler logs either.
+    const resp = await $fetch(uri, $fetchBaseOptions({query})).catch((e) => {
+        throw createError({ ...describeError(e), message: `Site settings fetch failed for ${ctx.siteCode} (${ctx.locale}): ${describeError(e).message}` })
+    })
 
     // Drupal in maintenance mode (or a proxy error page) answers 200 with HTML. Caching
     // `{ siteName: undefined, homePath: undefined }` from that for 30 days breaks home

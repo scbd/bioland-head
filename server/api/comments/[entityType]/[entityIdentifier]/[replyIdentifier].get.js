@@ -4,7 +4,7 @@ export default defineEventHandler(async (event) => {
             const ctx = await useRequestContext(event);
 
             
-            return getComments({...ctx, event });
+            return await getComments({...ctx, event });
         }
         catch (e) {
             passError(event, e);

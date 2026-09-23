@@ -3,7 +3,7 @@ export default defineCachedEventHandler(
     try {
       const ctx = await useRequestContext(event);
 
-      return getInstalledLanguages(ctx);
+      return await getInstalledLanguages(ctx);
     } catch (e) {
       passError(event, e);
     }

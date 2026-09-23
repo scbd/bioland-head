@@ -3,7 +3,7 @@ export default defineCachedEventHandler(
         try {
             const ctx = await useRequestContext(event);
 
-            return getSystemPagesMap(ctx);
+            return await getSystemPagesMap(ctx);
         } catch (e) {
             passError(event, e);
         }

@@ -601,7 +601,8 @@ async function buildSiteContext(params: { siteCode: string; locale: string; conf
     siteName = settings.siteName;
     homePath = settings.homePath;
   } catch (e) {
-    consola.error(`Failed to fetch site settings for ${siteCode} (${locale}):`, e);
+    // Summary only: the error's message carries the api-key URL and its data a full HTML page.
+    consola.error(`Failed to fetch site settings for ${siteCode} (${locale}):`, describeError(e));
     // Non-critical - continue without site settings
   }
 

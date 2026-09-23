@@ -4,7 +4,7 @@ export default defineCachedEventHandler(
         try {
             const ctx = await useRequestContext(event);
 
-            return getDrupalMenus({ ...ctx });
+            return await getDrupalMenus({ ...ctx });
         } catch (e) {
             passError(event, e);
         }

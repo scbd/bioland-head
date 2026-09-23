@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
 
             await addForumIdentifierToContext(ctx)
 
-            return useDrupalForums({...ctx,...query })
+            return await useDrupalForums({...ctx,...query })
         }
         catch (e) {
             passError(event, e);

@@ -3,7 +3,7 @@ export default defineCachedEventHandler(
     try {
       const ctx = await useRequestContext(event);
 
-      return getAbschMenus(ctx);
+      return await getAbschMenus(ctx);
     } catch (e) {
       passError(event, e);
     }

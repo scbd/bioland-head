@@ -16,14 +16,16 @@ export async function passError(event, error){
     const { pathname, host }   = requestUrl;
     const { baseHost, env }    = useRuntimeConfig().public;
 
-    console.error(`${host}${pathname}.js`,error);
+    // One line: the raw error carries upstream URLs (with any api-key) and, for Drupal, a
+    // full HTML page in `data`, which also must not travel back to the client.
+    consola.error(`${host}${pathname}.js`, describeError(error));
 
     throw createError({
         statusCode    : error.statusCode,
         statusMessage : error.statusMessage,
         message       : `${host}${pathname}.js`,
-        data          : { siteCode, locale, host, baseHost, env, pathname, requestUrl, errorData:error.data }
-    }); 
+        data          : { siteCode, locale, host, baseHost, env, pathname, requestUrl: redactUrl(requestUrl) }
+    });
 }
 
 export const slugify = (str) => {

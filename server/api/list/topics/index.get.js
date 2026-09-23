@@ -3,7 +3,7 @@ export default defineEventHandler(async (event) => {
             const query             = getQuery      (event);
             const ctx               = await useRequestContext(event);
 
-            return useDrupalTopicMenus({...ctx,...query});
+            return await useDrupalTopicMenus({...ctx,...query});
         }
         catch (e) {
             passError(event, e);

@@ -3,6 +3,7 @@ import { getRequestHost, getRequestHeader, getQuery, parseCookies, createError }
 import { CACHE_TTL } from '../../../../shared/utils/constants'
 import { getSiteSettings } from '../../../../server/utils/drupal/index.js'
 import * as siteHost from '~/shared/utils/site-host'
+import { describeError } from '~/server/utils/fetch-options'
 
 vi.mock('../../../../server/utils/drupal/index.js', () => ({ getSiteSettings: vi.fn() }))
 
@@ -22,6 +23,7 @@ beforeEach(async () => {
   vi.stubGlobal('getQuery', vi.fn(getQuery))
   vi.stubGlobal('parseCookies', vi.fn(parseCookies))
   vi.stubGlobal('createError', createError)
+  vi.stubGlobal('describeError', describeError)
   vi.stubGlobal('CACHE_TTL', CACHE_TTL)
   // Per-Site config is an external fixture here; the index suite uses real Nitro caching.
   vi.stubGlobal('cachedFunction', (fn, options) => (...args) => { options.getKey(...args); return fn(...args) })
