@@ -1,4 +1,5 @@
 import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
+import { useDmsmUrl } from '../../utils/dmsm-url';
 
 const ENVS        = new Set(['dev', 'stg', 'prod']);
 const SITE_CODE   = /^[a-z0-9-]{1,32}$/;
@@ -25,7 +26,8 @@ export default defineEventHandler(async (event) => {
     }
 
     async function resolveSite(siteCode, env){
-        const { dmsm, multiSiteCode } = useRuntimeConfig().public;
+        const { multiSiteCode }       = useRuntimeConfig().public;
+        const dmsm                    = useDmsmUrl();
         const { config, sites }       = await $fetch(`${dmsm}/config/${env}/${multiSiteCode}`, $fetchBaseOptions());
         const site                    = sites && Object.hasOwn(sites, siteCode) ? sites[siteCode] : null;
 

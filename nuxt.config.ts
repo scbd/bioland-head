@@ -68,6 +68,9 @@ export default defineNuxtConfig({
     // NUXT_REDIS_URL (e.g. redis://redis:6379/1). Set: server/plugins/00.1.cache-storage.ts
     // remounts the `cache` and `cache-clear` storage below onto Redis at startup. Empty: fs.
     redisUrl: "",
+    // DMSM API base URL, server-only (NUXT_DMSM). Read via server/utils/dmsm-url.ts, which
+    // still honours the legacy NUXT_PUBLIC_DMSM until every stack is renamed.
+    dmsm: "https://dmsm.cbddev.xyz/api",
     public: {
       isLocalHost:
         process.env.NUXT_PUBLIC_IS_LOCAL_HOST === "true" ? true : false,
@@ -79,7 +82,6 @@ export default defineNuxtConfig({
       baseHost: "",
       multiSiteCode: "",
       gaiaApi: "https://api.cbd.int/api",
-      dmsm: "https://dmsm.cbddev.xyz/api",
       logAll: process.env.NUXT_PUBLIC_LOG_ALL === "true" ? true : false,
       logServerOutRequests:
         process.env.NUXT_PUBLIC_LOG_SERVER_OUT_REQUESTS === "true"

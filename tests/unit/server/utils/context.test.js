@@ -17,7 +17,7 @@ beforeEach(async () => {
   runtime = { baseHost: 'test.example.com', env: 'dev', multiSiteCode: 'bl2',
     locales: [{ code: 'en' }, { code: 'es' }, { code: 'fr' }], dmsm: 'https://dmsm.example.test' }
   config = { locales: ['en', 'es', 'fr'], defaultLocale: 'en', country: 'BE' }
-  vi.stubGlobal('useRuntimeConfig', () => ({ public: runtime }))
+  vi.stubGlobal('useRuntimeConfig', () => { const { dmsm, ...pub } = runtime; return { dmsm, public: pub } })
   vi.stubGlobal('getRequestHeader', getRequestHeader)
   vi.stubGlobal('getRequestHost', vi.fn(getRequestHost))
   vi.stubGlobal('getQuery', vi.fn(getQuery))
@@ -387,7 +387,8 @@ describe('Context Utilities', () => {
         ]) {
           config = { redirect, defaultLocale: 'fr', locales: ['fr'] }
           vi.stubGlobal('useRuntimeConfig', () => ({
-            public: { env, baseHost: 'example.test', multiSiteCode: 'test', dmsm: 'https://dmsm.example.test', locales: [{ code: 'fr' }] },
+            dmsm: 'https://dmsm.example.test',
+            public: { env, baseHost: 'example.test', multiSiteCode: 'test', locales: [{ code: 'fr' }] },
           }))
           canonicalHost.mockClear()
           const event = eventFor({}, '/fr')

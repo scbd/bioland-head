@@ -42,7 +42,7 @@ beforeEach(() => {
   storage = createStorage()
   runtime = { env: 'prod', multiSiteCode: 'bl2', dmsm: 'https://dmsm.example.test' }
   fetchFixture = vi.fn().mockResolvedValue(staleConfig)
-  vi.stubGlobal('useRuntimeConfig', () => ({ public: runtime }))
+  vi.stubGlobal('useRuntimeConfig', () => { const { dmsm, ...pub } = runtime; return { dmsm, public: pub } })
   vi.stubGlobal('$fetch', fetchFixture)
   vi.stubGlobal('CACHE_TTL', CACHE_TTL)
   vi.stubGlobal('consola', { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() })

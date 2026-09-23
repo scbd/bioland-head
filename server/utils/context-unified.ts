@@ -14,6 +14,7 @@ import { getSiteSettings } from "./drupal/index.js";
 import { sanitizeBiolandSettings } from "./bioland-settings";
 import { drupalPathPrefix } from "#shared/utils/drupal-path-prefix";
 import { boundedTtlMap } from "./bounded-ttl-map.js";
+import { useDmsmUrl } from "./dmsm-url";
 
 
 interface RequestContextOptions { /** Explicit siteCode (skips host extraction) - used by context API route */ siteCode?: string; /** Explicit locale (skips path/cookie resolution) */ locale?: string; /** Bypass DMSM config cache - forces fresh fetch from DMSM API */ bypassCache?: boolean; }
@@ -237,7 +238,8 @@ function describeThrowable(e: unknown): Record<string, unknown> {
  * below the cost of not knowing which leg failed.
  */
 async function fetchDmsmConfigCore(siteCode: string): Promise<DmsmConfig> {
-  const { env, multiSiteCode, dmsm } = useRuntimeConfig().public;
+  const { env, multiSiteCode } = useRuntimeConfig().public;
+  const dmsm = useDmsmUrl();
 
   const uri = `${dmsm}/config/${encodeURIComponent(env)}/${encodeURIComponent(multiSiteCode)}/${encodeURIComponent(siteCode)}`;
   // A blank env/multiSiteCode/dmsm builds a plausible-looking but wrong URI

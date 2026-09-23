@@ -1,6 +1,9 @@
+import { useDmsmUrl } from '../../utils/dmsm-url';
+
 export default defineEventHandler(async (event) => {
     try{
-        const {dmsm, multiSiteCode } =useRuntimeConfig().public;
+        const { multiSiteCode } = useRuntimeConfig().public;
+        const dmsm = useDmsmUrl();
 
         const [d, s, p] = await Promise.all([
             $fetch(`${dmsm}/config/dev/${multiSiteCode}`, $fetchBaseOptions()),
