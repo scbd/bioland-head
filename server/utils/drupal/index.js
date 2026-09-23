@@ -1,3 +1,4 @@
+import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
 import { boundedTtlMap } from '../bounded-ttl-map.js';
 
 
@@ -29,7 +30,7 @@ async function _getSiteSettings (ctx) {
     const { apiKey }     = useRuntimeConfig()
     const host           = ctx.host || ctx.localizedHost
     const query          = { jsonapi_include: 1 };
-    const uri            = `${host}/${encodeURIComponent(ctx.locale)}/jsonapi/site/site?api-key=${encodeURIComponent(apiKey)}`
+    const uri            = `${host}/${encodeURIComponent(drupalPathPrefix(ctx.locale))}/jsonapi/site/site?api-key=${encodeURIComponent(apiKey)}`
 
     // A FetchError's message embeds the full URL, api-key included, and its data is the raw
     // response body; rethrow a redacted copy so no caller or nitro handler logs either.

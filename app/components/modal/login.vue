@@ -30,13 +30,12 @@
   import { VueFinalModal } from 'vue-final-modal';
 
   const { isLocalHost }  = useRuntimeConfig().public;
-  const   localePath     = useLocalePath (           );
   const { t            } = useI18n       (           );
   const   emit           = defineEmits   (['confirm']);
   const   siteStore      = useSiteStore  (           );
   
-  const registerUri = computed(() => siteStore.saml? siteStore.saml.registerUri :  `${siteStore.getHost(true)}${localePath(`/user/register`)}`);
-  const loginUri    = computed(() => siteStore.saml? siteStore.saml.loginUri    : `${siteStore.getHost(true)}${localePath(`/user/login`)}`);
+  const registerUri = computed(() => siteStore.saml? siteStore.saml.registerUri :  `${siteStore.localizedHost}/user/register`);
+  const loginUri    = computed(() => siteStore.saml? siteStore.saml.loginUri    : `${siteStore.localizedHost}/user/login`);
 
   function close(){  emit('confirm'); }
 

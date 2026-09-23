@@ -108,6 +108,14 @@ describe('cross-locale alias fallback (BL-1111)', () => {
     await expect(drupalPage.getPageData({ ...baseCtx }, event)).resolves.toEqual({ redirect: '/vi/mang-chm' })
   })
 
+  it('asks Drupal under the fil prefix for app locale tl and redirects to /tl (BL-1126)', async () => {
+    owners['/tl-only'] = 'fil'
+    const ctx = { ...baseCtx, locales: ['en', 'tl'], path: '/en/tl-only' }
+
+    await expect(drupalPage.getPageData(ctx, event)).resolves.toEqual({ redirect: '/tl/tl-only' })
+    expect(sweepCalls().map(([uri]) => new URL(uri).pathname)).toEqual(['/fil/router/translate-path'])
+  })
+
   it('asks every other locale at once, silently, and never the requested one', async () => {
     await drupalPage.getPageData({ ...baseCtx }, event)
 
@@ -359,6 +367,27 @@ describe('requested-locale alias-fallback redirect cache (BL-1116)', () => {
 
     await expect(drupalPage.getPageData({ ...baseCtx, path: '/en/normal-page' }, event)).rejects.toBeTruthy()
     expect(primaryCalls()).toHaveLength(1)
+  })
+})
+
+describe('canonical redirect under the Drupal fil prefix (BL-1126)', () => {
+  const tlCtx = { ...baseCtx, locale: 'tl', locales: ['en', 'tl'], localizedHost: 'https://asean.test/fil' }
+  const canonicalAt = (canonical) => $fetch.mockImplementation((uri) => uri.includes('/router/translate-path')
+    ? Promise.resolve({ entity: { uuid: 'u', type: 'node', bundle: 'content', canonical } })
+    : Promise.resolve({ data: { label: 'x' } }))
+
+  it('redirects a tl node path to the /tl alias Drupal reports as /fil', async () => {
+    canonicalAt('https://asean.test/fil/about')
+
+    await expect(drupalPage.getPageData({ ...tlCtx, path: '/tl/node/1' }, event)).resolves.toEqual({ redirect: '/tl/about' })
+  })
+
+  it('does not redirect when the /fil canonical is the requested /tl path', async () => {
+    canonicalAt('https://asean.test/fil/about')
+
+    const result = await drupalPage.getPageData({ ...tlCtx, path: '/tl/about' }, event).catch((e) => e)
+
+    expect(result?.redirect).toBeUndefined()
   })
 })
 

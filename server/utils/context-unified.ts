@@ -12,6 +12,7 @@ import type { H3Event } from "h3";
 import type { SiteContext, DmsmConfig, ContextCookie } from "~/shared/types";
 import { getSiteSettings } from "./drupal/index.js";
 import { sanitizeBiolandSettings } from "./bioland-settings";
+import { drupalPathPrefix } from "#shared/utils/drupal-path-prefix";
 
 
 interface RequestContextOptions { /** Explicit siteCode (skips host extraction) - used by context API route */ siteCode?: string; /** Explicit locale (skips path/cookie resolution) */ locale?: string; /** Bypass DMSM config cache - forces fresh fetch from DMSM API */ bypassCache?: boolean; }
@@ -580,7 +581,7 @@ async function buildSiteContext(params: { siteCode: string; locale: string; conf
   warnOnRejectedRedirect(siteCode, config.redirect);
 
   const host = getCanonicalHost({ siteCode, baseHost, env, redirect: config.redirect });
-  const pathPrefix    = `/${locale}`;
+  const pathPrefix    = `/${drupalPathPrefix(locale)}`;
   const localizedHost = `${host}${pathPrefix}`;
 
   // Index locale for CBD index API (only UN languages)

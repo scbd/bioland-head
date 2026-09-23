@@ -80,6 +80,18 @@ describe('site store hosts', () => {
     expect(store.params).toMatchObject({ host, localizedHost: `${host}/en`, redirect: bareRedirect })
   })
 
+  // BL-1126: the Drupal prefix for Tagalog is /fil; the app locale stays tl.
+  it('uses the Drupal fil prefix for the tl localizedHost only', () => {
+    const store = initialize({ locale: 'tl', config: { defaultLocale: 'en', locales: ['en', 'tl'] } })
+
+    expect(store.locale).toBe('tl')
+    expect(store.host).toBe('https://seed.example.test')
+    expect(store.getHost(true)).toBe('https://seed.example.test')
+    expect(store.getHost()).toBe('https://seed.example.test/fil')
+    expect(store.localizedHost).toBe('https://seed.example.test/fil')
+    expect(store.params).toMatchObject({ locale: 'tl', localizedHost: 'https://seed.example.test/fil' })
+  })
+
   it('keeps hosts empty before initialization', () => {
     const store = useSiteStore()
 

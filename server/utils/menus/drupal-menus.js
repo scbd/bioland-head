@@ -1,5 +1,6 @@
 import clone     from 'lodash.clonedeep'   ;
 import intersect from 'lodash.intersection';
+import { appPathFromDrupalPath } from '#shared/utils/drupal-path-prefix';
 
 const chm          = [ 'convention-protocols','biodiversity-facts', 'our-targets', 'cooperation', 'implementation','news-updates', 'resources'   ];
 const bch          = [ 'national-biosafety-framework', 'resources', 'news-updates', 'useful-links' ];
@@ -229,6 +230,8 @@ function splitClasses(menus){
         if(Array.isArray(aMenu.class) && aMenu?.class?.length >1) aMenu.class =aMenu.class.filter(Boolean);
         if(Array.isArray(aMenu['machine-name']))    aMenu.machineName = aMenu['machine-name'][0];
         if(Array.isArray(aMenu.target))             aMenu.target = aMenu.target[0];
+        // Drupal prefixes hrefs with its own path prefix (/fil/x for tl); links in the app use the app locale.
+        if(aMenu.href)                              aMenu.href = appPathFromDrupalPath(aMenu.href);
 
         delete(aMenu['machine-name']) ;
         addContentTypeId(aMenu);

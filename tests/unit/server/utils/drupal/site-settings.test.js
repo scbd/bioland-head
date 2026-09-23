@@ -39,6 +39,18 @@ describe('getSiteSettings', () => {
     $fetch.mockResolvedValue(body)
     await expect(drupal.getSiteSettings(ctx, {})).rejects.toThrow(/not a JSON:API document/)
   })
+
+  it('requests the Drupal fil prefix for app locale tl (BL-1126)', async () => {
+    $fetch.mockResolvedValue({ data: { name: 'ASEAN', page_front: '/home' } })
+    await drupal.getSiteSettings({ ...ctx, locale: 'tl' }, {})
+    expect($fetch.mock.calls[0][0]).toMatch(/^https:\/\/be\.test\/fil\/jsonapi\/site\/site\?/)
+  })
+
+  it('keeps the zh prefix for app locale zh (BL-1126)', async () => {
+    $fetch.mockResolvedValue({ data: { name: 'ASEAN', page_front: '/home' } })
+    await drupal.getSiteSettings({ ...ctx, locale: 'zh' }, {})
+    expect($fetch.mock.calls[0][0]).toMatch(/^https:\/\/be\.test\/zh\/jsonapi\/site\/site\?/)
+  })
 })
 
 describe('getSiteSettings failure memo (BL-1122)', () => {

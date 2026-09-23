@@ -1,3 +1,5 @@
+import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
+
 export default defineEventHandler(async (event) => {
     try{
         const queryCtx = getQuery (event);
@@ -50,7 +52,7 @@ export default defineEventHandler(async (event) => {
     }
     function isSiteUp({url, defaultLocale}){
 
-        return $fetch(`${url}/${defaultLocale}`, $fetchBaseOptions())
+        return $fetch(`${url}/${drupalPathPrefix(defaultLocale)}`, $fetchBaseOptions())
             .then((r) =>r.includes(testWord(defaultLocale)))
             .catch(() => false);
     }
@@ -71,7 +73,7 @@ export default defineEventHandler(async (event) => {
     function getCount({ url, defaultLocale }, targetLocale){
         const locale = targetLocale || defaultLocale || 'en';
 
-        return $fetch(url+`/${locale}/jsonapi/index/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image${buildDrupalLanguageFilter(locale)}`, $fetchBaseOptions())
+        return $fetch(url+`/${drupalPathPrefix(locale)}/jsonapi/index/content?jsonapi_include=1&include=field_type_placement,field_attachments.field_media_image${buildDrupalLanguageFilter(locale)}`, $fetchBaseOptions())
         .then(({meta}) => Number(meta?.count)? Number(meta?.count): 0)
         .catch(() => -1);
     }
