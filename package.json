@@ -10,7 +10,7 @@
     "stg-open-bsl-e2e": "rm -rf .data && nuxt cleanup && nuxt dev --open --host seed.localhost --port 3330",
     "stg-open-bsl-gt": "rm -rf .data && nuxt cleanup && nuxt dev --open --host gt.localhost --port 3330",
     "generate": "nuxt generate",
-    "build:image": "docker build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) -t ${IMAGE:-scbd/bioland-head}:$(git rev-parse --short HEAD) .",
+    "build:image": "SHA=$(git rev-parse --short HEAD) && docker build --platform linux/amd64 --build-arg GIT_COMMIT=$SHA --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) -t ${IMAGE:-scbd/bioland-head}:$SHA .",
     "preview": "nuxt preview --open",
     "postinstall": "nuxt prepare",
     "clean": "nuxt cleanup",

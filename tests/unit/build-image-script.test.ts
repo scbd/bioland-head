@@ -12,7 +12,7 @@ describe('package.json "build:image" script', () => {
   });
 
   it('passes GIT_COMMIT as a build-arg', () => {
-    expect(script).toMatch(/--build-arg GIT_COMMIT=\$\(git rev-parse --short HEAD\)/);
+    expect(script).toMatch(/--build-arg GIT_COMMIT=\$SHA/);
   });
 
   it('passes BUILD_DATE as a build-arg', () => {
@@ -24,6 +24,14 @@ describe('package.json "build:image" script', () => {
   });
 
   it('tags the image with the short commit SHA', () => {
-    expect(script).toMatch(/:\$\(git rev-parse --short HEAD\)\s+\.$/);
+    expect(script).toMatch(/:\$SHA\s+\.$/);
+  });
+
+  it('includes --platform linux/amd64 flag', () => {
+    expect(script).toMatch(/--platform linux\/amd64/);
+  });
+
+  it('captures git SHA into a variable before using it', () => {
+    expect(script).toMatch(/SHA=\$\(git rev-parse --short HEAD\)\s*&&/);
   });
 });

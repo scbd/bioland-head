@@ -351,7 +351,7 @@ yarn build:image
 IMAGE=scbd/bioland-head yarn build:image
 
 # Equivalent manual command
-docker build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) -t scbd/bioland-head:$(git rev-parse --short HEAD) .
+SHA=$(git rev-parse --short HEAD) && docker build --platform linux/amd64 --build-arg GIT_COMMIT=$SHA --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) -t scbd/bioland-head:$SHA .
 
 # Run container
 docker run -p 3000:3000 scbd/bioland-head:<short-sha>
