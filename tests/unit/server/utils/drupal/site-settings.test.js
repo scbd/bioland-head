@@ -82,4 +82,15 @@ describe('getSiteSettings failure memo (BL-1122)', () => {
     await expect(drupal.getSiteSettings(ctx, {})).resolves.toEqual({ siteName: 'Belgium', homePath: '/node/1' })
     expect($fetch).toHaveBeenCalledTimes(2)
   })
+
+  it('preserves the remembered flag on memo-hit errors', async () => {
+    vi.useFakeTimers()
+    $fetch.mockResolvedValue('<html>maintenance</html>')
+
+    await expect(drupal.getSiteSettings(ctx, {})).rejects.toThrow(/not a JSON:API document/)
+
+    const err = await drupal.getSiteSettings(ctx, {}).catch(e => e)
+    expect(err.remembered).toBe(true)
+    expect($fetch).toHaveBeenCalledTimes(1)
+  })
 })

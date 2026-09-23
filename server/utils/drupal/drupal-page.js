@@ -89,7 +89,11 @@ export async function fetchEntityByUuid(uri, options) {
     const key  = isAuthenticatedRequest(options?.headers) ? null : uri;
     const miss = key && uuidMisses.get(key);
 
-    if (miss) throw createError({ ...miss, remembered: true });
+    if (miss) {
+        const err = createError(miss);
+        err.remembered = true;
+        throw err;
+    }
 
     try {
         return await $fetch(uri, options);

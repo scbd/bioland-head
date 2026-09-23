@@ -75,7 +75,11 @@ async function getSiteSettingsOrRecentFailure(ctx) {
 
   // Store a redacted description (not the error object) and throw a fresh createError per
   // hit, tagged so the caller can log a memo hit differently from a real fetch failure.
-  if (failed) throw createError({ ...failed, remembered: true });
+  if (failed) {
+    const err = createError(failed);
+    err.remembered = true;
+    throw err;
+  }
 
   try {
     return await _getSiteSettings(ctx);

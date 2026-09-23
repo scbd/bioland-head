@@ -91,4 +91,14 @@ describe('fetchEntityByUuid (BL-1122)', () => {
     await expect(fetchEntityByUuid(uri, { headers })).rejects.toThrow()
     expect($fetch).toHaveBeenCalledTimes(4)
   })
+
+  it('preserves the remembered flag on memo-hit errors', async () => {
+    $fetch.mockRejectedValue(failure(404, 'Not Found'))
+
+    await expect(fetchEntityByUuid(uri, {})).rejects.toThrow()
+
+    const err = await fetchEntityByUuid(uri, {}).catch(e => e)
+    expect(err.remembered).toBe(true)
+    expect($fetch).toHaveBeenCalledTimes(1)
+  })
 })
