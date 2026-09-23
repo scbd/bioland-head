@@ -294,6 +294,7 @@ async function _findAliasInOtherLocales(ctx, aliasPath) {
             const result = await lookup;
 
             if (result?.locale) {
+                consola.info(`findAliasInOtherLocales: Alias ${JSON.stringify(aliasPath)} resolved in locale "${result.locale}"`);
                 return result;
             }
             failure ??= result?.error;
@@ -438,6 +439,7 @@ async function getPageIdentifiers(ctx,  headers){
                 if (aliasMatch) {
                     // Found the alias in another locale - redirect to that locale's version
                     const redirectPath = `/${aliasMatch.locale}${cleanPath}`;
+                    consola.info(`Alias "${cleanPath}" found in locale "${aliasMatch.locale}", redirecting`);
 
                     if (aliasRedirectKey) recordAliasRedirect(aliasRedirectKey, redirectPath);
 
