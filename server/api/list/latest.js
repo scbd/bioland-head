@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
                         $fetch('/api/list/chm',  $fetchBaseOptions({ query, method:'get', headers })).then((resp)=>resp.data.map(cleanIndexDataMap))
                     ]);
 
-            return sortData([ ...drupalContent.data, ...chmContent]); //
+            return await sortData([ ...drupalContent.data, ...chmContent]); //
         }
         catch (e) {
             passError(event, e);

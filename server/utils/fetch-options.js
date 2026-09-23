@@ -39,7 +39,8 @@ export const $fetchBaseOptions = (options = {}) => ({
   // Retry GET requests on transient failures (Drupal can return 500 under load)
   retry: options.method && options.method.toUpperCase() !== 'GET' ? 0 : 3,
   retryDelay: 300, // 300ms delay between retries
-  retryStatusCodes: [408, 429, 500, 502, 503, 504],
+  // 500 excluded: Drupal 500s are deterministic app errors, not transient - retrying them only multiplies load.
+  retryStatusCodes: [408, 429, 502, 503, 504],
   ...options
 })
 

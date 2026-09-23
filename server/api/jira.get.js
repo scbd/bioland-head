@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
 
             
 
-            return groupIssuesByStatus(issues);
+            return await groupIssuesByStatus(issues);
         }
         catch (e) {
 
@@ -51,14 +51,14 @@ export default defineEventHandler(async (event) => {
                     body: await makeQuery(context)
                 };
 
-                return $fetch(url, options).then(({ issues } ={})=>(issues || []).map(buildDescriptionsMap).filter(Boolean)); //.map(issue => Object.keys(issue.fields))
+                return await $fetch(url, options).then(({ issues } ={})=>(issues || []).map(buildDescriptionsMap).filter(Boolean)); //.map(issue => Object.keys(issue.fields))
             }catch(e){
                 consola.error('Error fetching issues:', e);
                 return [];
             }
         }
 
-        function getIssueParentIds(context){
+        async function getIssueParentIds(context){
             try{
                 const url = 'https://scbd.atlassian.net/rest/api/3/search/jql';
                 const body ={
@@ -77,7 +77,7 @@ export default defineEventHandler(async (event) => {
                     body
                 };
 
-                return $fetch(url, options).then(({ issues } ={})=>(issues || []).map(issue => issue.key).filter(Boolean)); //.map(issue => Object.keys(issue.fields))
+                return await $fetch(url, options).then(({ issues } ={})=>(issues || []).map(issue => issue.key).filter(Boolean)); //.map(issue => Object.keys(issue.fields))
             }catch(e){
                 consola.error('Error fetching issues:', e);
                 return [];
@@ -106,6 +106,8 @@ export default defineEventHandler(async (event) => {
             }
 
 
+            // await-guard: allow-sync-return - jiraIssueToHtml is a synchronous string transform;
+            // this helper runs inside Array#map and must stay sync.
             return jiraIssueToHtml(issue)
         }catch(e){
             consola.error('Error building description map:', e);

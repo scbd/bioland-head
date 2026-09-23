@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
             const ctx  = await useRequestContext(event);
 
 
-            return  getPageData({...ctx, path}, event);
+            return await getPageData({...ctx, path}, event);
         }
         catch (e) {
             passError(event, e);

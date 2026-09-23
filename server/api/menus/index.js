@@ -19,9 +19,9 @@ export default defineCachedEventHandler(
                 throw createError({ statusCode: 404, statusMessage: 'Server.menus: no context derived', });
 
             if (isBchSite)
-                return $fetch( '/api/menus/index-bch', $fetchBaseOptions({ query, method: 'get', headers }), );
+                return await $fetch( '/api/menus/index-bch', $fetchBaseOptions({ query, method: 'get', headers }), );
             else
-                return $fetch( '/api/menus/index-chm', $fetchBaseOptions({ query, method: 'get', headers }), );
+                return await $fetch( '/api/menus/index-chm', $fetchBaseOptions({ query, method: 'get', headers }), );
         } catch (e) {
             consola.error(e);
             passError(event, e);
