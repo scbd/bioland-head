@@ -118,7 +118,9 @@ describe('server/api/chm-network', () => {
 
     const result = await handler({})
 
-    expect(result.dev.published.sites[0].host).toBe('https://be.undefined')
+    // getCanonicalHost guards an optional baseHost to '' rather than the literal
+    // "undefined" (shared/utils/site-host.ts, pinned by site-host.test.js).
+    expect(result.dev.published.sites[0].host).toBe('https://be.')
   })
 
   it('tolerates an env payload with no config object at all', async () => {
@@ -127,7 +129,7 @@ describe('server/api/chm-network', () => {
     const result = await handler({})
 
     expect(result.stg.published.config).toBeUndefined()
-    expect(result.stg.published.sites[0].host).toBe('https://be.undefined')
+    expect(result.stg.published.sites[0].host).toBe('https://be.')
   })
 
   it('routes a DMSM failure through passError', async () => {
