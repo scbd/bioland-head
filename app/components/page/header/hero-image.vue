@@ -5,7 +5,7 @@
         <NuxtPicture
             v-if="heroImageUrl"
             :src="heroImageUrl"
-            :img-attrs="{ class: 'hero-img', fetchpriority: 'high', alt: heroImageAlt }"
+            :img-attrs="{ class: 'hero-img', fetchpriority: 'high', alt: heroImageAlt, style: heroObjectPositionStyle }"
             height="750"
             fit="cover"
             :quality="20"
@@ -100,6 +100,14 @@
 
     const heroImageAlt = computed(() => {
         return hi.value?.fieldMediaImage?.meta?.alt || ''
+    })
+
+    // Editor-selected focal point ("X,Y" percentages) -> CSS object-position;
+    // missing/invalid values keep the browser's default centered crop.
+    const heroObjectPositionStyle = computed(() => {
+        const objectPosition = focalPointObjectPosition(hi.value?.biolandFocalPoint)
+
+        return objectPosition ? { objectPosition } : undefined
     })
 
     // --- Gradient overlays (replicate former background-blend-mode layers) ---
