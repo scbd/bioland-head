@@ -35,9 +35,14 @@ describe('thesaurus/nt7', () => {
     expect(JSON.stringify(toNt7Tag(ortDoc))).not.toContain('@example.org')
   })
 
-  it('falls back to metadata.government and tolerates a missing body', () => {
+  it('builds government from metadata and tolerates a missing body', () => {
     const tag = toNt7Tag({ identifier: 'x', metadata: { government: 'al' } })
     expect(tag.government).toBe('country:al')
     expect(tag.tags.gbfTargets).toEqual([])
+  })
+
+  it('only falls back to owner when it is a country', () => {
+    expect(toNt7Tag({ owner: 'country:dz' }).government).toBe('country:dz')
+    expect(toNt7Tag({ owner: 'user:42' }).government).toBeUndefined()
   })
 })

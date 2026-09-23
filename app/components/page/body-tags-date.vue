@@ -71,7 +71,7 @@
                 </NuxtLink>
             </section>
             <div v-if="hasHiddenTags(tags.countries)" class="text-center">
-                <button type="button" class="btn btn-link btn-sm p-0 more-toggle" :aria-expanded="expanded.countries" :aria-label="expanded.countries ? t('Show less') : t('Show all Countries')" @click="expanded.countries = !expanded.countries">&hellip;</button>
+                <button type="button" class="btn btn-link btn-sm p-0 more-toggle" :aria-expanded="expanded.countries" :aria-label="`${expanded.countries ? t('Show less') : t('Show more')}: ${t('Countries')}`" @click="expanded.countries = !expanded.countries">{{ expanded.countries ? t('Show less') : '&hellip;' }}</button>
             </div>
         </div>
         <div v-if="tags?.subjects?.length" class="mb-2">
@@ -79,7 +79,7 @@
             
             <span  v-for="(subject,i) in visibleTags(tags.subjects, expanded.subjects)" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ t(subject.identifier) }}</span>
             <div v-if="hasHiddenTags(tags.subjects)" class="text-center">
-                <button type="button" class="btn btn-link btn-sm p-0 more-toggle" :aria-expanded="expanded.subjects" :aria-label="expanded.subjects ? t('Show less') : t('Show all Thematic Areas')" @click="expanded.subjects = !expanded.subjects">&hellip;</button>
+                <button type="button" class="btn btn-link btn-sm p-0 more-toggle" :aria-expanded="expanded.subjects" :aria-label="`${expanded.subjects ? t('Show less') : t('Show more')}: ${t('Thematic Areas')}`" @click="expanded.subjects = !expanded.subjects">{{ expanded.subjects ? t('Show less') : '&hellip;' }}</button>
             </div>
         </div>
         <div v-if="tags?.bchSubjects?.length" class="mb-2">
@@ -87,7 +87,7 @@
             
             <span  v-for="(subject,i) in visibleTags(tags.bchSubjects, expanded.bchSubjects)" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ t(subject.identifier) }}</span>
             <div v-if="hasHiddenTags(tags.bchSubjects)" class="text-center">
-                <button type="button" class="btn btn-link btn-sm p-0 more-toggle" :aria-expanded="expanded.bchSubjects" :aria-label="expanded.bchSubjects ? t('Show less') : t('Show all Biosafety Thematic Areas')" @click="expanded.bchSubjects = !expanded.bchSubjects">&hellip;</button>
+                <button type="button" class="btn btn-link btn-sm p-0 more-toggle" :aria-expanded="expanded.bchSubjects" :aria-label="`${expanded.bchSubjects ? t('Show less') : t('Show more')}: ${t('Biosafety Thematic Areas')}`" @click="expanded.bchSubjects = !expanded.bchSubjects">{{ expanded.bchSubjects ? t('Show less') : '&hellip;' }}</button>
             </div>
         </div>
     </div>
@@ -146,6 +146,8 @@ h5{
 }
 
 .more-toggle{
+    min-width: 24px;
+    min-height: 24px;
     font-size: 1.25rem;
     line-height: 1;
     text-decoration: none;

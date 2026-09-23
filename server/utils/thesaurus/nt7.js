@@ -9,7 +9,7 @@
  * @returns {{ identifier: string, title: object, summary: object, government?: string, tags: { gbfTargets: { identifier: string }[] } }}
  */
 export function toNt7Tag({ identifier, title, summary, owner, metadata, body } = {}) {
-    const government = owner || (metadata?.government ? `country:${metadata.government}` : undefined);
+    const government = metadata?.government ? `country:${metadata.government}` : (owner?.startsWith('country:') ? owner : undefined);
     const gbfTargets = (body?.globalTargetAlignment || [])
         .filter((target) => target?.identifier)
         .map(({ identifier }) => ({ identifier }));
