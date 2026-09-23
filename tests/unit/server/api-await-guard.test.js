@@ -19,6 +19,37 @@ import ts from 'typescript'
  */
 
 /**
+ * Given the expression of a `return`, find every `CallExpression` that is
+ * actually returned without an intervening `await` - unwrapping the shapes a
+ * return commonly takes: parentheses, a ternary's two branches, and the
+ * right-hand-side-reachable operands of `||` / `??` (either operand can be
+ * the value that ends up returned). Anything already wrapped in `await` is
+ * left alone (its calls are not visited, since we don't recurse into
+ * AwaitExpression), and we don't chase into unrelated expression shapes
+ * (member/call arguments, other binary operators, etc.) to avoid over-flagging.
+ *
+ * @param {import('typescript').Expression} expr
+ * @returns {import('typescript').CallExpression[]}
+ */
+function findUnawaitedCalls(expr) {
+  if (ts.isParenthesizedExpression(expr)) return findUnawaitedCalls(expr.expression)
+  if (ts.isCallExpression(expr)) return [expr]
+
+  if (ts.isConditionalExpression(expr)) {
+    return [...findUnawaitedCalls(expr.whenTrue), ...findUnawaitedCalls(expr.whenFalse)]
+  }
+
+  if (
+    ts.isBinaryExpression(expr) &&
+    (expr.operatorToken.kind === ts.SyntaxKind.BarBarToken || expr.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken)
+  ) {
+    return [...findUnawaitedCalls(expr.left), ...findUnawaitedCalls(expr.right)]
+  }
+
+  return []
+}
+
+/**
  * @param {string} file absolute path, used only for error messages
  * @param {string} text file contents
  * @returns {{ file: string, line: number, text: string }[]}
@@ -37,17 +68,26 @@ export function findUnawaitedTryReturns(file, text) {
     return /await-guard:\s*allow-sync-return/.test(leadingText)
   }
 
-  const walkTryBlock = (block) => {
+  // Walks one block (a try/catch/finally body) looking for `return` statements
+  // whose value contains an un-awaited call. `checked` gates whether a hit here
+  // is actually flagged: a try block is always checked, a catch/finally block
+  // only when it belongs to a try/catch that itself has an ancestor try (see
+  // visitTop below) - otherwise there's no outer catch for the rejection to
+  // reach anyway. Nested TryStatements and nested function bodies are their
+  // own scope and are walked independently (by visitTop), not descended into
+  // here, so each return is only ever evaluated once.
+  const checkReturnsIn = (block, checked) => {
     const visit = (node) => {
-      if (ts.isReturnStatement(node) && node.expression && ts.isCallExpression(node.expression)) {
-        if (!hasAllowComment(node)) {
+      if (checked && ts.isReturnStatement(node) && node.expression) {
+        const calls = findUnawaitedCalls(node.expression)
+
+        if (calls.length && !hasAllowComment(node)) {
           violations.push({ file, line: lineOf(node), text: node.getText(sourceFile).trim().slice(0, 160) })
         }
       }
 
-      // Don't descend into a nested function's body - it is its own await scope,
-      // and (if it has one) its own try/catch is walked separately below.
-      if (ts.isFunctionLike(node) && node !== block) return
+      if (ts.isFunctionLike(node)) return
+      if (ts.isTryStatement(node)) return
 
       ts.forEachChild(node, visit)
     }
@@ -55,13 +95,23 @@ export function findUnawaitedTryReturns(file, text) {
     ts.forEachChild(block, visit)
   }
 
-  const visitTop = (node) => {
-    if (ts.isTryStatement(node)) walkTryBlock(node.tryBlock)
+  // `tryDepth` counts ancestor TryStatements strictly above the current node
+  // (in any of their try/catch/finally zones). A TryStatement's own try block
+  // is always checked; its catch/finally are checked only once `tryDepth >= 1`,
+  // i.e. this try/catch itself sits inside an outer try/catch.
+  const visitTop = (node, tryDepth) => {
+    if (ts.isTryStatement(node)) {
+      checkReturnsIn(node.tryBlock, true)
+      if (node.catchClause) checkReturnsIn(node.catchClause.block, tryDepth >= 1)
+      if (node.finallyBlock) checkReturnsIn(node.finallyBlock, tryDepth >= 1)
+    }
 
-    ts.forEachChild(node, visitTop)
+    const nextDepth = ts.isTryStatement(node) ? tryDepth + 1 : tryDepth
+
+    ts.forEachChild(node, (child) => visitTop(child, nextDepth))
   }
 
-  visitTop(sourceFile)
+  visitTop(sourceFile, 0)
 
   return violations
 }
@@ -159,6 +209,116 @@ export default defineEventHandler(async (event) => {
 })
 `
     const violations = findUnawaitedTryReturns('fixtures/opt-out.js', fixture)
+
+    expect(violations).toEqual([])
+  })
+
+  it('flags an un-awaited call in either branch of a ternary return', () => {
+    const fixture = `
+export default defineEventHandler(async (event) => {
+  try {
+    const ctx = await useRequestContext(event)
+
+    return ctx.localizedHost ? getSystemPagesMap(ctx) : ctx
+  } catch (e) {
+    passError(event, e)
+  }
+})
+`
+    const violations = findUnawaitedTryReturns('fixtures/ternary-return.js', fixture)
+
+    expect(violations).toHaveLength(1)
+    expect(violations[0].text).toContain('getSystemPagesMap(ctx)')
+  })
+
+  it('does not flag a ternary return once both branches are awaited or plain', () => {
+    const fixture = `
+export default defineEventHandler(async (event) => {
+  try {
+    const ctx = await useRequestContext(event)
+
+    return ctx.localizedHost ? await getSystemPagesMap(ctx) : ctx
+  } catch (e) {
+    passError(event, e)
+  }
+})
+`
+    const violations = findUnawaitedTryReturns('fixtures/ternary-return-fixed.js', fixture)
+
+    expect(violations).toEqual([])
+  })
+
+  it('flags an un-awaited call on either side of || or ??', () => {
+    const orFixture = `
+export default defineEventHandler(async (event) => {
+  try {
+    return cached || fetchSomething(event)
+  } catch (e) {
+    passError(event, e)
+  }
+})
+`
+    const nullishFixture = `
+export default defineEventHandler(async (event) => {
+  try {
+    return cached ?? fetchSomething(event)
+  } catch (e) {
+    passError(event, e)
+  }
+})
+`
+
+    expect(findUnawaitedTryReturns('fixtures/or-return.js', orFixture)).toHaveLength(1)
+    expect(findUnawaitedTryReturns('fixtures/nullish-return.js', nullishFixture)).toHaveLength(1)
+  })
+
+  it('unwraps a parenthesized return to find the un-awaited call inside', () => {
+    const fixture = `
+export default defineEventHandler(async (event) => {
+  try {
+    return (fetchSomething(event))
+  } catch (e) {
+    passError(event, e)
+  }
+})
+`
+    const violations = findUnawaitedTryReturns('fixtures/parenthesized-return.js', fixture)
+
+    expect(violations).toHaveLength(1)
+    expect(violations[0].text).toContain('fetchSomething(event)')
+  })
+
+  it('flags an un-awaited return inside a catch/finally whose try is nested inside an outer try', () => {
+    const fixture = `
+export default defineEventHandler(async (event) => {
+  try {
+    try {
+      return await fetchSomething(event)
+    } catch (innerErr) {
+      return fetchFallback(event)
+    }
+  } catch (e) {
+    passError(event, e)
+  }
+})
+`
+    const violations = findUnawaitedTryReturns('fixtures/nested-catch-return.js', fixture)
+
+    expect(violations).toHaveLength(1)
+    expect(violations[0].text).toContain('fetchFallback(event)')
+  })
+
+  it('does not flag an un-awaited return inside a catch with no outer try', () => {
+    const fixture = `
+export default defineEventHandler(async (event) => {
+  try {
+    return await fetchSomething(event)
+  } catch (e) {
+    return fetchFallback(event)
+  }
+})
+`
+    const violations = findUnawaitedTryReturns('fixtures/top-level-catch-return.js', fixture)
 
     expect(violations).toEqual([])
   })
