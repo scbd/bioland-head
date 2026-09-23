@@ -1,3 +1,5 @@
+import { boundedTtlMap } from '../bounded-ttl-map.js';
+
 
 
 
@@ -39,7 +41,7 @@ async function _getSiteSettings (ctx) {
     // `{ siteName: undefined, homePath: undefined }` from that for 30 days breaks home
     // routing for every container, so refuse anything that is not a JSON:API document.
     if (!resp || typeof resp !== 'object' || !resp.data || typeof resp.data !== 'object')
-        throw new Error(`Site settings response for ${ctx.siteCode} (${ctx.locale}) is not a JSON:API document`)
+        throw Object.assign(new Error(`Site settings response for ${ctx.siteCode} (${ctx.locale}) is not a JSON:API document`), { statusCode: 422 })
 
     const name = resp.data.name
 
@@ -53,26 +55,50 @@ async function _getSiteSettings (ctx) {
     return settings
 }
 
+// A failed settings fetch (e.g. maintenance HTML) is never cached (BL-1065), so every render
+// re-asked Drupal. Remember a 4xx or non-JSON:API answer per site + locale for 60s in process,
+// then retry (BL-1122); never a 5xx or network error. The call carries only the api-key, never
+// the visitor's session, so it is the same answer for every visitor.
+const SITE_SETTINGS_FAILURE_TTL_MS = 60 * 1000;
+const siteSettingsFailures         = boundedTtlMap(1000);
+
+function siteSettingsKey({ env, multiSiteCode, siteCode, locale }) {
+  if (!env || !multiSiteCode || !siteCode || !locale)
+    throw new Error( `getSiteSettings cache key missing required context: env=${env}, multiSiteCode=${multiSiteCode}, siteCode=${siteCode}` );
+
+  return `${multiSiteCode}:${siteCode}:${locale}`;
+}
+
+async function getSiteSettingsOrRecentFailure(ctx) {
+  const key    = siteSettingsKey(ctx);
+  const failed = siteSettingsFailures.get(key);
+
+  if (failed) throw failed;
+
+  try {
+    const settings = await _getSiteSettings(ctx);
+
+    siteSettingsFailures.delete(key);
+    return settings;
+  } catch (e) {
+    if (e?.statusCode >= 400 && e.statusCode < 500) siteSettingsFailures.set(key, e, SITE_SETTINGS_FAILURE_TTL_MS);
+    throw e;
+  }
+}
+
 /**
  * Cached version of getSiteSettings
  * Cache key: $env-$multiSiteCode-$siteCode
  */
 export const getSiteSettings = defineCachedFunction(
   async (ctx, event) => {
-    return await _getSiteSettings(ctx);
+    return await getSiteSettingsOrRecentFailure(ctx);
   },
   {
     maxAge: 60 * 60 * 24 * 30,
     name: 'get-site-settings',
     group: "context",
     swr: false,
-    getKey: (ctx, event) => {
-      const { env, multiSiteCode, siteCode, locale } = ctx;
-
-      if (!env || !multiSiteCode || !siteCode || !locale)
-        throw new Error( `getSiteSettings cache key missing required context: env=${env}, multiSiteCode=${multiSiteCode}, siteCode=${siteCode}` );
-
-      return `${multiSiteCode}:${siteCode}:${locale}`;
-    }
+    getKey: (ctx, event) => siteSettingsKey(ctx)
   }
 );

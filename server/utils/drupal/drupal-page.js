@@ -1,6 +1,7 @@
 
 import { createHash } from 'node:crypto';
 import { camelCase } from 'change-case/keys';
+import { boundedTtlMap } from '../bounded-ttl-map.js';
 
 const localizationExceptionPaths =  [];
 
@@ -61,6 +62,30 @@ function logFailure(label, { siteCode, path }, e) {
 // Non-enumerable symbol: invisible to JSON serialization and to what callers read off the error.
 const markLogged = (error) => Object.defineProperty(error, LOGGED, { value: true });
 
+// A dangling reference (404) or an unpublished node (403) answers the same for ~5 minutes,
+// but BL-1065 keeps failures out of the shared cache, so each render re-asked Drupal
+// (BL-1122). Remember those two outcomes per by-UUID URI (site + locale + entity type +
+// uuid) in process only. Never 5xx or network errors, and never for a signed-in request:
+// an editor may be entitled to the unpublished node.
+const UUID_MISS_TTL_MS      = 5 * 60 * 1000;
+const UUID_MISS_MAX_ENTRIES = 1000;
+const uuidMisses            = boundedTtlMap(UUID_MISS_MAX_ENTRIES);
+
+export async function fetchEntityByUuid(uri, options) {
+    const key  = isAuthenticatedRequest(options?.headers) ? null : uri;
+    const miss = key && uuidMisses.get(key);
+
+    if (miss) throw createError(miss);
+
+    try {
+        return await $fetch(uri, options);
+    } catch (e) {
+        if (key && (e?.statusCode === 403 || e?.statusCode === 404))
+            uuidMisses.set(key, { statusCode: e.statusCode, statusMessage: e.statusMessage }, UUID_MISS_TTL_MS);
+        throw e;
+    }
+}
+
 export async function getPageData(ctx, event){
     try{
 
@@ -80,7 +105,7 @@ export async function getPageData(ctx, event){
         const   query                     = getSearchParams(ctx, type, bundle);
         const   uri                       = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
-        const { data } = await $fetch(uri, $fetchBaseOptions({ query, headers }));
+        const { data } = await fetchEntityByUuid(uri, $fetchBaseOptions({ query, headers }));
 
         data.label = label;
 
@@ -163,7 +188,7 @@ export async function getPageDates(ctx){
     const query    = getSearchParams(ctx, type, bundle, );
     const uri      = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
-    const { data } = await $fetch(uri, $fetchBaseOptions({ query }));
+    const { data } = await fetchEntityByUuid(uri, $fetchBaseOptions({ query }));
 
     const { changed, created, field_start_date } = data;
 
@@ -184,7 +209,7 @@ export async function getPageThumb(ctx){
     const query    = getSearchParams(defaultCtx, type, bundle, 'field_attachments');
     const uri      = `${sourceHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}/field_attachments`;
 
-    const { data } = await $fetch(uri, $fetchBaseOptions({ query }));
+    const { data } = await fetchEntityByUuid(uri, $fetchBaseOptions({ query }));
 
     return getThumbFiles(data,  { ...ctx, localizedHost: sourceHost })
 }
@@ -220,29 +245,6 @@ const ALIAS_NOT_FOUND = false;
 // shared in-flight sweep open indefinitely.
 const TRANSLATE_PATH_TIMEOUT_MS = 5000;
 const ALIAS_MISS_MAX_ENTRIES    = 1000;
-
-// Shared shape behind aliasMisses and aliasRedirects below: a bounded in-process map where
-// each entry expires on its own TTL, oldest entry evicted first once maxEntries is reached.
-function boundedTtlMap(maxEntries) {
-    const map = new Map();
-
-    return {
-        get(key) {
-            const entry = map.get(key);
-
-            if (!entry) return undefined;
-            if (Date.now() <= entry.expires) return entry.value;
-
-            map.delete(key);
-            return undefined;
-        },
-        set(key, value, ttlMs) {
-            map.delete(key);
-            if (map.size >= maxEntries) map.delete(map.keys().next().value);
-            map.set(key, { value, expires: Date.now() + ttlMs });
-        },
-    };
-}
 
 const aliasMisses = boundedTtlMap(ALIAS_MISS_MAX_ENTRIES);
 
