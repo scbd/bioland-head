@@ -148,9 +148,11 @@ h5{
 .more-toggle{
     min-width: 24px;
     min-height: 24px;
-    font-size: 1.25rem;
     line-height: 1;
     text-decoration: none;
+}
+.more-toggle[aria-expanded="false"]{
+    font-size: 1.25rem;
 }
 
 .badge.block-badge {
