@@ -44,7 +44,7 @@ export const I18N_HANDLER_CACHE_BASE = 'nitro:handlers:i18n'
 
 const ERROR_LOG_INTERVAL_MS = 60_000
 const CIRCUIT_OPEN_MS = 5_000
-/** Bounds the once-per-message memory should messages ever carry per-key detail. */
+/** Bounds the per-message throttle memory should messages ever carry per-key detail. */
 const MAX_DISTINCT_ERRORS = 100
 
 /**
@@ -89,7 +89,11 @@ export function redactRedisUrl(url: string): string {
 const describeError = (error: unknown): string =>
   error instanceof Error ? error.message || (error as NodeJS.ErrnoException).code || error.name : String(error)
 
-const CONNECTION_ERROR_CODES = new Set(['ECONNREFUSED', 'ETIMEDOUT', 'ECONNRESET', 'EPIPE'])
+const CONNECTION_ERROR_CODES = new Set([
+  'ECONNREFUSED', 'ETIMEDOUT', 'ECONNRESET', 'EPIPE',
+  // DNS (service name not resolvable yet, resolver flake) and routing failures.
+  'ENOTFOUND', 'EAI_AGAIN', 'EHOSTUNREACH', 'ENETUNREACH',
+])
 const CONNECTION_ERROR_MESSAGES = ["Stream isn't writeable", 'Command timed out', 'Connection is closed', 'Socket timeout']
 
 /** True for failures that mean Redis is unreachable or stalled, as opposed to a bad command. */
@@ -104,26 +108,28 @@ export function isConnectionError(error: unknown): boolean {
 /**
  * Connection-class errors log one line per interval, however many keys or reconnect attempts
  * fail inside it: a down Redis would otherwise log once per cache read on every request.
- * Any other error logs once per distinct message. A `ready` after an outage logs the recovery
- * and re-arms the throttle so the next outage is reported at once.
+ * Any other error is throttled per distinct message on the same interval, so a recurring one
+ * still shows up once per interval. A `ready` after an outage logs the recovery and re-arms the
+ * connection throttle so the next outage is reported at once.
  */
 export function createCacheLogger(intervalMs = ERROR_LOG_INTERVAL_MS, now: () => number = () => Date.now()): CacheLogger {
   let lastLoggedAt = Number.NEGATIVE_INFINITY
   let inOutage = false
-  const seen = new Set<string>()
+  const lastLoggedByMessage = new Map<string, number>()
 
   return {
     error(operation, error) {
       const message = describeError(error)
+      const at = now()
       if (!isConnectionError(error)) {
-        if (seen.has(message)) return
-        if (seen.size >= MAX_DISTINCT_ERRORS) seen.clear()
-        seen.add(message)
-        console.error(`[cache] Redis ${operation} failed (logged once per message):`, message)
+        const last = lastLoggedByMessage.get(message)
+        if (last !== undefined && at - last < intervalMs) return
+        if (last === undefined && lastLoggedByMessage.size >= MAX_DISTINCT_ERRORS) lastLoggedByMessage.clear()
+        lastLoggedByMessage.set(message, at)
+        console.error(`[cache] Redis ${operation} failed (repeats suppressed for ${intervalMs / 1000}s):`, message)
         return
       }
       inOutage = true
-      const at = now()
       if (at - lastLoggedAt < intervalMs) return
       lastLoggedAt = at
       console.error(`[cache] Redis ${operation} failed (repeats suppressed for ${intervalMs / 1000}s):`, message)
@@ -138,26 +144,54 @@ export function createCacheLogger(intervalMs = ERROR_LOG_INTERVAL_MS, now: () =>
 }
 
 export interface CircuitBreaker {
+  /** False lets the caller through; once the open window expires only one caller (the probe) gets false. */
   isOpen(): boolean
   trip(): void
+  /** Redis answered: closes the breaker if this was the half-open probe. */
+  succeed(): void
   reset(): void
 }
 
+/**
+ * Closed -> open on trip(). When the open window expires the breaker goes half-open: the next
+ * caller is the probe and everyone else keeps skipping Redis for another window, so a Redis
+ * that is still down costs one commandTimeout per window, not one per concurrent read.
+ * The probe's success (or a `ready`) closes it; its failure re-trips it.
+ */
 export function createCircuitBreaker(openMs = CIRCUIT_OPEN_MS, now: () => number = () => Date.now()): CircuitBreaker {
   let openUntil = Number.NEGATIVE_INFINITY
+  let probing = false
+  const reset = () => {
+    openUntil = Number.NEGATIVE_INFINITY
+    probing = false
+  }
   return {
-    isOpen: () => now() < openUntil,
-    trip: () => { openUntil = now() + openMs },
-    reset: () => { openUntil = Number.NEGATIVE_INFINITY },
+    isOpen() {
+      const at = now()
+      if (at < openUntil) return true
+      if (openUntil === Number.NEGATIVE_INFINITY) return false
+      openUntil = at + openMs
+      probing = true
+      return false
+    },
+    trip() {
+      openUntil = now() + openMs
+      probing = false
+    },
+    succeed() {
+      if (probing) reset()
+    },
+    reset,
   }
 }
 
 /**
  * Reads and writes degrade to a miss / a skipped write when Redis is unreachable, so the
  * caller fetches upstream instead of failing. Nitro's cached functions already catch storage
- * errors but log each one; direct callers (sitemaps, the cache-clear markers) do not catch.
+ * errors but log each one; direct callers (sitemaps) do not catch.
  * After a connection-class failure the breaker opens: reads and writes skip Redis entirely for
- * a few seconds, so a stalled server costs one commandTimeout, not one per cache read.
+ * a few seconds, so a stalled server costs one commandTimeout, not one per cache read. Any
+ * answer from Redis, including a command error, counts as a success for the half-open probe.
  * getKeys, removeItem and clear still throw: a clear that silently did nothing must not be
  * reported as done.
  */
@@ -166,9 +200,12 @@ export function degradeOnError(driver: Driver, logger: CacheLogger, breaker: Cir
     async (...args: any[]): Promise<T> => {
       if (breaker.isOpen()) return fallback(...args)
       try {
-        return await run(...args)
+        const result = await run(...args)
+        breaker.succeed()
+        return result
       } catch (error) {
         if (isConnectionError(error)) breaker.trip()
+        else breaker.succeed()
         logger.error(operation, error)
         return fallback(...args)
       }
@@ -209,11 +246,20 @@ export function purgeI18nHandlerCache(storage: Storage, logger: CacheLogger): vo
 /**
  * Swap `cache` and `cache-clear` onto Redis. Synchronous on purpose, see the file header.
  * Returns the ioredis clients so the caller can close them on shutdown.
+ *
+ * Only `cache` degrades on error. `cache-clear` holds the cross-replica coordination markers,
+ * and a read that silently misses or a pending-marker write that silently does nothing would
+ * let a replica clear as if it held the lock (or prune markers it could not read). Its raw
+ * driver throws instead, and server/middleware/00.cache-clear.ts turns that into a skipped
+ * clear, as it would for an fs error.
  */
 export function mountRedisCache(storage: Storage, redisUrl: string, logger: CacheLogger = createCacheLogger()): Redis[] {
-  const mounts: [mountpoint: string, base: string][] = [['cache', CACHE_KEY_BASE], ['cache-clear', CACHE_CLEAR_KEY_BASE]]
+  const mounts: [mountpoint: string, base: string, degrade: boolean][] = [
+    ['cache', CACHE_KEY_BASE, true],
+    ['cache-clear', CACHE_CLEAR_KEY_BASE, false],
+  ]
 
-  const clients = mounts.map(([mountpoint, base]) => {
+  const clients = mounts.map(([mountpoint, base, degrade]) => {
     const driver = redisDriver({
       url: redisUrl,
       base,
@@ -234,10 +280,12 @@ export function mountRedisCache(storage: Storage, redisUrl: string, logger: Cach
     // No dispose: the fs driver holds nothing to release, and disposing awaits, which would
     // leave the mount point empty for a tick.
     void storage.unmount(mountpoint, false)
-    storage.mount(mountpoint, degradeOnError(driver, logger, breaker))
+    storage.mount(mountpoint, degrade ? degradeOnError(driver, logger, breaker) : driver)
     return client
   })
 
+  // Every booting replica purges the shared i18n handler cache, not just the first: intended,
+  // since a boot is a deploy and the translations it serves may have changed.
   purgeI18nHandlerCache(storage, logger)
   return clients
 }

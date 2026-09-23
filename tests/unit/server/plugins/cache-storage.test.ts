@@ -235,7 +235,8 @@ describe('redis unreachable', () => {
     expect(await cache.getItem('menus:b.json')).toBeNull()
     expect(await cache.hasItem('menus:a.json')).toBe(false)
     await expect(cache.setItem('menus:a.json', { value: 1 })).resolves.toBeUndefined()
-    await expect(prefixStorage(storage, 'cache-clear').getItem('completed:x')).resolves.toBeNull()
+    // The coordination markers are not degraded: a miss there would pass for "no lock held".
+    await expect(prefixStorage(storage, 'cache-clear').getItem('completed:x')).rejects.toThrow()
     redis.clients[0]!.listeners.error!.forEach((fn) => fn(Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' })))
 
     expect(error).toHaveBeenCalledTimes(1)
@@ -285,6 +286,7 @@ describe('helpers', () => {
     ['command timeout', new Error('Command timed out')],
     ['closed connection', new Error('Connection is closed.')],
     ['retries exhausted', Object.assign(new Error('Reached the max retries per request limit'), { name: 'MaxRetriesPerRequestError' })],
+    ...['ENOTFOUND', 'EAI_AGAIN', 'EHOSTUNREACH', 'ENETUNREACH'].map((code) => [code, Object.assign(new Error(`getaddrinfo ${code} redis`), { code })] as const),
   ])('isConnectionError recognises %s', (_label, error) => {
     expect(plugin.isConnectionError(error)).toBe(true)
   })
@@ -308,7 +310,7 @@ describe('helpers', () => {
     expect(error).toHaveBeenCalledTimes(2)
   })
 
-  it('createCacheLogger logs other errors once per distinct message, unthrottled', () => {
+  it('createCacheLogger throttles other errors per distinct message', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     const logger = plugin.createCacheLogger(60_000, () => 0)
 
@@ -318,6 +320,42 @@ describe('helpers', () => {
     logger.error('write', new Error('ERR b'))
 
     expect(error.mock.calls.map((call) => call[1])).toEqual(['Command timed out', 'ERR a', 'ERR b'])
+  })
+
+  it('createCacheLogger logs a recurring non-connection error again after the interval', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    let now = 0
+    const logger = plugin.createCacheLogger(60_000, () => now)
+
+    logger.error('read', new Error('ERR a'))
+    now = 59_999
+    logger.error('read', new Error('ERR a'))
+    now = 60_000
+    logger.error('read', new Error('ERR a'))
+
+    expect(error).toHaveBeenCalledTimes(2)
+  })
+
+  it('createCircuitBreaker lets exactly one probe through after the window, closing on success or re-tripping on failure', () => {
+    let now = 0
+    const breaker = plugin.createCircuitBreaker(5_000, () => now)
+    expect(breaker.isOpen()).toBe(false)
+    breaker.succeed()
+    expect(breaker.isOpen()).toBe(false)
+
+    breaker.trip()
+    now = 4_999
+    expect(breaker.isOpen()).toBe(true)
+    now = 5_000
+    expect([breaker.isOpen(), breaker.isOpen(), breaker.isOpen()]).toEqual([false, true, true])
+    breaker.trip()
+    now = 9_999
+    expect(breaker.isOpen()).toBe(true)
+    now = 10_000
+    expect(breaker.isOpen()).toBe(false)
+    expect(breaker.isOpen()).toBe(true)
+    breaker.succeed()
+    expect([breaker.isOpen(), breaker.isOpen()]).toEqual([false, false])
   })
 
   it('createCacheLogger logs a recovery only after an outage, and re-arms the throttle', () => {
@@ -410,6 +448,28 @@ describe('half-open socket', () => {
     await vi.advanceTimersByTimeAsync(5_000)
     redis.state.stalled = false
     await expect(cache.getItem('menus:b.json')).resolves.toBeNull()
+    expect(gets()).toBe(2)
+  })
+
+  it('sends only one of N concurrent reads to redis once the open window expires', async () => {
+    vi.useFakeTimers()
+    plugin.mountRedisCache(storage, 'redis://redis:6379/1', silentLogger())
+    redis.state.stalled = true
+    const cache = prefixStorage(storage, 'cache')
+    const gets = () => redis.calls.filter((c) => c.command === 'get').length
+
+    const first = cache.getItem('menus:a.json')
+    await vi.advanceTimersByTimeAsync(1_000)
+    await first
+    await vi.advanceTimersByTimeAsync(5_000)
+
+    const reads = Array.from({ length: 5 }, (_, i) => cache.getItem(`menus:${i}.json`))
+    await vi.advanceTimersByTimeAsync(1_000)
+    await expect(Promise.all(reads)).resolves.toEqual([null, null, null, null, null])
+    expect(gets()).toBe(2)
+
+    // The probe timed out, so the breaker re-tripped: the next read skips redis.
+    await cache.getItem('menus:x.json')
     expect(gets()).toBe(2)
   })
 

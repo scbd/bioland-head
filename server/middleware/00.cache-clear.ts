@@ -19,6 +19,10 @@ import type { H3Event } from 'h3'
  *
  * The fs driver ignores TTLs, so markers older than COMPLETED_TTL are pruned on each run
  * to keep the directory from growing one file per login.
+ *
+ * If the marker store is unreachable (it throws: the Redis `cache-clear` mount is deliberately
+ * not degraded), the clear is skipped and logged rather than run without coordination or
+ * turned into a 500. The `cache` mount lives on the same store, so the clear could not succeed.
  */
 
 const STORAGE_BASE = 'cache-clear'
@@ -35,6 +39,8 @@ function hasAdminPermission(event: H3Event): boolean {
 /**
  * Remove pending/completed markers past their useful life. One tiny file per clear on a
  * store that never expires anything adds up; a login page adds one per sign-in.
+ * Only a readable timestamp past its TTL is removed: a null (missed or concurrently removed
+ * read) or any other value proves nothing about age, so it is left alone.
  */
 async function pruneStaleMarkers(storage: ReturnType<typeof useStorage>): Promise<void> {
   const now = Date.now()
@@ -43,8 +49,28 @@ async function pruneStaleMarkers(storage: ReturnType<typeof useStorage>): Promis
   await Promise.all(keys.map(async (key) => {
     const ttl = key.startsWith('pending:') ? PENDING_TTL : COMPLETED_TTL
     const at = await storage.getItem<number>(key)
-    if (typeof at !== 'number' || (now - at) > ttl * 1000) await storage.removeItem(key)
+    if (typeof at === 'number' && (now - at) > ttl * 1000) await storage.removeItem(key)
   }))
+}
+
+/**
+ * True when this value was already cleared within COMPLETED_TTL, or another container/request
+ * holds a fresh pending marker (after yielding briefly to it). A stale pending marker is removed.
+ */
+async function isCompletedOrInProgress(storage: ReturnType<typeof useStorage>, completedKey: string, pendingKey: string): Promise<boolean> {
+  const completedAt = await storage.getItem<number>(completedKey)
+  if (completedAt && (Date.now() - completedAt) < COMPLETED_TTL * 1000) return true
+
+  const pendingAt = await storage.getItem<number>(pendingKey)
+  if (!pendingAt) return false
+  if ((Date.now() - pendingAt) < PENDING_TTL * 1000) {
+    // Still in progress - wait a bit and let the original complete.
+    // We don't block indefinitely since we can't share promises across containers.
+    await new Promise(resolve => setTimeout(resolve, 500))
+    return true
+  }
+  await storage.removeItem(pendingKey)
+  return false
 }
 
 export default defineEventHandler(async (event) => {
@@ -74,24 +100,11 @@ export default defineEventHandler(async (event) => {
   const pendingKey = `pending:${seachainTaisce}`
   const completedKey = `completed:${seachainTaisce}`
 
-  // Already completed with this value - skip
-  const completedAt = await storage.getItem<number>(completedKey)
-  if (completedAt && (Date.now() - completedAt) < COMPLETED_TTL * 1000) {
+  try {
+    if (await isCompletedOrInProgress(storage, completedKey, pendingKey)) return
+  } catch (error) {
+    consola.warn('[cache-clear] Marker store unavailable, skipping cache clear:', error)
     return
-  }
-
-  // Check if another container/request is already clearing with this value
-  const pendingAt = await storage.getItem<number>(pendingKey)
-  if (pendingAt) {
-    // Check if pending is stale (older than PENDING_TTL)
-    if ((Date.now() - pendingAt) < PENDING_TTL * 1000) {
-      // Still in progress - wait a bit and let the original complete
-      // We don't block indefinitely since we can't share promises across containers
-      await new Promise(resolve => setTimeout(resolve, 500))
-      return
-    }
-    // Stale pending - clean it up and proceed
-    await storage.removeItem(pendingKey)
   }
 
   // Permission check - only admin roles can trigger cache clear
@@ -109,8 +122,14 @@ export default defineEventHandler(async (event) => {
     return
   }
 
-  // Mark as pending (with timestamp for staleness detection)
-  await storage.setItem(pendingKey, Date.now())
+  // Mark as pending (with timestamp for staleness detection). Without it other containers
+  // would not see the clear in progress, so a failed write skips the clear.
+  try {
+    await storage.setItem(pendingKey, Date.now())
+  } catch (error) {
+    consola.warn('[cache-clear] Pending marker write failed, skipping cache clear:', error)
+    return
+  }
 
   await pruneStaleMarkers(storage).catch((error) => consola.warn('[cache-clear] Marker prune failed:', error))
 
