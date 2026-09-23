@@ -1,3 +1,4 @@
+import { internalQuery } from '../../utils/merge-query-into-context';
 import { DateTime } from 'luxon';
 import { kebabCase } from 'change-case';
 
@@ -8,11 +9,11 @@ export default defineEventHandler(async (event) => {
             const from        = DateTime.now().minus({months: 1}).toFormat('yyyy-MM-dd');
             const schemas     = [ 'news', 'notification', 'statement', 'meeting', 'pressRelease' ];
 
-            const query             = { ...getQuery(event), drupalInternalIds, rowsPerPage, from, schemas, promote:true };
             const context           = await useRequestContext(event);
+            const query             = { ...internalQuery(context, getQuery(event)), drupalInternalIds, rowsPerPage, from, schemas, promote:true };
 
 
-            const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(context || query || {}))};` }
+            const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(context))};` }
 
             const [ drupalContent, chmContent ] = await Promise.all([
                         $fetch('/api/list/drupal',  $fetchBaseOptions({ query, method:'get', headers })    ),

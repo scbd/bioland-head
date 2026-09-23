@@ -13,9 +13,39 @@ import type { SiteContext, DmsmConfig, ContextCookie } from "~/shared/types";
 import { getSiteSettings } from "./drupal/index.js";
 import { sanitizeBiolandSettings } from "./bioland-settings";
 import { drupalPathPrefix } from "#shared/utils/drupal-path-prefix";
+import { boundedTtlMap } from "./bounded-ttl-map.js";
 
 
 interface RequestContextOptions { /** Explicit siteCode (skips host extraction) - used by context API route */ siteCode?: string; /** Explicit locale (skips path/cookie resolution) */ locale?: string; /** Bypass DMSM config cache - forces fresh fetch from DMSM API */ bypassCache?: boolean; }
+
+// BL-1135 D3: a query locale the site does not serve is silently dropped by design (see
+// resolveLocale below), which can otherwise mask DMSM config drift (a locale the client
+// expects but siteLocales never lists). Warn once per (siteCode, locale) rather than per
+// request so a hot 404-ish path cannot spam the logs.
+const REJECTED_LOCALE_WARN_TTL_MS = 24 * 60 * 60 * 1000;
+const rejectedLocaleWarnings = boundedTtlMap(500);
+
+function warnRejectedLocaleOnce(siteCode: string, requestedLocale: string, siteLocales: string[]): void {
+  // Validate that requestedLocale is a plausible locale code before logging.
+  // Only log for strings matching /^[a-z]{2,3}(-[a-z0-9]{2,8})?$/i with max length 10.
+  // This prevents log injection / log flooding from attacker-supplied values like '../../etc'
+  // or overly-long strings.
+  if (!isPlausibleLocaleCode(requestedLocale)) return;
+
+  const key = `${siteCode}:${requestedLocale}`;
+
+  if (rejectedLocaleWarnings.get(key)) return;
+
+  rejectedLocaleWarnings.set(key, true, REJECTED_LOCALE_WARN_TTL_MS);
+  consola.warn(`[dmsm] rejected unsupported query locale`, { siteCode, requestedLocale, siteLocales });
+}
+
+function isPlausibleLocaleCode(value: unknown): boolean {
+  if (typeof value !== 'string') return false;
+  if (value.length > 10) return false;
+  // Pattern: 2-3 letters, optionally followed by hyphen and 2-8 alphanumeric chars
+  return /^[a-z]{2,3}(-[a-z0-9]{2,8})?$/i.test(value);
+}
 
 /**
  * Get site context for the current request
@@ -131,6 +161,9 @@ export async function useRequestContext( event: H3Event, options?: RequestContex
     // Also check query params for locale (internal fetches from client include it)
     const query        = getQuery(event) as { locale?: string };
     const queryLocale  = query.locale && siteLocales.includes(query.locale) ? query.locale : null;
+
+    if (query.locale && !queryLocale) warnRejectedLocaleOnce(siteCode, query.locale, siteLocales);
+
     const pathLocale   = extractLocaleFromPath( event.path, siteLocales, runtimeLocales );
     const cookieLocale = getCookieLocale(event);
 

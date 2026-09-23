@@ -23,12 +23,10 @@ import { smartTruncate } from '~~/shared/utils/text';
 export default defineEventHandler(async (event) => {
     try {
         const ctx = await useRequestContext(event);
-        const query = getQuery(event);
-        
-        // Override locale with query param if provided
-        const locale = query.locale || ctx?.locale || 'en';
+        // ctx.locale already adopts a served query locale; the raw query value is never trusted (BL-1135).
+        const locale = ctx?.locale || 'en';
         const country = ctx?.country?.toUpperCase() || 'GT'; // Default to Guatemala for testing
-        const siteCode = query.siteCode || ctx?.siteCode;
+        const siteCode = ctx?.siteCode;
 
         const headers = {
             Cookie: `context=${encodeURIComponent(JSON.stringify(ctx || {}))};`,

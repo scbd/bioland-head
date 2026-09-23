@@ -1,3 +1,4 @@
+import { mergeQueryIntoContext } from '../../utils/merge-query-into-context';
 /**
  * ABS (Access and Benefit-Sharing) list API endpoint.
  *
@@ -13,7 +14,7 @@
  *   @returns {Object} facetCounts - Facet aggregation results
  *
  * @example
- * // GET /api/list/abs?schemas=focalPoint&countries=BE
+ * // GET /api/list/abs?schemas=focalPoint (countries always come from the site context)
  *
  * @throws {Error} Passes any errors to the error handler via passError
  */
@@ -23,7 +24,7 @@ export default defineEventHandler(async (event) => {
     const ctx   = await useRequestContext(event);
     const abs   = true;
 
-    return await queryScbdIndex({ ...ctx, ...query }, {},  false, abs);
+    return await queryScbdIndex(mergeQueryIntoContext(ctx, query), {},  false, abs);
     
   } catch (e) {
     passError(event, e);

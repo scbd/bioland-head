@@ -87,7 +87,6 @@
     </div>
 </template>
 <script setup>
-    import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
     import { TransitionGroup } from 'vue';
     
     const   meStore   = useMeStore();
@@ -165,14 +164,13 @@
     
     // Build the query object once at setup time (non-reactive for initial fetch)
     // Use current reactive values for realm/realms at mount time
-    // IMPORTANT: Override locale and localizedHost with current i18n locale to ensure
+    // IMPORTANT: Override locale with current i18n locale to ensure
     // correct locale is sent to API, especially after language switch navigation
     // When schemaOnly=true, don't include realm/realms to allow cross-realm schema searches
     const staticQuery = {
         ...initialQuery,
         ...siteStore.params,
         locale: locale.value,
-        localizedHost: `${siteStore.host}/${drupalPathPrefix(locale.value)}`,
         freeText: initialQuery?.freeText || '',
         page: initialQuery?.page || 1,
         rowsPerPage: initialQuery?.rowsPerPage || 10,

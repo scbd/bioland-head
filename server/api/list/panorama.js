@@ -1,3 +1,4 @@
+import { mergeQueryIntoContext } from '../../utils/merge-query-into-context';
 import { stripHtml } from "string-strip-html";
 import { smartTruncate } from '~~/shared/utils/text';
 
@@ -6,7 +7,7 @@ export default cachedEventHandler(async (event) => {
             const query            = getQuery(event);
             const ctx              = await useRequestContext(event);
 
-            const { locale, countries } = { ...ctx, ...query }
+            const { locale, countries } = mergeQueryIntoContext(ctx, query)
 
             const { panoramaKey }  = useRuntimeConfig();
             const panoLocales      = ['en', 'fr', 'es'];

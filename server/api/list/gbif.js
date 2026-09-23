@@ -1,9 +1,10 @@
+import { mergeQueryIntoContext } from '../../utils/merge-query-into-context';
 export default defineCachedEventHandler(async (event) => {
         try{
             const query            = getQuery(event);
             const ctx              = await useRequestContext(event);
 
-            const { countries:c, country } = { ...ctx, ...query }
+            const { countries:c, country } = mergeQueryIntoContext(ctx, query)
 
             // Ensure countries is an array, fallback to country if available
             const countriesArray = Array.isArray(c) ? c : (c ? [c] : (country ? [country] : []));

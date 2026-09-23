@@ -1,3 +1,4 @@
+import { mergeQueryIntoContext } from '../../utils/merge-query-into-context';
 import clone from 'lodash.clonedeep';
 
 export default defineCachedEventHandler(
@@ -8,7 +9,8 @@ export default defineCachedEventHandler(
 
         const promises = [];
         const schemas = ["nationalTarget7"];
-        const allCountries = { ...ctx, ...query }.countries;
+        const merged = mergeQueryIntoContext(ctx, query);
+        const allCountries = merged.countries;
         const countryMap = {};
 
         for (const country of Array.isArray(allCountries)
@@ -17,8 +19,13 @@ export default defineCachedEventHandler(
             const countries = [country];
 
             promises.push(
+            // BL-1135 D1: getAllBySchemas caches on multiSiteCode+siteCode+locale+schemas+countries
+            // only (see server/utils/cbd-index.js). Passing `merged` here would leak client query
+            // keys (freeText/filters/page) into the cached upstream body under a cache key that
+            // ignores them, so a client-filtered result could be served to the next unfiltered
+            // request. Build the argument from ctx only.
             getAllBySchemas(
-                { ...ctx, ...query, countries },
+                { ...ctx, countries },
                 schemas,
                 countries,
             ).then((response) => {

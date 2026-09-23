@@ -48,7 +48,6 @@ import { Pagination } from 'swiper/modules';
 import { useWindowSize } from '@vueuse/core';
 import 'swiper/css';
 import clone from 'lodash.clonedeep';
-import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
 
 const swiperRef = ref(null);
 
@@ -113,7 +112,6 @@ const query = computed(() =>
     clone({
         ...siteStore.params,
         locale: locale.value,
-        localizedHost: `${siteStore.host}/${drupalPathPrefix(locale.value)}`,
     })
 );
 

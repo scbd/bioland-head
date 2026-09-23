@@ -1,9 +1,10 @@
+import { mergeQueryIntoContext } from '../../utils/merge-query-into-context';
 
 export default defineCachedEventHandler(
   async (event) => {
         try {
         const ctx = await useRequestContext(event);
-        const receivedQuery = { ...ctx, ...getQuery(event) };
+        const receivedQuery = mergeQueryIntoContext(ctx, getQuery(event));
         const query = getQueryString(receivedQuery);
         const response = await $indexFetch(query);
 

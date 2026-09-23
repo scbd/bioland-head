@@ -1,3 +1,4 @@
+import { mergeQueryIntoContext } from '../../utils/merge-query-into-context';
 /**
  * Retrieves Clearing-House Mechanism listings by merging the incoming request
  * query parameters with the contextual site metadata and forwarding the payload
@@ -12,7 +13,7 @@ export default defineEventHandler(async (event) => {
             const query            = getQuery   (event);
             const ctx              = await useRequestContext(event);
 
-            return await queryScbdIndex ({ ...ctx, ...query });
+            return await queryScbdIndex (mergeQueryIntoContext(ctx, query));
         }
         catch (e) {
             passError(event, e);
