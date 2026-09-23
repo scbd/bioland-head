@@ -62,7 +62,7 @@
         </div>
         <div v-if="tags?.countries?.length" class="mb-2">
             <h5 >{{t("Countries")}}</h5>
-            <section v-for="(aCountry,i) in tags.countries" :key="i" class="mb-1">
+            <section v-for="(aCountry,i) in visibleTags(tags.countries, expanded.countries)" :key="i" class="mb-1">
                 <NuxtLink   :to="`https://www.cbd.int/countries/?country=${aCountry.identifier}`" target="_blank" external>
                     
                     <span   :style="bgStyle" class="badge text-wrap  me-1 w-100">
@@ -70,16 +70,25 @@
                         <br>{{t(aCountry.identifier)}}</span>
                 </NuxtLink>
             </section>
+            <div v-if="hasHiddenTags(tags.countries)" class="text-center">
+                <button type="button" class="btn btn-link btn-sm p-0 more-toggle" :aria-expanded="expanded.countries" :aria-label="`${expanded.countries ? t('Show less') : t('Show more')}: ${t('Countries')}`" @click="expanded.countries = !expanded.countries">{{ expanded.countries ? t('Show less') : '&hellip;' }}</button>
+            </div>
         </div>
         <div v-if="tags?.subjects?.length" class="mb-2">
             <h5 >{{t("Thematic Areas")}}</h5>
             
-            <span  v-for="(subject,i) in tags.subjects" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ t(subject.identifier) }}</span>
+            <span  v-for="(subject,i) in visibleTags(tags.subjects, expanded.subjects)" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ t(subject.identifier) }}</span>
+            <div v-if="hasHiddenTags(tags.subjects)" class="text-center">
+                <button type="button" class="btn btn-link btn-sm p-0 more-toggle" :aria-expanded="expanded.subjects" :aria-label="`${expanded.subjects ? t('Show less') : t('Show more')}: ${t('Thematic Areas')}`" @click="expanded.subjects = !expanded.subjects">{{ expanded.subjects ? t('Show less') : '&hellip;' }}</button>
+            </div>
         </div>
         <div v-if="tags?.bchSubjects?.length" class="mb-2">
             <h5 >{{t("Biosafety Thematic Areas")}}</h5>
             
-            <span  v-for="(subject,i) in tags.bchSubjects" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ t(subject.identifier) }}</span>
+            <span  v-for="(subject,i) in visibleTags(tags.bchSubjects, expanded.bchSubjects)" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ t(subject.identifier) }}</span>
+            <div v-if="hasHiddenTags(tags.bchSubjects)" class="text-center">
+                <button type="button" class="btn btn-link btn-sm p-0 more-toggle" :aria-expanded="expanded.bchSubjects" :aria-label="`${expanded.bchSubjects ? t('Show less') : t('Show more')}: ${t('Biosafety Thematic Areas')}`" @click="expanded.bchSubjects = !expanded.bchSubjects">{{ expanded.bchSubjects ? t('Show less') : '&hellip;' }}</button>
+            </div>
         </div>
     </div>
 </template>
@@ -99,6 +108,7 @@
     });
 
     const {  getGbfUrl, tags }   = useDocumentHelpers(pageStore.page);
+    const   expanded        = reactive({ countries: false, subjects: false, bchSubjects: false });
 </script>
 
 <style lang="scss" scoped>
@@ -133,6 +143,16 @@ h5{
 }
 .popper{
     max-width: 50% !important;
+}
+
+.more-toggle{
+    min-width: 24px;
+    min-height: 24px;
+    line-height: 1;
+    text-decoration: none;
+}
+.more-toggle[aria-expanded="false"]{
+    font-size: 1.25rem;
 }
 
 .badge.block-badge {

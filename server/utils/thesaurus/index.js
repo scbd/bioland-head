@@ -1,6 +1,7 @@
 // NOTE: Do NOT re-export from TS modules here - Nuxt auto-imports them directly
 // Re-exporting causes "Duplicated imports" warnings during build
 // Individual exports like config.ts, fetcher.ts, sanitizers.ts, etc. are auto-imported by Nuxt
+import { isNt7Document, toNt7Tag } from './nt7.js';
 
 export const getThesaurusByKey = defineCachedFunction(
   async (event, keysRaw) => {
@@ -316,6 +317,13 @@ export async function mapTagsByType(tags) {
 
     for (const tag of tags) {
         if (!tag?.identifier) continue;
+
+        // ort-nt7-* keys resolve to whole ORT documents keyed by a GUID, which no pattern or
+        // domain lookup recognises - map them before the not-found cache can swallow them.
+        if (isNt7Document(tag)) {
+            (map.nt7 ??= []).push(toNt7Tag(tag));
+            continue;
+        }
 
         // Skip identifiers already known to be not found
         if (await isIdentifierNotFound(tag.identifier)) continue;
