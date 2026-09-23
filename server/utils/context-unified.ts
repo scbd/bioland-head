@@ -603,7 +603,10 @@ async function buildSiteContext(params: { siteCode: string; locale: string; conf
     homePath = settings.homePath;
   } catch (e) {
     // Summary only: the error's message carries the api-key URL and its data a full HTML page.
-    consola.error(`Failed to fetch site settings for ${siteCode} (${locale}):`, describeError(e));
+    // A memo hit (BL-1122) did not re-ask Drupal, so it logs once as a short line, not a
+    // full error every render.
+    if (e?.remembered) consola.debug(`Site settings fetch skipped for ${siteCode} (${locale}), recent failure remembered:`, describeError(e));
+    else consola.error(`Failed to fetch site settings for ${siteCode} (${locale}):`, describeError(e));
     // Non-critical - continue without site settings
   }
 

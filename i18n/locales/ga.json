@@ -935,16 +935,7 @@
   "Selected": "Roghnaithe",
   "In Progress": "Ar siúl",
   "Testing": "Tástáil",
-  "Type": "Cineál",
-  "Key": "Eochair",
-  "Summary": "Achoimre",
-  "Assignee": "Sannaitheoir",
-  "Priority": "Tosaíocht",
-  "Progress": "Dul chun cinn",
   "Created": "Cruthaithe",
-  "Unassigned": "Neamhshannaithe",
-  "No description available": "Níl aon tuairisc ar fáil",
-  "Work Overview": "Forbhreathnú Obair",
   "Bug": "Bug",
   "Task": "Tasc",
   "Story": "Scéal",
@@ -961,7 +952,6 @@
   "Medium": "Meánach",
   "Low": "Íseal",
   "Lowest": "Is ísle",
-  "Selected For Development": "Roghnaithe le haghaidh Forbartha",
   "View More ": {
     "": {
       "": {

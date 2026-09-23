@@ -935,16 +935,7 @@
   "Selected": "Seçilmiş",
   "In Progress": "Tərəqqi davam edir",
   "Testing": "Test",
-  "Type": "Növ",
-  "Key": "Açar",
-  "Summary": "Xülasə",
-  "Assignee": "Sifariş verən",
-  "Priority": "Prioritet",
-  "Progress": "Tərəqqi",
   "Created": "Yaradılıb",
-  "Unassigned": "Təyin olunmamışdır",
-  "No description available": "Təsvir yoxdur",
-  "Work Overview": "İşə ümumi baxış",
   "Bug": "Səhv",
   "Task": "Tapşırıq",
   "Story": "Hekayə",
@@ -961,7 +952,6 @@
   "Medium": "Orta",
   "Low": "Aşağı",
   "Lowest": "Ən aşağı",
-  "Selected For Development": "İnkişaf üçün seçilmişdir",
   "View More ": {
     "": {
       "": {

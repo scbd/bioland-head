@@ -935,16 +935,7 @@
   "Selected": "Избрани",
   "In Progress": "Во тек",
   "Testing": "Тестирање",
-  "Type": "Тип",
-  "Key": "Клучни",
-  "Summary": "Резиме",
-  "Assignee": "Цесинатор",
-  "Priority": "Приоритет",
-  "Progress": "Напредок",
   "Created": "Создадено",
-  "Unassigned": "Недоделени",
-  "No description available": "Нема достапен опис",
-  "Work Overview": "Преглед на работа",
   "Bug": "Бубачка",
   "Task": "Задача",
   "Story": "Приказна",
@@ -961,7 +952,6 @@
   "Medium": "Среден",
   "Low": "Ниско",
   "Lowest": "Најниско",
-  "Selected For Development": "Избрани за развој",
   "View More ": {
     "": {
       "": {

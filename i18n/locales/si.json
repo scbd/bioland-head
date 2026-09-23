@@ -935,16 +935,7 @@
   "Selected": "තෝරාගත්",
   "In Progress": "ක්රියාත්මක වෙමින් පවතී",
   "Testing": "පරීක්ෂා කිරීම",
-  "Type": "වර්ගය",
-  "Key": "යතුර",
-  "Summary": "සාරාංශය",
-  "Assignee": "පැවරුම්කරු",
-  "Priority": "ප්රමුඛතාව",
-  "Progress": "ප්රගතිය",
   "Created": "නිර්මාණය කරන ලදි",
-  "Unassigned": "පවරා නොගත්",
-  "No description available": "විස්තරයක් නොමැත",
-  "Work Overview": "වැඩ දළ විශ්ලේෂණය",
   "Bug": "දෝෂ",
   "Task": "කාර්යය",
   "Story": "කතාව",
@@ -961,7 +952,6 @@
   "Medium": "මධ්යම",
   "Low": "අඩු",
   "Lowest": "අඩුම",
-  "Selected For Development": "සංවර්ධනය සඳහා තෝරාගත්",
   "View More ": {
     "": {
       "": {

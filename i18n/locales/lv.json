@@ -935,16 +935,7 @@
   "Selected": "Izvēlēts",
   "In Progress": "Notiek",
   "Testing": "Testēšana",
-  "Type": "Veids",
-  "Key": "Atslēga",
-  "Summary": "Kopsavilkums",
-  "Assignee": "Cesicionārs",
-  "Priority": "Prioritāte",
-  "Progress": "Progress",
   "Created": "Izveidots",
-  "Unassigned": "Nepiešķirts",
-  "No description available": "Apraksts nav pieejams",
-  "Work Overview": "Darba pārskats",
   "Bug": "Kļūda",
   "Task": "Uzdevums",
   "Story": "Stāsts",
@@ -961,7 +952,6 @@
   "Medium": "Vidējs",
   "Low": "Zems",
   "Lowest": "Zemākā",
-  "Selected For Development": "Izvēlēts attīstībai",
   "View More ": {
     "": {
       "": {

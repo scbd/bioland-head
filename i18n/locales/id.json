@@ -935,16 +935,7 @@
   "Selected": "Dipilih",
   "In Progress": "Sedang Berjalan",
   "Testing": "Pengujian",
-  "Type": "Mengetik",
-  "Key": "Kunci",
-  "Summary": "Ringkasan",
-  "Assignee": "Penerima",
-  "Priority": "Prioritas",
-  "Progress": "Kemajuan",
   "Created": "Dibuat",
-  "Unassigned": "Tidak ditugaskan",
-  "No description available": "Tidak ada deskripsi yang tersedia",
-  "Work Overview": "Ikhtisar Pekerjaan",
   "Bug": "Bug",
   "Task": "Tugas",
   "Story": "Cerita",
@@ -961,7 +952,6 @@
   "Medium": "Sedang",
   "Low": "Rendah",
   "Lowest": "Terendah",
-  "Selected For Development": "Dipilih Untuk Pengembangan",
   "View More ": {
     "": {
       "": {

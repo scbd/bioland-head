@@ -935,16 +935,7 @@
   "Selected": "Dewiswyd",
   "In Progress": "Ar y gweill",
   "Testing": "Profi",
-  "Type": "Math",
-  "Key": "Allwedd",
-  "Summary": "Crynodeb",
-  "Assignee": "Asewyddwr",
-  "Priority": "Blaenoriaeth",
-  "Progress": "Cynnydd",
   "Created": "Crëwyd",
-  "Unassigned": "Heb ei neilltuo",
-  "No description available": "Dim disgrifiad ar gael",
-  "Work Overview": "Trosolwg Gwaith",
   "Bug": "Bug",
   "Task": "Tasg",
   "Story": "Stori",
@@ -961,7 +952,6 @@
   "Medium": "Canolig",
   "Low": "Isel",
   "Lowest": "Isaf",
-  "Selected For Development": "Dewiswyd ar gyfer Datblygu",
   "View More ": {
     "": {
       "": {

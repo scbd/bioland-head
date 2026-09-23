@@ -935,16 +935,7 @@
   "Selected": "Sélectionné",
   "In Progress": "En cours",
   "Testing": "Tests",
-  "Type": "Tapez",
-  "Key": "Clé",
-  "Summary": "Résumé",
-  "Assignee": "Cessionnaire",
-  "Priority": "Priorité",
-  "Progress": "Progrès",
   "Created": "Créé",
-  "Unassigned": "Non assigné",
-  "No description available": "Aucune description disponible",
-  "Work Overview": "Aperçu du travail",
   "Bug": "Bug",
   "Task": "Tâche",
   "Story": "L'histoire",
@@ -961,7 +952,6 @@
   "Medium": "Moyen",
   "Low": "Faible",
   "Lowest": "Le plus bas",
-  "Selected For Development": "Sélectionné pour le développement",
   "View More ": {
     "": {
       "": {
