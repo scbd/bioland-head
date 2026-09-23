@@ -935,16 +935,7 @@
   "Selected": "የተመረጠ",
   "In Progress": "በሂደት ላይ",
   "Testing": "ሙከራ",
-  "Type": "አይነት",
-  "Key": "ቁልፍ",
-  "Summary": "ማጠቃለያ",
-  "Assignee": "ተመላካይ",
-  "Priority": "ቅድሚያ",
-  "Progress": "እድገት",
   "Created": "የተፈጠረ",
-  "Unassigned": "ያልተመደበ",
-  "No description available": "ምንም መግለጫ የለም",
-  "Work Overview": "የሥራ እይታ",
   "Bug": "ስህተት",
   "Task": "ተግባር",
   "Story": "ታሪክ",
@@ -961,7 +952,6 @@
   "Medium": "መካከለኛ",
   "Low": "ዝቅተኛ",
   "Lowest": "ዝቅተኛ",
-  "Selected For Development": "ለልማት ተመረጠ",
   "View More ": {
     "": {
       "": {

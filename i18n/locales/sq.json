@@ -935,16 +935,7 @@
   "Selected": "përzgjedhur",
   "In Progress": "Në progres",
   "Testing": "Testimi",
-  "Type": "Lloji",
-  "Key": "Çelësi",
-  "Summary": "Përmbledhje",
-  "Assignee": "Përcjellësi",
-  "Priority": "Prioritet",
-  "Progress": "Progresi",
   "Created": "Krijuar",
-  "Unassigned": "I papërcaktuar",
-  "No description available": "Nuk ka përshkrim në dispozicion",
-  "Work Overview": "Përmbledhje e punës",
   "Bug": "Bug",
   "Task": "Detyra",
   "Story": "Tregimi",
@@ -961,7 +952,6 @@
   "Medium": "Mesatare",
   "Low": "I ulët",
   "Lowest": "Më i ulët",
-  "Selected For Development": "Zgjedhur për zhvillim",
   "View More ": {
     "": {
       "": {

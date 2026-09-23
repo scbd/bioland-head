@@ -935,16 +935,7 @@
   "Selected": "선택됨",
   "In Progress": "진행 중",
   "Testing": "테스팅",
-  "Type": "타입",
-  "Key": "키",
-  "Summary": "요약",
-  "Assignee": "양수인",
-  "Priority": "우선순위",
-  "Progress": "진행률",
   "Created": "생성됨",
-  "Unassigned": "할당되지 않음",
-  "No description available": "설명이 없습니다",
-  "Work Overview": "작업 개요",
   "Bug": "버그",
   "Task": "태스크",
   "Story": "스토리",
@@ -961,7 +952,6 @@
   "Medium": "미디엄",
   "Low": "낮음",
   "Lowest": "최하",
-  "Selected For Development": "개발 대상으로 선정",
   "View More ": {
     "": {
       "": {

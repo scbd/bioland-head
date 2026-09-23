@@ -935,16 +935,7 @@
   "Selected": "തിരഞ്ഞെടുത്തു",
   "In Progress": "പുരോഗമിക്കുന്നു",
   "Testing": "ടെസ്റ്റിംഗ്",
-  "Type": "ടൈപ്പ് ചെയ്യുക",
-  "Key": "കീ",
-  "Summary": "സംഗ്രഹം",
-  "Assignee": "ആസിഗ്നേയർ",
-  "Priority": "മുൻഗണന",
-  "Progress": "പുരോഗതി",
   "Created": "സൃഷ്ടിച്ചു",
-  "Unassigned": "നിയുക്തമല്ലാത്ത",
-  "No description available": "വിവരണം ലഭ്യമല്ല",
-  "Work Overview": "ജോലി അവലോകനം",
   "Bug": "ബഗ്",
   "Task": "ടാസ്ക്",
   "Story": "കഥ",
@@ -961,7 +952,6 @@
   "Medium": "ഇടത്തരം",
   "Low": "താഴ്ന്ന",
   "Lowest": "ഏറ്റവും താഴ്ന്ന",
-  "Selected For Development": "വികസനത്തിനായി തിരഞ്ഞെടുത്തു",
   "View More ": {
     "": {
       "": {

@@ -935,16 +935,7 @@
   "Selected": "Избрани",
   "In Progress": "В процес на изпълнение",
   "Testing": "Тестване",
-  "Type": "Тип",
-  "Key": "Ключ",
-  "Summary": "Резюме",
-  "Assignee": "Възложител",
-  "Priority": "Приоритет",
-  "Progress": "Напредък",
   "Created": "Създаден",
-  "Unassigned": "Невъзложен",
-  "No description available": "Няма налично описание",
-  "Work Overview": "Общ преглед на работата",
   "Bug": "Гъб",
   "Task": "Задача",
   "Story": "История",
@@ -961,7 +952,6 @@
   "Medium": "Среден",
   "Low": "Ниско",
   "Lowest": "Най-ниско",
-  "Selected For Development": "Избран за развитие",
   "View More ": {
     "": {
       "": {

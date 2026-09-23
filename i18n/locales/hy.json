@@ -935,16 +935,7 @@
   "Selected": "Ընտրված",
   "In Progress": "Ընթացքում",
   "Testing": "Թեստավորում",
-  "Type": "Տեսակ",
-  "Key": "բանալին",
-  "Summary": "Ամփոփում",
-  "Assignee": "Վերահանձնողը",
-  "Priority": "Առաջնահերթություն",
-  "Progress": "Առաջընթաց",
   "Created": "Ստեղծվել է",
-  "Unassigned": "Չնշանակված",
-  "No description available": "Նկարագրություն չկա",
-  "Work Overview": "Աշխատանքի ակնարկ",
   "Bug": "Սխալ",
   "Task": "Առաջադրանք",
   "Story": "Պատմություն",
@@ -961,7 +952,6 @@
   "Medium": "Միջին",
   "Low": "Ցածր",
   "Lowest": "Ամենացածր",
-  "Selected For Development": "Ընտրված է զարգացման համար",
   "View More ": {
     "": {
       "": {

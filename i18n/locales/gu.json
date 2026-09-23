@@ -935,16 +935,7 @@
   "Selected": "પસંદ કરેલ",
   "In Progress": "પ્રગતિમાં",
   "Testing": "પરીક્ષણ",
-  "Type": "પ્રકાર",
-  "Key": "કી",
-  "Summary": "સારાંશ",
-  "Assignee": "સોંપનાર",
-  "Priority": "પ્રાથમિકતા",
-  "Progress": "પ્રગતિ",
   "Created": "બનાવેલ",
-  "Unassigned": "અસોંપેલ",
-  "No description available": "કોઈ વર્ણન ઉપલબ્ધ નથી",
-  "Work Overview": "કાર્ય વિહંગાવલોકન",
   "Bug": "બગ",
   "Task": "કાર્ય",
   "Story": "વાર્તા",
@@ -961,7 +952,6 @@
   "Medium": "મધ્યમ",
   "Low": "નીચા",
   "Lowest": "સૌથી નીચો",
-  "Selected For Development": "વિકાસ માટે પસંદ કરેલ",
   "View More ": {
     "": {
       "": {

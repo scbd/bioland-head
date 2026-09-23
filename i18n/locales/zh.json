@@ -935,16 +935,7 @@
   "Selected": "已选中",
   "In Progress": "进行中",
   "Testing": "正在测试",
-  "Type": "类型",
-  "Key": "钥匙",
-  "Summary": "摘要",
-  "Assignee": "受让人",
-  "Priority": "优先级",
-  "Progress": "进展",
   "Created": "已创建",
-  "Unassigned": "未分配",
-  "No description available": "没有可用的描述",
-  "Work Overview": "工作概述",
   "Bug": "错误",
   "Task": "任务",
   "Story": "故事",
@@ -961,7 +952,6 @@
   "Medium": "中等",
   "Low": "低",
   "Lowest": "最低",
-  "Selected For Development": "入选开发",
   "View More ": {
     "": {
       "": {

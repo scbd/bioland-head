@@ -935,16 +935,7 @@
   "Selected": "নির্বাচিত",
   "In Progress": "অগ্রগতিতে",
   "Testing": "টেস্টিং",
-  "Type": "টাইপ",
-  "Key": "চাবি",
-  "Summary": "সংক্ষিপ্ত",
-  "Assignee": "দায়িত্বপ্রাপ্ত",
-  "Priority": "অগ্রাধিকার",
-  "Progress": "অগ্রগতি",
   "Created": "তৈরি করা হয়েছে",
-  "Unassigned": "অনির্ধারিত",
-  "No description available": "কোন বিবরণ উপলব্ধ নেই",
-  "Work Overview": "কাজের ওভারভিউ",
   "Bug": "বাগ",
   "Task": "টাস্ক",
   "Story": "গল্প",
@@ -961,7 +952,6 @@
   "Medium": "মাঝারি",
   "Low": "নিম্ন",
   "Lowest": "সর্বনিম্ন",
-  "Selected For Development": "উন্নয়নের জন্য নির্বাচিত",
   "View More ": {
     "": {
       "": {

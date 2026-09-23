@@ -935,16 +935,7 @@
   "Selected": "ಆಯ್ಕೆಮಾಡಲಾಗಿದೆ",
   "In Progress": "ಪ್ರಗತಿಯಲ್ಲಿದೆ",
   "Testing": "ಪರೀಕ್ಷೆ",
-  "Type": "ಟೈಪ್ ಮಾಡಿ",
-  "Key": "ಕೀ",
-  "Summary": "ಸಾರಾಂಶ",
-  "Assignee": "ನಿಯೋಜಿಸುವವರು",
-  "Priority": "ಆದ್ಯತೆ",
-  "Progress": "ಪ್ರಗತಿ",
   "Created": "ರಚಿಸಲಾಗಿದೆ",
-  "Unassigned": "ನಿಯೋಜಿಸದ",
-  "No description available": "ಯಾವುದೇ ವಿವರಣೆ ಲಭ್ಯವಿಲ್ಲ",
-  "Work Overview": "ಕೆಲಸದ ಅವಲೋಕನ",
   "Bug": "ದೋಷ",
   "Task": "ಕಾರ್ಯ",
   "Story": "ಕಥೆ",
@@ -961,7 +952,6 @@
   "Medium": "ಮಧ್ಯಮ",
   "Low": "ಕಡಿಮೆ",
   "Lowest": "ಕಡಿಮೆ",
-  "Selected For Development": "ಅಭಿವೃದ್ಧಿಗಾಗಿ ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ",
   "View More ": {
     "": {
       "": {

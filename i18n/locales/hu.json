@@ -935,16 +935,7 @@
   "Selected": "Kiválasztott",
   "In Progress": "Folyamatban",
   "Testing": "Tesztelés",
-  "Type": "Típus",
-  "Key": "Kulcs",
-  "Summary": "Összefoglaló",
-  "Assignee": "Átruházott",
-  "Priority": "Prioritás",
-  "Progress": "Előrelépés",
   "Created": "Létrehozott",
-  "Unassigned": "Nem hozzárendelt",
-  "No description available": "Nincs elérhető leírás",
-  "Work Overview": "Munka áttekintése",
   "Bug": "Hiba",
   "Task": "Feladat",
   "Story": "Történet",
@@ -961,7 +952,6 @@
   "Medium": "Közepes",
   "Low": "Alacsony",
   "Lowest": "Legalacsonyabb",
-  "Selected For Development": "Fejlesztésre kiválasztva",
   "View More ": {
     "": {
       "": {
