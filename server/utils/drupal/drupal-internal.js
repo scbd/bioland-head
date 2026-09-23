@@ -24,6 +24,10 @@ let transport; // undefined = not built yet, null = disabled
 /**
  * Record a tenant origin (e.g. `https://ca.chm-cbd.net`) as a Drupal host.
  *
+ * Hosts are never removed: after a DMSM redirect change A -> B, A stays routed internally
+ * until restart. Accepted, since every host here came from DMSM for this same Drupal, so
+ * the internal service still answers for A exactly as the public edge would.
+ *
  * @param {string} origin - Canonical Site host from getCanonicalHost / getGeneratedHostname.
  */
 export const registerDrupalHost = (origin) => {
