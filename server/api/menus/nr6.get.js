@@ -7,7 +7,7 @@ export default defineCachedEventHandler(
 
             const resp = await $indexFetch(queryString, ctx);
 
-            return mapByCountry(resp, ctx);
+            return await mapByCountry(resp, ctx);
         } catch (e) {
             passError(event, e);
         }

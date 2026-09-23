@@ -7,6 +7,7 @@ export default defineCachedEventHandler(
         const query = getQueryString(receivedQuery);
         const response = await $indexFetch(query);
 
+        // await-guard: allow-sync-return - mapDocs/filterDocs are plain sync functions; .map/.filter never return a promise
         return response?.docs?.length
             ? response.docs
                 .map(mapDocs(receivedQuery.locale))
