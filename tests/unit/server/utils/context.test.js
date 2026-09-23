@@ -274,6 +274,15 @@ describe('Context Utilities', () => {
       })
     })
 
+    it('uses the Drupal fil prefix in localizedHost while ctx.locale stays tl (BL-1126)', async () => {
+      config.locales = ['en', 'tl']
+      runtime.locales = [{ code: 'en' }, { code: 'tl' }]
+      const context = await contextModule.useRequestContext(eventFor({ host: 'be.localhost' }, '/tl/page'))
+
+      expect(context).toMatchObject({ locale: 'tl', localizedHost: 'https://be.test.example.com/fil' })
+      expect(getSiteSettings).toHaveBeenCalledWith(expect.objectContaining({ locale: 'tl', localizedHost: 'https://be.test.example.com/fil' }), expect.anything())
+    })
+
     it('drops a bioland.settings key head does not consume', async () => {
       config.runTime = { biolandSettings: { show_home: true, _core: { default_config_hash: 'abc' } } }
       expect((await contextModule.useRequestContext(eventFor({ host: 'be.localhost' }))).biolandSettings).toEqual({})

@@ -108,6 +108,14 @@ describe('cross-locale alias fallback (BL-1111)', () => {
     await expect(drupalPage.getPageData({ ...baseCtx }, event)).resolves.toEqual({ redirect: '/vi/mang-chm' })
   })
 
+  it('asks Drupal under the fil prefix for app locale tl and redirects to /tl (BL-1126)', async () => {
+    owners['/tl-only'] = 'fil'
+    const ctx = { ...baseCtx, locales: ['en', 'tl'], path: '/en/tl-only' }
+
+    await expect(drupalPage.getPageData(ctx, event)).resolves.toEqual({ redirect: '/tl/tl-only' })
+    expect(sweepCalls().map(([uri]) => new URL(uri).pathname)).toEqual(['/fil/router/translate-path'])
+  })
+
   it('asks every other locale at once, silently, and never the requested one', async () => {
     await drupalPage.getPageData({ ...baseCtx }, event)
 

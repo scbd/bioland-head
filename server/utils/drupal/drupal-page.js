@@ -1,6 +1,7 @@
 
 import { createHash } from 'node:crypto';
 import { camelCase } from 'change-case/keys';
+import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
 
 const localizationExceptionPaths =  [];
 
@@ -253,7 +254,7 @@ const aliasMisses = boundedTtlMap(ALIAS_MISS_MAX_ENTRIES);
  * @returns {Promise<{locale: string, entityPath: string}|false|{error: Error}>}
  */
 async function translatePathInLocale(host, locale, aliasPath, signal) {
-    const uri = `${host}/${locale}/router/translate-path?path=${encodeURIComponent(aliasPath)}`;
+    const uri = `${host}/${drupalPathPrefix(locale)}/router/translate-path?path=${encodeURIComponent(aliasPath)}`;
 
     try {
         // silentError: a 404 here is the expected answer for most locales, not an error line.

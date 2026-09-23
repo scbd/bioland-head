@@ -1,3 +1,5 @@
+import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
+
 export const useSiteStore = defineStore('site', {
     state: () => ({ i18nStrategy: 'prefix', locale  : undefined, identifier                : undefined, siteCode                  : undefined, pageIdentifiers           : undefined, defaultLocale             : undefined, gaiaApi                   : undefined, drupalMultisiteIdentifier : undefined, multiSiteCode             : undefined, baseHost                  : undefined, logo                      : undefined, logoDimensions            : undefined, config                    : undefined, name                      : undefined, redirect                  : undefined, drupalInternalRevisionId : undefined, biolandSettings: undefined, env: undefined, }),
     actions:{
@@ -90,7 +92,7 @@ export const useSiteStore = defineStore('site', {
             // Guard against incomplete initialization during SSR
             if (!siteCode || !baseHost) return '';
         
-            const pathLocale = ignoreLocale? '' : `/${locale}`;
+            const pathLocale = ignoreLocale? '' : `/${drupalPathPrefix(locale)}`;
             // The helper owns the redirect decision (env gate plus validation), so ask it
             // first and encode the generated components only when it falls back to them.
             // Leave a redirect Host untouched.

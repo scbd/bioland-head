@@ -1,3 +1,5 @@
+import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
+
 
 export default defineEventHandler(async (event) => {
 
@@ -26,7 +28,7 @@ export default defineEventHandler(async (event) => {
         async function postComment(event){
             const { locale: localeCtx } = await useRequestContext(event);
             const   locale              = localeChosen || localeCtx;
-            const   uri                 = `${context.host}/${locale}${typeMap[entityType]}`;
+            const   uri                 = `${context.host}/${drupalPathPrefix(locale)}${typeMap[entityType]}`;
             const   method              = 'post';
 
 
