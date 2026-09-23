@@ -2,6 +2,7 @@
 import { createHash } from 'node:crypto';
 import { camelCase } from 'change-case/keys';
 import { appPathFromDrupalPath, drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
+import { boundedTtlMap } from '../bounded-ttl-map.js';
 
 const localizationExceptionPaths =  [];
 
@@ -42,7 +43,10 @@ const logOnce = createRateLimiter();
 // Marks an error already logged by an inner catch so an outer catch does not log it again.
 const LOGGED = Symbol('drupal-page.logged');
 
+// A memo-served uuid miss (BL-1122) is always expected, whatever its status: it is a
+// repeat of an outcome Drupal already gave once, not a new failure to alarm on.
 const isExpectedFailure = (e) => e?.statusCode === 404 ||
+                                 e?.remembered ||
                                  (e?.statusCode === 503 && e?.statusMessage === 'Drupal login unavailable');
 
 /**
@@ -61,6 +65,45 @@ function logFailure(label, { siteCode, path }, e) {
 
 // Non-enumerable symbol: invisible to JSON serialization and to what callers read off the error.
 const markLogged = (error) => Object.defineProperty(error, LOGGED, { value: true });
+
+// A dangling reference (404) or an unpublished node (403) answers the same for ~5 minutes,
+// but BL-1065 keeps failures out of the shared cache, so each render re-asked Drupal
+// (BL-1122). Remember those two outcomes, keyed by the full by-UUID request URI (host,
+// locale, entity type, bundle, uuid, and any sub-path such as /field_attachments; query
+// excluded) in process only. Never 5xx or network errors, and never for a signed-in
+// request: an editor may be entitled to the unpublished node.
+const UUID_MISS_TTL_MS      = 5 * 60 * 1000;
+const UUID_MISS_MAX_ENTRIES = 1000;
+const uuidMisses            = boundedTtlMap(UUID_MISS_MAX_ENTRIES);
+
+// A 403 is only remembered when Drupal itself answered it as a JSON:API error document —
+// a proxy/WAF block or an IP ban on the head's egress answers with a plain 403 (no
+// JSON:API body) and must not be memo-served for 5 minutes after the block lifts.
+function isJsonApiErrorDocument(e) {
+    if (Array.isArray(e?.data?.errors)) return true;
+
+    const contentType = e?.response?.headers?.get?.('content-type') || '';
+    return contentType.includes('application/vnd.api+json');
+}
+
+export async function fetchEntityByUuid(uri, options) {
+    const key  = isAuthenticatedRequest(options?.headers) ? null : uri;
+    const miss = key && uuidMisses.get(key);
+
+    if (miss) {
+        const err = createError(miss);
+        err.remembered = true;
+        throw err;
+    }
+
+    try {
+        return await $fetch(uri, options);
+    } catch (e) {
+        if (key && (e?.statusCode === 404 || (e?.statusCode === 403 && isJsonApiErrorDocument(e))))
+            uuidMisses.set(key, { statusCode: e.statusCode, statusMessage: e.statusMessage }, UUID_MISS_TTL_MS);
+        throw e;
+    }
+}
 
 export async function getPageData(ctx, event){
     try{
@@ -81,7 +124,7 @@ export async function getPageData(ctx, event){
         const   query                     = getSearchParams(ctx, type, bundle);
         const   uri                       = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
-        const { data } = await $fetch(uri, $fetchBaseOptions({ query, headers }));
+        const { data } = await fetchEntityByUuid(uri, $fetchBaseOptions({ query, headers }));
 
         data.label = label;
 
@@ -108,7 +151,7 @@ export async function getPageData(ctx, event){
             }
         }
         
-        if(data.type === 'taxonomy_term--system_pages' && !data?.parent[0].id !== 'virtual' ) await getChildren(ctx, data);
+        if(isSystemPageWithParent(data)) await getChildren(ctx, data);
 
         return  await mapData(event, ctx)(data);
     }catch(e){
@@ -125,6 +168,17 @@ export async function getPageData(ctx, event){
     }
 
 }   
+
+// The original check here (`!data?.parent[0].id !== 'virtual'`) compared a boolean to a
+// string, so it was always true and threw whenever `parent` was empty. Front-end components
+// (app/components/page/list/tabs.vue, filter.vue) have always relied on `children` being
+// populated for system pages with a 'virtual' parent too (top-level pages fall back to
+// `children.length` to decide whether to render tabs), so this preserves that existing
+// behavior — fetch children for any system page that has a parent entry — while fixing the
+// crash on an empty `parent` array.
+export function isSystemPageWithParent(data){
+    return data?.type === 'taxonomy_term--system_pages' && !!data?.parent?.length;
+}
 
 async function getChildren(ctx, data){
     const { localizedHost }       = ctx;
@@ -164,7 +218,7 @@ export async function getPageDates(ctx){
     const query    = getSearchParams(ctx, type, bundle, );
     const uri      = `${localizedHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}`;
 
-    const { data } = await $fetch(uri, $fetchBaseOptions({ query }));
+    const { data } = await fetchEntityByUuid(uri, $fetchBaseOptions({ query }));
 
     const { changed, created, field_start_date } = data;
 
@@ -185,7 +239,7 @@ export async function getPageThumb(ctx){
     const query    = getSearchParams(defaultCtx, type, bundle, 'field_attachments');
     const uri      = `${sourceHost}/jsonapi/${encodeURIComponent(type)}/${encodeURIComponent(bundle)}/${encodeURIComponent(uuid)}/field_attachments`;
 
-    const { data } = await $fetch(uri, $fetchBaseOptions({ query }));
+    const { data } = await fetchEntityByUuid(uri, $fetchBaseOptions({ query }));
 
     return getThumbFiles(data,  { ...ctx, localizedHost: sourceHost })
 }
@@ -221,29 +275,6 @@ const ALIAS_NOT_FOUND = false;
 // shared in-flight sweep open indefinitely.
 const TRANSLATE_PATH_TIMEOUT_MS = 5000;
 const ALIAS_MISS_MAX_ENTRIES    = 1000;
-
-// Shared shape behind aliasMisses and aliasRedirects below: a bounded in-process map where
-// each entry expires on its own TTL, oldest entry evicted first once maxEntries is reached.
-function boundedTtlMap(maxEntries) {
-    const map = new Map();
-
-    return {
-        get(key) {
-            const entry = map.get(key);
-
-            if (!entry) return undefined;
-            if (Date.now() <= entry.expires) return entry.value;
-
-            map.delete(key);
-            return undefined;
-        },
-        set(key, value, ttlMs) {
-            map.delete(key);
-            if (map.size >= maxEntries) map.delete(map.keys().next().value);
-            map.set(key, { value, expires: Date.now() + ttlMs });
-        },
-    };
-}
 
 const aliasMisses = boundedTtlMap(ALIAS_MISS_MAX_ENTRIES);
 

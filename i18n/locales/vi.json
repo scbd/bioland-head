@@ -935,16 +935,7 @@
   "Selected": "Đã chọn",
   "In Progress": "Đang tiến hành",
   "Testing": "Thử nghiệm",
-  "Type": "Kiểu",
-  "Key": "Chìa khóa",
-  "Summary": "Tóm tắt",
-  "Assignee": "Người được chuyển nhượng",
-  "Priority": "Ưu tiên",
-  "Progress": "Tiến độ",
   "Created": "Đã tạo",
-  "Unassigned": "Chưa được gán",
-  "No description available": "Không có mô tả",
-  "Work Overview": "Tổng quan về công việc",
   "Bug": "Lỗi",
   "Task": "Nhiệm vụ",
   "Story": "Câu chuyện",
@@ -961,7 +952,6 @@
   "Medium": "Trung bình",
   "Low": "Thấp",
   "Lowest": "Thấp nhất",
-  "Selected For Development": "Được chọn để phát triển",
   "View More ": {
     "": {
       "": {

@@ -61,6 +61,7 @@
     "change-case": "5.4.4",
     "click-outside-vue3": "4.0.1",
     "consola": "3.4.2",
+    "ioredis": "5.8.2",
     "isomorphic-dompurify": "2.26.0",
     "javascript-time-ago": "2.5.11",
     "limax": "4.1.0",
@@ -84,6 +85,7 @@
     "string-strip-html": "13.4.13",
     "superagent": "10.2.3",
     "text-cusor-helper": "1.0.7",
+    "unstorage": "1.17.3",
     "uuid": "11.1.0",
     "vue-final-modal": "4.5.5",
     "vue3-popper": "1.5.0"

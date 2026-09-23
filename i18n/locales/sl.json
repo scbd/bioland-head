@@ -935,16 +935,7 @@
   "Selected": "Izbrano",
   "In Progress": "V teku",
   "Testing": "Testiranje",
-  "Type": "Vrsta",
-  "Key": "Ključ",
-  "Summary": "Povzetek",
-  "Assignee": "Prejemnik",
-  "Priority": "Prednostna naloga",
-  "Progress": "Napredek",
   "Created": "Ustvarjeno",
-  "Unassigned": "Nedodeljeno",
-  "No description available": "Opis ni na voljo",
-  "Work Overview": "Pregled dela",
   "Bug": "Napaka",
   "Task": "Naloga",
   "Story": "Zgodba",
@@ -961,7 +952,6 @@
   "Medium": "Srednje",
   "Low": "Nizka",
   "Lowest": "Najnižja",
-  "Selected For Development": "Izbrana za razvoj",
   "View More ": {
     "": {
       "": {

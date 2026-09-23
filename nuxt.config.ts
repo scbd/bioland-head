@@ -48,7 +48,6 @@ export default defineNuxtConfig({
     apiUserPass: process.env.API_USER_PASS,
     apiKey: process.env.API_KEY,
     panoramaKey: process.env.PANORAMA_KEY,
-    jiraToken: process.env.JIRA_TOKEN,
     // AWS Translate Configuration
     awsRegion: process.env.AWS_REGION || "us-east-1",
     awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -66,6 +65,9 @@ export default defineNuxtConfig({
       : 5,
     // Local dev: Drupal session cookie bypass (e.g., SSESSxxx=yyy)
     localDrupalSession: process.env.NUXT_LOCAL_DRUPAL_SESSION || "",
+    // NUXT_REDIS_URL (e.g. redis://redis:6379/1). Set: server/plugins/00.1.cache-storage.ts
+    // remounts the `cache` and `cache-clear` storage below onto Redis at startup. Empty: fs.
+    redisUrl: "",
     public: {
       isLocalHost:
         process.env.NUXT_PUBLIC_IS_LOCAL_HOST === "true" ? true : false,
@@ -251,6 +253,7 @@ export default defineNuxtConfig({
       cache: { driver: "fs", base: "./.nuxt/cache" },
       "cache-clear": { driver: "fs", base: "./.nuxt/cache/cache-clear" },
     },
+    // Fallback when NUXT_REDIS_URL is unset; replaced at runtime by server/plugins/00.1.cache-storage.ts.
     storage: {
       cache: { driver: "fs", base: storageBase },
       // Coordination markers for server/middleware/00.cache-clear.ts. Unmounted, this base

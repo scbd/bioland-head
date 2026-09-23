@@ -935,16 +935,7 @@
   "Selected": "Napili",
   "In Progress": "Sa Pag-unlad",
   "Testing": "Pagsubok",
-  "Type": "Uri",
-  "Key": "Susi",
-  "Summary": "Buod",
-  "Assignee": "Tagapagtanggap",
-  "Priority": "Priyoridad",
-  "Progress": "Pag-unlad",
   "Created": "Nilikha",
-  "Unassigned": "Hindi itinalaga",
-  "No description available": "Walang magagamit na paglalarawan",
-  "Work Overview": "Pangkalahatang-ideya",
   "Bug": "Bug",
   "Task": "Gawain",
   "Story": "Kuwento",
@@ -961,7 +952,6 @@
   "Medium": "Katamtamang",
   "Low": "Mababang",
   "Lowest": "Pinakamababang",
-  "Selected For Development": "Napili Para sa Pag-unlad",
   "View More ": {
     "": {
       "": {

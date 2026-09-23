@@ -935,16 +935,7 @@
   "Selected": "Valitud",
   "In Progress": "Käimasolevas",
   "Testing": "Testimine",
-  "Type": "Tüüp",
-  "Key": "Võti",
-  "Summary": "Kokkuvõte",
-  "Assignee": "Ülesandur",
-  "Priority": "Prioriteet",
-  "Progress": "Edusammud",
   "Created": "Loodud",
-  "Unassigned": "Määratud",
-  "No description available": "Kirjeldus puudub",
-  "Work Overview": "Töö ülevaade",
   "Bug": "Viga",
   "Task": "Ülesanne",
   "Story": "Lugu",
@@ -961,7 +952,6 @@
   "Medium": "Keskmine",
   "Low": "Madal",
   "Lowest": "Madalaim",
-  "Selected For Development": "Valitud arendamiseks",
   "View More ": {
     "": {
       "": {

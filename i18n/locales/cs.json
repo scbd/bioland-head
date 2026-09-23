@@ -935,16 +935,7 @@
   "Selected": "Vybráno",
   "In Progress": "Probíhá",
   "Testing": "Testování",
-  "Type": "Typ",
-  "Key": "Klíč",
-  "Summary": "Souhrn",
-  "Assignee": "Postoupenec",
-  "Priority": "Priorita",
-  "Progress": "Postup",
   "Created": "Vytvořeno",
-  "Unassigned": "Nepřiřazeno",
-  "No description available": "Žádný popis není k dispozici",
-  "Work Overview": "Přehled práce",
   "Bug": "Chyba",
   "Task": "Úkol",
   "Story": "Příběh",
@@ -961,7 +952,6 @@
   "Medium": "Střední",
   "Low": "Nízká",
   "Lowest": "Nejnižší",
-  "Selected For Development": "Vybráno pro vývoj",
   "View More ": {
     "": {
       "": {

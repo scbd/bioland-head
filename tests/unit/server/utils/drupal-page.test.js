@@ -9,7 +9,7 @@ vi.hoisted(() => {
 
 afterAll(() => vi.unstubAllGlobals())
 
-import { backfillAttachments, getSearchParams } from '../../../../server/utils/drupal/drupal-page.js'
+import { backfillAttachments, getSearchParams, isSystemPageWithParent } from '../../../../server/utils/drupal/drupal-page.js'
 
 // Test the isAliasPath helper function logic
 // Note: These tests verify the logic patterns since the actual function is private
@@ -123,6 +123,40 @@ describe('drupal-page utilities', () => {
       // including it returns 405.
       const search = getSearchParams(ctx, 'media', 'remote_video');
       expect(search.include).toBeUndefined();
+    });
+  });
+
+  // BL-1129: the original check (`!data?.parent[0].id !== 'virtual'`) compared a boolean to a
+  // string, so it was always true and threw on an empty `parent` array. `children` on a system
+  // page with a 'virtual' parent has always been populated too (front-end tabs/filter components
+  // fall back to it for top-level pages), so a real parent and a 'virtual' one both fetch children
+  // — only an empty/missing `parent` skips the fetch instead of throwing.
+  describe('isSystemPageWithParent', () => {
+    it('returns true for a system page with a real parent', () => {
+      const data = { type: 'taxonomy_term--system_pages', parent: [{ id: 'tid-42' }] };
+      expect(isSystemPageWithParent(data)).toBe(true);
+    });
+
+    it('returns true for a system page with a virtual parent (preserves existing behavior)', () => {
+      const data = { type: 'taxonomy_term--system_pages', parent: [{ id: 'virtual' }] };
+      expect(isSystemPageWithParent(data)).toBe(true);
+    });
+
+    it('returns false, and does not throw, for a system page with an empty parent array', () => {
+      const data = { type: 'taxonomy_term--system_pages', parent: [] };
+      expect(() => isSystemPageWithParent(data)).not.toThrow();
+      expect(isSystemPageWithParent(data)).toBe(false);
+    });
+
+    it('returns false, and does not throw, when parent is missing entirely', () => {
+      const data = { type: 'taxonomy_term--system_pages' };
+      expect(() => isSystemPageWithParent(data)).not.toThrow();
+      expect(isSystemPageWithParent(data)).toBe(false);
+    });
+
+    it('returns false for a non-system-page type even with a parent', () => {
+      const data = { type: 'node--content', parent: [{ id: 'tid-42' }] };
+      expect(isSystemPageWithParent(data)).toBe(false);
     });
   });
 

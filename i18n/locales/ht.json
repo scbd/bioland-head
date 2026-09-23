@@ -935,16 +935,7 @@
   "Selected": "Seleksyon",
   "In Progress": "Nan Pwogrè",
   "Testing": "Tès",
-  "Type": "Kalite",
-  "Key": "Kle",
-  "Summary": "Rezime",
-  "Assignee": "Assignant",
-  "Priority": "Priyorite",
-  "Progress": "Pwogrè",
   "Created": "Kreye",
-  "Unassigned": "Pa asiyen",
-  "No description available": "Pa gen deskripsyon ki disponib",
-  "Work Overview": "Apèsi sou travay",
   "Bug": "Pinèz",
   "Task": "Travay",
   "Story": "Istwa",
@@ -961,7 +952,6 @@
   "Medium": "Mwayen",
   "Low": "Low",
   "Lowest": "Pi ba",
-  "Selected For Development": "Chwazi Pou Devlopman",
   "View More ": {
     "": {
       "": {

@@ -8,8 +8,9 @@ export default defineConfig({
     // Keep Vitest scoped to unit tests. E2E specs live under tests/e2e and
     // are executed by Playwright (yarn test:e2e), not Vitest.
     include: ['tests/unit/**/*.{test,spec}.{js,ts}'],
-    // Transform nitro's cache runtime so specs can vi.mock its storage/app imports.
-    server: { deps: { inline: [/nitropack\/dist\/runtime\/internal\/cache\.mjs/] } },
+    // Transform nitro's cache runtime so specs can vi.mock its storage/app imports, and
+    // unstorage's redis driver so specs can vi.mock the ioredis client it imports.
+    server: { deps: { inline: [/nitropack\/dist\/runtime\/internal\/cache\.mjs/, /unstorage\/drivers\/redis\.mjs/] } },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
