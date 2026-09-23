@@ -450,6 +450,7 @@ export const CACHE_TTL = {
   DRUPAL_TOPICS: 60 * 60, // 1 hour
   ALIAS_FALLBACK_HIT: 60 * 60 * 24, // 1 day
   ALIAS_FALLBACK_MISS: 60 * 10, // 10 minutes
+  ALIAS_REDIRECT: 60 * 10, // 10 minutes
   EXTERNAL: 60 * 60 * 24 * 30, // 30 days
   EXTERNAL_SHORT: 60 * 60 * 24, // 1 day
   THESAURUS: 60 * 60 * 24 * 7, // 7 days

@@ -75,7 +75,8 @@ function drupal(uri, opts) {
 
 const pathHash = (path) => createHash('sha1').update(path).digest('hex').slice(0, 16)
 
-const sweepCalls = () => $fetch.mock.calls.filter(([uri]) => !uri.startsWith(`${baseCtx.localizedHost}/`))
+const sweepCalls   = () => $fetch.mock.calls.filter(([uri]) => !uri.startsWith(`${baseCtx.localizedHost}/`))
+const primaryCalls = () => $fetch.mock.calls.filter(([uri]) => uri.startsWith(`${baseCtx.localizedHost}/router/translate-path`))
 
 beforeEach(async () => {
   vi.resetModules()
@@ -272,5 +273,91 @@ describe('cross-locale alias fallback (BL-1111)', () => {
 
     await expect(drupalPage.getPageData({ ...baseCtx, path: '/en/nowhere' }, event)).rejects.toMatchObject({ statusCode: 404 })
     expect(store.size).toBe(1)
+  })
+})
+
+describe('requested-locale alias-fallback redirect cache (BL-1116)', () => {
+  it('makes zero Drupal calls (primary or sweep) on a repeat request and returns the same redirect', async () => {
+    await expect(drupalPage.getPageData({ ...baseCtx }, event)).resolves.toEqual({ redirect: '/vi/mang-chm' })
+    $fetch.mockClear()
+
+    await expect(drupalPage.getPageData({ ...baseCtx }, event)).resolves.toEqual({ redirect: '/vi/mang-chm' })
+    expect(primaryCalls()).toHaveLength(0)
+    expect(sweepCalls()).toHaveLength(0)
+  })
+
+  it('bounds the redirect map, evicting the oldest entry first', async () => {
+    for (let i = 0; i <= 1000; i++) {
+      owners[`/mang-chm-${i}`] = 'vi'
+      await expect(drupalPage.getPageData({ ...baseCtx, path: `/en/mang-chm-${i}` }, event)).resolves.toEqual({ redirect: `/vi/mang-chm-${i}` })
+    }
+
+    $fetch.mockClear()
+    await expect(drupalPage.getPageData({ ...baseCtx, path: '/en/mang-chm-1000' }, event)).resolves.toEqual({ redirect: '/vi/mang-chm-1000' })
+    expect(primaryCalls()).toHaveLength(0)
+    expect(sweepCalls()).toHaveLength(0)
+
+    // The oldest entry (mang-chm-0) was evicted from the redirect cache, so the primary
+    // translate-path call re-runs; the underlying cross-locale sweep result is still
+    // cached separately (BL-1111's 1-day ALIAS_FALLBACK_HIT), so it makes no new calls.
+    await expect(drupalPage.getPageData({ ...baseCtx, path: '/en/mang-chm-0' }, event)).resolves.toEqual({ redirect: '/vi/mang-chm-0' })
+    expect(primaryCalls()).toHaveLength(1)
+    expect(sweepCalls()).toHaveLength(0)
+  })
+
+  it('re-runs the primary lookup after the redirect TTL expires', async () => {
+    const now = Date.now()
+
+    vi.spyOn(Date, 'now').mockReturnValue(now)
+    await expect(drupalPage.getPageData({ ...baseCtx }, event)).resolves.toEqual({ redirect: '/vi/mang-chm' })
+    $fetch.mockClear()
+
+    Date.now.mockReturnValue(now + CACHE_TTL.ALIAS_REDIRECT * 1000 - 1)
+    await expect(drupalPage.getPageData({ ...baseCtx }, event)).resolves.toEqual({ redirect: '/vi/mang-chm' })
+    expect(primaryCalls()).toHaveLength(0)
+
+    Date.now.mockReturnValue(now + CACHE_TTL.ALIAS_REDIRECT * 1000 + 1)
+    await expect(drupalPage.getPageData({ ...baseCtx }, event)).resolves.toEqual({ redirect: '/vi/mang-chm' })
+    expect(primaryCalls()).toHaveLength(1)
+  })
+
+  it('keeps separate cache entries per requested locale', async () => {
+    owners['/both'] = 'fr'
+    await expect(drupalPage.getPageData({ ...baseCtx, path: '/en/both' }, event)).resolves.toEqual({ redirect: '/fr/both' })
+
+    owners['/both'] = 'en'
+    await expect(drupalPage.getPageData({ ...baseCtx, locale: 'th', localizedHost: 'https://asean.test/th', path: '/th/both' }, event)).resolves.toEqual({ redirect: '/en/both' })
+
+    $fetch.mockClear()
+    await expect(drupalPage.getPageData({ ...baseCtx, path: '/en/both' }, event)).resolves.toEqual({ redirect: '/fr/both' })
+    expect(primaryCalls()).toHaveLength(0)
+  })
+
+  it('bypasses the redirect cache for an authenticated session; anonymous still hits it (BL-1116 F2)', async () => {
+    await expect(drupalPage.getPageData({ ...baseCtx }, event)).resolves.toEqual({ redirect: '/vi/mang-chm' })
+    $fetch.mockClear()
+
+    const authEvent = { context: { headers: { Cookie: 'SESSabc123=xyz' } } }
+    await expect(drupalPage.getPageData({ ...baseCtx }, authEvent)).resolves.toEqual({ redirect: '/vi/mang-chm' })
+    expect(primaryCalls()).toHaveLength(1)
+    expect(sweepCalls()).toHaveLength(0)
+
+    $fetch.mockClear()
+    await expect(drupalPage.getPageData({ ...baseCtx }, event)).resolves.toEqual({ redirect: '/vi/mang-chm' })
+    expect(primaryCalls()).toHaveLength(0)
+    expect(sweepCalls()).toHaveLength(0)
+  })
+
+  it('does not short-circuit normal (non-redirect) alias resolution', async () => {
+    // The alias resolves directly in the requested locale, so getPageIdentifiers never
+    // enters the redirect branch that writes the cache - the primary translate-path call
+    // still runs on every request for it.
+    owners['/normal-page'] = 'en'
+
+    await expect(drupalPage.getPageData({ ...baseCtx, path: '/en/normal-page' }, event)).rejects.toBeTruthy()
+    $fetch.mockClear()
+
+    await expect(drupalPage.getPageData({ ...baseCtx, path: '/en/normal-page' }, event)).rejects.toBeTruthy()
+    expect(primaryCalls()).toHaveLength(1)
   })
 })
