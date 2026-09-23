@@ -12,7 +12,8 @@ import type { H3Event } from 'h3'
  * - Request coordination: Concurrent requests with same value wait for completion
  * - CDN bypass: Stores value on event.context for forwarding to internal requests
  * 
- * Storage keys (in 'cache-clear' base, mounted on the shared cache volume in nuxt.config):
+ * Storage keys (in 'cache-clear' base, shared across containers: Redis when NUXT_REDIS_URL is set,
+ * see server/plugins/00.1.cache-storage.ts, else the shared cache volume from nuxt.config):
  * - `pending:{value}` - Timestamp when clear started (for in-progress tracking)
  * - `completed:{value}` - Timestamp when clear completed (TTL: 60s)
  *
@@ -129,7 +130,8 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     consola.error(`[cache-clear] Failed to clear cache:`, error)
   } finally {
-    // Always clean up pending
-    await storage.removeItem(pendingKey)
+    // Always clean up pending. A failed removal (store unreachable) must not turn the page
+    // into a 500; the marker ages out after PENDING_TTL.
+    await storage.removeItem(pendingKey).catch((error) => consola.warn('[cache-clear] Pending marker removal failed:', error))
   }
 })

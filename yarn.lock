@@ -7305,7 +7305,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ioredis@npm:^5.8.2":
+"ioredis@npm:5.8.2, ioredis@npm:^5.8.2":
   version: 5.8.2
   resolution: "ioredis@npm:5.8.2"
   dependencies:
@@ -8725,6 +8725,7 @@ __metadata:
     click-outside-vue3: "npm:4.0.1"
     consola: "npm:3.4.2"
     dotenv: "npm:^17.2.3"
+    ioredis: "npm:5.8.2"
     isomorphic-dompurify: "npm:2.26.0"
     javascript-time-ago: "npm:2.5.11"
     json5: "npm:2.2.3"
