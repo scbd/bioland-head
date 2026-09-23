@@ -4,6 +4,63 @@ import { camelCase } from 'change-case/keys';
 
 const localizationExceptionPaths =  [];
 
+/**
+ * Rate-limit repeated identical log lines: prints first occurrence per key per 60s window,
+ * and on next print after window expires, reports the suppressed count.
+ * Bounded map (max 500 keys, FIFO eviction on insert of a new key).
+ */
+function createRateLimiter() {
+    const map = new Map();
+    const maxKeys = 500;
+
+    return function logOnce(key, level, ...args) {
+        const now = Date.now();
+        const entry = map.get(key);
+
+        if (entry && now < entry.windowExpires) {
+            entry.count++;
+            return;
+        }
+
+        if (entry?.count) {
+            const last = args.length - 1;
+
+            if (typeof args[0] === 'object') args[0] = { ...args[0], suppressed: entry.count };
+            else args[last] = `${args[last] ?? ''} (suppressed ${entry.count})`;
+        }
+
+        if (!entry && map.size >= maxKeys) map.delete(map.keys().next().value);
+
+        map.set(key, { windowExpires: now + 60000, count: 0 });
+        consola[level](...args);
+    };
+}
+
+const logOnce = createRateLimiter();
+
+// Marks an error already logged by an inner catch so an outer catch does not log it again.
+const LOGGED = Symbol('drupal-page.logged');
+
+const isExpectedFailure = (e) => e?.statusCode === 404 ||
+                                 (e?.statusCode === 503 && e?.statusMessage === 'Drupal login unavailable');
+
+/**
+ * Log a failure once: expected outcomes as a single-line, rate-limited warn with no stack;
+ * anything else as a full consola.error. Skips errors an inner catch already logged.
+ */
+function logFailure(label, { siteCode, path }, e) {
+    if (e?.[LOGGED]) return;
+
+    if (!isExpectedFailure(e)) return consola.error(label, e);
+
+    const key = `${siteCode}:${e.statusCode}:${JSON.stringify(path)}`;
+
+    logOnce(key, 'warn', { siteCode, path: JSON.stringify(path), statusCode: e.statusCode, statusMessage: e.statusMessage });
+}
+
+// Non-enumerable symbol: invisible to JSON serialization and to what callers read off the error.
+const markLogged = (error) => Object.defineProperty(error, LOGGED, { value: true });
+
 export async function getPageData(ctx, event){
     try{
 
@@ -56,10 +113,10 @@ export async function getPageData(ctx, event){
     }catch(e){
         const { localizedHost } = ctx;
 
-        consola.error('getPageData',e);
+        logFailure('getPageData', ctx, e);
 
-        throw createError({ 
-            statusCode   : e.statusCode, 
+        throw createError({
+            statusCode   : e.statusCode,
             statusMessage: e.statusMessage,
             message      : `Server.util.drupal-page.getPageData: failed to get page identifiers for site/path: ${localizedHost}${ctx.path}`,
             data         : e
@@ -326,7 +383,7 @@ async function findAliasInOtherLocales(ctx, aliasPath) {
 
 async function getPageIdentifiers(ctx,  headers){
     try{
-        const { localizedHost, path, host, locale, locales } = ctx;
+        const { localizedHost, path, host, locale, locales, siteCode } = ctx;
 
         if(!localizedHost || localizedHost?.includes('undefined')) 
             throw createError({ 
@@ -360,8 +417,16 @@ async function getPageIdentifiers(ctx,  headers){
 
         let data;
         try {
-            data = await $fetch(uri, $fetchBaseOptions({ headers}));
+            // silentError: true suppresses the auto-log for a 404 since it's expected when an
+            // alias doesn't resolve in the requested locale; log a debug line instead.
+            data = await $fetch(uri, $fetchBaseOptions({ headers, silentError: true }));
         } catch (fetchError) {
+            // Log 404s at debug level since they're expected for many aliases; rate-limit per path
+            if (fetchError.statusCode === 404) {
+                const debugKey = `${siteCode}:404:${JSON.stringify(cleanPath)}`;
+                logOnce(debugKey, 'debug', `getPageIdentifiers: 404 for ${JSON.stringify(cleanPath)} in locale "${locale}"`);
+            }
+
             // If router/translate-path fails and this looks like an alias path,
             // try to find it in other locales
             if (isAlias) {
@@ -423,15 +488,16 @@ async function getPageIdentifiers(ctx,  headers){
         return redirect? { ...returnValues, redirect} : returnValues;
     }catch(e){
         const { host } = ctx;
-        consola.error('getPageIdentifiers',e);
 
-        throw createError({ 
-            statusCode   : e.statusCode, 
+        logFailure('getPageIdentifiers', ctx, e);
+
+        throw markLogged(createError({
+            statusCode   : e.statusCode,
             statusMessage: e.statusMessage,
             message      : `Server.util.drupal-page.getPageIdentifiers: failed to get page identifiers for site/path: ${host}${ctx.path}`,
             data: e,
             fatal:  true
-        });
+        }));
     }
 }
 
