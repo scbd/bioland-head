@@ -1,3 +1,6 @@
+# Build with: docker build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) -t <tag> .
+# Read back: docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' <container>
+
 # ---- Base stage: install shared OS utilities and configure Yarn ----
 FROM node:24-bookworm-slim AS base
 
@@ -48,8 +51,14 @@ RUN yarn build
 # ---- Runner stage: assemble minimal production image with non-root user ----
 FROM node:24-bookworm-slim AS runner
 
+ARG GIT_COMMIT=unknown
+ARG BUILD_DATE=unknown
+
 ENV NODE_ENV=production
 ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
+ENV GIT_COMMIT=$GIT_COMMIT BUILD_DATE=$BUILD_DATE
+
+LABEL org.opencontainers.image.revision=$GIT_COMMIT org.opencontainers.image.created=$BUILD_DATE
 
 WORKDIR /usr/src/app
 
