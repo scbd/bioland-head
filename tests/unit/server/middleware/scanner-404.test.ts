@@ -45,6 +45,8 @@ describe('00.scanner-404 middleware', () => {
       '//wp-login.php',
       '/wp-login.php.',
       '/wp-login.php;x=1',
+      '/%252eenv',
+      '/wp-login%252Ephp',
       '/WP-LOGIN.PHP',
       '/wp-login.php?foo=bar',
       '/%2e%65nv',

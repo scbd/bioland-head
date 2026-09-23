@@ -70,16 +70,19 @@ const BLOCKED_SEGMENTS = [
 const BLOCKED_PARTIAL_PREFIXES = ['/wp-', '/.git', '/.env']
 
 // Canonicalizes the request path so encoding/casing tricks cannot slip past the matchers:
-// drops the query, decodes once (keeping the raw path if it is malformed), collapses
-// repeated slashes, strips `;matrix` params and trailing dots from the last segment,
-// and lowercases.
+// drops the query, decodes up to three times so double-encoding (`%252e`) cannot hide a
+// dot (keeping the last good value if an escape is malformed), collapses repeated
+// slashes, strips `;matrix` params and trailing dots from the last segment, and lowercases.
 function normalizePath(path: string): string {
   const raw = path.split('?')[0] || '/'
   let decoded = raw
-  try {
-    decoded = decodeURIComponent(raw)
-  } catch {
-    // Malformed escape sequence: classify the raw path as-is.
+  for (let i = 0; i < 3 && decoded.includes('%'); i++) {
+    try {
+      decoded = decodeURIComponent(decoded)
+    } catch {
+      // Malformed escape sequence: classify what we have so far.
+      break
+    }
   }
   const collapsed = decoded.replace(/\/{2,}/g, '/')
   const lastSlash = collapsed.lastIndexOf('/')
@@ -128,7 +131,7 @@ export default defineEventHandler((event: H3Event) => {
   const isBlocked = hasBlockedExtension(withoutLocale) || hasBlockedPrefix(withoutLocale) || hasBlockedPrefix(pathname)
   if (!isBlocked) return
 
-  consola.debug(`[scanner-404] Fast 404 for scanner-shaped path: ${JSON.stringify(pathname.slice(0, 200))}`)
+  consola.debug(`[scanner-404] Fast 404 for scanner-shaped path: ${JSON.stringify(pathname).slice(0, 200)}`)
 
   // no-store: a false positive must never be CDN-cached as a 404 for every visitor.
   event.node.res.statusCode = 404
