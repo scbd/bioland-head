@@ -150,7 +150,7 @@ export async function getPageData(ctx, event){
             }
         }
         
-        if(data.type === 'taxonomy_term--system_pages' && !data?.parent[0].id !== 'virtual' ) await getChildren(ctx, data);
+        if(isSystemPageWithParent(data)) await getChildren(ctx, data);
 
         return  await mapData(event, ctx)(data);
     }catch(e){
@@ -167,6 +167,17 @@ export async function getPageData(ctx, event){
     }
 
 }   
+
+// The original check here (`!data?.parent[0].id !== 'virtual'`) compared a boolean to a
+// string, so it was always true and threw whenever `parent` was empty. Front-end components
+// (app/components/page/list/tabs.vue, filter.vue) have always relied on `children` being
+// populated for system pages with a 'virtual' parent too (top-level pages fall back to
+// `children.length` to decide whether to render tabs), so this preserves that existing
+// behavior — fetch children for any system page that has a parent entry — while fixing the
+// crash on an empty `parent` array.
+export function isSystemPageWithParent(data){
+    return data?.type === 'taxonomy_term--system_pages' && !!data?.parent?.length;
+}
 
 async function getChildren(ctx, data){
     const { localizedHost }       = ctx;
