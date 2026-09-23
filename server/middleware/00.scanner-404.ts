@@ -90,7 +90,9 @@ const DRUPAL_ONLY_EXACT_PATHS = new Set(['/user/login', '/user/logout', '/user/r
 // Canonicalizes the request path so encoding/casing tricks cannot slip past the matchers:
 // drops the query, decodes up to three times so double-encoding (`%252e`) cannot hide a
 // dot (keeping the last good value if an escape is malformed), collapses repeated
-// slashes, strips `;matrix` params and trailing dots from the last segment, and lowercases.
+// slashes, strips a single trailing slash (a bare `/` is kept intact - otherwise
+// `/user/login/` would slip past the exact-path matcher below), strips `;matrix` params
+// and trailing dots from the last segment, and lowercases.
 function normalizePath(path: string): string {
   const raw = path.split('?')[0] || '/'
   let decoded = raw
@@ -102,7 +104,8 @@ function normalizePath(path: string): string {
       break
     }
   }
-  const collapsed = decoded.replace(/\/{2,}/g, '/')
+  let collapsed = decoded.replace(/\/{2,}/g, '/')
+  if (collapsed.length > 1) collapsed = collapsed.replace(/\/+$/, '') || '/'
   const lastSlash = collapsed.lastIndexOf('/')
   const lastSegment = collapsed.slice(lastSlash + 1).replace(/;.*$/, '').replace(/\.+$/, '')
   return (collapsed.slice(0, lastSlash + 1) + lastSegment).toLowerCase() || '/'
@@ -112,7 +115,8 @@ function normalizePath(path: string): string {
 // ...) so the rest of the classification runs on the real path, matching how Nuxt i18n
 // prefixes routes and mirroring the Traefik locale rule (incl. the tl -> fil mapping
 // from BL-1126). `zh-hans`/`fil` are checked before the generic 2-letter form since
-// neither fits its `XX` or `XX-XX` shape.
+// neither fits its `XX` or `XX-XX` shape. Expects an already-lowercased `pathname` (see
+// normalizePath) - the region group is deliberately `[a-z]{2}`, not `[A-Za-z]{2}`.
 function stripLocale(pathname: string): string {
   return pathname.replace(/^\/(zh-hans|fil|[a-z]{2}(-[a-z]{2})?)(?=\/|$)/, '') || '/'
 }
