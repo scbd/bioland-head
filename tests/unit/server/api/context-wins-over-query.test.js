@@ -10,6 +10,7 @@ const CTX = Object.freeze({
   baseHost     : 'test',
   locale       : 'en',
   locales      : ['en', 'fr'],
+  country      : 'BE',
   countries    : ['BE'],
   redirect     : undefined, // present-but-empty, as a site without a DMSM redirect resolves
   config       : {},
@@ -26,6 +27,8 @@ const EVIL = Object.freeze({
   redirect     : 'evil.example',
   forumAlias   : 'evil-forum',
   topicId      : 'evil-topic',
+  country      : 'ZZ',
+  countries    : ['ZZ', 'YY'],
 })
 
 const LEGIT = Object.freeze({ page: '3', rowsPerPage: '7', freeText: 'seeds', schemas: 'news' })
@@ -60,9 +63,16 @@ beforeEach(() => {
   vi.stubGlobal('limitArrayToX', (a) => a)
   vi.stubGlobal('shuffleArrayHourly', (a) => a)
   vi.stubGlobal('sortNT7byToc', () => 0)
+  vi.stubGlobal('getExternalShortCacheOptions', () => ({}))
+  vi.stubGlobal('unLocales', ['en', 'fr'])
+  vi.stubGlobal('getIndexNrFields', (locale) => `fl=${locale}`)
+  vi.stubGlobal('getIndexQuery', (schema, { country, countries }) => `q=${schema}:${[country, ...countries].join(',')}`)
 
-  spies.$fetch = vi.fn(async () => ({ data: [] }))
+  // One shape that satisfies every handler's response mapping (drupal/index, gbif, panorama, tsc).
+  spies.$fetch = vi.fn(async () => ({ data: [], solutions: [], facets: [], response: { docs: [] } }))
   vi.stubGlobal('$fetch', spies.$fetch)
+  spies.$indexFetch = vi.fn(async () => ({ docs: [] }))
+  vi.stubGlobal('$indexFetch', spies.$indexFetch)
 
   for (const name of ['queryScbdIndex', 'useContentTypeIndex', 'useDrupalForums', 'useDrupalTopicMenus', 'useDrupalForumComments']) {
     spies[name] = vi.fn(async () => ({ data: [] }))
@@ -106,6 +116,10 @@ const MODULES = {
   'forums/[forumAlias]/index.get.js': () => import('~/server/api/forums/[forumAlias]/index.get.js'),
   'forums/[forumAlias]/[topicId].get.js': () => import('~/server/api/forums/[forumAlias]/[topicId].get.js'),
   'menus/index.js': () => import('~/server/api/menus/index.js'),
+  'menus/nbsap.get.js': () => import('~/server/api/menus/nbsap.get.js'),
+  'list/gbif.js': () => import('~/server/api/list/gbif.js'),
+  'list/panorama.js': () => import('~/server/api/list/panorama.js'),
+  'list/tsc.js': () => import('~/server/api/list/tsc.js'),
   'menus/index-bch.js': () => import('~/server/api/menus/index-bch.js'),
   'menus/index-chm.js': () => import('~/server/api/menus/index-chm.js'),
   'list/latest.js': () => import('~/server/api/list/latest.js'),
@@ -123,7 +137,7 @@ describe('BL-1135 handlers merging query into context', () => {
     for (const call of spies[spy].mock.calls) {
       const merged = call[argIndex]
 
-      for (const key of ['localizedHost', 'host', 'baseHost', 'siteCode', 'identifier', 'locale', 'locales'])
+      for (const key of ['localizedHost', 'host', 'baseHost', 'siteCode', 'identifier', 'locale', 'locales', 'country', 'countries'])
         expect(merged[key], key).toEqual(CTX[key])
 
       expect(merged.redirect, 'redirect').toBeUndefined()
@@ -139,9 +153,43 @@ describe('BL-1135 handlers merging query into context', () => {
     expect(spies.useDrupalTopics.mock.calls[0][0]).toMatchObject({ topicId: '42' })
   })
 
+  it.each([
+    ['menus/nt7.js'],
+    ['list/widget/nt7.js'],
+  ])('%s queries the index with ctx countries, not ?countries= (upstream cache key unchanged)', async (path) => {
+    await (await load(path))({})
+
+    // cbd-index keys its cache on the 3rd argument, so it must be the site's list.
+    expect(spies.getAllBySchemas).toHaveBeenCalledTimes(1)
+    expect(spies.getAllBySchemas.mock.calls[0][2]).toEqual(['BE'])
+  })
+
   it('keeps the route drupalInternalId over the query', async () => {
     await (await load('list/drupal/[drupalInternalId].get.js'))({})
     expect(spies.useContentTypeIndex.mock.calls[0][1].drupalInternalId).toBe('2')
+  })
+})
+
+// Handlers that build an upstream URL/query string themselves: nothing client-sent may reach it.
+// The query adds `locale: 'fr'` (a locale both panorama and the index serve) so a leak is visible.
+const URL_HANDLERS = [
+  ['menus/nbsap.get.js', '$indexFetch', ['q=nationalReport:BE,BE', 'fl=en'], ['ZZ', 'YY', 'fl=fr']],
+  ['list/gbif.js',       '$fetch',      ['country=BE'],                      ['ZZ', 'YY']],
+  ['list/panorama.js',   '$fetch',      ['/en/api', 'country_iso_2[]=BE'],   ['ZZ', 'YY', '/fr/']],
+  ['list/tsc.js',        '$fetch',      ['title_EN_s', 'rows=7'],            ['_FR_']],
+]
+
+describe('BL-1135 handlers building upstream queries from ctx', () => {
+  it.each(URL_HANDLERS)('%s uses ctx locale and countries in the upstream request (%s)', async (path, spy, present, absent) => {
+    vi.stubGlobal('getQuery', () => ({ ...EVIL, ...LEGIT, locale: 'fr', rows: '7' }))
+    await (await load(path))({})
+
+    expect(spies[spy]).toHaveBeenCalled()
+
+    for (const [uri] of spies[spy].mock.calls) {
+      for (const s of present) expect(uri).toContain(s)
+      for (const s of absent) expect(uri).not.toContain(s)
+    }
   })
 })
 

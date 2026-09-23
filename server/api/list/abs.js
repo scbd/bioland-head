@@ -14,7 +14,7 @@ import { mergeQueryIntoContext } from '../../utils/merge-query-into-context';
  *   @returns {Object} facetCounts - Facet aggregation results
  *
  * @example
- * // GET /api/list/abs?schemas=focalPoint&countries=BE
+ * // GET /api/list/abs?schemas=focalPoint (countries always come from the site context)
  *
  * @throws {Error} Passes any errors to the error handler via passError
  */

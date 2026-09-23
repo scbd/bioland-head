@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { internalQuery, mergeQueryIntoContext, QUERY_OVERRIDABLE_CONTEXT_KEYS } from '~/server/utils/merge-query-into-context'
+import { internalQuery, mergeQueryIntoContext } from '~/server/utils/merge-query-into-context'
 
 const ctx = {
   siteCode: 'be',
@@ -14,7 +14,7 @@ const ctx = {
 }
 
 describe('mergeQueryIntoContext', () => {
-  it.each(['host', 'localizedHost', 'baseHost', 'siteCode', 'locale', 'redirect'])('keeps ctx.%s over the query', (key) => {
+  it.each(['host', 'localizedHost', 'baseHost', 'siteCode', 'locale', 'redirect', 'country', 'countries'])('keeps ctx.%s over the query', (key) => {
     expect(mergeQueryIntoContext(ctx, { [key]: 'https://evil.example' })[key]).toBe(ctx[key as keyof typeof ctx])
   })
 
@@ -22,13 +22,12 @@ describe('mergeQueryIntoContext', () => {
     expect(mergeQueryIntoContext(ctx, { page: '2', rowsPerPage: '5', freeText: 'x', schemas: ['a'] })).toMatchObject({ page: '2', rowsPerPage: '5', freeText: 'x', schemas: ['a'] })
   })
 
-  it('lets the country filter keys be overridden, and only those', () => {
-    expect(QUERY_OVERRIDABLE_CONTEXT_KEYS).toEqual(['country', 'countries'])
-    expect(mergeQueryIntoContext(ctx, { country: 'FR', countries: ['FR', 'DE'] })).toMatchObject({ country: 'FR', countries: ['FR', 'DE'] })
+  it('keeps ctx countries over a client country filter (BL-1135 cache poisoning)', () => {
+    expect(mergeQueryIntoContext(ctx, { country: 'ZZ', countries: ['ZZ', 'YY'] })).toMatchObject({ country: 'BE', countries: ['BE'] })
   })
 
-  it('keeps ctx countries when the query does not send them', () => {
-    expect(mergeQueryIntoContext(ctx, {}).countries).toEqual(['BE'])
+  it('keeps a present-but-undefined ctx country over the query', () => {
+    expect(mergeQueryIntoContext({ ...ctx, country: undefined }, { country: 'ZZ' }).country).toBeUndefined()
   })
 
   it('tolerates a missing query and does not mutate its inputs', () => {

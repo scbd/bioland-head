@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
             const query             = { ...internalQuery(context, getQuery(event)), drupalInternalIds, rowsPerPage, from, schemas, promote:true };
 
 
-            const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(context || query || {}))};` }
+            const headers = { Cookie: `context=${encodeURIComponent(JSON.stringify(context))};` }
 
             const [ drupalContent, chmContent ] = await Promise.all([
                         $fetch('/api/list/drupal',  $fetchBaseOptions({ query, method:'get', headers })    ),

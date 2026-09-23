@@ -46,7 +46,6 @@ import { Pagination  }   from 'swiper/modules';
 import { useWindowSize } from '@vueuse/core';
 
 import clone from 'lodash.clonedeep';
-import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
 
 const swiperRef      = ref(null);
 const { locale }     = useI18n();
@@ -118,8 +117,7 @@ const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ 
 const query = computed(() => clone({ 
     ...siteStore.params, 
     locale: locale.value,
-    localizedHost: `${siteStore.host}/${drupalPathPrefix(locale.value)}`,
-    rowsPerPage: limit.value,
+    rowsPerPage: limit.value, 
     schemas: schemas.value 
 }));
 

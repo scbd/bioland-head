@@ -1,12 +1,3 @@
-/**
- * Context keys a client query may still override. They narrow which records come back
- * (the index `country`/`countries` filter) and never decide which host the server fetches from.
- * They stay overridable because the client's `siteStore.countries` also folds in
- * `config.runtime.countries`, which the server context does not, so pinning them would drop
- * rows from the country widgets.
- */
-export const QUERY_OVERRIDABLE_CONTEXT_KEYS = Object.freeze(["country", "countries"] as const);
-
 type Bag = Record<string, unknown>;
 
 /**
@@ -17,6 +8,10 @@ type Bag = Record<string, unknown>;
  * keeps its server value, so a crafted `?localizedHost=https://evil.example` cannot point a Drupal
  * or index fetch at another host. Every other query key (paging, filters, ids) passes through.
  *
+ * `country`/`countries` are server-only too. The handlers that read them are cached per
+ * site and locale, so a client value would be served to every visitor of the site. The client's
+ * own list (siteStore.countries) is built from the same DMSM `config.country`/`config.countries`.
+ *
  * `locale` needs no carve-out: useRequestContext already adopts a query locale the site serves,
  * so a legitimate `?locale=` yields the same value here and an unserved one is dropped.
  *
@@ -24,12 +19,7 @@ type Bag = Record<string, unknown>;
  * @param query - The request query from getQuery.
  */
 export function mergeQueryIntoContext<C extends Bag, Q extends Bag>(ctx: C, query: Q = {} as Q): Omit<Q, keyof C> & C {
-  const merged: Bag = { ...query, ...ctx };
-
-  for (const key of QUERY_OVERRIDABLE_CONTEXT_KEYS)
-    if (query?.[key] !== undefined) merged[key] = query[key];
-
-  return merged as Omit<Q, keyof C> & C;
+  return { ...query, ...ctx } as Omit<Q, keyof C> & C;
 }
 
 /**
