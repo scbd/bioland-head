@@ -65,7 +65,7 @@ export default defineEventHandler(async (event) => {
         const combined = [...(drupalResources || []), ...(bchResources || [])];
         const sorted = sortByDate(combined);
         
-        return sorted.slice(0, 10);
+        return await sorted.slice(0, 10);
     } catch (e) {
         passError(event, e);
     }
@@ -130,7 +130,7 @@ async function fetchBchResources(ctx, locale, country) {
         }));
 
         // Normalize and transform BCH records
-        return (response?.docs || []).map(normalizeIndexKeys).map((record) => cleanBchResourceRecord(record, locale));
+        return await (response?.docs || []).map(normalizeIndexKeys).map((record) => cleanBchResourceRecord(record, locale));
     } catch (error) {
         consola.error('[latest-bch-resources] BCH index request failed:', error.message);
         throw error;

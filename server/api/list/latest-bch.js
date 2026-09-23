@@ -91,8 +91,8 @@ export default defineEventHandler(async (event) => {
             return [];
           });
 
-          return sortData([
-            ...(newsContent?.data || []), 
+          return await sortData([
+            ...(newsContent?.data || []),
             ...(bchContent || []),
             ...(top3Articles || [])
           ]);

@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
     const ctx   = await useRequestContext(event);
     const bch   = true;
 
-    return queryScbdIndex({ ...ctx, ...query }, {}, bch);
+    return await queryScbdIndex({ ...ctx, ...query }, {}, bch);
     
   } catch (e) {
     passError(event, e);

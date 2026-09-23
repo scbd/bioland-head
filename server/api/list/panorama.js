@@ -33,7 +33,7 @@ export default cachedEventHandler(async (event) => {
             const options = $fetchBaseOptions({ headers, silentError });
             const data    = (await $fetch(uri, options ).then(({ solutions }) => solutions)).map(({ solution }) => solution).map((s) => mapPanoData(s, panoLocale));
 
-            return data.slice(0, 5)
+            return await data.slice(0, 5)
         }
         catch (e) {
 

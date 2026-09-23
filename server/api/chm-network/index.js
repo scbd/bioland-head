@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
         ])
 
 
-        return  makeSections({ dev: d, stg: s, prod: p });
+        return await makeSections({ dev: d, stg: s, prod: p });
     }
     catch (e) {
         passError(event, e);
