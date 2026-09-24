@@ -66,7 +66,7 @@ export default {
     isControlButtonEnabled: true,
 
     // Switch to toggle the concatenation of target cookie ids to the cookie description.
-    isCookieIdVisible: true,
+    isCookieIdVisible: false,
 
     // Switch to toggle the inclusion of this module's css.
     // If css is set to false, you will still be able to access your color variables.
