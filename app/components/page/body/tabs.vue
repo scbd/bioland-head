@@ -61,18 +61,7 @@
     const   pageStore  = usePageStore();
     const   siteStore  = useSiteStore();
 
-    // Per-user cookie key (must match system-page-warning.vue)
-    const userKey    = computed(() => meStore.userID || meStore.email || 'anon');
-    const cookieName = computed(() => `hideSystemPageWarning_${userKey.value}`);
-
-    // Cookie to check if user chose to hide system page warning
-    const hideWarningCookie = useCookie(cookieName.value, {
-        maxAge  : 60 * 60 * 24 * 365, // 1 year
-        path    : '/',
-        sameSite: 'lax',
-        default : () => false,
-        watch   : true
-    });
+    const { isWarningHidden } = useSystemPageWarning();
 
     // System pages and content type pages have restricted editing
     const isRestrictedPage = computed(() => pageStore.isSystemPage || pageStore.isContentType);
@@ -82,8 +71,7 @@
     
     // Hide entire tabs component when alert is hidden and page is restricted for this user
     const hideTabsForRestrictedPage = computed(() => {
-        const cookieHidden = hideWarningCookie.value === true || hideWarningCookie.value === 'true';
-        return cookieHidden && isDisabledTab.value;
+        return isWarningHidden.value && isDisabledTab.value;
     });
 
     const returnUrl = computed(()=>`?returnUrl=${encodeURIComponent(route.path)}`);
