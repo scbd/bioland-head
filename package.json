@@ -85,6 +85,7 @@
     "string-strip-html": "13.4.13",
     "superagent": "10.2.3",
     "text-cusor-helper": "1.0.7",
+    "undici": "7.29.1",
     "unstorage": "1.17.3",
     "uuid": "11.1.0",
     "vue-final-modal": "4.5.5",

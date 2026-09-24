@@ -6,6 +6,7 @@ import { getCanonicalHost } from '../../../../shared/utils/site-host'
 // cache can be exercised without a network or a Nitro context.
 
 const postCalls = []
+const useCalls  = []
 let loginShouldFail = false
 let timeoutSpy = () => {}
 let redirectsSpy = () => {}
@@ -37,10 +38,13 @@ vi.mock('superagent', () => {
       },
     }
 
-    return {
+    const saAgent = {
+      use:  (plugin) => { useCalls.push(plugin); return saAgent },
       post: (uri) => { postCalls.push(uri); return request },
       get:  () => request,
     }
+
+    return saAgent
   }
 
   return { default: { agent } }
@@ -61,6 +65,7 @@ async function importModule () {
 describe('useDrupalLogin', () => {
   beforeEach(() => {
     postCalls.length  = 0
+    useCalls.length   = 0
     deferred.length   = 0
     loginShouldFail   = false
     deferNext         = false
@@ -110,6 +115,15 @@ describe('useDrupalLogin', () => {
     expect(postCalls).toHaveLength(1)
     expect(agents[0]).toBe(agents[1])
     expect(agents[1]).toBe(agents[2])
+  })
+
+  it('wires the internal Drupal transport plugin into the login agent', async () => {
+    const useDrupalLogin               = await importFresh()
+    const { drupalInternalSuperagent } = await import('../../../../server/utils/drupal/drupal-internal.js')
+
+    await useDrupalLogin('seed')
+
+    expect(useCalls).toEqual([drupalInternalSuperagent])
   })
 
   it('reuses the cached session on later calls', async () => {
