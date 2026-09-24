@@ -1,5 +1,5 @@
 <template>
-    <NuxtLink  v-if="!noHeader" class="main-nav-sub-heading"  :to="safeLocalePath(menu.href)" :title="menu.title" :external="isExternal" :target="target">
+    <NuxtLink  v-if="!noHeader" class="main-nav-sub-heading"  :to="safeLocalePath(href)" :title="menu.title" :external="isExternal" :target="target">
         <h4 id="page-header-mega-menu-header-title" class="text-wrap position-relative d-inline-block mb-2" :style="lineStyle">
             {{menu.title}}
             <LazyIcon v-if="hasArrow" name="arrow-right" class="arrow" :style="arrowStyle"/>
@@ -12,9 +12,20 @@
         const   props      = defineProps({ menu: Object, localize: { type: Boolean, default: true } });
         const { safeLocalePath } = useSafeLocalePath(toRef(props, 'localize'));
         const { menu }     = toRefs(props);
-        const   hasArrow   = computed(()=>menu?.value?.class?.includes('arrow')||menu?.value?.class?.includes('mm-arrow'));
-        const   isExternal = computed(()=> menu?.value?.href?.includes('http'));
-        const   target     = computed(()=> menu?.value?.target? menu?.value?.target[0] : '_self');
+        const   menusStore = useMenusStore();
+        const { locale }   = useI18n();
+        const   searchPath = computed(() => menusStore?.getSystemPagePath?.({ alias: '/search', locale: unref(locale) }) || '/search');
+        const   href       = computed(() => {
+            const rawHref = menu?.value?.href;
+            if (rawHref && rawHref !== '<nolink>') return rawHref;
+            if (menu?.value?.title) return `${searchPath.value}?freeText=${encodeURIComponent(menu.value.title)}`;
+            return null;
+        });
+        const   noHeader         = computed(()=> menu?.value?.title?.startsWith('<noheader'));
+        const   hasExplicitArrow = computed(() => menu?.value?.class?.includes('arrow') || menu?.value?.class?.includes('mm-arrow'));
+        const   hasArrow         = computed(() => !noHeader.value && (hasExplicitArrow.value || !!href.value));
+        const   isExternal       = computed(() => href.value?.includes('http'));
+        const   target           = computed(()=> menu?.value?.target? menu?.value?.target[0] : '_self');
 
         const   hasSpecialDescription   = computed(()=>menu?.value?.class?.includes('mm-special-description'));
         const   siteStore               = useSiteStore();
@@ -26,7 +37,6 @@
         const lineStyle        = reactive({ 'border-bottom': `.25rem solid ${primaryColor.value}` })
         const arrowStyle       = reactive({ 'fill': primaryColor.value })
         const descriptionStyle = reactive({ 'color': primaryColor.value })
-        const noHeader         = computed(()=> menu?.value?.title?.startsWith('<noheader'));
 </script>
 
 <style lang="scss" scoped>
