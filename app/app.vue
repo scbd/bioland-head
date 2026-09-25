@@ -8,8 +8,14 @@
 <script setup >
 
 const { locale } = useI18n();
+const siteStore  = useSiteStore();
 const localHead  = useLocaleHead({ addDirAttribute: true, addSeoAttributes: true }) 
-useHead({ htmlAttrs: { lang: locale, dir: () => localHead.value.htmlAttrs.dir } })
+
+// Root --bs-primary follows the site's header colour so every var(--bs-primary) accent
+// (section heading underlines, dividers) matches it; resolveTheme only yields validated hex.
+const rootThemeStyle = () => `--bs-primary: ${siteStore.primaryColor}`;
+
+useHead({ htmlAttrs: { lang: locale, dir: () => localHead.value.htmlAttrs.dir, style: rootThemeStyle } })
 
 </script>
 <script>
