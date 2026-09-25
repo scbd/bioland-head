@@ -1,0 +1,54 @@
+/* Editor alignment (BL-1155). Drupal's filter_align / media_embed render CKEditor's data-align as
+   `align-left|right|center` on the <img>, captioned <figure> or embedded media wrapper, and the
+   alignment plugin as `text-align-*` on blocks. Drupal ships the rules in its own theme css, which
+   the head never loads, so without these the image sits on its own line and text never wraps.
+   Global so it reaches every v-html body (#page-body-body, #page-body-media-body) whichever
+   component rendered it. Physical left/right on purpose: mirrors the editor's visual choice in RTL. */
+:is(#page-body-body, #page-body-media-body)::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+:is(#page-body-body, #page-body-media-body) :is(.align-left, [data-align="left"]) {
+    float: left;
+    margin: .25rem 1.5rem 1rem 0;
+}
+:is(#page-body-body, #page-body-media-body) :is(.align-right, [data-align="right"]) {
+    float: right;
+    margin: .25rem 0 1rem 1.5rem;
+}
+:is(#page-body-body, #page-body-media-body) :is(.align-center, [data-align="center"]) {
+    display: block;
+    margin: 0 auto 1rem;
+}
+/* Shrink-wrap unsized aligned items so auto margins can center them. An editor width preset
+   (`media--view-mode-bioland-width-N`, BL-917) sets its own width and must win. */
+:is(#page-body-body, #page-body-media-body) :is(.align-center, [data-align="center"]):not([class*="media--view-mode-bioland-width-"]) {
+    width: fit-content;
+}
+:is(#page-body-body, #page-body-media-body) :is(.align-left, .align-right, .align-center, [data-align]) img {
+    max-width: 100%;
+    height: auto;
+}
+:is(#page-body-body, #page-body-media-body) .text-align-left    { text-align: left; }
+:is(#page-body-body, #page-body-media-body) .text-align-right   { text-align: right; }
+:is(#page-body-body, #page-body-media-body) .text-align-center  { text-align: center; }
+:is(#page-body-body, #page-body-media-body) .text-align-justify { text-align: justify; }
+
+/* Drupal renders the media entity with its admin-only "Contains machine translations?" flag
+   (field_i18n) when the default view display still lists it. Never show it on the site. */
+:is(#page-body-body, #page-body-main-body, #page-body-media-body) .media .field--name-field-i18n {
+    display: none;
+}
+
+/* Below md the column is too narrow to wrap text beside a photo: stack instead. */
+@media (max-width: 767.98px) {
+    :is(#page-body-body, #page-body-media-body) :is(.align-left, .align-right, [data-align="left"], [data-align="right"]) {
+        float: none;
+        max-width: 100%;
+        margin: 0 auto 1rem;
+    }
+    :is(#page-body-body, #page-body-media-body) :is(.align-left, .align-right, [data-align="left"], [data-align="right"]):not([class*="media--view-mode-bioland-width-"]) {
+        width: fit-content;
+    }
+}
