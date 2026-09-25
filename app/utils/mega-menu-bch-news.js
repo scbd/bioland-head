@@ -10,21 +10,33 @@ function bchNewsMenuDate(item){
     return date?.isValid ? date.toMillis() : -Infinity;
 }
 
+// News, notifications and announcements only: latest-bch also returns BCH `meeting` records.
+const BCH_NEWS_SCHEMAS = ['news', 'notification', 'statement', 'pressRelease'];
+
 /**
- * True for records imported from the BCH (index documents and BCH announcement articles), false for
- * site-authored Drupal nodes, which always carry a node id or a content-type placement.
+ * True for BCH-imported news (index documents of a news schema and BCH announcement articles), false
+ * for meetings and for site-authored Drupal nodes, which always carry a node id or a content-type placement.
  */
 export function isBchImportedNewsRecord(record){
     if(!record) return false;
     if(record.type === 'bch') return true;
 
-    return !record.dnid && !record.fieldTypePlacement;
+    return !record.dnid && !record.fieldTypePlacement && BCH_NEWS_SCHEMAS.includes(record.schema);
+}
+
+function isHttpsUrl(href){
+    try{
+        return new URL(href).protocol === 'https:';
+    }
+    catch{
+        return false;
+    }
 }
 
 export function toBchNewsMenuItem(record){
     const href = record?.href || record?.url || record?.urls?.[0];
 
-    if(!href || !record?.title) return null;
+    if(!isHttpsUrl(href) || !record?.title) return null;
 
     return {
         title  : record.title,
@@ -36,9 +48,9 @@ export function toBchNewsMenuItem(record){
 }
 
 /**
- * Merges BCH-imported news into a mega-menu content-type list, newest first, capped at `limit`.
- * Site items keep their server order (sticky / field_order); BCH items are slotted in by date,
- * and ties go to the site item.
+ * Merges BCH-imported news into a mega-menu content-type list, capped at `limit`.
+ * Sticky site items stay on top in server order; the remaining site items and the BCH items follow
+ * newest first, and on equal dates the site item comes first.
  */
 export function mergeBchNewsIntoMegaMenu(siteItems, bchRecords, limit){
     const site      = Array.isArray(siteItems) ? siteItems : [];
@@ -48,17 +60,11 @@ export function mergeBchNewsIntoMegaMenu(siteItems, bchRecords, limit){
                         .map(toBchNewsMenuItem)
                         .filter((item)=> item && !siteHrefs.has(item.href))
                         .map((item)=> [item.href, item]));
-    const bch       = [...bchByHref.values()].sort((a, b)=> bchNewsMenuDate(b) - bchNewsMenuDate(a));
-
-    const merged = [];
-    let i = 0;
-    let j = 0;
-
-    while(i < site.length || j < bch.length){
-        const takeBch = j < bch.length && (i >= site.length || bchNewsMenuDate(bch[j]) > bchNewsMenuDate(site[i]));
-
-        merged.push(takeBch ? bch[j++] : site[i++]);
-    }
+    const sticky    = site.filter(({ sticky })=> sticky);
+    // Array#sort is stable, so site items (listed first) win date ties and keep their relative order.
+    const rest      = [...site.filter(({ sticky })=> !sticky), ...bchByHref.values()]
+                        .sort((a, b)=> bchNewsMenuDate(b) - bchNewsMenuDate(a));
+    const merged    = [...sticky, ...rest];
 
     return Number.isInteger(limit) && limit > 0 ? merged.slice(0, limit) : merged;
 }

@@ -16,6 +16,14 @@ describe('isBchImportedNewsRecord', () => {
         expect(isBchImportedNewsRecord({ dnid: 4 })).toBe(false);
         expect(isBchImportedNewsRecord(null)).toBe(false);
     });
+
+    it('accepts the BCH news schemas and rejects meetings', () => {
+        for (const schema of ['news', 'notification', 'statement', 'pressRelease'])
+            expect(isBchImportedNewsRecord(bchIndex('a', '2026-01-01', schema))).toBe(true);
+
+        expect(isBchImportedNewsRecord(bchIndex('m', '2026-01-01', 'meeting'))).toBe(false);
+        expect(isBchImportedNewsRecord({ title: 'x', href: 'https://bch.cbd.int/x' })).toBe(false);
+    });
 });
 
 describe('toBchNewsMenuItem', () => {
@@ -28,13 +36,18 @@ describe('toBchNewsMenuItem', () => {
         expect(toBchNewsMenuItem({ title: 't' })).toBeNull();
         expect(toBchNewsMenuItem({ href: 'https://x' })).toBeNull();
     });
+
+    it('drops links that are not https', () => {
+        for (const href of ['http://bch.cbd.int/t', 'javascript:alert(1)', '/relative', 'not a url'])
+            expect(toBchNewsMenuItem({ title: 't', href })).toBeNull();
+    });
 });
 
 describe('mergeBchNewsIntoMegaMenu', () => {
     it('slots BCH items in newest first and labels them', () => {
         const result = mergeBchNewsIntoMegaMenu(
             [site('local', '2026-03-01')],
-            [bchIndex('older', '2026-01-01'), bchIndex('newer', '2026-04-01'), drupalNews('dup-site', '2026-05-01')],
+            [bchIndex('older', '2026-01-01'), bchIndex('newer', '2026-04-01'), drupalNews('dup-site', '2026-05-01'), bchIndex('meeting', '2026-05-01', 'meeting')],
             6
         );
 
@@ -43,14 +56,20 @@ describe('mergeBchNewsIntoMegaMenu', () => {
         expect(result.find(({ title }) => title === 'local').isFromBch).toBeUndefined();
     });
 
-    it('keeps the site order (sticky / field_order) and gives ties to the site item', () => {
+    it('keeps sticky site items on top even when a BCH item is newer', () => {
         const result = mergeBchNewsIntoMegaMenu(
-            [site('sticky-old', '2025-01-01'), site('recent', '2026-03-01')],
-            [bchIndex('same-day', '2025-01-01')],
+            [{ ...site('pinned-old', '2024-01-01'), sticky: true }, site('recent', '2026-03-01')],
+            [bchIndex('newest', '2026-06-01')],
             6
         );
 
-        expect(result.map(({ title }) => title)).toEqual(['sticky-old', 'recent', 'same-day']);
+        expect(result.map(({ title }) => title)).toEqual(['pinned-old', 'newest', 'recent']);
+    });
+
+    it('gives date ties to the site item', () => {
+        const result = mergeBchNewsIntoMegaMenu([site('local', '2025-01-01')], [bchIndex('same-day', '2025-01-01')], 6);
+
+        expect(result.map(({ title }) => title)).toEqual(['local', 'same-day']);
     });
 
     it('respects the item cap and ignores a missing or invalid cap', () => {
