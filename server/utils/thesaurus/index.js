@@ -2,6 +2,14 @@
 // Re-exporting causes "Duplicated imports" warnings during build
 // Individual exports like config.ts, fetcher.ts, sanitizers.ts, etc. are auto-imported by Nuxt
 import { isNt7Document, toNt7Tag } from './nt7.js';
+import { ecosystemTypes } from './ecosystems';
+import { getStaticDomain } from './source-map';
+
+// Ecosystem types are a static term set with no thesaurus API behind them, so a
+// tag that names one is resolved here, in the API term shape (name + localized title).
+const ecosystemTermsById = new Map(
+  ecosystemTypes.map(({ identifier, name }) => [identifier, { identifier, name: name.en, title: name }]),
+);
 
 export const getThesaurusByKey = defineCachedFunction(
   async (event, keysRaw) => {
@@ -32,6 +40,11 @@ export const getThesaurusByKey = defineCachedFunction(
           promiseDetails.push({
             promise: Promise.resolve(getSdg(keyStr)),
             url: `SDG: ${keyStr}`,
+          });
+        } else if (ecosystemTermsById.has(keyStr)) {
+          promiseDetails.push({
+            promise: Promise.resolve(ecosystemTermsById.get(keyStr)),
+            url: `Ecosystem: ${keyStr}`,
           });
         } else if (keyStr.includes("ort-nt7")) {
           promiseDetails.push({
@@ -324,9 +337,9 @@ export async function mapTagsByType(tags) {
             (map.nt7 ??= []).push(toNt7Tag(tag));
             continue;
         }
-
-        // Skip identifiers already known to be not found
-        if (await isIdentifierNotFound(tag.identifier)) continue;
+        // Skip identifiers already known to be not found, unless the static map now files them
+        // (the not-found list outlives a deploy that adds a static entry).
+        if (!getStaticDomain(tag.identifier) && await isIdentifierNotFound(tag.identifier)) continue;
 
         const category = categoryPatterns.find(({ test }) => test(tag.identifier));
         const key = category?.key || await getDomainByIdentifier(tag.identifier);

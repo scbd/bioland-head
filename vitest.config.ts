@@ -1,7 +1,10 @@
 import { defineConfig } from 'vitest/config'
 import { resolve } from 'path'
+// Nuxt ships @vitejs/plugin-vue; it compiles .vue files so component specs can import real SFCs.
+import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
+  plugins: [vue()],
   test: {
     globals: true,
     environment: 'node',

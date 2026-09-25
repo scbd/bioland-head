@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 vi.mock('~/server/utils/thesaurus/config', () => ({
   apiDomains: ['alpha', 'beta'],
   thesaurusApiUrls: { alpha: 'https://alpha.test', beta: 'https://beta.test' },
+  GOV_TYPE_IDS: new Set(['GOV-1']),
 }))
 
 let sourceMap, $fetch, warn
@@ -81,5 +82,17 @@ describe('getDomainByIdentifier', () => {
     expect(await sourceMap.getDomainByIdentifier('A-1')).toBe('alpha')
     expect(await sourceMap.getDomainByIdentifier('nope')).toBeNull()
     expect($fetch.mock.calls.length).toBe(callsAfterFailure)
+  })
+})
+
+describe('static entries', () => {
+  it('answer ahead of a cached build that predates them', async () => {
+    vi.resetModules()
+    // A shared-cache map written before GOV-1 / T1.1 were static entries.
+    vi.stubGlobal('defineCachedFunction', (fn, opts) => opts?.getKey?.() === 'thesaurus-source-map' ? async () => ({ 'GOV-1': 'alpha' }) : fn)
+    const stale = await import('~/server/utils/thesaurus/source-map')
+
+    expect(await stale.getDomainByIdentifier('GOV-1')).toBe('govTypes')
+    expect(await stale.getDomainByIdentifier('T1.1')).toBe('ecosystemTypes')
   })
 })

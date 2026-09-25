@@ -90,6 +90,11 @@
                 <button type="button" class="btn btn-link btn-sm p-0 more-toggle" :aria-expanded="expanded.bchSubjects" :aria-label="`${expanded.bchSubjects ? t('Show less') : t('Show more')}: ${t('Biosafety Thematic Areas')}`" @click="expanded.bchSubjects = !expanded.bchSubjects">{{ expanded.bchSubjects ? t('Show less') : '&hellip;' }}</button>
             </div>
         </div>
+        <div v-for="group in additionalTagGroups" :key="group.key" class="mb-2">
+            <h5 >{{t(group.heading)}}</h5>
+
+            <span  v-for="term in group.terms" :key="term.identifier" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ getTagTermLabel(term, locale) }}</span>
+        </div>
     </div>
 </template>
 <script setup>
@@ -109,6 +114,8 @@
 
     const {  getGbfUrl, tags }   = useDocumentHelpers(pageStore.page);
     const   expanded        = reactive({ countries: false, subjects: false, bchSubjects: false });
+
+    const additionalTagGroups = computed(() => getAdditionalTagGroups(tags.value));
 </script>
 
 <style lang="scss" scoped>
