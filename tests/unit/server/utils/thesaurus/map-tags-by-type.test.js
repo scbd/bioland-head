@@ -78,6 +78,14 @@ describe('mapTagsByType', () => {
     })
   })
 
+  it('files a static id even when the not-found list already holds it', async () => {
+    storage.set('term-not-found', JSON.stringify(['T1.1', 'NOPE']))
+
+    const map = await thesaurus.mapTagsByType([{ identifier: 'T1.1' }, { identifier: 'NOPE' }])
+
+    expect(ids(map)).toEqual({ ecosystemTypes: ['T1.1'] })
+  })
+
   it('drops unknown identifiers and returns undefined for no tags', async () => {
     expect(await thesaurus.mapTagsByType([{ identifier: 'NOPE' }, {}, null])).toEqual({})
     expect(await thesaurus.mapTagsByType(undefined)).toBeUndefined()

@@ -302,7 +302,8 @@ export async function getDomainByIdentifier(identifier) {
 
   // Static entries win over the API build (see buildThesaurusSourceMap), and answering them
   // here keeps them current even while a cached map built before they were added is served.
-  if (Object.hasOwn(thesaurusSourceMap, identifier)) return thesaurusSourceMap[identifier];
+  const staticDomain = getStaticDomain(identifier);
+  if (staticDomain) return staticDomain;
 
   // Honour the backoff even before any build has succeeded: on a cold start with one
   // thesaurus API down, mapTagsByType would otherwise rebuild (and re-fetch the dead
@@ -321,6 +322,16 @@ export async function getDomainByIdentifier(identifier) {
     const fallback = lastGoodSourceMap || thesaurusSourceMap;
     return fallback[identifier] ?? null;
   }
+}
+
+/**
+ * The domain the static source map files an identifier under, without touching the API build.
+ *
+ * @param {string} identifier
+ * @returns {string|undefined}
+ */
+export function getStaticDomain(identifier) {
+  return Object.hasOwn(thesaurusSourceMap, identifier) ? thesaurusSourceMap[identifier] : undefined;
 }
 
 /**

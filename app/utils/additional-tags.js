@@ -2,6 +2,8 @@
  * The "additional tag" groups an editor can attach to content from the Drupal module's
  * Additional Tags Settings tab. Each key matches the bucket `mapTagsByType` files the term
  * under on the server; `heading` is the i18n key shown above the group on the content page.
+ * Headings reuse the Drupal tab's group labels ("Event Status", "Document Types", ...);
+ * geographic scope and government types have no label there, so they follow the same form.
  */
 export const ADDITIONAL_TAG_GROUPS = [
   { key: 'documentTypes',   heading: 'Document Types' },
@@ -14,16 +16,19 @@ export const ADDITIONAL_TAG_GROUPS = [
 ];
 
 /**
- * The additional tag groups present on a record, in display order, empty groups omitted.
+ * The additional tag groups present on a record, in display order, empty groups omitted and
+ * a term tagged more than once shown once.
  *
  * @param {Record<string, object[]>|undefined} tags - A record's `tags`, as built by `mapTagsByType`.
  * @returns {{ key: string, heading: string, terms: object[] }[]}
  */
 export function getAdditionalTagGroups(tags) {
   return ADDITIONAL_TAG_GROUPS
-    .map((group) => ({ ...group, terms: tags?.[group.key] || [] }))
+    .map((group) => ({ ...group, terms: uniqueByIdentifier(tags?.[group.key] || []) }))
     .filter(({ terms }) => terms.length);
 }
+
+const uniqueByIdentifier = (terms) => [...new Map(terms.map((term) => [term?.identifier, term])).values()];
 
 /**
  * Display label for a thesaurus term: its localized title, then its English title or name.

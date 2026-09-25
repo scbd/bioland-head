@@ -8,6 +8,12 @@ describe('getAdditionalTagGroups', () => {
     expect(getAdditionalTagGroups(tags).map(({ key }) => key)).toEqual(['documentTypes', 'geoScopes'])
   })
 
+  it('shows a term tagged more than once only once', () => {
+    const tags = { documentTypes: [{ identifier: 'D' }, { identifier: 'E' }, { identifier: 'D' }] }
+
+    expect(getAdditionalTagGroups(tags)[0].terms.map(({ identifier }) => identifier)).toEqual(['D', 'E'])
+  })
+
   it('returns nothing for missing tags', () => {
     expect(getAdditionalTagGroups(undefined)).toEqual([])
     expect(getAdditionalTagGroups({})).toEqual([])
@@ -16,6 +22,12 @@ describe('getAdditionalTagGroups', () => {
   it('covers every additional tag group the Drupal settings tab can configure', () => {
     expect(ADDITIONAL_TAG_GROUPS.map(({ key }) => key)).toEqual(
       ['documentTypes', 'eventStatuses', 'projectStatuses', 'geoScopes', 'orgTypes', 'govTypes', 'ecosystemTypes'])
+  })
+
+  it('uses the Drupal Additional Tags Settings group labels as headings', () => {
+    expect(ADDITIONAL_TAG_GROUPS.map(({ heading }) => heading)).toEqual([
+      'Document Types', 'Event Status', 'Project Status', 'Geographic Scope',
+      'Organization Types', 'Government Types', 'Ecosystem Types'])
   })
 })
 
