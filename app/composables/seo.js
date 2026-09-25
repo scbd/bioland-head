@@ -216,7 +216,7 @@ function generateTwitterHandle(siteName, isBiosafetySite) {
  * @param {string} siteName - Site name for alt text
  * @returns {Object|null} - Image object with src, alt, width, height
  */
-function getOgImage(page, host, isHomePage = false, logo = null, logoDimensions = null, siteName = '') {
+export function getOgImage(page, host, isHomePage = false, logo = null, logoDimensions = null, siteName = '') {
     // For home page, use the site logo
     if (isHomePage && logo) {
         return {
@@ -229,17 +229,19 @@ function getOgImage(page, host, isHomePage = false, logo = null, logoDimensions 
         };
     }
     
+    if (isRemoteVideo(page)) return toOgImage(getRemoteVideoImage(page, host));
+
     const attachments = page?.fieldAttachments;
     
     if (!Array.isArray(attachments) || !attachments.length) return null;
     
-    // Prefer hero images, then regular images
+    // Prefer hero images, then regular images, then a remote video's preview image
     const heroImage = attachments.find(({ type }) => type === 'media--hero');
     const regularImage = attachments.find(({ type }) => type === 'media--image');
     
     const image = heroImage || regularImage;
     
-    if (!image?.fieldMediaImage?.uri?.url) return null;
+    if (!image?.fieldMediaImage?.uri?.url) return toOgImage(getRemoteVideoImage(attachments.find(isRemoteVideo), host));
     
     const src = `${host}${image.fieldMediaImage.uri.url}`;
     
@@ -251,6 +253,19 @@ function getOgImage(page, host, isHomePage = false, logo = null, logoDimensions 
         height: image.fieldHeight || image.fieldMediaImage?.meta?.height,
         type: image.fieldMime || 'image/jpeg'
     };
+}
+
+/**
+ * Maps a remote video preview image to the OG image shape
+ * @param {Object|null} image - Result of getRemoteVideoImage
+ * @returns {Object|null} - Image object with src, alt, width, height
+ */
+export function toOgImage(image) {
+    if (!image) return null;
+
+    const { src, alt, width, height, mime } = image;
+
+    return { src, secureUrl: src, alt, width, height, ...(mime && { type: mime }) };
 }
 
 /**

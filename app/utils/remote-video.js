@@ -22,3 +22,44 @@ export function getRemoteVideoEmbedSrc(url) {
 
   return ''
 }
+
+/**
+ * Whether a JSON:API media record is a remote video (YouTube/Vimeo).
+ *
+ * @param   {object} record - Media record (camelCased JSON:API)
+ * @returns {boolean}
+ */
+export function isRemoteVideo(record) {
+  return record?.type === 'media--remote_video'
+}
+
+/**
+ * Picks the preview image for a remote video media record (BL-815).
+ *
+ * The site's custom `field_media_image` is an optional editor override; when
+ * it has no file, core's `thumbnail` (fetched from the oEmbed provider) is
+ * used. Alt text comes from the chosen file first, then the other file, then
+ * the media name, since provider thumbnails usually carry no alt. Width and
+ * height come from whichever file was chosen.
+ *
+ * @param   {object} record    - Remote video media record (camelCased JSON:API)
+ * @param   {string} [host=''] - Origin prefixed to the file path
+ * @returns {{ src: string, alt: string, width?: number, height?: number, mime?: string }|null}
+ *          null when neither file has a url
+ */
+export function getRemoteVideoImage(record, host = '') {
+  const { fieldMediaImage, thumbnail, name } = record || {}
+  const file = [fieldMediaImage, thumbnail].find((f) => f?.uri?.url)
+
+  if (!file) return null
+
+  const other = file === fieldMediaImage ? thumbnail : fieldMediaImage
+
+  return {
+    src   : `${host}${file.uri.url}`,
+    alt   : file.meta?.alt || other?.meta?.alt || name || '',
+    width : file.meta?.width,
+    height: file.meta?.height,
+    mime  : file.filemime
+  }
+}

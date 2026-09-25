@@ -129,7 +129,9 @@ function getContentTypeName(tid) {
  * @param {string} host - Site host URL
  * @returns {string|null} - Image URL
  */
-function getImageUrl(page, host) {
+export function getImageUrl(page, host) {
+    if (isRemoteVideo(page)) return getRemoteVideoImage(page, host)?.src || null;
+
     const attachments = page?.fieldAttachments;
     
     if (!Array.isArray(attachments) || !attachments.length) {
@@ -141,9 +143,9 @@ function getImageUrl(page, host) {
     const regularImage = attachments.find(({ type }) => type === 'media--image');
     const image = heroImage || regularImage;
     
-    if (!image?.fieldMediaImage?.uri?.url) return null;
-    
-    return `${host}${image.fieldMediaImage.uri.url}`;
+    if (image?.fieldMediaImage?.uri?.url) return `${host}${image.fieldMediaImage.uri.url}`;
+
+    return getRemoteVideoImage(attachments.find(isRemoteVideo), host)?.src || null;
 }
 
 /**
