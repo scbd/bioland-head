@@ -137,5 +137,39 @@ describe('html', () => {
       expect(htmlSanitize(input)).not.toContain('data:')
       expect(htmlSanitize('<img src="text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">')).not.toContain('data:')
     })
+
+    describe('editor alignment markup (BL-1155)', () => {
+      it('keeps the align class Drupal media_embed puts on an embedded image', () => {
+        const input = '<div class="align-left media media--type-image"><div class="field__item"><img src="/sites/co/files/a.jpg" width="480" height="361" alt="A"></div></div><h4>Text</h4>'
+        const result = htmlSanitize(input)
+
+        expect(result).toContain('class="align-left media media--type-image"')
+        expect(result).toContain('width="480"')
+      })
+
+      it('keeps align classes on images and captioned figures', () => {
+        expect(htmlSanitize('<img class="align-right" src="/a.jpg" alt="">')).toContain('class="align-right"')
+        expect(htmlSanitize('<figure class="caption caption-img align-center"><img src="/a.jpg" alt=""><figcaption>c</figcaption></figure>'))
+          .toContain('class="caption caption-img align-center"')
+      })
+
+      it('keeps an unfiltered data-align attribute', () => {
+        expect(htmlSanitize('<img data-align="left" src="/a.jpg" alt="">')).toContain('data-align="left"')
+      })
+
+      it('keeps paragraph text-align classes', () => {
+        expect(htmlSanitize('<p class="text-align-justify">x</p>')).toContain('class="text-align-justify"')
+        expect(htmlSanitize('<h2 class="text-align-center">x</h2>')).toContain('class="text-align-center"')
+      })
+
+      it('still strips hostile markup riding on aligned elements', () => {
+        const input = '<div class="align-left" onclick="alert(1)"><img src="x" onerror="alert(1)" class="align-left"><script>alert(1)</script></div><p class="text-align-center"><a href="javascript:alert(1)">x</a></p>'
+        const result = htmlSanitize(input)
+
+        expect(result).toContain('class="align-left"')
+        expect(result).toContain('class="text-align-center"')
+        expect(result).not.toMatch(/onclick|onerror|<script|javascript:/i)
+      })
+    })
   })
 })
