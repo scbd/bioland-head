@@ -4,6 +4,7 @@
             <NuxtLink  class="child-link" :class="menu.class"   :to="safeLocalePath(menu.href)" :title="title || menu.title" :external="isExternal" :target="target">
                 {{title || menu.title}}  {{menu.class}} {{isFinalLink}}<span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<LazyIcon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
             </NuxtLink>
+            <small v-if="menu.isFromBch" class="d-block text-muted">{{ t('from the Biosafety Clearing-House') }}</small>
         </p>
         <div v-if="isFinalLink && menu.count && !hideFinal" id="page-header-mega-menu-link-final" :class="menu.class">
             <NuxtLink  class="child-link"   :to="safeLocalePath(menu.href)" :title="title || menu.title" :external="isExternal" :target="target">
@@ -19,6 +20,7 @@
                     <div class="col-9 align-self-center">
                         <p class="text-wrap card-text ps-1">
                             {{title || menu.title}}<span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<LazyIcon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
+                            <small v-if="menu.isFromBch" class="d-block text-muted">{{ t('from the Biosafety Clearing-House') }}</small>
                         </p>
                     </div>
                 </div>
@@ -31,6 +33,7 @@
                     <NuxtImg :src="menu.thumb" class="img-fluid card-img" :alt="menu.title" width="102" height="64" fit="cover" format="webp"/>
                     <div class="card-body">
                         <p class="card-text" :class="{ 'card-text--long-word': hasLongWord }">{{menu.title}}</p>
+                        <p v-if="menu.isFromBch" class="card-text"><small class="text-muted">{{ t('from the Biosafety Clearing-House') }}</small></p>
                         <p class="card-text"><small class="text-muted">{{dateFormat(menu)}}</small></p>
                     </div>
                 </div>
@@ -57,7 +60,7 @@
 <script setup>
     import { DateTime } from 'luxon';
 
-    const { locale  }   = useI18n();
+    const { t, locale } = useI18n();
     const   props       = defineProps({ 
                                         menu      : Object,
                                         showThumbs: Boolean,
