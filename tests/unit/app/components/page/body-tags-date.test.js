@@ -1,34 +1,21 @@
-import { readFileSync } from 'node:fs'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import * as vue from 'vue'
 import { renderToString } from 'vue/server-renderer'
-import { parse, compileScript } from '@vue/compiler-sfc'
 import { getAdditionalTagGroups, getTagTermLabel } from '~/app/utils/additional-tags'
+import BodyTagsDate from '~/app/components/page/body-tags-date.vue'
 
-// This repo installs no @vue/test-utils or DOM environment, so the checked-in SFC is compiled
-// with @vue/compiler-sfc and server-rendered. Nuxt auto-imports are supplied the way Nuxt does:
-// as an import at the top of <script setup>, here resolved from a stub object.
-const AUTO_IMPORTS = ['computed', 'useI18n', 'useDateFormat', 'useMeStore', 'usePageStore', 'useTheme',
-  'useDocumentHelpers', 'getAdditionalTagGroups', 'getTagTermLabel']
+// This repo installs no @vue/test-utils or DOM environment, so the checked-in SFC is compiled by
+// @vitejs/plugin-vue and server-rendered. Nuxt auto-imports are free identifiers in the compiled
+// setup, so they are supplied as globals; template-only helpers go on globalProperties.
+const { stub } = await vi.hoisted(async () => {
+  const { defineComponent, h } = await import('vue')
+  return { stub: defineComponent({ render() { return h('span', this.$slots.default?.()) } }) }
+})
+vi.mock('vue3-popper', () => ({ default: stub }))
 
-const source = readFileSync(new URL('../../../../../app/components/page/body-tags-date.vue', import.meta.url), 'utf8')
-const withImports = source.replace('<script setup>', `<script setup>\nimport { ${AUTO_IMPORTS.join(', ')} } from '#imports';`)
-const { descriptor } = parse(withImports)
-const { content } = compileScript(descriptor, { id: 'body-tags-date', inlineTemplate: true, genDefaultAs: '__sfc__' })
-
-const toDestructure = (names) => names.replace(/\s+as\s+/g, ': ')
-const moduleBody = content
-  .replace(/import\s*\{([^}]*)\}\s*from\s*['"]vue['"];?/g, (_, names) => `const {${toDestructure(names)}} = __vue;`)
-  .replace(/import\s*\{([^}]*)\}\s*from\s*['"]#imports['"];?/g, (_, names) => `const {${toDestructure(names)}} = __imports;`)
-  .replace(/import\s+(\w+)\s+from\s*['"]vue3-popper['"];?/g, 'const $1 = __stub;')
-  + '\nreturn __sfc__;'
-
-const stub = vue.defineComponent({ render() { return vue.h('span', this.$slots.default?.()) } })
-const buildComponent = (imports) => new Function('__vue', '__imports', '__stub', moduleBody)(vue, imports, stub)
-
-async function render(tags) {
-  const page = { title: 'A document', status: true, langcode: 'en', tags }
-  const component = buildComponent({
+let page
+beforeEach(() => {
+  const globals = {
     computed: vue.computed,
     useI18n: () => ({ t: (key) => `t:${key}`, locale: vue.ref('en') }),
     useDateFormat: () => (d) => String(d),
@@ -37,9 +24,15 @@ async function render(tags) {
     useTheme: () => ({ bgStyle: {}, style: {} }),
     useDocumentHelpers: (record) => ({ getGbfUrl: () => '', tags: vue.computed(() => record?.tags) }),
     getAdditionalTagGroups,
-    getTagTermLabel,
-  })
-  const app = vue.createSSRApp(component)
+  }
+  for (const [name, value] of Object.entries(globals)) vi.stubGlobal(name, value)
+})
+afterEach(() => vi.unstubAllGlobals())
+
+async function render(tags) {
+  page = { title: 'A document', status: true, langcode: 'en', tags }
+  const app = vue.createSSRApp(BodyTagsDate)
+  app.config.globalProperties.getTagTermLabel = getTagTermLabel
   for (const name of ['NuxtLink', 'ClientOnly', 'LazyGbfIcon', 'NuxtImg']) app.component(name, stub)
   return renderToString(app)
 }
