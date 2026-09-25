@@ -66,7 +66,8 @@
                     <LazyPageBodyTagsDate id="page-body-media-tags-date-image-mobile" />
                 </div>
 
-                <div id="page-body-media-body" :style="pageTypeStyle" v-if="pageStore?.body" v-html="htmlSanitize(pageStore?.body)"></div>
+                <div id="page-body-media-body" :style="pageTypeStyle" v-if="pageStore?.body" v-html="sanitizedBody"></div>
+                <LazyFontAwesome v-if="hasFontAwesomeIcon(sanitizedBody)"/>
 
             </div>
             
@@ -84,6 +85,8 @@
     const { pageTypeStyle } = useTheme();
 
     const { downloadUrl, imageSrc, imgHeight, imgWidth, mime } = useMediaRecord(pageStore.page);
+
+    const   sanitizedBody  = computed(()=> htmlSanitize(pageStore?.body));
 
     const isPdf     = computed(()=> mime.value?.includes('pdf') || downloadUrl?.toLowerCase()?.endsWith('.pdf'));
     const typeLabel = computed(()=> pageStore?.typeName? t(pageStore.typeName) : '');

@@ -57,6 +57,7 @@
                             <LazyPageBodyTagsDate id="page-body-tags-date-desktop" /> 
                         </div>
                         <div id="page-body-body" :style="pageTypeStyle" v-if="pageStore?.body" v-html="sanitizedBody"></div>
+                        <LazyFontAwesome v-if="hasFontAwesomeIcon(sanitizedBody)"/>
                     </div>
                 </div>
             </div>

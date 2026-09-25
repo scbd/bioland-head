@@ -1167,6 +1167,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fortawesome/fontawesome-free@npm:6.7.2":
+  version: 6.7.2
+  resolution: "@fortawesome/fontawesome-free@npm:6.7.2"
+  checksum: 10c0/e27fb8b846f0bcf40c904acc210829a640329fc7b7ec4e42a7c43cb53739ed6052d78df90810f555a5c80bc608fee5a5174db3fa6da617f582d6210009a19278
+  languageName: node
+  linkType: hard
+
 "@intlify/bundle-utils@npm:11.0.3":
   version: 11.0.3
   resolution: "@intlify/bundle-utils@npm:11.0.3"
@@ -8703,6 +8710,7 @@ __metadata:
   dependencies:
     "@aws-sdk/client-translate": "npm:^3.948.0"
     "@dargmuesli/nuxt-cookie-control": "npm:9.0.8"
+    "@fortawesome/fontawesome-free": "npm:6.7.2"
     "@nuxt/devtools": "npm:3.1.0"
     "@nuxt/image": "npm:1.10.0"
     "@nuxt/scripts": "npm:0.13.0"

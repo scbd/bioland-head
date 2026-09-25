@@ -4,7 +4,8 @@
         <LazyPageBodyTabs id="home-page-body-tabs" v-if="meStore.showEdit"/>
         <div v-if="body?.value" class="row">
             <div class="col-12 my-2" >
-                <div  v-html="htmlSanitize(body?.value)"></div>
+                <div  v-html="sanitizedBody"></div>
+                <LazyFontAwesome v-if="hasFontAwesomeIcon(sanitizedBody)"/>
             </div>
         </div>
         <div class="row my-4">
@@ -41,6 +42,7 @@ const siteStore = useSiteStore();
 const pageStore = usePageStore();
 const meStore   = useMeStore();
 const body      = computed(()=>pageStore?.page?.body);
+const sanitizedBody = computed(()=> htmlSanitize(body?.value));
 
 const isNbfEnabled        = computed(() => siteStore?.biolandSettings?.homeWidgets?.nbfWidget?.enable ?? true);
 const isBchNewsEnabled    = computed(() => siteStore?.biolandSettings?.homeWidgets?.bchNewsWidget?.enable ?? true);
