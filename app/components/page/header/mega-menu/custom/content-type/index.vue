@@ -73,9 +73,9 @@
     });
     const   viewport           = useViewport();
     const   mergesBchNews      = !!siteStore?.isBiosafetySite && getContentType() === BCH_NEWS_CONTENT_TYPE;
-    const   bchNews            = mergesBchNews
-        ? useLazyFetch('/api/list/latest-bch', { key: 'mega-menu-latest-bch', query: computed(()=> ({ ...siteStore.params, locale: unref(locale) })), server: false, default: () => [] }).data
-        : ref([]);
+    // This component mounts only when its drop-down opens, so the fetch is already lazy; the shared cached
+    // key reuses the home widget's payload and skips refetching on re-open.
+    const   bchNews            = mergesBchNews ? useLatestBchNews({ lazy: true, server: false }).data : ref([]);
     const   contentTypeMenuLength = computed(()=> {
         const configured = Number(siteStore?.biolandSettings?.megaMenu?.contentTypeMenus?.[unref(contentTypeTid)]?.maxMenus);
 
@@ -199,6 +199,7 @@
        
         const siteData    = menuStore.getContentTypeData(contentTypeName, country, unref(locale)) || [];
 
+        // BCH news is SCBD-wide (latest-bch queries the index without a country filter), so it goes in every tab.
         const data        = mergesBchNews ? mergeBchNewsIntoMegaMenu(siteData, unref(bchNews), unref(contentTypeMenuLength)) : siteData;
 
         const menuPaths   = unref(passedMenu)?.children?.map(aMenu => aMenu.href) || [];

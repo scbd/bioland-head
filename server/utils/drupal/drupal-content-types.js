@@ -224,6 +224,7 @@ function mapThumbNails(ctx){
         field_published,
         field_tags,
         field_type_placement,
+        sticky,
       } = document;
 
       const startDate = field_start_date || "";
@@ -248,6 +249,7 @@ function mapThumbNails(ctx){
           startDate,
           published,
           tags,
+          sticky,
           contentTypeId: field_type_placement?.drupal_internal__tid,
           nid: drupal_internal__nid,
         };
@@ -265,6 +267,7 @@ function mapThumbNails(ctx){
           startDate,
           published,
           tags,
+          sticky,
           nid: drupal_internal__nid,
           contentTypeId: field_type_placement?.drupal_internal__tid,
         };
@@ -280,6 +283,7 @@ function mapThumbNails(ctx){
         startDate,
         published,
         tags,
+        sticky,
         nid: drupal_internal__nid,
         contentTypeId: field_type_placement?.drupal_internal__tid,
       };

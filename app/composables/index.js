@@ -37,6 +37,17 @@ export const useGetCachedData= () =>  {
             return data !== undefined ? data : nuxtApp?.static?.data?.[key];
         }
 }
+// One cached key per site/locale shared by the home BCH news widget and the News & Updates mega-menu,
+// so opening the menu reuses the widget's payload and re-opening it does not refetch.
+export const useLatestBchNews = (options = {}) => {
+    const   siteStore     = useSiteStore();
+    const { locale }      = useI18n();
+    const   getCachedData = useGetCachedData();
+    const   query         = computed(()=> clone({ ...siteStore.params, locale: unref(locale) }));
+    const   key           = computed(()=> `latest-bch-${JSON.stringify(unref(query))}`);
+
+    return useFetch('/api/list/latest-bch', { method: 'GET', key, query, getCachedData, ...options });
+}
 export const useDateFormat = () => (date, format = 'yyyy LLL dd')=>{
 
     const { locale } = useI18n();
