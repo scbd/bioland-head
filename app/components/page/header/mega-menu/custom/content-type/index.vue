@@ -39,6 +39,9 @@
 
     const DEFAULT_HORIZONTAL_CARD_LIMIT = 4;
     const DEFAULT_MAX_ROWS_PER_COLUMN = 0;
+    // Mirrors getContentTypeMenuLength in server/utils/drupal/drupal-content-types.js.
+    const DEFAULT_CONTENT_TYPE_MENU_LENGTH = 6;
+    const BCH_NEWS_CONTENT_TYPE = 'news';
     
     const  { t, locale }       = useI18n();
     const   localePath         = useLocalePath();
@@ -69,6 +72,15 @@
         return getDefaultFinalLink();
     });
     const   viewport           = useViewport();
+    const   mergesBchNews      = !!siteStore?.isBiosafetySite && getContentType() === BCH_NEWS_CONTENT_TYPE;
+    // This component mounts only when its drop-down opens, so the fetch is already lazy; the shared cached
+    // key reuses the home widget's payload and skips refetching on re-open.
+    const   bchNews            = mergesBchNews ? useLatestBchNews({ lazy: true, server: false }).data : ref([]);
+    const   contentTypeMenuLength = computed(()=> {
+        const configured = Number(siteStore?.biolandSettings?.megaMenu?.contentTypeMenus?.[unref(contentTypeTid)]?.maxMenus);
+
+        return Number.isInteger(configured) && configured > 0 ? configured : DEFAULT_CONTENT_TYPE_MENU_LENGTH;
+    });
 
 
 
@@ -185,7 +197,10 @@
 
         const children    = unref(passedMenu)?.children || [];
        
-        const data        = menuStore.getContentTypeData(contentTypeName, country, unref(locale)) || [];
+        const siteData    = menuStore.getContentTypeData(contentTypeName, country, unref(locale)) || [];
+
+        // BCH news is SCBD-wide (latest-bch queries the index without a country filter), so it goes in every tab.
+        const data        = mergesBchNews ? mergeBchNewsIntoMegaMenu(siteData, unref(bchNews), unref(contentTypeMenuLength)) : siteData;
 
         const menuPaths   = unref(passedMenu)?.children?.map(aMenu => aMenu.href) || [];
 

@@ -46,7 +46,6 @@
 import { Pagination  }   from 'swiper/modules';
 import { useWindowSize } from '@vueuse/core';
 import 'swiper/css';
-import clone from 'lodash.clonedeep';
 
 const swiperRef = ref(null);
 
@@ -97,17 +96,7 @@ const slidesOffsetBefore = computed(()=> rowElWidth.value >= 768 ? 20 : 20);
 
 const newsLink = computed(()=> localePath({path: menusStore.getSystemPagePath({ id:systemPageTidConstants.SEARCH, locale:unref(locale)}), query:{ schemas:[2,3, 49]}}));
 
-// Override locale with current i18n locale to ensure correct locale is sent to API
-const query = computed(() => clone({ 
-    ...siteStore.params, 
-    locale: locale.value,
-}));
-
-const { data:slides, status } = await useFetch(() => `/api/list/latest-bch`, {  
-    method: 'GET', 
-    query, 
-    watch: [locale]
-});
+const { data:slides, status } = await useLatestBchNews();
 
 // Track if client has hydrated
 const hasHydrated = ref(false);
