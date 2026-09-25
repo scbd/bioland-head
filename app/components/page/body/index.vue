@@ -155,50 +155,6 @@
     width: 100%;
     height: 100%;
 }
-
-/* Editor alignment (BL-1155). Drupal's filter_align / media_embed render CKEditor's data-align as
-   `align-left|right|center` on the <img>, captioned <figure> or embedded media wrapper, and the
-   alignment plugin as `text-align-*` on blocks. Drupal ships the rules in its own theme css, which
-   the head never loads, so without these the image sits on its own line and text never wraps. */
-#page-body-body::after {
-    content: "";
-    display: table;
-    clear: both;
-}
-#page-body-body .align-left,
-#page-body-body [data-align="left"] {
-    float: left;
-    margin: .25rem 1.5rem 1rem 0;
-}
-#page-body-body .align-right,
-#page-body-body [data-align="right"] {
-    float: right;
-    margin: .25rem 0 1rem 1.5rem;
-}
-#page-body-body .align-center,
-#page-body-body [data-align="center"] {
-    display: block;
-    width: fit-content;
-    margin: 0 auto 1rem;
-}
-#page-body-body :is(.align-left, .align-right, .align-center, [data-align]) img {
-    max-width: 100%;
-    height: auto;
-}
-#page-body-body .text-align-left    { text-align: left; }
-#page-body-body .text-align-right   { text-align: right; }
-#page-body-body .text-align-center  { text-align: center; }
-#page-body-body .text-align-justify { text-align: justify; }
-
-/* Below md the column is too narrow to wrap text beside a photo: stack instead. */
-@media (max-width: 767.98px) {
-    #page-body-body :is(.align-left, .align-right, [data-align="left"], [data-align="right"]) {
-        float: none;
-        width: fit-content;
-        max-width: 100%;
-        margin: 0 auto 1rem;
-    }
-}
 </style>
 <style lang="scss" scoped>
 .page-body{
