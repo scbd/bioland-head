@@ -1,6 +1,13 @@
 // NOTE: Do NOT re-export from TS modules here - Nuxt auto-imports them directly
 // Re-exporting causes "Duplicated imports" warnings during build
 // Individual exports like config.ts, fetcher.ts, sanitizers.ts, etc. are auto-imported by Nuxt
+import { ecosystemTypes } from './ecosystems';
+
+// Ecosystem types are a static term set with no thesaurus API behind them, so a
+// tag that names one is resolved here, in the API term shape (name + localized title).
+const ecosystemTermsById = new Map(
+  ecosystemTypes.map(({ identifier, name }) => [identifier, { identifier, name: name.en, title: name }]),
+);
 
 export const getThesaurusByKey = defineCachedFunction(
   async (event, keysRaw) => {
@@ -31,6 +38,11 @@ export const getThesaurusByKey = defineCachedFunction(
           promiseDetails.push({
             promise: Promise.resolve(getSdg(keyStr)),
             url: `SDG: ${keyStr}`,
+          });
+        } else if (ecosystemTermsById.has(keyStr)) {
+          promiseDetails.push({
+            promise: Promise.resolve(ecosystemTermsById.get(keyStr)),
+            url: `Ecosystem: ${keyStr}`,
           });
         } else if (keyStr.includes("ort-nt7")) {
           promiseDetails.push({

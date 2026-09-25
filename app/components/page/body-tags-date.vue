@@ -81,6 +81,11 @@
             
             <span  v-for="(subject,i) in tags.bchSubjects" :key="i" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ t(subject.identifier) }}</span>
         </div>
+        <div v-for="group in additionalTagGroups" :key="group.key" class="mb-2">
+            <h5 >{{t(group.heading)}}</h5>
+
+            <span  v-for="term in group.terms" :key="term.identifier" :style="bgStyle" class="badge text-wrap   w-100 mb-1">{{ getTagTermLabel(term, locale) }}</span>
+        </div>
     </div>
 </template>
 <script setup>
@@ -99,6 +104,8 @@
     });
 
     const {  getGbfUrl, tags }   = useDocumentHelpers(pageStore.page);
+
+    const additionalTagGroups = computed(() => getAdditionalTagGroups(tags.value));
 </script>
 
 <style lang="scss" scoped>
