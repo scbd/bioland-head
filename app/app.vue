@@ -179,34 +179,37 @@ h6 {
   letter-spacing: 0.1rem;
 }
 
-// Body images render at the size the editor chose, never wider than the body, keeping their ratio.
-#page-body-body img,
-#page-body-main-body img,
-#page-body-media-body img {
-  max-width: 100%;
-  height: auto;
-}
-
-// Media embedded in a body at one of the bioland_width_* view modes (set by the drupal module's
-// CKEditor media size presets) takes that share of the body width; phones always get the full width.
-.media[class*="media--view-mode-bioland-width-"] {
-  max-width: 100%;
-
+// Body images render at the size the editor chose, never wider than the body; one sized by width
+// keeps its ratio, one sized only by a height attribute keeps that height. Same body ids as the
+// BL-1155 alignment rules, plus the main body.
+:is(#page-body-body, #page-body-main-body, #page-body-media-body) {
   img {
-    width: 100%;
+    max-width: 100%;
+  }
+
+  img:is([width], [style*="width"]) {
     height: auto;
   }
-}
 
-@each $percent in 25, 50, 75, 100 {
-  .media--view-mode-bioland-width-#{$percent} {
-    width: $percent * 1%;
+  // Media embedded at one of the bioland_width_* view modes (the drupal module's CKEditor media
+  // size presets) takes that share of the body width; phones always get the full width.
+  @each $percent in 25, 50, 75, 100 {
+    .media--view-mode-bioland-width-#{$percent} {
+      width: $percent * 1%;
+    }
   }
-}
 
-@media (max-width: 767.98px) {
-  .media[class*="media--view-mode-bioland-width-"] {
-    width: 100%;
+  [class*="media--view-mode-bioland-width-"] {
+    max-width: 100%;
+
+    img {
+      width: 100%;
+      height: auto;
+    }
+
+    @media (max-width: 767.98px) {
+      width: 100%;
+    }
   }
 }
 

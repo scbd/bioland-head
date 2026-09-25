@@ -159,17 +159,30 @@ describe('html', () => {
       expect(result).not.toMatch(/position|background|expression|evil/)
     })
 
-    it('drops an image style with no sizing declaration left', () => {
-      expect(htmlSanitize('<img src="/a.jpg" style="float:left;border:5px solid red">')).not.toContain('style=')
+    it('drops an image style with no allowed declaration left', () => {
+      expect(htmlSanitize('<img src="/a.jpg" style="border:5px solid red;position:fixed;background:url(https://evil.test/x)">')).not.toContain('style=')
+    })
+
+    it('keeps the float and margin legacy content aligns an image with', () => {
+      expect(htmlSanitize('<img src="/a.jpg" style="float:left;margin:0 1rem 1rem 0">'))
+        .toContain('style="float:left;margin:0 1rem 1rem 0"')
+      expect(htmlSanitize('<img src="/a.jpg" style="float: right; margin-left: 10px">'))
+        .toContain('style="float:right;margin-left:10px"')
+    })
+
+    it('strips invalid float and margin values', () => {
+      expect(htmlSanitize('<img src="/a.jpg" style="float:inherit;margin:-999px;margin-top:calc(100vh)">')).not.toContain('style=')
     })
 
     it('leaves styles on non-image elements alone', () => {
       expect(htmlSanitize('<p style="text-align:center">Hi</p>')).toContain('style="text-align:center"')
     })
 
+    // The class drupal-module-bioland's bioland_preprocess_media() appends (BiolandBodyMediaWidth::viewModeClass()),
+    // after media_embed's align class, on core's media.html.twig wrapper.
     it('keeps the view-mode class a resized media embed renders with', () => {
-      expect(htmlSanitize('<div class="media media--type-image media--view-mode-bioland-width-50 align-center"><img src="/a.jpg" width="1090" height="545"></div>'))
-        .toContain('class="media media--type-image media--view-mode-bioland-width-50 align-center"')
+      expect(htmlSanitize('<div class="align-center media--view-mode-bioland-width-50"><img src="/a.jpg" width="1090" height="545"></div>'))
+        .toContain('class="align-center media--view-mode-bioland-width-50"')
     })
   })
 })
