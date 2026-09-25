@@ -137,5 +137,52 @@ describe('html', () => {
       expect(htmlSanitize(input)).not.toContain('data:')
       expect(htmlSanitize('<img src="text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">')).not.toContain('data:')
     })
+
+    it('keeps the width and height an editor resized a body image to', () => {
+      const result = htmlSanitize('<img class="image_resized" src="/a.jpg" width="960" height="480" style="width:75%;height:auto">')
+
+      expect(result).toContain('width="960"')
+      expect(result).toContain('height="480"')
+      expect(result).toContain('style="width:75%;height:auto"')
+      expect(result).toContain('class="image_resized"')
+    })
+
+    it('keeps sizing declarations on a figure and its aspect ratio', () => {
+      expect(htmlSanitize('<figure class="image" style="width: 50%; aspect-ratio: 2 / 1"><img src="/a.jpg"></figure>'))
+        .toContain('style="width:50%;aspect-ratio:2 / 1"')
+    })
+
+    it('strips non-sizing and hostile declarations from an image style', () => {
+      const result = htmlSanitize('<img src="/a.jpg" style="width:40%;position:fixed;top:0;background:url(https://evil.test/x);width:expression(alert(1))">')
+
+      expect(result).toContain('style="width:40%"')
+      expect(result).not.toMatch(/position|background|expression|evil/)
+    })
+
+    it('drops an image style with no allowed declaration left', () => {
+      expect(htmlSanitize('<img src="/a.jpg" style="border:5px solid red;position:fixed;background:url(https://evil.test/x)">')).not.toContain('style=')
+    })
+
+    it('keeps the float and margin legacy content aligns an image with', () => {
+      expect(htmlSanitize('<img src="/a.jpg" style="float:left;margin:0 1rem 1rem 0">'))
+        .toContain('style="float:left;margin:0 1rem 1rem 0"')
+      expect(htmlSanitize('<img src="/a.jpg" style="float: right; margin-left: 10px">'))
+        .toContain('style="float:right;margin-left:10px"')
+    })
+
+    it('strips invalid float and margin values', () => {
+      expect(htmlSanitize('<img src="/a.jpg" style="float:inherit;margin:-999px;margin-top:calc(100vh)">')).not.toContain('style=')
+    })
+
+    it('leaves styles on non-image elements alone', () => {
+      expect(htmlSanitize('<p style="text-align:center">Hi</p>')).toContain('style="text-align:center"')
+    })
+
+    // The class drupal-module-bioland's bioland_preprocess_media() appends (BiolandBodyMediaWidth::viewModeClass()),
+    // after media_embed's align class, on core's media.html.twig wrapper.
+    it('keeps the view-mode class a resized media embed renders with', () => {
+      expect(htmlSanitize('<div class="align-center media--view-mode-bioland-width-50"><img src="/a.jpg" width="1090" height="545"></div>'))
+        .toContain('class="align-center media--view-mode-bioland-width-50"')
+    })
   })
 })

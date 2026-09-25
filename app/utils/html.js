@@ -86,12 +86,51 @@ const repairBase64Image = (node, attr) =>
     if(value.length > maxUrlLength && !hasUsableScheme.test(value)) node.removeAttribute(attr);
   };
 
+// An editor-resized body image carries its size as `width`/`height` attributes or as an inline
+// `style="width:50%"`; legacy CKEditor 4 content aligns it with `float` and `margin`. DOMPurify
+// keeps any style verbatim, so on <img>/<figure> only those declarations survive, each with a
+// strictly validated value: the chosen size and alignment render, and nothing else an editor
+// pasted can restyle or reposition the image.
+const sizedTags   = new Set(['img', 'figure']);
+const length      = String.raw`(?:auto|\d+(?:\.\d+)?(?:px|%|em|rem)?)`;
+const lengthValue = new RegExp(`^${length}$`, 'i');
+const marginValue = new RegExp(`^${length}(?:\\s+${length}){0,3}$`, 'i');
+const allowedStyle = new Map([
+  ['width',         lengthValue],
+  ['height',        lengthValue],
+  ['aspect-ratio',  /^(?:auto|\d+(?:\.\d+)?(?:\s*\/\s*\d+(?:\.\d+)?)?)$/i],
+  ['float',         /^(?:left|right|none)$/i],
+  ['margin',        marginValue],
+  ['margin-top',    lengthValue],
+  ['margin-right',  lengthValue],
+  ['margin-bottom', lengthValue],
+  ['margin-left',   lengthValue],
+]);
+
+const isAllowedDeclaration = ([prop, value, ...rest]) =>
+  !rest.length && !!allowedStyle.get(prop?.toLowerCase())?.test(value || '');
+
+const restrictImageStyle = (node) =>
+  {
+    if(!sizedTags.has(node.tagName?.toLowerCase()) || !node.hasAttribute('style')) return;
+
+    const kept = node.getAttribute('style')
+      .split(';')
+      .map(declaration => declaration.split(':').map(part => part.trim()))
+      .filter(isAllowedDeclaration)
+      .map(([prop, value]) => `${prop.toLowerCase()}:${value}`);
+
+    if(kept.length) node.setAttribute('style', kept.join(';'));
+    else node.removeAttribute('style');
+  };
+
 DOMPurify.addHook('afterSanitizeAttributes', (node)=>
   {
     if(!node.getAttribute) return node;
 
     repairBase64Image(node, 'src');
     repairBase64Image(node, 'srcset');
+    restrictImageStyle(node);
 
     return node;
   });
