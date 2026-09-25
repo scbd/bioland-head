@@ -225,13 +225,11 @@ export const usePageStore = defineStore('page', {
             return this.page.fieldAttachments.filter(({ type })=> type === 'media--remote_video');
         },
         mediaImage(){
-            const siteStore = useSiteStore();
-
-            if(this.isMediaRemoteVideo) return getRemoteVideoImage(this.page, siteStore.host) || undefined;
-
             const hasImage = this.page?.fieldMediaImage?.uri?.url;
         
             if(!hasImage) return undefined;
+
+            const siteStore = useSiteStore();
         
             const alt = this.page.fieldMediaImage?.meta?.alt;
             const src = `${siteStore.host}${this.page.fieldMediaImage.uri.url}`;

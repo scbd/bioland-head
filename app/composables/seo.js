@@ -216,7 +216,7 @@ function generateTwitterHandle(siteName, isBiosafetySite) {
  * @param {string} siteName - Site name for alt text
  * @returns {Object|null} - Image object with src, alt, width, height
  */
-function getOgImage(page, host, isHomePage = false, logo = null, logoDimensions = null, siteName = '') {
+export function getOgImage(page, host, isHomePage = false, logo = null, logoDimensions = null, siteName = '') {
     // For home page, use the site logo
     if (isHomePage && logo) {
         return {
@@ -260,12 +260,12 @@ function getOgImage(page, host, isHomePage = false, logo = null, logoDimensions 
  * @param {Object|null} image - Result of getRemoteVideoImage
  * @returns {Object|null} - Image object with src, alt, width, height
  */
-function toOgImage(image) {
+export function toOgImage(image) {
     if (!image) return null;
 
     const { src, alt, width, height, mime } = image;
 
-    return { src, secureUrl: src, alt, width, height, type: mime || 'image/jpeg' };
+    return { src, secureUrl: src, alt, width, height, ...(mime && { type: mime }) };
 }
 
 /**

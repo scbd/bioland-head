@@ -38,9 +38,9 @@ export function isRemoteVideo(record) {
  *
  * The site's custom `field_media_image` is an optional editor override; when
  * it has no file, core's `thumbnail` (fetched from the oEmbed provider) is
- * used. Alt text falls back from the custom image to the thumbnail to the
- * media name, since provider thumbnails usually carry no alt. Width and height
- * come from whichever file was chosen.
+ * used. Alt text comes from the chosen file first, then the other file, then
+ * the media name, since provider thumbnails usually carry no alt. Width and
+ * height come from whichever file was chosen.
  *
  * @param   {object} record    - Remote video media record (camelCased JSON:API)
  * @param   {string} [host=''] - Origin prefixed to the file path
@@ -53,9 +53,11 @@ export function getRemoteVideoImage(record, host = '') {
 
   if (!file) return null
 
+  const other = file === fieldMediaImage ? thumbnail : fieldMediaImage
+
   return {
     src   : `${host}${file.uri.url}`,
-    alt   : fieldMediaImage?.meta?.alt || thumbnail?.meta?.alt || name || '',
+    alt   : file.meta?.alt || other?.meta?.alt || name || '',
     width : file.meta?.width,
     height: file.meta?.height,
     mime  : file.filemime

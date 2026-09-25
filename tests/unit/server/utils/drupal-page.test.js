@@ -118,11 +118,11 @@ describe('drupal-page utilities', () => {
       expect(search.include).toContain('field_media_document');
     });
 
-    it('includes only the core thumbnail for a media--remote_video page', () => {
-      // BL-815: the preview falls back to the provider thumbnail. field_media_image
-      // is site config on remote_video — including it returns 405.
+    it('includes the custom image and the core thumbnail for a media--remote_video page', () => {
+      // BL-815: the preview prefers the optional field_media_image and falls back to
+      // the provider thumbnail. The include returns 200; only the relationship route 405s.
       const search = getSearchParams(ctx, 'media', 'remote_video');
-      expect(search.include).toBe('thumbnail');
+      expect(search.include.split(',').sort()).toEqual(['field_media_image', 'thumbnail']);
     });
 
     it('includes attachment thumbnails for a system page', () => {

@@ -94,10 +94,19 @@ describe('remote-video', () => {
 
     it('falls back when field_media_image is an unresolved reference without uri', () => {
       const unresolved = { id: 'x', meta: { alt: 'Editor alt', width: 10, height: 10 } }
-      const image = getRemoteVideoImage({ name: 'Clip', fieldMediaImage: unresolved, thumbnail }, host)
+      const withThumbAlt = { ...thumbnail, meta: { ...thumbnail.meta, alt: 'Provider alt' } }
+      const image = getRemoteVideoImage({ name: 'Clip', fieldMediaImage: unresolved, thumbnail: withThumbAlt }, host)
       expect(image.src).toBe('https://seed.example/files/oembed_thumbnails/abc.jpg')
-      expect(image.alt).toBe('Editor alt')
+      expect(image.alt).toBe('Provider alt')
       expect([image.width, image.height]).toEqual([480, 360])
+    })
+
+    it('uses the other file alt only when the chosen file has none', () => {
+      const unresolved = { id: 'x', meta: { alt: 'Editor alt' } }
+      expect(getRemoteVideoImage({ name: 'Clip', fieldMediaImage: unresolved, thumbnail }).alt).toBe('Editor alt')
+      const customNoAlt = { ...custom, meta: { ...custom.meta, alt: '' } }
+      const withThumbAlt = { ...thumbnail, meta: { ...thumbnail.meta, alt: 'Provider alt' } }
+      expect(getRemoteVideoImage({ name: 'Clip', fieldMediaImage: customNoAlt, thumbnail: withThumbAlt }).alt).toBe('Provider alt')
     })
 
     it('returns null when neither file has a url', () => {

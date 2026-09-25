@@ -615,10 +615,11 @@ export function getSearchParams(ctx, type, bundle, prop){
     // page returns an unresolved file reference (no uri.url) and renders blank.
     if(type === 'media' &&  ['image', 'document', 'hero'].includes(bundle))  setMediaImageSearchParams(search);
     if(type === 'media' &&  ['document'].includes(bundle))  setMediaDocumentSearchParams(search);
-    // remote_video previews fall back to core's provider thumbnail (BL-815). Only
-    // the base field is included: field_media_image is site config and including
-    // it against remote_video returns 405.
-    if(type === 'media' &&  bundle === 'remote_video')  search['include'] = 'thumbnail';
+    // remote_video previews prefer the optional custom field_media_image and fall
+    // back to core's provider thumbnail (BL-815). Including both is safe; the 405
+    // seen on remote_video comes from the /field_attachments relationship route,
+    // not from an include.
+    if(type === 'media' &&  bundle === 'remote_video')  search['include'] = 'thumbnail,field_media_image';
     if(prop === 'field_attachments') search['include'] = 'thumbnail';
 
     return search;

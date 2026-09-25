@@ -129,7 +129,7 @@ function getContentTypeName(tid) {
  * @param {string} host - Site host URL
  * @returns {string|null} - Image URL
  */
-function getImageUrl(page, host) {
+export function getImageUrl(page, host) {
     if (isRemoteVideo(page)) return getRemoteVideoImage(page, host)?.src || null;
 
     const attachments = page?.fieldAttachments;

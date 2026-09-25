@@ -7,19 +7,19 @@ export const useMediaRecord = (passedMediaRecord) => {
 
     const downloadUrl =  `${siteStore.host}${record?.fieldMediaDocument?.uri?.url}`;
     // Remote videos fall back to the provider thumbnail when the optional custom image is empty (BL-815).
-    const videoImage  = isRemoteVideo(record) ? getRemoteVideoImage(record, siteStore.host) : null;
-    const imageAlt    = computed(()=> videoImage? videoImage.alt : record?.fieldMediaImage?.meta?.alt);
+    const videoImage  = computed(()=> isRemoteVideo(record) ? getRemoteVideoImage(record, siteStore.host) : null);
+    const imageAlt    = computed(()=> videoImage.value? videoImage.value.alt : record?.fieldMediaImage?.meta?.alt);
 
     const descriptionTruncated = computed(()=> record.description);
     const tags                 = computed(()=> record?.tags);
     const imageSrc             = computed(()=> {
-        if(isRemoteVideo(record)) return videoImage?.src || '';
+        if(isRemoteVideo(record)) return videoImage.value?.src || '';
 
         return record?.fieldMediaImage?.uri?.url? siteStore.host + record?.fieldMediaImage?.uri?.url : '';
     });
 
-    const imgHeight = computed(()=> videoImage? videoImage.height : record?.fieldMediaImage?.meta?.height);
-    const imgWidth  = computed(()=> videoImage? videoImage.width  : record?.fieldMediaImage?.meta?.width);
+    const imgHeight = computed(()=> videoImage.value? videoImage.value.height : record?.fieldMediaImage?.meta?.height);
+    const imgWidth  = computed(()=> videoImage.value? videoImage.value.width  : record?.fieldMediaImage?.meta?.width);
 
     const linkTo   = computed(()=> {
         if(!record?.path) return localPath(`/media/${record?.drupalInternalMid}`);
