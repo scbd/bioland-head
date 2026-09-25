@@ -35,6 +35,12 @@
 :is(#page-body-body, #page-body-media-body) .text-align-center  { text-align: center; }
 :is(#page-body-body, #page-body-media-body) .text-align-justify { text-align: justify; }
 
+/* Drupal renders the media entity with its admin-only "Contains machine translations?" flag
+   (field_i18n) when the default view display still lists it. Never show it on the site. */
+:is(#page-body-body, #page-body-main-body, #page-body-media-body) .media .field--name-field-i18n {
+    display: none;
+}
+
 /* Below md the column is too narrow to wrap text beside a photo: stack instead. */
 @media (max-width: 767.98px) {
     :is(#page-body-body, #page-body-media-body) :is(.align-left, .align-right, [data-align="left"], [data-align="right"]) {
