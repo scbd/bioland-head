@@ -608,13 +608,17 @@ function mapData(event,ctx){
 export function getSearchParams(ctx, type, bundle, prop){
     const search = {jsonapi_include: 1};
 
-    if(type === 'taxonomy_term' && bundle === 'system_pages') search['include'] = 'field_attachments,field_attachments.field_media_image,field_search,parent';
+    if(type === 'taxonomy_term' && bundle === 'system_pages') search['include'] = 'field_attachments,field_attachments.field_media_image,field_attachments.thumbnail,field_search,parent';
     if(type === 'node' && bundle === 'forum')setNodeForumSearchParams(search);
     if(type === 'node' && bundle === 'content' && !prop)  setContentSearchParams(search);
     // hero carries field_media_image too — without it a standalone media--hero
     // page returns an unresolved file reference (no uri.url) and renders blank.
     if(type === 'media' &&  ['image', 'document', 'hero'].includes(bundle))  setMediaImageSearchParams(search);
     if(type === 'media' &&  ['document'].includes(bundle))  setMediaDocumentSearchParams(search);
+    // remote_video previews fall back to core's provider thumbnail (BL-815). Only
+    // the base field is included: field_media_image is site config and including
+    // it against remote_video returns 405.
+    if(type === 'media' &&  bundle === 'remote_video')  search['include'] = 'thumbnail';
     if(prop === 'field_attachments') search['include'] = 'thumbnail';
 
     return search;

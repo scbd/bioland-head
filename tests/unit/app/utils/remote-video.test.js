@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getRemoteVideoEmbedSrc } from '../../../../app/utils/remote-video'
+import { getRemoteVideoEmbedSrc, getRemoteVideoImage, isRemoteVideo } from '../../../../app/utils/remote-video'
 
 describe('remote-video', () => {
   describe('getRemoteVideoEmbedSrc', () => {
@@ -65,6 +65,55 @@ describe('remote-video', () => {
 
     it('returns empty string for empty string', () => {
       expect(getRemoteVideoEmbedSrc('')).toBe('')
+    })
+  })
+
+  describe('isRemoteVideo', () => {
+    it('matches only media--remote_video', () => {
+      expect(isRemoteVideo({ type: 'media--remote_video' })).toBe(true)
+      expect(isRemoteVideo({ type: 'media--image' })).toBe(false)
+      expect(isRemoteVideo(undefined)).toBe(false)
+    })
+  })
+
+  describe('getRemoteVideoImage', () => {
+    const host = 'https://seed.example'
+    const custom = { uri: { url: '/files/custom.jpg' }, meta: { alt: 'Custom alt', width: 1200, height: 800 }, filemime: 'image/png' }
+    const thumbnail = { uri: { url: '/files/oembed_thumbnails/abc.jpg' }, meta: { alt: '', width: 480, height: 360 }, filemime: 'image/jpeg' }
+
+    it('prefers the custom field_media_image when it has a file', () => {
+      expect(getRemoteVideoImage({ name: 'Clip', fieldMediaImage: custom, thumbnail }, host)).toEqual({
+        src: 'https://seed.example/files/custom.jpg', alt: 'Custom alt', width: 1200, height: 800, mime: 'image/png'
+      })
+    })
+
+    it('falls back to the provider thumbnail when field_media_image is empty', () => {
+      const image = getRemoteVideoImage({ name: 'Clip', fieldMediaImage: null, thumbnail }, host)
+      expect(image).toEqual({ src: 'https://seed.example/files/oembed_thumbnails/abc.jpg', alt: 'Clip', width: 480, height: 360, mime: 'image/jpeg' })
+    })
+
+    it('falls back when field_media_image is an unresolved reference without uri', () => {
+      const unresolved = { id: 'x', meta: { alt: 'Editor alt', width: 10, height: 10 } }
+      const image = getRemoteVideoImage({ name: 'Clip', fieldMediaImage: unresolved, thumbnail }, host)
+      expect(image.src).toBe('https://seed.example/files/oembed_thumbnails/abc.jpg')
+      expect(image.alt).toBe('Editor alt')
+      expect([image.width, image.height]).toEqual([480, 360])
+    })
+
+    it('returns null when neither file has a url', () => {
+      expect(getRemoteVideoImage({ name: 'Clip', fieldMediaImage: {}, thumbnail: { uri: {} } }, host)).toBeNull()
+      expect(getRemoteVideoImage(undefined, host)).toBeNull()
+    })
+
+    it('falls back alt from custom image to thumbnail to name', () => {
+      const withThumbAlt = { ...thumbnail, meta: { ...thumbnail.meta, alt: 'Provider alt' } }
+      expect(getRemoteVideoImage({ name: 'Clip', thumbnail: withThumbAlt }).alt).toBe('Provider alt')
+      expect(getRemoteVideoImage({ name: 'Clip', thumbnail }).alt).toBe('Clip')
+      expect(getRemoteVideoImage({ thumbnail }).alt).toBe('')
+    })
+
+    it('returns a host-relative src when no host is given', () => {
+      expect(getRemoteVideoImage({ thumbnail }).src).toBe('/files/oembed_thumbnails/abc.jpg')
     })
   })
 })
