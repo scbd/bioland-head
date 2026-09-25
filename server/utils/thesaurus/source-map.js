@@ -1,10 +1,17 @@
-import { thesaurusApiUrls, apiDomains } from './config';
+import { thesaurusApiUrls, apiDomains, GOV_TYPE_IDS } from './config';
+import { ecosystemTypes } from './ecosystems';
 
 /**
  * Static fallback source map for identifiers that may not be in the API
- * or need explicit domain mapping
+ * or need explicit domain mapping.
+ *
+ * - ecosystemTypes is a static domain (no API), so its terms only exist here.
+ * - orgTypes and govTypes share one API term set, so the dynamic build files every
+ *   term under orgTypes; the gov subset is split out by the same ids config.ts filters on.
  */
 const thesaurusSourceMap = {
+  ...Object.fromEntries(ecosystemTypes.map(({ identifier }) => [identifier, "ecosystemTypes"])),
+  ...Object.fromEntries([...GOV_TYPE_IDS].map((identifier) => [identifier, "govTypes"])),
   draft: "documentStates",
   published: "documentStates",
   rejected: "documentStates",
@@ -16,13 +23,12 @@ const thesaurusSourceMap = {
   "90C29DF8-D863-4255-851D-A7A6E8FDFA8F": "orgTypes",
   "39EA5BC2-FEC4-4946-A543-A4F6E1A2F330": "orgTypes",
   "692b3eb1-a00c-437d-8903-d9b7714a7514": "orgTypes",
-  "B3699A74-EF2E-467A-A82F-EF2149A2EFC5": "govTypes",
-  "8830904C-8AF4-4C2F-AADB-363D98D854DA": "govTypes",
-  "1C3A4FF4-9AB7-4A34-BE06-E07F575B7A32": "govTypes",
 
   "7437F880-7B12-4F26-AA91-CED37250DD0A": "jurisdictions",
   "528B1187-F1BD-4479-9FB3-ADBD9076D361": "jurisdictions",
-  "DEBB019D-8647-40EC-8AE5-10CA88572F6E": "jurisdictions",
+  // "Sub-national" sits in both the jurisdictions and geoScopes term sets; geoScopes is the
+  // one editors select as an additional tag on projects, so it wins.
+  "DEBB019D-8647-40EC-8AE5-10CA88572F6E": "geoScopes",
 
   "E0006E60-E0D9-4196-855F-8456F0C38690": "regions",
   "CCA4B662-8EF4-418D-B327-0D6F418AA703": "regions",
@@ -294,6 +300,11 @@ const SOURCE_MAP_RETRY_MS = 60_000;
 export async function getDomainByIdentifier(identifier) {
   if (!identifier) return undefined;
 
+  // Static entries win over the API build (see buildThesaurusSourceMap), and answering them
+  // here keeps them current even while a cached map built before they were added is served.
+  const staticDomain = getStaticDomain(identifier);
+  if (staticDomain) return staticDomain;
+
   // Honour the backoff even before any build has succeeded: on a cold start with one
   // thesaurus API down, mapTagsByType would otherwise rebuild (and re-fetch the dead
   // domain) once per tag, per request.
@@ -311,6 +322,16 @@ export async function getDomainByIdentifier(identifier) {
     const fallback = lastGoodSourceMap || thesaurusSourceMap;
     return fallback[identifier] ?? null;
   }
+}
+
+/**
+ * The domain the static source map files an identifier under, without touching the API build.
+ *
+ * @param {string} identifier
+ * @returns {string|undefined}
+ */
+export function getStaticDomain(identifier) {
+  return Object.hasOwn(thesaurusSourceMap, identifier) ? thesaurusSourceMap[identifier] : undefined;
 }
 
 /**
