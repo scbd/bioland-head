@@ -97,6 +97,10 @@ DOMPurify.addHook('afterSanitizeAttributes', (node)=>
   });
 
 
+// CKEditor's icon button inserts Font Awesome markup (`<i class="fa-solid fa-phone">`), which
+// survives sanitising as a plain classed element but needs the Font Awesome stylesheet to draw.
+export const hasFontAwesomeIcon = (html) => /\bclass=["'][^"']*\bfa-[a-z]/i.test(html || '');
+
 export const hasBchEmbed = (html) => {
   const bchEmbedRegex = /<div\b[^>]*\bclass=["'][^"']*scbd-chm-embed[^"']*["'][^>]*>/i;
 

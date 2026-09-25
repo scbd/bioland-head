@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { htmlSanitize } from '../../../../app/utils/html'
+import { htmlSanitize, hasFontAwesomeIcon } from '../../../../app/utils/html'
 
 describe('html', () => {
   describe('htmlSanitize', () => {
@@ -136,6 +136,31 @@ describe('html', () => {
       // never parsed as a document. `text/html` is held to the same line.
       expect(htmlSanitize(input)).not.toContain('data:')
       expect(htmlSanitize('<img src="text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">')).not.toContain('data:')
+    })
+  })
+
+  describe('Font Awesome icons (BL-915)', () => {
+    const phone    = '<div><i class="fa-solid fa-phone fa-pull-left">&nbsp;</i>+1 868 646 4335</div>'
+    const envelope = '<div><i class="fa-solid fa-envelope">&nbsp;</i><a href="mailto:a@gov.tt">a@gov.tt</a></div>'
+
+    it('keeps the icon markup CKEditor emits', () => {
+      expect(htmlSanitize(phone)).toContain('<i class="fa-solid fa-phone fa-pull-left">')
+      expect(htmlSanitize(envelope)).toContain('<i class="fa-solid fa-envelope">')
+    })
+
+    it('still strips handlers and scripts riding on icon markup', () => {
+      const result = htmlSanitize('<i class="fa-solid fa-phone" onmouseover="alert(1)"><script>alert(1)</script></i><i class="fa-solid fa-envelope"><img src=x onerror="alert(1)"></i>')
+
+      expect(result).toContain('<i class="fa-solid fa-phone">')
+      expect(result).not.toMatch(/onmouseover|onerror|<script|alert/)
+    })
+
+    it('detects icon markup so the stylesheet is only loaded when needed', () => {
+      expect(hasFontAwesomeIcon(htmlSanitize(phone))).toBe(true)
+      expect(hasFontAwesomeIcon(htmlSanitize(envelope))).toBe(true)
+      expect(hasFontAwesomeIcon('<p class="fancy">fa-phone in text</p>')).toBe(false)
+      expect(hasFontAwesomeIcon('')).toBe(false)
+      expect(hasFontAwesomeIcon(undefined)).toBe(false)
     })
   })
 })
