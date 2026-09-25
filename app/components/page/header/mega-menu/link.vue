@@ -12,15 +12,13 @@
         </div>
         <section v-if="!showCards" id="page-header-mega-menu-link-thumb-section">
             <NuxtLink  v-if="showThumbs && !isFinalLink " id="page-header-mega-menu-link-thumb" class="child-link" :class="menu.class"   :to="safeLocalePath(menu.href)" :title="menu.title" :external="isExternal" :target="target">
-                <div class="d-flex mb-2">
-                    <div class="col-3 align-self-center">
-                        <NuxtImg :src="menu.thumb || '/images/no-image.png'" class="img-fluid" :alt="title || menu.title" width="64" height="64"/>
-                    </div>
-                    <div class="col-9 align-self-center">
-                        <p class="text-wrap card-text ps-1">
-                            {{title || menu.title}}<span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<LazyIcon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
-                        </p>
-                    </div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="mm-thumb">
+                        <NuxtImg :src="menu.thumb || '/images/no-image.png'" class="mm-thumb__img" :alt="title || menu.title" width="160" height="100" fit="cover" format="webp"/>
+                    </span>
+                    <p class="text-wrap card-text mb-0">
+                        {{title || menu.title}}<span v-if="menu.count" class="text-nowrap text-muted">&#65279;&nbsp;({{menu.count}})</span><span class="text-nowrap">&#65279;&nbsp;<LazyIcon v-if="isExternal && !isSpecial " name="external-link"  class="ex-link" /></span>
+                    </p>
                 </div>
             </NuxtLink>
         </section>
@@ -28,7 +26,7 @@
         <section v-if="showCards && !isFinalLink" id="page-header-mega-menu-link-card-section">
             <NuxtLink id="page-header-mega-menu-link-card" class="child-link" :class="menu.class"   :to="safeLocalePath(menu.href)" :title="menu.title" :external="isExternal" :target="target">
                 <div class="card" style="max-width: 160px;">
-                    <NuxtImg :src="menu.thumb" class="img-fluid card-img" :alt="menu.title" width="102" height="64" fit="cover" format="webp"/>
+                    <NuxtImg :src="menu.thumb" class="img-fluid card-img" :alt="menu.title" width="320" height="200" fit="cover" format="webp"/>
                     <div class="card-body">
                         <p class="card-text" :class="{ 'card-text--long-word': hasLongWord }">{{menu.title}}</p>
                         <p class="card-text"><small class="text-muted">{{dateFormat(menu)}}</small></p>
@@ -113,8 +111,26 @@
 </script>
 
 <style lang="scss" scoped>
+// BL-1154: one thumbnail box for every mega-menu item. The source image's own
+// size/ratio never leaks through; tune these tokens to resize all thumbnails.
 .mega-menu-link-wrapper {
+    --mm-thumb-width: 5rem;
+    --mm-thumb-aspect: 8 / 5;
     position: relative;
+}
+
+.mm-thumb {
+    flex: 0 0 var(--mm-thumb-width);
+    width: var(--mm-thumb-width);
+    aspect-ratio: var(--mm-thumb-aspect);
+    overflow: hidden;
+}
+
+.mm-thumb__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .mega-menu-link-children {
@@ -148,7 +164,7 @@
 // the cards end up mismatched. object-fit crops client-side as a guarantee.
 .card .card-img{
     width: 100%;
-    aspect-ratio: 102 / 64;
+    aspect-ratio: var(--mm-thumb-aspect);
     height: auto;
     object-fit: cover;
 }
