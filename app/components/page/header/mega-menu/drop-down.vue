@@ -532,8 +532,8 @@
         flex-direction: row;
     }
     .menu-section :deep(.card .card-img) {
-        width: 80px !important;
-        aspect-ratio: 102 / 64;
+        width: var(--mm-thumb-width) !important;
+        aspect-ratio: var(--mm-thumb-aspect);
         height: auto !important;
         object-fit: cover;
         margin-right: 0.5rem;
