@@ -118,11 +118,16 @@ describe('drupal-page utilities', () => {
       expect(search.include).toContain('field_media_document');
     });
 
-    it('requests no file include for a media--remote_video page', () => {
-      // remote_video carries an oembed URL + thumbnail, not field_media_image —
-      // including it returns 405.
+    it('includes the custom image and the core thumbnail for a media--remote_video page', () => {
+      // BL-815: the preview prefers the optional field_media_image and falls back to
+      // the provider thumbnail. The include returns 200; only the relationship route 405s.
       const search = getSearchParams(ctx, 'media', 'remote_video');
-      expect(search.include).toBeUndefined();
+      expect(search.include.split(',').sort()).toEqual(['field_media_image', 'thumbnail']);
+    });
+
+    it('includes attachment thumbnails for a system page', () => {
+      const search = getSearchParams(ctx, 'taxonomy_term', 'system_pages');
+      expect(search.include.split(',')).toContain('field_attachments.thumbnail');
     });
   });
 
