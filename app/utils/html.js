@@ -86,12 +86,26 @@ const repairBase64Image = (node, attr) =>
     if(value.length > maxUrlLength && !hasUsableScheme.test(value)) node.removeAttribute(attr);
   };
 
+// CKEditor's icon button always sits next to the visible text it decorates (a phone number, an
+// email address), so the glyph itself carries no independent meaning. Some screen readers still
+// announce the private-use `::before` glyph Font Awesome draws it with, so hide it unless the
+// editor gave the icon its own accessible name.
+const hideDecorativeFontAwesomeIcon = node =>
+  {
+    if(node.tagName?.toLowerCase() !== 'i') return;
+    if(!/\bfa-[a-z]/i.test(node.getAttribute('class') || '')) return;
+    if(node.getAttribute('aria-label')) return;
+
+    node.setAttribute('aria-hidden', 'true');
+  };
+
 DOMPurify.addHook('afterSanitizeAttributes', (node)=>
   {
     if(!node.getAttribute) return node;
 
     repairBase64Image(node, 'src');
     repairBase64Image(node, 'srcset');
+    hideDecorativeFontAwesomeIcon(node);
 
     return node;
   });
