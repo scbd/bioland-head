@@ -137,5 +137,39 @@ describe('html', () => {
       expect(htmlSanitize(input)).not.toContain('data:')
       expect(htmlSanitize('<img src="text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">')).not.toContain('data:')
     })
+
+    it('keeps the width and height an editor resized a body image to', () => {
+      const result = htmlSanitize('<img class="image_resized" src="/a.jpg" width="960" height="480" style="width:75%;height:auto">')
+
+      expect(result).toContain('width="960"')
+      expect(result).toContain('height="480"')
+      expect(result).toContain('style="width:75%;height:auto"')
+      expect(result).toContain('class="image_resized"')
+    })
+
+    it('keeps sizing declarations on a figure and its aspect ratio', () => {
+      expect(htmlSanitize('<figure class="image" style="width: 50%; aspect-ratio: 2 / 1"><img src="/a.jpg"></figure>'))
+        .toContain('style="width:50%;aspect-ratio:2 / 1"')
+    })
+
+    it('strips non-sizing and hostile declarations from an image style', () => {
+      const result = htmlSanitize('<img src="/a.jpg" style="width:40%;position:fixed;top:0;background:url(https://evil.test/x);width:expression(alert(1))">')
+
+      expect(result).toContain('style="width:40%"')
+      expect(result).not.toMatch(/position|background|expression|evil/)
+    })
+
+    it('drops an image style with no sizing declaration left', () => {
+      expect(htmlSanitize('<img src="/a.jpg" style="float:left;border:5px solid red">')).not.toContain('style=')
+    })
+
+    it('leaves styles on non-image elements alone', () => {
+      expect(htmlSanitize('<p style="text-align:center">Hi</p>')).toContain('style="text-align:center"')
+    })
+
+    it('keeps the view-mode class a resized media embed renders with', () => {
+      expect(htmlSanitize('<div class="media media--type-image media--view-mode-bioland-width-50 align-center"><img src="/a.jpg" width="1090" height="545"></div>'))
+        .toContain('class="media media--type-image media--view-mode-bioland-width-50 align-center"')
+    })
   })
 })

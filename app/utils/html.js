@@ -86,12 +86,35 @@ const repairBase64Image = (node, attr) =>
     if(value.length > maxUrlLength && !hasUsableScheme.test(value)) node.removeAttribute(attr);
   };
 
+// An editor-resized body image carries its size as `width`/`height` attributes or as an inline
+// `style="width:50%"`. DOMPurify keeps any style verbatim, so on <img>/<figure> only the sizing
+// declarations survive: the chosen size renders, and nothing else an editor pasted can restyle
+// or reposition the image.
+const sizedTags      = new Set(['img', 'figure']);
+const sizingProps    = new Set(['width', 'height', 'aspect-ratio']);
+const sizingValue    = /^(?:auto|\d+(?:\.\d+)?(?:px|%|em|rem)?|\d+(?:\.\d+)?\s*\/\s*\d+(?:\.\d+)?)$/i;
+
+const restrictSizingStyle = (node) =>
+  {
+    if(!sizedTags.has(node.tagName?.toLowerCase()) || !node.hasAttribute('style')) return;
+
+    const kept = node.getAttribute('style')
+      .split(';')
+      .map(declaration => declaration.split(':').map(part => part.trim()))
+      .filter(([prop, value, ...rest]) => !rest.length && sizingProps.has(prop?.toLowerCase()) && sizingValue.test(value || ''))
+      .map(([prop, value]) => `${prop.toLowerCase()}:${value}`);
+
+    if(kept.length) node.setAttribute('style', kept.join(';'));
+    else node.removeAttribute('style');
+  };
+
 DOMPurify.addHook('afterSanitizeAttributes', (node)=>
   {
     if(!node.getAttribute) return node;
 
     repairBase64Image(node, 'src');
     repairBase64Image(node, 'srcset');
+    restrictSizingStyle(node);
 
     return node;
   });
