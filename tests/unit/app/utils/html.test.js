@@ -144,15 +144,30 @@ describe('html', () => {
     const envelope = '<div><i class="fa-solid fa-envelope">&nbsp;</i><a href="mailto:a@gov.tt">a@gov.tt</a></div>'
 
     it('keeps the icon markup CKEditor emits', () => {
-      expect(htmlSanitize(phone)).toContain('<i class="fa-solid fa-phone fa-pull-left">')
-      expect(htmlSanitize(envelope)).toContain('<i class="fa-solid fa-envelope">')
+      expect(htmlSanitize(phone)).toContain('class="fa-solid fa-phone fa-pull-left"')
+      expect(htmlSanitize(envelope)).toContain('class="fa-solid fa-envelope"')
     })
 
     it('still strips handlers and scripts riding on icon markup', () => {
       const result = htmlSanitize('<i class="fa-solid fa-phone" onmouseover="alert(1)"><script>alert(1)</script></i><i class="fa-solid fa-envelope"><img src=x onerror="alert(1)"></i>')
 
-      expect(result).toContain('<i class="fa-solid fa-phone">')
+      expect(result).toContain('class="fa-solid fa-phone"')
       expect(result).not.toMatch(/onmouseover|onerror|<script|alert/)
+    })
+
+    it('marks a decorative icon aria-hidden so screen readers skip the glyph', () => {
+      expect(htmlSanitize(phone)).toContain('aria-hidden="true"')
+      expect(htmlSanitize(envelope)).toContain('aria-hidden="true"')
+    })
+
+    it('leaves an icon with its own accessible name alone', () => {
+      const input = '<i class="fa-solid fa-phone" aria-label="Call us">&nbsp;</i>'
+
+      expect(htmlSanitize(input)).not.toContain('aria-hidden')
+    })
+
+    it('does not touch a non fa- classed element', () => {
+      expect(htmlSanitize('<i class="my-icon">x</i>')).not.toContain('aria-hidden')
     })
 
     it('detects icon markup so the stylesheet is only loaded when needed', () => {
