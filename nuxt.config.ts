@@ -4,7 +4,7 @@ import domains from './configs/domains'     ;
 import cookieControl from './configs/cookie-control';
 import { LOG_LEVEL } from './shared/utils/constants';
 
-const css   =   [ '~/assets/custom.scss', 'vue-final-modal/style.css' ]
+const css   =   [ '~/assets/custom.scss', '~/assets/css/editor-alignment.css', 'vue-final-modal/style.css' ]
 
 const resolveLogLevel = () => {
   const envValue = process.env.NUXT_PUBLIC_LOG_LEVEL?.trim().toUpperCase();
