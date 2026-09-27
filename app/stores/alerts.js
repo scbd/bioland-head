@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
-export const useAlertStore = defineStore('alert', { 
+const useAlertStore = defineStore('alert', { 
     state: () => ({ alerts: [], noRepeat: [] }),
 
     actions:{
@@ -39,3 +39,4 @@ export const useAlertStore = defineStore('alert', {
     }
 }, { persist: true });
 
+export { useAlertStore };

@@ -3,7 +3,7 @@ import { contentTypeTidConstants } from "#shared/utils/constants";
 
 const typeMapIds = Object.fromEntries(Object.entries(contentTypeTidConstants).map(([key, value]) => [kebabCase(key), value]));
 
-export const useMenusStore = defineStore('menus', { 
+const useMenusStore = defineStore('menus', { 
     state: () => ({ 
         footer: [], 
         main: [], 
@@ -272,3 +272,5 @@ export const useMenusStore = defineStore('menus', {
         isLoaded: state => !!state?.footer?.length
     }
 });
+
+export { useMenusStore };

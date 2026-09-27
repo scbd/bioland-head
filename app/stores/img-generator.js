@@ -90,7 +90,7 @@ function getRecordIdentifier(ctx) {
         || '';
 }
 
-export const useImageGenStore = defineStore('imageGenerator', { 
+const useImageGenStore = defineStore('imageGenerator', { 
     state: () => ({}),
     actions: {
         getImage(ctx) {
@@ -148,3 +148,5 @@ export const useImageGenStore = defineStore('imageGenerator', {
         }
     }
 });
+
+export { useImageGenStore };
