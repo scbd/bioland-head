@@ -1,6 +1,6 @@
 import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
 
-export const useSiteStore = defineStore('site', {
+const useSiteStore = defineStore('site', {
     state: () => ({ i18nStrategy: 'prefix', locale  : undefined, identifier                : undefined, siteCode                  : undefined, pageIdentifiers           : undefined, defaultLocale             : undefined, gaiaApi                   : undefined, drupalMultisiteIdentifier : undefined, multiSiteCode             : undefined, baseHost                  : undefined, logo                      : undefined, logoDimensions            : undefined, config                    : undefined, name                      : undefined, redirect                  : undefined, drupalInternalRevisionId : undefined, biolandSettings: undefined, env: undefined, }),
     actions:{
         set(name, value){
@@ -186,3 +186,6 @@ export const useSiteStore = defineStore('site', {
         }
     }
 });
+
+// export { } form: keeps mlly/unimport from reading object keys as extra exports (BL-1178)
+export { useSiteStore };

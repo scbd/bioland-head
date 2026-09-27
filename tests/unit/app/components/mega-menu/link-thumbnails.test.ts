@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
@@ -22,7 +22,9 @@ if (!template) throw new Error('link.vue template could not be located')
 const compiled = compileTemplate({ source: template, id: 'mega-menu-link', filename: 'link.vue', compilerOptions: { mode: 'module' } })
 if (compiled.errors.length) throw new Error(`link.vue template failed to compile: ${compiled.errors.join(', ')}`)
 
-const compileDir = mkdtempSync(join(process.cwd(), '.agents/temp/mega-menu-link-render-'))
+const tempRoot = join(process.cwd(), '.agents/temp')
+mkdirSync(tempRoot, { recursive: true })
+const compileDir = mkdtempSync(join(tempRoot, 'mega-menu-link-render-'))
 const compileFile = join(compileDir, 'render.mjs')
 writeFileSync(compileFile, compiled.code)
 const { render: renderFn } = await import(pathToFileURL(compileFile).href)

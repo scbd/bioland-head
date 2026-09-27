@@ -1,7 +1,7 @@
 import   intersect   from 'lodash.intersection';
 import { DateTime  } from "luxon"              ;
 
-export const useMeStore = defineStore('me', { 
+const useMeStore = defineStore('me', { 
     state: () => ({ userID: '', duuid: '', diuid: '',timezone:'', preferredLang: '', displayName: '', name: '', email: '', img:'', isAuthenticated: false, roles: [], editMode: true, token: '', expire: new Date() }),
 
     actions:{
@@ -128,3 +128,5 @@ export const useMeStore = defineStore('me', {
     persist: true,
 });
 
+// export { } form: keeps mlly/unimport from reading object keys as extra exports (BL-1178)
+export { useMeStore };

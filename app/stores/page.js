@@ -1,6 +1,6 @@
 
 import { camelCase } from 'change-case/keys';
-export const usePageStore = defineStore('page', {
+const usePageStore = defineStore('page', {
     state: ()=>({ page: {}, loading: true, cancelLoading: true, isInitialized: false, cacheKeys:{}, breadcrumbsSchemaOrg: null, headerSchemaOrg: null, footerSchemaOrg: null, mainMenuSchemaOrg: null }), 
     actions:{
         isLoading(){
@@ -309,3 +309,6 @@ function getTids(searchField){
 
     return searchField.map(({ drupalInternalTid })=> drupalInternalTid);
 }
+
+// export { } form: keeps mlly/unimport from reading object keys as extra exports (BL-1178)
+export { usePageStore };
