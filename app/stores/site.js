@@ -187,4 +187,5 @@ const useSiteStore = defineStore('site', {
     }
 });
 
+// export { } form: keeps mlly/unimport from reading object keys as extra exports (BL-1178)
 export { useSiteStore };
