@@ -276,17 +276,27 @@ describe('html', () => {
       expect(htmlSanitize(iframe('https://files.example.org/a.html'), { embedAllowedOrigins: list })).toContain('sandbox="allow-same-origin allow-forms"')
     })
 
-    it('strips editor-authored allow and allowfullscreen from non-player entries', () => {
-      const authored = src => `<iframe src="${src}" allow="camera *; microphone *" allowfullscreen></iframe>`
+    it('strips editor-authored allow from non-player entries', () => {
+      const authored = src => `<iframe src="${src}" allow="camera *; microphone *"></iframe>`
 
       for(const src of ['https://files.example.org/sites/default/files/x.html', 'https://app.powerbi.com/view?r=1']){
         const result = htmlSanitize(authored(src), { embedAllowedOrigins })
 
         expect(result).toContain('<iframe')
         expect(result).not.toContain('allow=')
-        expect(result).not.toContain('allowfullscreen')
         expect(result).not.toContain('camera')
       }
+    })
+
+    it('keeps editor-authored allowfullscreen on allowed non-player entries, so the Power BI fullscreen button works', () => {
+      const result = htmlSanitize('<iframe src="https://app.powerbi.com/view?r=1" allow="camera *" allowfullscreen="true"></iframe>', { embedAllowedOrigins })
+
+      expect(result).toContain('allowfullscreen')
+      expect(result).not.toContain('allow=')
+    })
+
+    it('adds no allowfullscreen to a non-player entry the editor did not mark', () => {
+      expect(htmlSanitize(iframe('https://app.powerbi.com/view?r=1'), { embedAllowedOrigins })).not.toContain('allowfullscreen')
     })
 
     it('replaces an editor-authored allow on player entries with the player policy', () => {
