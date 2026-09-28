@@ -608,14 +608,17 @@ function mapData(event,ctx){
                 if(media)
                     media.path = p;
             }))
-            if(media.field_tags || media.fieldTags)
-                promises.push(getThesaurusByKey(event, media?.field_tags?.value || media?.fieldTags?.value).catch(() => []).then(async (p)=>{ media.tags = await mapTagsByType(p) ;}));
+            const mediaTagKeys = getTagKeys(media?.field_tags || media?.fieldTags);
+            if(mediaTagKeys.length)
+                promises.push(getThesaurusByKey(event, mediaTagKeys).catch(() => []).then(async (p)=>{ media.tags = await mapTagsByType(p) ;}));
         }
 
-        if(document.field_tags?.value || document.fieldTags?.value)
+        // Both tag columns: the additional tags (document type, event status, ...) live in value2.
+        const tagKeys = getTagKeys(document.field_tags || document.fieldTags);
+        if(tagKeys.length)
             // Tags are decoration: a thesaurus outage must not fail the page, and must not be
             // cached as "no tags" either - getThesaurusByKey throws so nothing is stored.
-            promises.push(getThesaurusByKey(event, document.field_tags?.value || document.fieldTags?.value).catch(() => []).then(async (p)=>{ document.tags = await mapTagsByType(p) ;}));
+            promises.push(getThesaurusByKey(event, tagKeys).catch(() => []).then(async (p)=>{ document.tags = await mapTagsByType(p) ;}));
 
         await Promise.all(promises);
 
