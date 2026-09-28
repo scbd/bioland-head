@@ -52,13 +52,15 @@ const findEmbedEntry = (value, entries) =>
     return entries.find(entry => matchesEntry(src, entry));
   };
 
-// Scripts plus same-origin lets the frame remove its own sandbox, and plain top navigation lets it
-// replace the host page, so both are dropped whatever the config or the editor asks for.
+// Tokens that let the frame escape its sandbox or take over the host page are dropped whatever the
+// config or the editor asks for, as is same-origin beside scripts (the frame could remove its sandbox).
+const neverAllowedTokens = [ 'allow-top-navigation', 'allow-popups-to-escape-sandbox', 'allow-top-navigation-to-custom-protocols' ];
+
 const toSandbox = (value) =>
   {
     const tokens = new Set(String(value ?? '').toLowerCase().split(/\s+/).filter(token => sandboxTokens.has(token)));
 
-    tokens.delete('allow-top-navigation');
+    neverAllowedTokens.forEach(token => tokens.delete(token));
     if(tokens.has('allow-scripts')) tokens.delete('allow-same-origin');
 
     return [ ...tokens ].join(' ');
@@ -82,14 +84,15 @@ const toSizeStyle = (node) =>
 const applyEmbedEntry = (node, entry, host) =>
   {
     const isMediaPlayer = mediaPlayerHost.test(host);
-    const sandbox       = toSandbox(entry.sandbox);
+    const hasSandbox    = String(entry.sandbox ?? '').trim() !== '';
 
     node.setAttribute("style", isMediaPlayer ? 'aspect-ratio: 16 / 9; width: 100%;' : toSizeStyle(node));
     node.removeAttribute("height");
     node.removeAttribute("width");
 
-    // An entry without tokens keeps the editor's own sandbox (validated), never loosening the frame.
-    if(sandbox) node.setAttribute("sandbox", sandbox);
+    // A configured sandbox is always emitted, as `sandbox=""` (fully restricted) when every token is
+    // filtered out, so a typo never fails open. An entry without one keeps the editor's own (validated).
+    if(hasSandbox) node.setAttribute("sandbox", toSandbox(entry.sandbox));
     else if(node.hasAttribute("sandbox")) node.setAttribute("sandbox", toSandbox(node.getAttribute("sandbox")));
 
     if(!isMediaPlayer){
