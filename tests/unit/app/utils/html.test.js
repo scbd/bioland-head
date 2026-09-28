@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { htmlSanitize, hasFontAwesomeIcon } from '../../../../app/utils/html'
 
 // Shape of siteStore.biolandSettings.embed.allowedOrigins after context-unified's camelCase.
@@ -367,11 +367,122 @@ describe('html', () => {
       expect(result).toContain('sandbox="allow-scripts allow-forms"')
     })
 
-    it('replaces an editor-authored sandbox with the entry tokens, and drops it when the entry has none', () => {
-      const authored = src => `<iframe src="${src}" sandbox="allow-same-origin allow-scripts"></iframe>`
+    it('replaces an editor-authored sandbox with the entry tokens', () => {
+      const authored = '<iframe src="https://files.example.org/sites/default/files/a.html" sandbox="allow-forms"></iframe>'
 
-      expect(htmlSanitize(authored('https://files.example.org/sites/default/files/a.html'), { embedAllowedOrigins })).toContain('sandbox="allow-scripts"')
-      expect(htmlSanitize(authored('https://app.powerbi.com/view?r=1'), { embedAllowedOrigins })).not.toContain('sandbox=')
+      expect(htmlSanitize(authored, { embedAllowedOrigins })).toContain('sandbox="allow-scripts"')
+    })
+
+    it.each([
+      ['validated editor tokens', 'allow-scripts allow-same-origin allow-bogus', 'sandbox="allow-scripts"'],
+      ['an empty editor sandbox (fully restricted)', '', 'sandbox=""'],
+    ])('keeps %s when the entry has no sandbox', (_, authored, expected) => {
+      const result = htmlSanitize(`<iframe src="https://app.powerbi.com/view?r=1" sandbox="${authored}"></iframe>`, { embedAllowedOrigins })
+
+      expect(result).toContain(expected)
+    })
+
+    it('adds no sandbox when neither the entry nor the editor sets one', () => {
+      expect(htmlSanitize(iframe('https://app.powerbi.com/view?r=1'), { embedAllowedOrigins })).not.toContain('sandbox')
+    })
+
+    it('drops allow-same-origin next to allow-scripts, and plain allow-top-navigation, from entry tokens', () => {
+      const list   = [{ url: 'https://files.example.org', label: 'Files', sandbox: 'allow-scripts allow-same-origin allow-top-navigation allow-top-navigation-by-user-activation' }]
+      const result = htmlSanitize(iframe('https://files.example.org/a.html'), { embedAllowedOrigins: list })
+
+      expect(result).toContain('sandbox="allow-scripts allow-top-navigation-by-user-activation"')
+    })
+
+    it('keeps allow-same-origin when allow-scripts is absent', () => {
+      const list = [{ url: 'https://files.example.org', label: 'Files', sandbox: 'allow-same-origin allow-forms' }]
+
+      expect(htmlSanitize(iframe('https://files.example.org/a.html'), { embedAllowedOrigins: list })).toContain('sandbox="allow-same-origin allow-forms"')
+    })
+
+    it('strips editor-authored allow and allowfullscreen from non-player entries', () => {
+      const authored = src => `<iframe src="${src}" allow="camera *; microphone *" allowfullscreen></iframe>`
+
+      for(const src of ['https://files.example.org/sites/default/files/x.html', 'https://app.powerbi.com/view?r=1']){
+        const result = htmlSanitize(authored(src), { embedAllowedOrigins })
+
+        expect(result).toContain('<iframe')
+        expect(result).not.toContain('allow=')
+        expect(result).not.toContain('allowfullscreen')
+        expect(result).not.toContain('camera')
+      }
+    })
+
+    it('replaces an editor-authored allow on player entries with the player policy', () => {
+      const result = htmlSanitize('<iframe src="https://player.vimeo.com/video/1" allow="camera *"></iframe>', { embedAllowedOrigins })
+
+      expect(result).not.toContain('camera')
+      expect(result).toContain('allow="accelerometer; autoplay;')
+    })
+
+    it.each([
+      ['plain integers', 'width="800" height="485"', 'aspect-ratio: 800 / 485; width: 100%;'],
+      ['px integers', 'width="800px" height="485px"', 'aspect-ratio: 800 / 485; width: 100%;'],
+      ['the iframe formatter percentage width', 'width="100%" height="600"', 'width: 100%; height: 600px;'],
+      ['a height only', 'height="800"', 'width: 100%; height: 800px;'],
+      ['percentages only', 'width="100%" height="100%"', 'aspect-ratio: 16 / 9; width: 100%;'],
+      ['no dimensions', '', 'aspect-ratio: 16 / 9; width: 100%;'],
+    ])('sizes a non-player frame from %s', (_, attrs, style) => {
+      const result = htmlSanitize(`<iframe src="https://app.powerbi.com/view?r=1" ${attrs}></iframe>`, { embedAllowedOrigins })
+
+      expect(result).toContain(`style="${style}"`)
+      expect(result).not.toMatch(/\s(?:width|height)="/)
+    })
+
+    it.each([
+      ['an encoded slash', 'https://app.powerbi.com/view/..%2fgroups/x'],
+      ['an uppercase encoded slash', 'https://app.powerbi.com/view/..%2Fgroups/x'],
+      ['an encoded backslash', 'https://app.powerbi.com/view/..%5Cgroups/x'],
+      ['userinfo on an allowed host', 'https://evil@www.youtube.com/embed/a'],
+      ['a user and password on an allowed host', 'https://u:p@www.youtube.com/embed/a'],
+      ['a non-default port', 'https://www.youtube.com:8443/embed/a'],
+      ['a trailing-dot host', 'https://www.youtube.com./embed/a'],
+      ['a data: src', 'data:text/html,<p>x</p>'],
+      ['a blob: src', 'blob:https://www.youtube.com/abc'],
+    ])('removes %s', (_, src) => {
+      expect(htmlSanitize(iframe(src), { embedAllowedOrigins })).not.toContain('<iframe')
+    })
+
+    it.each([
+      ['an explicit default port', 'https://www.youtube.com:443/embed/a'],
+      ['an uppercase scheme and host', 'HTTPS://WWW.YOUTUBE.COM/embed/a'],
+    ])('keeps %s, which normalises to the entry', (_, src) => {
+      expect(htmlSanitize(iframe(src), { embedAllowedOrigins })).toContain('<iframe')
+    })
+
+    it('matches an IDN host in either its unicode or punycode form', () => {
+      const list = [{ url: 'https://bücher.example', label: 'IDN', sandbox: '' }]
+
+      expect(htmlSanitize(iframe('https://xn--bcher-kva.example/a'), { embedAllowedOrigins: list })).toContain('<iframe')
+      expect(htmlSanitize(iframe('https://bücher.example/a'), { embedAllowedOrigins: list })).toContain('<iframe')
+      expect(htmlSanitize(iframe('https://bucher.example/a'), { embedAllowedOrigins: list })).not.toContain('<iframe')
+    })
+
+    describe('site store default', () => {
+      afterEach(() => vi.unstubAllGlobals())
+
+      it('reads the list from siteStore.biolandSettings.embed.allowedOrigins when none is passed', () => {
+        vi.stubGlobal('useSiteStore', () => ({ biolandSettings: { embed: { allowedOrigins: embedAllowedOrigins } } }))
+
+        expect(htmlSanitize(iframe('https://app.powerbi.com/view?r=1'))).toContain('<iframe')
+        expect(htmlSanitize(iframe('https://evil.example/view'))).not.toContain('<iframe')
+      })
+
+      it('denies every iframe when the store has no embed settings', () => {
+        vi.stubGlobal('useSiteStore', () => ({ biolandSettings: {} }))
+
+        expect(htmlSanitize(iframe('https://www.youtube.com/embed/a'))).not.toContain('<iframe')
+      })
+
+      it('denies every iframe when the store throws (no active Pinia)', () => {
+        vi.stubGlobal('useSiteStore', () => { throw new Error('getActivePinia was called with no active Pinia') })
+
+        expect(htmlSanitize(iframe('https://www.youtube.com/embed/a'))).not.toContain('<iframe')
+      })
     })
   })
 })

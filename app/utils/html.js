@@ -45,19 +45,38 @@ const findEmbedEntry = (value, entries) =>
   {
     const src = parseUrl(value);
 
-    if(!src || !/^https?:$/.test(src.protocol) || !Array.isArray(entries)) return undefined;
+    // Userinfo is never needed to frame a page, and an encoded `/` or `\` survives URL
+    // normalisation, so a server that decodes it before routing could serve a path outside the prefix.
+    if(!src || !/^https?:$/.test(src.protocol) || src.username || src.password || /%2f|%5c/i.test(src.pathname) || !Array.isArray(entries)) return undefined;
 
     return entries.find(entry => matchesEntry(src, entry));
   };
 
-const toSandbox = (value) => [ ...new Set(String(value ?? '').toLowerCase().split(/\s+/).filter(token => sandboxTokens.has(token))) ].join(' ');
-
-const toAspectRatio = (node) =>
+// Scripts plus same-origin lets the frame remove its own sandbox, and plain top navigation lets it
+// replace the host page, so both are dropped whatever the config or the editor asks for.
+const toSandbox = (value) =>
   {
-    const width  = Number.parseInt(node.getAttribute('width'), 10);
-    const height = Number.parseInt(node.getAttribute('height'), 10);
+    const tokens = new Set(String(value ?? '').toLowerCase().split(/\s+/).filter(token => sandboxTokens.has(token)));
 
-    return width > 0 && height > 0 ? `${width} / ${height}` : '16 / 9';
+    tokens.delete('allow-top-navigation');
+    if(tokens.has('allow-scripts')) tokens.delete('allow-same-origin');
+
+    return [ ...tokens ].join(' ');
+  };
+
+// Only plain or `px` integers are dimensions a ratio can be built from: the iframe formatter writes
+// `width="100%" height="600"`, which must keep its pixel height rather than become `100 / 600`.
+const toPixels = (value) => /^\s*\d+(?:px)?\s*$/i.test(value ?? '') ? Number.parseInt(value, 10) || undefined : undefined;
+
+const toSizeStyle = (node) =>
+  {
+    const width  = toPixels(node.getAttribute('width'));
+    const height = toPixels(node.getAttribute('height'));
+
+    if(width && height) return `aspect-ratio: ${width} / ${height}; width: 100%;`;
+    if(height) return `width: 100%; height: ${height}px;`;
+
+    return 'aspect-ratio: 16 / 9; width: 100%;';
   };
 
 const applyEmbedEntry = (node, entry, host) =>
@@ -65,14 +84,21 @@ const applyEmbedEntry = (node, entry, host) =>
     const isMediaPlayer = mediaPlayerHost.test(host);
     const sandbox       = toSandbox(entry.sandbox);
 
-    node.setAttribute("style", `aspect-ratio: ${isMediaPlayer ? '16 / 9' : toAspectRatio(node)}; width: 100%;`);
+    node.setAttribute("style", isMediaPlayer ? 'aspect-ratio: 16 / 9; width: 100%;' : toSizeStyle(node));
     node.removeAttribute("height");
     node.removeAttribute("width");
 
+    // An entry without tokens keeps the editor's own sandbox (validated), never loosening the frame.
     if(sandbox) node.setAttribute("sandbox", sandbox);
-    else node.removeAttribute("sandbox");
+    else if(node.hasAttribute("sandbox")) node.setAttribute("sandbox", toSandbox(node.getAttribute("sandbox")));
 
-    if(!isMediaPlayer) return;
+    if(!isMediaPlayer){
+      // Permission delegation (camera, microphone, ...) is granted to the players below only.
+      node.removeAttribute("allow");
+      node.removeAttribute("allowfullscreen");
+
+      return;
+    }
 
     node.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;");
     node.setAttribute("allowfullscreen", "");
