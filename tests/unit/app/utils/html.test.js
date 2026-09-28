@@ -393,6 +393,25 @@ describe('html', () => {
       expect(result).toContain('sandbox="allow-scripts allow-top-navigation-by-user-activation"')
     })
 
+    it.each([
+      ['plain allow-top-navigation alone', 'allow-top-navigation'],
+      ['a typo', 'allow-scrpts'],
+      ['allow-popups-to-escape-sandbox alone', 'allow-popups-to-escape-sandbox'],
+      ['allow-top-navigation-to-custom-protocols alone', 'allow-top-navigation-to-custom-protocols'],
+    ])('emits a fully restricted sandbox when %s is filtered out', (_, sandbox) => {
+      const list   = [{ url: 'https://files.example.org', label: 'Files', sandbox }]
+      const result = htmlSanitize('<iframe src="https://files.example.org/a.html" sandbox="allow-scripts allow-forms"></iframe>', { embedAllowedOrigins: list })
+
+      expect(result).toContain('sandbox=""')
+    })
+
+    it('drops the escape tokens and keeps the rest', () => {
+      const list   = [{ url: 'https://files.example.org', label: 'Files', sandbox: 'allow-popups allow-popups-to-escape-sandbox allow-top-navigation-to-custom-protocols allow-forms' }]
+      const result = htmlSanitize(iframe('https://files.example.org/a.html'), { embedAllowedOrigins: list })
+
+      expect(result).toContain('sandbox="allow-popups allow-forms"')
+    })
+
     it('keeps allow-same-origin when allow-scripts is absent', () => {
       const list = [{ url: 'https://files.example.org', label: 'Files', sandbox: 'allow-same-origin allow-forms' }]
 
