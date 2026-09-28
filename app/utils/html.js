@@ -20,7 +20,13 @@ const removeUntrustedIframe = (node, data)=>
 
     if(node.getAttribute("src")?.startsWith('https://portal.geobon.org')) return node;
 
-    return node.parentNode.parentNode.removeChild(node.parentNode);//node;
+    // The wrapper (e.g. a <p>) is what normally gets removed, but a null grandparent throws --
+    // and an untrusted iframe still needs stripping even when it sits at the top of the body, so
+    // fall back to removing the iframe itself rather than returning early and leaving it in place.
+    const wrapper = node.parentNode;
+    (wrapper?.parentNode && wrapper.nodeName !== 'BODY' ? wrapper : node).remove();
+
+    return node;
   };
 
 // Drupal's XSS filter strips the `data:` scheme off inline base64 images but keeps the
@@ -153,14 +159,20 @@ const repairAttributes = (node)=>
 // server/utils' re-export - and both copies share the one externalised isomorphic-dompurify
 // instance. Registering per copy ran every hook twice: the second iframe pass found the wrapper
 // the first had already detached, threw on its null parent, and the page's SSR never answered
-// (BL-1223). Register once per DOMPurify instance.
+// (BL-1223). Register once per DOMPurify instance -- but re-registering on re-evaluation (e.g.
+// dev HMR editing the hook functions) must still end up with exactly one of each, and it must be
+// the latest version, so the previous pair is removed by reference before the current pair is added.
 const hooksRegistered = Symbol.for('bioland.htmlSanitize.hooks');
 
-if(!DOMPurify[hooksRegistered]){
-  DOMPurify[hooksRegistered] = true;
-  DOMPurify.addHook('uponSanitizeElement', removeUntrustedIframe);
-  DOMPurify.addHook('afterSanitizeAttributes', repairAttributes);
+const previousHooks = DOMPurify[hooksRegistered];
+if(previousHooks){
+  DOMPurify.removeHook('uponSanitizeElement', previousHooks.uponSanitizeElement);
+  DOMPurify.removeHook('afterSanitizeAttributes', previousHooks.afterSanitizeAttributes);
 }
+
+DOMPurify[hooksRegistered] = { uponSanitizeElement: removeUntrustedIframe, afterSanitizeAttributes: repairAttributes };
+DOMPurify.addHook('uponSanitizeElement', removeUntrustedIframe);
+DOMPurify.addHook('afterSanitizeAttributes', repairAttributes);
 
 
 // CKEditor's icon button inserts Font Awesome markup (`<i class="fa-solid fa-phone">`), which
