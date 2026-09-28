@@ -515,7 +515,13 @@ async function getPageIdentifiers(ctx,  headers){
                                !canonicalPathname.endsWith(path) &&
                                canonicalLocale === locale;
         
-        const redirect = shouldRedirect ? canonicalPathname : '';
+        // The home node answers at /{locale} only, so its alias (and any other path to it) 301s
+        // there. A term home is left alone: it renders exactly as before this node home existed.
+        // Keyed on the live translate-path answer (data.isHomePath), not the cached ctx.homePath,
+        // so a page.front rollback can't leave the alias 301ing to the wrong home for up to an hour.
+        const isHomeNode = type === 'node' && !!data?.isHomePath;
+
+        const redirect = isHomeNode && !isJustLocale ? `/${locale}` : shouldRedirect ? canonicalPathname : '';
 
         const returnValues = { uuid, id, type, bundle, pagePath:path, path,  label:data.label };
 

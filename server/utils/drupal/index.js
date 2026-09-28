@@ -1,4 +1,5 @@
 import { drupalPathPrefix } from '#shared/utils/drupal-path-prefix';
+import { CACHE_TTL } from '#shared/utils/constants';
 import { boundedTtlMap } from '../bounded-ttl-map.js';
 
 
@@ -39,7 +40,7 @@ async function _getSiteSettings (ctx) {
     })
 
     // Drupal in maintenance mode (or a proxy error page) answers 200 with HTML. Caching
-    // `{ siteName: undefined, homePath: undefined }` from that for 30 days breaks home
+    // `{ siteName: undefined, homePath: undefined }` from that for the cache lifetime breaks home
     // routing for every container, so refuse anything that is not a JSON:API document.
     if (!resp || typeof resp !== 'object' || !resp.data || typeof resp.data !== 'object')
         throw Object.assign(new Error(`Site settings response for ${ctx.siteCode} (${ctx.locale}) is not a JSON:API document`), { statusCode: 422 })
@@ -99,7 +100,10 @@ export const getSiteSettings = defineCachedFunction(
     return await getSiteSettingsOrRecentFailure(ctx);
   },
   {
-    maxAge: 60 * 60 * 24 * 30,
+    // One hour, not 30 days: page_front moves when a site's home becomes node 1000 (BL-838),
+    // and a stale homePath breaks the home redirects. One small request per site + locale per
+    // hour is cheap; an admin `?seachain-taisce` clear (the `context` group) is the fast path.
+    maxAge: CACHE_TTL.ONE_HOUR,
     name: 'get-site-settings',
     group: "context",
     swr: false,

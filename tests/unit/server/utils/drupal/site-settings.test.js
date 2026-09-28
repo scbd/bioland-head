@@ -35,7 +35,7 @@ describe('getSiteSettings', () => {
     ['null body', null],
     ['no data member', { errors: [{ status: '503' }] }],
     ['scalar data', { data: 'nope' }],
-  ])('rejects on %s instead of caching undefined settings for 30 days', async (_label, body) => {
+  ])('rejects on %s instead of caching undefined settings', async (_label, body) => {
     $fetch.mockResolvedValue(body)
     await expect(drupal.getSiteSettings(ctx, {})).rejects.toThrow(/not a JSON:API document/)
   })
@@ -50,6 +50,17 @@ describe('getSiteSettings', () => {
     $fetch.mockResolvedValue({ data: { name: 'ASEAN', page_front: '/home' } })
     await drupal.getSiteSettings({ ...ctx, locale: 'zh' }, {})
     expect($fetch.mock.calls[0][0]).toMatch(/^https:\/\/be\.test\/zh\/jsonapi\/site\/site\?/)
+  })
+})
+
+describe('getSiteSettings cache lifetime (BL-838)', () => {
+  it('caches for one hour so a page.front change reaches the head the same hour', async () => {
+    const options = vi.fn()
+    vi.stubGlobal('defineCachedFunction', (fn, opts) => { options(opts); return fn })
+    vi.resetModules()
+    await import('~/server/utils/drupal/index.js')
+
+    expect(options).toHaveBeenCalledWith(expect.objectContaining({ name: 'get-site-settings', group: 'context', maxAge: 60 * 60 }))
   })
 })
 

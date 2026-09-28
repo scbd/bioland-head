@@ -117,8 +117,16 @@
         background: `linear-gradient(rgba(0, 0, 0, 0.33) 0%, rgba(0, 0, 0, 0) 100%), linear-gradient(90deg, rgb(${hexToRgb(siteStore.theme.hero.primary[0])}) 0%, rgba(${hexToRgb(siteStore.theme.hero.primary[0])}, 0) 100%)`
     }))
 
+    // A term home keeps its heroes in the home-page settings form; a node home keeps them
+    // in its own field_attachments, which the node edit form owns.
     function editUrl() {
-        return pageStore?.isHomePage? editUrlHomePage() : editUrlDirect();
+        if(!pageStore?.isHomePage) return editUrlDirect();
+
+        return pageStore.page?.drupalInternalNid? editUrlHomeNode() : editUrlHomePage();
+    }
+
+    function editUrlHomeNode () {
+        return  `${siteStore.localizedHost}/node/${pageStore.page.drupalInternalNid}/edit?destination=${encodeURIComponent(route.path)}#edit-field-attachments-wrapper`;
     }
 
     function editUrlHomePage () {

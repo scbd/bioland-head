@@ -257,9 +257,15 @@ export const usePageStore = defineStore('page', {
         title(){
             return this.page?.title || this.page?.name;
         },
+        // Drupal's page.front is a system path to a node or a term; match the page's own.
         isHomePage(){
-            const siteStore = useSiteStore();
-            return siteStore.homePath === `/taxonomy/term/${this?.page?.drupalInternalTid}`;
+            const { homePath }                             = useSiteStore();
+            const { drupalInternalNid, drupalInternalTid } = this.page || {};
+
+            if(!homePath) return false;
+
+            return (!!drupalInternalNid && homePath === `/node/${drupalInternalNid}`)
+                || (!!drupalInternalTid && homePath === `/taxonomy/term/${drupalInternalTid}`);
         },
         body(){
             return this.page?.body?.processed || this.page?.body?.value || this.page?.description?.processed || this.page?.description?.value;
