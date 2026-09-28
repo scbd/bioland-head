@@ -10,6 +10,24 @@ const ecosystemTermsById = new Map(
   ecosystemTypes.map(({ identifier, name }) => [identifier, { identifier, name: name.en, title: name }]),
 );
 
+/**
+ * Every thesaurus key on a Drupal `field_tags` value. The field is a two-column string
+ * field: `value` holds the main tags, `value2` the additional tags (document type, event
+ * status, ...) the module's Additional Tags Settings tab lets an editor pick.
+ *
+ * @param {{ value?: string, value2?: string }|string|undefined} fieldTags
+ * @returns {string[]}
+ */
+export function getTagKeys(fieldTags) {
+  const columns = typeof fieldTags === 'string' ? [fieldTags] : [fieldTags?.value, fieldTags?.value2];
+
+  return columns
+    .filter((column) => typeof column === 'string')
+    .flatMap((column) => column.split(','))
+    .map((key) => key.trim())
+    .filter(Boolean);
+}
+
 export const getThesaurusByKey = defineCachedFunction(
   async (event, keysRaw) => {
     // Every failure path below throws. `[false]` used to be returned instead and was
