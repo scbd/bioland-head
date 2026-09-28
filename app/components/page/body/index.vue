@@ -76,7 +76,7 @@
             
             <div id="page-body-attachments" v-if="pageStore?.media?.length"  class="row mt-3">
                 <div class="col-12 col-md-3">
-                    <h2 id="page-body-attachments-heading" :style="pageTypeStyle" class="side-heading text-nowrap">{{t('Attachments')}} <span class="text-muted fs-4">({{pageStore?.media.length}})</span></h2>
+                    <h2 id="page-body-attachments-heading" :style="pageTypeStyle" class="side-heading">{{t('Attachments')}} <span class="text-muted fs-4 text-nowrap">({{pageStore?.media.length}})</span></h2>
 
                 </div>
                 <div class="col-12 col-md-9">
@@ -85,7 +85,7 @@
             </div>
             <div id="page-body-national-targets" v-if="pageStore?.tags?.nt7?.length" class="row mt-3">
                 <div class="col-12 col-md-3">
-                    <h2 id="page-body-national-targets-heading" :style="pageTypeStyle" class="side-heading text-nowrap">{{t('National Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.nt7.length}})</span></h2>
+                    <h2 id="page-body-national-targets-heading" :style="pageTypeStyle" class="side-heading">{{t('National Targets')}} <span class="text-muted fs-4 text-nowrap">({{pageStore?.tags.nt7.length}})</span></h2>
                 </div>
                 <div class="col-12 col-md-9">
                     <LazySwiperGbf id="page-body-national-targets-swiper" :slides="pageStore?.tags?.nt7" type="nt7"/>
@@ -93,7 +93,7 @@
             </div>
             <div id="page-body-gbf-targets" v-if="pageStore?.tags?.gbfTargets?.length" class="row mt-3">
                 <div class="col-12 col-md-3">
-                    <h2 id="page-body-gbf-targets-heading" :style="pageTypeStyle" class="side-heading text-nowrap">{{t('GBF Targets')}} <span class="text-muted fs-4">({{pageStore?.tags.gbfTargets.length}})</span></h2>
+                    <h2 id="page-body-gbf-targets-heading" :style="pageTypeStyle" class="side-heading">{{t('GBF Targets')}} <span class="text-muted fs-4 text-nowrap">({{pageStore?.tags.gbfTargets.length}})</span></h2>
                 </div>
                 <div class="col-12 col-md-9">
                     <LazySwiperGbf id="page-body-gbf-targets-swiper" :slides="pageStore?.tags?.gbfTargets" type="gbf"/>
@@ -183,5 +183,6 @@
     padding-top: 1rem;
     border-top: var(--bs-primary) .5rem solid;
     font-size: 2rem;
+    overflow-wrap: anywhere;
 }
 </style>
