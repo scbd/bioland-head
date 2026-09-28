@@ -138,4 +138,37 @@ describe('html', () => {
       expect(htmlSanitize('<img src="text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">')).not.toContain('data:')
     })
   })
+
+  describe('untrusted iframe removal', () => {
+    it('removes the wrapper when an untrusted iframe is wrapped in a <p>', () => {
+      const input = '<p>before</p><p><iframe src="https://evil.example.com"></iframe></p><p>after</p>'
+      const result = htmlSanitize(input)
+
+      expect(result).not.toContain('<iframe')
+      expect(result).not.toContain('evil.example.com')
+      expect(result).toContain('before')
+      expect(result).toContain('after')
+    })
+
+    it('removes an untrusted iframe sitting at the top level of the body without throwing', () => {
+      const input = '<iframe src="https://evil.example.com"></iframe><p>kept</p>'
+
+      expect(() => htmlSanitize(input)).not.toThrow()
+
+      const result = htmlSanitize(input)
+
+      expect(result).not.toContain('<iframe')
+      expect(result).not.toContain('evil.example.com')
+      expect(result).toContain('kept')
+    })
+
+    it('keeps a trusted youtube iframe', () => {
+      const input = '<p><iframe src="https://www.youtube.com/embed/abc123" width="560" height="315"></iframe></p>'
+      const result = htmlSanitize(input)
+
+      expect(result).toContain('<iframe')
+      expect(result).toContain('youtube.com/embed/abc123')
+      expect(result).toContain('aspect-ratio: 16 / 9')
+    })
+  })
 })
