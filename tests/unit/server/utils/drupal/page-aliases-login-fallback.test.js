@@ -28,7 +28,7 @@ const drupalSession = (rows) => {
 
 function drupal(uri) {
   if (uri.includes('/router/translate-path'))
-    return Promise.resolve({ entity: { uuid: 'u-1', type: 'node', bundle: 'content', canonical: `${ctx.host}${ctx.path}` }, label: 'About' })
+    return Promise.resolve({ entity: { uuid: 'u-1', id: '42', type: 'node', bundle: 'content', canonical: `${ctx.host}${ctx.path}` }, label: 'About' })
 
   return Promise.resolve({ data: { ...entity, default_langcode: true } })
 }
@@ -109,5 +109,28 @@ describe('getPageData when the Drupal login breaker is open (BL-1113)', () => {
 
     await expect(drupalPage.getPageData({ ...ctx }, event)).resolves.toMatchObject({ aliases: { en: '/en/about', fr: '/fr/a-propos' } })
     expect(consola.warn).not.toHaveBeenCalled()
+  })
+})
+
+describe('getPageData for the home node (BL-838)', () => {
+  it('301s the home node alias to the locale root', async () => {
+    await expect(drupalPage.getPageData({ ...ctx, homePath: '/node/42' }, event)).resolves.toEqual({ redirect: '/en' })
+  })
+
+  it('renders the home node at the locale root without redirecting', async () => {
+    const page = await drupalPage.getPageData({ ...ctx, path: '/en', homePath: '/node/42' }, event)
+
+    expect(page.redirect).toBeUndefined()
+    expect(page.drupalInternalNid).toBe(42)
+  })
+
+  it.each([
+    ['another node is the home', '/node/43'],
+    ['a term with the same id is the home', '/taxonomy/term/42'],
+    ['there is no homePath', undefined],
+  ])('does not redirect when %s', async (_label, homePath) => {
+    const page = await drupalPage.getPageData({ ...ctx, homePath }, event)
+
+    expect(page.redirect).toBeUndefined()
   })
 })

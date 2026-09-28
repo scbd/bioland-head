@@ -216,8 +216,7 @@ function getSearchParamsByAlias(alias){
  */
 export async function mapAliasByLocale(ctx, type, id){
 
-    const homePath = ctx?.homePath || '/taxonomies/term/20'
-    const isHomePath = homePath === `/${type}/${id}`; 
+    const isHomePath = !!ctx?.homePath && ctx.homePath === `/${type}/${id}`;
 
     const languages = await getById(ctx)(type, id, true)
     // getInstalledLanguages returns array of objects with drupalInternalId

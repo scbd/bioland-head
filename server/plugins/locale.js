@@ -15,6 +15,7 @@ export default defineNitroPlugin((nitro) => {
         await handleMalformedPaths();
         await handleLocaleRedirect();
         await handleTaxonomyTermAlias();
+        await handleHomeNodePath();
 
         /**
          * Redirects malformed paths (duplicate locales, double slashes)
@@ -87,6 +88,30 @@ export default defineNitroPlugin((nitro) => {
                 if(aliasData?.alias) {
                     return sendRedirect(event, `/${locale}${aliasData.alias}${queryPart}`, 301);
                 }
+            } catch (error) {
+                return;
+            }
+        }
+
+        /**
+         * Redirects /{locale}/node/{nid} to /{locale} when that node is the homepage, as
+         * handleTaxonomyTermAlias does for a term home. The home node's alias is redirected
+         * in getPageIdentifiers, where the alias is already resolved to the node.
+         */
+        async function handleHomeNodePath(){
+            try {
+                const nodeMatch = event.path.match(/^\/([a-z]{2})\/node\/(\d+)\/?(?:\?|$)/);
+
+                if(!nodeMatch) return;
+
+                const [, locale, nid] = nodeMatch;
+                const ctx = await useRequestContext(event);
+
+                if(ctx.homePath !== `/node/${nid}`) return;
+
+                const queryString = event.node.req.url?.split('?')[1];
+
+                return sendRedirect(event, `/${locale}${queryString ? `?${queryString}` : ''}`, 301);
             } catch (error) {
                 return;
             }

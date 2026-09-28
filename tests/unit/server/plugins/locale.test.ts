@@ -366,4 +366,43 @@ describe('server/plugins/locale request hook', () => {
       expect(mockSendRedirect).not.toHaveBeenCalled()
     })
   })
+
+  describe('home page canonical URL (BL-838)', () => {
+    const withHome = (homePath: string) =>
+      mockUseRequestContext.mockResolvedValue({ ...makeContext(`https://${GENERATED_HOST}`), homePath })
+
+    it('301s the home node system path to the locale root, keeping the query', async () => {
+      withHome('/node/1000')
+
+      await requestHook(makeEvent('/fr/node/1000?x=1'))
+
+      expect(mockSendRedirect).toHaveBeenCalledTimes(1)
+      expect(mockSendRedirect).toHaveBeenCalledWith(expect.anything(), '/fr?x=1', 301)
+    })
+
+    it.each(['/en/node/1001', '/en/node/10000', '/en/node/1000/edit'])('leaves %s alone when node 1000 is the home', async (path) => {
+      withHome('/node/1000')
+
+      await requestHook(makeEvent(path))
+
+      expect(mockSendRedirect).not.toHaveBeenCalled()
+    })
+
+    it('leaves node paths alone on a term home', async () => {
+      withHome('/taxonomy/term/20')
+
+      await requestHook(makeEvent('/en/node/20'))
+
+      expect(mockSendRedirect).not.toHaveBeenCalled()
+    })
+
+    it('still 301s the home term system path to the locale root', async () => {
+      withHome('/taxonomy/term/20')
+
+      await requestHook(makeEvent('/en/taxonomy/term/20'))
+
+      expect(mockSendRedirect).toHaveBeenCalledWith(expect.anything(), '/en', 301)
+      expect(mockGetTermAliasById).not.toHaveBeenCalled()
+    })
+  })
 })
