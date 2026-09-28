@@ -380,6 +380,24 @@ describe('server/plugins/locale request hook', () => {
       expect(mockSendRedirect).toHaveBeenCalledWith(expect.anything(), '/fr?x=1', 301)
     })
 
+    it('301s the home node system path for another locale prefix', async () => {
+      withHome('/node/1000')
+
+      await requestHook(makeEvent('/fr/node/1000'))
+
+      expect(mockSendRedirect).toHaveBeenCalledTimes(1)
+      expect(mockSendRedirect).toHaveBeenCalledWith(expect.anything(), '/fr', 301)
+    })
+
+    it('301s the home node system path with a trailing slash', async () => {
+      withHome('/node/1000')
+
+      await requestHook(makeEvent('/en/node/1000/'))
+
+      expect(mockSendRedirect).toHaveBeenCalledTimes(1)
+      expect(mockSendRedirect).toHaveBeenCalledWith(expect.anything(), '/en', 301)
+    })
+
     it.each(['/en/node/1001', '/en/node/10000', '/en/node/1000/edit'])('leaves %s alone when node 1000 is the home', async (path) => {
       withHome('/node/1000')
 

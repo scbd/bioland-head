@@ -18,7 +18,7 @@ const event = { context: { headers: {} } }
 
 const loginUnavailable = () => createError({ statusCode: 503, statusMessage: 'Drupal login unavailable', data: { siteCode: 'asean', reason: 'failure-backoff' } })
 
-let drupalPage, consola, useDrupalLogin, entity
+let drupalPage, consola, useDrupalLogin, entity, translatePathEntity, translatePathIsHome
 
 // A path_alias request answered with the given rows, in superagent's chained shape.
 const drupalSession = (rows) => {
@@ -28,14 +28,16 @@ const drupalSession = (rows) => {
 
 function drupal(uri) {
   if (uri.includes('/router/translate-path'))
-    return Promise.resolve({ entity: { uuid: 'u-1', id: '42', type: 'node', bundle: 'content', canonical: `${ctx.host}${ctx.path}` }, label: 'About' })
+    return Promise.resolve({ entity: translatePathEntity, label: 'About', isHomePath: translatePathIsHome })
 
   return Promise.resolve({ data: { ...entity, default_langcode: true } })
 }
 
 beforeEach(async () => {
   vi.resetModules()
-  entity         = { drupal_internal__nid: 42 }
+  entity              = { drupal_internal__nid: 42 }
+  translatePathEntity = { uuid: 'u-1', id: '42', type: 'node', bundle: 'content', canonical: `${ctx.host}${ctx.path}` }
+  translatePathIsHome = false
   consola        = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
   useDrupalLogin = vi.fn(() => Promise.reject(loginUnavailable()))
 
@@ -116,22 +118,35 @@ describe('getPageData when the Drupal login breaker is open (BL-1113)', () => {
 
 describe('getPageData for the home node (BL-838)', () => {
   it('301s the home node alias to the locale root', async () => {
-    await expect(drupalPage.getPageData({ ...ctx, homePath: '/node/42' }, event)).resolves.toEqual({ redirect: '/en' })
+    translatePathIsHome = true
+
+    await expect(drupalPage.getPageData({ ...ctx }, event)).resolves.toEqual({ redirect: '/en' })
   })
 
   it('renders the home node at the locale root without redirecting', async () => {
-    const page = await drupalPage.getPageData({ ...ctx, path: '/en', homePath: '/node/42' }, event)
+    translatePathIsHome = true
+
+    const page = await drupalPage.getPageData({ ...ctx, path: '/en' }, event)
 
     expect(page.redirect).toBeUndefined()
     expect(page.drupalInternalNid).toBe(42)
   })
 
-  it.each([
-    ['another node is the home', '/node/43'],
-    ['a term with the same id is the home', '/taxonomy/term/42'],
-    ['there is no homePath', undefined],
-  ])('does not redirect when %s', async (_label, homePath) => {
-    const page = await drupalPage.getPageData({ ...ctx, homePath }, event)
+  it('does not redirect when the entity is not the home, even if a stale ctx.homePath says otherwise', async () => {
+    // BL-838 F1: the redirect must key on the live translate-path answer (isHomePath), never on
+    // the cached ctx.homePath, which can disagree with Drupal for up to the settings TTL.
+    translatePathIsHome = false
+
+    const page = await drupalPage.getPageData({ ...ctx, homePath: '/node/42' }, event)
+
+    expect(page.redirect).toBeUndefined()
+  })
+
+  it('does not redirect a term home through the node-home branch (BL-838 F2)', async () => {
+    translatePathEntity = { uuid: 'u-2', id: '20', type: 'taxonomy_term', bundle: 'system_pages', canonical: `${ctx.host}${ctx.path}` }
+    translatePathIsHome = true
+
+    const page = await drupalPage.getPageData({ ...ctx }, event)
 
     expect(page.redirect).toBeUndefined()
   })

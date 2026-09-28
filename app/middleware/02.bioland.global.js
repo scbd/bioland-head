@@ -178,8 +178,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       hasSession    : hasDrupalSessionCookie(event.node?.req?.headers?.cookie) || meStore.isAuthenticated,
       isBypass      : 'seachain-taisce' in (to.query || {}),
       isContentPage : pStore.isPage || pStore.isMediaPage,
-      // Home is itself a system_pages term, but it is the one shell worth tiering: it is the
-      // highest-traffic page and the 5-minute cap below already bounds its staleness.
+      // Home may be a system_pages term or a node, but it is the one shell worth tiering: it is
+      // the highest-traffic page and the 5-minute cap below already bounds its staleness.
       isSystemPage  : pStore.isSystemPage && !isHome,
     });
 
