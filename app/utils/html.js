@@ -4,7 +4,7 @@ const defaultOptions = { USE_PROFILES: { html: true },ADD_TAGS: ["iframe"], ADD_
 
 export const htmlSanitize = (html, options = {}) => html? DOMPurify.sanitize(html, { ...defaultOptions, ...options } ) : '';
 
-DOMPurify.addHook('uponSanitizeElement', (node, data)=>
+const removeUntrustedIframe = (node, data)=>
   {
     if (data.tagName !== 'iframe') return node;
 
@@ -21,7 +21,7 @@ DOMPurify.addHook('uponSanitizeElement', (node, data)=>
     if(node.getAttribute("src")?.startsWith('https://portal.geobon.org')) return node;
 
     return node.parentNode.parentNode.removeChild(node.parentNode);//node;
-  });
+  };
 
 // Drupal's XSS filter strips the `data:` scheme off inline base64 images but keeps the
 // payload, so bodies arrive holding src="image/jpeg;base64,/9j/...". The browser resolves
@@ -86,7 +86,7 @@ const repairBase64Image = (node, attr) =>
     if(value.length > maxUrlLength && !hasUsableScheme.test(value)) node.removeAttribute(attr);
   };
 
-DOMPurify.addHook('afterSanitizeAttributes', (node)=>
+const repairAttributes = (node)=>
   {
     if(!node.getAttribute) return node;
 
@@ -94,7 +94,20 @@ DOMPurify.addHook('afterSanitizeAttributes', (node)=>
     repairBase64Image(node, 'srcset');
 
     return node;
-  });
+  };
+
+// This module is bundled twice on the server - once in the Vue app and once in Nitro through
+// server/utils' re-export - and both copies share the one externalised isomorphic-dompurify
+// instance. Registering per copy ran every hook twice: the second iframe pass found the wrapper
+// the first had already detached, threw on its null parent, and the page's SSR never answered
+// (BL-1223). Register once per DOMPurify instance.
+const hooksRegistered = Symbol.for('bioland.htmlSanitize.hooks');
+
+if(!DOMPurify[hooksRegistered]){
+  DOMPurify[hooksRegistered] = true;
+  DOMPurify.addHook('uponSanitizeElement', removeUntrustedIframe);
+  DOMPurify.addHook('afterSanitizeAttributes', repairAttributes);
+}
 
 
 export const hasBchEmbed = (html) => {
