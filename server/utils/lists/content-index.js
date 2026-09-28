@@ -96,8 +96,7 @@ function mapData(event,ctx){
             }
             
             if (fieldTags) {
-                const { value, value2 } = fieldTags;
-                const keys = ((value || '') + (value2 ? ','+value2 : '')).split(',').map(k=>k.trim()).filter(Boolean);
+                const keys = getTagKeys(fieldTags);
 
                 // Only fetch thesaurus data if we have keys
                 if(keys.length)

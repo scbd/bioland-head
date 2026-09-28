@@ -52,6 +52,8 @@ beforeEach(async () => {
   vi.stubGlobal('mapLocaleFromDrupal', mapLocaleFromDrupal)
   vi.stubGlobal('removeLocalizationFromPath', (await import('~/server/utils/drupal/index.js')).removeLocalizationFromPath)
   vi.stubGlobal('mapAliasByLocale', (await import('~/server/utils/drupal/drupal-path-alias.js')).mapAliasByLocale)
+  vi.stubGlobal('getThesaurusCacheOptions', () => ({}))
+  vi.stubGlobal('getTagKeys', (await import('~/server/utils/thesaurus/index.js')).getTagKeys)
 
   drupalPage = await import('~/server/utils/drupal/drupal-page.js')
 })

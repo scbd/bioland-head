@@ -22,7 +22,7 @@ export interface DataSourceConfig {
 }
 
 // IDs used for filtering org types vs gov types
-const GOV_TYPE_IDS = new Set([
+export const GOV_TYPE_IDS = new Set([
   '9456EBD7-5DDD-4423-82BD-B117D109667C',
   '1C3A4FF4-9AB7-4A34-BE06-E07F575B7A32',
   '8830904C-8AF4-4C2F-AADB-363D98D854DA',
