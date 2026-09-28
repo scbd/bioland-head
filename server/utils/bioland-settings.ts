@@ -46,6 +46,8 @@ export const BIOLAND_SETTINGS_ALLOWLIST = [
   "homeWidgets",
   /** app/components/page/header/mega-menu/**, server/utils/drupal/drupal-content-types.js */
   "megaMenu",
+  /** app/utils/html.js - `embed.allowedOrigins`, the iframe allowlist (BL-1218) */
+  "embed",
 ] as const;
 
 /** Keys that can poison an object graph, stripped at any depth. */
