@@ -1,24 +1,95 @@
 import DOMPurify from "isomorphic-dompurify";
 
-const defaultOptions = { USE_PROFILES: { html: true },ADD_TAGS: ["iframe"], ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling'] };
+const defaultOptions = { USE_PROFILES: { html: true },ADD_TAGS: ["iframe"], ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'sandbox'] };
 
-export const htmlSanitize = (html, options = {}) => html? DOMPurify.sanitize(html, { ...defaultOptions, ...options } ) : '';
+// The iframe allowlist is Drupal config (bioland.settings `embed.allowed_origins`, camelCased by
+// server/utils/context-unified.ts), read at render time so an admin can allow a provider without a
+// deploy. Outside a Nuxt app with an active Pinia (Nitro routes, plain unit tests) there is no list,
+// and no list means no iframe survives: deny by default.
+const siteEmbedOrigins = () =>
+  {
+    try { return useSiteStore()?.biolandSettings?.embed?.allowedOrigins; }
+    catch { return undefined; }
+  };
 
-const removeUntrustedIframe = (node, data)=>
+// Callers may pass `embedAllowedOrigins` explicitly; it travels to the hook on DOMPurify's own
+// config (hooks receive it as their third argument), so no module state is shared between requests.
+export const htmlSanitize = (html, { embedAllowedOrigins = siteEmbedOrigins(), ...options } = {}) =>
+  html? DOMPurify.sanitize(html, { ...defaultOptions, ...options, EMBED_ALLOWED_ORIGINS: embedAllowedOrigins } ) : '';
+
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-iframe-sandbox
+const sandboxTokens = new Set([ 'allow-downloads', 'allow-forms', 'allow-modals', 'allow-orientation-lock', 'allow-pointer-lock', 'allow-popups', 'allow-popups-to-escape-sandbox', 'allow-presentation', 'allow-same-origin', 'allow-scripts', 'allow-storage-access-by-user-activation', 'allow-top-navigation', 'allow-top-navigation-by-user-activation', 'allow-top-navigation-to-custom-protocols' ]);
+
+const mediaPlayerHost = /^(?:(?:www\.)?youtube(?:-nocookie)?\.com|player\.vimeo\.com)$/;
+
+const parseUrl = (value) =>
+  {
+    try { return new URL(value); }
+    catch { return undefined; }
+  };
+
+// Same rule as the module's URL constraint: scheme and host equal exactly, and the path matches the
+// entry's path prefix on a segment boundary, so `/view` admits `/view` and `/view/x` but not `/view-evil`.
+const matchesEntry = (src, entry) =>
+  {
+    const allowed = parseUrl(entry?.url);
+
+    if(!allowed || src.protocol !== allowed.protocol || src.host !== allowed.host) return false;
+
+    const prefix = allowed.pathname.replace(/\/+$/, '');
+
+    return !prefix || src.pathname === prefix || src.pathname.startsWith(`${prefix}/`);
+  };
+
+const findEmbedEntry = (value, entries) =>
+  {
+    const src = parseUrl(value);
+
+    if(!src || !/^https?:$/.test(src.protocol) || !Array.isArray(entries)) return undefined;
+
+    return entries.find(entry => matchesEntry(src, entry));
+  };
+
+const toSandbox = (value) => [ ...new Set(String(value ?? '').toLowerCase().split(/\s+/).filter(token => sandboxTokens.has(token))) ].join(' ');
+
+const toAspectRatio = (node) =>
+  {
+    const width  = Number.parseInt(node.getAttribute('width'), 10);
+    const height = Number.parseInt(node.getAttribute('height'), 10);
+
+    return width > 0 && height > 0 ? `${width} / ${height}` : '16 / 9';
+  };
+
+const applyEmbedEntry = (node, entry, host) =>
+  {
+    const isMediaPlayer = mediaPlayerHost.test(host);
+    const sandbox       = toSandbox(entry.sandbox);
+
+    node.setAttribute("style", `aspect-ratio: ${isMediaPlayer ? '16 / 9' : toAspectRatio(node)}; width: 100%;`);
+    node.removeAttribute("height");
+    node.removeAttribute("width");
+
+    if(sandbox) node.setAttribute("sandbox", sandbox);
+    else node.removeAttribute("sandbox");
+
+    if(!isMediaPlayer) return;
+
+    node.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;");
+    node.setAttribute("allowfullscreen", "");
+  };
+
+const removeUntrustedIframe = (node, data, config)=>
   {
     if (data.tagName !== 'iframe') return node;
 
-    if(/youtube\.com|player\.vimeo\.com/.test(node.getAttribute("src") || '')) {
-      node.removeAttribute("height");
-      node.removeAttribute("width");
-      node.setAttribute("style", "aspect-ratio: 16 / 9; width: 100%;");
-      node.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;");
-      node.setAttribute("allowfullscreen", "");
-      
+    const src   = node.getAttribute("src") || '';
+    const entry = findEmbedEntry(src, config?.EMBED_ALLOWED_ORIGINS);
+
+    if(entry){
+      applyEmbedEntry(node, entry, new URL(src).hostname);
+
       return node;
     }
-
-    if(node.getAttribute("src")?.startsWith('https://portal.geobon.org')) return node;
 
     // The wrapper (e.g. a <p>) is what normally gets removed, but a null grandparent throws --
     // and an untrusted iframe still needs stripping even when it sits at the top of the body, so

@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import { htmlSanitize, hasFontAwesomeIcon } from '../../../../app/utils/html'
 
+// Shape of siteStore.biolandSettings.embed.allowedOrigins after context-unified's camelCase.
+const embedAllowedOrigins = [
+  { url: 'https://www.youtube.com', label: 'YouTube', sandbox: '' },
+  { url: 'https://player.vimeo.com', label: 'Vimeo', sandbox: '' },
+  { url: 'https://app.powerbi.com/view', label: 'Power BI', sandbox: '' },
+  { url: 'https://files.example.org/sites/default/files', label: 'Site files', sandbox: 'allow-scripts' },
+]
+
 describe('html', () => {
   describe('htmlSanitize', () => {
     it('strips style attributes while preserving tags and text when FORBID_ATTR style is set', () => {
@@ -287,11 +295,83 @@ describe('html', () => {
 
     it('keeps a trusted youtube iframe', () => {
       const input = '<p><iframe src="https://www.youtube.com/embed/abc123" width="560" height="315"></iframe></p>'
-      const result = htmlSanitize(input)
+      const result = htmlSanitize(input, { embedAllowedOrigins })
 
       expect(result).toContain('<iframe')
       expect(result).toContain('youtube.com/embed/abc123')
       expect(result).toContain('aspect-ratio: 16 / 9')
+      expect(result).toContain('allow="accelerometer; autoplay;')
+      expect(result).not.toContain('sandbox=')
+    })
+  })
+
+  describe('config-driven iframe allowlist (BL-1218)', () => {
+    const iframe = src => `<p>before</p><p><iframe src="${src}" width="800" height="485"></iframe></p><p>after</p>`
+
+    it('keeps an iframe whose origin is on the list', () => {
+      const result = htmlSanitize(iframe('https://app.powerbi.com/view?r=abc'), { embedAllowedOrigins })
+
+      expect(result).toContain('src="https://app.powerbi.com/view?r=abc"')
+      expect(result).toContain('aspect-ratio: 800 / 485; width: 100%;')
+      expect(result).not.toContain('width="800"')
+      expect(result).not.toContain('allow="accelerometer')
+    })
+
+    it.each([
+      ['a lookalike host', 'https://evil-youtube.com/embed/abc'],
+      ['a subdomain of an allowed host', 'https://www.youtube.com.evil.example/embed/abc'],
+      ['userinfo that disguises the host', 'https://www.youtube.com@evil.example/embed/abc'],
+      ['a different scheme', 'http://www.youtube.com/embed/abc'],
+      ['a path that only shares a prefix string', 'https://app.powerbi.com/view-evil?r=abc'],
+      ['a path outside the prefix', 'https://app.powerbi.com/groups/abc'],
+      ['a schemeless src', '//www.youtube.com/embed/abc'],
+      ['a javascript src', 'javascript:alert(1)'],
+    ])('removes %s', (_, src) => {
+      const result = htmlSanitize(iframe(src), { embedAllowedOrigins })
+
+      expect(result).not.toContain('<iframe')
+      expect(result).toContain('before')
+      expect(result).toContain('after')
+    })
+
+    it('matches the path prefix on a segment boundary', () => {
+      expect(htmlSanitize(iframe('https://app.powerbi.com/view'), { embedAllowedOrigins })).toContain('<iframe')
+      expect(htmlSanitize(iframe('https://app.powerbi.com/view/report'), { embedAllowedOrigins })).toContain('<iframe')
+    })
+
+    it.each([
+      ['no list', undefined],
+      ['an empty list', []],
+      ['a non-array value', { url: 'https://www.youtube.com' }],
+    ])('removes every iframe given %s', (_, list) => {
+      const result = htmlSanitize(iframe('https://www.youtube.com/embed/abc'), { embedAllowedOrigins: list })
+
+      expect(result).not.toContain('<iframe')
+    })
+
+    it('removes every iframe when no list is passed and no site store is available', () => {
+      expect(htmlSanitize(iframe('https://www.youtube.com/embed/abc'))).not.toContain('<iframe')
+    })
+
+    it('gives a files-origin entry allow-scripts without allow-same-origin', () => {
+      const result = htmlSanitize(iframe('https://files.example.org/sites/default/files/flowchart.html'), { embedAllowedOrigins })
+
+      expect(result).toContain('sandbox="allow-scripts"')
+      expect(result).not.toContain('allow-same-origin')
+    })
+
+    it('drops unknown and duplicate sandbox tokens', () => {
+      const list   = [{ url: 'https://files.example.org', label: 'Files', sandbox: 'allow-scripts ALLOW-SCRIPTS allow-evil allow-forms' }]
+      const result = htmlSanitize(iframe('https://files.example.org/a.html'), { embedAllowedOrigins: list })
+
+      expect(result).toContain('sandbox="allow-scripts allow-forms"')
+    })
+
+    it('replaces an editor-authored sandbox with the entry tokens, and drops it when the entry has none', () => {
+      const authored = src => `<iframe src="${src}" sandbox="allow-same-origin allow-scripts"></iframe>`
+
+      expect(htmlSanitize(authored('https://files.example.org/sites/default/files/a.html'), { embedAllowedOrigins })).toContain('sandbox="allow-scripts"')
+      expect(htmlSanitize(authored('https://app.powerbi.com/view?r=1'), { embedAllowedOrigins })).not.toContain('sandbox=')
     })
   })
 })

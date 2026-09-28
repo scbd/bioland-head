@@ -30,6 +30,7 @@ describe('sanitizeBiolandSettings', () => {
         google_analytics_ids: 'G-ABC123',
         home_widgets : { gbif_widget: { enable: false } },
         mega_menu    : { forums: { position: 'top' }, content_type_menus: { 12: { menu_position: 'bottom' } } },
+        embed        : { allowed_origins: [{ url: 'https://app.powerbi.com/view', label: 'Power BI', sandbox: '' }, { url: 'https://files.example.org', label: 'Files', sandbox: 'allow-scripts' }] },
         _core        : { default_config_hash: 'abc' },
         langcode     : 'en',
         uuid         : 'd0d0-cafe'
@@ -41,7 +42,7 @@ describe('sanitizeBiolandSettings', () => {
             const sanitized = sanitizeBiolandSettings(authored())
 
             expect(Object.keys(sanitized).sort())
-                .toEqual(['config', 'googleAnalyticsEnabled', 'googleAnalyticsIds', 'homeWidgets', 'megaMenu', 'theme'])
+                .toEqual(['config', 'embed', 'googleAnalyticsEnabled', 'googleAnalyticsIds', 'homeWidgets', 'megaMenu', 'theme'])
         })
 
         it('emits keys in allowlist order, not payload order, so output never depends on Drupal serialisation', () => {
@@ -323,6 +324,11 @@ describe('sanitizeBiolandSettings', () => {
             // app/components/page/header/mega-menu/** and server/utils/drupal/drupal-content-types.js
             expect(settings.megaMenu.forums.position).toBe('top')
             expect(settings.megaMenu.contentTypeMenus['12'].menuPosition).toBe('bottom')
+            // app/utils/html.js - the iframe allowlist (BL-1218)
+            expect(settings.embed.allowedOrigins).toEqual([
+                { url: 'https://app.powerbi.com/view', label: 'Power BI', sandbox: '' },
+                { url: 'https://files.example.org', label: 'Files', sandbox: 'allow-scripts' },
+            ])
         })
 
         it('preserves falsy-but-meaningful authored values', () => {
@@ -339,9 +345,9 @@ describe('sanitizeBiolandSettings', () => {
             expect(settings.theme.homePageWidgets.columns).toEqual([['panorama', 'gbif'], ['forums']])
         })
 
-        it('lists exactly the six keys head consumes', () => {
+        it('lists exactly the seven keys head consumes', () => {
             expect([...BIOLAND_SETTINGS_ALLOWLIST].sort())
-                .toEqual(['config', 'googleAnalyticsEnabled', 'googleAnalyticsIds', 'homeWidgets', 'megaMenu', 'theme'])
+                .toEqual(['config', 'embed', 'googleAnalyticsEnabled', 'googleAnalyticsIds', 'homeWidgets', 'megaMenu', 'theme'])
         })
     })
 
