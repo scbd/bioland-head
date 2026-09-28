@@ -93,9 +93,9 @@ const applyEmbedEntry = (node, entry, host) =>
     else if(node.hasAttribute("sandbox")) node.setAttribute("sandbox", toSandbox(node.getAttribute("sandbox")));
 
     if(!isMediaPlayer){
-      // Permission delegation (camera, microphone, ...) is granted to the players below only.
+      // Permission delegation (camera, microphone, ...) is granted to the players below only. An
+      // editor's `allowfullscreen` stays: it needs a user gesture and grants nothing sensitive.
       node.removeAttribute("allow");
-      node.removeAttribute("allowfullscreen");
 
       return;
     }
