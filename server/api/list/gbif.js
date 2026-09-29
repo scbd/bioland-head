@@ -23,7 +23,7 @@ export default defineCachedEventHandler(async (event) => {
             return { ...data[0], ...data[1] }
         }
         catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     
     },

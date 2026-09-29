@@ -15,7 +15,7 @@ export default defineCachedEventHandler(
                 .filter(filterDocs(receivedQuery.locale))
             : {};
         } catch (e) {
-        passError(event, e);
+        return passError(event, e);
         }
     },
     getMenusCacheOptions('nbsap-menus', true, CACHE_TTL.CBD_API_LONG)

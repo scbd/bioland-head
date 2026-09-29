@@ -10,6 +10,11 @@ import ts from 'typescript'
  * `passError`) never runs. This scans server/api/** and server/routes/** for that
  * shape and fails the build if a new instance shows up.
  *
+ * BL-1247 guard: `passError` is async and always throws, so a bare `passError(event, e)`
+ * statement inside a `catch` lets its rejection escape as an unhandled rejection while the
+ * handler resolves `undefined`. It must be `return`ed, `await`ed, or `throw`n. Opt out with
+ * `// await-guard: allow-bare-pass-error - <reason>` on the line above the call.
+ *
  * A call that is verifiably synchronous and must stay sync (e.g. it feeds
  * `Array#map` inside a non-async helper) can opt out with a comment on the line
  * above the `return`:
@@ -116,9 +121,57 @@ export function findUnawaitedTryReturns(file, text) {
   return violations
 }
 
+/**
+ * Stops at function-like nodes: a bare passError inside a nested callback within a catch is
+ * not flagged (intentional limit; that callback is its own scope).
+ *
+ * @param {string} file absolute path, used only for error messages
+ * @param {string} text file contents
+ * @returns {{ file: string, line: number, text: string }[]}
+ */
+export function findBarePassErrorInCatch(file, text) {
+  const scriptKind = file.endsWith('.ts') ? ts.ScriptKind.TS : ts.ScriptKind.JS
+  const sourceFile = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, scriptKind)
+  const violations = []
+
+  const isBarePassError = (node) =>
+    ts.isExpressionStatement(node) &&
+    ts.isCallExpression(node.expression) &&
+    ts.isIdentifier(node.expression.expression) &&
+    node.expression.expression.text === 'passError'
+
+  const hasAllowComment = (node) => {
+    const leadingText = node.getFullText(sourceFile).slice(0, node.getStart(sourceFile) - node.getFullStart())
+
+    return /await-guard:\s*allow-bare-pass-error/.test(leadingText)
+  }
+
+  const visitCatch = (node) => {
+    if (isBarePassError(node) && !hasAllowComment(node)) {
+      const line = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1
+
+      violations.push({ file, line, text: node.getText(sourceFile).trim().slice(0, 160) })
+    }
+
+    if (ts.isFunctionLike(node)) return
+
+    ts.forEachChild(node, visitCatch)
+  }
+
+  const visit = (node) => {
+    if (ts.isCatchClause(node)) ts.forEachChild(node.block, visitCatch)
+
+    ts.forEachChild(node, visit)
+  }
+
+  visit(sourceFile)
+
+  return violations
+}
+
 const scanGlobs = ['server/api/**/*.js', 'server/api/**/*.ts', 'server/routes/**/*.js', 'server/routes/**/*.ts']
 
-function scanRepo() {
+function scanRepo(finder = findUnawaitedTryReturns) {
   const root = process.cwd()
   const files = scanGlobs.flatMap((pattern) => globSync(pattern, { cwd: root }))
   const violations = []
@@ -127,7 +180,7 @@ function scanRepo() {
     const absPath = join(root, relPath)
     const text = readFileSync(absPath, 'utf8')
 
-    violations.push(...findUnawaitedTryReturns(relPath, text))
+    violations.push(...finder(relPath, text))
   }
 
   return violations
@@ -321,5 +374,70 @@ export default defineEventHandler(async (event) => {
     const violations = findUnawaitedTryReturns('fixtures/top-level-catch-return.js', fixture)
 
     expect(violations).toEqual([])
+  })
+
+  it('has no bare `passError(...)` statement inside a catch block (BL-1247)', () => {
+    const violations = scanRepo(findBarePassErrorInCatch)
+
+    if (violations.length) {
+      const report = violations.map((v) => `  ${v.file}:${v.line}  ${v.text}`).join('\n')
+
+      throw new Error(
+        `Found ${violations.length} bare passError call(s) inside a catch block. ` +
+        `passError is async and always throws, so it must be returned/awaited or its rejection is unhandled ` +
+        `and the handler resolves undefined. Use "return passError(...)", or opt out with ` +
+        `"// await-guard: allow-bare-pass-error - <reason>" on the line above:\n${report}`,
+      )
+    }
+
+    expect(violations).toEqual([])
+  })
+
+  it('flags a fixture with a bare passError inside a catch', () => {
+    const fixture = `
+export default defineEventHandler(async (event) => {
+  try {
+    return await fetchSomething(event)
+  } catch (e) {
+    passError(event, e)
+  }
+})
+`
+    const violations = findBarePassErrorInCatch('fixtures/bare-pass-error.js', fixture)
+
+    expect(violations).toHaveLength(1)
+    expect(violations[0].text).toContain('passError(event, e)')
+  })
+
+  it('does not flag a returned, awaited, or thrown passError, nor one outside a catch', () => {
+    const fixture = `
+export default defineEventHandler(async (event) => {
+  try {
+    return await fetchSomething(event)
+  } catch (e) {
+    if (a) return passError(event, e)
+    if (b) await passError(event, e)
+    throw await passError(event, e)
+  }
+})
+export const helper = (event, e) => { passError(event, e) }
+`
+
+    expect(findBarePassErrorInCatch('fixtures/ok-pass-error.js', fixture)).toEqual([])
+  })
+
+  it('respects the bare passError opt-out comment', () => {
+    const fixture = `
+export default defineEventHandler(async (event) => {
+  try {
+    return await fetchSomething(event)
+  } catch (e) {
+    // await-guard: allow-bare-pass-error - fire-and-forget audit path
+    passError(event, e)
+  }
+})
+`
+
+    expect(findBarePassErrorInCatch('fixtures/opt-out-pass-error.js', fixture)).toEqual([])
   })
 })

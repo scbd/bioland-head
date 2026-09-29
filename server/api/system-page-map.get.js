@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
         return ctx.localizedHost? await getSystemPagesMap(ctx) : ctx;
     }
     catch (e) {
-        passError(event, e);
+        return passError(event, e);
     }
     
 })

@@ -50,7 +50,7 @@ export default cachedEventHandler(async (event) => {
         return response;
     }
     catch (e) {
-        passError(event, e);
+        return passError(event, e);
     }
     }, 
     {

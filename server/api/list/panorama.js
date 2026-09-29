@@ -37,7 +37,7 @@ export default cachedEventHandler(async (event) => {
             return await data.slice(0, 5)
         }
         catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     },
     getExternalCacheOptions('panorama')

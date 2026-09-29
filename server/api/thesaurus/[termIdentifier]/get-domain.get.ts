@@ -26,6 +26,6 @@ export default defineEventHandler(async (event) => {
     
     return { identifier: termIdentifier, domain };
   } catch (e: any) {
-    passError(event, e);
+    return passError(event, e);
   }
 });

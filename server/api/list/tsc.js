@@ -17,7 +17,7 @@ export default cachedEventHandler(async (event) => {
             return await $fetch(uri, $fetchBaseOptions({ mode: 'cors' })).then(({ response }) => response.docs.map(normalizeIndexKeys).map(mapHref));
         }
         catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     },
     getExternalCacheOptions('biobridge')

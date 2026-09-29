@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
         }
         catch (e) {
 
-            passError(event, e);
+            return passError(event, e);
         }
     }
 )

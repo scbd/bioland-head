@@ -7,7 +7,7 @@ export default defineCachedEventHandler(
 
             return await mapByGov(response, ctx);
         } catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     },
     getMenusCacheOptions('nr-menus', true, CACHE_TTL.CBD_API_LONG)

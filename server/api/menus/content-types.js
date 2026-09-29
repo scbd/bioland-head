@@ -6,7 +6,7 @@ export default defineCachedEventHandler(
 
             return menus;
         } catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     },
     getMenusCacheOptions('content-type-menus', false, CACHE_TTL.MENUS)

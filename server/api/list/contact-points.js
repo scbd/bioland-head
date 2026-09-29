@@ -13,7 +13,7 @@ export default cachedEventHandler(async (event) => {
             return countryMap
         }
         catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     },
     getExternalCacheOptions('focal-points')

@@ -65,7 +65,7 @@ export default defineEventHandler(async (event) => {
         
         return await sorted.slice(0, 10);
     } catch (e) {
-        passError(event, e);
+        return passError(event, e);
     }
 });
 

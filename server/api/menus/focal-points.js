@@ -16,7 +16,7 @@ export default defineCachedEventHandler(
 
             return links;
         } catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     },
     getMenusCacheOptions('focal-points-menus', true, CACHE_TTL.CBD_API)
