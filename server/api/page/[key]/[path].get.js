@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
             return await getPageData({...ctx, path}, event);
         }
         catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     }
 )

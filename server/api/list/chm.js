@@ -16,6 +16,6 @@ export default defineEventHandler(async (event) => {
             return await queryScbdIndex (mergeQueryIntoContext(ctx, query));
         }
         catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
 })

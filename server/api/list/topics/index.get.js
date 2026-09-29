@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
             return await useDrupalTopicMenus(mergeQueryIntoContext(ctx, query));
         }
         catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     }
 )

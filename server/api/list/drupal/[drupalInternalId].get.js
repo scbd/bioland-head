@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
             return await useContentTypeIndex (event, { ...mergeQueryIntoContext(ctx, query), drupalInternalId });
         }
         catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     }
 )

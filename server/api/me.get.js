@@ -5,6 +5,6 @@ export default defineEventHandler(async (event) => {
         return user;
     }
     catch (e) {
-        passError(event, e);
+        return passError(event, e);
     }
 })

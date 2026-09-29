@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
             return await getComments({...ctx, event });
         }
         catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     }
 )

@@ -44,7 +44,7 @@ export default defineCachedEventHandler(
 
         return countryMap;
         } catch (e) {
-        passError(event, e);
+        return passError(event, e);
         }
     },
     getMenusCacheOptions('nr7-menus', true, CACHE_TTL.CBD_API_LONG)

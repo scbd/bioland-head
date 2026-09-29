@@ -5,7 +5,7 @@ export default defineCachedEventHandler(
 
             return await getSystemPagesMap(ctx);
         } catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     },
     getMenusCacheOptions('system-pages-menus', true, CACHE_TTL.DRUPAL_SYSTEM_PAGES)

@@ -6,7 +6,7 @@ export default defineCachedEventHandler(
 
             return await useDrupalTopicMenus(ctx);
         } catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     },
     getMenusCacheOptions('topics-menus', true, CACHE_TTL.DRUPAL_TOPICS)
