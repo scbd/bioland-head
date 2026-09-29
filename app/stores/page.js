@@ -133,13 +133,13 @@ const usePageStore = defineStore('page', {
         isPage(){
             if(this.isSystemPageDev || this.isSearch || this.isForumsList ||  this.isMediaPage || this.isForumsList || this.isNcpsList || this.isChmNetwork) return false;
 
-            const pageTypes = ['node--content','taxonomy_term--system_pages', 'media--hero', 'media--image', 'media--document', 'media--remote_video' ];
+            const pageTypes = ['node--content','taxonomy_term--system_pages', 'media--hero', 'media--image', 'media--document', 'media--remote_video', 'media--embed' ];
             if(pageTypes.includes(this?.page?.type)) return true;
 
             return false;
         },
         isMediaPage(){
-            return ['media--hero', 'media--image', 'media--document', 'media--remote_video'].includes(this?.page?.type);
+            return ['media--hero', 'media--image', 'media--document', 'media--remote_video', 'media--embed'].includes(this?.page?.type);
 
         },
         mediaTypeName(){
@@ -245,6 +245,8 @@ const usePageStore = defineStore('page', {
         isMediaImage(){ return this?.page?.type?.includes('image') },
         isMediaRemoteVideo(){ return this?.page?.type?.includes('remote_video') },
         isMediaHero(){ return this?.page?.type?.includes('hero') },
+        isMediaEmbed(){ return this?.page?.type === 'media--embed' },
+        embedHtml(){ return this.isMediaEmbed ? embedFrameHtml(this.page?.fieldMediaInlineFrame, this.page?.name) : '' },
         isContentType(){
             // Content type pages are taxonomy_term--tags with a drupalInternalTid that matches a content type ID
             if (this?.page?.type !== 'taxonomy_term--tags') return false;

@@ -17,8 +17,9 @@
                 <div id="page-body-media-preview" class="d-flex justify-content-center text-center">
 
                     <NuxtImg id="page-body-media-preview-img" v-if="imageSrc && !pageStore?.isMediaImage" :alt="pageStore?.image?.alt || pageStore?.page?.name" :src="imageSrc" format="webp" :width="imgWidth" :height="imgHeight" class="card-img-top img-fluid i-top"/>
-                    <LazyMediaDocIcon v-if="(!imageSrc || pageStore?.isMediaImage) && !pageStore?.isMediaRemoteVideo" :mime="mime" :uri="imageSrc || downloadUrl" :size="8" class="card-img-top i-top"/>
+                    <LazyMediaDocIcon v-if="(!imageSrc || pageStore?.isMediaImage) && !pageStore?.isMediaRemoteVideo && !pageStore?.isMediaEmbed" :mime="mime" :uri="imageSrc || downloadUrl" :size="8" class="card-img-top i-top"/>
                     <LazyIcon v-if="!imageSrc && pageStore?.isMediaRemoteVideo" :name="'video'" :color="siteStore.primaryColor" :size="8" />
+                    <LazyIcon v-if="!imageSrc && pageStore?.isMediaEmbed" :name="'external-link'" :color="siteStore.primaryColor" :size="8" />
                 </div>
 
                 <LazyPageMediaFileDetails id="page-body-media-file-details-desktop" :vertical="true" />
@@ -50,6 +51,8 @@
                 </div>
 
                 <LazyPageBodyMediaRemoteVideo id="page-body-media-remote-video" v-if="pageStore?.isMediaRemoteVideo" :url="pageStore?.page?.fieldMediaOembedVideo" :title="pageStore?.page?.name || pageStore?.page?.title"/>
+
+                <div id="page-body-media-embed" v-if="pageStore?.isMediaEmbed && pageStore?.embedHtml" v-html="htmlSanitize(pageStore.embedHtml)"></div>
 
                 <div id="page-body-media-file-details-mobile" class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
                     
