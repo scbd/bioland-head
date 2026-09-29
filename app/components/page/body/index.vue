@@ -117,8 +117,6 @@
     const   imageDefaults  = usePageSideImageDefaults({height: pageStore?.image?.fieldHeight, width: pageStore?.image?.fieldWidth});
     const { pageTypeStyle } = useTheme();
 
-    console.log('DEBUG image:', { src: pageStore?.image?.src, alt: pageStore?.image?.alt, image: pageStore?.image });
-
     const { host, isBiosafetySite  } = storeToRefs(siteStore);
 
     function showEdit(){
