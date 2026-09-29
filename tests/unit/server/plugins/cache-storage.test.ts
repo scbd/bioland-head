@@ -146,7 +146,7 @@ describe('00.1.cache-storage plugin', () => {
       maxRetriesPerRequest: 1,
       connectTimeout: 2_000,
       commandTimeout: 3_000,
-      socketTimeout: 2_000,
+      socketTimeout: 4_000,
       keepAlive: 10_000,
       scanCount: 1_000,
       ttl: CACHE_TTL.ONE_MONTH * 2,

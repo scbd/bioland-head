@@ -59,7 +59,10 @@ const MAX_DISTINCT_ERRORS = 100
  * a read past 1s, and a single timeout no longer opens the breaker (see createCircuitBreaker).
  * A half-open socket (peer gone, status still `ready`) is caught by socketTimeout, which drops
  * the socket when a write gets no reply, and by TCP keepalive probes on an idle one; the
- * circuit breaker in degradeOnError keeps requests off it in the meantime.
+ * circuit breaker in degradeOnError keeps requests off it in the meantime. socketTimeout sits
+ * above commandTimeout so a plain stall surfaces as `Command timed out` (tolerated up to three
+ * in a row) before the socket is torn down with a hard `Socket timeout`, which opens the breaker
+ * at once; only a stall longer than socketTimeout gets that treatment.
  * Reconnects keep going, capped at 5s apart, so the cache comes back on its own when Redis does.
  */
 export const REDIS_CLIENT_OPTIONS: RedisOptions = {
@@ -67,7 +70,7 @@ export const REDIS_CLIENT_OPTIONS: RedisOptions = {
   maxRetriesPerRequest: 1,
   connectTimeout: 2_000,
   commandTimeout: 3_000,
-  socketTimeout: 2_000,
+  socketTimeout: 4_000,
   keepAlive: 10_000,
   retryStrategy: (times: number) => Math.min(times * 500, 5_000),
 }
@@ -101,11 +104,18 @@ const CONNECTION_ERROR_CODES = new Set([
 const COMMAND_TIMEOUT_MESSAGE = 'Command timed out'
 const CONNECTION_ERROR_MESSAGES = ["Stream isn't writeable", COMMAND_TIMEOUT_MESSAGE, 'Connection is closed', 'Socket timeout']
 
-/** True for a command that got no reply within commandTimeout (a stall, not a dead connection). */
+/**
+ * True for a command that got no reply within commandTimeout (a stall, not a dead connection).
+ * An AggregateError counts only when every connection error inside it is a timeout: a mix with
+ * ECONNREFUSED and the like is a hard error.
+ */
 export function isCommandTimeout(error: unknown): boolean {
   if (!(error instanceof Error)) return false
+  if (error instanceof AggregateError) {
+    const connectionErrors = error.errors.filter(isConnectionError)
+    return connectionErrors.length > 0 && connectionErrors.every(isCommandTimeout)
+  }
   return error.message.includes(COMMAND_TIMEOUT_MESSAGE)
-    || (error instanceof AggregateError && error.errors.some(isCommandTimeout))
 }
 
 /** True for failures that mean Redis is unreachable or stalled, as opposed to a bad command. */
@@ -158,7 +168,11 @@ export function createCacheLogger(intervalMs = ERROR_LOG_INTERVAL_MS, now: () =>
 export interface CircuitBreaker {
   /** False lets the caller through; once the open window expires only one caller (the probe) gets false. */
   isOpen(): boolean
-  /** `commandTimeout` marks a stalled command: it opens only on the third in a row, or on a failed probe. */
+  /**
+   * `commandTimeout` marks a stalled command: it opens only on the third in a row, or on a failed
+   * probe. "In a row" counts completions, so N in-flight reads that time out together from one
+   * stall count as N.
+   */
   trip(commandTimeout?: boolean): void
   /** Redis answered: closes the breaker if this was the half-open probe. */
   succeed(): void
