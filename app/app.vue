@@ -22,6 +22,13 @@ useHead({ htmlAttrs: { lang: locale, dir: () => localHead.value.htmlAttrs.dir, s
 export default { name      : 'BL2App', };
 </script>
 <style lang="css">
+/* Allowed embedded frames (app/utils/html.js applyEmbedEntry). Height or ratio comes inline. */
+.iframe-responsive {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border: 0;
+}
 .page-enter-active,
 .page-leave-active {
   transition: all 0.4s;

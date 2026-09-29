@@ -334,6 +334,15 @@ describe('html', () => {
       expect(result).toContain('after')
     })
 
+    it('marks every allowed iframe iframe-responsive, keeping the editor class', () => {
+      const powerBi = htmlSanitize('<iframe class="report" src="https://app.powerbi.com/view?r=abc"></iframe>', { embedAllowedOrigins })
+      const youtube = htmlSanitize('<iframe src="https://www.youtube.com/embed/abc"></iframe>', { embedAllowedOrigins })
+
+      expect(powerBi).toContain('class="report iframe-responsive"')
+      expect(youtube).toContain('class="iframe-responsive"')
+      expect(htmlSanitize(iframe('https://evil.example/x'), { embedAllowedOrigins })).not.toContain('iframe-responsive')
+    })
+
     it('matches the path prefix on a segment boundary', () => {
       expect(htmlSanitize(iframe('https://app.powerbi.com/view'), { embedAllowedOrigins })).toContain('<iframe')
       expect(htmlSanitize(iframe('https://app.powerbi.com/view/report'), { embedAllowedOrigins })).toContain('<iframe')

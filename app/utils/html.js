@@ -86,6 +86,9 @@ const applyEmbedEntry = (node, entry, host) =>
     const isMediaPlayer = mediaPlayerHost.test(host);
     const hasSandbox    = String(entry.sandbox ?? '').trim() !== '';
 
+    // `iframe-responsive` (app.vue) keeps every allowed frame inside its column; the inline style
+    // below still sets its ratio or pixel height.
+    node.classList.add("iframe-responsive");
     node.setAttribute("style", isMediaPlayer ? 'aspect-ratio: 16 / 9; width: 100%;' : toSizeStyle(node));
     node.removeAttribute("height");
     node.removeAttribute("width");
