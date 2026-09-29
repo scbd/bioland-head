@@ -531,6 +531,11 @@ describe('html', () => {
       expect(embedFrameHtml(frame, 'Flow <Chart>')).toBe('<iframe src="https://app.powerbi.com/view?r=a&amp;b=&quot;x&quot;" title="Flow &lt;Chart>" width="100%" height="600" allowfullscreen></iframe>')
     })
 
+    it('keeps allowfullscreen for a boolean true and drops it otherwise', () => {
+      expect(embedFrameHtml({ url: 'https://a.example/x', allowfullscreen: true })).toContain(' allowfullscreen')
+      expect(embedFrameHtml({ url: 'https://a.example/x', allowfullscreen: '0' })).not.toContain('allowfullscreen')
+    })
+
     it('returns nothing without a url', () => {
       expect(embedFrameHtml(undefined)).toBe('')
       expect(embedFrameHtml({ url: '' })).toBe('')

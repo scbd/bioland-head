@@ -29,7 +29,7 @@ export const embedFrameHtml = (frame, fallbackTitle = '') =>
     const attributes = { src: frame.url, title: frame.title || fallbackTitle, width: frame.width, height: frame.height };
     const html       = Object.entries(attributes).filter(([, value]) => value).map(([name, value]) => ` ${name}="${escapeAttribute(value)}"`).join('');
 
-    return `<iframe${html}${String(frame.allowfullscreen) === '1' ? ' allowfullscreen' : ''}></iframe>`;
+    return `<iframe${html}${['1', 'true'].includes(String(frame.allowfullscreen)) ? ' allowfullscreen' : ''}></iframe>`;
   };
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-iframe-sandbox

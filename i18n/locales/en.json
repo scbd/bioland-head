@@ -94,6 +94,7 @@
   "image": "image | images",
   "video": "video | videos",
   "remote_video": "video | videos",
+  "embed": "embed | embeds",
   "photos-and-videos": "photo or video | photos & videos",
   "search": "search",
   "content": "site content",
