@@ -3,6 +3,7 @@
   "topic": "topic | topics",
   "post": "post | posts",
 "comments": "comments",
+  "pageNotFound": "Page not found",
   "systemPageWarningTitle": "View Only Mode",
   "systemPageWarningMessage": "This is a system page managed by site administrators. System pages define the structure of content types and site functionality, and cannot be edited by regular users.",
   "systemPageDisabled": "System page - editing disabled",

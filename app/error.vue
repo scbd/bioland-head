@@ -2,7 +2,7 @@
   <div class="error-page">
     <div class="error-content">
       <h1>{{ error.statusCode }}</h1>
-      <p>{{ error.statusMessage || 'An error occurred' }}</p>
+      <p>{{ message }}</p>
       <button @click="handleError" class="btn btn-primary">
         Go Home
       </button>
@@ -19,6 +19,12 @@ interface ErrorProps {
 }
 
 const props = defineProps<ErrorProps>();
+
+const { t } = useI18n();
+
+const message = computed(() => props.error.statusCode === 404
+  ? t('pageNotFound')
+  : props.error.statusMessage || 'An error occurred');
 
 const handleError = () => clearError({ redirect: '/' });
 </script>
