@@ -327,7 +327,7 @@ describe('html', () => {
       expect(htmlSanitize(iframe('https://app.powerbi.com/view?r=1'), { embedAllowedOrigins })).not.toContain('allowfullscreen')
     })
 
-    describe('iframe fallback content (BL-1269)', () => {
+    describe('iframe fallback content (BL-1269; the no-children and disallowed cases are regression guards)', () => {
       const src = 'https://app.powerbi.com/view?r=x'
 
       it('keeps an allowed iframe whose fallback holds a link, emitted without children', () => {
@@ -344,6 +344,35 @@ describe('html', () => {
 
         expect(result).toContain('<iframe')
         expect(result).not.toContain('no iframes here')
+      })
+
+      it('keeps an allowed iframe in its <p> between sibling paragraphs', () => {
+        const result = htmlSanitize(`<p>a</p><p><iframe src="${src}">see <a href="${src}">T</a></iframe></p><p>b</p>`, { embedAllowedOrigins })
+
+        expect(result).toContain('<p><iframe')
+        expect(result).toContain('</iframe></p>')
+        expect(result).toContain('<p>a</p>')
+        expect(result).toContain('<p>b</p>')
+      })
+
+      it('keeps a youtube player iframe with a markup fallback', () => {
+        const yt     = 'https://www.youtube.com/embed/abc'
+        const result = htmlSanitize(`<iframe src="${yt}" allowfullscreen>see <a href="${yt}">T</a></iframe>`, { embedAllowedOrigins })
+
+        expect(result).toContain('<iframe')
+        expect(result).toContain('allowfullscreen')
+        expect(result).toContain('allow="accelerometer')
+        expect(result).not.toContain('<a')
+      })
+
+      it('drops an allowlisted iframe wrapped in svg', () => {
+        expect(htmlSanitize(`<svg><iframe src="${src}">x<a>y</a></iframe></svg>`, { embedAllowedOrigins })).not.toContain('<iframe')
+      })
+
+      it('drops an iframe whose src only spoofs an allowed origin', () => {
+        const spoof = 'javascript:alert(1)//https://app.powerbi.com/view'
+
+        expect(htmlSanitize(`<iframe src="${spoof}">see <a href="x">T</a></iframe>`, { embedAllowedOrigins })).not.toContain('<iframe')
       })
 
       it('leaves an allowed iframe with no children unchanged', () => {
