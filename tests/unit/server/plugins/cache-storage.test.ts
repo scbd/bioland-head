@@ -296,6 +296,13 @@ describe('helpers', () => {
     expect(plugin.isConnectionError('ECONNREFUSED')).toBe(false)
   })
 
+  it('isCommandTimeout matches only a stalled command, not a hard connection error', () => {
+    expect(plugin.isCommandTimeout(new Error('Command timed out'))).toBe(true)
+    expect(plugin.isCommandTimeout(new AggregateError([new Error('Command timed out')], ''))).toBe(true)
+    expect(plugin.isCommandTimeout(new Error('Connection is closed.'))).toBe(false)
+    expect(plugin.isCommandTimeout('Command timed out')).toBe(false)
+  })
+
   it('createCacheLogger throttles connection errors to once per interval', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     let now = 0
