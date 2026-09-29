@@ -121,6 +121,15 @@ function stripLocale(pathname: string): string {
   return pathname.replace(/^\/(zh-hans|fil|[a-z]{2}(-[a-z]{2})?)(?=\/|$)/, '') || '/'
 }
 
+// Strips one Drupal-only locale prefix (app `tl` maps to Drupal `fil`) left behind when
+// Traefik hands the head `/en/fil/router/...` and stripLocale removed only `/en`. The list
+// is deliberately fixed, never a generic 2-letter segment: a real alias can start with a
+// two-letter word. It runs once, so stacked prefixes and dot segments fall through to SSR
+// by design.
+function stripDrupalLocalePrefix(pathname: string): string {
+  return pathname.replace(/^\/(zh-hans|zh-hant|fil)(?=\/|$)/, '') || '/'
+}
+
 function isAllowedSitemap(pathname: string): boolean {
   return stripLocale(pathname) === '/sitemap.xml'
 }
@@ -164,7 +173,7 @@ export default defineEventHandler((event: H3Event) => {
     hasBlockedExtension(withoutLocale) ||
     hasBlockedPrefix(withoutLocale) ||
     hasBlockedPrefix(pathname) ||
-    isDrupalOnlyPath(withoutLocale)
+    isDrupalOnlyPath(stripDrupalLocalePrefix(withoutLocale))
   if (!isBlocked) return
 
   consola.debug(`[scanner-404] Fast 404 for scanner-shaped path: ${JSON.stringify(pathname).slice(0, 200)}`)
