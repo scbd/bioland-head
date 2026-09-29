@@ -53,10 +53,6 @@ export async function clearSiteCache(event, options = {}) {
         throw new Error(`clearSiteCache: multiSiteCode and siteCode are required`);
     }
     
-    // BL-1246: drop this container's in-process DMSM config L1 so the clear is immediate here.
-    // Other replicas keep their own L1 and can serve the previous config for up to 60 s after a clear.
-    invalidateDmsmConfigL1(siteCode);
-
     const storage = useStorage('cache');
     // One walk of the store (the fs driver ignores a base argument), then narrow to the
     // per-Site groups before any pattern matching.
@@ -122,6 +118,12 @@ export async function clearSiteCache(event, options = {}) {
         });
     }
     
+    // BL-1246: drop this container's in-process DMSM config L1 AFTER the store delete, so a hot
+    // request during the walk cannot re-seed it from the not-yet-deleted entry. Other replicas keep
+    // their own L1 and can serve the previous config for up to 60 s after a clear.
+    // invalidateDmsmConfigL1 is a Nitro auto-import from server/utils/context-unified.ts.
+    invalidateDmsmConfigL1(siteCode);
+
     return {
         deleted,
         count: deleted.length,

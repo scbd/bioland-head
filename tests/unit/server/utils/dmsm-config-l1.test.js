@@ -75,4 +75,16 @@ describe('DMSM config in-process L1 (BL-1246)', () => {
     expect(await mod.getCachedDmsmConfig(event, 'be')).toEqual(config)
     expect(fetchFixture).toHaveBeenCalledTimes(2)
   })
+
+  it('does not re-seed the L1 from a fetch that was in flight when the site was invalidated', async () => {
+    let resolveFetch
+    fetchFixture.mockImplementationOnce(() => new Promise((resolve) => { resolveFetch = resolve }))
+    const inFlight = mod.getCachedDmsmConfig(event, 'be')
+    mod.invalidateDmsmConfigL1('be')
+    resolveFetch(config)
+
+    expect(await inFlight).toEqual(config)
+    await mod.getCachedDmsmConfig(event, 'be')
+    expect(fetchFixture).toHaveBeenCalledTimes(2)
+  })
 })
