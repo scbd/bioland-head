@@ -9,7 +9,7 @@ export default defineCachedEventHandler(
 
             return await mapByCountry(resp, ctx);
         } catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     },
     getMenusCacheOptions('nr6-menus', true, CACHE_TTL.CBD_API_LONG)

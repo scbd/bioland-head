@@ -32,6 +32,6 @@ export default defineEventHandler(async (event) => {
       sameAs
     };
   } catch (e: any) {
-    passError(event, e);
+    return passError(event, e);
   }
 });

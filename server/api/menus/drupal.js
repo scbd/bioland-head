@@ -6,7 +6,7 @@ export default defineCachedEventHandler(
 
             return await getDrupalMenus({ ...ctx });
         } catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     }, 
     getMenusCacheOptions('drupal-menus', false, CACHE_TTL.MENUS)

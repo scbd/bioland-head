@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
             return await useDrupalForums({ ...mergeQueryIntoContext(ctx, query), event });
         }
         catch (e) {
-            passError(event, e);
+            return passError(event, e);
         }
     }
 )

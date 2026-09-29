@@ -5,7 +5,7 @@ export default defineCachedEventHandler(
 
       return await getAbschMenus(ctx);
     } catch (e) {
-      passError(event, e);
+      return passError(event, e);
     }
   },
   getMenusCacheOptions('absch-menus', true, CACHE_TTL.CBD_API),

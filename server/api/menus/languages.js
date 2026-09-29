@@ -5,7 +5,7 @@ export default defineCachedEventHandler(
 
       return await getInstalledLanguages(ctx);
     } catch (e) {
-      passError(event, e);
+      return passError(event, e);
     }
   },
   {

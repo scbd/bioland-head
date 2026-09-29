@@ -25,7 +25,7 @@ export default defineCachedEventHandler(
                 return await $fetch( '/api/menus/index-chm', $fetchBaseOptions({ query: forwarded, method: 'get', headers }), );
         } catch (e) {
             consola.error(e);
-            passError(event, e);
+            return passError(event, e);
         }
     },
     // SWR on: with the composite now failing hard when Drupal's menu is down, serve the last
