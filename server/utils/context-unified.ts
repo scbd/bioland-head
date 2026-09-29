@@ -361,13 +361,37 @@ const _fetchDmsmConfig = cachedFunction(
   },
 );
 
+// BL-1246: in-process L1 in front of the Redis-backed _fetchDmsmConfig so the hottest request
+// path does not pay a Redis round trip (or stall on a degraded mount) per request. Keyed exactly
+// like the Nitro cache entry; site config changes rarely so 60 s costs nothing in freshness.
+const DMSM_CONFIG_L1_TTL_MS = 60 * 1000;
+const dmsmConfigL1 = boundedTtlMap(500);
+// Bumped by every invalidation so a fetch that was already in flight cannot re-seed the L1 with
+// the pre-clear config when it resolves after the clear.
+let dmsmConfigL1Generation = 0;
+
+// The explicit /api/context/[siteCode]/[locale] route passes an unvalidated siteCode, so the L1
+// key is trimmed and lowercased in this one place; otherwise 'BE' / 'Be ' would each take a slot
+// and could evict real tenants. The Redis key (dmsmConfigCacheKey) is deliberately unchanged.
+const dmsmConfigL1Key = (multiSiteCode: string, siteCode: string) => `${multiSiteCode}:${siteCode.trim().toLowerCase()}`;
+
+/**
+ * Drop this container's L1 entry for a site. Called by clearSiteCache so an admin cache clear is
+ * immediate here; other replicas keep serving their previous config for up to 60 s.
+ */
+export function invalidateDmsmConfigL1(siteCode: string): void {
+  dmsmConfigL1Generation++;
+  dmsmConfigL1.delete(dmsmConfigL1Key(useRuntimeConfig().public.multiSiteCode, siteCode));
+}
+
 /**
  * Get DMSM config with request coalescing to prevent thundering herd
  * If a request is already in-flight for this siteCode, wait for it instead of starting a new one
  * @param bypassCache - If true, skips cache and fetches directly from DMSM API
  */
 export async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypassCache?: boolean): Promise<DmsmConfig | null> {
-  // Bypass cache if requested - fetch directly without caching or coalescing
+  // Bypass cache if requested - fetch directly without caching or coalescing.
+  // The L1 is skipped on read and write so a forced refresh never serves or seeds it.
   if (bypassCache) {
     consola.debug(`Bypassing DMSM cache for siteCode: ${siteCode}`);
     return fetchDmsmConfigCore(siteCode).catch(() => null);
@@ -375,6 +399,12 @@ export async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypa
 
   const { env, multiSiteCode } = useRuntimeConfig().public;
   const cacheKey = `${multiSiteCode}:${siteCode}`;
+
+  const l1Key = dmsmConfigL1Key(multiSiteCode, siteCode);
+  const l1Hit = dmsmConfigL1.get(l1Key);
+  if (l1Hit) {
+    return l1Hit;
+  }
 
   // Check if there's already a request in-flight for this key
   const pending = pendingDmsmRequests.get(cacheKey);
@@ -385,8 +415,16 @@ export async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypa
   // Start new request and track it. fetchDmsmConfigCore has already logged the
   // reason, and callers treat a missing config as a 404, so collapse the
   // rejection back to null here and keep this function's contract total.
+  const generation = dmsmConfigL1Generation;
   const promise = _fetchDmsmConfig(event, siteCode)
     .catch(() => null)
+    .then((config) => {
+      // A null (failed or missing) config is never cached, so the next request retries. A clear
+      // that landed while this fetch was in flight (generation moved) must not be re-seeded.
+      // A stale-while-revalidate value can sit in the L1 for up to 60 s beyond the L2 window.
+      if (config && generation === dmsmConfigL1Generation) dmsmConfigL1.set(l1Key, config, DMSM_CONFIG_L1_TTL_MS);
+      return config;
+    })
     .finally(() => {
       // Clean up after completion (success or failure)
       pendingDmsmRequests.delete(cacheKey);

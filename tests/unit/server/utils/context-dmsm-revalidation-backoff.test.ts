@@ -84,6 +84,8 @@ describe('DMSM config revalidation backoff through the real serialized Nitro SWR
     await getCachedDmsmConfig(event, 'be')
     await drain()
     expect(fetchFixture).toHaveBeenCalledTimes(3)
+    // BL-1246: the 60 s in-process L1 still holds the config returned by the probe above.
+    vi.setSystemTime(Date.now() + 60 * 1000 + 1)
     expect(await getCachedDmsmConfig(event, 'be')).toEqual(freshConfig)
   })
 
