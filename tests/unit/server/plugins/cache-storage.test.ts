@@ -300,6 +300,9 @@ describe('helpers', () => {
     expect(plugin.isCommandTimeout(new Error('Command timed out'))).toBe(true)
     expect(plugin.isCommandTimeout(new AggregateError([new Error('Command timed out')], ''))).toBe(true)
     expect(plugin.isCommandTimeout(new Error('Connection is closed.'))).toBe(false)
+    const refused = Object.assign(new Error(''), { code: 'ECONNREFUSED' })
+    expect(plugin.isCommandTimeout(new AggregateError([new Error('Command timed out'), refused], ''))).toBe(false)
+    expect(plugin.isCommandTimeout(new AggregateError([refused], ''))).toBe(false)
     expect(plugin.isCommandTimeout('Command timed out')).toBe(false)
   })
 
@@ -428,6 +431,55 @@ describe('i18n handler cache purge', () => {
     plugin.mountRedisCache(storage, 'redis://redis:6379/1', logger)
 
     await vi.waitFor(() => expect(logger.error).toHaveBeenCalledWith('i18n handler cache purge', expect.any(Error)))
+  })
+})
+
+describe('createCircuitBreaker', () => {
+  const setup = () => {
+    let at = 0
+    return { breaker: plugin.createCircuitBreaker(5_000, () => at), advance: (ms: number) => { at += ms } }
+  }
+
+  it('opens on the third consecutive timeout, not before', () => {
+    const { breaker } = setup()
+    breaker.trip(true)
+    breaker.trip(true)
+    expect(breaker.isOpen()).toBe(false)
+    breaker.trip(true)
+    expect(breaker.isOpen()).toBe(true)
+  })
+
+  it('opens at once on a hard error and clears the timeout count', () => {
+    const { breaker, advance } = setup()
+    breaker.trip(true)
+    breaker.trip(true)
+    breaker.trip(false)
+    expect(breaker.isOpen()).toBe(true)
+    advance(5_000)
+    expect(breaker.isOpen()).toBe(false) // half-open probe
+    breaker.succeed()
+    breaker.trip(true)
+    breaker.trip(true)
+    expect(breaker.isOpen()).toBe(false)
+  })
+
+  it('resets the count on a success between timeouts', () => {
+    const { breaker } = setup()
+    breaker.trip(true)
+    breaker.trip(true)
+    breaker.succeed()
+    breaker.trip(true)
+    breaker.trip(true)
+    expect(breaker.isOpen()).toBe(false)
+  })
+
+  it('re-opens at once when the half-open probe times out', () => {
+    const { breaker, advance } = setup()
+    breaker.trip(false)
+    advance(5_000)
+    expect(breaker.isOpen()).toBe(false) // the probe
+    breaker.trip(true)
+    expect(breaker.isOpen()).toBe(true)
   })
 })
 
