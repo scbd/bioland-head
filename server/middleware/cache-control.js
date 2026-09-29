@@ -35,4 +35,18 @@ export default defineEventHandler((event) => {
       res.setHeader('Cache-Control', `max-age=${CACHE_TTL.FIVE_MINUTES}, stale-if-error=${week}, stale-while-revalidate=${day}`);
     else
       res.setHeader('Cache-Control', `max-age=${CACHE_TTL.DEFAULT}, stale-if-error=${week}, stale-while-revalidate=${day}`);
+
+    // The status is unknown here, so decide at the moment headers go out: an error response
+    // (e.g. the SSR 404 for a path Drupal answered empty) must never be CDN-cached or served stale.
+    if (typeof res.writeHead === 'function') {
+      const writeHead = res.writeHead;
+
+      res.writeHead = function (code, ...args) {
+        const status = typeof code === 'number' ? code : this.statusCode;
+
+        if (status >= 400 && !this.headersSent) this.setHeader('Cache-Control', 'no-store');
+
+        return writeHead.call(this, code, ...args);
+      };
+    }
 })
