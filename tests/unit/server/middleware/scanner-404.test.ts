@@ -50,6 +50,11 @@ describe('00.scanner-404 middleware', () => {
       '/WP-LOGIN.PHP',
       '/wp-login.php?foo=bar',
       '/%2e%65nv',
+      '/en/fil/router/translate-path?path=%2F',
+      '/en/fil/jsonapi/site/site',
+      '/en/fil/system/menu/main/linkset',
+      '/zh/zh-hans/jsonapi/node/page',
+      '/en/zh-hant/admin/config',
       '/km/router/translate-path?path=%2Frouter%2Ftranslate-path',
       '/en/system/menu/our-targets/linkset',
       '/jsonapi/node/page',
@@ -122,6 +127,9 @@ describe('00.scanner-404 middleware', () => {
       '/en/routers-guide',
       '/en/administration-guide',
       '/en/jsonapi-something',
+      '/en/fil/some-real-alias',
+      '/en/fi/router-guide',
+      '/en/fi/router/translate-path',
     ])('passes through %s untouched', (path) => {
       const event = eventFor(path)
       const result = handler(event)
