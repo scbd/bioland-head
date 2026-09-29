@@ -80,7 +80,6 @@ describe('server/api/list/panorama', () => {
   it('rejects with an H3Error carrying the upstream status instead of resolving undefined (BL-1247)', async () => {
     const { createError: h3CreateError, H3Error } = await import('h3')
 
-    vi.stubGlobal('createError', h3CreateError)
     // Mirrors the real passError: async (awaits request context first) and always throws.
     globalThis.passError.mockImplementation(async (event, e) => {
       await Promise.resolve()
