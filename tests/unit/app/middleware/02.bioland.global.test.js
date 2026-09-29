@@ -45,7 +45,7 @@ describe('middleware site identifier resolution', () => {
       usePageStore: () => ({ initialize: vi.fn() }),
       useMenusStore: () => ({ isLoaded: true, loadAllMenus: vi.fn() }),
       useMeStore: () => ({ initialize: vi.fn() }),
-      useGetPage: () => vi.fn(async () => null),
+      useGetPage: () => vi.fn(async () => ({ id: 'page', type: 'node--page' })),
       useFetch: vi.fn(async () => ({ data: { value: null }, error: { value: null } })),
       useRuntimeConfig: () => runtimeConfig,
       useRequestURL: () => ({ hostname: hostName }),
@@ -133,5 +133,11 @@ describe('middleware site identifier resolution', () => {
     expect(siteStore.initialize).not.toHaveBeenCalled()
     expect(siteStore.siteCode).toBe('server-site')
     expect(errorLog).not.toHaveBeenCalled()
+  })
+
+  it.each([undefined, null, ''])('throws a fatal 404 when getPage resolves %j', async (answer) => {
+    vi.stubGlobal('useGetPage', () => vi.fn(async () => answer))
+
+    await expect(middleware({ path: '/en/zzz-not-real' }, {})).rejects.toMatchObject({ statusCode: 404, fatal: true })
   })
 })
