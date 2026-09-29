@@ -129,6 +129,8 @@ describe('00.scanner-404 middleware', () => {
       '/en/jsonapi-something',
       '/en/fil/some-real-alias',
       '/en/fi/router-guide',
+      // Pins a known gap on purpose: a Drupal-only path under an unlisted two-letter prefix still
+      // reaches SSR; the strip list is deliberately fixed to fil|zh-hans|zh-hant.
       '/en/fi/router/translate-path',
     ])('passes through %s untouched', (path) => {
       const event = eventFor(path)
