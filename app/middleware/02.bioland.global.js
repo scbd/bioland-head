@@ -112,7 +112,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   const [ pData, fetch ]   = await Promise.all([getPage(path), getMenus()]);
   const { data: menuData } = fetch || { data: undefined};
 
-  if(!pData) return;
+  if(!pData) throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true });
   if(pData?.redirect) {
     await abortNavigation();
     

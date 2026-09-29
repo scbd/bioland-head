@@ -104,6 +104,8 @@ export const useGetPage = () => {
                 const options =  process.server? {  method: 'GET', headers, query: queryParams } : {  method: 'GET', query: queryParams };
                 const  data   = await $fetch(`/api/page/${encodeURIComponent(key.value)}/${encodeURIComponent(path.value)}`,options)//.then(({ data }) => data);
 
+            if(!hasPageData(data)) throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal:true })
+
             return data;
         }catch(e){
             consola.error('useGetPage', e, key.value)
@@ -117,6 +119,12 @@ export const useGetPage = () => {
     }
 }
 
+
+/**
+ * A page answer is usable when it redirects or carries a Drupal entity (id/type).
+ * Anything else (204 -> undefined, '', null, {}) means the path resolved to nothing.
+ */
+export const hasPageData = (data)=> !!data && typeof data === 'object' && !!(data.redirect || data.id || data.type);
 
 export const useDocumentHelpers = (passedContentRecord, {passedType} = {}) => {
     const { t }      = useI18n();
