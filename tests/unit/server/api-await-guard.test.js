@@ -122,6 +122,9 @@ export function findUnawaitedTryReturns(file, text) {
 }
 
 /**
+ * Stops at function-like nodes: a bare passError inside a nested callback within a catch is
+ * not flagged (intentional limit; that callback is its own scope).
+ *
  * @param {string} file absolute path, used only for error messages
  * @param {string} text file contents
  * @returns {{ file: string, line: number, text: string }[]}
