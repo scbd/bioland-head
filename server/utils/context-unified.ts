@@ -370,13 +370,18 @@ const dmsmConfigL1 = boundedTtlMap(500);
 // the pre-clear config when it resolves after the clear.
 let dmsmConfigL1Generation = 0;
 
+// The explicit /api/context/[siteCode]/[locale] route passes an unvalidated siteCode, so the L1
+// key is trimmed and lowercased in this one place; otherwise 'BE' / 'Be ' would each take a slot
+// and could evict real tenants. The Redis key (dmsmConfigCacheKey) is deliberately unchanged.
+const dmsmConfigL1Key = (multiSiteCode: string, siteCode: string) => `${multiSiteCode}:${siteCode.trim().toLowerCase()}`;
+
 /**
  * Drop this container's L1 entry for a site. Called by clearSiteCache so an admin cache clear is
  * immediate here; other replicas keep serving their previous config for up to 60 s.
  */
 export function invalidateDmsmConfigL1(siteCode: string): void {
   dmsmConfigL1Generation++;
-  dmsmConfigL1.delete(dmsmConfigCacheKey(siteCode));
+  dmsmConfigL1.delete(dmsmConfigL1Key(useRuntimeConfig().public.multiSiteCode, siteCode));
 }
 
 /**
@@ -395,7 +400,8 @@ export async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypa
   const { env, multiSiteCode } = useRuntimeConfig().public;
   const cacheKey = `${multiSiteCode}:${siteCode}`;
 
-  const l1Hit = dmsmConfigL1.get(cacheKey);
+  const l1Key = dmsmConfigL1Key(multiSiteCode, siteCode);
+  const l1Hit = dmsmConfigL1.get(l1Key);
   if (l1Hit) {
     return l1Hit;
   }
@@ -416,7 +422,7 @@ export async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypa
       // A null (failed or missing) config is never cached, so the next request retries. A clear
       // that landed while this fetch was in flight (generation moved) must not be re-seeded.
       // A stale-while-revalidate value can sit in the L1 for up to 60 s beyond the L2 window.
-      if (config && generation === dmsmConfigL1Generation) dmsmConfigL1.set(cacheKey, config, DMSM_CONFIG_L1_TTL_MS);
+      if (config && generation === dmsmConfigL1Generation) dmsmConfigL1.set(l1Key, config, DMSM_CONFIG_L1_TTL_MS);
       return config;
     })
     .finally(() => {

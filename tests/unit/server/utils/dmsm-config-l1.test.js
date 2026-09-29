@@ -87,4 +87,18 @@ describe('DMSM config in-process L1 (BL-1246)', () => {
     await mod.getCachedDmsmConfig(event, 'be')
     expect(fetchFixture).toHaveBeenCalledTimes(2)
   })
+
+  it('normalises the site code so BE, Be  and be share one L1 entry', async () => {
+    await mod.getCachedDmsmConfig(event, 'be')
+    await mod.getCachedDmsmConfig(event, 'BE')
+    await mod.getCachedDmsmConfig(event, ' Be ')
+    expect(fetchFixture).toHaveBeenCalledTimes(1)
+  })
+
+  it('invalidateDmsmConfigL1 with a differently-cased code clears the lowercase entry', async () => {
+    await mod.getCachedDmsmConfig(event, 'be')
+    mod.invalidateDmsmConfigL1('BE')
+    await mod.getCachedDmsmConfig(event, 'be')
+    expect(fetchFixture).toHaveBeenCalledTimes(2)
+  })
 })
