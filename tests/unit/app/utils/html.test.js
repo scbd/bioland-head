@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { htmlSanitize } from '../../../../app/utils/html'
+import { embedFrameHtml, htmlSanitize } from '../../../../app/utils/html'
 
 // Shape of siteStore.biolandSettings.embed.allowedOrigins after context-unified's camelCase.
 const embedAllowedOrigins = [
@@ -398,6 +398,32 @@ describe('html', () => {
 
         expect(htmlSanitize(iframe('https://www.youtube.com/embed/a'))).not.toContain('<iframe')
       })
+    })
+  })
+
+  describe('embedFrameHtml (BL-1218 embed media page)', () => {
+    const frame = { url: 'https://app.powerbi.com/view?r=a&b="x"', title: '', width: '100%', height: '600', allowfullscreen: '1', class: '' }
+
+    it('builds an escaped iframe from the Drupal iframe field', () => {
+      expect(embedFrameHtml(frame, 'Flow <Chart>')).toBe('<iframe src="https://app.powerbi.com/view?r=a&amp;b=&quot;x&quot;" title="Flow &lt;Chart>" width="100%" height="600" allowfullscreen></iframe>')
+    })
+
+    it('keeps allowfullscreen for a boolean true and drops it otherwise', () => {
+      expect(embedFrameHtml({ url: 'https://a.example/x', allowfullscreen: true })).toContain(' allowfullscreen')
+      expect(embedFrameHtml({ url: 'https://a.example/x', allowfullscreen: '0' })).not.toContain('allowfullscreen')
+    })
+
+    it('returns nothing without a url', () => {
+      expect(embedFrameHtml(undefined)).toBe('')
+      expect(embedFrameHtml({ url: '' })).toBe('')
+    })
+
+    it('renders through htmlSanitize with the allowlist sizing and class', () => {
+      const html = htmlSanitize(embedFrameHtml(frame), { embedAllowedOrigins: [{ url: 'https://app.powerbi.com/view', sandbox: '' }] })
+
+      expect(html).toContain('class="iframe-responsive"')
+      expect(html).toContain('style="width: 100%; height: 600px;"')
+      expect(htmlSanitize(embedFrameHtml({ url: 'https://evil.example/x' }), { embedAllowedOrigins: [] })).toBe('')
     })
   })
 })

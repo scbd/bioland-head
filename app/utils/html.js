@@ -17,6 +17,21 @@ const siteEmbedOrigins = () =>
 export const htmlSanitize = (html, { embedAllowedOrigins = siteEmbedOrigins(), ...options } = {}) =>
   html? DOMPurify.sanitize(html, { ...defaultOptions, ...options, EMBED_ALLOWED_ORIGINS: embedAllowedOrigins } ) : '';
 
+const escapeAttribute = value => String(value).replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
+
+// The <iframe> for an embed media page, from its Drupal `iframe` field (url, title, width, height,
+// allowfullscreen). Render it through htmlSanitize so the page gets the same allowlist, sandbox and
+// sizing as a body iframe; binding :src directly would skip them.
+export const embedFrameHtml = (frame, fallbackTitle = '') =>
+  {
+    if(!frame?.url) return '';
+
+    const attributes = { src: frame.url, title: frame.title || fallbackTitle, width: frame.width, height: frame.height };
+    const html       = Object.entries(attributes).filter(([, value]) => value).map(([name, value]) => ` ${name}="${escapeAttribute(value)}"`).join('');
+
+    return `<iframe${html}${['1', 'true'].includes(String(frame.allowfullscreen)) ? ' allowfullscreen' : ''}></iframe>`;
+  };
+
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-iframe-sandbox
 const sandboxTokens = new Set([ 'allow-downloads', 'allow-forms', 'allow-modals', 'allow-orientation-lock', 'allow-pointer-lock', 'allow-popups', 'allow-popups-to-escape-sandbox', 'allow-presentation', 'allow-same-origin', 'allow-scripts', 'allow-storage-access-by-user-activation', 'allow-top-navigation', 'allow-top-navigation-by-user-activation', 'allow-top-navigation-to-custom-protocols' ]);
 
