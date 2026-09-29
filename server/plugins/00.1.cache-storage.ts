@@ -44,6 +44,8 @@ export const I18N_HANDLER_CACHE_BASE = 'nitro:handlers:i18n'
 
 const ERROR_LOG_INTERVAL_MS = 60_000
 const CIRCUIT_OPEN_MS = 5_000
+/** Consecutive Command timed out errors that open the breaker; one slow command is not an outage. */
+const TIMEOUTS_TO_OPEN = 3
 /** Bounds the per-message throttle memory should messages ever carry per-key detail. */
 const MAX_DISTINCT_ERRORS = 100
 
@@ -52,18 +54,23 @@ const MAX_DISTINCT_ERRORS = 100
  * outcome (see failFastAfterFirstConnect), so boot-time reads such as the thesaurus warm-up
  * wait the few ms for the socket instead of missing; after that a command issued while
  * disconnected fails at once (a cache miss) instead of queueing until reconnect.
- * commandTimeout bounds a connected-but-stalled server and any command still queued at boot.
+ * commandTimeout bounds a connected-but-stalled server and any command still queued at boot;
+ * it sits at 3s because the shared Redis also serves Drupal, whose invalidation spikes can stall
+ * a read past 1s, and a single timeout no longer opens the breaker (see createCircuitBreaker).
  * A half-open socket (peer gone, status still `ready`) is caught by socketTimeout, which drops
  * the socket when a write gets no reply, and by TCP keepalive probes on an idle one; the
- * circuit breaker in degradeOnError keeps requests off it in the meantime.
+ * circuit breaker in degradeOnError keeps requests off it in the meantime. socketTimeout sits
+ * above commandTimeout so a plain stall surfaces as `Command timed out` (tolerated up to three
+ * in a row) before the socket is torn down with a hard `Socket timeout`, which opens the breaker
+ * at once; only a stall longer than socketTimeout gets that treatment.
  * Reconnects keep going, capped at 5s apart, so the cache comes back on its own when Redis does.
  */
 export const REDIS_CLIENT_OPTIONS: RedisOptions = {
   enableOfflineQueue: true,
   maxRetriesPerRequest: 1,
   connectTimeout: 2_000,
-  commandTimeout: 1_000,
-  socketTimeout: 2_000,
+  commandTimeout: 3_000,
+  socketTimeout: 4_000,
   keepAlive: 10_000,
   retryStrategy: (times: number) => Math.min(times * 500, 5_000),
 }
@@ -94,7 +101,22 @@ const CONNECTION_ERROR_CODES = new Set([
   // DNS (service name not resolvable yet, resolver flake) and routing failures.
   'ENOTFOUND', 'EAI_AGAIN', 'EHOSTUNREACH', 'ENETUNREACH',
 ])
-const CONNECTION_ERROR_MESSAGES = ["Stream isn't writeable", 'Command timed out', 'Connection is closed', 'Socket timeout']
+const COMMAND_TIMEOUT_MESSAGE = 'Command timed out'
+const CONNECTION_ERROR_MESSAGES = ["Stream isn't writeable", COMMAND_TIMEOUT_MESSAGE, 'Connection is closed', 'Socket timeout']
+
+/**
+ * True for a command that got no reply within commandTimeout (a stall, not a dead connection).
+ * An AggregateError counts only when every connection error inside it is a timeout: a mix with
+ * ECONNREFUSED and the like is a hard error.
+ */
+export function isCommandTimeout(error: unknown): boolean {
+  if (!(error instanceof Error)) return false
+  if (error instanceof AggregateError) {
+    const connectionErrors = error.errors.filter(isConnectionError)
+    return connectionErrors.length > 0 && connectionErrors.every(isCommandTimeout)
+  }
+  return error.message.includes(COMMAND_TIMEOUT_MESSAGE)
+}
 
 /** True for failures that mean Redis is unreachable or stalled, as opposed to a bad command. */
 export function isConnectionError(error: unknown): boolean {
@@ -146,7 +168,12 @@ export function createCacheLogger(intervalMs = ERROR_LOG_INTERVAL_MS, now: () =>
 export interface CircuitBreaker {
   /** False lets the caller through; once the open window expires only one caller (the probe) gets false. */
   isOpen(): boolean
-  trip(): void
+  /**
+   * `commandTimeout` marks a stalled command: it opens only on the third in a row, or on a failed
+   * probe. "In a row" counts completions, so N in-flight reads that time out together from one
+   * stall count as N.
+   */
+  trip(commandTimeout?: boolean): void
   /** Redis answered: closes the breaker if this was the half-open probe. */
   succeed(): void
   reset(): void
@@ -157,13 +184,18 @@ export interface CircuitBreaker {
  * caller is the probe and everyone else keeps skipping Redis for another window, so a Redis
  * that is still down costs one commandTimeout per window, not one per concurrent read.
  * The probe's success (or a `ready`) closes it; its failure re-trips it.
+ * A command timeout is softer than a hard connection error: it opens the breaker only after
+ * TIMEOUTS_TO_OPEN in a row (any answer from Redis resets the count), so one slow command
+ * does not blank the cache; a timed-out probe still re-opens at once.
  */
 export function createCircuitBreaker(openMs = CIRCUIT_OPEN_MS, now: () => number = () => Date.now()): CircuitBreaker {
   let openUntil = Number.NEGATIVE_INFINITY
   let probing = false
+  let timeouts = 0
   const reset = () => {
     openUntil = Number.NEGATIVE_INFINITY
     probing = false
+    timeouts = 0
   }
   return {
     isOpen() {
@@ -174,12 +206,15 @@ export function createCircuitBreaker(openMs = CIRCUIT_OPEN_MS, now: () => number
       probing = true
       return false
     },
-    trip() {
+    trip(commandTimeout = false) {
+      if (commandTimeout && !probing && ++timeouts < TIMEOUTS_TO_OPEN) return
+      timeouts = 0
       openUntil = now() + openMs
       probing = false
     },
     succeed() {
       if (probing) reset()
+      else timeouts = 0
     },
     reset,
   }
@@ -189,8 +224,9 @@ export function createCircuitBreaker(openMs = CIRCUIT_OPEN_MS, now: () => number
  * Reads and writes degrade to a miss / a skipped write when Redis is unreachable, so the
  * caller fetches upstream instead of failing. Nitro's cached functions already catch storage
  * errors but log each one; direct callers (sitemaps) do not catch.
- * After a connection-class failure the breaker opens: reads and writes skip Redis entirely for
- * a few seconds, so a stalled server costs one commandTimeout, not one per cache read. Any
+ * After a connection-class failure the breaker opens (for command timeouts, after three in a
+ * row): reads and writes skip Redis entirely for a few seconds, so a stalled server costs a
+ * few commandTimeouts, not one per cache read. Any
  * answer from Redis, including a command error, counts as a success for the half-open probe.
  * getKeys, removeItem and clear still throw: a clear that silently did nothing must not be
  * reported as done.
@@ -204,7 +240,7 @@ export function degradeOnError(driver: Driver, logger: CacheLogger, breaker: Cir
         breaker.succeed()
         return result
       } catch (error) {
-        if (isConnectionError(error)) breaker.trip()
+        if (isConnectionError(error)) breaker.trip(isCommandTimeout(error))
         else breaker.succeed()
         logger.error(operation, error)
         return fallback(...args)
