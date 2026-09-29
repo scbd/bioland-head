@@ -17,10 +17,11 @@ const makeStore = (keys) => {
   }
 }
 
-let cache, store
+let cache, store, invalidateDmsmConfigL1
 
 beforeEach(async () => {
   vi.resetModules()
+  invalidateDmsmConfigL1 = vi.fn()
   store = makeStore([
     'context:get-dmsm-config:bl2:be.json',
     'context:get-site-settings:bl2:be:en.json',
@@ -38,6 +39,7 @@ beforeEach(async () => {
   vi.stubGlobal('useStorage', vi.fn(() => store))
   vi.stubGlobal('useRequestContext', vi.fn(async () => ({ multiSiteCode: 'bl2', siteCode: 'be' })))
   vi.stubGlobal('getRequestURL', vi.fn())
+  vi.stubGlobal('invalidateDmsmConfigL1', invalidateDmsmConfigL1)
   vi.stubGlobal('getHeader', vi.fn(() => ''))
   cache = await import('~/server/utils/nitro-cache')
 })
@@ -50,6 +52,11 @@ describe('clearSiteCache', () => {
     expect(store.getKeys).toHaveBeenCalledTimes(1)
     expect(store.getKeys).toHaveBeenCalledWith()
     expect(cache.SITE_SCOPED_CACHE_GROUPS).not.toContain('users')
+  })
+
+  it('drops this container\'s in-process DMSM config L1 entry for the Site (BL-1246)', async () => {
+    await cache.clearSiteCache({}, { multiSiteCode: 'bl2', siteCode: 'be' })
+    expect(invalidateDmsmConfigL1).toHaveBeenCalledExactlyOnceWith('be')
   })
 
   it('removes every entry for the Site across key formats and keeps other Sites', async () => {

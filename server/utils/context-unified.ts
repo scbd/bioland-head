@@ -361,13 +361,28 @@ const _fetchDmsmConfig = cachedFunction(
   },
 );
 
+// BL-1246: in-process L1 in front of the Redis-backed _fetchDmsmConfig so the hottest request
+// path does not pay a Redis round trip (or stall on a degraded mount) per request. Keyed exactly
+// like the Nitro cache entry; site config changes rarely so 60 s costs nothing in freshness.
+const DMSM_CONFIG_L1_TTL_MS = 60 * 1000;
+const dmsmConfigL1 = boundedTtlMap(500);
+
+/**
+ * Drop this container's L1 entry for a site. Called by clearSiteCache so an admin cache clear is
+ * immediate here; other replicas keep serving their previous config for up to 60 s.
+ */
+export function invalidateDmsmConfigL1(siteCode: string): void {
+  dmsmConfigL1.delete(dmsmConfigCacheKey(siteCode));
+}
+
 /**
  * Get DMSM config with request coalescing to prevent thundering herd
  * If a request is already in-flight for this siteCode, wait for it instead of starting a new one
  * @param bypassCache - If true, skips cache and fetches directly from DMSM API
  */
 export async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypassCache?: boolean): Promise<DmsmConfig | null> {
-  // Bypass cache if requested - fetch directly without caching or coalescing
+  // Bypass cache if requested - fetch directly without caching or coalescing.
+  // The L1 is skipped on read and write so a forced refresh never serves or seeds it.
   if (bypassCache) {
     consola.debug(`Bypassing DMSM cache for siteCode: ${siteCode}`);
     return fetchDmsmConfigCore(siteCode).catch(() => null);
@@ -375,6 +390,11 @@ export async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypa
 
   const { env, multiSiteCode } = useRuntimeConfig().public;
   const cacheKey = `${multiSiteCode}:${siteCode}`;
+
+  const l1Hit = dmsmConfigL1.get(cacheKey);
+  if (l1Hit) {
+    return l1Hit;
+  }
 
   // Check if there's already a request in-flight for this key
   const pending = pendingDmsmRequests.get(cacheKey);
@@ -387,6 +407,11 @@ export async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypa
   // rejection back to null here and keep this function's contract total.
   const promise = _fetchDmsmConfig(event, siteCode)
     .catch(() => null)
+    .then((config) => {
+      // A null (failed or missing) config is never cached, so the next request retries.
+      if (config) dmsmConfigL1.set(cacheKey, config, DMSM_CONFIG_L1_TTL_MS);
+      return config;
+    })
     .finally(() => {
       // Clean up after completion (success or failure)
       pendingDmsmRequests.delete(cacheKey);
