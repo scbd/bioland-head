@@ -145,7 +145,7 @@ describe('00.1.cache-storage plugin', () => {
     expect(opts).toMatchObject({
       maxRetriesPerRequest: 1,
       connectTimeout: 2_000,
-      commandTimeout: 1_000,
+      commandTimeout: 3_000,
       socketTimeout: 2_000,
       keepAlive: 10_000,
       scanCount: 1_000,
@@ -425,30 +425,84 @@ describe('i18n handler cache purge', () => {
 })
 
 describe('half-open socket', () => {
-  it('misses within commandTimeout, then skips redis while the breaker is open', async () => {
+  const COMMAND_TIMEOUT = 3_000
+  const gets = () => redis.calls.filter((c) => c.command === 'get').length
+  /** Reads `count` distinct keys one after another, each waiting out commandTimeout. */
+  const stallReads = async (cache: Storage, count: number) => {
+    for (let i = 0; i < count; i++) {
+      const read = cache.getItem(`menus:stall-${i}.json`)
+      await vi.advanceTimersByTimeAsync(COMMAND_TIMEOUT)
+      await expect(read).resolves.toBeNull()
+    }
+  }
+
+  it('misses within commandTimeout, then skips redis once three reads in a row stalled', async () => {
     vi.useFakeTimers()
     plugin.mountRedisCache(storage, 'redis://redis:6379/1', silentLogger())
     redis.state.stalled = true
     const cache = prefixStorage(storage, 'cache')
-    const gets = () => redis.calls.filter((c) => c.command === 'get').length
 
     let settled = false
     const first = cache.getItem('menus:a.json').finally(() => { settled = true })
-    await vi.advanceTimersByTimeAsync(999)
+    await vi.advanceTimersByTimeAsync(COMMAND_TIMEOUT - 1)
     expect(settled).toBe(false)
     await vi.advanceTimersByTimeAsync(1)
     await expect(first).resolves.toBeNull()
-    expect(gets()).toBe(1)
+    await stallReads(cache, 2)
+    expect(gets()).toBe(3)
 
     await expect(cache.getItem('menus:b.json')).resolves.toBeNull()
     await expect(cache.setItem('menus:b.json', 1)).resolves.toBeUndefined()
-    expect(gets()).toBe(1)
+    expect(gets()).toBe(3)
     expect(redis.calls.some((c) => c.command === 'set')).toBe(false)
 
     await vi.advanceTimersByTimeAsync(5_000)
     redis.state.stalled = false
     await expect(cache.getItem('menus:b.json')).resolves.toBeNull()
-    expect(gets()).toBe(2)
+    expect(gets()).toBe(4)
+  })
+
+  it('keeps sending reads to redis after one or two timeouts', async () => {
+    vi.useFakeTimers()
+    plugin.mountRedisCache(storage, 'redis://redis:6379/1', silentLogger())
+    redis.state.stalled = true
+    const cache = prefixStorage(storage, 'cache')
+
+    await stallReads(cache, 2)
+    redis.state.stalled = false
+    redis.db.set('head:menus:a.json', JSON.stringify('hit'))
+
+    await expect(cache.getItem('menus:a.json')).resolves.toBe('hit')
+    expect(gets()).toBe(3)
+  })
+
+  it('resets the timeout count on any answer from redis', async () => {
+    vi.useFakeTimers()
+    plugin.mountRedisCache(storage, 'redis://redis:6379/1', silentLogger())
+    const cache = prefixStorage(storage, 'cache')
+
+    redis.state.stalled = true
+    await stallReads(cache, 2)
+    redis.state.stalled = false
+    await cache.getItem('menus:ok.json')
+    redis.state.stalled = true
+    await stallReads(cache, 2)
+    redis.state.stalled = false
+    redis.db.set('head:menus:a.json', JSON.stringify('hit'))
+
+    await expect(cache.getItem('menus:a.json')).resolves.toBe('hit')
+  })
+
+  it('still opens the breaker on the first hard connection error', async () => {
+    plugin.mountRedisCache(storage, 'redis://redis:6379/1', silentLogger())
+    redis.state.down = true
+    const cache = prefixStorage(storage, 'cache')
+
+    await expect(cache.getItem('menus:a.json')).resolves.toBeNull()
+    redis.state.down = false
+    await expect(cache.getItem('menus:b.json')).resolves.toBeNull()
+
+    expect(gets()).toBe(1)
   })
 
   it('sends only one of N concurrent reads to redis once the open window expires', async () => {
@@ -456,21 +510,18 @@ describe('half-open socket', () => {
     plugin.mountRedisCache(storage, 'redis://redis:6379/1', silentLogger())
     redis.state.stalled = true
     const cache = prefixStorage(storage, 'cache')
-    const gets = () => redis.calls.filter((c) => c.command === 'get').length
 
-    const first = cache.getItem('menus:a.json')
-    await vi.advanceTimersByTimeAsync(1_000)
-    await first
+    await stallReads(cache, 3)
     await vi.advanceTimersByTimeAsync(5_000)
 
     const reads = Array.from({ length: 5 }, (_, i) => cache.getItem(`menus:${i}.json`))
-    await vi.advanceTimersByTimeAsync(1_000)
+    await vi.advanceTimersByTimeAsync(COMMAND_TIMEOUT)
     await expect(Promise.all(reads)).resolves.toEqual([null, null, null, null, null])
-    expect(gets()).toBe(2)
+    expect(gets()).toBe(4)
 
-    // The probe timed out, so the breaker re-tripped: the next read skips redis.
+    // The probe timed out, so the breaker re-tripped at once: the next read skips redis.
     await cache.getItem('menus:x.json')
-    expect(gets()).toBe(2)
+    expect(gets()).toBe(4)
   })
 
   it('closes the breaker as soon as the client is ready again', async () => {
@@ -479,14 +530,12 @@ describe('half-open socket', () => {
     redis.state.stalled = true
     const cache = prefixStorage(storage, 'cache')
 
-    const first = cache.getItem('menus:a.json')
-    await vi.advanceTimersByTimeAsync(1_000)
-    await first
+    await stallReads(cache, 3)
     redis.state.stalled = false
     redis.clients[0]!.client.emit('ready')
 
     await cache.getItem('menus:a.json')
-    expect(redis.calls.filter((c) => c.command === 'get')).toHaveLength(2)
+    expect(gets()).toBe(4)
   })
 })
 
