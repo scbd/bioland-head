@@ -199,6 +199,7 @@ describe('clearSiteCache against the redis mount', () => {
 
     vi.resetModules()
     vi.stubGlobal('CACHE_TTL', CACHE_TTL)
+    vi.stubGlobal('invalidateDmsmConfigL1', vi.fn())
     vi.stubGlobal('useStorage', (base?: string) => (base ? prefixStorage(storage, base) : storage))
     const { clearSiteCache } = await import('~/server/utils/nitro-cache')
 
