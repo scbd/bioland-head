@@ -48,7 +48,7 @@
   }
 
   async function reload(){
-    await getPage(route.path, true);
+    await getPage(route.path, true).catch(()=> undefined);
     await clearQueryString();
 
     emit('confirm');

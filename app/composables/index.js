@@ -93,18 +93,18 @@ export const useGetPage = () => {
                 const options =  process.server? {  method: 'GET', headers, query: queryParams } : {  method: 'GET', query: queryParams };
                 const  data   = await $fetch(`/api/page/${encodeURIComponent(key.value)}/${encodeURIComponent(path.value)}`,options)//.then(({ data }) => data);
 
-            if(!hasPageData(data)) throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal:true })
-
-            return data;
+            if(hasPageData(data)) return data;
         }catch(e){
             consola.error('useGetPage', e, key.value)
-            consola.error("useGetPage", e);
             if(e.statusCode === 404 || e.statusCode === 403)
-                throw createError({ statusCode: 404, statusMessage: `Page not found for path: ${path.value}`, fatal:true })
+                throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal:true })
         
             throw createError({ statusCode: e.statusCode, statusMessage: e.statusMessage, fatal:true }) 
 
         }
+
+        // Resolved without page data (204 -> undefined, '', null, {}): the path does not exist.
+        throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal:true })
     }
 }
 
