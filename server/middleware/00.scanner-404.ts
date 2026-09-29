@@ -121,9 +121,11 @@ function stripLocale(pathname: string): string {
   return pathname.replace(/^\/(zh-hans|fil|[a-z]{2}(-[a-z]{2})?)(?=\/|$)/, '') || '/'
 }
 
-// Drupal-only path prefixes for locales (app `tl` maps to Drupal `fil`). Traefik can hand
-// the head `/en/fil/router/...`, where stripLocale removed only `/en`. Deliberately a fixed
-// list, never a generic 2-letter segment: a real alias can start with a two-letter word.
+// Strips one Drupal-only locale prefix (app `tl` maps to Drupal `fil`) left behind when
+// Traefik hands the head `/en/fil/router/...` and stripLocale removed only `/en`. The list
+// is deliberately fixed, never a generic 2-letter segment: a real alias can start with a
+// two-letter word. It runs once, so stacked prefixes and dot segments fall through to SSR
+// by design.
 function stripDrupalLocalePrefix(pathname: string): string {
   return pathname.replace(/^\/(zh-hans|zh-hant|fil)(?=\/|$)/, '') || '/'
 }
