@@ -135,9 +135,8 @@ const removeUntrustedIframe = (node, data, config)=>
     if(entry){
       applyEmbedEntry(node, entry, new URL(src).hostname);
 
-      // Drupal writes fallback markup inside the tag ("Your browser does not support iframes ... <a>"),
-      // which parses as raw text and trips DOMPurify's mutation-XSS probe, deleting the approved frame.
-      // The fallback is never shown by a browser that renders the frame, so drop it here (this hook runs first).
+      // Drupal's fallback markup inside the tag parses as raw text and trips DOMPurify's _isUnsafeNode mXSS probe.
+      // DOMPurify runs uponSanitizeElement before that probe (3.3.0 and 3.4.x); the first BL-1269 test pins this order.
       node.textContent = '';
 
       return node;
