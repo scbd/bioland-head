@@ -366,12 +366,16 @@ const _fetchDmsmConfig = cachedFunction(
 // like the Nitro cache entry; site config changes rarely so 60 s costs nothing in freshness.
 const DMSM_CONFIG_L1_TTL_MS = 60 * 1000;
 const dmsmConfigL1 = boundedTtlMap(500);
+// Bumped by every invalidation so a fetch that was already in flight cannot re-seed the L1 with
+// the pre-clear config when it resolves after the clear.
+let dmsmConfigL1Generation = 0;
 
 /**
  * Drop this container's L1 entry for a site. Called by clearSiteCache so an admin cache clear is
  * immediate here; other replicas keep serving their previous config for up to 60 s.
  */
 export function invalidateDmsmConfigL1(siteCode: string): void {
+  dmsmConfigL1Generation++;
   dmsmConfigL1.delete(dmsmConfigCacheKey(siteCode));
 }
 
@@ -405,11 +409,14 @@ export async function getCachedDmsmConfig(event: H3Event, siteCode: string, bypa
   // Start new request and track it. fetchDmsmConfigCore has already logged the
   // reason, and callers treat a missing config as a 404, so collapse the
   // rejection back to null here and keep this function's contract total.
+  const generation = dmsmConfigL1Generation;
   const promise = _fetchDmsmConfig(event, siteCode)
     .catch(() => null)
     .then((config) => {
-      // A null (failed or missing) config is never cached, so the next request retries.
-      if (config) dmsmConfigL1.set(cacheKey, config, DMSM_CONFIG_L1_TTL_MS);
+      // A null (failed or missing) config is never cached, so the next request retries. A clear
+      // that landed while this fetch was in flight (generation moved) must not be re-seeded.
+      // A stale-while-revalidate value can sit in the L1 for up to 60 s beyond the L2 window.
+      if (config && generation === dmsmConfigL1Generation) dmsmConfigL1.set(cacheKey, config, DMSM_CONFIG_L1_TTL_MS);
       return config;
     })
     .finally(() => {
