@@ -327,6 +327,39 @@ describe('html', () => {
       expect(htmlSanitize(iframe('https://app.powerbi.com/view?r=1'), { embedAllowedOrigins })).not.toContain('allowfullscreen')
     })
 
+    describe('iframe fallback content (BL-1269)', () => {
+      const src = 'https://app.powerbi.com/view?r=x'
+
+      it('keeps an allowed iframe whose fallback holds a link, emitted without children', () => {
+        const input  = `<iframe src="${src}" title="T" allowfullscreen>Your browser does not support iframes, but you can visit <a href="${src}">T</a></iframe>`
+        const result = htmlSanitize(input, { embedAllowedOrigins })
+
+        expect(result).toMatch(/<iframe [^>]*src="https:\/\/app\.powerbi\.com\/view\?r=x"[^>]*><\/iframe>/)
+        expect(result).not.toContain('Your browser')
+        expect(result).not.toContain('<a')
+      })
+
+      it('keeps an allowed iframe with plain-text fallback, children cleared', () => {
+        const result = htmlSanitize(`<iframe src="${src}">no iframes here</iframe>`, { embedAllowedOrigins })
+
+        expect(result).toContain('<iframe')
+        expect(result).not.toContain('no iframes here')
+      })
+
+      it('leaves an allowed iframe with no children unchanged', () => {
+        expect(htmlSanitize(`<iframe src="${src}"></iframe>`, { embedAllowedOrigins })).toMatch(/<iframe [^>]*><\/iframe>/)
+      })
+
+      it('still removes a disallowed iframe with a markup fallback together with its wrapper', () => {
+        const result = htmlSanitize('<p>a</p><p><iframe src="https://evil.example.com/x">see <a href="https://evil.example.com/x">T</a></iframe></p><p>b</p>', { embedAllowedOrigins })
+
+        expect(result).not.toContain('<iframe')
+        expect(result).not.toContain('evil.example.com')
+        expect(result).toContain('<p>a</p>')
+        expect(result).toContain('<p>b</p>')
+      })
+    })
+
     it('replaces an editor-authored allow on player entries with the player policy', () => {
       const result = htmlSanitize('<iframe src="https://player.vimeo.com/video/1" allow="camera *"></iframe>', { embedAllowedOrigins })
 

@@ -135,6 +135,11 @@ const removeUntrustedIframe = (node, data, config)=>
     if(entry){
       applyEmbedEntry(node, entry, new URL(src).hostname);
 
+      // Drupal writes fallback markup inside the tag ("Your browser does not support iframes ... <a>"),
+      // which parses as raw text and trips DOMPurify's mutation-XSS probe, deleting the approved frame.
+      // The fallback is never shown by a browser that renders the frame, so drop it here (this hook runs first).
+      node.textContent = '';
+
       return node;
     }
 
