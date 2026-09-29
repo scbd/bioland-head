@@ -550,4 +550,31 @@ describe('Cache Control Middleware', () => {
       expect(CACHE_TTL.DEFAULT).toBe(15)
     })
   })
+
+  describe('Error responses', () => {
+    const run = (status, url = 'http://localhost/en/some-page') => {
+      global.getRequestURL.mockReturnValue(new URL(url))
+      const writeHead = vi.fn()
+      const headers = {}
+      const res = { statusCode: status, headersSent: false, writeHead, setHeader: vi.fn((k, v) => { headers[k] = v }) }
+
+      cacheControlMiddleware({ node: { res } })
+      res.writeHead(status)
+
+      return { headers, writeHead }
+    }
+
+    it.each([404, 500, 503])('sends no-store on a %i', (status) => {
+      const { headers, writeHead } = run(status)
+
+      expect(headers['Cache-Control']).toBe('no-store')
+      expect(writeHead).toHaveBeenCalledWith(status)
+    })
+
+    it('keeps the normal cache header on a 200', () => {
+      const { headers } = run(200)
+
+      expect(headers['Cache-Control']).toContain(`max-age=${CACHE_TTL.DEFAULT}`)
+    })
+  })
 })
