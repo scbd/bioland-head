@@ -575,6 +575,36 @@ describe('Cache Control Middleware', () => {
       const { headers } = run(200)
 
       expect(headers['Cache-Control']).toContain(`max-age=${CACHE_TTL.DEFAULT}`)
+      })
+    })
+
+  describe('X-Robots-Tag on /api/', () => {
+    it.each([
+      ['/api/list/gbif'],
+      ['/api/menus'],
+      ['/api/me'],
+      ['/api/page/home'],
+    ])('sets noindex on %s', (path) => {
+      global.getRequestURL.mockReturnValue(new URL(`http://localhost${path}`))
+
+      cacheControlMiddleware(mockEvent)
+
+      expect(mockRes.setHeader).toHaveBeenCalledWith('X-Robots-Tag', 'noindex')
+    })
+
+    it.each([
+      ['/'],
+      ['/en/about'],
+      ['/robots.txt'],
+      ['/_nuxt/entry.js'],
+      ['/_ipx/w_100/images/a.png'],
+      ['/apiary'],
+    ])('does not set X-Robots-Tag on %s', (path) => {
+      global.getRequestURL.mockReturnValue(new URL(`http://localhost${path}`))
+
+      cacheControlMiddleware(mockEvent)
+
+      expect(mockRes.setHeader).not.toHaveBeenCalledWith('X-Robots-Tag', expect.anything())
     })
   })
 })

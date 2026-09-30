@@ -25,6 +25,10 @@ export default defineEventHandler((event) => {
     const isNuxt       = pathname.match(/\/_nuxt\//);
     const isSites      = pathname.match(/\/sites\/[a-zA-Z0-9]+\/files\//);
     const isAsset      = isIpx || isNuxt || isSites || pathname.match(/(.+)\.(avif|webp|jpg|jpeg|gif|css|png|js|ico|svg|mjs)/)
+    // robots.txt keeps `Allow: /` (pages fetch /api/* while rendering), so keep the JSON itself out of the index.
+    if (pathname.startsWith('/api/'))
+      res.setHeader('X-Robots-Tag', 'noindex');
+
     const isNoCache    = isMeApi || isCommentsApi || isForumsApi || byPassCache;
 
     if (isNoCache)

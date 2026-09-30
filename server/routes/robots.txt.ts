@@ -24,6 +24,9 @@ import { CACHE_TTL } from '../../shared/utils/constants'
  * `Accept-Language` dimension is harmless here (robots.txt does not vary by locale), it just
  * fragments the cache key slightly more than strictly necessary, and staying on the shared
  * constant keeps one Vary policy for every Host-derived response instead of two to maintain.
+ *
+ * `/api` is kept out of the index via `X-Robots-Tag: noindex` (`server/middleware/cache-control.js`),
+ * not `Disallow: /api/`: pages call /api/* client-side while rendering, so crawlers must be able to fetch it.
  */
 
 const DISALLOW_ALL = 'User-agent: *\nDisallow: /\n';
