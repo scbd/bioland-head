@@ -32,6 +32,16 @@ export const embedFrameHtml = (frame, fallbackTitle = '') =>
     return `<iframe${html}${['1', 'true'].includes(String(frame.allowfullscreen)) ? ' allowfullscreen' : ''}></iframe>`;
   };
 
+// Host of an embed page's frame URL for the editor notice; '' when the URL is missing or invalid.
+export const embedFrameHost = (frame) =>
+  {
+    try { return new URL(frame?.url).host; }
+    catch { return ''; }
+  };
+
+// True when an embed page had a frame and the sanitizer dropped it (origin not on the allowlist).
+export const embedFrameStripped = (html, sanitized) => !!html && !/<iframe\b/i.test(sanitized ?? '');
+
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-iframe-sandbox
 const sandboxTokens = new Set([ 'allow-downloads', 'allow-forms', 'allow-modals', 'allow-orientation-lock', 'allow-pointer-lock', 'allow-popups', 'allow-popups-to-escape-sandbox', 'allow-presentation', 'allow-same-origin', 'allow-scripts', 'allow-storage-access-by-user-activation', 'allow-top-navigation', 'allow-top-navigation-by-user-activation', 'allow-top-navigation-to-custom-protocols' ]);
 
