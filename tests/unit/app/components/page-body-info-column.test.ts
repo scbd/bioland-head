@@ -25,5 +25,6 @@ describe('page body info column placement (BL-1287)', () => {
     it('leaves the mobile mount and media details block untouched', () => {
         expect(tagOf('page-body-media-file-details-desktop')).toContain('v-if="isImageOrVideo || isDocument"')
         expect(tagOf('page-body-media-file-details-mobile')).not.toContain('pageInfoColumn')
+        expect(tagOf('page-body-tags-date-image-mobile')).not.toMatch(/v-if|pageInfoColumn/)
     })
 })

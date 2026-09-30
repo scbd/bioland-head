@@ -102,11 +102,12 @@
  * ## Totality
  *
  * For ANY input, including `{}`, `null`, or a config with no theme at all, every contract group
- * (`color`, `backGround`, `hero`, `megaMenu`, `i18n`, `homePageWidgets`) is an object and
+ * (`color`, `backGround`, `hero`, `megaMenu`, `i18n`, `homePageWidgets`, `page`) is an object and
  * `hero.primary` is an array of length 2. Contract leaves are always own properties, so no
  * optional chain and no index access on the result can throw. A leaf whose value is genuinely
  * unset stays `undefined` rather than being invented — this function preserves today's rendered
- * values, it does not add defaults that did not exist.
+ * values, it does not add defaults that did not exist. The one deliberate exception is
+ * `page.infoColumn`, which defaults to `left` (BL-1287) so every site gets the left layout.
  *
  * ## Cloning
  *
@@ -173,9 +174,10 @@ const isUsableColor = value => typeof value === 'string' && value === value.trim
 /** A column count that yields at least one column. `0` collapses the mega-menu grid to nothing. */
 const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(value) >= 1;
 
-/** A language limit that renders at least one language. `0` empties the menu and hides the bar. */
+/** The page info column side: only `left` or `right` is placeable (BL-1287). */
 const isUsableInfoColumn = value => value === 'left' || value === 'right';
 
+/** A language limit that renders at least one language. `0` empties the menu and hides the bar. */
 const isUsableLanguageLimit = value => typeof value !== 'boolean' && Number.isFinite(Number(value)) && Number(value) >= 1;
 
 /**
