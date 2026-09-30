@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { embedFrameHtml, htmlSanitize, hasFontAwesomeIcon } from '../../../../app/utils/html'
 
 // Shape of siteStore.biolandSettings.embed.allowedOrigins after context-unified's camelCase.
@@ -332,6 +333,95 @@ describe('html', () => {
       expect(result).not.toContain('<iframe')
       expect(result).toContain('before')
       expect(result).toContain('after')
+    })
+
+    describe('embed frame sizing precedence', () => {
+      const origins = [
+        { url: 'https://app.powerbi.com/view', label: 'Power BI', sandbox: '' },
+        { url: 'https://bioland-static.s3.ca-central-1.amazonaws.com', label: 'Static', sandbox: '' },
+        { url: 'https://www.youtube.com', label: 'YouTube', sandbox: '' },
+      ]
+      const bi = 'https://app.powerbi.com/view?r=abc'
+      const frame = (attrs, src = bi) => `<iframe ${attrs} src="${src}"></iframe>`
+      const wrap = (data, inner, style = '') => `<div class="media media--type-embed" ${data}${style ? ` style="${style}"` : ''}>${inner}</div>`
+      const run = html => htmlSanitize(html, { embedAllowedOrigins: origins })
+      const styleOf = out => /<iframe[^>]* style="([^"]*)"/.exec(out)?.[1]
+
+      it('field values only: unchanged from today', () => {
+        const out = run(frame('width="100%" height="75%"'))
+        expect(styleOf(out)).toBe('width: 100%; height: 75vh;')
+        expect(out).toContain('data-embed-sized')
+      })
+
+      it('CKEditor percentage width stays on the wrapper; the iframe fills it', () => {
+        const out = run(wrap('data-media-width="75%"', frame('width="100%" height="75%"'), 'width: 75%; max-width: 100%; display: block'))
+        expect(out).toContain('width: 75%')
+        expect(styleOf(out)).toBe('width: 100%; height: 75vh;')
+      })
+
+      it('CKEditor percentage width over a px field width never repeats the percentage', () => {
+        expect(styleOf(run(wrap('data-media-width="75%"', frame('width="300" height="200"'))))).toBe('width: 100%; height: 200px;')
+      })
+
+      it('CKEditor px width and height become a ratio', () => {
+        expect(styleOf(run(wrap('data-media-width="800px" data-media-height="450px"', frame('width="100%" height="75%"'))))).toBe('aspect-ratio: 800 / 450; width: 100%;')
+      })
+
+      it('mixed sources: CKEditor px width, field px height', () => {
+        expect(styleOf(run(wrap('data-media-width="800px"', frame('width="100%" height="450"'))))).toBe('width: 800px; height: 450px;')
+      })
+
+      it('CKEditor height wins over the field height, width from the field', () => {
+        const out = run(wrap('data-media-height="40%"', frame('width="100%" height="75%"')))
+        expect(styleOf(out)).toBe('width: 100%; height: 40vh;')
+        expect(out).toContain('data-embed-sized')
+      })
+
+      it('CKEditor px width alone keeps the 16:9 row', () => {
+        const out = run(wrap('data-media-width="800px"', frame('')))
+        expect(styleOf(out)).toBe('aspect-ratio: 16 / 9; width: 800px;')
+        expect(out).not.toContain('data-embed-sized')
+      })
+
+      it('no height anywhere keeps 16:9 and no data-embed-sized', () => {
+        const out = run(frame('width="100%"'))
+        expect(styleOf(out)).toBe('aspect-ratio: 16 / 9; width: 100%;')
+        expect(out).not.toContain('data-embed-sized')
+      })
+
+      it('CKEditor viewport height is capped at 100vh', () => {
+        expect(styleOf(run(wrap('data-media-height="150vh"', frame('width="100%"'))))).toBe('width: 100%; height: 100vh;')
+      })
+
+      it('invalid CKEditor values fall back to the field values', () => {
+        expect(styleOf(run(wrap('data-media-width="calc(1px)" data-media-height="9;x"', frame('width="100%" height="75%"'))))).toBe('width: 100%; height: 75vh;')
+      })
+
+      it('media player hosts keep the fixed 16:9 branch', () => {
+        const out = run(wrap('data-media-width="800px" data-media-height="450px"', frame('width="10" height="10"', 'https://www.youtube.com/embed/abc')))
+        expect(styleOf(out)).toBe('aspect-ratio: 16 / 9; width: 100%;')
+        expect(out).not.toContain('data-embed-sized')
+      })
+
+      it('drops the style block next to the iframe', () => {
+        const out = run(`<style type="text/css">#f {border-width:0;}</style>${frame('width="100%"')}`)
+        expect(out).not.toContain('<style')
+        expect(out).not.toContain('border-width')
+        expect(out).toContain('<iframe')
+      })
+
+      it('adds iframe-responsive itself (Drupal never sends it)', () => {
+        expect(run(frame('width="100%"'))).toContain('class="iframe-responsive"')
+      })
+
+      it('real Drupal markup (node 10076): field values, no style blocks', () => {
+        const html = readFileSync(new URL('./fixtures/processed-body-node-10076.html', import.meta.url), 'utf8')
+        const out = run(html)
+        const styles = [...out.matchAll(/<iframe[^>]* style="([^"]*)"/g)].map(m => m[1])
+        expect(styles).toEqual(['width: 75%; height: 50vh;', 'width: 100%; height: 75vh;'])
+        expect(out).not.toContain('<style')
+        expect(out.match(/iframe-responsive/g)).toHaveLength(2)
+      })
     })
 
     it('marks every allowed iframe iframe-responsive, keeping the editor class', () => {

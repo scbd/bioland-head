@@ -1,6 +1,7 @@
 import DOMPurify from "isomorphic-dompurify";
 
-const defaultOptions = { USE_PROFILES: { html: true },ADD_TAGS: ["iframe"], ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'sandbox'] };
+// FORBID_TAGS style: contrib iframe prints a <style> block per frame; it never needs to reach the page.
+const defaultOptions = { USE_PROFILES: { html: true },ADD_TAGS: ["iframe"], FORBID_TAGS: ['style'], ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'sandbox'] };
 
 // The iframe allowlist is Drupal config (bioland.settings `embed.allowed_origins`, camelCased by
 // server/utils/context-unified.ts), read at render time so an admin can allow a provider without a
@@ -106,11 +107,11 @@ const toLength = (value) =>
 const toHeight = ({ amount, unit }) =>
   ['%', 'vh'].includes(unit) ? `${Math.min(Number(amount), 100)}vh` : `${amount}${unit}`;
 
-// Two pixel sizes become a ratio that scales with the column. Otherwise the editor's width is kept (the
-// iframe-responsive max-width still caps it) and so is the height.
-const toSizeStyle = (width, height) =>
+// Two pixel sizes from the same source become a ratio that scales with the column. Otherwise the width is
+// kept (the iframe-responsive max-width still caps it) and so is the height.
+const toSizeStyle = (width, height, sameSource = true) =>
   {
-    if(width?.unit === 'px' && height?.unit === 'px') return `aspect-ratio: ${width.amount} / ${height.amount}; width: 100%;`;
+    if(sameSource && width?.unit === 'px' && height?.unit === 'px') return `aspect-ratio: ${width.amount} / ${height.amount}; width: 100%;`;
 
     const widthStyle = width ? `width: ${width.amount}${width.unit};` : 'width: 100%;';
 
@@ -119,17 +120,37 @@ const toSizeStyle = (width, height) =>
     return `${widthStyle} height: ${toHeight(height)};`;
   };
 
+// Per dimension, the editor's CKEditor resize (data-media-width / data-media-height on the media wrapper)
+// wins over the iframe attributes (the frame field). A CKEditor percentage width is already on the wrapper
+// (media_resize), so the iframe fills that container instead of repeating the percentage.
+// Mixed sources never form a ratio: the two numbers were not chosen together.
+const embedDimensions = (node) =>
+  {
+    const wrapper  = node.closest('[data-media-width], [data-media-height]');
+    const ckWidth  = toLength(wrapper?.getAttribute('data-media-width'));
+    const ckHeight = toLength(wrapper?.getAttribute('data-media-height'));
+    const width    = ckWidth ?? toLength(node.getAttribute('width'));
+    const height   = ckHeight ?? toLength(node.getAttribute('height'));
+
+    return {
+      width     : ckWidth?.unit === '%' ? { amount: '100', unit: '%' } : width,
+      height,
+      sameSource: Boolean(ckWidth) === Boolean(ckHeight),
+    };
+  };
+
 const applyEmbedEntry = (node, entry, host) =>
   {
     const isMediaPlayer = mediaPlayerHost.test(host);
     const hasSandbox    = String(entry.sandbox ?? '').trim() !== '';
 
     // `iframe-responsive` (app.vue) keeps every allowed frame inside its column; the inline style
-    // below still sets its ratio or pixel height.
-    const height = isMediaPlayer ? undefined : toLength(node.getAttribute('height'));
+    // below still sets its ratio or pixel height. Drupal never sends that class (the iframe_only
+    // formatter drops the widget class), so this is the only place it is added.
+    const { width, height, sameSource } = isMediaPlayer ? {} : embedDimensions(node);
 
     node.classList.add("iframe-responsive");
-    node.setAttribute("style", isMediaPlayer ? 'aspect-ratio: 16 / 9; width: 100%;' : toSizeStyle(toLength(node.getAttribute('width')), height));
+    node.setAttribute("style", isMediaPlayer ? 'aspect-ratio: 16 / 9; width: 100%;' : toSizeStyle(width, height, sameSource));
     // Marks a frame the editor gave a height, so the embed page (media/index.vue) leaves its size alone.
     node.toggleAttribute("data-embed-sized", Boolean(height));
     node.removeAttribute("height");
