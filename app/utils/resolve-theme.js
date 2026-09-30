@@ -102,11 +102,12 @@
  * ## Totality
  *
  * For ANY input, including `{}`, `null`, or a config with no theme at all, every contract group
- * (`color`, `backGround`, `hero`, `megaMenu`, `i18n`, `homePageWidgets`) is an object and
+ * (`color`, `backGround`, `hero`, `megaMenu`, `i18n`, `homePageWidgets`, `page`) is an object and
  * `hero.primary` is an array of length 2. Contract leaves are always own properties, so no
  * optional chain and no index access on the result can throw. A leaf whose value is genuinely
  * unset stays `undefined` rather than being invented — this function preserves today's rendered
- * values, it does not add defaults that did not exist.
+ * values, it does not add defaults that did not exist. The one deliberate exception is
+ * `page.infoColumn`, which defaults to `left` (BL-1287) so every site gets the left layout.
  *
  * ## Cloning
  *
@@ -123,7 +124,8 @@
 /** Code defaults leg. Only keys that had a hardcoded fallback before this refactor belong here. */
 const THEME_DEFAULTS = Object.freeze({
     color   : { primary: '#009edb' },  // was hardcoded at app/stores/site.js:140
-    megaMenu: { maxColumns: 5 }        // was hardcoded as `|| 5` at schema-org.js:1152 and drop-down.vue:63
+    megaMenu: { maxColumns: 5 },       // was hardcoded as `|| 5` at schema-org.js:1152 and drop-down.vue:63
+    page    : { infoColumn: 'left' }   // BL-1287: every site defaults to the left info column
 });
 
 /**
@@ -140,7 +142,8 @@ const CONTRACT_LEAVES = freezeOwnMap({
     hero           : Object.freeze(['primary', 'secondary']),
     megaMenu       : Object.freeze(['maxColumns', 'maxRowsPerColumn', 'horizontalCardMax', 'forums']),
     i18n           : Object.freeze(['maxLangBeforeWrap']),
-    homePageWidgets: Object.freeze(['columns'])
+    homePageWidgets: Object.freeze(['columns']),
+    page           : Object.freeze(['infoColumn'])
 });
 
 /**
@@ -170,6 +173,9 @@ const isUsableColor = value => typeof value === 'string' && value === value.trim
 
 /** A column count that yields at least one column. `0` collapses the mega-menu grid to nothing. */
 const isUsableColumnCount = value => Number.isFinite(Number(value)) && Number(value) >= 1;
+
+/** The page info column side: only `left` or `right` is placeable (BL-1287). */
+const isUsableInfoColumn = value => value === 'left' || value === 'right';
 
 /** A language limit that renders at least one language. `0` empties the menu and hides the bar. */
 const isUsableLanguageLimit = value => typeof value !== 'boolean' && Number.isFinite(Number(value)) && Number(value) >= 1;
@@ -238,6 +244,9 @@ const isUsableColumnList = value =>
  *                       and leaves `otherMenus` hidden behind the `limitedMenus.length > 1` gate
  *                       at language-bar.vue:18, causing all language selectors to vanish.
  *
+ * - `page.infoColumn` — enum guard (BL-1287): only `left` or `right`; anything else falls through
+ *                       to the `left` default so a bad value never moves the column.
+ *
  * Explicitly NOT validated, with reasons:
  * - `backGround.secondary` — its old read had no `||`, so `''` was already passed through and
  *   rendered. `backGround.primary: ''` demonstrably occurs in the live network theme; rejecting it
@@ -249,7 +258,8 @@ const LEAF_VALIDATORS = freezeOwnMap({
     color          : freezeOwnMap({ primary: isUsableColor, secondary: isUsableColor }),
     megaMenu       : freezeOwnMap({ maxColumns: isUsableColumnCount }),
     homePageWidgets: freezeOwnMap({ columns: isUsableColumnList }),
-    i18n           : freezeOwnMap({ maxLangBeforeWrap: isUsableLanguageLimit })
+    i18n           : freezeOwnMap({ maxLangBeforeWrap: isUsableLanguageLimit }),
+    page           : freezeOwnMap({ infoColumn: isUsableInfoColumn })
 });
 
 const isPlainObject = value => typeof value === 'object' && value !== null && !Array.isArray(value);

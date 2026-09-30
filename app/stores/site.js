@@ -170,6 +170,9 @@ export const useSiteStore = defineStore('site', {
         maxLangBeforeWrap(){
             return this.theme.i18n.maxLangBeforeWrap;
         },
+        pageInfoColumnRight(){
+            return this.theme.page.infoColumn === 'right';
+        },
         isBiosafetySite(){
             return this.baseHost.includes('bsl') || this.baseHost.includes('biosafety') || this.baseHost.includes('bch');
         },
