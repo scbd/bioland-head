@@ -1,12 +1,12 @@
 <template>
     
     <div id="page-header-mega-menu-login">
-        <NuxtLink v-if="!isAuthenticated" id="page-header-mega-menu-login-link" class="nav-link" :style="loginLinkStyle" :to="loginUrl" :title="aMenu.title" :external="true">
+        <NuxtLink v-if="!isAuthenticated" id="page-header-mega-menu-login-link" class="nav-link text-white" :to="loginUrl" :title="aMenu.title" :external="true">
             <span v-if="!isAuthenticated"> {{aMenu.title}} </span>
         </NuxtLink>
-        <button v-if="isAuthenticated" id="page-header-mega-menu-login-btn" class="nav-link" :style="loginLinkStyle" :to="loginUrl" :title="aMenu.title" >
+        <button v-if="isAuthenticated" id="page-header-mega-menu-login-btn" class="nav-link text-white" :to="loginUrl" :title="aMenu.title" >
             <span v-if="isAuthenticated"> 
-                <LazyIcon name="drupal" :color="loginLinkStyle.color" :size="2" class="me-1"/> 
+                <LazyIcon name="drupal" color="#ffffff" :size="2" class="me-1"/> 
             </span>
         </button>
         <div v-if="show" id="page-header-mega-menu-login-dropdown" class="overflow-scroll mm" >
@@ -90,12 +90,6 @@
 
     const removeLocalizationFromPath = useRemoveLocalizationFromPathIfDepthX();
     const isAuthenticated            = computed(() => meStore.isAuthenticated );
-
-    // BL-1074: this link/button sits on the primary-color background the parent
-    // mega-menu applies to the login <li> (see loginStyle() in mega-menu/index.vue).
-    // A hardcoded white was ~1.8:1 against a light brand color like #B7C800; pick
-    // whichever of black/white actually contrasts with the current brand color.
-    const loginLinkStyle = computed(() => ({ color: contrastTextColor(siteStore.primaryColor) }));
 
     const isMd         = computed(()=> !!!viewport?.isGreaterThan('md'));
     const isDrupalSize = computed(()=> !!!viewport?.isGreaterThan('md')? 4 : 6);
