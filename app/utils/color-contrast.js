@@ -10,8 +10,9 @@ export function parseColor(color) {
   // Handle hex
   const hex = color.replace('#', '')
 
-  if (/^[0-9a-f]{3,8}$/i.test(hex)) {
-    const fullHex = hex.length === 3
+  if (/^([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(hex)) {
+    // Expand #rgb / #rgba shorthand; alpha (4th/8th digit group) is ignored for contrast.
+    const fullHex = hex.length <= 4
       ? hex.split('').map(c => c + c).join('')
       : hex
 
@@ -134,6 +135,23 @@ const DARKEN_STEPS = 1000
  *                     cannot be parsed or the surface cannot be parsed.
  */
 export function accessibleColor(color, surface = '#ffffff', { large = false } = {}) {
+  const key = `${color}|${surface}|${large}`
+
+  if (accessibleColorMemo.has(key)) return accessibleColorMemo.get(key)
+
+  const result = computeAccessibleColor(color, surface, large)
+
+  if (accessibleColorMemo.size >= MEMO_LIMIT) accessibleColorMemo.delete(accessibleColorMemo.keys().next().value)
+  accessibleColorMemo.set(key, result)
+
+  return result
+}
+
+/** Bounded memo of accessibleColor results (insertion-ordered eviction). */
+const accessibleColorMemo = new Map()
+const MEMO_LIMIT = 200
+
+function computeAccessibleColor(color, surface, large) {
   const rgb        = parseColor(color)
   const surfaceRgb = parseColor(surface)
 
