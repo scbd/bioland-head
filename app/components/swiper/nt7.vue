@@ -145,11 +145,7 @@ const headerStyle = reactive({
   'border-bottom-width': '4px'
 });
 
-const linkStyle = reactive({
-    color: siteStore.primaryColor,
-    'text-decoration': 'underline',
-    'text-decoration-color': siteStore.primaryColor,
-});
+const { linkStyle } = useTheme();
 
 // Calculate Bootstrap column classes based on slides per view (SSR-safe)
 const cardColClass = computed(() => {
