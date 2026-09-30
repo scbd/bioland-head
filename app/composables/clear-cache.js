@@ -3,5 +3,6 @@
 export function useClearCache() {
     const route = useRoute();
 
-    return () => reloadNuxtApp({ path: `${route.path}?seachain-taisce=${Math.floor(Date.now() / 1000)}` });
+    // reloadNuxtApp assigns window.location.href, so a leading `//` would navigate off-site.
+    return () => reloadNuxtApp({ path: `${route.path.replace(/^\/{2,}/, '/')}?seachain-taisce=${Math.floor(Date.now() / 1000)}` });
 }

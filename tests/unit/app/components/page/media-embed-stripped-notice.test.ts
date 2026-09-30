@@ -17,7 +17,10 @@ const render = (url: string) => {
   return { html, sanitized: htmlSanitize(html, { embedAllowedOrigins }) }
 }
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+  vi.restoreAllMocks()
+})
 
 describe('embed media page stripped-frame notice', () => {
   it('renders the iframe and no notice for an allowed origin', () => {
@@ -44,7 +47,7 @@ describe('embed media page stripped-frame notice', () => {
   })
 
   it('gates the notice on canEditMenu, client side, with the host as an i18n param', () => {
-    expect(notice).toContain('v-if="embedStripped && meStore.canEditMenu"')
+    expect(notice).toContain('v-if="meStore.canEditMenu && embedStripped"')
     expect(notice).toContain("t('embedStrippedNotice', { host: embedHost })")
     expect(notice).not.toContain('v-html')
     expect(notice).toContain('@click="clearCache()"')
@@ -70,7 +73,17 @@ describe('useClearCache', () => {
     useClearCache()()
 
     expect(reloadNuxtApp).toHaveBeenCalledWith({ path: '/en/embed/flow-chart?seachain-taisce=1790000000' })
-    vi.restoreAllMocks()
+  })
+
+  it('collapses leading slashes so the reload can never be protocol-relative', () => {
+    const reloadNuxtApp = vi.fn()
+    vi.stubGlobal('useRoute', () => ({ path: '///evil.example/en/embed/x' }))
+    vi.stubGlobal('reloadNuxtApp', reloadNuxtApp)
+    vi.spyOn(Date, 'now').mockReturnValue(1_790_000_000_500)
+
+    useClearCache()()
+
+    expect(reloadNuxtApp).toHaveBeenCalledWith({ path: '/evil.example/en/embed/x?seachain-taisce=1790000000' })
   })
 
   it('is the implementation login.vue uses', () => {
