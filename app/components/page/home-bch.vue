@@ -42,7 +42,7 @@ const siteStore = useSiteStore();
 const pageStore = usePageStore();
 const meStore   = useMeStore();
 const body      = computed(()=>pageStore?.page?.body);
-const sanitizedBody = computed(()=> htmlSanitize(body?.value));
+const sanitizedBody = computed(()=> htmlSanitize(body.value?.value));
 
 const isNbfEnabled        = computed(() => siteStore?.biolandSettings?.homeWidgets?.nbfWidget?.enable ?? true);
 const isBchNewsEnabled    = computed(() => siteStore?.biolandSettings?.homeWidgets?.bchNewsWidget?.enable ?? true);

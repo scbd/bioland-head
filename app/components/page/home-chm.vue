@@ -29,7 +29,7 @@ const siteStore = useSiteStore();
 const pageStore = usePageStore();
 const meStore   = useMeStore();
 const body      = computed(()=>pageStore?.page?.body);
-const sanitizedBody = computed(()=> htmlSanitize(body?.value));
+const sanitizedBody = computed(()=> htmlSanitize(body.value?.value));
 
 const columnsOfWidgetComponents = computed(() => siteStore?.theme?.homePageWidgets?.columns);
 
