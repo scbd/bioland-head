@@ -19,6 +19,14 @@ describe('color-contrast', () => {
       expect(parseColor('000')).toEqual({ r: 0, g: 0, b: 0 })
     })
 
+    it('expands 4-digit #rgba and ignores alpha', () => {
+      expect(parseColor('#f0a8')).toEqual({ r: 255, g: 0, b: 170 })
+    })
+
+    it('parses 8-digit #rrggbbaa and ignores alpha', () => {
+      expect(parseColor('#009edb80')).toEqual({ r: 0, g: 158, b: 219 })
+    })
+
     it('parses rgb() string', () => {
       expect(parseColor('rgb(136, 146, 98)')).toEqual({ r: 136, g: 146, b: 98 })
     })
@@ -216,6 +224,19 @@ describe('color-contrast', () => {
       const result = accessibleColor('#010101', '#000000')
 
       expect(result).toBe('#000000')
+    })
+  })
+
+  describe('accessibleColor memo', () => {
+    it('returns identical values on repeated calls', () => {
+      const first = accessibleColor('#B7C800', '#ffffff')
+
+      expect(accessibleColor('#B7C800', '#ffffff')).toBe(first)
+      expect(contrastRatio(first, '#ffffff')).toBeGreaterThanOrEqual(4.5)
+    })
+
+    it('keeps large-text and normal results distinct', () => {
+      expect(accessibleColor('#B7C800', '#ffffff', { large: true })).not.toBe(accessibleColor('#B7C800', '#ffffff'))
     })
   })
 })

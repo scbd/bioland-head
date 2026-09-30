@@ -6,7 +6,7 @@
         </NuxtLink>
         <button v-if="isAuthenticated" id="page-header-mega-menu-login-btn" class="nav-link" :style="loginLinkStyle" :to="loginUrl" :title="aMenu.title" >
             <span v-if="isAuthenticated"> 
-                <LazyIcon name="drupal" color="#ffffff" :size="2" class="me-1"/> 
+                <LazyIcon name="drupal" :color="loginLinkStyle.color" :size="2" class="me-1"/> 
             </span>
         </button>
         <div v-if="show" id="page-header-mega-menu-login-dropdown" class="overflow-scroll mm" >
