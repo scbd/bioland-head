@@ -29,9 +29,9 @@
                     <div id="page-header-mega-menu-burger-search-box" class="input-group position-fixed bottom-0 mb-1 burger-search-box" >
                         <input id="page-header-mega-menu-burger-search-input" @keyup.enter="()=>{onClick(queryText);}" type="text" v-model="queryText" class="form-control"  :placeholder="t('Search this site')" aria-label="search" >
 
-                        <a id="page-header-mega-menu-burger-search-btn" v-on:click="onClick(queryText)" class="input-group-text"  :alt="t('Search this site')"  >
+                        <button id="page-header-mega-menu-burger-search-btn" type="button" v-on:click="onClick(queryText)" class="input-group-text"  :aria-label="t('Search this site')"  >
                             <LazyIcon name="search" class="white-icon" />&nbsp;
-                        </a>
+                        </button>
                     </div>
             </div>
             <section v-for="(aMenu,index) in menus" :id="`page-header-mega-menu-burger-dropdown-section-${index}`" :key="index" class="burger-dropdown-section">
