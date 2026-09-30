@@ -67,7 +67,8 @@ describe('Auth Middleware', () => {
       '/api/menus/nbsap',
       '/api/menus/focal-points',
       '/api/menus/content-types',
-      '/api/menus/languages'
+      '/api/menus/languages',
+      '/images/flags/96/BE'
     ]
 
     skipPaths.forEach((path) => {

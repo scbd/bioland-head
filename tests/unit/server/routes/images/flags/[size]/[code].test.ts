@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 // Bind the Nitro auto-imports the route relies on before importing it in plain-Node Vitest,
 // same pattern as tests/unit/server/routes/[locale]/sitemap.test.ts.
@@ -8,13 +8,34 @@ let fetchMock: ReturnType<typeof vi.fn>
 vi.stubGlobal('defineEventHandler', (handler: unknown) => handler)
 vi.stubGlobal('getRouterParam', (_event: unknown, name: string) => routerParams[name])
 vi.stubGlobal('createError', ({ statusCode, statusMessage }: { statusCode: number, statusMessage: string }) => {
-    const error = new Error(statusMessage) as Error & { statusCode: number }
-    error.statusCode = statusCode
+    const error = new Error(statusMessage) as Error & { statusCode: number, statusMessage: string }
+    error.statusCode    = statusCode
+    error.statusMessage = statusMessage
 
     return error
 })
 vi.stubGlobal('setResponseHeader', vi.fn())
 vi.stubGlobal('fetch', (...args: unknown[]) => fetchMock(...args))
+vi.stubGlobal('CACHE_TTL', { FIVE_MINUTES: 300 })
+vi.stubGlobal('getExternalCacheOptions', (name: string) => ({ name, group: 'external' }))
+
+// Minimal defineCachedFunction stand-in: memoises successful results by the route's own
+// getKey (so key normalisation is exercised) and never stores a throw, like Nitro.
+type CacheOptions = { getKey: (...args: unknown[]) => string }
+let cacheStore: Map<string, unknown>
+let cacheOptions: CacheOptions
+vi.stubGlobal('defineCachedFunction', (fn: (...args: unknown[]) => Promise<unknown>, options: CacheOptions) => {
+    cacheOptions = options
+
+    return async (...args: unknown[]) => {
+        const key = options.getKey(...args)
+        if (cacheStore.has(key)) return cacheStore.get(key)
+        const value = await fn(...args)
+        cacheStore.set(key, value)
+
+        return value
+    }
+})
 
 let handler: (event: unknown) => Promise<Buffer>
 
@@ -64,11 +85,11 @@ function fakeUpstreamResponse({
 }
 
 describe('server/routes/images/flags/[size]/[code]', () => {
-    beforeAll(async () => {
-        handler = (await import('~/server/routes/images/flags/[size]/[code].get.js')).default as typeof handler
-    })
-
-    beforeEach(() => {
+    // Re-import per test: the route keeps its negative cache at module scope.
+    beforeEach(async () => {
+        vi.resetModules()
+        cacheStore = new Map()
+        handler    = (await import('~/server/routes/images/flags/[size]/[code].get.js')).default as typeof handler
         routerParams = { size: '96', code: 'be' }
         fetchMock    = vi.fn().mockResolvedValue(fakeUpstreamResponse())
         vi.mocked(setResponseHeader).mockClear()
@@ -107,6 +128,69 @@ describe('server/routes/images/flags/[size]/[code]', () => {
             'Cache-Control',
             'public, max-age=31536000, immutable',
         )
+    })
+
+    it('serves a fixed image/png Content-Type with nosniff', async () => {
+        fetchMock.mockResolvedValueOnce(fakeUpstreamResponse({ contentType: 'image/png; charset=binary' }))
+        await handler(fakeEvent)
+
+        expect(setResponseHeader).toHaveBeenCalledWith(fakeEvent, 'Content-Type', 'image/png')
+        expect(setResponseHeader).toHaveBeenCalledWith(fakeEvent, 'X-Content-Type-Options', 'nosniff')
+    })
+
+    it('keys the server cache on the uppercased code so be and BE share one upstream fetch', async () => {
+        expect(cacheOptions.getKey(96, 'BE')).toBe('96:BE')
+
+        await handler(fakeEvent)
+        routerParams.code = 'BE'
+        const result = await handler(fakeEvent)
+
+        expect(fetchMock).toHaveBeenCalledOnce()
+        expect(result.byteLength).toBe(4)
+    })
+
+    it('rejects an image/svg+xml upstream response', async () => {
+        const upstream = fakeUpstreamResponse({ contentType: 'image/svg+xml' })
+        fetchMock.mockResolvedValueOnce(upstream)
+        await expect(handler(fakeEvent)).rejects.toMatchObject({ statusCode: 502 })
+        expect(upstream.bodyCancel).toHaveBeenCalledOnce()
+    })
+
+    it.each([
+        ['an invalid size', () => { routerParams.size = '999' }],
+        ['an invalid code', () => { routerParams.code = 'belgium' }],
+        ['an upstream failure', () => { fetchMock.mockRejectedValueOnce(new Error('down')) }],
+        ['an oversized body', () => { fetchMock.mockResolvedValueOnce(fakeUpstreamResponse({ contentLength: 600 * 1024 })) }],
+    ])('sets Cache-Control: no-store on %s', async (_label, arrange) => {
+        arrange()
+        await expect(handler(fakeEvent)).rejects.toHaveProperty('statusCode')
+
+        expect(setResponseHeader).toHaveBeenCalledWith(fakeEvent, 'Cache-Control', 'no-store')
+        expect(setResponseHeader).not.toHaveBeenCalledWith(fakeEvent, 'Cache-Control', 'public, max-age=31536000, immutable')
+    })
+
+    it('preserves the too-large status message through the cache layer', async () => {
+        fetchMock.mockResolvedValueOnce(fakeUpstreamResponse({ contentLength: 600 * 1024 }))
+        await expect(handler(fakeEvent)).rejects.toMatchObject({ statusCode: 502, statusMessage: 'Flag image too large' })
+    })
+
+    describe('negative cache', () => {
+        afterEach(() => vi.useRealTimers())
+
+        it('answers a recently failed pair locally, then retries upstream after the TTL', async () => {
+            vi.useFakeTimers()
+            fetchMock.mockResolvedValueOnce(fakeUpstreamResponse({ ok: false }))
+
+            await expect(handler(fakeEvent)).rejects.toMatchObject({ statusCode: 502 })
+            routerParams.code = 'BE'
+            await expect(handler(fakeEvent)).rejects.toMatchObject({ statusCode: 502 })
+            expect(fetchMock).toHaveBeenCalledOnce()
+
+            vi.advanceTimersByTime(300 * 1000 + 1)
+            const result = await handler(fakeEvent)
+            expect(fetchMock).toHaveBeenCalledTimes(2)
+            expect(result.byteLength).toBe(4)
+        })
     })
 
     it('rejects a size outside the allowlist', async () => {

@@ -11,7 +11,7 @@ beforeEach(async () => {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('Context middleware baseline', () => {
-  it.each(['/_nuxt/app.js', '/_ipx/image', '/_i18n/en', '/__nuxt_error', '/favicon.ico', '/.well-known/test', '/fonts/font.woff2', '/api/context/be/en'])('retains exemption for %s', async (path) => {
+  it.each(['/_nuxt/app.js', '/_ipx/image', '/_i18n/en', '/__nuxt_error', '/favicon.ico', '/.well-known/test', '/fonts/font.woff2', '/api/context/be/en', '/images/flags/96/BE'])('retains exemption for %s', async (path) => {
     await handler({ path, context: {} })
     expect(useRequestContext).not.toHaveBeenCalled()
   })
