@@ -23,13 +23,19 @@ describe('language-bar single-language link has a discernible name', () => {
 describe('widget card image-overlay links have a discernible name', () => {
   const source = read('app/components/widget/index.vue')
 
-  it('labels both empty overlay links (hasImg and ClientOnly fallback) with the record title', () => {
+  it('hides both empty overlay links (hasImg and ClientOnly fallback) from assistive tech and tab order', () => {
     const overlayLinks = [...source.matchAll(/<NuxtLink[^>]*><div style="width:100%;height:200px;"><\/div><\/NuxtLink>/g)]
 
     expect(overlayLinks.length).toBe(2)
     overlayLinks.forEach(([link]) => {
-      expect(link).toMatch(/:aria-label="record\.title \|\| undefined"/)
+      expect(link).toMatch(/aria-hidden="true"/)
+      expect(link).toMatch(/tabindex="-1"/)
+      expect(link).not.toMatch(/aria-label/)
     })
+  })
+
+  it('keeps the title link as the accessible link, named by the record title', () => {
+    expect(source).toMatch(/<NuxtLink[^>]*class="text-primary fw-bold"[^>]*><span[^>]*>\{\{record\.title\}\}<\/span><\/NuxtLink>/)
   })
 
   it('labels each GBF target icon link with its target identifier', () => {
@@ -43,10 +49,16 @@ describe('widget card image-overlay links have a discernible name', () => {
 describe('geobon widget image-overlay link has a discernible name', () => {
   const source = read('app/components/widget/geobon.vue')
 
-  it('labels the empty overlay link with the record name', () => {
+  it('hides the empty overlay link from assistive tech and tab order', () => {
     const overlayLink = source.match(/<NuxtLink[^>]*><div style="width:100%;height:200px;"><\/div><\/NuxtLink>/)?.[0]
 
     expect(overlayLink).toBeTruthy()
-    expect(overlayLink).toMatch(/:aria-label="record\.name \|\| undefined"/)
+    expect(overlayLink).toMatch(/aria-hidden="true"/)
+    expect(overlayLink).toMatch(/tabindex="-1"/)
+    expect(overlayLink).not.toMatch(/aria-label/)
+  })
+
+  it('keeps the title link as the accessible link, named by the record name', () => {
+    expect(source).toMatch(/<NuxtLink[^>]*><span[^>]*>\{\{record\.name\}\}<\/span><\/NuxtLink>/)
   })
 })
