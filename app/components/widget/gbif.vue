@@ -96,6 +96,7 @@
 
     onMounted(() => {
         isHydrated.value = true;
+        // DPR is sampled once at mount; a monitor change keeps the tile URL chosen at this point
         devicePixelRatio.value = window.devicePixelRatio || 1;
     });
 
@@ -156,7 +157,7 @@
     const links = [ viewAllLink.value ];
     const query = clone({...siteStore.params });
 
-    // immediate:false - the fetch fires from the IntersectionObserver callback in onMounted, once the widget scrolls into view
+    // immediate:false - the fetch fires from the IntersectionObserver callback (registered at setup), once the widget scrolls into view
     const { data, status, error, execute } =  await useLazyFetch(`/api/list/gbif`, {  method: 'GET', query, key: 'gbif-widget', getCachedData, immediate: false });
 
     const loading = computed(()=> status.value === 'pending');
