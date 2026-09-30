@@ -28,7 +28,7 @@ describe('widget card image-overlay links have a discernible name', () => {
 
     expect(overlayLinks.length).toBe(2)
     overlayLinks.forEach(([link]) => {
-      expect(link).toMatch(/:aria-label="record\.title"/)
+      expect(link).toMatch(/:aria-label="record\.title \|\| undefined"/)
     })
   })
 
@@ -47,6 +47,6 @@ describe('geobon widget image-overlay link has a discernible name', () => {
     const overlayLink = source.match(/<NuxtLink[^>]*><div style="width:100%;height:200px;"><\/div><\/NuxtLink>/)?.[0]
 
     expect(overlayLink).toBeTruthy()
-    expect(overlayLink).toMatch(/:aria-label="record\.name"/)
+    expect(overlayLink).toMatch(/:aria-label="record\.name \|\| undefined"/)
   })
 })
