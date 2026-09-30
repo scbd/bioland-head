@@ -33,7 +33,8 @@
 
                 <div class="d-md-flex"  >
                     <div class="align-self-start w-100">
-                        <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="htmlSanitize(pageStore?.body)"></div>
+                        <div :style="pageTypeStyle" v-if="pageStore?.body" v-html="sanitizedBody"></div>
+                        <LazyFontAwesome v-if="hasFontAwesomeIcon(sanitizedBody)"/>
 
                         <LazyWidgetChmNetwork/>
                         <!-- <div  class="tabs">
@@ -81,6 +82,8 @@
     const pageStore = usePageStore();
     const siteStore = useSiteStore();
     const { pageTypeStyle } = useTheme();
+
+    const   sanitizedBody  = computed(()=> htmlSanitize(pageStore?.body));
 
     function getUrlComponent(){
         if(pageStore?.isMediaPage)    return `/media/${pageStore?.page?.drupalInternalMid}`;
