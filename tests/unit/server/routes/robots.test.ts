@@ -12,7 +12,7 @@ vi.stubGlobal('useRequestContext', async () => {
   if (ctxError) throw ctxError
   return ctx
 })
-vi.stubGlobal('CACHE_TTL', { ONE_HOUR: 3600 })
+vi.stubGlobal('CACHE_TTL', { DEFAULT: 15, ONE_HOUR: 3600 })
 vi.stubGlobal('consola', { warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() })
 
 let handler: (event: unknown) => Promise<string>
@@ -71,6 +71,14 @@ describe('server/routes/robots.txt', () => {
     const body = await handler({})
 
     expect(body).toBe('User-agent: *\nDisallow: /\n')
+  })
+
+  it('uses short cache (15s) for error responses so transient DMSM failures do not pin Disallow at the CDN', async () => {
+    ctxError = new Error('DMSM fetch failed')
+
+    await handler({})
+
+    expect(setHeaders['Cache-Control']).toBe('public, max-age=15')
   })
 
   it('always sets a text/plain content type and cache-control header', async () => {
