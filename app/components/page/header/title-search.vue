@@ -346,10 +346,14 @@
    that anchor's own hit box (it does not add to the line-height used by the surrounding
    flow), so the header does not reflow. margin-inline-end keeps the two targets apart
    horizontally as well. */
-#page-header-title-search-desktop-cbd-links > a.navbar-subbrand {
+#page-header-title-search-desktop-cbd-links > a.navbar-subbrand,
+#page-header-title-search-desktop-biosafety-links > a.navbar-subbrand,
+#page-header-title-search-large-brand-links > a.navbar-subbrand {
     padding-block: 0.25rem;
 }
-#page-header-title-search-desktop-cbd-links > a.navbar-subbrand:first-child {
+#page-header-title-search-desktop-cbd-links > a.navbar-subbrand:first-child,
+#page-header-title-search-desktop-biosafety-links > a.navbar-subbrand:first-child,
+#page-header-title-search-large-brand-links > a.navbar-subbrand.text-nowrap {
     margin-inline-end: 0.5rem;
 }
 .navbar-subbrand-small {

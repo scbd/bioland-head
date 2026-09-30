@@ -17,6 +17,10 @@ describe('BL-1075: swiper pagination bullet target-size (WCAG 2.2 AA, 24x24 CSS 
     expect(scss).toMatch(/swiper-container::part\(bullet-active\)/)
   })
 
+  it('zeroes the pagination offset so the padded bullet keeps the dot at its old position', () => {
+    expect(scss).toMatch(/swiper-container\s*\{\s*--swiper-pagination-bottom:\s*0;/)
+  })
+
   it('grows the hit area via padding, not width/height, so the visible 8px dot is unchanged', () => {
     const rule = scss.match(/swiper-container::part\(bullet\),\s*swiper-container::part\(bullet-active\)\s*\{([\s\S]*?)\}/)?.[1]
     if (!rule) throw new Error('swiper-container::part(bullet) rule could not be located in custom.scss')
@@ -34,15 +38,22 @@ describe('BL-1075: swiper pagination bullet target-size (WCAG 2.2 AA, 24x24 CSS 
 describe('BL-1075: header sub-brand link target-size (WCAG 2.2 AA, 24x24 CSS px)', () => {
   const component = readFileSync(new URL('../../../../app/components/page/header/title-search.vue', import.meta.url), 'utf8')
 
+  it('covers every variant that renders the CBD/CHM link pair', () => {
+    for (const id of ['desktop-cbd-links', 'desktop-biosafety-links', 'large-brand-links']) {
+      expect(component).toMatch(new RegExp(String.raw`#page-header-title-search-${id} > a\.navbar-subbrand(,|\s*\{)`))
+    }
+    expect(component).toMatch(/#page-header-title-search-large-brand-links > a\.navbar-subbrand\.text-nowrap\s*\{/)
+  })
+
   it('adds block padding to the desktop CBD/CHM sub-brand links to reach a 24px hit area', () => {
-    const rule = component.match(/#page-header-title-search-desktop-cbd-links > a\.navbar-subbrand\s*\{([\s\S]*?)\}/)?.[1]
+    const rule = component.match(/#page-header-title-search-large-brand-links > a\.navbar-subbrand\s*\{([\s\S]*?)\}/)?.[1]
     if (!rule) throw new Error('#page-header-title-search-desktop-cbd-links > a.navbar-subbrand rule could not be located')
 
     expect(rule).toMatch(/padding-block:\s*0\.25rem/)
   })
 
   it('adds horizontal spacing between the two sub-brand links', () => {
-    const rule = component.match(/#page-header-title-search-desktop-cbd-links > a\.navbar-subbrand:first-child\s*\{([\s\S]*?)\}/)?.[1]
+    const rule = component.match(/#page-header-title-search-large-brand-links > a\.navbar-subbrand\.text-nowrap\s*\{([\s\S]*?)\}/)?.[1]
     if (!rule) throw new Error('#page-header-title-search-desktop-cbd-links > a.navbar-subbrand:first-child rule could not be located')
 
     expect(rule).toMatch(/margin-inline-end:\s*0\.5rem/)

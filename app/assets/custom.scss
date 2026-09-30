@@ -1024,6 +1024,12 @@ $utilities: map-merge(
 // so ::part() is the selector that actually crosses the shadow boundary from here.
 // Padding (not width/height) grows the hit area to 24x24 while background-clip keeps
 // the painted dot at its original 8px so the carousel's visual appearance is unchanged.
+// The 8px padding on each side lifts the painted dot 8px above the old position
+// (pagination sits at bottom: 8px by default), so drop the offset to 0 to keep the dot
+// exactly where it was and away from slide content.
+swiper-container {
+  --swiper-pagination-bottom: 0;
+}
 swiper-container::part(bullet),
 swiper-container::part(bullet-active) {
   box-sizing: content-box;
