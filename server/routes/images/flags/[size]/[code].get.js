@@ -16,11 +16,16 @@
  *   - there is no way to pass an arbitrary URL through this route, so it cannot become an
  *   open proxy.
  * - Redirects are rejected (`redirect: 'error'`) rather than followed, the response is
- *   dropped unless its Content-Type is actually an image, and the upstream fetch is
- *   time-bounded - all fail-closed guards against a misbehaving or compromised upstream.
+ *   dropped unless its Content-Type is exactly `image/png` (an `image/svg+xml` body could
+ *   carry script), and the upstream fetch is time-bounded - all fail-closed guards against
+ *   a misbehaving or compromised upstream. The served Content-Type is a constant, never the
+ *   upstream's, and `nosniff` stops a browser second-guessing it.
  * - The response body is streamed and the byte count actually read is capped at
  *   MAX_FLAG_BYTES, not just the declared Content-Length - a missing or lying header is
  *   exactly the case worth defending against on a public route with a buffered read.
+ * - Successful fetches are cached server-side keyed on `<size>:<UPPERCASE code>`, so `be` and
+ *   `BE` share one upstream request. Failures are remembered briefly per container so an
+ *   unknown code cannot be used to hammer cbd.int. Every error response is `no-store`.
  */
 
 // Matches the sprite sizes cbd.int actually serves under /images/flags/<size>/.
@@ -35,18 +40,27 @@ const COUNTRY_CODE_PATTERN = /^[A-Za-z]{2}$/
 // upstream instead of buffering an unbounded response.
 const MAX_FLAG_BYTES = 512 * 1024
 
-export default defineEventHandler(async (event) => {
-    const rawSize = getRouterParam(event, 'size')
-    const rawCode = getRouterParam(event, 'code')
-    const size    = Number(rawSize)
+const FLAG_CONTENT_TYPE = 'image/png'
 
-    if (!ALLOWED_FLAG_SIZES.has(size))
-        throw createError({ statusCode: 400, statusMessage: 'Invalid flag size' })
+// How long a failed (size, code) pair is answered locally before cbd.int is tried again.
+const NEGATIVE_CACHE_MS = CACHE_TTL.FIVE_MINUTES * 1000
 
-    if (typeof rawCode !== 'string' || !COUNTRY_CODE_PATTERN.test(rawCode))
-        throw createError({ statusCode: 400, statusMessage: 'Invalid country code' })
+// `<size>:<CODE>` -> epoch ms until which the pair is known unavailable. Bounded by the
+// allowlists (10 sizes x 676 two-letter codes), so it cannot grow without limit.
+const unavailableUntil = new Map()
 
-    const code        = rawCode.toUpperCase()
+const upstreamError = (statusMessage) => createError({ statusCode: 502, statusMessage })
+
+/**
+ * Fetches one flag from cbd.int and returns its bytes base64-encoded (the cache store
+ * serialises to JSON, so a raw Buffer would not round-trip). Throws on any failure, which
+ * keeps failures out of the long-lived cache.
+ *
+ * @param {number} size - Allowlisted flag size
+ * @param {string} code - Uppercased ISO 3166-1 alpha-2 code
+ * @returns {Promise<string>} Base64 PNG bytes
+ */
+const fetchFlag = async (size, code) => {
     const upstreamUrl = `https://www.cbd.int/images/flags/${size}/flag-${code}-${size}.png`
 
     let response
@@ -64,23 +78,23 @@ export default defineEventHandler(async (event) => {
         })
     }
     catch {
-        throw createError({ statusCode: 502, statusMessage: 'Flag image unavailable' })
+        throw upstreamError('Flag image unavailable')
     }
 
     if (!response.ok) {
         // Drain/cancel before rejecting - an unread body on a rejected response is a leaked
         // upstream socket, worst exactly when the upstream is already misbehaving.
         await response.body?.cancel()
-        throw createError({ statusCode: 502, statusMessage: 'Flag image unavailable' })
+        throw upstreamError('Flag image unavailable')
     }
 
     if (!response.body)
-        throw createError({ statusCode: 502, statusMessage: 'Flag image unavailable' })
+        throw upstreamError('Flag image unavailable')
 
-    const contentType = response.headers.get('content-type') || ''
-    if (!contentType.startsWith('image/')) {
+    const mediaType = (response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase()
+    if (mediaType !== FLAG_CONTENT_TYPE) {
         await response.body.cancel()
-        throw createError({ statusCode: 502, statusMessage: 'Flag image unavailable' })
+        throw upstreamError('Flag image unavailable')
     }
 
     // Reject upfront when the upstream is honest about an oversized body, but don't trust
@@ -88,7 +102,7 @@ export default defineEventHandler(async (event) => {
     const declaredLength = Number(response.headers.get('content-length'))
     if (Number.isFinite(declaredLength) && declaredLength > MAX_FLAG_BYTES) {
         await response.body.cancel()
-        throw createError({ statusCode: 502, statusMessage: 'Flag image too large' })
+        throw upstreamError('Flag image too large')
     }
 
     const reader = response.body.getReader()
@@ -107,7 +121,7 @@ export default defineEventHandler(async (event) => {
             // chunk over", not byte-exact, in exchange for not pre-inspecting each chunk.
             if (bytesRead > MAX_FLAG_BYTES) {
                 await reader.cancel()
-                throw createError({ statusCode: 502, statusMessage: 'Flag image too large' })
+                throw upstreamError('Flag image too large')
             }
 
             chunks.push(value)
@@ -115,12 +129,57 @@ export default defineEventHandler(async (event) => {
     }
     catch (error) {
         if (error?.statusCode) throw error
-        throw createError({ statusCode: 502, statusMessage: 'Flag image unavailable' })
+        throw upstreamError('Flag image unavailable')
     }
 
-    setResponseHeader(event, 'Content-Type', contentType)
+    return Buffer.concat(chunks.map((chunk) => Buffer.from(chunk))).toString('base64')
+}
+
+const getCachedFlag = defineCachedFunction(fetchFlag, {
+    ...getExternalCacheOptions('country-flag'),
+    getKey: (size, code) => `${size}:${code}`,
+})
+
+export default defineEventHandler(async (event) => {
+    // Error responses must never be stored by the CDN or browser - only the success path
+    // below sets a cacheable header.
+    const fail = (statusCode, statusMessage) => {
+        setResponseHeader(event, 'Cache-Control', 'no-store')
+
+        return createError({ statusCode, statusMessage })
+    }
+
+    const rawSize = getRouterParam(event, 'size')
+    const rawCode = getRouterParam(event, 'code')
+    const size    = Number(rawSize)
+
+    if (!ALLOWED_FLAG_SIZES.has(size))
+        throw fail(400, 'Invalid flag size')
+
+    if (typeof rawCode !== 'string' || !COUNTRY_CODE_PATTERN.test(rawCode))
+        throw fail(400, 'Invalid country code')
+
+    const code = rawCode.toUpperCase()
+    const key  = `${size}:${code}`
+
+    if ((unavailableUntil.get(key) ?? 0) > Date.now())
+        throw fail(502, 'Flag image unavailable')
+
+    let base64
+    try {
+        base64 = await getCachedFlag(size, code)
+    }
+    catch (error) {
+        unavailableUntil.set(key, Date.now() + NEGATIVE_CACHE_MS)
+        throw fail(502, error?.statusMessage || 'Flag image unavailable')
+    }
+
+    unavailableUntil.delete(key)
+
+    setResponseHeader(event, 'Content-Type', FLAG_CONTENT_TYPE)
+    setResponseHeader(event, 'X-Content-Type-Options', 'nosniff')
     // Same allowlisted (size, code) pair always resolves to the same bytes.
     setResponseHeader(event, 'Cache-Control', 'public, max-age=31536000, immutable')
 
-    return Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)))
+    return Buffer.from(base64, 'base64')
 })
