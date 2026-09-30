@@ -3,6 +3,7 @@ import { createPinia, defineStore, setActivePinia } from 'pinia'
 import { unref } from 'vue'
 import { uniqueArray, falsyFilter } from '~/app/utils/index.js'
 import { getCanonicalHost, getGeneratedHostname } from '~/shared/utils/site-host'
+import { getFlagUrl } from '~/app/utils/flag-url.js'
 
 let useSiteStore
 
@@ -13,6 +14,7 @@ beforeEach(async () => {
   vi.stubGlobal('falsyFilter', falsyFilter)
   vi.stubGlobal('getCanonicalHost', getCanonicalHost)
   vi.stubGlobal('getGeneratedHostname', getGeneratedHostname)
+  vi.stubGlobal('getFlagUrl', getFlagUrl)
   ;({ useSiteStore } = await import('~/app/stores/site.js'))
   setActivePinia(createPinia())
 })
@@ -193,5 +195,40 @@ describe('site store hosts', () => {
 
     expect(store.host).toBe('https://be.example.test')
     expect(store.params.redirect).toBe('')
+  })
+})
+
+describe('site store getLogoUri', () => {
+  it('prefers an explicit config logo over a flag fallback', () => {
+    const store = initialize({ config: { logo: 'https://example.test/logo.png', country: 'BE' } })
+
+    expect(store.getLogoUri).toBe('https://example.test/logo.png')
+  })
+
+  it('builds an absolute same-origin flag URL from the host and country (BL-1071)', () => {
+    const store = initialize({ siteCode: 'seed', baseHost: 'example.test', config: { country: 'BE' } })
+
+    expect(store.getLogoUri).toBe('https://seed.example.test/images/flags/96/BE')
+  })
+
+  it('falls back to the first entry of countries when country is absent', () => {
+    const store = initialize({ siteCode: 'seed', baseHost: 'example.test', config: { countries: ['FR', 'DE'] } })
+
+    expect(store.getLogoUri).toBe('https://seed.example.test/images/flags/96/FR')
+  })
+
+  it('never emits a relative URL when getHost is empty during incomplete SSR init', () => {
+    const store = useSiteStore()
+    // No initialize() call - siteCode/baseHost stay unset, so getHost(true) returns ''
+    // per its own guard. getLogoUri must not silently prefix a relative flag URL with ''.
+    store.config = { country: 'BE' }
+
+    expect(store.getLogoUri).toBe('https://seed.chm-cbd.net/sites/default/files/images/country/flag/xx.png')
+  })
+
+  it('falls back to the seed default when there is no logo and no country', () => {
+    const store = initialize({ config: {} })
+
+    expect(store.getLogoUri).toBe('https://seed.chm-cbd.net/sites/default/files/images/country/flag/xx.png')
   })
 })

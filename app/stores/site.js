@@ -121,9 +121,17 @@ export const useSiteStore = defineStore('site', {
             const hasCountry = config?.country || (config?.countries? config?.countries[0] : undefined);
 
             if(config?.logo)  return config.logo;
-        
-            if(hasCountry) return getFlagUrl(hasCountry)
-        
+
+            // getFlagUrl is same-origin relative (BL-1071); schema.org/Open Graph
+            // consumers of this getter need an absolute URL, so prefix with the host. getHost
+            // returns '' during incomplete SSR init (see its own guard) - falling through to
+            // the seed default keeps this getter always-absolute instead of silently emitting
+            // a relative URL into JSON-LD.
+            if(hasCountry){
+                const host = this.getHost(true);
+                if(host) return `${host}${getFlagUrl(hasCountry)}`
+            }
+
             return 'https://seed.chm-cbd.net/sites/default/files/images/country/flag/xx.png'
         },
         host(){
