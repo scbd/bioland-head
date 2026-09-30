@@ -52,7 +52,19 @@
 
                 <LazyPageBodyMediaRemoteVideo id="page-body-media-remote-video" v-if="pageStore?.isMediaRemoteVideo" :url="pageStore?.page?.fieldMediaOembedVideo" :title="pageStore?.page?.name || pageStore?.page?.title"/>
 
-                <div id="page-body-media-embed" v-if="pageStore?.isMediaEmbed && pageStore?.embedHtml" v-html="htmlSanitize(pageStore.embedHtml)"></div>
+                <div id="page-body-media-embed" v-if="pageStore?.isMediaEmbed && pageStore?.embedHtml" v-html="sanitizedEmbed"></div>
+
+                <!-- meStore can resolve on the client only, so the editor notice renders after hydration.
+                     embedStrippedCacheNotice's "5 minute cache plus 60 s" is the DMSM config cache maxAge
+                     and L1 TTL in server/utils/context-unified.ts (BL-1246); update the string with them. -->
+                <ClientOnly>
+                    <div id="page-body-media-embed-stripped" v-if="meStore.canEditMenu && embedStripped" class="alert alert-warning" role="status">
+                        <p class="mb-1">{{ embedHost ? t('embedStrippedNotice', { host: embedHost }) : t('embedStrippedNoticeNoHost') }}</p>
+                        <p class="mb-2">{{ t('embedStrippedCacheNotice') }}</p>
+                        <button id="page-body-media-embed-stripped-clear-cache" type="button" class="btn btn-sm btn-outline-dark me-2" @click="clearCache()">{{ t('Clear Cache') }}</button>
+                        <NuxtLink id="page-body-media-embed-stripped-settings" :to="embedSettingsUrl" external>{{ t('Embed allowlist settings') }}</NuxtLink>
+                    </div>
+                </ClientOnly>
 
                 <div id="page-body-media-file-details-mobile" class="col-12 col-md-9 offset-md-3 d-md-none mt-1 mb-1">
                     
@@ -92,6 +104,13 @@
     const typeLabel = computed(()=> pageStore?.typeName? t(pageStore.typeName) : '');
 
     const showEdit = computed( ()=> meStore?.showEdit   )  
+
+    const route            = useRoute();
+    const clearCache       = useClearCache();
+    const sanitizedEmbed   = computed(()=> htmlSanitize(pageStore?.embedHtml));
+    const embedStripped    = computed(()=> !!pageStore?.isMediaEmbed && embedFrameStripped(pageStore?.embedHtml, sanitizedEmbed.value));
+    const embedHost        = computed(()=> embedFrameHost(pageStore?.page?.fieldMediaInlineFrame));
+    const embedSettingsUrl = computed(()=> `${siteStore.localizedHost}/admin/config/bioland/settings/front-end/general?destination=${encodeURIComponent(route.path)}`);
 </script>
 
 <style lang="scss" scoped>
