@@ -1,5 +1,3 @@
-import { timePhase } from '../utils/request-timing'
-
 /**
  * Context Resolution Middleware
  * 
@@ -23,11 +21,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Resolve context (will be cached on event.context.site)
-    // Timed as `ctx` (BL-1069): host resolution, the DMSM config read and the Drupal site
-    // settings all happen inside this call. It reads ~0ms when 00.cache-clear already resolved
-    // the context for this request - the `dmsm` and `drupal-settings` phases are still recorded
-    // against the request, whichever middleware triggered them.
-    await timePhase(event, 'ctx', () => useRequestContext(event))
+    await useRequestContext(event)
   } catch (e: unknown) {
     const error = e as Error & { statusCode?: number }
     if (error.statusCode === 400) throw e
