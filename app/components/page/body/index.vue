@@ -31,7 +31,7 @@
                 </div>
 
                 <LazyPageMediaFileDetails id="page-body-media-file-details-desktop" v-if="isImageOrVideo || isDocument" :vertical="true" />
-                <LazyPageBodyTagsDate v-if="isBiosafetySite" id="page-body-tags-date-side-desktop" class="mt-3 w-100" />
+                <LazyPageBodyTagsDate v-if="!pageInfoColumnRight" id="page-body-tags-date-side-desktop" class="mt-3 w-100" />
             </div>
 
             <div id="page-body-content" class="col-12 col-md-9">
@@ -53,7 +53,7 @@
 
                 <div id="page-body-body-layout" class="d-md-flex"  >
                     <div class="align-self-start w-100 ">
-                        <div v-if="!isImageOrVideo && !isBiosafetySite"class="d-none d-md-block" > 
+                        <div v-if="!isImageOrVideo && pageInfoColumnRight" class="d-none d-md-block" > 
                             <LazyPageBodyTagsDate id="page-body-tags-date-desktop" /> 
                         </div>
                         <div id="page-body-body" :style="pageTypeStyle" v-if="pageStore?.body" v-html="sanitizedBody"></div>
@@ -118,7 +118,7 @@
 
     console.log('DEBUG image:', { src: pageStore?.image?.src, alt: pageStore?.image?.alt, image: pageStore?.image });
 
-    const { host, isBiosafetySite  } = storeToRefs(siteStore);
+    const { host, pageInfoColumnRight } = storeToRefs(siteStore);
 
     function showEdit(){
             return meStore?.showEdit;
