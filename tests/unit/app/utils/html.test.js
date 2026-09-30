@@ -524,13 +524,35 @@ describe('html', () => {
       ['px integers', 'width="800px" height="485px"', 'aspect-ratio: 800 / 485; width: 100%;'],
       ['the iframe formatter percentage width', 'width="100%" height="600"', 'width: 100%; height: 600px;'],
       ['a height only', 'height="800"', 'width: 100%; height: 800px;'],
-      ['percentages only', 'width="100%" height="100%"', 'aspect-ratio: 16 / 9; width: 100%;'],
+      ['percentages only', 'width="75%" height="50%"', 'width: 75%; height: 50vh;'],
+      ['a percentage width only', 'width="75%"', 'aspect-ratio: 16 / 9; width: 75%;'],
+      ['a pixel width and a percentage height', 'width="600" height="75%"', 'width: 600px; height: 75vh;'],
+      ['the other units the iframe field accepts', 'width="80vw" height="30rem"', 'width: 80vw; height: 30rem;'],
+      ['a decimal percentage', 'width="62.5%" height="40.5%"', 'width: 62.5%; height: 40.5vh;'],
+      ['a zero or unknown unit, which is dropped', 'width="0" height="10pt"', 'aspect-ratio: 16 / 9; width: 100%;'],
+      ['a value that tries to add a declaration', 'width="50%;position:fixed" height="1e3"', 'aspect-ratio: 16 / 9; width: 100%;'],
+      ['uppercase units and padding', 'width=" 50PX " height="40VH"', 'width: 50px; height: 40vh;'],
+      ['a pixel width and an em height', 'width="600" height="30em"', 'width: 600px; height: 30em;'],
+      ['a pixel width only', 'width="600"', 'aspect-ratio: 16 / 9; width: 600px;'],
+      ['a viewport height past the screen, which is capped', 'width="100%" height="250%"', 'width: 100%; height: 100vh;'],
+      ['a number past four digits, which is dropped', 'width="100%" height="99999"', 'aspect-ratio: 16 / 9; width: 100%;'],
       ['no dimensions', '', 'aspect-ratio: 16 / 9; width: 100%;'],
     ])('sizes a non-player frame from %s', (_, attrs, style) => {
       const result = htmlSanitize(`<iframe src="https://app.powerbi.com/view?r=1" ${attrs}></iframe>`, { embedAllowedOrigins })
 
       expect(result).toContain(`style="${style}"`)
       expect(result).not.toMatch(/\s(?:width|height)="/)
+    })
+
+    it.each([
+      ['a pixel ratio', 'width="800" height="485"', true],
+      ['a percentage height', 'width="75%" height="50%"', true],
+      ['no usable height', 'width="75%"', false],
+      ['an editor-authored marker without a height', 'data-embed-sized=""', false],
+    ])('marks the frame as editor-sized only with %s', (_, attrs, sized) => {
+      const result = htmlSanitize(`<iframe src="https://app.powerbi.com/view?r=1" ${attrs}></iframe>`, { embedAllowedOrigins })
+
+      expect(result.includes('data-embed-sized')).toBe(sized)
     })
 
     it.each([
