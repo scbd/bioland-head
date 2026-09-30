@@ -81,19 +81,32 @@ const toSandbox = (value) =>
     return [ ...tokens ].join(' ');
   };
 
-// Only plain or `px` integers are dimensions a ratio can be built from: the iframe formatter writes
-// `width="100%" height="600"`, which must keep its pixel height rather than become `100 / 600`.
-const toPixels = (value) => /^\s*\d+(?:px)?\s*$/i.test(value ?? '') ? Number.parseInt(value, 10) || undefined : undefined;
-
-const toSizeStyle = (node) =>
+// The iframe field takes a plain integer (pixels) or a number with `%`, `em`, `rem`, `vw` or `vh`.
+// Anything else is dropped, so only a number and a known unit ever reach the style attribute. Four digits
+// cover any real size and keep a typo like `99999999` from pushing the rest of the page out of reach.
+const toLength = (value) =>
   {
-    const width  = toPixels(node.getAttribute('width'));
-    const height = toPixels(node.getAttribute('height'));
+    const [ , amount, unit = 'px' ] = /^\s*(\d{1,4}(?:\.\d{1,2})?)(px|%|em|rem|vw|vh)?\s*$/i.exec(value ?? '') || [];
 
-    if(width && height) return `aspect-ratio: ${width} / ${height}; width: 100%;`;
-    if(height) return `width: 100%; height: ${height}px;`;
+    return Number(amount) ? { amount, unit: unit.toLowerCase() } : undefined;
+  };
 
-    return 'aspect-ratio: 16 / 9; width: 100%;';
+// A percentage height has no sized parent in the body column to resolve against, so `50%` reads as half
+// the viewport height; no viewport height goes past the full screen.
+const toHeight = ({ amount, unit }) =>
+  ['%', 'vh'].includes(unit) ? `${Math.min(Number(amount), 100)}vh` : `${amount}${unit}`;
+
+// Two pixel sizes become a ratio that scales with the column. Otherwise the editor's width is kept (the
+// iframe-responsive max-width still caps it) and so is the height.
+const toSizeStyle = (width, height) =>
+  {
+    if(width?.unit === 'px' && height?.unit === 'px') return `aspect-ratio: ${width.amount} / ${height.amount}; width: 100%;`;
+
+    const widthStyle = width ? `width: ${width.amount}${width.unit};` : 'width: 100%;';
+
+    if(!height) return `aspect-ratio: 16 / 9; ${widthStyle}`;
+
+    return `${widthStyle} height: ${toHeight(height)};`;
   };
 
 const applyEmbedEntry = (node, entry, host) =>
@@ -103,8 +116,12 @@ const applyEmbedEntry = (node, entry, host) =>
 
     // `iframe-responsive` (app.vue) keeps every allowed frame inside its column; the inline style
     // below still sets its ratio or pixel height.
+    const height = isMediaPlayer ? undefined : toLength(node.getAttribute('height'));
+
     node.classList.add("iframe-responsive");
-    node.setAttribute("style", isMediaPlayer ? 'aspect-ratio: 16 / 9; width: 100%;' : toSizeStyle(node));
+    node.setAttribute("style", isMediaPlayer ? 'aspect-ratio: 16 / 9; width: 100%;' : toSizeStyle(toLength(node.getAttribute('width')), height));
+    // Marks a frame the editor gave a height, so the embed page (media/index.vue) leaves its size alone.
+    node.toggleAttribute("data-embed-sized", Boolean(height));
     node.removeAttribute("height");
     node.removeAttribute("width");
 
@@ -134,6 +151,10 @@ const removeUntrustedIframe = (node, data, config)=>
 
     if(entry){
       applyEmbedEntry(node, entry, new URL(src).hostname);
+
+      // Drupal's fallback markup inside the tag parses as raw text and trips DOMPurify's _isUnsafeNode mXSS probe.
+      // DOMPurify runs uponSanitizeElement before that probe (3.3.0 and 3.4.x); the first BL-1269 test pins this order.
+      node.textContent = '';
 
       return node;
     }

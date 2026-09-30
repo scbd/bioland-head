@@ -103,8 +103,8 @@
 
 }
 .has-hero{ font-size: 1.2rem; }
-/* An embed page is the frame itself: give a percentage-sized page (Claude artifact, report) room. */
-#page-body-media-embed :deep(.iframe-responsive){ min-height: 70vh; }
+/* An embed page is the frame itself: give a frame with no editor height (Claude artifact, report) room. */
+#page-body-media-embed :deep(.iframe-responsive:not([data-embed-sized])){ min-height: 70vh; }
 .page-type{
     padding-left: 0;
     padding-top: 1rem;
