@@ -109,10 +109,7 @@
 
     const { data, status, error, refresh } =  await useFetch(`${siteStore.localizedHost}/system/menu/account/linkset`, {  method: 'GET', headers, key: 'logout-url', getCachedData });
 
-    const clearCache = () => {
-        const timestamp = Math.floor(Date.now() / 1000);
-        reloadNuxtApp({ path: `${route.path}?seachain-taisce=${timestamp}` });
-    };
+    const clearCache = useClearCache();
 
     const logOutUrl = computed(() => { 
 
