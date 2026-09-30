@@ -58,7 +58,7 @@
                      embedStrippedCacheNotice's "5 minute cache plus 60 s" is the DMSM config cache maxAge
                      and L1 TTL in server/utils/context-unified.ts (BL-1246); update the string with them. -->
                 <ClientOnly>
-                    <div id="page-body-media-embed-stripped" v-if="embedStripped && meStore.canEditMenu" class="alert alert-warning" role="status">
+                    <div id="page-body-media-embed-stripped" v-if="meStore.canEditMenu && embedStripped" class="alert alert-warning" role="status">
                         <p class="mb-1">{{ embedHost ? t('embedStrippedNotice', { host: embedHost }) : t('embedStrippedNoticeNoHost') }}</p>
                         <p class="mb-2">{{ t('embedStrippedCacheNotice') }}</p>
                         <button id="page-body-media-embed-stripped-clear-cache" type="button" class="btn btn-sm btn-outline-dark me-2" @click="clearCache()">{{ t('Clear Cache') }}</button>
