@@ -1,4 +1,5 @@
 import { DOCUMENT_VARY } from '../../shared/utils/document-cache-ttl'
+import { CACHE_TTL } from '../../shared/utils/constants'
 
 /**
  * Per-tenant robots.txt (BL-1070)
@@ -37,7 +38,9 @@ export default defineEventHandler(async (event) => {
     ctx = await useRequestContext(event);
   } catch (e) {
     // No Site config, unresolvable Host, or the DMSM fetch itself failed - default to safe.
+    // Use short cache for error responses so transient failures don't pin Disallow at the CDN.
     consola.warn('[robots.txt] failed to resolve site context, defaulting to Disallow', { message: (e as Error)?.message });
+    setResponseHeader(event, 'Cache-Control', `public, max-age=${CACHE_TTL.DEFAULT}`);
     return DISALLOW_ALL;
   }
 
