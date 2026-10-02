@@ -306,6 +306,60 @@ describe('html', () => {
     })
   })
 
+  describe('remote video through the Drupal oEmbed proxy (BL-1343)', () => {
+    const youTube = 'https%3A//www.youtube.com/watch%3Fv%3DdQw4w9WgXcQ'
+    const vimeo   = 'https%3A//vimeo.com/123456789'
+    const proxy   = (src) => [
+      '<p>before</p>',
+      '<div class="media media--type-remote-video"><div class="field field--name-field-media-oembed-video">',
+      `<iframe src="${src}" width="200" height="113" class="media-oembed-content" loading="lazy" title="NR5 - English"></iframe>`,
+      '</div></div><p>after</p>',
+    ].join('')
+
+    it.each([
+      ['an absolute src', `https://demo.bsl.staging.cbd.int/en/media/oembed?url=${youTube}&amp;max_width=0&amp;max_height=0&amp;hash=abc`],
+      ['a relative src', `/en/media/oembed?url=${youTube}&amp;max_width=0&amp;max_height=0&amp;hash=abc`],
+      ['a src without a language prefix', `/media/oembed?max_width=0&amp;url=${youTube}`],
+    ])('renders the youtube player for %s', (_, src) => {
+      const result = htmlSanitize(proxy(src), { embedAllowedOrigins })
+
+      expect(result).toContain('src="https://www.youtube.com/embed/dQw4w9WgXcQ"')
+      expect(result).toContain('title="NR5 - English"')
+      expect(result).toContain('aspect-ratio: 16 / 9; width: 100%;')
+      expect(result).not.toContain('media/oembed')
+      expect(result).not.toContain('width="200"')
+    })
+
+    it('renders the vimeo player', () => {
+      const result = htmlSanitize(proxy(`/en/media/oembed?url=${vimeo}&amp;hash=abc`), { embedAllowedOrigins })
+
+      expect(result).toContain('src="https://player.vimeo.com/video/123456789"')
+    })
+
+    it.each([
+      ['an unknown provider', `/en/media/oembed?url=${encodeURIComponent('https://evil.example/watch?v=dQw4w9WgXcQ')}`],
+      ['no url param', '/en/media/oembed?hash=abc'],
+      ['a lookalike proxy path', `/en/media/oembed-evil?url=${youTube}`],
+    ])('strips the proxy frame for %s', (_, src) => {
+      const result = htmlSanitize(proxy(src), { embedAllowedOrigins })
+
+      expect(result).not.toContain('<iframe')
+      expect(result).toContain('before')
+      expect(result).toContain('after')
+    })
+
+    it('strips a provider that is not on the allowlist', () => {
+      const youTubeOnly = embedAllowedOrigins.filter(({ label }) => label === 'YouTube')
+      const result      = htmlSanitize(proxy(`/en/media/oembed?url=${vimeo}`), { embedAllowedOrigins: youTubeOnly })
+
+      expect(result).not.toContain('<iframe')
+    })
+
+    it('still strips a plain iframe that is not on the allowlist', () => {
+      expect(htmlSanitize(proxy('https://evil.example/embed/x'), { embedAllowedOrigins })).not.toContain('<iframe')
+    })
+  })
+
   describe('config-driven iframe allowlist (BL-1218)', () => {
     const iframe = src => `<p>before</p><p><iframe src="${src}" width="800" height="485"></iframe></p><p>after</p>`
 
@@ -357,6 +411,15 @@ describe('html', () => {
         const out = run(wrap('data-media-width="75%"', frame('width="100%" height="75%"'), 'width: 75%; max-width: 100%; display: block'))
         expect(out).toContain('width: 75%')
         expect(styleOf(out)).toBe('width: 100%; height: 75vh;')
+      })
+
+      it('an oEmbed proxy frame in a CKEditor percentage wrapper becomes a 16:9 player filling it (BL-1343)', () => {
+        const proxySrc = '/en/media/oembed?url=https%3A//www.youtube.com/watch%3Fv%3DdQw4w9WgXcQ&amp;max_width=0'
+        const out      = run(wrap('data-media-width="75%"', frame('width="200" height="113"', proxySrc), 'width: 75%; max-width: 100%; display: block'))
+
+        expect(out).toContain('src="https://www.youtube.com/embed/dQw4w9WgXcQ"')
+        expect(out).toMatch(/<div[^>]* style="width: 75%;/)
+        expect(styleOf(out)).toBe('aspect-ratio: 16 / 9; width: 100%;')
       })
 
       it('CKEditor percentage width over a px field width never repeats the percentage', () => {

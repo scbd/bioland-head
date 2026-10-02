@@ -1,4 +1,5 @@
 import DOMPurify from "isomorphic-dompurify";
+import { getRemoteVideoEmbedSrc } from "./remote-video.js";
 
 // FORBID_TAGS style: contrib iframe prints a <style> block per frame; it never needs to reach the page.
 const defaultOptions = { USE_PROFILES: { html: true },ADD_TAGS: ["iframe"], FORBID_TAGS: ['style'], ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'sandbox'] };
@@ -48,9 +49,9 @@ const sandboxTokens = new Set([ 'allow-downloads', 'allow-forms', 'allow-modals'
 
 const mediaPlayerHost = /^(?:(?:www\.)?youtube(?:-nocookie)?\.com|player\.vimeo\.com)$/;
 
-const parseUrl = (value) =>
+const parseUrl = (value, base) =>
   {
-    try { return new URL(value); }
+    try { return new URL(value, base); }
     catch { return undefined; }
   };
 
@@ -173,9 +174,25 @@ const applyEmbedEntry = (node, entry, host) =>
     node.setAttribute("allowfullscreen", "");
   };
 
+// A remote video embedded in a body renders as an iframe on Drupal's own oEmbed proxy
+// (`/<lang>/media/oembed?url=<watch url>`), on whichever host served Drupal. That host is never trusted:
+// the watch URL is mapped to a fixed YouTube or Vimeo player URL instead, which then has to pass the
+// allowlist like any other frame. A URL with no YouTube/Vimeo id keeps the proxy src and is stripped as before.
+const oembedProxyPlayerSrc = (value) =>
+  {
+    // The base only resolves a relative src; the host is never read.
+    const src = parseUrl(value ?? '', 'https://drupal.invalid');
+
+    return /\/media\/oembed$/.test(src?.pathname ?? '') ? getRemoteVideoEmbedSrc(src.searchParams.get('url')) : '';
+  };
+
 const removeUntrustedIframe = (node, data, config)=>
   {
     if (data.tagName !== 'iframe') return node;
+
+    const playerSrc = oembedProxyPlayerSrc(node.getAttribute("src"));
+
+    if(playerSrc) node.setAttribute("src", playerSrc);
 
     const src   = node.getAttribute("src") || '';
     const entry = findEmbedEntry(src, config?.EMBED_ALLOWED_ORIGINS);
