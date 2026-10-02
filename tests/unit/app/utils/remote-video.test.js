@@ -3,6 +3,14 @@ import { getRemoteVideoEmbedSrc, getRemoteVideoImage, isRemoteVideo } from '../.
 
 describe('remote-video', () => {
   describe('getRemoteVideoEmbedSrc', () => {
+    it('returns an empty string quickly for a URL over 2048 chars', () => {
+      const url   = 'youtube.com/watch?&'.repeat(8_000) // ~150 KB; ~400 ms uncapped
+      const start = performance.now()
+
+      expect(getRemoteVideoEmbedSrc(url)).toBe('')
+      expect(performance.now() - start).toBeLessThan(50)
+    })
+
     it('derives the player src from a vimeo URL', () => {
       expect(getRemoteVideoEmbedSrc('https://vimeo.com/34930003')).toBe('https://player.vimeo.com/video/34930003')
     })

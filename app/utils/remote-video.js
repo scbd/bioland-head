@@ -6,10 +6,12 @@
  * SSR and client-side navigation (YouTube's oEmbed endpoint has no CORS).
  *
  * @param   {string} url - Public video URL (watch/share link)
- * @returns {string} Embed iframe src (empty string when the provider is unknown)
+ * @returns {string} Embed iframe src (empty string when the provider is unknown or the URL is over 2048 chars)
  */
 export function getRemoteVideoEmbedSrc(url) {
-  if (!url) return ''
+  // Body iframe srcs reach this through the oEmbed proxy (BL-1343); the YouTube pattern backtracks
+  // quadratically, so a URL no browser would send is never matched.
+  if (!url || url.length > 2048) return ''
 
   const youTubeId = url.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/)?.[1]
 

@@ -413,6 +413,15 @@ describe('html', () => {
         expect(styleOf(out)).toBe('width: 100%; height: 75vh;')
       })
 
+      it('an oEmbed proxy frame in a CKEditor percentage wrapper becomes a 16:9 player filling it (BL-1343)', () => {
+        const proxySrc = '/en/media/oembed?url=https%3A//www.youtube.com/watch%3Fv%3DdQw4w9WgXcQ&amp;max_width=0'
+        const out      = run(wrap('data-media-width="75%"', frame('width="200" height="113"', proxySrc), 'width: 75%; max-width: 100%; display: block'))
+
+        expect(out).toContain('src="https://www.youtube.com/embed/dQw4w9WgXcQ"')
+        expect(out).toMatch(/<div[^>]* style="width: 75%;/)
+        expect(styleOf(out)).toBe('aspect-ratio: 16 / 9; width: 100%;')
+      })
+
       it('CKEditor percentage width over a px field width never repeats the percentage', () => {
         expect(styleOf(run(wrap('data-media-width="75%"', frame('width="300" height="200"'))))).toBe('width: 100%; height: 200px;')
       })

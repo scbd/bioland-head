@@ -1,5 +1,5 @@
 import DOMPurify from "isomorphic-dompurify";
-import { getRemoteVideoEmbedSrc } from "./remote-video";
+import { getRemoteVideoEmbedSrc } from "./remote-video.js";
 
 // FORBID_TAGS style: contrib iframe prints a <style> block per frame; it never needs to reach the page.
 const defaultOptions = { USE_PROFILES: { html: true },ADD_TAGS: ["iframe"], FORBID_TAGS: ['style'], ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'sandbox'] };
@@ -176,8 +176,8 @@ const applyEmbedEntry = (node, entry, host) =>
 
 // A remote video embedded in a body renders as an iframe on Drupal's own oEmbed proxy
 // (`/<lang>/media/oembed?url=<watch url>`), on whichever host served Drupal. That host is never trusted:
-// the watch URL is mapped to the provider's player instead, which then has to pass the allowlist like
-// any other frame. An unknown provider keeps the proxy src, so it is stripped as before.
+// the watch URL is mapped to a fixed YouTube or Vimeo player URL instead, which then has to pass the
+// allowlist like any other frame. A URL with no YouTube/Vimeo id keeps the proxy src and is stripped as before.
 const oembedProxyPlayerSrc = (value) =>
   {
     // The base only resolves a relative src; the host is never read.
